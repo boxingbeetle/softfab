@@ -1,0 +1,20 @@
+_model: toc
+---
+sort_key: 1
+---
+_template: toc.html
+---
+title: SoftFab Documentation
+---
+abstract: This is the root page of the SoftFab documentation.
+---
+pre_toc: As an experienced SoftFab user you can use the buttons in the navigation bar above to get your desired document quickly. Novice users may navigate through the table of contents below.
+---
+post_toc:
+
+<div class="dev-plug">
+  SoftFab is proudly brought to you by<br>
+  <a href="https://boxingbeetle.com/"><img src="boxingbeetle_logo.svg" alt="Boxing Beetle"></a>
+</div>
+---
+button: Top

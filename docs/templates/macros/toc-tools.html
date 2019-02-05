@@ -1,0 +1,13 @@
+{% macro generate_toc(this) %}
+<div class="toc">
+  <h2>Table of Contents</h2>
+  <ol>
+    {% for child in this.children %}
+      <li>
+        <h3><a href="{{ child.path|url }}" title="{{ child.button or child.title}}">{{ child.title }}</a></h3>
+        {{ child.abstract }}
+      </li>
+    {% endfor %}
+  </ol>
+</div>
+{% endmacro %}

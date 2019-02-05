@@ -1,0 +1,5 @@
+[project]
+name = SoftFab Documentation
+
+[packages]
+lektor-markdown-highlighter = 0.3.1

@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en-US">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
+<link rel="stylesheet" href="{{ '/static/style.css'|url }}">
+<link rel="stylesheet" href="{{ get_pygments_stylesheet()|url }}">
+<title>{% block title %}Untitled{% endblock %} - SoftFab documentation</title>
+</head>
+<body>
+  <header>
+    <h1>{{ this.title }}</h1>
+  </header>
+  <nav>
+{% macro _walk_to_root(node) %}
+  {% if node.parent %}
+    {{ _walk_to_root(node.parent) }}
+    <div><a href="{{ node.parent.path|url }}">{{ node.parent.button or node.parent.title }}</a></div>
+  {% endif %}
+{% endmacro %}
+    {{ _walk_to_root(this) }}
+    <div class="here">{{ this.button or this.title }}</div>
+    {% for child in this.children %}
+      <div><a href="{{ child.path|url }}">{{ child.button or child.title }}</a></div>
+    {% endfor %}
+  </nav>
+  <main>
+    {% block body %}{% endblock %}
+  </main>
+</body>
+</html>

@@ -1,0 +1,15 @@
+_model: toc
+---
+sort_key: 200
+---
+_template: toc.html
+---
+title: Installation
+---
+abstract: Read all about installing Control Centers, Factory PC's, Task Runners and writing wrappers. Get your factory running!
+---
+pre_toc:
+---
+post_toc:
+---
+button: Install
