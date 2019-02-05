@@ -1,0 +1,64 @@
+# SPDX-License-Identifier: BSD-3-Clause
+
+from ControlPage import ControlPage
+from Page import InvalidRequest, PageProcessor
+from authentication import NoAuthPage
+from joblib import jobDB
+from pageargs import PageArgs, StrArg
+from shadowlib import shadowDB
+from xmlgen import xml
+
+from urllib.parse import urlsplit
+
+class TaskReport_POST(ControlPage):
+    authenticationWrapper = NoAuthPage
+
+    class Arguments(PageArgs):
+        id = StrArg(None)
+        name = StrArg(None)
+        shadowId = StrArg(None)
+        url = StrArg()
+
+    class Processor(PageProcessor):
+
+        def process(self, req):
+            jobId = req.args.id
+            taskName = req.args.name
+            shadowId = req.args.shadowId
+            url = req.args.url
+
+            if jobId is None and shadowId is None:
+                raise InvalidRequest('Neither "id" nor "shadowId" was supplied')
+            if jobId is not None and shadowId is not None:
+                raise InvalidRequest('Both "id" and "shadowId" were supplied')
+            if shadowId is None:
+                try:
+                    job = jobDB[jobId]
+                except KeyError:
+                    raise InvalidRequest('Job "%s" does not exist' % jobId)
+                run = job.getTask(taskName)
+                if run is None:
+                    raise InvalidRequest(
+                        'Job "%s" does not contain task "%s"'
+                        % ( jobId, taskName )
+                        )
+            else:
+                try:
+                    run = shadowDB[shadowId]
+                except KeyError:
+                    raise InvalidRequest(
+                        'Shadow run "%s" does not exist' % shadowId
+                        )
+
+            parts = urlsplit(url)
+            if parts[0] not in ('http', 'https') or parts[1] == '':
+                raise InvalidRequest(
+                    'URL "%s" is not an absolute HTTP(S) URL' % url
+                    )
+            run.setURL(url)
+
+    def checkAccess(self, req):
+        pass
+
+    def writeReply(self, response, proc):
+        response.write(xml.ok)

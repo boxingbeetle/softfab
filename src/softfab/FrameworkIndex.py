@@ -1,0 +1,75 @@
+# SPDX-License-Identifier: BSD-3-Clause
+
+from FabPage import FabPage
+from Page import PageProcessor
+from datawidgets import (
+    BoolDataColumn, DataColumn, DataTable, LinkColumn, ListDataColumn
+    )
+from frameworklib import anyExtract, frameworkDB
+from frameworkview import FrameworkColumn
+from pageargs import IntArg, PageArgs, SortArg
+from pagelinks import createProductDetailsLink
+from webgui import docLink
+from xmlgen import txt, xhtml
+
+class ProductColumn(DataColumn):
+    def presentCell(self, record, **kwargs):
+        return txt(', ').join(
+            createProductDetailsLink(productDefId)
+            for productDefId in record[self.keyName]
+            )
+
+class FrameworksTable(DataTable):
+    db = frameworkDB
+    nameColumn = FrameworkColumn('Framework ID', 'id')
+    wrapperColumn = DataColumn('Wrapper', 'wrapper')
+    extractColumn = BoolDataColumn('Extract', 'extract')
+    inputColumn = ProductColumn('Input Products', 'inputs')
+    outputColumn = ProductColumn('Output Products', 'outputs')
+    parameterColumn = ListDataColumn('Parameters', 'parameters')
+    editColumn = LinkColumn('Edit', 'FrameworkEdit')
+    deleteColumn = LinkColumn('Delete', 'FrameworkDelete')
+
+    def iterColumns(self, **kwargs):
+        yield self.nameColumn
+        yield self.wrapperColumn
+        if anyExtract():
+            yield self.extractColumn
+        yield self.inputColumn
+        yield self.outputColumn
+        yield self.parameterColumn
+        yield self.editColumn
+        yield self.deleteColumn
+
+class FrameworkIndex(FabPage):
+    icon = 'Framework1'
+    description = 'Frameworks'
+    children = [ 'FrameworkDetails', 'FrameworkEdit', 'FrameworkDelete' ]
+
+    class Arguments(PageArgs):
+        first = IntArg(0)
+        sort = SortArg()
+
+    class Processor(PageProcessor):
+        pass
+
+    def checkAccess(self, req):
+        req.checkPrivilege('fd/l')
+
+    def iterDataTables(self, proc):
+        yield FrameworksTable.instance
+
+    def presentContent(self, proc):
+        yield FrameworksTable.instance.present(proc=proc)
+        yield xhtml.p[
+            'Final parameters are not shown in the table above. '
+            'If you follow one of the framework name links, you are taken '
+            'to the framework details page which lists all parameters.'
+            ]
+        yield xhtml.p[
+            'For help about "Frameworks" or "Task Definitions" read the '
+            'document: ',
+            docLink('/concepts/task_definitions/')[
+                'Framework and Task Definitions'
+                ], '.'
+            ]

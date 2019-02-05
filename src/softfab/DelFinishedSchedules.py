@@ -1,0 +1,72 @@
+# SPDX-License-Identifier: BSD-3-Clause
+
+from FabPage import FabPage
+from Page import PageProcessor, Redirect
+from formlib import actionButtons, makeForm
+from pageargs import EnumArg, PageArgs
+from schedulelib import scheduleDB
+from xmlgen import xhtml
+
+from enum import Enum
+
+Actions = Enum('Actions', 'DELETE CANCEL')
+
+class DelFinishedSchedules_GET(FabPage):
+    # Refuse child link from ScheduleIndex.
+    linkDescription = False
+    # Do not display navigation bar for this page.
+    description = None
+    icon = None
+
+    def fabTitle(self, proc):
+        return 'Delete Schedules'
+
+    class Arguments(PageArgs):
+        pass
+
+    def checkAccess(self, req):
+        pass
+
+    def presentContent(self, proc):
+        yield xhtml.p[ 'Delete all finished schedules?' ]
+        yield makeForm()[
+            xhtml.p[ actionButtons(Actions) ]
+            ].present(proc=proc)
+
+class DelFinishedSchedules_POST(FabPage):
+    # Refuse child link from ScheduleIndex.
+    linkDescription = False
+    # Do not display navigation bar for this page.
+    description = None
+    icon = None
+
+    def fabTitle(self, proc):
+        return 'Delete Schedules'
+
+    class Arguments(PageArgs):
+        action = EnumArg(Actions)
+
+    class Processor(PageProcessor):
+
+        def process(self, req):
+            action = req.args.action
+            if action is Actions.CANCEL:
+                raise Redirect(self.page.getParentURL(req))
+            elif action is Actions.DELETE:
+                req.checkPrivilege('s/d', 'delete all finished schedules')
+                finishedSchedules = [
+                    schedule for schedule in scheduleDB if schedule.isDone()
+                    ]
+                for schedule in finishedSchedules:
+                    scheduleDB.remove(schedule)
+            else:
+                assert False, action
+
+    def checkAccess(self, req):
+        pass
+
+    def presentContent(self, proc):
+        yield (
+            xhtml.p[ 'All finished schedules have been deleted.' ],
+            self.backToParent(proc.req)
+            )
