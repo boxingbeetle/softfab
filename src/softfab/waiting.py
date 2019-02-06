@@ -7,14 +7,18 @@ This informs the user of why a task isn't running yet.
 from abc import ABC
 from enum import IntEnum
 from typing import (
-    Callable, ClassVar, Iterable, List, NewType, Optional, Sequence, Set,
-    Tuple, cast
+    TYPE_CHECKING, Callable, ClassVar, Iterable, List, NewType, Optional,
+    Sequence, Set, Tuple, cast
     )
 
 from connection import ConnectionStatus
 from resreq import ResourceSpec
-from resourcelib import ResourceBase
 from utils import abstract, pluralize
+
+if TYPE_CHECKING:
+    from resourcelib import ResourceBase
+else:
+    ResourceBase = None
 
 # Note: Importing TaskRunner leads to circular imports.
 #       Since we don't actually depend on any TaskRunner-specific

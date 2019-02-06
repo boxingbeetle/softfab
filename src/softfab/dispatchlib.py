@@ -2,16 +2,20 @@
 
 from collections import defaultdict
 from typing import (
-    Dict, Iterable, List, Mapping, Optional, Sequence, Set,
+    TYPE_CHECKING, Dict, Iterable, List, Mapping, Optional, Sequence, Set,
     cast, overload
     )
 
 from resreq import ResourceClaim, ResourceSpec
-from resourcelib import Resource
 from waiting import (
     ReasonForWaiting, ResourceCapsReason, ResourceSpecReason,
     ResourceTypeReason, StatusLevel, statusLevelForResource
     )
+
+if TYPE_CHECKING:
+    from resourcelib import Resource
+else:
+    Resource = None
 
 @overload
 def _groupByType(
