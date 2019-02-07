@@ -111,7 +111,12 @@ class ChangePassword_GET(FabPage):
 
 
 class ChangePassword_POST(FabPage):
-    icon = 'ChangePassword1'
+    # Icon is determined by the GET variant of the page.
+    # TODO: This asymmetry isn't good.
+    #       Either give treat both the GET and POST handlers as full pages
+    #       with their own icon etc (see FabPage.__pageInfo), or move the
+    #       icon etc. to a per-module container.
+    icon = None
     description = 'Change Password'
 
     class Arguments(ChangePassword_GET.Arguments, LoginPassArgs):
