@@ -1,0 +1,21 @@
+<svg
+   xmlns="http://www.w3.org/2000/svg" version="1.1"
+   width="32" height="32">
+  <defs>
+    <linearGradient id="fade" x2="1">
+      <stop offset="0" stop-color="#ffcc00" stop-opacity="1"/>
+      <stop offset="1" stop-color="#ffcc00" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <g fill="url(#fade)" stroke="none">
+    <path d="m 0.9,17 3.1,0 0,7 -3.1,2 z"/>
+    <path d="m 0.9,25.9375 9.6,-7.405 0,8.5 11,-8.5 0,8.5 11,-8.5 0,14.5 -31.6,0 z"/>
+  </g>
+  <g fill="none" stroke="#800000" stroke-width="1">
+    <path d="M 1.0459,14.6356 c 3.78074,-1.34315 3.92971,-2.12587 2.78581,-5.28971 -1.1439,-3.16385 0.34027,-3.65361 3.01796,-4.64302"/>
+    <path d="M 6.0288,10.5798 c 3.78074,-1.34315 3.92971,-2.12587 2.78581,-5.28971 -1.1439,-3.16385 0.34027,-3.65361 3.01796,-4.64302"/>
+    <path d="M 7.4683,6.1602 10.3234,5.0437"/>
+    <path d="M 4,16.5 0.5,16.5 0.5,33"/>
+    <path d="m 0.875,25.9375 9.625,-7.4375 0,8.5 11,-8.5 0,8.5 11,-8.5" stroke-linejoin="round" stroke-linecap="square"/>
+  </g>
+</svg>

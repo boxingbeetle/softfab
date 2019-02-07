@@ -1,0 +1,11 @@
+<svg
+   xmlns="http://www.w3.org/2000/svg" version="1.1"
+   width="20" height="20">
+  <g stroke-width="1" stroke="#800000" fill="none">
+    <path d="M 4,3.5 7.5,8 M 15,3.5 11.5,8 M 9.5,12.5 9.5,16.5" stroke="#000000"/>
+    <rect x="0.5" y="0.5" width="7" height="3"/>
+    <rect x="11.5" y="0.5" width="7" height="3"/>
+    <rect x="5.5" y="16.5" width="8" height="3"/>
+    <ellipse cx="9.5" cy="10" rx="4" ry="2.5"/>
+  </g>
+</svg>

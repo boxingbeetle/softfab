@@ -1,0 +1,12 @@
+<svg
+   xmlns="http://www.w3.org/2000/svg" version="1.1"
+   width="20" height="20">
+  <defs>
+    <linearGradient id="fade" x1="0" y1="0" x2="0.8" y2="0.8">
+      <stop offset="0" stop-color="#800000" stop-opacity="0.6"/>
+      <stop offset="1" stop-color="#800000" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <path d="M 1.5,1.5 17.5,10 1.5,18.5 Z"
+     style="fill:url(#fade);stroke:#800000;stroke-width:1;stroke-linejoin:round"/>
+</svg>
