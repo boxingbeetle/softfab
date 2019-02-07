@@ -322,6 +322,15 @@ def checkParamState(args, parent):
 def validateParamState(proc, parent):
     args = proc.args
 
+    parentParams = dict(
+        ( name, value )
+        for name, value in parent.getParameters().items()
+        # Only consider overridable parameters.
+        # Note that checkParamState() has already rejected attempts
+        # to override final parameters.
+        if not parent.isFinal(name)
+        )
+
     # Extract the essential data:
     # - maps parameter name to (value, final) pair
     # - a parameter that is present in this dictionary is new or overridden,
@@ -333,7 +342,7 @@ def validateParamState(proc, parent):
         if name != '':
             value = args.values[index]
             final = args.final.get(index, False)
-            if not args.poverride.get(index):
+            if name in parentParams and not args.poverride.get(index):
                 value = None # inherited
             data[name] = ( value, final )
     if 'sf.summary' in data:
@@ -356,12 +365,6 @@ def validateParamState(proc, parent):
     # Create new ordering:
     # - first parent params, then new params;
     #   inside these categories params are sorted alphabetically
-    parentParams = dict(
-        ( name, value )
-        for name, value in parent.getParameters().items()
-        # Only consider overridable parameters.
-        if not parent.isFinal(name)
-        )
     names = [
         ( 0, name ) for name in parentParams.keys()
         if name not in specialParameters
