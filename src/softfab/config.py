@@ -26,10 +26,6 @@ dbDir = '/home/factory/db/projname'
 # unit testing. It is recommended to keep this enabled in production.
 dbAtomicWrites = True
 
-# Directory in which style sheets and images are located.
-# Can be a path relative to the code location or an absolute path.
-stylePath = 'styles'
-
 # Logging level (can be an integer or a string identifying one of the
 # predefined logging levels: 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'
 loggingLevel = 'INFO'

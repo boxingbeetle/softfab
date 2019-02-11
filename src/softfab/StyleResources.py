@@ -1,6 +1,5 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from config import stylePath
 from databaselib import createInternalId
 from timelib import getTime, secondsPerDay
 from useragent import AcceptedEncodings
@@ -22,11 +21,8 @@ def _load(filePath):
         logging.error('Error reading style resource "%s": %s', filePath, ex)
         return None
 
-if isabs(stylePath):
-    _stylesDir = stylePath
-else:
-    # Look for style files relative to this source file.
-    _stylesDir = joinpath(dirname(__file__), stylePath)
+# Look for style files relative to this source file.
+_stylesDir = joinpath(dirname(__file__), 'styles')
 
 class _StyleResource(static.Data):
 
