@@ -13,15 +13,6 @@ import sys
 # Set during any upgrade.
 upgradeInProgress = False
 
-# COMPAT 2.11: Project time zone offset.
-timeOffset = 0
-
-# COMPAT 2.12: Rename "sut" to "tr".
-renameSUT = False
-
-# COMPAT 2.13: Rename "tr" to "sf.tr".
-renameTR = False
-
 def setConversionFlags():
     '''Sets all conversion flags to True.
     '''
@@ -30,10 +21,7 @@ def setConversionFlags():
         if isinstance(variables[name], bool):
             variables[name] = True
 
-def setConversionFlagsForVersion(version):
+def setConversionFlagsForVersion(version): # pylint: disable=unused-argument
     '''Sets conversion flags according to the given version that we are
     converting from.
     '''
-    global renameSUT, renameTR
-    renameSUT = version < (2, 13, 0)
-    renameTR = version < (2, 14, 0)

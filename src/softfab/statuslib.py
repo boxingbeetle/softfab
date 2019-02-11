@@ -303,18 +303,8 @@ class StatusModelRegistry(StatusModel):
         self.__modelBuilders = {}
 
     def __walkModelPath(self, modelPath):
-        first = True
         for modelId in modelPath.split('/'):
             if modelId != '':
-                if first:
-                    # COMPAT 2.13: Use spaces instead of underscores, since it
-                    #              is more important here to be presentation
-                    #              friendly than to be URL friendly.
-                    modelId = {
-                        'job_from_configuration': 'job from configuration',
-                        'scheduled_jobs': 'scheduled jobs',
-                        }.get(modelId, modelId)
-                    first = False
                 yield modelId
 
     def _createModel(self, key):

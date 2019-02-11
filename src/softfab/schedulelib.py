@@ -63,9 +63,6 @@ from utils import Heap, SharedInstance
 from xmlbind import XMLTag
 from xmlgen import xml
 
-# COMPAT 2.11: Project time zone offset.
-import conversionflags
-
 from twisted.internet import reactor
 
 from enum import Enum
@@ -214,13 +211,6 @@ class Scheduled(XMLTag, DatabaseElem, Selectable):
     def __init__(self, properties, comment = '', adjustTime = False):
         assert 'configId' in properties \
             or ('tagKey' in properties and 'tagValue' in properties)
-        # COMPAT 2.11: The ".lower()" is for backwards compatibility.
-        seqStr = properties['sequence'].lower()
-        # COMPAT 2.11: It seems some databases contain this misspelling.
-        if seqStr == 'continously':
-            seqStr = 'continuously'
-        if seqStr != properties['sequence']:
-            properties = dict(properties, sequence=seqStr)
         # COMPAT 2.16: Rename 'paused' to 'suspended'.
         if 'paused' in properties:
             properties = dict(properties, suspended=properties['paused'])
@@ -246,17 +236,6 @@ class Scheduled(XMLTag, DatabaseElem, Selectable):
                 )
         else:
             assert 'trigger' not in self._properties
-        if 'startTime' in self._properties:
-            if self._properties['startTime'] == 0:
-                # COMPAT 2.12: Start time 0 is not used anymore.
-                if sequence is ScheduleRepeat.ONCE:
-                    # Schedule is done.
-                    self._properties['done'] = True
-                del self._properties['startTime']
-            else:
-                # COMPAT 2.11: Project time zone offset was applied to the start
-                #              time.
-                self._properties['startTime'] -= conversionflags.timeOffset * 60
         self._properties['suspended'] = \
             self._properties.get('suspended') not in (None, '0', 'False')
         if not self._properties.get('owner'):

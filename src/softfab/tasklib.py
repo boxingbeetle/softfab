@@ -26,17 +26,7 @@ class TaskRunnerSet:
 
 class TaskStateMixin:
     intProperties = ('starttime', 'stoptime') # type: ClassVar[Sequence[str]]
-
-    def __init__(self):
-        if 'result' in self._properties:
-            # COMPAT 2.13: Map "blocked" and "dismissed" onto "cancelled".
-            #              Start using enumProperties when this conversion
-            #              is removed.
-            result = self._properties['result']
-            if result in ( 'blocked', 'dismissed' ):
-                result = 'cancelled'
-
-            self._properties['result'] = ResultCode.__members__[result.upper()]
+    enumProperties = {'result': ResultCode}
 
     def _getState(self):
         raise NotImplementedError

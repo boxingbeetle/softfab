@@ -1,7 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from config import dbDir
-from conversionflags import renameSUT, renameTR
 from databaselib import DatabaseElem, VersionedDatabase
 from paramlib import ParamMixin
 from resreq import ResourceClaim, ResourceSpec, taskRunnerResourceRefName
@@ -47,27 +46,12 @@ class TaskDefBase(ParamMixin, XMLTag, DatabaseElem):
         return XMLTag.__getitem__(self, key)
 
     def _addResource(self, attributes):
-        if (renameSUT and attributes['type'] == 'sut') \
-        or (renameTR and attributes['type'] == 'tr'):
-            # COMPAT 2.12: Rename "sut" to "sf.tr".
-            # COMPAT 2.13: Rename "tr" to "sf.tr".
-            attributes = dict(attributes)
-            attributes['type'] = taskRunnerResourceTypeName
         if attributes['type'] == taskRunnerResourceTypeName:
             # COMPAT 2.16: Force reference name for TR.
             attributes['ref'] = taskRunnerResourceRefName
         spec = ResourceSpec(attributes)
         self.addResourceSpec(spec)
         return spec
-
-    def _endParse(self):
-        # COMPAT 2.12: Make sure every task definition explicitly states that
-        #              it needs a Task Runner to run on.
-        if not any(
-            res.typeName == taskRunnerResourceTypeName
-            for res in self.__resources
-            ):
-            self.addTaskRunnerSpec()
 
     def addResourceSpec(self, spec):
         self.__resources.append(spec)
@@ -130,10 +114,6 @@ class Framework(TaskDefBase):
     def getParametersSelf(self):
         params = TaskDefBase.getParametersSelf(self)
         params.setdefault('sf.wrapper', self.getId())
-        # COMPAT 2.11: Make sure every framework definition has "sf.extractor"
-        #              defined, otherwise for example GetTaskDefParams will
-        #              give different results for old and recently saved defs.
-        params.setdefault('sf.extractor', 'false')
         return params
 
     def getFinalSelf(self):

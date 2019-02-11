@@ -388,13 +388,6 @@ class Job(TaskSet, TaskRunnerSet, XMLTag, DatabaseElem):
         self.__inputSet = None
         self.__products = {}
         self.__params = {}
-
-        # COMPAT 2.11: Remove extraneous properties.
-        if 'name' in self._properties:
-            del self._properties['name']
-        if 'trselect' in self._properties:
-            del self._properties['trselect']
-
         self.__mainGroup = None
         self.__description = None
         self.__result = None
@@ -497,11 +490,6 @@ class Job(TaskSet, TaskRunnerSet, XMLTag, DatabaseElem):
     def __checkProduct(self, name):
         if not name in self.__products:
             self.__products[name] = Product.create(name).getId()
-
-    def _setParams(self, params):
-        # COMPAT 2.14: Convert job parameters stored directly as attributes on
-        #              a single tag (<params/>).
-        self.__params.update(params)
 
     def _addParam(self, attributes):
         self.__params[attributes['name']] = attributes['value']

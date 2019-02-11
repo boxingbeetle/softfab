@@ -10,8 +10,6 @@ from version import version
 from xmlbind import XMLTag
 from xmlgen import xml
 
-import conversionflags
-
 from enum import Enum
 import logging
 import os
@@ -132,10 +130,6 @@ class Project(XMLTag, SingletonElem):
         self._properties.setdefault('embedcustom', '')
         if not self._properties.get('timezone'):
             self._properties['timezone'] = _guessSystemTimezone()
-        # COMPAT 2.11:
-        if 'timeoffset' in self._properties:
-            conversionflags.timeOffset = int(self._properties['timeoffset'])
-            del self._properties['timeoffset']
 
         self.__targets = set()
         # Note: tag keys should be kept in a list rather than a set,
