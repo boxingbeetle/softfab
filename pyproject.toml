@@ -1,0 +1,41 @@
+[build-system]
+requires = ['poetry>=0.12']
+build-backend = 'poetry.masonry.api'
+
+[tool.poetry]
+name = 'softfab'
+version = "3.0.0-pre1"
+description = 'Web application for orchestrating build and test execution'
+authors = [
+    'Maarten ter Huurne <maarten@boxingbeetle.com>',
+    'Hans Spanjers <hans@boxingbeetle.com>',
+    ]
+license = 'BSD-3-Clause'
+readme = 'README.md'
+homepage = 'https://boxingbeetle.com/tools/softfab/'
+repository = 'https://github.com/boxingbeetle/softfab'
+documentation = 'https://docs.softfab.io/'
+keywords = ['build', 'test', 'execution', 'process', 'report']
+classifiers = [
+    'Development Status :: 5 - Production/Stable',
+    'Environment :: Web Environment',
+    'Intended Audience :: Developers',
+    'Operating System :: OS Independent',
+    'Natural Language :: English',
+    'Topic :: Software Development :: Build Tools',
+    'Topic :: Software Development :: Quality Assurance',
+    'Topic :: Software Development :: Testing',
+    ]
+
+[tool.poetry.dependencies]
+python = '^3.5'
+Twisted = '>=16.6'
+passlib = {version = '^1.7', extras = ['bcrypt']}
+pygraphviz = '^1.4'
+pytz = '*'
+
+[tool.poetry.dev-dependencies]
+pdoc3 = '^0.5.1'
+pytest = '^4.0'
+pylint = '^2.0'
+invoke = '^1.2'
