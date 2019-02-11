@@ -2,7 +2,7 @@
 
 from Page import Responder
 from StyleResources import styleRoot
-from config import customStylesheet, debugSupport
+from config import debugSupport
 from pagelinks import createUserDetailsLink
 from projectlib import project
 from timelib import getTime
@@ -18,8 +18,6 @@ _shortcutIcon = styleRoot.addShortcutIcon('SoftFabIcon')
 
 def _createStyleSheets():
     yield styleRoot.addStyleSheet('sw-factory')
-    if customStylesheet:
-        yield styleRoot.addStyleSheet(customStylesheet)
 _styleSheets = tuple(_createStyleSheets())
 # This sheet contains workarounds for the very limited CSS support in MSOffice.
 # For example it is used to correct the Atom feed rendering in MS Outlook.
