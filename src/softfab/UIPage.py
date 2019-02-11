@@ -18,7 +18,6 @@ _shortcutIcon = styleRoot.addShortcutIcon('SoftFabIcon')
 
 def _createStyleSheets():
     yield styleRoot.addStyleSheet('sw-factory')
-    yield styleRoot.addStyleSheet('control-center')
     if customStylesheet:
         yield styleRoot.addStyleSheet(customStylesheet)
 _styleSheets = tuple(_createStyleSheets())
