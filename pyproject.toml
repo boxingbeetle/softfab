@@ -33,6 +33,7 @@ Twisted = '>=16.6'
 passlib = {version = '^1.7', extras = ['bcrypt']}
 pygraphviz = '^1.4'
 pytz = '*'
+importlib_resources = "^1.0"
 
 [tool.poetry.dev-dependencies]
 lektor = '^3.1'

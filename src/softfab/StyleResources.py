@@ -4,25 +4,22 @@ from softfab.databaselib import createInternalId
 from softfab.timelib import getTime, secondsPerDay
 from softfab.useragent import AcceptedEncodings
 from softfab.webgui import ShortcutIcon, StyleSheet, pngIcon, svgIcon
+from softfab import styles
 
+from importlib_resources import is_resource, read_binary
 from twisted.web import http, resource, static
 
 from gzip import GzipFile
 from io import BytesIO
-from os.path import dirname, exists, isabs, join as joinpath
 import logging
 import re
 
-def _load(filePath):
+def _load(fileName):
     try:
-        with open(filePath, 'rb') as inp:
-            return inp.read()
+        return read_binary(styles, fileName)
     except IOError as ex:
-        logging.error('Error reading style resource "%s": %s', filePath, ex)
+        logging.error('Error reading style resource "%s": %s', fileName, ex)
         return None
-
-# Look for style files relative to this source file.
-_stylesDir = joinpath(dirname(__file__), 'styles')
 
 class _StyleResource(static.Data):
 
@@ -83,7 +80,7 @@ class _StyleRoot(resource.Resource):
         self.__icons = {}
 
     def __addFile(self, fileName, mediaType):
-        data = _load(joinpath(_stylesDir, fileName))
+        data = _load(fileName)
         if data is not None:
             resourceFactory = (
                 _CompressedStyleResource
@@ -102,7 +99,7 @@ class _StyleRoot(resource.Resource):
 
     def __addIcon(self, name):
         fileName = name + '.svg'
-        if exists(joinpath(_stylesDir, fileName)):
+        if is_resource(styles, fileName):
             data = self.__addFile(fileName, 'image/svg+xml')
             if data is not None:
                 return svgIcon(self.relativeURL + '/' + fileName, data)
