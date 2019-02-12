@@ -2,22 +2,24 @@
 
 from typing import Mapping, Optional, Tuple, cast
 
-from StyleResources import styleRoot
-from config import enableSecurity, rootURL
-from databaselib import RecordObserver
-from datawidgets import DataColumn, DataTable, DurationColumn, TimeColumn
-from joblib import jobDB
-from notification import sendNotification
-from pagelinks import createJobURL
-from projectlib import project
-from resultcode import ResultCode
-from schedulelib import scheduleDB
-from schedulerefs import createScheduleDetailsURL
-from sortedqueue import SortedQueue
-from taskview import getTaskStatus
-from userview import OwnerColumn
-from webgui import Panel, cell
-from xmlgen import xhtml
+from softfab.StyleResources import styleRoot
+from softfab.config import enableSecurity, rootURL
+from softfab.databaselib import RecordObserver
+from softfab.datawidgets import (
+    DataColumn, DataTable, DurationColumn, TimeColumn
+    )
+from softfab.joblib import jobDB
+from softfab.notification import sendNotification
+from softfab.pagelinks import createJobURL
+from softfab.projectlib import project
+from softfab.resultcode import ResultCode
+from softfab.schedulelib import scheduleDB
+from softfab.schedulerefs import createScheduleDetailsURL
+from softfab.sortedqueue import SortedQueue
+from softfab.taskview import getTaskStatus
+from softfab.userview import OwnerColumn
+from softfab.webgui import Panel, cell
+from softfab.xmlgen import xhtml
 
 # High priority status codes are at the end of the list.
 _resultList = (

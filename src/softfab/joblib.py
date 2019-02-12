@@ -1,23 +1,25 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-import frameworklib
-import taskdeflib
-import taskrunlib
-from config import dbDir
-from databaselib import Database, DatabaseElem, RecordObserver, createUniqueId
-from dispatchlib import pickResources
-from paramlib import specialParameters
-from productlib import Product, productDB
-from resreq import ResourceClaim, ResourceSpec
-from resourcelib import resourceDB
-from restypelib import resTypeDB
-from resultcode import combineResults
-from taskgroup import PriorityMixin, TaskSet
-from tasklib import ResourceRequirementsMixin, TaskRunnerSet, TaskStateMixin
-from timelib import getTime
-from waiting import InputReason, ResourceMissingReason, checkRunners
-from xmlbind import XMLTag
-from xmlgen import xml
+from softfab import frameworklib, taskdeflib, taskrunlib
+from softfab.config import dbDir
+from softfab.databaselib import (
+    Database, DatabaseElem, RecordObserver, createUniqueId
+    )
+from softfab.dispatchlib import pickResources
+from softfab.paramlib import specialParameters
+from softfab.productlib import Product, productDB
+from softfab.resreq import ResourceClaim, ResourceSpec
+from softfab.resourcelib import resourceDB
+from softfab.restypelib import resTypeDB
+from softfab.resultcode import combineResults
+from softfab.taskgroup import PriorityMixin, TaskSet
+from softfab.tasklib import (
+    ResourceRequirementsMixin, TaskRunnerSet, TaskStateMixin
+    )
+from softfab.timelib import getTime
+from softfab.waiting import InputReason, ResourceMissingReason, checkRunners
+from softfab.xmlbind import XMLTag
+from softfab.xmlgen import xml
 
 from collections import defaultdict
 import logging

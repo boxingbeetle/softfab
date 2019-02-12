@@ -9,9 +9,9 @@ from typing import (
     )
 from urllib.parse import parse_qs
 
-from timelib import stringToTime
-from timeview import formatDate, formatTime
-from utils import cachedProperty, encodeURL, iterable
+from softfab.timelib import stringToTime
+from softfab.timeview import formatDate, formatTime
+from softfab.utils import cachedProperty, encodeURL, iterable
 
 if TYPE_CHECKING:
     from request import Request

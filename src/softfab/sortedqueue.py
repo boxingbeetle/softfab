@@ -3,8 +3,8 @@
 from abc import ABC
 from typing import ClassVar
 
-from databaselib import RecordObserver, RecordSubjectMixin
-from utils import abstract
+from softfab.databaselib import RecordObserver, RecordSubjectMixin
+from softfab.utils import abstract
 
 def binarySearch(lst, elem, key):
     high = len(lst)

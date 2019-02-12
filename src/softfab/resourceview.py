@@ -1,15 +1,15 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from Page import PresentableError
-from connection import ConnectionStatus
-from databaselib import checkWrapperVarName
-from formlib import dropDownList, emptyOption, hiddenInput, textInput
-from pageargs import ListArg
-from pagelinks import createCapabilityLink
-from resreq import ResourceSpec, taskRunnerResourceRefName
-from restypelib import resTypeDB, taskRunnerResourceTypeName
-from webgui import Panel, Table, rowManagerInstanceScript
-from xmlgen import txt, xhtml
+from softfab.Page import PresentableError
+from softfab.connection import ConnectionStatus
+from softfab.databaselib import checkWrapperVarName
+from softfab.formlib import dropDownList, emptyOption, hiddenInput, textInput
+from softfab.pageargs import ListArg
+from softfab.pagelinks import createCapabilityLink
+from softfab.resreq import ResourceSpec, taskRunnerResourceRefName
+from softfab.restypelib import resTypeDB, taskRunnerResourceTypeName
+from softfab.webgui import Panel, Table, rowManagerInstanceScript
+from softfab.xmlgen import txt, xhtml
 
 from collections import defaultdict
 

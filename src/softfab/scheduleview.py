@@ -1,16 +1,18 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from config import rootURL
-from configlib import configDB
-from joblib import jobDB
-from pagelinks import createJobsURL
-from resultcode import combineResults
-from schedulelib import JobDBObserver, ScheduleRepeat, asap, scheduleDB
-from schedulerefs import createScheduleDetailsURL
-from statuslib import DBStatusModelGroup, StatusModel, StatusModelRegistry
-from timeview import formatTime
-from webgui import maybeLink
-from xmlgen import xml
+from softfab.config import rootURL
+from softfab.configlib import configDB
+from softfab.joblib import jobDB
+from softfab.pagelinks import createJobsURL
+from softfab.resultcode import combineResults
+from softfab.schedulelib import JobDBObserver, ScheduleRepeat, asap, scheduleDB
+from softfab.schedulerefs import createScheduleDetailsURL
+from softfab.statuslib import (
+    DBStatusModelGroup, StatusModel, StatusModelRegistry
+    )
+from softfab.timeview import formatTime
+from softfab.webgui import maybeLink
+from softfab.xmlgen import xml
 
 weekDays = [
     'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday',

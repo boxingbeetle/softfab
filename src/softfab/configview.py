@@ -1,22 +1,22 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from config import enableSecurity, rootURL
-from configlib import configDB
-from databaselib import RecordObserver
-from datawidgets import DataColumn, DataTable, LinkColumn
-from formlib import dropDownList, emptyOption, hiddenInput, textInput
-from joblib import jobDB
-from jobview import unfinishedJobs
-from pagelinks import createConfigDetailsLink, createJobURL
-from productdeflib import ProductType
-from projectlib import project
-from schedulelib import scheduleDB
-from sortedqueue import SortedQueue
-from statuslib import StatusModel, StatusModelRegistry
-from taskrunnerlib import taskRunnerDB
-from userview import OwnerColumn
-from webgui import Table, cell
-from xmlgen import xml
+from softfab.config import enableSecurity, rootURL
+from softfab.configlib import configDB
+from softfab.databaselib import RecordObserver
+from softfab.datawidgets import DataColumn, DataTable, LinkColumn
+from softfab.formlib import dropDownList, emptyOption, hiddenInput, textInput
+from softfab.joblib import jobDB
+from softfab.jobview import unfinishedJobs
+from softfab.pagelinks import createConfigDetailsLink, createJobURL
+from softfab.productdeflib import ProductType
+from softfab.projectlib import project
+from softfab.schedulelib import scheduleDB
+from softfab.sortedqueue import SortedQueue
+from softfab.statuslib import StatusModel, StatusModelRegistry
+from softfab.taskrunnerlib import taskRunnerDB
+from softfab.userview import OwnerColumn
+from softfab.webgui import Table, cell
+from softfab.xmlgen import xml
 
 class SelectConfigsMixin:
     '''Mixin for PageProcessors that want to use the `sel` argument to

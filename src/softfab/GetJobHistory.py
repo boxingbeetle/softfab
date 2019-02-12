@@ -1,12 +1,12 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from ControlPage import ControlPage
-from ReportMixin import ReportArgs, JobReportProcessor
-from joblib import jobDB
-from pageargs import SetArg
-from querylib import SetFilter, runQuery
-from utils import chop
-from xmlgen import adaptToXML, xml
+from softfab.ControlPage import ControlPage
+from softfab.ReportMixin import ReportArgs, JobReportProcessor
+from softfab.joblib import jobDB
+from softfab.pageargs import SetArg
+from softfab.querylib import SetFilter, runQuery
+from softfab.utils import chop
+from softfab.xmlgen import adaptToXML, xml
 
 from twisted.internet import defer
 

@@ -1,9 +1,9 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from Page import PageProcessor
-from UIPage import UIPage
-from webgui import docLink
-from xmlgen import xhtml
+from softfab.Page import PageProcessor
+from softfab.UIPage import UIPage
+from softfab.webgui import docLink
+from softfab.xmlgen import xhtml
 
 class InternalErrorPage(UIPage, PageProcessor):
     '''500 error page: shown when an internal error occurred.

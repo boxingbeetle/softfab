@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-import utils
+from softfab import utils
 import os, os.path, random, time, unittest
 
 class TestHeap(unittest.TestCase):

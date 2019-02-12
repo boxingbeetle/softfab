@@ -2,13 +2,13 @@
 
 import os, os.path, unittest
 
-import config
+from softfab import config
 import imp
 config.dbDir = 'testdb'
 assert not os.path.exists(config.dbDir)
 
-import databases, shadowlib, taskrunnerlib
-from resultcode import ResultCode
+from softfab import databases, shadowlib, taskrunnerlib
+from softfab.resultcode import ResultCode
 
 import shadowtestutils
 from datageneratorlib import DataGenerator, removeRec

@@ -1,18 +1,18 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from FabPage import FabPage
-from Page import PageProcessor
-from config import enableSecurity
-from connection import ConnectionStatus
-from pagelinks import (
+from softfab.FabPage import FabPage
+from softfab.Page import PageProcessor
+from softfab.config import enableSecurity
+from softfab.connection import ConnectionStatus
+from softfab.pagelinks import (
     ResourceIdArgs, TaskRunnerIdArgs, createJobLink, createTaskLink
     )
-from resourceview import getResourceStatus, presentCapabilities
-from restypelib import taskRunnerResourceTypeName
-from taskrunnerlib import taskRunnerDB
-from timeview import formatDuration, formatTime
-from webgui import Column, Table, pageLink, row
-from xmlgen import xhtml
+from softfab.resourceview import getResourceStatus, presentCapabilities
+from softfab.restypelib import taskRunnerResourceTypeName
+from softfab.taskrunnerlib import taskRunnerDB
+from softfab.timeview import formatDuration, formatTime
+from softfab.webgui import Column, Table, pageLink, row
+from softfab.xmlgen import xhtml
 
 class TaskRunnerDetails(FabPage):
     icon = 'TaskRunStat1'

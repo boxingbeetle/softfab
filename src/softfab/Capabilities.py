@@ -1,22 +1,22 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from FabPage import FabPage
-from Page import PageProcessor
-from datawidgets import DataColumn, DataTable
-from pageargs import ArgsCorrected, IntArg
-from pagelinks import (
+from softfab.FabPage import FabPage
+from softfab.Page import PageProcessor
+from softfab.datawidgets import DataColumn, DataTable
+from softfab.pageargs import ArgsCorrected, IntArg
+from softfab.pagelinks import (
     CapFilterArgs, createTaskDetailsLink, createTaskRunnerDetailsLink
     )
-from querylib import CustomFilter
-from resourcelib import resourceDB
-from resourceview import presentCapabilities
-from restypelib import resTypeDB, taskRunnerResourceTypeName
-from restypeview import ResTypeTableMixin
-from taskdeflib import taskDefDB
-from taskrunnerlib import taskRunnerDB
-from utils import ResultKeeper
-from webgui import Table, pageLink, row, vgroup
-from xmlgen import txt, xhtml
+from softfab.querylib import CustomFilter
+from softfab.resourcelib import resourceDB
+from softfab.resourceview import presentCapabilities
+from softfab.restypelib import resTypeDB, taskRunnerResourceTypeName
+from softfab.restypeview import ResTypeTableMixin
+from softfab.taskdeflib import taskDefDB
+from softfab.taskrunnerlib import taskRunnerDB
+from softfab.utils import ResultKeeper
+from softfab.webgui import Table, pageLink, row, vgroup
+from softfab.xmlgen import txt, xhtml
 
 class ResTypeTable(ResTypeTableMixin, Table):
 

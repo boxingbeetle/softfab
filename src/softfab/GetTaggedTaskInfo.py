@@ -1,12 +1,12 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from ControlPage import ControlPage
-from Page import PageProcessor
-from joblib import getAllTasksWithId
-from pageargs import PageArgs, DictArg, SetArg, StrArg
-from taskdeflib import TaskDef, taskDefDB
-from timeview import formatTimeAttr
-from xmlgen import xml
+from softfab.ControlPage import ControlPage
+from softfab.Page import PageProcessor
+from softfab.joblib import getAllTasksWithId
+from softfab.pageargs import PageArgs, DictArg, SetArg, StrArg
+from softfab.taskdeflib import TaskDef, taskDefDB
+from softfab.timeview import formatTimeAttr
+from softfab.xmlgen import xml
 
 def filterTasks(tag, owner):
     # In "selected", each tag key is mapped to a dictionary which maps the

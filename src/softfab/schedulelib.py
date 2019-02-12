@@ -53,15 +53,15 @@ A: For repeating schedules, advance to next time.
    For non-repeating schedules, run as soon as schedule is resumed.
 '''
 
-from config import dbDir
-from configlib import Config, configDB, iterConfigsByTag
-from databaselib import Database, DatabaseElem, RecordObserver
-from joblib import jobDB
-from selectlib import ObservingTagCache, Selectable
-from timelib import endOfTime, getTime
-from utils import Heap, SharedInstance
-from xmlbind import XMLTag
-from xmlgen import xml
+from softfab.config import dbDir
+from softfab.configlib import Config, configDB, iterConfigsByTag
+from softfab.databaselib import Database, DatabaseElem, RecordObserver
+from softfab.joblib import jobDB
+from softfab.selectlib import ObservingTagCache, Selectable
+from softfab.timelib import endOfTime, getTime
+from softfab.utils import Heap, SharedInstance
+from softfab.xmlbind import XMLTag
+from softfab.xmlgen import xml
 
 from twisted.internet import reactor
 

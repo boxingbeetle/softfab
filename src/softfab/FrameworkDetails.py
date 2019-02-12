@@ -1,19 +1,19 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from FabPage import FabPage
-from Page import PageProcessor
-from RecordDelete import DeleteArgs
-from frameworklib import frameworkDB
-from frameworkview import taskDefsUsingFramework
-from graphview import GraphPageMixin, GraphPanel, createExecutionGraph
-from pagelinks import (
+from softfab.FabPage import FabPage
+from softfab.Page import PageProcessor
+from softfab.RecordDelete import DeleteArgs
+from softfab.frameworklib import frameworkDB
+from softfab.frameworkview import taskDefsUsingFramework
+from softfab.graphview import GraphPageMixin, GraphPanel, createExecutionGraph
+from softfab.pagelinks import (
     FrameworkIdArgs, createProductDetailsLink, createTaskDetailsLink
     )
-from paramview import ParametersTable
-from resourceview import InlineResourcesTable
-from utils import pluralize
-from webgui import PropertiesTable, hgroup, pageLink
-from xmlgen import xhtml
+from softfab.paramview import ParametersTable
+from softfab.resourceview import InlineResourcesTable
+from softfab.utils import pluralize
+from softfab.webgui import PropertiesTable, hgroup, pageLink
+from softfab.xmlgen import xhtml
 
 # Note: We use "taskDef" here to refer to instances of TaskDefBase,
 #       mostly frameworks. This was done in anticipation of replacing

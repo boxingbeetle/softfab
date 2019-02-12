@@ -5,15 +5,15 @@ from abc import ABC
 from enum import Enum
 from typing import ClassVar, Mapping, Optional, Sequence, Union
 
-from Page import FabResource, Responder
-from StyleResources import styleRoot
-from UIPage import UIPage
-from authentication import LoginAuthPage
-from config import homePageName
-from refresh import RefreshScript
-from utils import abstract
-from webgui import Widget, pageURL
-from xmlgen import xhtml
+from softfab.Page import FabResource, Responder
+from softfab.StyleResources import styleRoot
+from softfab.UIPage import UIPage
+from softfab.authentication import LoginAuthPage
+from softfab.config import homePageName
+from softfab.refresh import RefreshScript
+from softfab.utils import abstract
+from softfab.webgui import Widget, pageURL
+from softfab.xmlgen import xhtml
 
 class _WidgetResponder(Responder):
 

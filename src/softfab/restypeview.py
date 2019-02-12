@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from restypelib import resTypeDB, taskRunnerResourceTypeName
-from webgui import Column
+from softfab.restypelib import resTypeDB, taskRunnerResourceTypeName
+from softfab.webgui import Column
 
 class DescriptionColumn(Column):
     label = 'Description'

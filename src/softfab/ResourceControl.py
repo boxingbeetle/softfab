@@ -1,10 +1,10 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from ControlPage import ControlPage
-from Page import InvalidRequest, PageProcessor
-from pageargs import EnumArg, PageArgs, SetArg
-from taskrunnerlib import taskRunnerDB
-from xmlgen import xml
+from softfab.ControlPage import ControlPage
+from softfab.Page import InvalidRequest, PageProcessor
+from softfab.pageargs import EnumArg, PageArgs, SetArg
+from softfab.taskrunnerlib import taskRunnerDB
+from softfab.xmlgen import xml
 
 from enum import Enum
 

@@ -6,9 +6,9 @@ from typing import ClassVar, Type
 from twisted.internet import interfaces
 from zope.interface import implementer
 
-from databaselib import Database, RecordObserver
-from utils import SharedInstance, abstract
-from xmlgen import xml
+from softfab.databaselib import Database, RecordObserver
+from softfab.utils import SharedInstance, abstract
+from softfab.xmlgen import xml
 
 class StatusModel:
     '''A piece of Control Center state that can be observed.

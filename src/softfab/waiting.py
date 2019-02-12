@@ -11,9 +11,9 @@ from typing import (
     Sequence, Set, Tuple, cast
     )
 
-from connection import ConnectionStatus
-from resreq import ResourceSpec
-from utils import abstract, pluralize
+from softfab.connection import ConnectionStatus
+from softfab.resreq import ResourceSpec
+from softfab.utils import abstract, pluralize
 
 if TYPE_CHECKING:
     from resourcelib import ResourceBase

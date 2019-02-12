@@ -3,24 +3,24 @@
 from enum import Enum
 from typing import ClassVar, Optional
 
-from CSVPage import CSVPage
-from Page import PageProcessor
-from config import enableSecurity
-from databaselib import Database
-from formlib import (
+from softfab.CSVPage import CSVPage
+from softfab.Page import PageProcessor
+from softfab.config import enableSecurity
+from softfab.databaselib import Database
+from softfab.formlib import (
     clearButton, dropDownList, makeForm, option, resetButton, selectionList,
     submitButton, textInput
     )
-from joblib import jobDB
-from pageargs import DateTimeArg, EnumArg, PageArgs, SetArg
-from pagelinks import TaskIdSetArgs
-from projectlib import project
-from querylib import CustomFilter, SetFilter
-from timeview import formatTime
-from userlib import userDB
-from utils import SharedInstance, abstract
-from webgui import script
-from xmlgen import xhtml
+from softfab.joblib import jobDB
+from softfab.pageargs import DateTimeArg, EnumArg, PageArgs, SetArg
+from softfab.pagelinks import TaskIdSetArgs
+from softfab.projectlib import project
+from softfab.querylib import CustomFilter, SetFilter
+from softfab.timeview import formatTime
+from softfab.userlib import userDB
+from softfab.utils import SharedInstance, abstract
+from softfab.webgui import script
+from softfab.xmlgen import xhtml
 
 ExecutionState = Enum('ExecutionState', 'ALL COMPLETED FINISHED UNFINISHED')
 

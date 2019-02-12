@@ -1,14 +1,14 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from ControlPage import ControlPage
-from Page import InvalidRequest, PageProcessor
-from joblib import jobDB
-from pagelinks import JobIdArgs
-from productdeflib import ProductType
-from projectlib import project
-from taskrunnerlib import taskRunnerDB
-from timeview import formatTimeAttr
-from xmlgen import xml
+from softfab.ControlPage import ControlPage
+from softfab.Page import InvalidRequest, PageProcessor
+from softfab.joblib import jobDB
+from softfab.pagelinks import JobIdArgs
+from softfab.productdeflib import ProductType
+from softfab.projectlib import project
+from softfab.taskrunnerlib import taskRunnerDB
+from softfab.timeview import formatTimeAttr
+from softfab.xmlgen import xml
 
 class GetJobInfo(ControlPage):
 

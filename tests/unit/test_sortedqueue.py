@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from databaselib import Database, DatabaseElem
-from sortedqueue import SortedQueue
-from xmlgen import xml
+from softfab.databaselib import Database, DatabaseElem
+from softfab.sortedqueue import SortedQueue
+from softfab.xmlgen import xml
 import os, os.path, random, unittest
 
 class Record(DatabaseElem):

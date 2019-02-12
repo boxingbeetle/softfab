@@ -1,9 +1,9 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from FabPage import FabPage
-from Page import PageProcessor
-from pageargs import IntArg, PageArgs, SortArg
-from storageview import StorageTable
+from softfab.FabPage import FabPage
+from softfab.Page import PageProcessor
+from softfab.pageargs import IntArg, PageArgs, SortArg
+from softfab.storageview import StorageTable
 
 class StorageIndex(FabPage):
     icon = 'IconReport'

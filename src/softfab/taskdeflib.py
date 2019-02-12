@@ -1,10 +1,10 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-import frameworklib
-from config import dbDir
-from databaselib import VersionedDatabase
-from selectlib import Selectable, ObservingTagCache
-from xmlgen import xml
+from softfab import frameworklib
+from softfab.config import dbDir
+from softfab.databaselib import VersionedDatabase
+from softfab.selectlib import Selectable, ObservingTagCache
+from softfab.xmlgen import xml
 
 class TaskDefFactory:
     @staticmethod

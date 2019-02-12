@@ -4,14 +4,14 @@ from abc import ABC
 from enum import Enum
 from typing import ClassVar
 
-from FabPage import FabPage, IconModifier
-from Page import PageProcessor, PresentableError, Redirect
-from databaselib import Database
-from formlib import actionButtons, makeForm
-from pageargs import EnumArg, PageArgs, StrArg
-from utils import abstract, pluralize
-from webgui import unorderedList
-from xmlgen import xhtml
+from softfab.FabPage import FabPage, IconModifier
+from softfab.Page import PageProcessor, PresentableError, Redirect
+from softfab.databaselib import Database
+from softfab.formlib import actionButtons, makeForm
+from softfab.pageargs import EnumArg, PageArgs, StrArg
+from softfab.utils import abstract, pluralize
+from softfab.webgui import unorderedList
+from softfab.xmlgen import xhtml
 
 class RecordInUseError(Exception):
 

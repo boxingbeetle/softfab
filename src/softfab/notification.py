@@ -6,7 +6,7 @@ It can be used to send certain recipients an email about a certain event
 that happened in the SoftFab (e.g. Job complete or Job failed).
 '''
 
-from config import mailDomain, mailSender, smtpRelay
+from softfab.config import mailDomain, mailSender, smtpRelay
 
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText

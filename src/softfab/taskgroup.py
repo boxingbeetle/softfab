@@ -1,8 +1,10 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from setcalc import UnionFind, categorizedLists, union
-from utils import Heap, ResultKeeper
-from waiting import BoundReason, checkGroupRunners, checkBoundGroupRunner
+from softfab.setcalc import UnionFind, categorizedLists, union
+from softfab.utils import Heap, ResultKeeper
+from softfab.waiting import (
+    BoundReason, checkGroupRunners, checkBoundGroupRunner
+    )
 
 from collections import defaultdict
 from functools import total_ordering

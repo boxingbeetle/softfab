@@ -1,12 +1,12 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from RecordDelete import (
+from softfab.RecordDelete import (
     RecordDelete_GET, RecordDelete_POSTMixin, RecordInUseError
     )
-from frameworklib import frameworkDB
-from frameworkview import taskDefsUsingFramework
-from pageargs import RefererArg
-from pagelinks import createTaskDetailsLink
+from softfab.frameworklib import frameworkDB
+from softfab.frameworkview import taskDefsUsingFramework
+from softfab.pageargs import RefererArg
+from softfab.pagelinks import createTaskDetailsLink
 
 class ParentArgs:
     indexQuery = RefererArg('FrameworkIndex')

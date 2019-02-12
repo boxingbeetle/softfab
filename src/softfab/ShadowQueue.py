@@ -1,10 +1,10 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from FabPage import FabPage
-from Page import PageProcessor
-from pageargs import IntArg, PageArgs, SortArg
-from shadowlib import shadowDB
-from shadowview import ShadowTable, trimPolicy
+from softfab.FabPage import FabPage
+from softfab.Page import PageProcessor
+from softfab.pageargs import IntArg, PageArgs, SortArg
+from softfab.shadowlib import shadowDB
+from softfab.shadowview import ShadowTable, trimPolicy
 
 class ShadowQueue(FabPage):
     icon = 'TaskRunStat1'

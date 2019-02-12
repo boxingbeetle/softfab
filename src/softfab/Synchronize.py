@@ -1,14 +1,14 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from ControlPage import ControlPage
-from Page import PageProcessor
-from authentication import NoAuthPage
-from jobview import unfinishedJobs
-from shadowlib import shadowDB
-from sortedqueue import SortedQueue
-from taskrunnerlib import RequestFactory, TaskRunner, taskRunnerDB
-from xmlbind import parse
-from xmlgen import xml
+from softfab.ControlPage import ControlPage
+from softfab.Page import PageProcessor
+from softfab.authentication import NoAuthPage
+from softfab.jobview import unfinishedJobs
+from softfab.shadowlib import shadowDB
+from softfab.sortedqueue import SortedQueue
+from softfab.taskrunnerlib import RequestFactory, TaskRunner, taskRunnerDB
+from softfab.xmlbind import parse
+from softfab.xmlgen import xml
 
 class WaitingShadowRuns(SortedQueue):
     compareField = 'createtime'

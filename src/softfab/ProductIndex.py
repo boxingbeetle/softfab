@@ -1,13 +1,15 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from FabPage import FabPage
-from Page import PageProcessor
-from datawidgets import BoolDataColumn, DataColumn, DataTable, LinkColumn
-from pageargs import IntArg, PageArgs, SortArg
-from pagelinks import createProductDetailsLink
-from productdeflib import productDefDB
-from webgui import docLink
-from xmlgen import xhtml
+from softfab.FabPage import FabPage
+from softfab.Page import PageProcessor
+from softfab.datawidgets import (
+    BoolDataColumn, DataColumn, DataTable, LinkColumn
+    )
+from softfab.pageargs import IntArg, PageArgs, SortArg
+from softfab.pagelinks import createProductDetailsLink
+from softfab.productdeflib import productDefDB
+from softfab.webgui import docLink
+from softfab.xmlgen import xhtml
 
 class NameColumn(DataColumn):
     label = 'Product ID'

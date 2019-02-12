@@ -1,12 +1,14 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from CSVPage import CSVPage
-from Page import PageProcessor
-from databaselib import RecordObserver
-from joblib import jobDB
-from pageargs import ArgsCorrected, IntArg, PageArgs, StrArg, dynamic
-from querylib import CustomFilter, runQuery
-from timelib import getTime, getWeekNr, secondsPerDay, weekRange, weeksInYear
+from softfab.CSVPage import CSVPage
+from softfab.Page import PageProcessor
+from softfab.databaselib import RecordObserver
+from softfab.joblib import jobDB
+from softfab.pageargs import ArgsCorrected, IntArg, PageArgs, StrArg, dynamic
+from softfab.querylib import CustomFilter, runQuery
+from softfab.timelib import (
+    getTime, getWeekNr, secondsPerDay, weekRange, weeksInYear
+    )
 
 from collections import defaultdict
 import time

@@ -4,13 +4,13 @@ import unittest
 
 from initconfig import config
 
-import databases
-import configlib, resourcelib, restypelib, taskrunnerlib
-from resreq import ResourceSpec, taskRunnerResourceRefName
-from restypelib import taskRunnerResourceTypeName
-from resultcode import ResultCode
-from timelib import setTime
-from utils import IllegalStateError
+from softfab import databases
+from softfab import configlib, resourcelib, restypelib, taskrunnerlib
+from softfab.resreq import ResourceSpec, taskRunnerResourceRefName
+from softfab.restypelib import taskRunnerResourceTypeName
+from softfab.resultcode import ResultCode
+from softfab.timelib import setTime
+from softfab.utils import IllegalStateError
 
 from datageneratorlib import removeRec, DataGenerator
 

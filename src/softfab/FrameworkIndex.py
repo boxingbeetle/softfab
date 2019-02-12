@@ -1,16 +1,16 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from FabPage import FabPage
-from Page import PageProcessor
-from datawidgets import (
+from softfab.FabPage import FabPage
+from softfab.Page import PageProcessor
+from softfab.datawidgets import (
     BoolDataColumn, DataColumn, DataTable, LinkColumn, ListDataColumn
     )
-from frameworklib import anyExtract, frameworkDB
-from frameworkview import FrameworkColumn
-from pageargs import IntArg, PageArgs, SortArg
-from pagelinks import createProductDetailsLink
-from webgui import docLink
-from xmlgen import txt, xhtml
+from softfab.frameworklib import anyExtract, frameworkDB
+from softfab.frameworkview import FrameworkColumn
+from softfab.pageargs import IntArg, PageArgs, SortArg
+from softfab.pagelinks import createProductDetailsLink
+from softfab.webgui import docLink
+from softfab.xmlgen import txt, xhtml
 
 class ProductColumn(DataColumn):
     def presentCell(self, record, **kwargs):

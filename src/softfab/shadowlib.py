@@ -5,15 +5,17 @@ from typing import ClassVar, cast
 
 from twisted.internet import reactor
 
-from config import dbDir
-from databaselib import Database, DatabaseElem, RecordObserver, createUniqueId
-from resultcode import ResultCode
-from storagelib import StorageURLMixin
-from sortedqueue import SortedQueue
-from timelib import getTime
-from utils import abstract, cachedProperty
-from xmlbind import XMLTag
-from xmlgen import xml
+from softfab.config import dbDir
+from softfab.databaselib import (
+    Database, DatabaseElem, RecordObserver, createUniqueId
+    )
+from softfab.resultcode import ResultCode
+from softfab.storagelib import StorageURLMixin
+from softfab.sortedqueue import SortedQueue
+from softfab.timelib import getTime
+from softfab.utils import abstract, cachedProperty
+from softfab.xmlbind import XMLTag
+from softfab.xmlgen import xml
 
 # Note: To avoid cyclic imports, taskrunlib sets this.
 #       The weird construct is to avoid PyLint complaining about methods we

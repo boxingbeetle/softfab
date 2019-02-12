@@ -1,12 +1,12 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from FabPage import FabPage
-from Page import PageProcessor
-from joblib import jobDB
-from jobview import JobsSubTable
-from pagelinks import JobIdSetArgs
-from webgui import unorderedList
-from xmlgen import xhtml
+from softfab.FabPage import FabPage
+from softfab.Page import PageProcessor
+from softfab.joblib import jobDB
+from softfab.jobview import JobsSubTable
+from softfab.pagelinks import JobIdSetArgs
+from softfab.webgui import unorderedList
+from softfab.xmlgen import xhtml
 
 class ShowJobsTable(JobsSubTable):
     widgetId = 'jobsTable'

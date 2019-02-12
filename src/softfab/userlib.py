@@ -1,10 +1,10 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from config import dbDir, enableSecurity
-from databaselib import Database, DatabaseElem
-from utils import atomicWrite
-from xmlbind import XMLTag
-from xmlgen import xml
+from softfab.config import dbDir, enableSecurity
+from softfab.databaselib import Database, DatabaseElem
+from softfab.utils import atomicWrite
+from softfab.xmlbind import XMLTag
+from softfab.xmlgen import xml
 
 from passlib.apache import HtpasswdFile
 from twisted.cred import error

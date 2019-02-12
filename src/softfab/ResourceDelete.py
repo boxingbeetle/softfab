@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from RecordDelete import RecordDelete_GET, RecordDelete_POSTMixin
-from pageargs import RefererArg
-from resourcelib import resourceDB
+from softfab.RecordDelete import RecordDelete_GET, RecordDelete_POSTMixin
+from softfab.pageargs import RefererArg
+from softfab.resourcelib import resourceDB
 
 class ParentArgs:
     indexQuery = RefererArg('ResourceIndex')

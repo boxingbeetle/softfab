@@ -1,16 +1,16 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from FabPage import FabPage
-from Page import AccessDenied, PageProcessor, PresentableError, Redirect
-from configlib import configDB, iterConfigsByTag
-from configview import SimpleConfigTable
-from formlib import actionButtons, makeForm
-from joblib import jobDB
-from pageargs import EnumArg, PageArgs, RefererArg, SetArg, StrArg
-from pagelinks import createJobsURL
-from selectview import TagArgs
-from utils import pluralize
-from xmlgen import xhtml
+from softfab.FabPage import FabPage
+from softfab.Page import AccessDenied, PageProcessor, PresentableError, Redirect
+from softfab.configlib import configDB, iterConfigsByTag
+from softfab.configview import SimpleConfigTable
+from softfab.formlib import actionButtons, makeForm
+from softfab.joblib import jobDB
+from softfab.pageargs import EnumArg, PageArgs, RefererArg, SetArg, StrArg
+from softfab.pagelinks import createJobsURL
+from softfab.selectview import TagArgs
+from softfab.utils import pluralize
+from softfab.xmlgen import xhtml
 
 from enum import Enum
 

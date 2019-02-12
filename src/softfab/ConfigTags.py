@@ -1,16 +1,18 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from FabPage import FabPage, IconModifier
-from Page import PageProcessor, Redirect
-from configlib import Config, configDB
-from configview import SelectConfigsMixin, SimpleConfigTable
-from formlib import actionButtons, hiddenInput, makeForm
-from pageargs import DictArg, EnumArg, RefererArg, SetArg, StrArg
-from projectlib import project
-from selectlib import getCommonTags
-from selectview import SelectArgs, TagValueEditTable, textToValues, valuesToText
-from utils import encodeURL
-from xmlgen import xhtml
+from softfab.FabPage import FabPage, IconModifier
+from softfab.Page import PageProcessor, Redirect
+from softfab.configlib import Config, configDB
+from softfab.configview import SelectConfigsMixin, SimpleConfigTable
+from softfab.formlib import actionButtons, hiddenInput, makeForm
+from softfab.pageargs import DictArg, EnumArg, RefererArg, SetArg, StrArg
+from softfab.projectlib import project
+from softfab.selectlib import getCommonTags
+from softfab.selectview import (
+    SelectArgs, TagValueEditTable, textToValues, valuesToText
+    )
+from softfab.utils import encodeURL
+from softfab.xmlgen import xhtml
 
 from enum import Enum
 

@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from utils import SharedInstance
+from softfab.utils import SharedInstance
 
 import unittest
 from abc import ABC, abstractmethod

@@ -1,21 +1,21 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from FabPage import FabPage
-from ReportMixin import ReportProcessor, ReportTaskArgs
-from datawidgets import DataColumn
-from formlib import CheckBoxesTable, RadioTable, makeForm, submitButton
-from joblib import iterDoneTasks
-from jobview import createTimeColumn
-from pageargs import EnumArg, IntArg, SetArg, SortArg
-from pagelinks import createJobURL
-from querylib import KeySorter, runQuery
-from resultlib import getData, getKeys
-from setcalc import intersection
-from tasktables import TaskRunsTable
-from taskview import TaskColumn
-from timeview import formatTime
-from webgui import pageLink
-from xmlgen import xhtml
+from softfab.FabPage import FabPage
+from softfab.ReportMixin import ReportProcessor, ReportTaskArgs
+from softfab.datawidgets import DataColumn
+from softfab.formlib import CheckBoxesTable, RadioTable, makeForm, submitButton
+from softfab.joblib import iterDoneTasks
+from softfab.jobview import createTimeColumn
+from softfab.pageargs import EnumArg, IntArg, SetArg, SortArg
+from softfab.pagelinks import createJobURL
+from softfab.querylib import KeySorter, runQuery
+from softfab.resultlib import getData, getKeys
+from softfab.setcalc import intersection
+from softfab.tasktables import TaskRunsTable
+from softfab.taskview import TaskColumn
+from softfab.timeview import formatTime
+from softfab.webgui import pageLink
+from softfab.xmlgen import xhtml
 
 from collections import defaultdict
 from enum import Enum

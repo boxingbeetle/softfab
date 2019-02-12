@@ -1,10 +1,10 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from ControlPage import ControlPage
-from Page import PageProcessor
-from pageargs import PageArgs, StrArg
-from statuslib import StatusModelRegistry
-from xmlgen import xml
+from softfab.ControlPage import ControlPage
+from softfab.Page import PageProcessor
+from softfab.pageargs import PageArgs, StrArg
+from softfab.statuslib import StatusModelRegistry
+from softfab.xmlgen import xml
 
 def treeSupportsFormat(modelClass, fmt):
     '''Returns True iff the given model class or one of its descendants might

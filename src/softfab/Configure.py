@@ -1,9 +1,9 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from FabPage import FabPage
-from config import enableSecurity
-from xmlgen import xhtml
-from webgui import docLink
+from softfab.FabPage import FabPage
+from softfab.config import enableSecurity
+from softfab.xmlgen import xhtml
+from softfab.webgui import docLink
 
 class Configure(FabPage):
     icon = 'Configure'

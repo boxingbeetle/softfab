@@ -4,9 +4,9 @@ from abc import ABC
 from collections import defaultdict
 from typing import ClassVar
 
-from databaselib import RecordObserver
-from utils import abstract
-from xmlgen import xml
+from softfab.databaselib import RecordObserver
+from softfab.utils import abstract
+from softfab.xmlgen import xml
 
 class Selectable(ABC):
     cache = abstract # type: ClassVar[TagCache]

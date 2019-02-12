@@ -5,19 +5,21 @@
 # The upgrade procedure states that a backup should be made before upgrading,
 # so in case of abnormal termination we can just restart the upgrade from the
 # backup.
-import config
+from softfab import config
 config.dbAtomicWrites = False
 
 # pylint: disable=wrong-import-position
 
 # Set conversion flags.
-from conversionflags import setConversionFlags, setConversionFlagsForVersion
+from softfab.conversionflags import (
+    setConversionFlags, setConversionFlagsForVersion
+    )
 setConversionFlags()
 
 # Check whether we can convert from the database version in use before the
 # upgrade.
-from projectlib import project
-from utils import parseVersion
+from softfab.projectlib import project
+from softfab.utils import parseVersion
 import sys
 try:
     versionStr = project['version']

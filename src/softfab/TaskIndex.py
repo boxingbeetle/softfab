@@ -1,14 +1,16 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from FabPage import FabPage
-from Page import PageProcessor
-from datawidgets import DataColumn, DataTable, LinkColumn, ListDataColumn
-from frameworkview import FrameworkColumn
-from pageargs import IntArg, PageArgs, SortArg
-from pagelinks import createTaskDetailsLink
-from taskdeflib import taskDefDB
-from webgui import docLink
-from xmlgen import xhtml
+from softfab.FabPage import FabPage
+from softfab.Page import PageProcessor
+from softfab.datawidgets import (
+    DataColumn, DataTable, LinkColumn, ListDataColumn
+    )
+from softfab.frameworkview import FrameworkColumn
+from softfab.pageargs import IntArg, PageArgs, SortArg
+from softfab.pagelinks import createTaskDetailsLink
+from softfab.taskdeflib import taskDefDB
+from softfab.webgui import docLink
+from softfab.xmlgen import xhtml
 
 class NameColumn(DataColumn):
     label = 'Task Definition ID'

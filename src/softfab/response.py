@@ -1,9 +1,9 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from projectlib import project
-from useragent import AcceptedEncodings
-from utils import iterable
-from xmlgen import XMLPresentable
+from softfab.projectlib import project
+from softfab.useragent import AcceptedEncodings
+from softfab.utils import iterable
+from softfab.xmlgen import XMLPresentable
 
 from twisted.internet import defer, interfaces, reactor
 from twisted.web import http

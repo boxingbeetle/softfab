@@ -4,11 +4,13 @@ from re import split as re_split, compile as re_compile
 from typing import Mapping
 import logging
 
-from config import dbDir
-from databaselib import Database, DatabaseElem, RecordObserver, createInternalId
+from softfab.config import dbDir
+from softfab.databaselib import (
+    Database, DatabaseElem, RecordObserver, createInternalId
+    )
 from urllib.parse import quote, urljoin, urlsplit, urlunsplit
-from xmlbind import XMLTag
-from xmlgen import xml
+from softfab.xmlbind import XMLTag
+from softfab.xmlgen import xml
 
 _storageNames = {} # type: Mapping[str, str]
 _storageURLMap = {} # type: Mapping[str, str]

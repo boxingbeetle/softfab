@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-import shadowlib
+from softfab import shadowlib
 
 class TestShadowRun(shadowlib.ShadowRun):
     tagName = 'test'

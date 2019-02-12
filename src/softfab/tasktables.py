@@ -1,15 +1,17 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from config import enableSecurity
-from datawidgets import DataColumn, DataTable, DurationColumn, TimeColumn
-from jobview import targetColumn
-from pagelinks import createTaskRunnerDetailsLink
-from projectlib import project
-from taskview import (
+from softfab.config import enableSecurity
+from softfab.datawidgets import (
+    DataColumn, DataTable, DurationColumn, TimeColumn
+    )
+from softfab.jobview import targetColumn
+from softfab.pagelinks import createTaskRunnerDetailsLink
+from softfab.projectlib import project
+from softfab.taskview import (
     AbortColumn, ExportColumn, ExtractedColumn, SummaryColumn, TaskColumn,
     getTaskStatus
     )
-from userview import OwnerColumn
+from softfab.userview import OwnerColumn
 
 class TaskRunsTable(DataTable):
     db = None

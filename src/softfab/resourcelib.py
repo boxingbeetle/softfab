@@ -5,13 +5,13 @@ from typing import (
     AbstractSet, ClassVar, FrozenSet, Iterable, Iterator, Mapping, Set, cast
     )
 
-from config import dbDir
-from connection import ConnectionStatus
-from databaselib import Database, DatabaseElem
-from timelib import getTime
-from utils import abstract
-from xmlbind import XMLTag
-from xmlgen import xml
+from softfab.config import dbDir
+from softfab.connection import ConnectionStatus
+from softfab.databaselib import Database, DatabaseElem
+from softfab.timelib import getTime
+from softfab.utils import abstract
+from softfab.xmlbind import XMLTag
+from softfab.xmlgen import xml
 
 class ResourceBase(XMLTag, DatabaseElem):
     """Base class for Resource and TaskRunner.

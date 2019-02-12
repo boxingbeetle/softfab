@@ -1,12 +1,12 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from FabPage import FabPage
-from Page import InvalidRequest, PageProcessor, Redirect
-from formlib import actionButtons, makeForm
-from pageargs import EnumArg, PageArgs, StrArg
-from taskrunnerlib import taskRunnerDB
-from resourceview import CapabilitiesPanel, CommentPanel
-from xmlgen import xhtml
+from softfab.FabPage import FabPage
+from softfab.Page import InvalidRequest, PageProcessor, Redirect
+from softfab.formlib import actionButtons, makeForm
+from softfab.pageargs import EnumArg, PageArgs, StrArg
+from softfab.taskrunnerlib import taskRunnerDB
+from softfab.resourceview import CapabilitiesPanel, CommentPanel
+from softfab.xmlgen import xhtml
 
 from enum import Enum
 

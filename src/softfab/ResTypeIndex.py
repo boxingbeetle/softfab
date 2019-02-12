@@ -1,10 +1,12 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from FabPage import FabPage
-from Page import PageProcessor
-from datawidgets import BoolDataColumn, DataColumn, DataTable, LinkColumn
-from pageargs import IntArg, PageArgs, SortArg
-from restypelib import resTypeDB
+from softfab.FabPage import FabPage
+from softfab.Page import PageProcessor
+from softfab.datawidgets import (
+    BoolDataColumn, DataColumn, DataTable, LinkColumn
+    )
+from softfab.pageargs import IntArg, PageArgs, SortArg
+from softfab.restypelib import resTypeDB
 
 class ResTypeLinkColumn(LinkColumn):
 

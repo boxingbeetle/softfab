@@ -1,15 +1,19 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from Page import FabResource, PageProcessor, PresentableError, Redirect
-from UIPage import UIPage
-from authentication import NoAuthPage
-from config import enableSecurity
-from formlib import FormTable, makeForm, passwordInput, submitButton, textInput
-from pageargs import ArgsCorrected, PageArgs, StrArg
-from userlib import IUser, PasswordMessage, authenticate, passwordQuality
-from userview import LoginPassArgs, PasswordMsgArgs
-from webgui import pageURL
-from xmlgen import xhtml
+from softfab.Page import FabResource, PageProcessor, PresentableError, Redirect
+from softfab.UIPage import UIPage
+from softfab.authentication import NoAuthPage
+from softfab.config import enableSecurity
+from softfab.formlib import (
+    FormTable, makeForm, passwordInput, submitButton, textInput
+    )
+from softfab.pageargs import ArgsCorrected, PageArgs, StrArg
+from softfab.userlib import (
+    IUser, PasswordMessage, authenticate, passwordQuality
+    )
+from softfab.userview import LoginPassArgs, PasswordMsgArgs
+from softfab.webgui import pageURL
+from softfab.xmlgen import xhtml
 
 from twisted.cred import error
 from twisted.internet import defer

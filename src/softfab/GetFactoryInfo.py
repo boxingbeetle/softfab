@@ -1,14 +1,14 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from ControlPage import ControlPage
-from Page import PageProcessor
-from config import rootURL
-from databases import iterDatabases
-from projectlib import getBootTime, project
-from timeview import formatTimeAttr
-from userlib import privileges
-from version import version
-from xmlgen import xml
+from softfab.ControlPage import ControlPage
+from softfab.Page import PageProcessor
+from softfab.config import rootURL
+from softfab.databases import iterDatabases
+from softfab.projectlib import getBootTime, project
+from softfab.timeview import formatTimeAttr
+from softfab.userlib import privileges
+from softfab.version import version
+from softfab.xmlgen import xml
 
 class GetFactoryInfo(ControlPage):
 

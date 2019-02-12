@@ -1,18 +1,18 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from FabPage import FabPage
-from Page import PageProcessor
-from joblib import jobDB
-from jobview import CommentPanel, JobsSubTable
-from pagelinks import (
+from softfab.FabPage import FabPage
+from softfab.Page import PageProcessor
+from softfab.joblib import jobDB
+from softfab.jobview import CommentPanel, JobsSubTable
+from softfab.pagelinks import (
     JobIdArgs, TaskIdArgs, createConfigDetailsLink, createTaskInfoLink
     )
-from productview import ProductTable
-from taskrunnerlib import taskRunnerDB
-from tasktables import JobTaskRunsTable
-from utils import pluralize
-from webgui import Table, cell, pageLink
-from xmlgen import txt, xhtml
+from softfab.productview import ProductTable
+from softfab.taskrunnerlib import taskRunnerDB
+from softfab.tasktables import JobTaskRunsTable
+from softfab.utils import pluralize
+from softfab.webgui import Table, cell, pageLink
+from softfab.xmlgen import txt, xhtml
 
 class SelfJobsTable(JobsSubTable):
     descriptionLink = False

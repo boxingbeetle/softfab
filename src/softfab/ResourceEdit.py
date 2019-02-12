@@ -1,15 +1,15 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from EditPage import EditPage
-from Page import PresentableError
-from formlib import RadioTable, textInput
-from pageargs import StrArg
-from resourcelib import Resource, resourceDB
-from resourceview import CapabilitiesPanel, CommentPanel
-from restypelib import resTypeDB, taskRunnerResourceTypeName
-from restypeview import ResTypeTableMixin
-from webgui import Panel, pageLink, vgroup
-from xmlgen import xhtml
+from softfab.EditPage import EditPage
+from softfab.Page import PresentableError
+from softfab.formlib import RadioTable, textInput
+from softfab.pageargs import StrArg
+from softfab.resourcelib import Resource, resourceDB
+from softfab.resourceview import CapabilitiesPanel, CommentPanel
+from softfab.restypelib import resTypeDB, taskRunnerResourceTypeName
+from softfab.restypeview import ResTypeTableMixin
+from softfab.webgui import Panel, pageLink, vgroup
+from softfab.xmlgen import xhtml
 
 class CustomResTypeTable(ResTypeTableMixin, RadioTable):
     reserved = False

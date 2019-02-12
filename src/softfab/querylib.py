@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from utils import missing, wildcardMatcher
+from softfab.utils import missing, wildcardMatcher
 
 from operator import itemgetter
 

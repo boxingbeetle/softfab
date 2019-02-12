@@ -1,12 +1,12 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from ControlPage import ControlPage
-from Page import InvalidRequest, PageProcessor
-from joblib import jobDB
-from jobview import alertList
-from pageargs import StrArg
-from pagelinks import JobIdArgs
-from xmlgen import xml
+from softfab.ControlPage import ControlPage
+from softfab.Page import InvalidRequest, PageProcessor
+from softfab.joblib import jobDB
+from softfab.jobview import alertList
+from softfab.pageargs import StrArg
+from softfab.pagelinks import JobIdArgs
+from softfab.xmlgen import xml
 
 class TaskAlert_POST(ControlPage):
 

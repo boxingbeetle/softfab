@@ -2,7 +2,7 @@
 
 import unittest
 
-from xmlgen import xhtml
+from softfab.xmlgen import xhtml
 
 """Test XML generation module."""
 

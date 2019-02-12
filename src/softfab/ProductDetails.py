@@ -1,15 +1,15 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from FabPage import FabPage
-from Page import PageProcessor
-from RecordDelete import DeleteArgs
-from frameworklib import frameworkDB
-from graphview import GraphPageMixin, GraphPanel, createExecutionGraph
-from pagelinks import ProductDefIdArgs, createFrameworkDetailsLink
-from productdeflib import productDefDB
-from utils import pluralize
-from webgui import PropertiesTable, hgroup, pageLink
-from xmlgen import xhtml
+from softfab.FabPage import FabPage
+from softfab.Page import PageProcessor
+from softfab.RecordDelete import DeleteArgs
+from softfab.frameworklib import frameworkDB
+from softfab.graphview import GraphPageMixin, GraphPanel, createExecutionGraph
+from softfab.pagelinks import ProductDefIdArgs, createFrameworkDetailsLink
+from softfab.productdeflib import productDefDB
+from softfab.utils import pluralize
+from softfab.webgui import PropertiesTable, hgroup, pageLink
+from softfab.xmlgen import xhtml
 
 class DetailsTable(PropertiesTable):
 

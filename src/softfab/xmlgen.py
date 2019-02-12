@@ -50,7 +50,7 @@ from typing import (
 from xml.etree import ElementTree
 from xml.sax.saxutils import escape
 
-from utils import cachedProperty
+from softfab.utils import cachedProperty
 
 # NoReturn was introduced in Python 3.6.5.
 if TYPE_CHECKING:

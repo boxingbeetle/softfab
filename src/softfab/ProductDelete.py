@@ -1,12 +1,12 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from RecordDelete import (
+from softfab.RecordDelete import (
     RecordDelete_GET, RecordDelete_POSTMixin, RecordInUseError
     )
-from frameworklib import frameworkDB
-from pageargs import RefererArg
-from pagelinks import createFrameworkDetailsLink
-from productdeflib import productDefDB
+from softfab.frameworklib import frameworkDB
+from softfab.pageargs import RefererArg
+from softfab.pagelinks import createFrameworkDetailsLink
+from softfab.productdeflib import productDefDB
 
 class ParentArgs:
     indexQuery = RefererArg('ProductIndex')

@@ -5,23 +5,23 @@ but much better defined.
 Its specification is in RFC 4287:  http://tools.ietf.org/html/rfc4287
 '''
 
-from ControlPage import ControlPage
-from Page import PageProcessor
-from UIPage import iterStyleSheets
-from config import dbDir, homePage, rootURL
-from databaselib import RecordObserver
-from datawidgets import DataColumn
-from joblib import jobDB
-from jobview import CommentPanel, JobsSubTable
-from pagelinks import createJobURL, createUserDetailsURL
-from projectlib import project
-from querylib import CustomFilter, KeySorter, runQuery
-from timelib import getTime
-from timeview import formatDuration, formatTime
-from utils import pluralize
-from version import version
-from webgui import Table, cell, pageURL, row
-from xmlgen import atom, xhtml
+from softfab.ControlPage import ControlPage
+from softfab.Page import PageProcessor
+from softfab.UIPage import iterStyleSheets
+from softfab.config import dbDir, homePage, rootURL
+from softfab.databaselib import RecordObserver
+from softfab.datawidgets import DataColumn
+from softfab.joblib import jobDB
+from softfab.jobview import CommentPanel, JobsSubTable
+from softfab.pagelinks import createJobURL, createUserDetailsURL
+from softfab.projectlib import project
+from softfab.querylib import CustomFilter, KeySorter, runQuery
+from softfab.timelib import getTime
+from softfab.timeview import formatDuration, formatTime
+from softfab.utils import pluralize
+from softfab.version import version
+from softfab.webgui import Table, cell, pageURL, row
+from softfab.xmlgen import atom, xhtml
 
 from os.path import basename
 from time import gmtime, strftime

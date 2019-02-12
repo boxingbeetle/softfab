@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from webgui import Script
+from softfab.webgui import Script
 
 class RefreshScript(Script):
 

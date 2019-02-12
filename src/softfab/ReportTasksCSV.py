@@ -1,12 +1,12 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from CSVPage import CSVPage
-from ReportMixin import ReportProcessor, ReportTaskCSVArgs
-from joblib import iterDoneTasks
-from resultlib import getData, getKeys
-from querylib import KeySorter, runQuery
-from setcalc import union
-from timeview import formatTime
+from softfab.CSVPage import CSVPage
+from softfab.ReportMixin import ReportProcessor, ReportTaskCSVArgs
+from softfab.joblib import iterDoneTasks
+from softfab.resultlib import getData, getKeys
+from softfab.querylib import KeySorter, runQuery
+from softfab.setcalc import union
+from softfab.timeview import formatTime
 
 class ReportTasksCSV(CSVPage):
 

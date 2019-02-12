@@ -1,16 +1,18 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from FabPage import FabPage
-from Page import PageProcessor
-from configlib import Config, configDB
-from configview import ConfigTable, SimpleConfigTable
-from datawidgets import DataColumn
-from formlib import checkBox
-from pageargs import IntArg, SortArg
-from projectlib import project
-from selectview import BasketArgs, SelectProcMixin, TagArgs, selectDialog
-from webgui import docLink
-from xmlgen import xhtml
+from softfab.FabPage import FabPage
+from softfab.Page import PageProcessor
+from softfab.configlib import Config, configDB
+from softfab.configview import ConfigTable, SimpleConfigTable
+from softfab.datawidgets import DataColumn
+from softfab.formlib import checkBox
+from softfab.pageargs import IntArg, SortArg
+from softfab.projectlib import project
+from softfab.selectview import (
+    BasketArgs, SelectProcMixin, TagArgs, selectDialog
+    )
+from softfab.webgui import docLink
+from softfab.xmlgen import xhtml
 
 class SelectColumn(DataColumn):
     keyName = None

@@ -1,13 +1,13 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from ControlPage import ControlPage
-from Page import InvalidRequest, PageProcessor
-from joblib import jobDB
-from pageargs import DictArg, EnumArg, StrArg
-from pagelinks import TaskIdArgs
-from resultcode import ResultCode
-from resultlib import putData
-from xmlgen import xml
+from softfab.ControlPage import ControlPage
+from softfab.Page import InvalidRequest, PageProcessor
+from softfab.joblib import jobDB
+from softfab.pageargs import DictArg, EnumArg, StrArg
+from softfab.pagelinks import TaskIdArgs
+from softfab.resultcode import ResultCode
+from softfab.resultlib import putData
+from softfab.xmlgen import xml
 
 class InspectDone_POST(ControlPage):
 

@@ -2,8 +2,8 @@
 
 from typing import ClassVar, Type
 
-from Page import Authenticator, FabResource, Responder
-from authentication import HTTPAuthPage
+from softfab.Page import Authenticator, FabResource, Responder
+from softfab.authentication import HTTPAuthPage
 
 class _ErrorResponder(Responder):
 

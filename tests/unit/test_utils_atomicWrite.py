@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from utils import atomicWrite
+from softfab.utils import atomicWrite
 
 import unittest
 

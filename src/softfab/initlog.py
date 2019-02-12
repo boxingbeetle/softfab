@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from config import dbDir, loggingLevel
-from version import version
+from softfab.config import dbDir, loggingLevel
+from softfab.version import version
 
 import logging
 import os

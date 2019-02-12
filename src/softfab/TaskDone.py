@@ -1,15 +1,15 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from ControlPage import ControlPage
-from Page import InvalidRequest, PageProcessor
-from authentication import NoAuthPage
-from joblib import jobDB
-from pageargs import DictArg, EnumArg, PageArgs, StrArg
-from resultcode import ResultCode
-from resultlib import putData
-from shadowlib import shadowDB
-from taskrunlib import defaultSummaries
-from xmlgen import xml
+from softfab.ControlPage import ControlPage
+from softfab.Page import InvalidRequest, PageProcessor
+from softfab.authentication import NoAuthPage
+from softfab.joblib import jobDB
+from softfab.pageargs import DictArg, EnumArg, PageArgs, StrArg
+from softfab.resultcode import ResultCode
+from softfab.resultlib import putData
+from softfab.shadowlib import shadowDB
+from softfab.taskrunlib import defaultSummaries
+from softfab.xmlgen import xml
 
 import logging
 

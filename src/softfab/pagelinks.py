@@ -1,12 +1,12 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from configlib import configDB
-from pageargs import PageArgs, SetArg, StrArg
-from restypelib import resTypeDB
-from shadowlib import shadowDB
-from taskrunnerlib import taskRunnerDB
-from webgui import pageLink, pageURL
-from xmlgen import txt, xhtml
+from softfab.configlib import configDB
+from softfab.pageargs import PageArgs, SetArg, StrArg
+from softfab.restypelib import resTypeDB
+from softfab.shadowlib import shadowDB
+from softfab.taskrunnerlib import taskRunnerDB
+from softfab.webgui import pageLink, pageURL
+from softfab.xmlgen import txt, xhtml
 
 class ProductDefIdArgs(PageArgs):
     '''Identifies a particular product definition.

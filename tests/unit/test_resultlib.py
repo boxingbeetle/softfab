@@ -4,8 +4,9 @@ import os, unittest
 
 from initconfig import config
 
-import resultlib
 from datageneratorlib import removeRec
+
+from softfab import resultlib
 
 class TestResults(unittest.TestCase):
     """Test result storage and processing functionality.

@@ -1,30 +1,30 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from FabPage import IconModifier
-from Page import (
+from softfab.FabPage import IconModifier
+from softfab.Page import (
     AccessDenied, InternalError, InvalidRequest, PresentableError, Redirect
     )
-from config import mailDomain
-from configlib import Config, Task, configDB
-from configview import InputTable
-from dialog import DialogPage, DialogStep
-from formlib import (
+from softfab.config import mailDomain
+from softfab.configlib import Config, Task, configDB
+from softfab.configview import InputTable
+from softfab.dialog import DialogPage, DialogStep
+from softfab.formlib import (
     CheckBoxesTable, RadioTable, SingleCheckBoxTable,
     selectionList, textArea, textInput
     )
-from joblib import jobDB
-from pageargs import (
+from softfab.joblib import jobDB
+from softfab.pageargs import (
     ArgsCorrected, BoolArg, DictArg, EnumArg, IntArg, SetArg, StrArg
     )
-from pagelinks import createJobsURL
-from paramview import ParamCell, ParamOverrideTable
-from productdeflib import ProductType
-from projectlib import project
-from selectview import TagValueEditTable, textToValues, valuesToText
-from taskdeflib import taskDefDB
-from taskrunnerlib import taskRunnerDB
-from webgui import Table, cell
-from xmlgen import xhtml
+from softfab.pagelinks import createJobsURL
+from softfab.paramview import ParamCell, ParamOverrideTable
+from softfab.productdeflib import ProductType
+from softfab.projectlib import project
+from softfab.selectview import TagValueEditTable, textToValues, valuesToText
+from softfab.taskdeflib import taskDefDB
+from softfab.taskrunnerlib import taskRunnerDB
+from softfab.webgui import Table, cell
+from softfab.xmlgen import xhtml
 
 from enum import Enum
 

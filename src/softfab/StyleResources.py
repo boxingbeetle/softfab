@@ -1,9 +1,9 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from databaselib import createInternalId
-from timelib import getTime, secondsPerDay
-from useragent import AcceptedEncodings
-from webgui import ShortcutIcon, StyleSheet, pngIcon, svgIcon
+from softfab.databaselib import createInternalId
+from softfab.timelib import getTime, secondsPerDay
+from softfab.useragent import AcceptedEncodings
+from softfab.webgui import ShortcutIcon, StyleSheet, pngIcon, svgIcon
 
 from twisted.web import http, resource, static
 

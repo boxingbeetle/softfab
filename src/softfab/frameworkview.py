@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from datawidgets import DataColumn
-from pagelinks import createFrameworkDetailsLink
-from taskdeflib import taskDefDB
+from softfab.datawidgets import DataColumn
+from softfab.pagelinks import createFrameworkDetailsLink
+from softfab.taskdeflib import taskDefDB
 
 class FrameworkColumn(DataColumn):
     def presentCell(self, record, **kwargs):

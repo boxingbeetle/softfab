@@ -1,18 +1,18 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from FabPage import FabPage
-from Page import PageProcessor
-from ReportMixin import ReportArgs
-from config import enableSecurity
-from joblib import jobDB
-from jobview import JobsSubTable
-from pageargs import PageArgs, StrArg
-from pagelinks import UserIdArgs
-from querylib import KeySorter, ValueFilter, runQuery
-from userlib import userDB
-from userview import activeRole
-from webgui import PropertiesTable, pageLink
-from xmlgen import xhtml
+from softfab.FabPage import FabPage
+from softfab.Page import PageProcessor
+from softfab.ReportMixin import ReportArgs
+from softfab.config import enableSecurity
+from softfab.joblib import jobDB
+from softfab.jobview import JobsSubTable
+from softfab.pageargs import PageArgs, StrArg
+from softfab.pagelinks import UserIdArgs
+from softfab.querylib import KeySorter, ValueFilter, runQuery
+from softfab.userlib import userDB
+from softfab.userview import activeRole
+from softfab.webgui import PropertiesTable, pageLink
+from softfab.xmlgen import xhtml
 
 class DetailsTable(PropertiesTable):
 

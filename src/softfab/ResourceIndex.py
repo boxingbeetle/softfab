@@ -1,18 +1,20 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from FabPage import FabPage
-from Page import PageProcessor, PresentableError, Redirect
-from RecordDelete import DeleteArgs
-from datawidgets import DataColumn, DataTable, LinkColumn, ListDataColumn
-from formlib import makeForm, submitButton
-from pageargs import EnumArg, IntArg, PageArgs, SortArg, StrArg
-from pagelinks import createTaskLink, createTaskRunnerDetailsLink
-from resourcelib import resourceDB
-from resourceview import getResourceStatus, presentCapabilities
-from restypelib import resTypeDB, taskRunnerResourceTypeName
-from taskrunnerlib import taskRunnerDB
-from webgui import docLink, header, pageLink, pageURL, row
-from xmlgen import xhtml
+from softfab.FabPage import FabPage
+from softfab.Page import PageProcessor, PresentableError, Redirect
+from softfab.RecordDelete import DeleteArgs
+from softfab.datawidgets import (
+    DataColumn, DataTable, LinkColumn, ListDataColumn
+    )
+from softfab.formlib import makeForm, submitButton
+from softfab.pageargs import EnumArg, IntArg, PageArgs, SortArg, StrArg
+from softfab.pagelinks import createTaskLink, createTaskRunnerDetailsLink
+from softfab.resourcelib import resourceDB
+from softfab.resourceview import getResourceStatus, presentCapabilities
+from softfab.restypelib import resTypeDB, taskRunnerResourceTypeName
+from softfab.taskrunnerlib import taskRunnerDB
+from softfab.webgui import docLink, header, pageLink, pageURL, row
+from softfab.xmlgen import xhtml
 
 from collections import defaultdict
 from enum import Enum

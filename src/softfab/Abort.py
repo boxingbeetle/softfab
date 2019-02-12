@@ -1,10 +1,10 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from ControlPage import ControlPage
-from Page import InvalidRequest, PageProcessor
-from joblib import jobDB
-from pageargs import BoolArg, PageArgs, SetArg
-from xmlgen import xml
+from softfab.ControlPage import ControlPage
+from softfab.Page import InvalidRequest, PageProcessor
+from softfab.joblib import jobDB
+from softfab.pageargs import BoolArg, PageArgs, SetArg
+from softfab.xmlgen import xml
 
 class Abort_POST(ControlPage):
 

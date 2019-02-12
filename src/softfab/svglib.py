@@ -3,8 +3,8 @@
 '''Presents SVG images.
 '''
 
-from webgui import Widget
-from xmlgen import adaptToXML, xhtml
+from softfab.webgui import Widget
+from softfab.xmlgen import adaptToXML, xhtml
 
 from xml.etree import ElementTree
 

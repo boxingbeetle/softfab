@@ -3,13 +3,13 @@
 from abc import ABC
 from typing import ClassVar, Optional, Sequence, Union
 
-from databaselib import Database
-from pageargs import ArgsCorrected
-from querylib import KeySorter, runQuery
-from timeview import formatDuration, formatTime
-from utils import abstract, encodeURL, escapeURL, pluralize
-from webgui import Column, Table, cell, pageURL, row
-from xmlgen import xhtml
+from softfab.databaselib import Database
+from softfab.pageargs import ArgsCorrected
+from softfab.querylib import KeySorter, runQuery
+from softfab.timeview import formatDuration, formatTime
+from softfab.utils import abstract, encodeURL, escapeURL, pluralize
+from softfab.webgui import Column, Table, cell, pageURL, row
+from softfab.xmlgen import xhtml
 
 def listToStr(lst):
     return ', '.join(lst)

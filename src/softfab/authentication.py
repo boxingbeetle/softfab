@@ -1,10 +1,12 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from Page import Authenticator, HTTPAuthenticator, InternalError, Redirector
-from config import enableSecurity
-from request import Request
-from userlib import IUser, SuperUser, UnknownUser, authenticate
-from utils import encodeURL
+from softfab.Page import (
+    Authenticator, HTTPAuthenticator, InternalError, Redirector
+    )
+from softfab.config import enableSecurity
+from softfab.request import Request
+from softfab.userlib import IUser, SuperUser, UnknownUser, authenticate
+from softfab.utils import encodeURL
 
 from twisted.cred.error import LoginFailed
 from twisted.internet import defer

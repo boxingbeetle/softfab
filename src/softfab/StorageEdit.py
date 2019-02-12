@@ -1,12 +1,14 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from EditPage import AbstractPhase, EditPage, EditPagePrev
-from Page import PresentableError
-from formlib import checkBox, makeForm, submitButton, textInput
-from pageargs import BoolArg, StrArg
-from storagelib import Storage, getStorageIdByName, getStorageIdByURL, storageDB
-from webgui import PropertiesTable
-from xmlgen import xhtml
+from softfab.EditPage import AbstractPhase, EditPage, EditPagePrev
+from softfab.Page import PresentableError
+from softfab.formlib import checkBox, makeForm, submitButton, textInput
+from softfab.pageargs import BoolArg, StrArg
+from softfab.storagelib import (
+    Storage, getStorageIdByName, getStorageIdByURL, storageDB
+    )
+from softfab.webgui import PropertiesTable
+from softfab.xmlgen import xhtml
 
 from urllib.parse import urlparse
 

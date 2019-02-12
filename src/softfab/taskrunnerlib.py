@@ -6,18 +6,20 @@ from typing import ClassVar
 
 from twisted.internet import reactor
 
-from config import dbDir, syncDelay
-from connection import ConnectionStatus
-from databaselib import Database, RecordObserver
-from resourcelib import ResourceBase
-from restypelib import taskRunnerResourceTypeName
-from shadowlib import shadowDB
-from statuslib import DBStatusModelGroup, StatusModel, StatusModelRegistry
-from taskrunlib import taskRunDB
-from timelib import getTime
-from utils import abstract, cachedProperty, parseVersion
-from xmlbind import XMLTag
-from xmlgen import xml
+from softfab.config import dbDir, syncDelay
+from softfab.connection import ConnectionStatus
+from softfab.databaselib import Database, RecordObserver
+from softfab.resourcelib import ResourceBase
+from softfab.restypelib import taskRunnerResourceTypeName
+from softfab.shadowlib import shadowDB
+from softfab.statuslib import (
+    DBStatusModelGroup, StatusModel, StatusModelRegistry
+    )
+from softfab.taskrunlib import taskRunDB
+from softfab.timelib import getTime
+from softfab.utils import abstract, cachedProperty, parseVersion
+from softfab.xmlbind import XMLTag
+from softfab.xmlgen import xml
 
 class RequestFactory:
     @staticmethod
@@ -725,4 +727,4 @@ class TaskRunnerModelGroup(DBStatusModelGroup):
 # pylint: disable=pointless-statement
 StatusModelRegistry#.addModelGroup(TaskRunnerModelGroup, 'taskrunner')
 
-import joblib
+from softfab import joblib

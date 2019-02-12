@@ -1,10 +1,10 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from EditPage import EditPage
-from formlib import CheckBoxesTable, textInput
-from pageargs import SetArg, StrArg
-from restypelib import ResType, resTypeDB
-from webgui import Column, PropertiesTable, cell
+from softfab.EditPage import EditPage
+from softfab.formlib import CheckBoxesTable, textInput
+from softfab.pageargs import SetArg, StrArg
+from softfab.restypelib import ResType, resTypeDB
+from softfab.webgui import Column, PropertiesTable, cell
 
 class ResTypeEdit(EditPage):
     # FabPage constants:

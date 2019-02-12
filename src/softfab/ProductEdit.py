@@ -1,10 +1,10 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from EditPage import EditPage
-from formlib import checkBox, dropDownList
-from pageargs import BoolArg, EnumArg
-from productdeflib import ProductDef, ProductType, productDefDB
-from webgui import PropertiesTable, docLink
+from softfab.EditPage import EditPage
+from softfab.formlib import checkBox, dropDownList
+from softfab.pageargs import BoolArg, EnumArg
+from softfab.productdeflib import ProductDef, ProductType, productDefDB
+from softfab.webgui import PropertiesTable, docLink
 
 class ProductEdit(EditPage):
     # FabPage constants:

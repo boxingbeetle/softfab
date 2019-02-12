@@ -1,11 +1,11 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from ControlPage import ControlPage
-from Page import InvalidRequest, PageProcessor
-from configlib import configDB
-from joblib import jobDB
-from pageargs import DictArg, PageArgs, StrArg
-from xmlgen import xml
+from softfab.ControlPage import ControlPage
+from softfab.Page import InvalidRequest, PageProcessor
+from softfab.configlib import configDB
+from softfab.joblib import jobDB
+from softfab.pageargs import DictArg, PageArgs, StrArg
+from softfab.xmlgen import xml
 
 class LoadExecuteDefault_POST(ControlPage):
 

@@ -1,13 +1,13 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from FabPage import FabPage
-from ReportMixin import JobReportProcessor, ReportArgs, ReportFilterForm
-from formlib import textInput
-from joblib import jobDB
-from jobview import JobsTable
-from pageargs import IntArg, SortArg, StrArg
-from querylib import WildcardFilter
-from xmlgen import xhtml
+from softfab.FabPage import FabPage
+from softfab.ReportMixin import JobReportProcessor, ReportArgs, ReportFilterForm
+from softfab.formlib import textInput
+from softfab.joblib import jobDB
+from softfab.jobview import JobsTable
+from softfab.pageargs import IntArg, SortArg, StrArg
+from softfab.querylib import WildcardFilter
+from softfab.xmlgen import xhtml
 
 class FilteredJobsTable(JobsTable):
 

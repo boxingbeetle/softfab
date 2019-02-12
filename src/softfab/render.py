@@ -4,14 +4,14 @@
 Module to render the page
 '''
 
-from Page import (
+from softfab.Page import (
     AccessDenied, InvalidRequest, PageProcessor, PresentableError, Redirect,
     Redirector
     )
-from UIPage import UIPage
-from pageargs import ArgsCorrected, ArgsInvalid, dynamic
-from response import Response
-from xmlgen import xhtml
+from softfab.UIPage import UIPage
+from softfab.pageargs import ArgsCorrected, ArgsInvalid, dynamic
+from softfab.response import Response
+from softfab.xmlgen import xhtml
 
 from twisted.internet import defer, interfaces
 

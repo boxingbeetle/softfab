@@ -2,7 +2,7 @@ from shutil import rmtree
 
 from invoke import task
 
-SRC_ENV = {'PYTHONPATH': 'src/softfab'}
+SRC_ENV = {'PYTHONPATH': 'src'}
 PYLINT_ENV = {'PYTHONPATH': 'tests/pylint'}
 
 @task
@@ -23,7 +23,7 @@ def run(c, host='localhost', port=8180):
     print('Starting Control Center at: http://%s:%d/' % (host, port))
     c.run('twist web'
             ' --listen tcp:interface=%s:port=%d'
-            ' --class TwistedApp.Root' % (host, port),
+            ' --class softfab.TwistedApp.Root' % (host, port),
             env=SRC_ENV, pty=True)
 
 @task

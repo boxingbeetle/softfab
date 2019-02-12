@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from configlib import configDB
-from utils import pluralize
+from softfab.configlib import configDB
+from softfab.utils import pluralize
 
 def configsUsingTaskDef(taskDefId):
     '''Iterates through the IDs of those configurations that contain the given

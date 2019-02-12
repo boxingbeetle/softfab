@@ -1,12 +1,12 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from ControlPage import ControlPage
-from Page import InvalidRequest, PageProcessor
-from configlib import configDB
-from pageargs import PageArgs, SetArg, StrArg
-from schedulelib import scheduleDB
-from taskdeflib import taskDefDB
-from xmlgen import xml
+from softfab.ControlPage import ControlPage
+from softfab.Page import InvalidRequest, PageProcessor
+from softfab.configlib import configDB
+from softfab.pageargs import PageArgs, SetArg, StrArg
+from softfab.schedulelib import scheduleDB
+from softfab.taskdeflib import taskDefDB
+from softfab.xmlgen import xml
 
 subjectToDB = dict(
     config = configDB,

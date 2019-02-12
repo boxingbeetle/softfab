@@ -1,17 +1,19 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from FabPage import FabPage
-from Page import PageProcessor, Redirect
-from config import enableSecurity
-from datawidgets import DataColumn, DataTable, LinkColumn
-from formlib import makeForm
-from pageargs import DictArg, EnumArg, IntArg, PageArgs, SortArg
-from schedulelib import scheduleDB
-from schedulerefs import createScheduleDetailsLink
-from scheduleview import createLastJobLink, describeNextRun, getScheduleStatus
-from userview import OwnerColumn
-from webgui import pageLink, pageURL
-from xmlgen import xhtml
+from softfab.FabPage import FabPage
+from softfab.Page import PageProcessor, Redirect
+from softfab.config import enableSecurity
+from softfab.datawidgets import DataColumn, DataTable, LinkColumn
+from softfab.formlib import makeForm
+from softfab.pageargs import DictArg, EnumArg, IntArg, PageArgs, SortArg
+from softfab.schedulelib import scheduleDB
+from softfab.schedulerefs import createScheduleDetailsLink
+from softfab.scheduleview import (
+    createLastJobLink, describeNextRun, getScheduleStatus
+    )
+from softfab.userview import OwnerColumn
+from softfab.webgui import pageLink, pageURL
+from softfab.xmlgen import xhtml
 
 from enum import Enum
 

@@ -1,10 +1,10 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from Page import FabResource, PageProcessor, Redirect
-from UIPage import UIPage
-from authentication import NoAuthPage
-from config import enableSecurity
-from xmlgen import xhtml
+from softfab.Page import FabResource, PageProcessor, Redirect
+from softfab.UIPage import UIPage
+from softfab.authentication import NoAuthPage
+from softfab.config import enableSecurity
+from softfab.xmlgen import xhtml
 
 class Logout(UIPage, FabResource):
     '''Page that logs out the user that requests it.

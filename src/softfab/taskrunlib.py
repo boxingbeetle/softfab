@@ -2,24 +2,23 @@
 
 from typing import cast
 
-import resourcelib
-import shadowlib
-from config import dbDir
-from conversionflags import upgradeInProgress
-from databaselib import (
+from softfab import resourcelib, shadowlib
+from softfab.config import dbDir
+from softfab.conversionflags import upgradeInProgress
+from softfab.databaselib import (
     Database, DatabaseElem, ObsoleteRecordError, createInternalId
     )
-from resreq import ResourceClaim
-from restypelib import taskRunnerResourceTypeName
-from resultcode import ResultCode
-from storagelib import StorageURLMixin
-from tasklib import TaskStateMixin
-from timelib import getTime
-from timeview import formatTime
-from utils import IllegalStateError, cachedProperty, pluralize
-from waiting import topWhyNot
-from xmlbind import XMLTag
-from xmlgen import xhtml, xml
+from softfab.resreq import ResourceClaim
+from softfab.restypelib import taskRunnerResourceTypeName
+from softfab.resultcode import ResultCode
+from softfab.storagelib import StorageURLMixin
+from softfab.tasklib import TaskStateMixin
+from softfab.timelib import getTime
+from softfab.timeview import formatTime
+from softfab.utils import IllegalStateError, cachedProperty, pluralize
+from softfab.waiting import topWhyNot
+from softfab.xmlbind import XMLTag
+from softfab.xmlgen import xhtml, xml
 
 # Note: To avoid cyclic imports, joblib sets this.
 #       The weird construct is to avoid PyLint complaining about methods we

@@ -1,14 +1,14 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from config import dbDir
-from databaselib import (
+from softfab.config import dbDir
+from softfab.databaselib import (
     Database, SingletonElem, SingletonObserver, SingletonWrapper
     )
-from timelib import getTime
-from utils import cachedProperty
-from version import version
-from xmlbind import XMLTag
-from xmlgen import xml
+from softfab.timelib import getTime
+from softfab.utils import cachedProperty
+from softfab.version import version
+from softfab.xmlbind import XMLTag
+from softfab.xmlgen import xml
 
 from enum import Enum
 import logging

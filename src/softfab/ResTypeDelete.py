@@ -1,14 +1,14 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from RecordDelete import (
+from softfab.RecordDelete import (
     RecordDelete_GET, RecordDelete_POSTMixin, RecordInUseError
     )
-from frameworklib import frameworkDB
-from pageargs import RefererArg
-from pagelinks import createFrameworkDetailsLink, createTaskDetailsLink
-from resourcelib import resourceDB
-from restypelib import resTypeDB
-from taskdeflib import taskDefDB
+from softfab.frameworklib import frameworkDB
+from softfab.pageargs import RefererArg
+from softfab.pagelinks import createFrameworkDetailsLink, createTaskDetailsLink
+from softfab.resourcelib import resourceDB
+from softfab.restypelib import resTypeDB
+from softfab.taskdeflib import taskDefDB
 
 class ParentArgs:
     indexQuery = RefererArg('ResTypeIndex')

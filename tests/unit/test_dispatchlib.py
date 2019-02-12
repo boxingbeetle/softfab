@@ -5,9 +5,9 @@ import unittest
 from collections import defaultdict
 from random import Random
 
-from connection import ConnectionStatus
-from dispatchlib import pickResources
-from resreq import ResourceClaim, ResourceSpec
+from softfab.connection import ConnectionStatus
+from softfab.dispatchlib import pickResources
+from softfab.resreq import ResourceClaim, ResourceSpec
 
 sequenceNr = 0
 

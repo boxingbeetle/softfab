@@ -1,10 +1,10 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from Page import AccessDenied, InvalidRequest, Redirect
-from config import rootURL
-from useragent import UserAgent
-from userlib import privileges
-from utils import cachedProperty, iterable
+from softfab.Page import AccessDenied, InvalidRequest, Redirect
+from softfab.config import rootURL
+from softfab.useragent import UserAgent
+from softfab.userlib import privileges
+from softfab.utils import cachedProperty, iterable
 
 from cgi import parse_header
 from urllib.parse import parse_qs, urlparse

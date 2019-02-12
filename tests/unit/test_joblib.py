@@ -4,11 +4,11 @@ import random, unittest
 
 from initconfig import config
 
-import databases
-import configlib, taskrunnerlib
-from resultcode import ResultCode
-from timelib import setTime
-from utils import IllegalStateError
+from softfab import databases
+from softfab import configlib, taskrunnerlib
+from softfab.resultcode import ResultCode
+from softfab.timelib import setTime
+from softfab.utils import IllegalStateError
 
 from datageneratorlib import removeRec, DataGenerator
 

@@ -1,12 +1,12 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from Page import FabResource, PageProcessor, Redirect
-from UIPage import UIPage
-from authentication import LoginAuthPage
-from joblib import getAllTasksWithId
-from pagelinks import TaskDefIdArgs
-from resultcode import ResultCode
-from xmlgen import xhtml
+from softfab.Page import FabResource, PageProcessor, Redirect
+from softfab.UIPage import UIPage
+from softfab.authentication import LoginAuthPage
+from softfab.joblib import getAllTasksWithId
+from softfab.pagelinks import TaskDefIdArgs
+from softfab.resultcode import ResultCode
+from softfab.xmlgen import xhtml
 
 class LatestReport(UIPage, FabResource):
     authenticationWrapper = LoginAuthPage

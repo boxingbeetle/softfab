@@ -4,14 +4,14 @@
 Builds the execution graphs by using AGraph from the pygraphviz module.
 '''
 
-from Page import Responder
-from frameworklib import Framework, frameworkDB
-from graphrefs import Format, iterGraphFormats
-from pagelinks import createFrameworkDetailsURL, createProductDetailsURL
-from productdeflib import ProductDef, ProductType, productDefDB
-from setcalc import UnionFind
-from svglib import SVGPanel, svgNSPrefix
-from xmlgen import txt, xhtml
+from softfab.Page import Responder
+from softfab.frameworklib import Framework, frameworkDB
+from softfab.graphrefs import Format, iterGraphFormats
+from softfab.pagelinks import createFrameworkDetailsURL, createProductDetailsURL
+from softfab.productdeflib import ProductDef, ProductType, productDefDB
+from softfab.setcalc import UnionFind
+from softfab.svglib import SVGPanel, svgNSPrefix
+from softfab.xmlgen import txt, xhtml
 
 from xml.etree import ElementTree
 import logging

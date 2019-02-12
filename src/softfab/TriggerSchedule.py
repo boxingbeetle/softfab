@@ -1,10 +1,10 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from ControlPage import ControlPage
-from Page import InvalidRequest, PageProcessor
-from pageargs import PageArgs, StrArg
-from schedulelib import scheduleDB
-from xmlgen import xml
+from softfab.ControlPage import ControlPage
+from softfab.Page import InvalidRequest, PageProcessor
+from softfab.pageargs import PageArgs, StrArg
+from softfab.schedulelib import scheduleDB
+from softfab.xmlgen import xml
 
 class TriggerSchedule_POST(ControlPage):
 

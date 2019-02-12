@@ -1,11 +1,11 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from datawidgets import DataColumn
-from pagelinks import TaskIdArgs, createTaskInfoLink
-from shadowlib import shadowDB
-from shadowview import getShadowRunStatus
-from webgui import cell, maybeLink, pageLink
-from xmlgen import xhtml
+from softfab.datawidgets import DataColumn
+from softfab.pagelinks import TaskIdArgs, createTaskInfoLink
+from softfab.shadowlib import shadowDB
+from softfab.shadowview import getShadowRunStatus
+from softfab.webgui import cell, maybeLink, pageLink
+from softfab.xmlgen import xhtml
 
 def getTaskStatus(task):
     '''Returns a short string describing the current status of the given task

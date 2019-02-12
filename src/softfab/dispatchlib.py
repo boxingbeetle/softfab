@@ -6,8 +6,8 @@ from typing import (
     cast, overload
     )
 
-from resreq import ResourceClaim, ResourceSpec
-from waiting import (
+from softfab.resreq import ResourceClaim, ResourceSpec
+from softfab.waiting import (
     ReasonForWaiting, ResourceCapsReason, ResourceSpecReason,
     ResourceTypeReason, StatusLevel, statusLevelForResource
     )

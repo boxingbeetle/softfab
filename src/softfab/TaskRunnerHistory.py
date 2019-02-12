@@ -1,15 +1,15 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from FabPage import FabPage
-from Page import PageProcessor
-from joblib import jobDB
-from pageargs import IntArg, SortArg
-from pagelinks import TaskRunnerIdArgs
-from querylib import runQuery
-from taskrunnerlib import taskRunnerDB
-from tasktables import TaskRunsTable
-from webgui import pageLink
-from xmlgen import xhtml
+from softfab.FabPage import FabPage
+from softfab.Page import PageProcessor
+from softfab.joblib import jobDB
+from softfab.pageargs import IntArg, SortArg
+from softfab.pagelinks import TaskRunnerIdArgs
+from softfab.querylib import runQuery
+from softfab.taskrunnerlib import taskRunnerDB
+from softfab.tasktables import TaskRunsTable
+from softfab.webgui import pageLink
+from softfab.xmlgen import xhtml
 
 # For large factories, sorting through all tasks that ever ran will take
 # several minutes. The typical use case for Task Runner History is to see

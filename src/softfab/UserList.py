@@ -1,19 +1,19 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from FabPage import FabPage
-from Page import PageProcessor, PresentableError, Redirect
-from config import enableSecurity
-from datawidgets import DataColumn, DataTable
-from formlib import (
+from softfab.FabPage import FabPage
+from softfab.Page import PageProcessor, PresentableError, Redirect
+from softfab.config import enableSecurity
+from softfab.datawidgets import DataColumn, DataTable
+from softfab.formlib import (
     SingleCheckBoxTable, dropDownList, hiddenInput, makeForm, submitButton
     )
-from pageargs import BoolArg, EnumArg, IntArg, PageArgs, StrArg, SortArg
-from pagelinks import UserIdArgs, createUserDetailsLink
-from querylib import CustomFilter
-from userlib import UIRoleNames, rolesGrantPrivilege, userDB
-from userview import activeRole, uiRoleToSet
-from webgui import pageLink, pageURL, script
-from xmlgen import xhtml
+from softfab.pageargs import BoolArg, EnumArg, IntArg, PageArgs, StrArg, SortArg
+from softfab.pagelinks import UserIdArgs, createUserDetailsLink
+from softfab.querylib import CustomFilter
+from softfab.userlib import UIRoleNames, rolesGrantPrivilege, userDB
+from softfab.userview import activeRole, uiRoleToSet
+from softfab.webgui import pageLink, pageURL, script
+from softfab.xmlgen import xhtml
 
 class NameColumn(DataColumn):
     label = 'Name'

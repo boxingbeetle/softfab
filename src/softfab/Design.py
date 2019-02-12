@@ -4,16 +4,16 @@
 The Design page containing the execution graph(s).
 '''
 
-from FabPage import FabPage
-from Page import PageProcessor
-from graphview import (
+from softfab.FabPage import FabPage
+from softfab.Page import PageProcessor
+from softfab.graphview import (
     GraphPageMixin, GraphPanel, canCreateGraphs,
     createExecutionGraph, createLegend, iterConnectedExecutionGraphs
     )
-from pageargs import PageArgs, StrArg
-from webgui import docLink
-from utils import encodeURL
-from xmlgen import xhtml
+from softfab.pageargs import PageArgs, StrArg
+from softfab.webgui import docLink
+from softfab.utils import encodeURL
+from softfab.xmlgen import xhtml
 
 class Design(GraphPageMixin, FabPage):
     icon = 'IconDesign'

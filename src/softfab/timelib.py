@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from statuslib import StatusModel, StatusModelRegistry
-from xmlgen import xml
+from softfab.statuslib import StatusModel, StatusModelRegistry
+from softfab.xmlgen import xml
 
 from twisted.internet import reactor
 from time import localtime, mktime, strftime, struct_time, time

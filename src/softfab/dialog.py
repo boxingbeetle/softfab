@@ -3,13 +3,13 @@
 from abc import ABC
 from typing import ClassVar, Sequence, Type
 
-from FabPage import FabPage
-from Page import InvalidRequest, PageProcessor, PresentableError
-from formlib import backButton, makeForm, submitButton
-from pageargs import ArgsCorrected, PageArgs, StrArg
-from utils import abstract
-from webgui import PresenterFunction
-from xmlgen import xhtml
+from softfab.FabPage import FabPage
+from softfab.Page import InvalidRequest, PageProcessor, PresentableError
+from softfab.formlib import backButton, makeForm, submitButton
+from softfab.pageargs import ArgsCorrected, PageArgs, StrArg
+from softfab.utils import abstract
+from softfab.webgui import PresenterFunction
+from softfab.xmlgen import xhtml
 
 def _backAndNextButton(backName, nextLabel):
     back = backButton(name=backName)

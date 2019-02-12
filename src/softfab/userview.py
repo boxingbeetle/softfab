@@ -1,9 +1,9 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from datawidgets import DataColumn
-from pageargs import EnumArg, PageArgs, PasswordArg
-from pagelinks import UserIdArgs, createUserDetailsLink
-from userlib import UIRoleNames, PasswordMessage, minimumPasswordLength
+from softfab.datawidgets import DataColumn
+from softfab.pageargs import EnumArg, PageArgs, PasswordArg
+from softfab.pagelinks import UserIdArgs, createUserDetailsLink
+from softfab.userlib import UIRoleNames, PasswordMessage, minimumPasswordLength
 
 passwordStr = {
     PasswordMessage.SUCCESS  : 'The password has been changed successfully.',

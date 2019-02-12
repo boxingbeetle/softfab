@@ -1,12 +1,14 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from config import dbDir
-from databaselib import DatabaseElem, VersionedDatabase
-from paramlib import ParamMixin
-from resreq import ResourceClaim, ResourceSpec, taskRunnerResourceRefName
-from restypelib import taskRunnerResourceTypeName
-from xmlbind import XMLTag
-from xmlgen import xml
+from softfab.config import dbDir
+from softfab.databaselib import DatabaseElem, VersionedDatabase
+from softfab.paramlib import ParamMixin
+from softfab.resreq import (
+    ResourceClaim, ResourceSpec, taskRunnerResourceRefName
+    )
+from softfab.restypelib import taskRunnerResourceTypeName
+from softfab.xmlbind import XMLTag
+from softfab.xmlgen import xml
 
 class FrameworkFactory:
     @staticmethod

@@ -2,11 +2,11 @@
 
 from functools import total_ordering
 
-from config import dbDir
-from databaselib import Database, DatabaseElem, createInternalId
-from productdeflib import ProductType, productDefDB
-from xmlbind import XMLTag
-from xmlgen import xml
+from softfab.config import dbDir
+from softfab.databaselib import Database, DatabaseElem, createInternalId
+from softfab.productdeflib import ProductType, productDefDB
+from softfab.xmlbind import XMLTag
+from softfab.xmlgen import xml
 
 class ProductFactory:
     @staticmethod

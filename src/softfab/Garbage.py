@@ -1,9 +1,9 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from Page import FabResource
-from UIPage import UIPage
-from authentication import NoAuthPage
-from xmlgen import xhtml
+from softfab.Page import FabResource
+from softfab.UIPage import UIPage
+from softfab.authentication import NoAuthPage
+from softfab.xmlgen import xhtml
 
 import gc
 

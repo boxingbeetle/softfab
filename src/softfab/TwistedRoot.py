@@ -1,17 +1,17 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from InternalErrorPage import InternalErrorPage
-from Page import FabResource, InternalError, Redirect, Redirector
-from SplashPage import SplashPage, startupMessages
-from StyleResources import styleRoot
-from TwistedUtil import PageRedirect
-from authentication import NoAuthPage
-from config import debugSupport, homePageName
-from databases import iterDatabasesToPreload
-from render import NotFoundPage, parseAndProcess, present
-from request import Request
-from schedulelib import ScheduleManager
-from userlib import UnknownUser
+from softfab.InternalErrorPage import InternalErrorPage
+from softfab.Page import FabResource, InternalError, Redirect, Redirector
+from softfab.SplashPage import SplashPage, startupMessages
+from softfab.StyleResources import styleRoot
+from softfab.TwistedUtil import PageRedirect
+from softfab.authentication import NoAuthPage
+from softfab.config import debugSupport, homePageName
+from softfab.databases import iterDatabasesToPreload
+from softfab.render import NotFoundPage, parseAndProcess, present
+from softfab.request import Request
+from softfab.schedulelib import ScheduleManager
+from softfab.userlib import UnknownUser
 
 from twisted.cred.error import LoginFailed
 from twisted.internet import defer, reactor
@@ -199,95 +199,95 @@ def _iterPageImporters():
     # pylint: disable=possibly-unused-variable
     # Special web pages:
     def importLatestReport():
-        from LatestReport import LatestReport
+        from softfab.LatestReport import LatestReport
         return LatestReport,
     def importLogin():
-        from Login import Login_GET, Login_POST
+        from softfab.Login import Login_GET, Login_POST
         return Login_GET, Login_POST
     def importLogout():
-        from Logout import Logout
+        from softfab.Logout import Logout
         return Logout,
     # Data export pages:
     def importFeed():
-        from Feed import Feed
+        from softfab.Feed import Feed
         return Feed,
     def importReportTasksCSV():
-        from ReportTasksCSV import ReportTasksCSV
+        from softfab.ReportTasksCSV import ReportTasksCSV
         return ReportTasksCSV,
     def importTaskMatrixCSV():
-        from TaskMatrixCSV import TaskMatrixCSV
+        from softfab.TaskMatrixCSV import TaskMatrixCSV
         return TaskMatrixCSV,
     # API calls:
     def importAbort():
-        from Abort import Abort_POST
+        from softfab.Abort import Abort_POST
         return Abort_POST,
     def importGetFactoryInfo():
-        from GetFactoryInfo import GetFactoryInfo
+        from softfab.GetFactoryInfo import GetFactoryInfo
         return GetFactoryInfo,
     def importGetJobHistory():
-        from GetJobHistory import GetJobHistory
+        from softfab.GetJobHistory import GetJobHistory
         return GetJobHistory,
     def importGetJobInfo():
-        from GetJobInfo import GetJobInfo
+        from softfab.GetJobInfo import GetJobInfo
         return GetJobInfo,
     def importGetResourceInfo():
-        from GetResourceInfo import GetResourceInfo
+        from softfab.GetResourceInfo import GetResourceInfo
         return GetResourceInfo,
     def importGetTagged():
-        from GetTagged import GetTagged
+        from softfab.GetTagged import GetTagged
         return GetTagged,
     def importGetTaggedTaskInfo():
-        from GetTaggedTaskInfo import GetTaggedTaskInfo
+        from softfab.GetTaggedTaskInfo import GetTaggedTaskInfo
         return GetTaggedTaskInfo,
     def importGetTaskDefParams():
-        from GetTaskDefParams import GetTaskDefParams
+        from softfab.GetTaskDefParams import GetTaskDefParams
         return GetTaskDefParams,
     def importInspectDone():
-        from InspectDone import InspectDone_POST
+        from softfab.InspectDone import InspectDone_POST
         return InspectDone_POST,
     def importListModels():
-        from ListModels import ListModels
+        from softfab.ListModels import ListModels
         return ListModels,
     def importLoadExecuteDefault():
-        from LoadExecuteDefault import LoadExecuteDefault_POST
+        from softfab.LoadExecuteDefault import LoadExecuteDefault_POST
         return LoadExecuteDefault_POST,
     def importObserveStatus():
-        from ObserveStatus import ObserveStatus
+        from softfab.ObserveStatus import ObserveStatus
         return ObserveStatus,
     def importResourceControl():
-        from ResourceControl import ResourceControl_POST
+        from softfab.ResourceControl import ResourceControl_POST
         return ResourceControl_POST,
     def importSynchronize():
-        from Synchronize import Synchronize_POST
+        from softfab.Synchronize import Synchronize_POST
         return Synchronize_POST,
     def importTaskAlert():
-        from TaskAlert import TaskAlert_POST
+        from softfab.TaskAlert import TaskAlert_POST
         return TaskAlert_POST,
     def importTaskDone():
-        from TaskDone import TaskDone_POST
+        from softfab.TaskDone import TaskDone_POST
         return TaskDone_POST,
     def importaskReport():
-        from TaskReport import TaskReport_POST
+        from softfab.TaskReport import TaskReport_POST
         return TaskReport_POST,
     def importTaskRunnerExit():
-        from TaskRunnerExit import TaskRunnerExit_POST
+        from softfab.TaskRunnerExit import TaskRunnerExit_POST
         return TaskRunnerExit_POST,
     def importTriggerSchedule():
-        from TriggerSchedule import TriggerSchedule_POST
+        from softfab.TriggerSchedule import TriggerSchedule_POST
         return TriggerSchedule_POST,
     # Debug pages:
     # Harmless debug pages are always enabled, while pages that may leak
     # information or have side effects are only available when explicitly
     # enabled in the configuration.
     def importAbout():
-        from About import About
+        from softfab.About import About
         return About,
     def importExecutionGraphExamples():
-        from ExecutionGraphExamples import ExecutionGraphExamples
+        from softfab.ExecutionGraphExamples import ExecutionGraphExamples
         return ExecutionGraphExamples,
     if debugSupport:
         def importGarbage():
-            from Garbage import Garbage
+            from softfab.Garbage import Garbage
             return Garbage,
     return iter(locals().values())
 

@@ -2,9 +2,9 @@
 
 from typing import ClassVar, Sequence
 
-from restypelib import taskRunnerResourceTypeName
-from resultcode import ResultCode
-from xmlgen import xml
+from softfab.restypelib import taskRunnerResourceTypeName
+from softfab.resultcode import ResultCode
+from softfab.xmlgen import xml
 
 class TaskRunnerSet:
 

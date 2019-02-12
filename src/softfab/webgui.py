@@ -6,11 +6,11 @@ TODO: Currently the "css" Python argument sets the XHTML "style" attribute and
       The fact that "style" does not map to "style" is confusing.
 '''
 
-from config import docPage
-from pageargs import PageArgs
-from pnglib import getPNGDimensions
-from utils import SharedInstance, encodeURL, iterable
-from xmlgen import (
+from softfab.config import docPage
+from softfab.pageargs import PageArgs
+from softfab.pnglib import getPNGDimensions
+from softfab.utils import SharedInstance, encodeURL, iterable
+from softfab.xmlgen import (
     XML, XMLAttributeValue, XMLContent, XMLNode, XMLPresentable,
     XMLSubscriptable, adaptToXML, xhtml
     )

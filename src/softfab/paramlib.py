@@ -2,8 +2,8 @@
 
 from typing import ClassVar
 
-from utils import ResultKeeper, SharedInstance, SingletonMeta
-from xmlgen import xml
+from softfab.utils import ResultKeeper, SharedInstance, SingletonMeta
+from softfab.xmlgen import xml
 
 specialParameters = set([ 'sf.wrapper', 'sf.extractor', 'sf.timeout' ])
 '''specialParameters will not be listed in the Parameters section

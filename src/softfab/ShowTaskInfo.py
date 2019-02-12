@@ -1,24 +1,24 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from FabPage import FabPage
-from Page import PageProcessor
-from frameworklib import frameworkDB
-from joblib import jobDB
-from pagelinks import (
+from softfab.FabPage import FabPage
+from softfab.Page import PageProcessor
+from softfab.frameworklib import frameworkDB
+from softfab.joblib import jobDB
+from softfab.pagelinks import (
     TaskIdArgs, createFrameworkDetailsLink, createJobLink,
     createTaskDetailsLink, createTaskHistoryLink, createTaskRunnerDetailsLink
     )
-from paramview import ParametersTable
-from productview import ProductTable
-from projectlib import project
-from resourceview import InlineResourcesTable
-from selectview import valuesToText
-from taskdeflib import taskDefDB
-from taskdefview import formatTimeout
-from taskrunnerlib import taskRunnerDB
-from tasktables import JobTaskRunsTable
-from webgui import PropertiesTable
-from xmlgen import txt, xhtml
+from softfab.paramview import ParametersTable
+from softfab.productview import ProductTable
+from softfab.projectlib import project
+from softfab.resourceview import InlineResourcesTable
+from softfab.selectview import valuesToText
+from softfab.taskdeflib import taskDefDB
+from softfab.taskdefview import formatTimeout
+from softfab.taskrunnerlib import taskRunnerDB
+from softfab.tasktables import JobTaskRunsTable
+from softfab.webgui import PropertiesTable
+from softfab.xmlgen import txt, xhtml
 
 taskParametersTable = ParametersTable('task')
 

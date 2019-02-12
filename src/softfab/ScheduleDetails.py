@@ -1,20 +1,20 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from FabPage import FabPage
-from Page import PageProcessor
-from RecordDelete import DeleteArgs
-from config import enableSecurity
-from configlib import configDB
-from pagelinks import ConfigIdArgs, createConfigDetailsLink
-from schedulelib import ScheduleRepeat, scheduleDB
-from schedulerefs import ScheduleIdArgs
-from scheduleview import (
+from softfab.FabPage import FabPage
+from softfab.Page import PageProcessor
+from softfab.RecordDelete import DeleteArgs
+from softfab.config import enableSecurity
+from softfab.configlib import configDB
+from softfab.pagelinks import ConfigIdArgs, createConfigDetailsLink
+from softfab.schedulelib import ScheduleRepeat, scheduleDB
+from softfab.schedulerefs import ScheduleIdArgs
+from softfab.scheduleview import (
     createLastJobLink, describeNextRun, getScheduleStatus, stringToListDays
     )
-from selectview import TagArgs
-from utils import pluralize
-from webgui import PropertiesTable, Table, cell, pageLink, row
-from xmlgen import xhtml
+from softfab.selectview import TagArgs
+from softfab.utils import pluralize
+from softfab.webgui import PropertiesTable, Table, cell, pageLink, row
+from softfab.xmlgen import xhtml
 
 def statusDescription(scheduled):
     status = getScheduleStatus(scheduled)

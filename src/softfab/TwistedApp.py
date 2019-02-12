@@ -12,11 +12,10 @@ Main module for starting the Control Center inside Twisted.
 from twisted.web import server
 
 # Importing of this module triggers the logging system initialisation.
-import initlog
-del initlog
+import softfab.initlog # pylint: disable=unused-import
 
 # This must be after importing initlog
-from TwistedRoot import SoftFabRoot
+from softfab.TwistedRoot import SoftFabRoot
 import gc
 
 # Old objects are recycled when their reference count reaches zero.

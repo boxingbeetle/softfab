@@ -1,16 +1,17 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+import imp
 import unittest
 from io import StringIO
 
 from initconfig import config
 
-import taskrunnerlib, xmlbind
-from databases import reloadDatabases
 from datageneratorlib import removeRec
-from resourceview import getResourceStatus
-from timelib import setTime
-import imp
+
+from softfab import taskrunnerlib, xmlbind
+from softfab.databases import reloadDatabases
+from softfab.resourceview import getResourceStatus
+from softfab.timelib import setTime
 
 class DataFactory(object):
     "Factory for TaskRunnerData class."

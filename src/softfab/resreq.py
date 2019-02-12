@@ -7,8 +7,8 @@ from typing import (
     AbstractSet, Dict, FrozenSet, Iterable, Iterator, Mapping, cast
     )
 
-from xmlbind import XMLTag
-from xmlgen import xml
+from softfab.xmlbind import XMLTag
+from softfab.xmlgen import xml
 
 taskRunnerResourceRefName = 'SF_TR_HOST'
 

@@ -1,8 +1,9 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-import databaselib
 import os, os.path, random, time, unittest
-from xmlgen import xml
+
+from softfab import databaselib
+from softfab.xmlgen import xml
 
 class Record(databaselib.DatabaseElem):
     "Minimal implementation of DatabaseElem."

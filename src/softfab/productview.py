@@ -3,13 +3,13 @@
 from abc import ABC
 from typing import ClassVar
 
-from jobview import combinedStatus
-from pagelinks import createTaskInfoLink, createTaskRunnerDetailsLink
-from productdeflib import ProductType
-from taskview import getTaskStatus
-from utils import abstract
-from webgui import Table, cell, row
-from xmlgen import txt, xhtml
+from softfab.jobview import combinedStatus
+from softfab.pagelinks import createTaskInfoLink, createTaskRunnerDetailsLink
+from softfab.productdeflib import ProductType
+from softfab.taskview import getTaskStatus
+from softfab.utils import abstract
+from softfab.webgui import Table, cell, row
+from softfab.xmlgen import txt, xhtml
 
 def formatLocator(product, locator, finishedTask):
     if locator is None:

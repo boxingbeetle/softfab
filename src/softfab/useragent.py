@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from utils import cachedProperty
+from softfab.utils import cachedProperty
 
 import re
 

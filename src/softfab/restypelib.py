@@ -1,9 +1,9 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from config import dbDir
-from databaselib import VersionedDatabase, DatabaseElem
-from xmlbind import XMLTag
-from xmlgen import xml
+from softfab.config import dbDir
+from softfab.databaselib import VersionedDatabase, DatabaseElem
+from softfab.xmlbind import XMLTag
+from softfab.xmlgen import xml
 
 class ResTypeFactory:
     @staticmethod

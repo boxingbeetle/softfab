@@ -1,10 +1,12 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from datawidgets import DataColumn, DataTable, DurationColumn, TimeColumn
-from pagelinks import createTaskRunnerDetailsLink
-from shadowlib import maxOKRecords, maxDoneRecords, shadowDB
-from webgui import maybeLink
-from xmlgen import xhtml
+from softfab.datawidgets import (
+    DataColumn, DataTable, DurationColumn, TimeColumn
+    )
+from softfab.pagelinks import createTaskRunnerDetailsLink
+from softfab.shadowlib import maxOKRecords, maxDoneRecords, shadowDB
+from softfab.webgui import maybeLink
+from softfab.xmlgen import xhtml
 
 def getShadowRunStatus(run):
     state = run['state']

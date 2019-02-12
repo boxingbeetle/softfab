@@ -2,7 +2,7 @@
 
 from initconfig import config
 
-import databases, storagelib
+from softfab import databases, storagelib
 from datageneratorlib import removeRec
 
 import unittest

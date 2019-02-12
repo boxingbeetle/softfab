@@ -1,23 +1,25 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from EditPage import EditPage
-from Page import PresentableError
-from configlib import Config, configDB
-from formlib import (
+from softfab.EditPage import EditPage
+from softfab.Page import PresentableError
+from softfab.configlib import Config, configDB
+from softfab.formlib import (
     CheckBoxesTable, DropDownList, RadioTable,
     checkBox, dropDownList, textArea, textInput
     )
-from pageargs import BoolArg, EnumArg, IntArg, SetArg, StrArg
-from projectlib import project
-from schedulelib import ScheduleRepeat, Scheduled, asap, endOfTime, scheduleDB
-from scheduleview import listToStringDays, stringToListDays, weekDays
-from timelib import getTime, stringToTime
-from timeview import formatTime
-from webgui import (
+from softfab.pageargs import BoolArg, EnumArg, IntArg, SetArg, StrArg
+from softfab.projectlib import project
+from softfab.schedulelib import (
+    ScheduleRepeat, Scheduled, asap, endOfTime, scheduleDB
+    )
+from softfab.scheduleview import listToStringDays, stringToListDays, weekDays
+from softfab.timelib import getTime, stringToTime
+from softfab.timeview import formatTime
+from softfab.webgui import (
     Column, Panel, Script, Table, addRemoveStyleScript, docLink,
     groupItem, vgroup
     )
-from xmlgen import txt, xhtml
+from softfab.xmlgen import txt, xhtml
 
 from enum import Enum
 from time import localtime

@@ -1,17 +1,17 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from EditPage import EditPage
-from FabPage import IconModifier
-from Page import PresentableError
-from formlib import DropDownList, RadioTable, checkBox, textInput
-from pageargs import ArgsCorrected, BoolArg, EnumArg, IntArg, StrArg
-from projectlib import (
+from softfab.EditPage import EditPage
+from softfab.FabPage import IconModifier
+from softfab.Page import PresentableError
+from softfab.formlib import DropDownList, RadioTable, checkBox, textInput
+from softfab.pageargs import ArgsCorrected, BoolArg, EnumArg, IntArg, StrArg
+from softfab.projectlib import (
     EmbeddingPolicy, Project, _projectDB, defaultMaxJobs, getKnownTimezones,
     project
     )
-from setcalc import categorizedLists
-from webgui import PropertiesTable, Widget, docLink
-from xmlgen import xhtml
+from softfab.setcalc import categorizedLists
+from softfab.webgui import PropertiesTable, Widget, docLink
+from softfab.xmlgen import xhtml
 
 from urllib.parse import urlparse
 import time

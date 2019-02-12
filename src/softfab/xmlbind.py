@@ -13,8 +13,8 @@ from xml.sax.handler import (
     property_interning_dict
     )
 
-from utils import abstract
-from xmlgen import XML, XMLAttributeValue, XMLContent, xml as xmlnode
+from softfab.utils import abstract
+from softfab.xmlgen import XML, XMLAttributeValue, XMLContent, xml as xmlnode
 
 # XML parsing:
 

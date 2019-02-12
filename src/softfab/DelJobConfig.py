@@ -1,12 +1,12 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from RecordDelete import (
+from softfab.RecordDelete import (
     RecordDelete_GET, RecordDelete_POSTMixin, RecordInUseError
     )
-from configlib import configDB
-from configview import schedulesUsingConfig
-from pageargs import RefererArg
-from schedulerefs import createScheduleDetailsLink
+from softfab.configlib import configDB
+from softfab.configview import schedulesUsingConfig
+from softfab.pageargs import RefererArg
+from softfab.schedulerefs import createScheduleDetailsLink
 
 class ParentArgs:
     detailsQuery = RefererArg('ConfigDetails')

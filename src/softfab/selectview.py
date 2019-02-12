@@ -3,21 +3,21 @@
 from abc import ABC
 from typing import ClassVar
 
-from Page import Redirect
-from databaselib import Database
-from formlib import (
+from softfab.Page import Redirect
+from softfab.databaselib import Database
+from softfab.formlib import (
     disabledButton, dropDownList, hiddenInput, makeForm, resetButton,
     submitButton, textInput
     )
-from pageargs import ArgsCorrected, PageArgs, SetArg, StrArg
-from querylib import CustomFilter, runQuery
-from selectlib import TagCache
-from utils import abstract
-from webgui import (
+from softfab.pageargs import ArgsCorrected, PageArgs, SetArg, StrArg
+from softfab.querylib import CustomFilter, runQuery
+from softfab.selectlib import TagCache
+from softfab.utils import abstract
+from softfab.webgui import (
     Table, addRemoveStyleScript, cell, hgroup, pageLink, pageURL,
     preserveSpaces, script
     )
-from xmlgen import txt, xhtml
+from softfab.xmlgen import txt, xhtml
 
 class TagArgs(PageArgs):
     tagkey = StrArg(None)

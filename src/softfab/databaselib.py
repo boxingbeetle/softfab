@@ -1,9 +1,9 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from config import dbAtomicWrites, logChanges
-from utils import abstract, atomicWrite, cachedProperty
-from xmlbind import parse
-from xmlgen import XML
+from softfab.config import dbAtomicWrites, logChanges
+from softfab.utils import abstract, atomicWrite, cachedProperty
+from softfab.xmlbind import parse
+from softfab.xmlgen import XML
 
 import logging
 import os

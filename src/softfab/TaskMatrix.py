@@ -1,17 +1,17 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from CSVPage import presentCSVLink
-from FabPage import FabPage
-from ReportMixin import ReportTaskArgs
-from TaskMatrixCommon import (
+from softfab.CSVPage import presentCSVLink
+from softfab.FabPage import FabPage
+from softfab.ReportMixin import ReportTaskArgs
+from softfab.TaskMatrixCommon import (
     TaskMatrixArgs, TaskMatrixCSVArgs, TaskMatrixProcessor, dateRange
     )
-from configlib import configDB
-from formlib import dropDownList, emptyOption, makeForm, submitButton
-from jobview import createStatusBar
-from timelib import normalizeWeek, secondsPerDay, weeksInYear, iterDays
-from webgui import Table, cell, pageLink, pageURL
-from xmlgen import xhtml
+from softfab.configlib import configDB
+from softfab.formlib import dropDownList, emptyOption, makeForm, submitButton
+from softfab.jobview import createStatusBar
+from softfab.timelib import normalizeWeek, secondsPerDay, weeksInYear, iterDays
+from softfab.webgui import Table, cell, pageLink, pageURL
+from softfab.xmlgen import xhtml
 
 from collections import defaultdict
 import time

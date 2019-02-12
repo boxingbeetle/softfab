@@ -1,14 +1,14 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from FabPage import FabPage
-from StyleResources import styleRoot
-from Page import PageProcessor
-from databaselib import RecordObserver
-from joblib import jobDB
-from jobview import JobsSubTable
-from querylib import KeySorter, runQuery
-from webgui import docLink, pageLink, pageURL
-from xmlgen import xhtml
+from softfab.FabPage import FabPage
+from softfab.StyleResources import styleRoot
+from softfab.Page import PageProcessor
+from softfab.databaselib import RecordObserver
+from softfab.joblib import jobDB
+from softfab.jobview import JobsSubTable
+from softfab.querylib import KeySorter, runQuery
+from softfab.webgui import docLink, pageLink, pageURL
+from softfab.xmlgen import xhtml
 
 class MostRecent(RecordObserver):
     '''Keeps a list of the N most recent jobs.

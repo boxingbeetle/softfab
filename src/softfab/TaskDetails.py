@@ -1,21 +1,21 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from FabPage import FabPage
-from Page import PageProcessor
-from RecordDelete import DeleteArgs
-from pagelinks import (
+from softfab.FabPage import FabPage
+from softfab.Page import PageProcessor
+from softfab.RecordDelete import DeleteArgs
+from softfab.pagelinks import (
     TaskDefIdArgs, createConfigDetailsLink, createFrameworkDetailsLink,
     createTaskHistoryLink
     )
-from paramview import ParametersTable
-from projectlib import project
-from resourceview import InlineResourcesTable
-from selectview import valuesToText
-from taskdeflib import taskDefDB
-from taskdefview import configsUsingTaskDef, formatTimeout
-from utils import pluralize
-from webgui import PropertiesTable, pageLink
-from xmlgen import xhtml
+from softfab.paramview import ParametersTable
+from softfab.projectlib import project
+from softfab.resourceview import InlineResourcesTable
+from softfab.selectview import valuesToText
+from softfab.taskdeflib import taskDefDB
+from softfab.taskdefview import configsUsingTaskDef, formatTimeout
+from softfab.utils import pluralize
+from softfab.webgui import PropertiesTable, pageLink
+from softfab.xmlgen import xhtml
 
 taskDefParametersTable = ParametersTable('taskDef')
 

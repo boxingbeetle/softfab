@@ -1,11 +1,11 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from Page import PresentableError
-from RecordDelete import RecordDelete_GET, RecordDelete_POSTMixin
-from connection import ConnectionStatus
-from pageargs import RefererArg
-from taskrunnerlib import taskRunnerDB
-from xmlgen import xhtml
+from softfab.Page import PresentableError
+from softfab.RecordDelete import RecordDelete_GET, RecordDelete_POSTMixin
+from softfab.connection import ConnectionStatus
+from softfab.pageargs import RefererArg
+from softfab.taskrunnerlib import taskRunnerDB
+from softfab.xmlgen import xhtml
 
 class ParentArgs:
     indexQuery = RefererArg('ResourceIndex')

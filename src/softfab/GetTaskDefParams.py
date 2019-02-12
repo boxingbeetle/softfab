@@ -1,9 +1,9 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from ControlPage import ControlPage
-from pageargs import PageArgs, SetArg
-from taskdeflib import taskDefDB
-from xmlgen import xml
+from softfab.ControlPage import ControlPage
+from softfab.pageargs import PageArgs, SetArg
+from softfab.taskdeflib import taskDefDB
+from softfab.xmlgen import xml
 
 class GetTaskDefParams(ControlPage):
 

@@ -1,9 +1,11 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-# pylint: disable=multiple-imports
-import projectlib, restypelib, resourcelib, productdeflib, frameworklib
-import taskdeflib, storagelib, shadowlib, taskrunnerlib, productlib, joblib
-import taskrunlib, configlib, schedulelib, userlib
+from softfab import (
+    projectlib, restypelib, resourcelib, productdeflib, frameworklib,
+    taskdeflib, storagelib, shadowlib, taskrunnerlib, productlib, joblib,
+    taskrunlib, configlib, schedulelib, userlib
+    )
+
 import imp
 
 # Note: The databases should be ordered such that all if D2 depends on D1,

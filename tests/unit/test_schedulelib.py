@@ -2,13 +2,16 @@
 
 from initconfig import config as cfg
 
-import databases, configlib, joblib, schedulelib, scheduleview, taskrunnerlib
 from datageneratorlib import removeRec, DataGenerator
-from projectlib import project
-from resultcode import ResultCode
-from scheduleview import getScheduleStatus
-from timelib import endOfTime, secondsPerDay, setTimeFunc
-from timeview import formatTime
+
+from softfab import (
+    databases, configlib, joblib, schedulelib, scheduleview, taskrunnerlib
+    )
+from softfab.projectlib import project
+from softfab.resultcode import ResultCode
+from softfab.scheduleview import getScheduleStatus
+from softfab.timelib import endOfTime, secondsPerDay, setTimeFunc
+from softfab.timeview import formatTime
 
 import time, unittest
 from heapq import heappush, heappop

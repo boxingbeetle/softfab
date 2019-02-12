@@ -1,12 +1,12 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from FabPage import FabPage
-from projectlib import getBootTime, project
-from timeview import formatTime
-from utils import parseVersion
-from version import version as softFabVersion
-from webgui import Table, docLink
-from xmlgen import xhtml
+from softfab.FabPage import FabPage
+from softfab.projectlib import getBootTime, project
+from softfab.timeview import formatTime
+from softfab.utils import parseVersion
+from softfab.version import version as softFabVersion
+from softfab.webgui import Table, docLink
+from softfab.xmlgen import xhtml
 
 from passlib import __version__ as passlibVersion
 from twisted import __version__ as twistedVersion

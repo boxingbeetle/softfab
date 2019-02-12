@@ -1,11 +1,11 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from Page import PresentableError
-from formlib import RadioTable, checkBox, hiddenInput, textInput
-from pageargs import BoolArg, DictArg, EnumArg, StrArg
-from paramlib import specialParameters
-from webgui import Table, cell, rowManagerInstanceScript, script
-from xmlgen import xhtml
+from softfab.Page import PresentableError
+from softfab.formlib import RadioTable, checkBox, hiddenInput, textInput
+from softfab.pageargs import BoolArg, DictArg, EnumArg, StrArg
+from softfab.paramlib import specialParameters
+from softfab.webgui import Table, cell, rowManagerInstanceScript, script
+from softfab.xmlgen import xhtml
 
 from enum import Enum
 import re

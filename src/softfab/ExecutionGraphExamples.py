@@ -1,13 +1,13 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from Page import FabResource, PageProcessor
-from UIPage import UIPage
-from authentication import NoAuthPage
-from frameworklib import Framework
-from graphview import ExecutionGraphBuilder, GraphPageMixin
-from productdeflib import ProductDef, ProductType
-from webgui import Table
-from xmlgen import xhtml
+from softfab.Page import FabResource, PageProcessor
+from softfab.UIPage import UIPage
+from softfab.authentication import NoAuthPage
+from softfab.frameworklib import Framework
+from softfab.graphview import ExecutionGraphBuilder, GraphPageMixin
+from softfab.productdeflib import ProductDef, ProductType
+from softfab.webgui import Table
+from softfab.xmlgen import xhtml
 
 class TaskGraphBuilder(ExecutionGraphBuilder):
 

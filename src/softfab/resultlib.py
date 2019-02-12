@@ -4,8 +4,8 @@ import os.path
 import re
 from typing import Iterator, Mapping, Sequence, Set, Tuple
 
-from config import dbDir
-from taskrunlib import taskRunDB
+from softfab.config import dbDir
+from softfab.taskrunlib import taskRunDB
 
 syntheticKeys = ( 'sf.duration', )
 

@@ -1,20 +1,20 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from FabPage import FabPage
-from Page import PageProcessor, Redirect
-from configlib import TaskSetWithInputs, configDB
-from configview import (
+from softfab.FabPage import FabPage
+from softfab.Page import PageProcessor, Redirect
+from softfab.configlib import TaskSetWithInputs, configDB
+from softfab.configview import (
     InputTable, SelectConfigsMixin, SimpleConfigTable, presentMissingConfigs
     )
-from formlib import actionButtons, hiddenInput, makeForm, textInput
-from joblib import jobDB
-from paramview import ParamOverrideTable
-from pageargs import DictArg, EnumArg, RefererArg, StrArg
-from pagelinks import createJobsURL
-from selectview import SelectArgs
-from utils import encodeURL
-from webgui import decoration
-from xmlgen import xhtml
+from softfab.formlib import actionButtons, hiddenInput, makeForm, textInput
+from softfab.joblib import jobDB
+from softfab.paramview import ParamOverrideTable
+from softfab.pageargs import DictArg, EnumArg, RefererArg, StrArg
+from softfab.pagelinks import createJobsURL
+from softfab.selectview import SelectArgs
+from softfab.utils import encodeURL
+from softfab.webgui import decoration
+from softfab.xmlgen import xhtml
 
 from enum import Enum
 

@@ -1,24 +1,24 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from FabPage import FabPage
-from Page import PageProcessor
-from RecordDelete import DeleteArgs
-from configlib import configDB
-from graphview import GraphPageMixin, GraphPanel, createExecutionGraph
-from jobview import CommentPanel
-from pagelinks import (
+from softfab.FabPage import FabPage
+from softfab.Page import PageProcessor
+from softfab.RecordDelete import DeleteArgs
+from softfab.configlib import configDB
+from softfab.graphview import GraphPageMixin, GraphPanel, createExecutionGraph
+from softfab.jobview import CommentPanel
+from softfab.pagelinks import (
     ConfigIdArgs, createTaskDetailsLink, createTaskRunnerDetailsLink
     )
-from productview import formatLocator
-from projectlib import project
-from schedulelib import scheduleDB
-from schedulerefs import createScheduleDetailsLink
-from selectview import TagArgs
-from utils import encodeURL, pluralize
-from webgui import (
+from softfab.productview import formatLocator
+from softfab.projectlib import project
+from softfab.schedulelib import scheduleDB
+from softfab.schedulerefs import createScheduleDetailsLink
+from softfab.selectview import TagArgs
+from softfab.utils import encodeURL, pluralize
+from softfab.webgui import (
     PresenterFunction, Table, cell, decoration, pageLink, unorderedList
     )
-from xmlgen import txt, xhtml
+from softfab.xmlgen import txt, xhtml
 
 # Note:
 # The following pieces of information are not included in this page:

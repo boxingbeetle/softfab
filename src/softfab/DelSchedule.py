@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from RecordDelete import RecordDelete_GET, RecordDelete_POSTMixin
-from pageargs import RefererArg
-from schedulelib import scheduleDB
+from softfab.RecordDelete import RecordDelete_GET, RecordDelete_POSTMixin
+from softfab.pageargs import RefererArg
+from softfab.schedulelib import scheduleDB
 
 class ParentArgs:
     indexQuery = RefererArg('ScheduleIndex')

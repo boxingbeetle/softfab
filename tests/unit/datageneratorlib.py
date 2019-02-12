@@ -1,11 +1,13 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-import configlib, frameworklib, productdeflib, resourcelib, restypelib, \
-    taskdeflib, taskrunnerlib, userlib, xmlbind
-from resreq import ResourceSpec
-
 from io import StringIO
 import os, os.path, random
+
+from softfab import (
+    configlib, frameworklib, productdeflib, resourcelib, restypelib,
+    taskdeflib, taskrunnerlib, userlib, xmlbind
+    )
+from softfab.resreq import ResourceSpec
 
 def removeRec(path):
     """Removes a directory and the files it contains, recursively.

@@ -4,16 +4,16 @@ from abc import ABC
 from enum import Enum
 from typing import ClassVar, Union
 
-from FabPage import FabPage, IconModifier
-from Page import (
+from softfab.FabPage import FabPage, IconModifier
+from softfab.Page import (
     InternalError, InvalidRequest, PageProcessor, PresentableError, Redirect
     )
-from databaselib import Database
-from formlib import actionButtons, backButton, makeForm, textInput
-from pageargs import EnumArg, PageArgs, StrArg
-from utils import abstract
-from webgui import preserveSpaces, rowManagerScript
-from xmlgen import xhtml
+from softfab.databaselib import Database
+from softfab.formlib import actionButtons, backButton, makeForm, textInput
+from softfab.pageargs import EnumArg, PageArgs, StrArg
+from softfab.utils import abstract
+from softfab.webgui import preserveSpaces, rowManagerScript
+from softfab.xmlgen import xhtml
 
 class AbstractPhase:
     '''Note: This class is similar to DialogStep, but I don't know yet if/how

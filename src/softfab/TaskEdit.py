@@ -1,25 +1,25 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from EditPage import EditPage
-from Page import PresentableError
-from formlib import dropDownList, emptyOption, textArea, textInput
-from frameworklib import frameworkDB
-from pageargs import IntArg, StrArg
-from paramlib import paramTop
-from paramview import (
+from softfab.EditPage import EditPage
+from softfab.Page import PresentableError
+from softfab.formlib import dropDownList, emptyOption, textArea, textInput
+from softfab.frameworklib import frameworkDB
+from softfab.pageargs import IntArg, StrArg
+from softfab.paramlib import paramTop
+from softfab.paramview import (
     ParamArgsMixin, ParamDefTable,
     addParamsToElement, checkParamState, initParamArgs, validateParamState
     )
-from projectlib import project
-from resourceview import (
+from softfab.projectlib import project
+from softfab.resourceview import (
     ResourceRequirementsArgsMixin, addResourceRequirementsToElement,
     checkResourceRequirementsState, initResourceRequirementsArgs,
     resourceRequirementsWidget, validateResourceRequirementsState
     )
-from selectview import textToValues, valuesToText
-from taskdeflib import TaskDef, taskDefDB
-from webgui import PropertiesTable
-from xmlgen import xhtml
+from softfab.selectview import textToValues, valuesToText
+from softfab.taskdeflib import TaskDef, taskDefDB
+from softfab.webgui import PropertiesTable
+from softfab.xmlgen import xhtml
 
 class TaskEdit(EditPage):
     # FabPage constants:

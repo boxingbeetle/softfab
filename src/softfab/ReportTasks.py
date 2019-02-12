@@ -1,23 +1,23 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from CSVPage import presentCSVLink
-from FabPage import FabPage
-from ReportMixin import (
+from softfab.CSVPage import presentCSVLink
+from softfab.FabPage import FabPage
+from softfab.ReportMixin import (
     ExecutionState, ReportFilterForm, ReportProcessor, ReportTaskArgs,
     ReportTaskCSVArgs
     )
-from formlib import selectionList
-from joblib import (
+from softfab.formlib import selectionList
+from softfab.joblib import (
     iterAllTasks, iterDoneTasks, iterFinishedTasks, iterUnfinishedTasks,
     jobDB
     )
-from pageargs import IntArg, SortArg
-from resultlib import getKeys
-from setcalc import intersection, union
-from taskdeflib import taskDefDB
-from tasktables import TaskRunsTable
-from webgui import pageLink
-from xmlgen import xhtml
+from softfab.pageargs import IntArg, SortArg
+from softfab.resultlib import getKeys
+from softfab.setcalc import intersection, union
+from softfab.taskdeflib import taskDefDB
+from softfab.tasktables import TaskRunsTable
+from softfab.webgui import pageLink
+from softfab.xmlgen import xhtml
 
 class FilteredTaskRunsTable(TaskRunsTable):
 

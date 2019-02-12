@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from pageargs import PageArgs, StrArg
-from webgui import pageLink, pageURL
+from softfab.pageargs import PageArgs, StrArg
+from softfab.webgui import pageLink, pageURL
 
 class ScheduleIdArgs(PageArgs):
     '''Identifies a particular schedule.

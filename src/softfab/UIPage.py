@@ -1,14 +1,14 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from Page import Responder
-from StyleResources import styleRoot
-from config import debugSupport
-from pagelinks import createUserDetailsLink
-from projectlib import project
-from timelib import getTime
-from timeview import formatTime
-from version import version
-from xmlgen import xhtml
+from softfab.Page import Responder
+from softfab.StyleResources import styleRoot
+from softfab.config import debugSupport
+from softfab.pagelinks import createUserDetailsLink
+from softfab.projectlib import project
+from softfab.timelib import getTime
+from softfab.timeview import formatTime
+from softfab.version import version
+from softfab.xmlgen import xhtml
 
 from traceback import format_exc
 import logging

@@ -1,10 +1,10 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from ControlPage import ControlPage
-from Page import InvalidRequest, PageProcessor
-from pagelinks import TaskRunnerIdArgs
-from taskrunnerlib import taskRunnerDB
-from xmlgen import xml
+from softfab.ControlPage import ControlPage
+from softfab.Page import InvalidRequest, PageProcessor
+from softfab.pagelinks import TaskRunnerIdArgs
+from softfab.taskrunnerlib import taskRunnerDB
+from softfab.xmlgen import xml
 
 class TaskRunnerExit_POST(ControlPage):
 

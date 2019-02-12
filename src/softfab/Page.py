@@ -4,9 +4,9 @@ from abc import ABC
 from collections import defaultdict
 from typing import ClassVar, Type
 
-from pageargs import PageArgs
-from webgui import pageURL
-from utils import SharedInstance, abstract
+from softfab.pageargs import PageArgs
+from softfab.webgui import pageURL
+from softfab.utils import SharedInstance, abstract
 
 class Authenticator:
     '''Abstract base class of authentication wrappers.
