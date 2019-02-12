@@ -3,7 +3,7 @@ from shutil import rmtree
 from invoke import task
 
 SRC_ENV = {'PYTHONPATH': 'src'}
-PYLINT_ENV = {'PYTHONPATH': 'tests/pylint'}
+PYLINT_ENV = {'PYTHONPATH': 'src:tests/pylint'}
 
 @task
 def clean(c):
@@ -12,10 +12,10 @@ def clean(c):
     rmtree('docs/output')
 
 @task
-def lint(c):
+def lint(c, src='src/softfab/*.py'):
     """Check sources with PyLint."""
     print('Checking sources with PyLint...')
-    c.run('pylint src/softfab/*.py', env=PYLINT_ENV, pty=True)
+    c.run('pylint %s' % src, env=PYLINT_ENV, pty=True)
 
 @task
 def run(c, host='localhost', port=8180):
