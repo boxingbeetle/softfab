@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import ClassVar, Sequence
+from enum import Enum
+from typing import ClassVar, Mapping, Sequence, Type
 
 from softfab.restypelib import taskRunnerResourceTypeName
 from softfab.resultcode import ResultCode
@@ -26,7 +27,9 @@ class TaskRunnerSet:
 
 class TaskStateMixin:
     intProperties = ('starttime', 'stoptime') # type: ClassVar[Sequence[str]]
-    enumProperties = {'result': ResultCode}
+    enumProperties = {
+        'result': ResultCode
+        } # type: ClassVar[Mapping[str, Type[Enum]]]
 
     def _getState(self):
         raise NotImplementedError
