@@ -18,6 +18,12 @@ def lint(c, src='src/softfab/*.py'):
     c.run('pylint %s' % src, env=PYLINT_ENV, pty=True)
 
 @task
+def types(c, src='src/softfab/*.py'):
+    """Check sources with mypy."""
+    print('Checking sources with mypy...')
+    c.run('mypy --ignore-missing-imports %s' % src, env=SRC_ENV, pty=True)
+
+@task
 def run(c, host='localhost', port=8180):
     """Run a Control Center instance."""
     print('Starting Control Center at: http://%s:%d/' % (host, port))
