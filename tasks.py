@@ -12,10 +12,14 @@ def clean(c):
     rmtree('docs/output')
 
 @task
-def lint(c, src='src/softfab/*.py'):
+def lint(c, src='src/softfab/*.py', rule=None):
     """Check sources with PyLint."""
     print('Checking sources with PyLint...')
-    c.run('pylint %s' % src, env=PYLINT_ENV, pty=True)
+    args = []
+    if rule is not None:
+        args += ['--disable=all', '--enable=' + rule]
+    args.append(src)
+    c.run('pylint %s' % ' '.join(args), env=PYLINT_ENV, pty=True)
 
 @task
 def types(c, src='src/softfab/*.py'):
