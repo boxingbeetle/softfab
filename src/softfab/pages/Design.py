@@ -114,12 +114,13 @@ class Design(GraphPageMixin, FabPage):
                         'Edit existing Task Definitions.'
                         ),
                     ( 'Resources',
-                        'Lists all Resources, Create new Resources and Resource Types '
-                        'or Edit existing Resources.'
+                        'Lists all Resources, Create new Resources and '
+                        'Resource Types or Edit existing Resources.'
                         )
                     ]
                 yield xhtml.dl[(
-                    ( xhtml.dt[name], xhtml.dd[descr] ) for name, descr in descriptions
+                    (xhtml.dt[name], xhtml.dd[descr])
+                    for name, descr in descriptions
                     )]
         else:
             yield xhtml.p(class_ = 'notice')[

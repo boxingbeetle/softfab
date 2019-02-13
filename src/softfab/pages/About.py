@@ -56,8 +56,8 @@ class About(FabPage):
         yield xhtml.h2[ 'Documentation' ]
         yield (
             xhtml.p[
-                'The complete set of SoftFab documentation can be found on the ',
-                docLink('/')['documentation pages'],
+                'The complete set of SoftFab documentation can be found '
+                'on the ', docLink('/')['documentation pages'],
                 '.'
                 ]
             )

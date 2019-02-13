@@ -408,7 +408,8 @@ class Table(Widget):
     style = None # type: Optional[str]
     hideWhenEmpty = False
 
-    def present(self, # type: ignore # https://github.com/python/mypy/issues/5669
+    def present(self, # type: ignore
+                      # https://github.com/python/mypy/issues/5669
             data: Optional['_TableData'] = None,
             columns: Sequence[Column] = (),
             **kwargs: object

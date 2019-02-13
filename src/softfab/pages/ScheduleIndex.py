@@ -107,7 +107,9 @@ class ScheduleIndex_GET(FabPage):
         yield ScheduleTable
 
     def presentContent(self, proc):
-        yield makeForm(args = proc.args)[ ScheduleTable.instance ].present(proc=proc)
+        yield makeForm(args=proc.args)[
+            ScheduleTable.instance
+            ].present(proc=proc)
         if proc.finishedSchedules:
             yield xhtml.p[
                 pageLink('DelFinishedSchedules')[

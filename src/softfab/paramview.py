@@ -100,7 +100,9 @@ class ParamOverrideTable(Table):
                     curValue = taskParams.get(name)
                     tableRows.append([
                         name,
-                        self.getParamCell(proc, taskId, name, curValue, defValue)
+                        self.getParamCell(
+                            proc, taskId, name, curValue, defValue
+                            )
                         ])
             if len(tableRows) > 0:
                 tableRows[0].insert(0, cell(rowspan = len(tableRows))[taskId])

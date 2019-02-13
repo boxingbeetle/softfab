@@ -31,9 +31,13 @@ else:
     except ValueError:
         dbVersion = 0, 0, 0
 if dbVersion < (2, 16, 0):
-    print('Cannot convert database because its format is too old (%s).' \
-        % '.'.join(str(i) for i in dbVersion), file=sys.stderr)
-    print('Please upgrade to an earlier SoftFab version first.', file=sys.stderr)
+    print(
+        'Cannot convert database because its format is too old (%s).'
+        % '.'.join(str(i) for i in dbVersion), file=sys.stderr
+        )
+    print(
+        'Please upgrade to an earlier SoftFab version first.', file=sys.stderr
+        )
     print('See release notes for details.', file=sys.stderr)
     sys.exit(1)
 
