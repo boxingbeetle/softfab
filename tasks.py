@@ -5,6 +5,8 @@ from invoke import task
 SRC_ENV = {'PYTHONPATH': 'src'}
 PYLINT_ENV = {'PYTHONPATH': 'src:tests/pylint'}
 
+all_sources = 'src/softfab/*.py src/softfab/pages/*.py'
+
 @task
 def clean(c):
     """Clean up our output."""
@@ -12,7 +14,7 @@ def clean(c):
     rmtree('docs/output')
 
 @task
-def lint(c, src='src/softfab/*.py', rule=None):
+def lint(c, src=all_sources, rule=None):
     """Check sources with PyLint."""
     print('Checking sources with PyLint...')
     args = []
@@ -22,7 +24,7 @@ def lint(c, src='src/softfab/*.py', rule=None):
     c.run('pylint %s' % ' '.join(args), env=PYLINT_ENV, pty=True)
 
 @task
-def types(c, src='src/softfab/*.py'):
+def types(c, src=all_sources):
     """Check sources with mypy."""
     print('Checking sources with mypy...')
     c.run('mypy --ignore-missing-imports %s' % src, env=SRC_ENV, pty=True)
