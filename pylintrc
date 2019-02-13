@@ -101,8 +101,11 @@ disable=bad-continuation,
         useless-return,
         # Too many false positives currently, should improve soon.
         #   https://github.com/PyCQA/pylint/issues/2300
-        wrong-import-order
+        wrong-import-order,
         # We're not sticking to this PEP8 rule yet, maybe later.
+        fixme,
+        # A lot of TODOs mark poor design, which should be fixed at some
+        # point, but are not urgent enough to be included in every run.
 
 [REPORTS]
 
