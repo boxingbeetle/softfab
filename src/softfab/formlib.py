@@ -1,6 +1,5 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from abc import ABC
 from enum import Enum
 from typing import ClassVar, Mapping, Optional
 
