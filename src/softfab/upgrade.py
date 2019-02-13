@@ -43,8 +43,8 @@ def convertAll():
     '''Convert all databases to the current format.
     '''
 
-    from databases import iterDatabases
-    from taskrunnerlib import recomputeRunning
+    from softfab.databases import iterDatabases
+    from softfab.taskrunnerlib import recomputeRunning
 
     for db in iterDatabases():
         print('Converting', db.description, 'database...')

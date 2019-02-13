@@ -25,7 +25,7 @@ from xml.etree import ElementTree
 import logging
 
 if TYPE_CHECKING:
-    from datawidgets import _TableData
+    from softfab.datawidgets import _TableData
 
 # NoReturn was introduced in Python 3.6.5.
 if TYPE_CHECKING:

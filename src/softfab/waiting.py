@@ -16,7 +16,7 @@ from softfab.resreq import ResourceSpec
 from softfab.utils import abstract, pluralize
 
 if TYPE_CHECKING:
-    from resourcelib import ResourceBase
+    from softfab.resourcelib import ResourceBase
 else:
     ResourceBase = None
 

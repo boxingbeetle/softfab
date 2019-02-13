@@ -13,7 +13,7 @@ from softfab.waiting import (
     )
 
 if TYPE_CHECKING:
-    from resourcelib import Resource
+    from softfab.resourcelib import Resource
 else:
     Resource = None
 

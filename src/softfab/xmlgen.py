@@ -16,7 +16,7 @@ TODO: Look again at today's Stan, I think it has changed and there are less
       differences now. The main difference remains though: no templating.
 
 To create an XML tree (data structure consisting of nested XMLNodes):
-  from xmlgen import xml
+  from softfab.xmlgen import xml
   xml.<tagname>(<attributes>)[<nested elements>]
 where attributes are keyword arguments.
 If the tag name contains a minus or is not a constant, you can use the

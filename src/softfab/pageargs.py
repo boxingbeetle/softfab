@@ -14,7 +14,7 @@ from softfab.timeview import formatDate, formatTime
 from softfab.utils import cachedProperty, encodeURL, iterable
 
 if TYPE_CHECKING:
-    from request import Request
+    from softfab.request import Request
 else:
     Request = None
 
