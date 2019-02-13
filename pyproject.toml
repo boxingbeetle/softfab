@@ -34,6 +34,7 @@ passlib = {version = '^1.7', extras = ['bcrypt']}
 pygraphviz = '^1.4'
 pytz = '*'
 importlib_resources = "^1.0"
+"zope.interface" = '^4.4.2'
 
 [tool.poetry.dev-dependencies]
 lektor = '^3.1'
