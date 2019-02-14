@@ -21,11 +21,11 @@ from twisted.python.failure import Failure
 from twisted.web import resource, server
 
 from functools import partial
+from importlib import import_module
 from inspect import getmodulename
 from types import GeneratorType
 import importlib_resources
 import logging
-import sys
 
 startupLogger = logging.getLogger('ControlCenter.startup')
 
@@ -179,16 +179,14 @@ class PageLoader:
             if moduleName is None or moduleName == '__init__':
                 continue
             fullName = pagesPackage + '.' + moduleName
-            if fullName not in sys.modules:
-                try:
-                    __import__(fullName)
-                except Exception:
-                    startupLogger.exception(
-                        'Error importing page module "%s"', fullName
-                        )
-                    continue
-            module = sys.modules[fullName]
-            self.__addPage(module, moduleName)
+            try:
+                module = import_module(fullName)
+            except Exception:
+                startupLogger.exception(
+                    'Error importing page module "%s"', fullName
+                    )
+            else:
+                self.__addPage(module, moduleName)
 
 class PageResource(resource.Resource):
     '''Twisted Resource that serves Control Center pages.
