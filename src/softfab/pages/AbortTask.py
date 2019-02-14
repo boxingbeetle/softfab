@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from softfab.FabPage import FabPage
+from softfab.FabPage import FabPage, IconModifier
 from softfab.Page import PageProcessor, Redirect
 from softfab.formlib import actionButtons, makeForm
 from softfab.joblib import jobDB
@@ -13,7 +13,8 @@ from enum import Enum
 Actions = Enum('Actions', 'ABORT CANCEL')
 
 class AbortTask_GET(FabPage):
-    icon = 'AbortTask'
+    icon = 'IconExec'
+    iconModifier = IconModifier.DELETE
     description = 'Abort Task'
 
     class Arguments(TaskIdArgs):
@@ -37,7 +38,8 @@ class AbortTask_GET(FabPage):
             ].present(proc=proc)
 
 class AbortTask_POST(FabPage):
-    icon = 'AbortTask'
+    icon = 'IconExec'
+    iconModifier = IconModifier.DELETE
     description = 'Abort Task'
 
     class Arguments(TaskIdArgs):
