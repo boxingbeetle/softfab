@@ -293,7 +293,7 @@ class SoftFabRoot(resource.Resource):
         # Start schedule processing.
         yield ScheduleManager().trigger
 
-    def startupComplete(self, result):
+    def startupComplete(self, result): # pylint: disable=unused-argument
         # Serve a 404 page for non-existing URLs.
         self.defaultPage = PageResource.anyMethod(ResourceNotFound)
 
