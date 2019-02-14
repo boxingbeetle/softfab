@@ -16,17 +16,6 @@ import softfab.initlog # pylint: disable=unused-import
 
 # This must be after importing initlog
 from softfab.TwistedRoot import SoftFabRoot
-import gc
-
-# Old objects are recycled when their reference count reaches zero.
-# Python can do a mark-and-sweep garbage collection as well, to clean up
-# clusters of objects which are unreachable but have non-zero reference counts
-# due to cyclic references. However, this mark-and-sweep blocks the Python VM
-# for a while, depending on how many objects exist. For large factories, it can
-# take seconds or even minutes to check everything. Therefore we decided to
-# rely purely on reference counting and write code for explicitly breaking
-# reference cycles.
-gc.disable()
 
 # TODO: Can we set this timeout on individual sessions instead?
 server.Session.sessionTimeout = 60 * 60 * 24 * 7 # one week in seconds

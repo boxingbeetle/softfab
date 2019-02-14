@@ -6,7 +6,7 @@ from softfab.SplashPage import SplashPage, startupMessages
 from softfab.StyleResources import styleRoot
 from softfab.TwistedUtil import PageRedirect
 from softfab.authentication import NoAuthPage
-from softfab.config import debugSupport, homePageName
+from softfab.config import homePageName
 from softfab.databases import iterDatabasesToPreload
 from softfab.render import NotFoundPage, parseAndProcess, present
 from softfab.request import Request
@@ -284,10 +284,6 @@ def _iterPageImporters():
     def importExecutionGraphExamples():
         from softfab.pages.ExecutionGraphExamples import ExecutionGraphExamples
         return ExecutionGraphExamples,
-    if debugSupport:
-        def importGarbage():
-            from softfab.pages.Garbage import Garbage
-            return Garbage,
     return iter(locals().values())
 
 class PageResource(resource.Resource):
