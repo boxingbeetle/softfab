@@ -44,9 +44,6 @@ class Garbage(UIPage, FabResource):
                 xhtml.p[ 'Referred by:' ],
                 xhtml.table[
                     xhtml.tbody[(
-                        # Note: Generator expressions do not put their iteration
-                        #       variable in the outside scope, unlike list
-                        #       comprehensions.
                         xhtml.tr[ xhtml.td[ repr(referrer) ]]
                         for referrer in referrers
                         )]
