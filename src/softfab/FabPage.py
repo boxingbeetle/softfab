@@ -41,11 +41,22 @@ class FabPage(UIPage, FabResource, ABC):
     # If set to False, the parent will not link to this page.
     linkDescription = None # type: ClassVar[Union[str, bool, None]]
     children = [] # type: ClassVar[Sequence[str]]
+
     # TODO: Because this is a static method, it is not possible to disable
     #       pages (like AddUser) for certain roles.
-    #       We could solve this by passing the request object: we to separate
+    #       We could solve this by passing the request object: we separate
     #       the page and the request anyway.
-    isActive = staticmethod(lambda: True)
+    #       However, we would have to redesign the __pageInfo mechanism,
+    #       since currently this does not contain instances of pages.
+    @staticmethod
+    def isActive():
+        """Returns True iff this page should currently be shown.
+
+        Inactive pages are not shown in the navigation bar and when accessed
+        directly, the browser will be redirected to the parent page.
+        By default, pages are active.
+        """
+        return True
 
     @classmethod
     def __processPage(cls, name, parents = ()):
