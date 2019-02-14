@@ -6,8 +6,13 @@ from softfab.useragent import UserAgent
 from softfab.userlib import privileges
 from softfab.utils import cachedProperty, iterable
 
+from twisted.web.server import Session
+
 from cgi import parse_header
 from urllib.parse import parse_qs, urlparse
+
+class LongSession(Session):
+    sessionTimeout = 60 * 60 * 24 * 7 # one week in seconds
 
 class RequestBase:
     '''Contains the request information that is available during all request
@@ -203,7 +208,9 @@ class Request(RequestBase):
         '''Starts a new session and returns it.
         '''
         request = self._request
-        session = request.site.makeSession()
+        site = request.site
+        site.sessionFactory = LongSession
+        session = site.makeSession()
         session.touch()
         request.addCookie(self.sessionCookieName, session.uid, path = '/')
         return session
