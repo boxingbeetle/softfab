@@ -21,7 +21,9 @@ from twisted.python.failure import Failure
 from twisted.web import resource, server
 
 from functools import partial
+from inspect import getmodulename
 from types import GeneratorType
+import importlib_resources
 import logging
 import sys
 
@@ -133,14 +135,19 @@ class PageLoader:
     def __init__(self, root):
         self.root = root
 
-    def __addPage(self, loader):
-        try:
-            pageClasses = loader()
-        except Exception:
-            startupLogger.exception(
-                'Error in page loader function "%s"', loader.__name__
+    def __addPage(self, module, pageName):
+        pageClasses = tuple(
+            getattr(module, name)
+            for name in dir(module)
+            if name.partition('_')[0] == pageName
+            )
+        if not pageClasses:
+            startupLogger.error(
+                'Page module "%s" does not contain any classes named "%s"',
+                module.__name__, pageName
                 )
-            return None
+            return
+
         pagesByMethod = {}
         name = None
         for pageClass in pageClasses:
@@ -163,128 +170,25 @@ class PageLoader:
                 assert name == base
         pageResource = PageResource.forMethods(pagesByMethod)
         self.root.putChild(name.encode(), pageResource)
-        return pagesByMethod.get('GET') or pagesByMethod['POST']
-
-    def __addFabPage(self, pageName):
-        fullName = 'softfab.pages.' + pageName
-        def importPage():
-            if fullName not in sys.modules:
-                __import__(fullName)
-            module = sys.modules[fullName]
-            return tuple(
-                getattr(module, name)
-                for name in dir(module)
-                if name.partition('_')[0] == pageName
-                )
-        # Set function name for error logging.
-        importPage.__name__ = 'import' + pageName
-        pageClass = self.__addPage(importPage)
-        if pageClass is None:
-            # This happens when an error was caught when adding the page.
-            return
-        for child in pageClass.children:
-            if not isinstance(child, str):
-                child = child[0]
-            self.__addFabPage(child)
 
     def process(self):
         startupMessages.addMessage('Registering pages')
-        self.__addFabPage(homePageName)
-        for loader in _iterPageImporters():
-            self.__addPage(loader)
-
-def _iterPageImporters():
-    # TODO: Organise source files so that they can be discovered automatically?
-    # pylint: disable=possibly-unused-variable
-    # Special web pages:
-    def importLatestReport():
-        from softfab.pages.LatestReport import LatestReport
-        return LatestReport,
-    def importLogin():
-        from softfab.pages.Login import Login_GET, Login_POST
-        return Login_GET, Login_POST
-    def importLogout():
-        from softfab.pages.Logout import Logout
-        return Logout,
-    # Data export pages:
-    def importFeed():
-        from softfab.pages.Feed import Feed
-        return Feed,
-    def importReportTasksCSV():
-        from softfab.pages.ReportTasksCSV import ReportTasksCSV
-        return ReportTasksCSV,
-    def importTaskMatrixCSV():
-        from softfab.pages.TaskMatrixCSV import TaskMatrixCSV
-        return TaskMatrixCSV,
-    # API calls:
-    def importAbort():
-        from softfab.pages.Abort import Abort_POST
-        return Abort_POST,
-    def importGetFactoryInfo():
-        from softfab.pages.GetFactoryInfo import GetFactoryInfo
-        return GetFactoryInfo,
-    def importGetJobHistory():
-        from softfab.pages.GetJobHistory import GetJobHistory
-        return GetJobHistory,
-    def importGetJobInfo():
-        from softfab.pages.GetJobInfo import GetJobInfo
-        return GetJobInfo,
-    def importGetResourceInfo():
-        from softfab.pages.GetResourceInfo import GetResourceInfo
-        return GetResourceInfo,
-    def importGetTagged():
-        from softfab.pages.GetTagged import GetTagged
-        return GetTagged,
-    def importGetTaggedTaskInfo():
-        from softfab.pages.GetTaggedTaskInfo import GetTaggedTaskInfo
-        return GetTaggedTaskInfo,
-    def importGetTaskDefParams():
-        from softfab.pages.GetTaskDefParams import GetTaskDefParams
-        return GetTaskDefParams,
-    def importInspectDone():
-        from softfab.pages.InspectDone import InspectDone_POST
-        return InspectDone_POST,
-    def importListModels():
-        from softfab.pages.ListModels import ListModels
-        return ListModels,
-    def importLoadExecuteDefault():
-        from softfab.pages.LoadExecuteDefault import LoadExecuteDefault_POST
-        return LoadExecuteDefault_POST,
-    def importObserveStatus():
-        from softfab.pages.ObserveStatus import ObserveStatus
-        return ObserveStatus,
-    def importResourceControl():
-        from softfab.pages.ResourceControl import ResourceControl_POST
-        return ResourceControl_POST,
-    def importSynchronize():
-        from softfab.pages.Synchronize import Synchronize_POST
-        return Synchronize_POST,
-    def importTaskAlert():
-        from softfab.pages.TaskAlert import TaskAlert_POST
-        return TaskAlert_POST,
-    def importTaskDone():
-        from softfab.pages.TaskDone import TaskDone_POST
-        return TaskDone_POST,
-    def importaskReport():
-        from softfab.pages.TaskReport import TaskReport_POST
-        return TaskReport_POST,
-    def importTaskRunnerExit():
-        from softfab.pages.TaskRunnerExit import TaskRunnerExit_POST
-        return TaskRunnerExit_POST,
-    def importTriggerSchedule():
-        from softfab.pages.TriggerSchedule import TriggerSchedule_POST
-        return TriggerSchedule_POST,
-    # Debug pages:
-    # Harmless debug pages are always enabled, while pages that may leak
-    # information or have side effects are only available when explicitly
-    # enabled in the configuration.
-    def importAbout():
-        from softfab.pages.About import About
-        return About,
-    def importExecutionGraphExamples():
-        from softfab.pages.ExecutionGraphExamples import ExecutionGraphExamples
-        return ExecutionGraphExamples,
-    return iter(locals().values())
+        pagesPackage = 'softfab.pages'
+        for fileName in importlib_resources.contents(pagesPackage):
+            moduleName = getmodulename(fileName)
+            if moduleName is None or moduleName == '__init__':
+                continue
+            fullName = pagesPackage + '.' + moduleName
+            if fullName not in sys.modules:
+                try:
+                    __import__(fullName)
+                except Exception:
+                    startupLogger.exception(
+                        'Error importing page module "%s"', fullName
+                        )
+                    continue
+            module = sys.modules[fullName]
+            self.__addPage(module, moduleName)
 
 class PageResource(resource.Resource):
     '''Twisted Resource that serves Control Center pages.
