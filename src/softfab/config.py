@@ -15,9 +15,6 @@ homePage = 'https://boxingbeetle.com/tools/softfab/'
 # The SoftFab documentation page
 docPage = 'https://softfab.example.com/docs'
 
-# The SoftFab release notes page
-relNotesPage = docPage + '/reference/release_notes'
-
 # Directory this fab's database is located in.
 dbDir = '/home/factory/db/projname'
 
