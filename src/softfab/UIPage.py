@@ -10,7 +10,7 @@ from softfab.timeview import formatTime
 from softfab.version import version
 from softfab.xmlgen import xhtml
 
-from traceback import format_exc
+from traceback import TracebackException
 import logging
 
 _logoIcon = styleRoot.addIcon('SoftFabLogo')
@@ -108,7 +108,8 @@ class UIPage(Responder):
             'An error occurred while generating this page.'
             ]
         if debugSupport:
-            yield xhtml.pre[format_exc(ex)]
+            tb = TracebackException.from_exception(ex)
+            yield xhtml.pre[tb.format()]
         else:
             yield xhtml.p['Details were written to the server log.']
 
