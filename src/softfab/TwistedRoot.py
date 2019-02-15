@@ -150,19 +150,21 @@ class PageLoader:
         pagesByMethod = {}
         name = None
         for pageClass in pageClasses:
+            page = pageClass()
+
             className = pageClass.__name__
             index = className.find('_')
             if index == -1:
                 base = className
                 assert 'GET' not in pagesByMethod
-                pagesByMethod['GET'] = pageClass
+                pagesByMethod['GET'] = page
                 assert 'POST' not in pagesByMethod
-                pagesByMethod['POST'] = pageClass
+                pagesByMethod['POST'] = page
             else:
                 base = className[ : index]
                 method = className[index + 1 : ]
                 assert method not in pagesByMethod
-                pagesByMethod[method] = pageClass
+                pagesByMethod[method] = page
             if name is None:
                 name = base
             else:
@@ -193,18 +195,18 @@ class PageResource(resource.Resource):
     isLeaf = True
 
     @classmethod
-    def anyMethod(cls, pageClass):
+    def anyMethod(cls, page):
         instance = cls()
-        setattr(instance, 'render', partial(renderAuthenticated, pageClass()))
+        setattr(instance, 'render', partial(renderAuthenticated, page))
         return instance
 
     @classmethod
     def forMethods(cls, pagesByMethod):
         instance = cls()
-        for method, pageClass in pagesByMethod.items():
+        for method, page in pagesByMethod.items():
             setattr(
                 instance, 'render_' + method,
-                partial(renderAuthenticated, pageClass())
+                partial(renderAuthenticated, page)
                 )
         return instance
 
@@ -281,7 +283,7 @@ class SoftFabRoot(resource.Resource):
         self.putChild(b'', PageRedirect('Home'))
         self.putChild(styleRoot.relativeURL.encode(), styleRoot)
 
-        self.defaultPage = PageResource.anyMethod(SplashPage)
+        self.defaultPage = PageResource.anyMethod(SplashPage())
         d = callInChunks(self.startup())
         d.addCallback(self.startupComplete)
         d.addErrback(self.startupFailed)
@@ -294,7 +296,7 @@ class SoftFabRoot(resource.Resource):
 
     def startupComplete(self, result): # pylint: disable=unused-argument
         # Serve a 404 page for non-existing URLs.
-        self.defaultPage = PageResource.anyMethod(ResourceNotFound)
+        self.defaultPage = PageResource.anyMethod(ResourceNotFound())
 
     def startupFailed(self, failure):
         startupLogger.error(
