@@ -6,7 +6,6 @@ from softfab.SplashPage import SplashPage, startupMessages
 from softfab.StyleResources import styleRoot
 from softfab.TwistedUtil import PageRedirect
 from softfab.authentication import NoAuthPage
-from softfab.config import homePageName
 from softfab.databases import iterDatabasesToPreload
 from softfab.render import NotFoundPage, parseAndProcess, present
 from softfab.request import Request
@@ -279,7 +278,7 @@ class SoftFabRoot(resource.Resource):
         '''Creates a Control Center root resource.
         '''
         resource.Resource.__init__(self)
-        self.putChild(b'', PageRedirect(homePageName))
+        self.putChild(b'', PageRedirect('Home'))
         self.putChild(styleRoot.relativeURL.encode(), styleRoot)
 
         self.defaultPage = PageResource.anyMethod(SplashPage)

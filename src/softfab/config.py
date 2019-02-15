@@ -33,10 +33,6 @@ syncDelay = 10
 # Set to 'False' to disable user login security during development
 enableSecurity = True
 
-# Set to the name of the home page handler. This is used to forward
-# requests from '/' URL and to generate navigation menu structure
-homePageName = 'Home'
-
 # SMTP relay to send outgoing messages to
 smtpRelay = 'mail.example.com'
 

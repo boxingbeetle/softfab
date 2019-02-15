@@ -9,7 +9,6 @@ from softfab.Page import FabResource, Responder
 from softfab.StyleResources import styleRoot
 from softfab.UIPage import UIPage
 from softfab.authentication import LoginAuthPage
-from softfab.config import homePageName
 from softfab.refresh import RefreshScript
 from softfab.utils import abstract
 from softfab.webgui import Widget, pageURL
@@ -91,7 +90,7 @@ class FabPage(UIPage, FabResource, ABC):
     @classmethod
     def getPageInfo(cls, page = None):
         if len(cls.__pageInfo) == 0:
-            cls.__processPage(homePageName)
+            cls.__processPage('Home')
         return cls.__pageInfo[page or cls.getResourceName()]
 
     @classmethod
@@ -193,7 +192,7 @@ class FabPage(UIPage, FabResource, ABC):
                 return url
         # In normal situations, the home page will be in the ancestry,
         # so it is unlikely we will ever get here.
-        return homePageName
+        return 'Home'
 
     def backToParent(self, req):
         parentName = self.getPageInfo()['parents'][-1]
