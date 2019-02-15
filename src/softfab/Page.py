@@ -162,6 +162,15 @@ class FabResource(ABC):
     authenticationWrapper = abstract # type: ClassVar[Type[Authenticator]]
     streaming = False
 
+    debugSupport = False
+    """Provide additional debug information as part of a reply?
+
+    This could leak privileged information, so it should only be enabled
+    in development environments.
+    This flag can be enabled site-wide by using `softfab.TwistedApp.DebugRoot`
+    as the root resource.
+    """
+
     name = property(lambda self: self.getResourceName())
 
     @classmethod

@@ -11,6 +11,7 @@ from softfab.render import NotFoundPage, parseAndProcess, present
 from softfab.request import Request
 from softfab.schedulelib import ScheduleManager
 from softfab.userlib import UnknownUser
+from softfab.utils import abstract
 
 from twisted.cred.error import LoginFailed
 from twisted.internet import defer, reactor
@@ -151,6 +152,7 @@ class PageLoader:
         name = None
         for pageClass in pageClasses:
             page = pageClass()
+            page.debugSupport = self.root.debugSupport
 
             className = pageClass.__name__
             index = className.find('_')
@@ -275,6 +277,11 @@ class ResourceNotFound(FabResource):
 stylePrefix = styleRoot.urlPrefix.encode()
 
 class SoftFabRoot(resource.Resource):
+
+    debugSupport = abstract
+    """Value for `softfab.FabResource.debugSupport` to set on pages
+    registered under this root.
+    """
 
     def __init__(self):
         '''Creates a Control Center root resource.

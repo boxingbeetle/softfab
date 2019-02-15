@@ -45,6 +45,3 @@ mailDomain = 'example.com'
 # Enables database change logging.
 # This is useful for system testing; in production it should be disabled.
 logChanges = False
-
-# Set this to True only on shielded machines, since there are security risks.
-debugSupport = False

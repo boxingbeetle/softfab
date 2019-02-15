@@ -2,7 +2,6 @@
 
 from softfab.Page import Responder
 from softfab.StyleResources import styleRoot
-from softfab.config import debugSupport
 from softfab.pagelinks import createUserDetailsLink
 from softfab.projectlib import project
 from softfab.timelib import getTime
@@ -107,7 +106,7 @@ class UIPage(Responder):
         yield xhtml.p(class_ = 'notice')[
             'An error occurred while generating this page.'
             ]
-        if debugSupport:
+        if self.debugSupport:
             tb = TracebackException.from_exception(ex)
             yield xhtml.pre[tb.format()]
         else:

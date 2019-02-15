@@ -35,7 +35,7 @@ def run(c, host='localhost', port=8180):
     print('Starting Control Center at: http://%s:%d/' % (host, port))
     c.run('twist web'
             ' --listen tcp:interface=%s:port=%d'
-            ' --class softfab.TwistedApp.Root' % (host, port),
+            ' --class softfab.TwistedApp.DebugRoot' % (host, port),
             env=SRC_ENV, pty=True)
 
 @task
