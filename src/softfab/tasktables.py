@@ -1,6 +1,5 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from softfab.config import enableSecurity
 from softfab.datawidgets import (
     DataColumn, DataTable, DurationColumn, TimeColumn
     )
@@ -41,7 +40,7 @@ class TaskRunsTable(DataTable):
         yield self.taskColumn
         if self.showTargetColumn():
             yield targetColumn
-        if enableSecurity:
+        if project.showOwners:
             yield self.ownerColumn
         yield self.summaryColumn
 

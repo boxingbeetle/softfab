@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from softfab.config import dbDir
+from softfab.config import dbDir, enableSecurity
 from softfab.databaselib import (
     Database, SingletonElem, SingletonObserver, SingletonWrapper
     )
@@ -156,6 +156,14 @@ class Project(XMLTag, SingletonElem):
 
     def setTagKeys(self, tagKeys):
         self.__tagKeys = list(tagKeys)
+
+    @property
+    def showOwners(self):
+        """Should owners be shown in the user interface?
+
+        Returns True iff user authentication is enabled.
+        """
+        return enableSecurity
 
     @property
     def showTargets(self):

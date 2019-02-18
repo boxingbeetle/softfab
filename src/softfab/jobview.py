@@ -3,7 +3,7 @@
 from typing import Mapping, Optional, Tuple, cast
 
 from softfab.StyleResources import styleRoot
-from softfab.config import enableSecurity, rootURL
+from softfab.config import rootURL
 from softfab.databaselib import RecordObserver
 from softfab.datawidgets import (
     DataColumn, DataTable, DurationColumn, TimeColumn
@@ -178,7 +178,7 @@ class JobsTable(DataTable):
         yield _DescriptionColumn.instance
         if self.showTargetColumn():
             yield targetColumn
-        if enableSecurity:
+        if project.showOwners:
             yield OwnerColumn.instance
         yield self.statusColumn
 

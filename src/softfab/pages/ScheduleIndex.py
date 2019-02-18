@@ -2,10 +2,10 @@
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor, Redirect
-from softfab.config import enableSecurity
 from softfab.datawidgets import DataColumn, DataTable, LinkColumn
 from softfab.formlib import makeForm
 from softfab.pageargs import DictArg, EnumArg, IntArg, PageArgs, SortArg
+from softfab.projectlib import project
 from softfab.schedulelib import scheduleDB
 from softfab.schedulerefs import createScheduleDetailsLink
 from softfab.scheduleview import (
@@ -69,7 +69,7 @@ class ScheduleTable(DataTable):
         yield LastRunColumn.instance
         yield NextRunColumn.instance
         yield SequenceColumn.instance
-        if enableSecurity:
+        if project.showOwners:
             yield OwnerColumn.instance
         yield LinkColumn('Edit', 'ScheduleEdit')
         yield LinkColumn('Delete', 'DelSchedule')

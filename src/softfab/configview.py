@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from softfab.config import enableSecurity, rootURL
+from softfab.config import rootURL
 from softfab.configlib import configDB
 from softfab.databaselib import RecordObserver
 from softfab.datawidgets import DataColumn, DataTable, LinkColumn
@@ -137,7 +137,7 @@ class SimpleConfigTable(DataTable):
         # TODO: Look at both project and config targets?
         if project.showTargets:
             yield self.targetColumn
-        if enableSecurity:
+        if project.showOwners:
             yield OwnerColumn.instance
 
     def iterRowStyles(self, rowNr, record, **kwargs):

@@ -3,9 +3,9 @@
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
 from softfab.RecordDelete import DeleteArgs
-from softfab.config import enableSecurity
 from softfab.configlib import configDB
 from softfab.pagelinks import ConfigIdArgs, createConfigDetailsLink
+from softfab.projectlib import project
 from softfab.schedulelib import ScheduleRepeat, scheduleDB
 from softfab.schedulerefs import ScheduleIdArgs
 from softfab.scheduleview import (
@@ -82,7 +82,7 @@ class DetailsTable(PropertiesTable):
             yield 'CM triggers', xhtml.br.join(
                 sorted(scheduled.getTagValues('sf.cmtrigger'))
                 )
-        if enableSecurity:
+        if project.showOwners:
             yield 'Owner', scheduled.getOwner() or '-'
         yield 'Comment', xhtml.br.join(scheduled.comment.splitlines())
         yield row(class_ = getScheduleStatus(scheduled))[

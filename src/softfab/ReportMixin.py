@@ -5,7 +5,6 @@ from typing import ClassVar, Optional
 
 from softfab.CSVPage import CSVPage
 from softfab.Page import PageProcessor
-from softfab.config import enableSecurity
 from softfab.databaselib import Database
 from softfab.formlib import (
     clearButton, dropDownList, makeForm, option, resetButton, selectionList,
@@ -140,7 +139,7 @@ class ReportFilterForm:
                 ]
             if len(targetList) > 1:
                 yield xhtml.td[ 'Targets:' ]
-            if len(owners) > 1 and enableSecurity:
+            if len(owners) > 1 and project.showOwners:
                 yield xhtml.td[ 'Owners:' ]
         yield xhtml.tr[ columns1() ]
 
@@ -155,7 +154,7 @@ class ReportFilterForm:
                         selected=proc.targetFilter
                         )[ targetList ]
                     ]
-            if len(owners) > 1 and enableSecurity:
+            if len(owners) > 1 and project.showOwners:
                 yield xhtml.td(rowspan = 4, style = 'vertical-align:top')[
                     selectionList(
                         name='owner', size=numListItems, style='width: 18ex',
