@@ -33,7 +33,7 @@ class TaskRunsTable(DataTable):
         Default implementation returns True iff there are multiple targets
         defined for this project.
         '''
-        return project.showTargets()
+        return project.showTargets
 
     def iterColumns(self, **kwargs):
         yield self.startTimeColumn

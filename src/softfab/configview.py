@@ -135,7 +135,7 @@ class SimpleConfigTable(DataTable):
     def iterColumns(self, **kwargs):
         yield from self.fixedColumns
         # TODO: Look at both project and config targets?
-        if project.showTargets():
+        if project.showTargets:
             yield self.targetColumn
         if enableSecurity:
             yield OwnerColumn.instance

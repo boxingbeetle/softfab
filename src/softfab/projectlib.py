@@ -157,11 +157,12 @@ class Project(XMLTag, SingletonElem):
     def setTagKeys(self, tagKeys):
         self.__tagKeys = list(tagKeys)
 
+    @property
     def showTargets(self):
-        '''Returns True iff more than one target is available,
-        meaning the targets feature is in use and should be part of the
-        user interface.
-        '''
+        """Should targets be shown in the user interface?
+
+        Returns True iff more than one target is defined.
+        """
         return len(self.__targets) > 1
 
     def getResourceServer(self):

@@ -167,7 +167,7 @@ class JobsTable(DataTable):
     statusColumn = _StatusColumn.instance
 
     def showTargetColumn(self):
-        return project.showTargets()
+        return project.showTargets
 
     def iterRowStyles(self, rowNr, record, **kwargs):
         yield getJobStatus(record)
