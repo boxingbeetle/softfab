@@ -2,7 +2,6 @@
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
-from softfab.config import enableSecurity
 from softfab.connection import ConnectionStatus
 from softfab.pagelinks import (
     ResourceIdArgs, TaskRunnerIdArgs, createJobLink, createTaskLink
@@ -89,16 +88,14 @@ class DetailsTable(Table):
         yield row(class_ = status)[ 'Status', status ]
         yield 'Exit when idle', 'yes' if runner.shouldExit() else 'no'
         yield 'Suspended', 'yes' if runner.isSuspended() else 'no'
-        if enableSecurity:
-            user = runner.getChangedUser()
-            if user is None:
-                # Note: It is possible this TR was never suspended.
-                yield 'Last suspended/resumed by', 'unknown'
-            else:
-                if runner.isSuspended():
-                    label = 'Last suspended by'
-                else:
-                    label = 'Last resumed by'
-                yield label, '%s at %s' % (
-                    user, formatTime(runner.getChangedTime())
-                    )
+
+        label = 'Last suspended' if runner.isSuspended() else 'Last resumed'
+        changedTime = runner.getChangedTime()
+        if changedTime == 0:
+            changeDesc = 'never'
+        else:
+            changeDesc = 'by %s at %s' % (
+                runner.getChangedUser() or 'unknown',
+                formatTime(changedTime)
+                )
+        yield label, changeDesc
