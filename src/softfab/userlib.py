@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from softfab.config import dbDir, enableSecurity
+from softfab.config import dbDir
 from softfab.databaselib import Database, DatabaseElem
 from softfab.utils import atomicWrite
 from softfab.xmlbind import XMLTag
@@ -431,7 +431,6 @@ class UserInfo(XMLTag, DatabaseElem):
 adminUserName = 'admin'
 adminDefaultPassword = 'admin'
 
-if enableSecurity:
-    # Create admin account if database is empty.
-    if len(userDB) == 0:
-        addUserAccount(adminUserName, adminDefaultPassword, ( 'operator', ))
+# Create admin account if database is empty.
+if len(userDB) == 0:
+    addUserAccount(adminUserName, adminDefaultPassword, ( 'operator', ))
