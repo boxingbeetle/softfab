@@ -65,7 +65,7 @@ class UserDetails(FabPage):
         infoUser = proc.infoUser
         infoUserName = proc.args.user
         requestUser = proc.req.getUser()
-        requestUserName = requestUser.getId()
+        requestUserName = requestUser.getUserName()
 
         if infoUser is None:
             yield xhtml.p[

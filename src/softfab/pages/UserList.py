@@ -49,8 +49,9 @@ class PasswordColumn(DataColumn):
         requestUser = proc.req.getUser()
         userName = record.getId()
         if requestUser.hasPrivilege('u/m') or (
-            requestUser.hasPrivilege('u/mo') and requestUser.getId() == userName
-            ):
+                requestUser.hasPrivilege('u/mo') and
+                requestUser.getUserName() == userName
+                ):
             # User is allowed to modify passwords.
             return pageLink('ChangePassword', UserIdArgs(user = userName))[
                 'Change'
