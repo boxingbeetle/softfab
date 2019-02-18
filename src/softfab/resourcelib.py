@@ -2,7 +2,8 @@
 
 import logging
 from typing import (
-    AbstractSet, ClassVar, FrozenSet, Iterable, Iterator, Mapping, Set, cast
+    AbstractSet, ClassVar, FrozenSet, Iterable, Iterator, Mapping, Optional,
+    Set, cast
     )
 
 from softfab.config import dbDir
@@ -119,11 +120,11 @@ class ResourceBase(XMLTag, DatabaseElem):
             self._properties['changeduser'] = user
             self._notify()
 
-    def getChangedUser(self) -> str:
+    def getChangedUser(self) -> Optional[str]:
         '''Returns the name of the user that suspended/resumed the TR as
         the last person.
         '''
-        return cast(str, self._properties['changeduser'])
+        return cast(Optional[str], self._properties['changeduser'])
 
     def getChangedTime(self) -> int:
         '''Returns the time at which the suspend state last changed.
