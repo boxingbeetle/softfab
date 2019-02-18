@@ -3,9 +3,8 @@
 from softfab.Page import (
     Authenticator, HTTPAuthenticator, InternalError, Redirector
     )
-from softfab.config import enableSecurity
 from softfab.request import Request
-from softfab.userlib import IUser, SuperUser, UnknownUser, authenticate
+from softfab.userlib import IUser, UnknownUser, authenticate
 from softfab.utils import encodeURL
 
 from twisted.cred.error import LoginFailed
@@ -17,10 +16,6 @@ class LoginAuthPage(Authenticator):
     '''
 
     def authenticate(self, request):
-        if not enableSecurity:
-            # Authorization is disabled: user is allowed to do anything.
-            return defer.succeed(SuperUser())
-
         # Check for active session.
         session = Request.getSession(request)
         if session is not None:
@@ -43,10 +38,6 @@ class HTTPAuthPage(Authenticator):
     '''
 
     def authenticate(self, request):
-        if not enableSecurity:
-            # Authorization is disabled: user is allowed to do anything.
-            return defer.succeed(SuperUser())
-
         # To avoid cross-site request forgery, we must authenticate every API
         # call and not use session cookies. Since API calls are not made using
         # web browsers, most likely the client is not using session cookies

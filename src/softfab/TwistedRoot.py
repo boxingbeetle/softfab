@@ -6,11 +6,12 @@ from softfab.SplashPage import SplashPage, startupMessages
 from softfab.StyleResources import styleRoot
 from softfab.TwistedUtil import PageRedirect
 from softfab.authentication import NoAuthPage
+from softfab.config import enableSecurity
 from softfab.databases import iterDatabasesToPreload
 from softfab.render import NotFoundPage, parseAndProcess, present
 from softfab.request import Request
 from softfab.schedulelib import ScheduleManager
-from softfab.userlib import UnknownUser
+from softfab.userlib import SuperUser, UnknownUser
 from softfab.utils import abstract
 
 from twisted.cred.error import LoginFailed
@@ -230,7 +231,10 @@ def renderAsync(page, request):
             Request(request, UnknownUser()).checkDirect()
         authenticator = page.authenticationWrapper.instance
         try:
-            user = yield authenticator.authenticate(request)
+            if enableSecurity:
+                user = yield authenticator.authenticate(request)
+            else:
+                user = SuperUser()
         except LoginFailed as ex:
             req = Request(request, UnknownUser())
             responder = proc = authenticator.askForAuthentication(req)
