@@ -45,7 +45,9 @@ class Home(FabPage):
         'LoadExecute', 'ReportIndex', 'ResourceIndex', 'ScheduleIndex',
         'Configure'
         ]
-    feedIcon = styleRoot.addIcon('feed-icon')(alt='Feed', title='Atom feed')
+    feedIcon = styleRoot.addIcon('feed-icon')(
+        alt='Feed', title='Atom feed', width=17, height=17
+        )
 
     class Processor(PageProcessor):
         recentJobs = MostRecent(jobDB, 'recent', 50)
