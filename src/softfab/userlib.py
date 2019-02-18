@@ -12,6 +12,7 @@ from twisted.internet import defer
 from zope.interface import Interface, implementer
 
 from enum import Enum
+from functools import total_ordering
 from os import makedirs
 from os.path import dirname, exists
 import logging
@@ -20,7 +21,18 @@ roleNames = frozenset([ 'guest', 'user', 'operator' ])
 
 # This only defines UI ordering.
 # The content of the list must be consistent with roleNames.
-UIRoleNames = Enum('UIRoleNames', 'INACTIVE GUEST USER OPERATOR')
+@total_ordering
+class UIRoleNames(Enum):
+    INACTIVE = 1
+    GUEST = 2
+    USER = 3
+    OPERATOR = 4
+    def __lt__(self, other):
+        if self.__class__ is other.__class__:
+            # pylint: disable=comparison-with-callable
+            # https://github.com/PyCQA/pylint/issues/2757
+            return self.value < other.value
+        return NotImplemented
 assert set(elem.name.lower() for elem in list(UIRoleNames)[1 : ]) == roleNames
 
 # Privileges are designated as '<object>/<action>' where object can be:
