@@ -3,7 +3,6 @@
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
 from softfab.ReportMixin import ReportArgs
-from softfab.config import enableSecurity
 from softfab.joblib import jobDB
 from softfab.jobview import JobsSubTable
 from softfab.pageargs import PageArgs, StrArg
@@ -29,7 +28,6 @@ class OwnedJobsTable(JobsSubTable):
 class UserDetails(FabPage):
     icon = 'UserList1'
     description = 'User Details'
-    isActive = staticmethod(lambda: enableSecurity)
 
     class Arguments(PageArgs):
         user = StrArg()

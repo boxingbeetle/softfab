@@ -2,7 +2,6 @@
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor, PresentableError, Redirect
-from softfab.config import enableSecurity
 from softfab.datawidgets import DataColumn, DataTable
 from softfab.formlib import (
     SingleCheckBoxTable, dropDownList, hiddenInput, makeForm, submitButton
@@ -114,7 +113,6 @@ class UserList_GET(FabPage):
     icon = 'UserList1'
     description = 'Users'
     children = 'UserDetails', 'AddUser', 'ChangePassword'
-    isActive = staticmethod(lambda: enableSecurity)
 
     def fabTitle(self, proc):
         return 'Configure Users'
@@ -152,7 +150,6 @@ class UserList_GET(FabPage):
 class UserList_POST(FabPage):
     icon = 'UserList1'
     description = 'Change Role'
-    isActive = staticmethod(lambda: enableSecurity)
 
     def fabTitle(self, proc):
         return 'Change User Role'

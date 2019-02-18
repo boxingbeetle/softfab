@@ -3,7 +3,9 @@
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor, PresentableError, Redirect
 from softfab.config import enableSecurity
-from softfab.formlib import FormTable, actionButtons, makeForm, passwordInput
+from softfab.formlib import (
+    FormTable, actionButtons, hiddenInput, makeForm, passwordInput
+    )
 from softfab.pageargs import EnumArg, PasswordArg, RefererArg
 from softfab.userlib import (
     PasswordMessage, authenticate, changePassword, passwordQuality, userDB
@@ -20,20 +22,25 @@ from enum import Enum
 
 def presentForm(proc):
     return makeForm(args = proc.args)[
-        xhtml.p[
-            'Please enter a new password for user ',
-            xhtml.b[ proc.args.user ], ':'
-            ],
-        NewPasswordTable.instance,
-        xhtml.p[
+        presentFormBody(proc)
+        ].present(proc=proc)
+
+def presentFormBody(proc):
+    yield xhtml.p[
+        'Please enter a new password for user ', xhtml.b[ proc.args.user ], ':'
+        ]
+    yield NewPasswordTable.instance
+    if enableSecurity:
+        yield xhtml.p[
             'To verify your identity, '
             'please also enter your %s password:' % (
                 'old' if proc.args.user == proc.req.getUserName() else 'own'
                 )
-            ],
-        ReqPasswordTable.instance,
-        xhtml.p[ actionButtons(Actions) ],
-        ].present(proc=proc)
+            ]
+        yield ReqPasswordTable.instance
+    else:
+        yield hiddenInput(name='loginpass', value='')
+    yield xhtml.p[ actionButtons(Actions) ]
 
 class NewPasswordTable(FormTable):
     labelStyle = 'formlabel'
@@ -58,7 +65,6 @@ Actions = Enum('Actions', 'CHANGE CANCEL')
 class ChangePassword_GET(FabPage):
     icon = 'UserList1'
     description = 'Change Password'
-    isActive = staticmethod(lambda: enableSecurity)
 
     class Arguments(PasswordMsgArgs):
         indexQuery = RefererArg('UserList')
@@ -160,17 +166,20 @@ class ChangePassword_POST(FabPage):
                     self.retry = True # pylint: disable=attribute-defined-outside-init
                     raise PresentableError(passwordStr[quality])
 
-                loginpass = req.args.loginpass
-                try:
-                    user_ = yield authenticate(reqUserName, loginpass)
-                except error.LoginFailed as ex:
-                    self.retry = True # pylint: disable=attribute-defined-outside-init
-                    raise PresentableError(
-                        'Verification of %s password failed%s.' % (
-                            'old' if userName == reqUserName else 'operator',
-                            ': ' + str(ex) if str(ex) else ''
+                if enableSecurity:
+                    try:
+                        user_ = yield authenticate(
+                            reqUserName, req.args.loginpass
                             )
-                        )
+                    except error.LoginFailed as ex:
+                        self.retry = True # pylint: disable=attribute-defined-outside-init
+                        raise PresentableError(
+                            'Verification of %s password failed%s.' % (
+                                'old' if userName == reqUserName
+                                    else 'operator',
+                                ': ' + str(ex) if str(ex) else ''
+                                )
+                            )
 
                 # Apply changes.
                 try:

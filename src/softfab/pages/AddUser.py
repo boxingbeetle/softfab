@@ -4,8 +4,8 @@ from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor, PresentableError, Redirect
 from softfab.config import enableSecurity
 from softfab.formlib import (
-    FormTable, actionButtons, dropDownList, emptyOption, makeForm,
-    passwordInput, textInput
+    FormTable, actionButtons, dropDownList, emptyOption, hiddenInput,
+    makeForm, passwordInput, textInput
     )
 from softfab.pageargs import EnumArg, PageArgs, RefererArg, StrArg
 from softfab.userlib import (
@@ -26,7 +26,6 @@ Actions = Enum('Actions', 'ADD CANCEL')
 class AddUser_GET(FabPage):
     icon = 'AddUser1'
     description = 'Add User'
-    isActive = staticmethod(lambda: enableSecurity)
 
     def checkAccess(self, req):
         req.checkPrivilege('u/c', 'add new users')
@@ -46,15 +45,21 @@ class AddUser_GET(FabPage):
 
     def presentForm(self, proc, prefill):
         return makeForm(args = prefill)[
-            xhtml.p[ 'Enter information about new user:' ],
-            UserTable.instance,
-            xhtml.p[
+            self.presentFormBody()
+            ].present(proc=proc)
+
+    def presentFormBody(self):
+        yield xhtml.p[ 'Enter information about new user:' ]
+        yield UserTable.instance
+        if enableSecurity:
+            yield xhtml.p[
                 'To verify your identity, '
                 'please also enter your own password:'
-                ],
-            ReqPasswordTable.instance,
-            xhtml.p[ actionButtons(Actions) ]
-            ].present(proc=proc)
+                ]
+            yield ReqPasswordTable.instance
+        else:
+            yield hiddenInput(name='loginpass', value='')
+        yield xhtml.p[ actionButtons(Actions) ]
 
 class AddUser_POST(AddUser_GET):
 
@@ -90,15 +95,17 @@ class AddUser_POST(AddUser_GET):
                     raise PresentableError(passwordStr[quality])
 
                 # Authentication of currently logged-in operator
-                loginpass = req.args.loginpass
-                try:
-                    user_ = yield authenticate(req.getUserName(), loginpass)
-                except error.LoginFailed as ex:
-                    raise PresentableError(
-                        'Operator authentication failed%s.' % (
-                            ': ' + str(ex) if str(ex) else ''
+                if enableSecurity:
+                    try:
+                        user_ = yield authenticate(
+                            req.getUserName(), req.args.loginpass
                             )
-                        )
+                    except error.LoginFailed as ex:
+                        raise PresentableError(
+                            'Operator authentication failed%s.' % (
+                                ': ' + str(ex) if str(ex) else ''
+                                )
+                            )
 
                 # Create new user account.
                 try:
