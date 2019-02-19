@@ -2,7 +2,6 @@
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor, PresentableError, Redirect
-from softfab.config import enableSecurity
 from softfab.formlib import (
     FormTable, actionButtons, hiddenInput, makeForm, passwordInput
     )
@@ -30,7 +29,9 @@ def presentFormBody(proc):
         'Please enter a new password for user ', xhtml.b[ proc.args.user ], ':'
         ]
     yield NewPasswordTable.instance
-    if enableSecurity:
+    if proc.req.getUserName() is None:
+        yield hiddenInput(name='loginpass', value='')
+    else:
         yield xhtml.p[
             'To verify your identity, '
             'please also enter your %s password:' % (
@@ -38,8 +39,6 @@ def presentFormBody(proc):
                 )
             ]
         yield ReqPasswordTable.instance
-    else:
-        yield hiddenInput(name='loginpass', value='')
     yield xhtml.p[ actionButtons(Actions) ]
 
 class NewPasswordTable(FormTable):
@@ -166,7 +165,7 @@ class ChangePassword_POST(FabPage):
                     self.retry = True # pylint: disable=attribute-defined-outside-init
                     raise PresentableError(passwordStr[quality])
 
-                if enableSecurity:
+                if reqUserName is not None:
                     try:
                         user_ = yield authenticate(
                             reqUserName, req.args.loginpass

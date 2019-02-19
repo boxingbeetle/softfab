@@ -2,7 +2,6 @@
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor, PresentableError, Redirect
-from softfab.config import enableSecurity
 from softfab.formlib import (
     FormTable, actionButtons, dropDownList, emptyOption, hiddenInput,
     makeForm, passwordInput, textInput
@@ -45,20 +44,20 @@ class AddUser_GET(FabPage):
 
     def presentForm(self, proc, prefill):
         return makeForm(args = prefill)[
-            self.presentFormBody()
+            self.presentFormBody(proc.req)
             ].present(proc=proc)
 
-    def presentFormBody(self):
+    def presentFormBody(self, req):
         yield xhtml.p[ 'Enter information about new user:' ]
         yield UserTable.instance
-        if enableSecurity:
+        if req.getUserName() is None:
+            yield hiddenInput(name='loginpass', value='')
+        else:
             yield xhtml.p[
                 'To verify your identity, '
                 'please also enter your own password:'
                 ]
             yield ReqPasswordTable.instance
-        else:
-            yield hiddenInput(name='loginpass', value='')
         yield xhtml.p[ actionButtons(Actions) ]
 
 class AddUser_POST(AddUser_GET):
@@ -95,10 +94,11 @@ class AddUser_POST(AddUser_GET):
                     raise PresentableError(passwordStr[quality])
 
                 # Authentication of currently logged-in operator
-                if enableSecurity:
+                reqUserName = req.getUserName()
+                if reqUserName is not None:
                     try:
                         user_ = yield authenticate(
-                            req.getUserName(), req.args.loginpass
+                            reqUserName, req.args.loginpass
                             )
                     except error.LoginFailed as ex:
                         raise PresentableError(
