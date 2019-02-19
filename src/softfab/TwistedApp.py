@@ -25,8 +25,16 @@ class Root(SoftFabRoot):
     """Root resource for production sites.
     """
     debugSupport = False
+    anonOperator = False
 
 class DebugRoot(SoftFabRoot):
     """Root resource for development sites.
     """
     debugSupport = True
+    anonOperator = True
+
+class DebugAuthRoot(SoftFabRoot):
+    """Root resource for development sites, with mandatory authentication.
+    """
+    debugSupport = True
+    anonOperator = False

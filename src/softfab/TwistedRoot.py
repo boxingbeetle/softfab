@@ -5,13 +5,12 @@ from softfab.Page import FabResource, InternalError, Redirect, Redirector
 from softfab.SplashPage import SplashPage, startupMessages
 from softfab.StyleResources import styleRoot
 from softfab.TwistedUtil import PageRedirect
-from softfab.authentication import NoAuthPage
-from softfab.config import enableSecurity
+from softfab.authentication import DisabledAuthPage, NoAuthPage
 from softfab.databases import iterDatabasesToPreload
 from softfab.render import NotFoundPage, parseAndProcess, present
 from softfab.request import Request
 from softfab.schedulelib import ScheduleManager
-from softfab.userlib import SuperUser, UnknownUser
+from softfab.userlib import UnknownUser
 from softfab.utils import abstract
 
 from twisted.cred.error import LoginFailed
@@ -151,9 +150,12 @@ class PageLoader:
 
         pagesByMethod = {}
         name = None
+        root = self.root
         for pageClass in pageClasses:
             page = pageClass()
-            page.debugSupport = self.root.debugSupport
+            page.debugSupport = root.debugSupport
+            if root.anonOperator:
+                page.authenticator = DisabledAuthPage
 
             className = pageClass.__name__
             index = className.find('_')
@@ -231,10 +233,7 @@ def renderAsync(page, request):
             Request(request, UnknownUser()).checkDirect()
         authenticator = page.authenticator.instance
         try:
-            if enableSecurity:
-                user = yield authenticator.authenticate(request)
-            else:
-                user = SuperUser()
+            user = yield authenticator.authenticate(request)
         except LoginFailed as ex:
             req = Request(request, UnknownUser())
             responder = proc = authenticator.askForAuthentication(req)
@@ -285,6 +284,11 @@ class SoftFabRoot(resource.Resource):
     debugSupport = abstract
     """Value for `softfab.FabResource.debugSupport` to set on pages
     registered under this root.
+    """
+
+    anonOperator = abstract
+    """Iff True, automatically give every client operator privileges
+    to pages registered under this root, without forcing a login.
     """
 
     def __init__(self):

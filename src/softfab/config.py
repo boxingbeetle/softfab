@@ -30,9 +30,6 @@ loggingLevel = 'INFO'
 # Delay between the syncronization requests (seconds)
 syncDelay = 10
 
-# Set to 'False' to disable user login security during development
-enableSecurity = True
-
 # SMTP relay to send outgoing messages to
 smtpRelay = 'mail.example.com'
 

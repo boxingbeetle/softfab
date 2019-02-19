@@ -4,7 +4,7 @@ from softfab.Page import (
     Authenticator, HTTPAuthenticator, InternalError, Redirector
     )
 from softfab.request import Request
-from softfab.userlib import IUser, UnknownUser, authenticate
+from softfab.userlib import IUser, SuperUser, UnknownUser, authenticate
 from softfab.utils import encodeURL
 
 from twisted.cred.error import LoginFailed
@@ -60,14 +60,27 @@ class HTTPAuthPage(Authenticator):
         return HTTPAuthenticator(req, 'SoftFab')
 
 class NoAuthPage(Authenticator):
-    '''Page wrapper that performs no authentication.
+    '''Page wrapper that performs no authentication and returns
+    a non-privileged user.
     '''
 
     def authenticate(self, request):
-        # No authentication: run as a user with no privileges.
         return defer.succeed(UnknownUser())
 
     def askForAuthentication(self, req):
         raise InternalError(
             'Authentication requested for page that does not require it.'
+            )
+
+class DisabledAuthPage(Authenticator):
+    '''Page wrapper that performs no authentication and returns
+    a user with all privileges.
+    '''
+
+    def authenticate(self, request):
+        return defer.succeed(SuperUser())
+
+    def askForAuthentication(self, req):
+        raise InternalError(
+            'Authentication requested while authentication is disabled.'
             )
