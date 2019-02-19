@@ -9,7 +9,7 @@ from softfab.resultcode import ResultCode
 from softfab.xmlgen import xhtml
 
 class LatestReport(UIPage, FabResource):
-    authenticationWrapper = LoginAuthPage
+    authenticator = LoginAuthPage
 
     class Arguments(TaskDefIdArgs):
         pass

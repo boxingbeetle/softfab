@@ -17,7 +17,7 @@ class WaitingShadowRuns(SortedQueue):
         return record.isWaiting()
 
 class Synchronize_POST(ControlPage):
-    authenticationWrapper = NoAuthPage
+    authenticator = NoAuthPage
 
     waitingShadowRuns = WaitingShadowRuns(shadowDB)
 

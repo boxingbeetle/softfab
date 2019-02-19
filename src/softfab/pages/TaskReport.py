@@ -11,7 +11,7 @@ from softfab.xmlgen import xml
 from urllib.parse import urlsplit
 
 class TaskReport_POST(ControlPage):
-    authenticationWrapper = NoAuthPage
+    authenticator = NoAuthPage
 
     class Arguments(PageArgs):
         id = StrArg(None)

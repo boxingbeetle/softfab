@@ -229,7 +229,7 @@ def renderAsync(page, request):
     try:
         if page.streaming:
             Request(request, UnknownUser()).checkDirect()
-        authenticator = page.authenticationWrapper.instance
+        authenticator = page.authenticator.instance
         try:
             if enableSecurity:
                 user = yield authenticator.authenticate(request)
@@ -264,7 +264,7 @@ def renderAsync(page, request):
             )
 
 class ResourceNotFound(FabResource):
-    authenticationWrapper = NoAuthPage
+    authenticator = NoAuthPage
 
     def checkAccess(self, req):
         pass

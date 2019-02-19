@@ -27,7 +27,7 @@ class LoginTable(FormTable):
 class Login_GET(UIPage, FabResource):
     '''Page that presents login form.
     '''
-    authenticationWrapper = NoAuthPage
+    authenticator = NoAuthPage
 
     class Arguments(PageArgs):
         url = StrArg(None)
@@ -88,7 +88,7 @@ _downloadURLs = {
 class Login_POST(Login_GET):
     '''Page that handles submitted login form.
     '''
-    authenticationWrapper = NoAuthPage
+    authenticator = NoAuthPage
 
     class Arguments(Login_GET.Arguments, LoginPassArgs):
         loginname = StrArg()

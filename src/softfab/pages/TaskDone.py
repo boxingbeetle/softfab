@@ -14,7 +14,7 @@ from softfab.xmlgen import xml
 import logging
 
 class TaskDone_POST(ControlPage):
-    authenticationWrapper = NoAuthPage
+    authenticator = NoAuthPage
 
     class Arguments(PageArgs):
         result = EnumArg(ResultCode, None)

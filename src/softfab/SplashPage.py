@@ -27,7 +27,7 @@ startupMessages = _StartupMessages()
 #       is done after loading databases, because module-level objects will
 #       be making database requests.
 class SplashPage(UIPage, FabResource):
-    authenticationWrapper = NoAuthPage
+    authenticator = NoAuthPage
 
     def checkAccess(self, req):
         pass

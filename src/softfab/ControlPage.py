@@ -21,7 +21,7 @@ class ControlPage(FabResource, Responder):
     third party processes (through API calls).
     '''
     contentType = 'text/xml; charset=UTF-8'
-    authenticationWrapper = HTTPAuthPage # type: ClassVar[Type[Authenticator]]
+    authenticator = HTTPAuthPage # type: ClassVar[Type[Authenticator]]
 
     __errorResponder = _ErrorResponder()
 

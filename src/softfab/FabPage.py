@@ -28,7 +28,7 @@ class _WidgetResponder(Responder):
 IconModifier = Enum('IconModifier', 'NONE EDIT DELETE')
 
 class FabPage(UIPage, FabResource, ABC):
-    authenticationWrapper = LoginAuthPage
+    authenticator = LoginAuthPage
 
     __pageInfo = {} # type: ClassVar[Mapping[str, object]]
 

@@ -9,7 +9,7 @@ from softfab.webgui import pageURL
 from softfab.utils import SharedInstance, abstract
 
 class Authenticator:
-    '''Abstract base class of authentication wrappers.
+    '''Abstract base class of authenticators.
     '''
 
     instance = SharedInstance() # type: ClassVar[SharedInstance]
@@ -159,7 +159,7 @@ class HTTPAuthenticator(PageProcessor, Responder):
 class FabResource(ABC):
     '''Abstract base class for Control Center pages.
     '''
-    authenticationWrapper = abstract # type: ClassVar[Type[Authenticator]]
+    authenticator = abstract # type: ClassVar[Type[Authenticator]]
     streaming = False
 
     debugSupport = False

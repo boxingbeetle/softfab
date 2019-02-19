@@ -23,7 +23,7 @@ class Separator(Enum):
     TAB = '\t'
 
 class CSVPage(FabResource, Responder):
-    authenticationWrapper = LoginAuthPage
+    authenticator = LoginAuthPage
 
     class Arguments(PageArgs):
         sep = EnumArg(Separator, Separator.COMMA)

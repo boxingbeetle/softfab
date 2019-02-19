@@ -8,7 +8,7 @@ from softfab.xmlgen import xhtml
 class Logout(UIPage, FabResource):
     '''Page that logs out the user that requests it.
     '''
-    authenticationWrapper = NoAuthPage
+    authenticator = NoAuthPage
 
     class Processor(PageProcessor):
 

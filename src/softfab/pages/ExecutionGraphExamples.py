@@ -39,7 +39,7 @@ class CombinedProductGraphBuilder(ExecutionGraphBuilder):
         self.addProduct(ProductDef.create('coverage_data', combined = True))
 
 class ExecutionGraphExamples(GraphPageMixin, UIPage, FabResource):
-    authenticationWrapper = NoAuthPage
+    authenticator = NoAuthPage
 
     class Processor(PageProcessor):
 
