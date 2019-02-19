@@ -1,9 +1,8 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from softfab.Page import FabResource, PageProcessor, Redirect
+from softfab.Page import FabResource, PageProcessor
 from softfab.UIPage import UIPage
 from softfab.authentication import NoAuthPage
-from softfab.config import enableSecurity
 from softfab.xmlgen import xhtml
 
 class Logout(UIPage, FabResource):
@@ -14,8 +13,6 @@ class Logout(UIPage, FabResource):
     class Processor(PageProcessor):
 
         def process(self, req):
-            if not enableSecurity:
-                raise Redirect('Home')
             loggedOut = req.stopSession()
             # pylint: disable=attribute-defined-outside-init
             self.loggedOut = loggedOut
