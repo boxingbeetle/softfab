@@ -137,7 +137,7 @@ class UIPage(Responder):
         return xhtml.div(class_ = 'titlebar')[
             xhtml.div(class_ = 'title')[ self.__title(proc) ],
             xhtml.div(class_ = 'info')[
-                '' if userName is None else (
+                xhtml.a(href='Login')[ 'log in' ] if userName is None else (
                     createUserDetailsLink(userName), ' \u2013 ',
                     xhtml.a(href='Logout')[ 'log out' ]
                     ),
