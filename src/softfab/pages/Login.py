@@ -3,7 +3,6 @@
 from softfab.Page import FabResource, PageProcessor, PresentableError, Redirect
 from softfab.UIPage import UIPage
 from softfab.authentication import NoAuthPage
-from softfab.config import enableSecurity
 from softfab.formlib import (
     FormTable, makeForm, passwordInput, submitButton, textInput
     )
@@ -36,9 +35,6 @@ class Login_GET(UIPage, FabResource):
     class Processor(PageProcessor):
 
         def process(self, req):
-            if not enableSecurity:
-                raise Redirect('Home')
-
             url = req.args.url
             if url is not None and '/' in url:
                 # Only accept relative URLs.
