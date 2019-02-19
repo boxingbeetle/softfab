@@ -380,6 +380,14 @@ class UserDB(Database):
     privilegeObject = 'u'
     description = 'user'
     uniqueKeys = ( 'id', )
+
+    @property
+    def numActiveUsers(self):
+        """The number of user accounts in this factory, excluding accounts
+        that are no longer allowed to login.
+        """
+        return sum(user.isActive() for user in self)
+
 userDB = UserDB()
 
 @implementer(IUser)

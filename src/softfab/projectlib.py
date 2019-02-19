@@ -1,10 +1,11 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from softfab.config import dbDir, enableSecurity
+from softfab.config import dbDir
 from softfab.databaselib import (
     Database, SingletonElem, SingletonObserver, SingletonWrapper
     )
 from softfab.timelib import getTime
+from softfab.userlib import userDB
 from softfab.utils import cachedProperty
 from softfab.version import version
 from softfab.xmlbind import XMLTag
@@ -161,9 +162,9 @@ class Project(XMLTag, SingletonElem):
     def showOwners(self):
         """Should owners be shown in the user interface?
 
-        Returns True iff user authentication is enabled.
+        Returns True iff there are multiple active users.
         """
-        return enableSecurity
+        return userDB.numActiveUsers > 1
 
     @property
     def showTargets(self):
