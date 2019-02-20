@@ -10,23 +10,33 @@ from softfab.utils import encodeURL
 from twisted.cred.error import LoginFailed
 from twisted.internet import defer
 
+from typing import Optional
+
+def loggedInUser(request) -> Optional[IUser]:
+    """Gets the logged-in user making the request.
+    Also resets the session timeout.
+    """
+    session = Request.getSession(request)
+    if session is not None:
+        user = session.getComponent(IUser)
+        if user is not None and user.isActive():
+            session.touch()
+            return user
+    return None
+
 class LoginAuthPage(Authenticator):
     '''Page wrapper that performs authentication using a login page and
     a session cookie.
     '''
 
     def authenticate(self, request):
-        # Check for active session.
-        session = Request.getSession(request)
-        if session is not None:
-            user = session.getComponent(IUser)
-            if user is not None and user.isActive():
-                # User has already authenticated.
-                session.touch()
-                return defer.succeed(user)
-
-        # No active session; user must log in.
-        return defer.fail(LoginFailed())
+        user = loggedInUser(request)
+        if user is None:
+            # User must log in.
+            return defer.fail(LoginFailed())
+        else:
+            # User has already authenticated.
+            return defer.succeed(user)
 
     def askForAuthentication(self, req):
         return Redirector(
@@ -73,12 +83,18 @@ class NoAuthPage(Authenticator):
             )
 
 class DisabledAuthPage(Authenticator):
-    '''Page wrapper that performs no authentication and returns
-    a user with all privileges.
+    '''Page wrapper that forces no authentication and returns
+    a user with all privileges when not logged in.
+    This is for ease of development, not recommended for production.
     '''
 
     def authenticate(self, request):
-        return defer.succeed(SuperUser())
+        user = loggedInUser(request)
+        if user is None:
+            return defer.succeed(SuperUser())
+        else:
+            # Use logged-in user.
+            return defer.succeed(user)
 
     def askForAuthentication(self, req):
         raise InternalError(
