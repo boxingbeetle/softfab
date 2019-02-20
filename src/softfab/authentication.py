@@ -25,7 +25,7 @@ def loggedInUser(request) -> Optional[IUser]:
     return None
 
 class LoginAuthPage(Authenticator):
-    '''Page wrapper that performs authentication using a login page and
+    '''Authenticator that performs authentication using a login page and
     a session cookie.
     '''
 
@@ -44,7 +44,7 @@ class LoginAuthPage(Authenticator):
             )
 
 class HTTPAuthPage(Authenticator):
-    '''Page wrapper that performs HTTP authentication.
+    '''Authenticator that performs HTTP authentication.
     '''
 
     def authenticate(self, request):
@@ -70,7 +70,7 @@ class HTTPAuthPage(Authenticator):
         return HTTPAuthenticator(req, 'SoftFab')
 
 class NoAuthPage(Authenticator):
-    '''Page wrapper that performs no authentication and returns
+    '''Authenticator that performs no authentication and returns
     a non-privileged user.
     '''
 
@@ -83,7 +83,7 @@ class NoAuthPage(Authenticator):
             )
 
 class DisabledAuthPage(Authenticator):
-    '''Page wrapper that forces no authentication and returns
+    '''Authenticator that forces no authentication and returns
     a user with all privileges when not logged in.
     This is for ease of development, not recommended for production.
     '''
