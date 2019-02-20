@@ -3,7 +3,7 @@
 from softfab.Page import AccessDenied, InvalidRequest, Redirect
 from softfab.config import rootURL
 from softfab.useragent import UserAgent
-from softfab.userlib import privileges
+from softfab.userlib import UnknownUser, privileges
 from softfab.utils import cachedProperty, iterable
 
 from twisted.web.server import Session
@@ -224,6 +224,7 @@ class Request(RequestBase):
             return False
         else:
             session.expire()
+            self._user = UnknownUser()
             return True
 
     # Privilege checks:
