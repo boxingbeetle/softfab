@@ -333,11 +333,9 @@ div.linkbar > div {
 	white-space: nowrap;
 }
 div.linkbar > div.level {
-	vertical-align: middle;
 	background: #FFE49A;
-	padding: 0;
-	margin: 1px;
-	font-size: 0;
+	color: #800000;
+	margin: 0;
 }
 .navicon {
 	position: relative;

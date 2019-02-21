@@ -228,9 +228,7 @@ class LinkBar(Widget):
     styleRoot.addIcon('IconEdit')
     styleRoot.addIcon('IconDelete')
 
-    __levelSep = xhtml.div(class_ = 'level')[
-        styleRoot.addIcon('level')
-        ].present()
+    __levelSep = xhtml.div(class_ = 'level')[ '\u25B8' ]
 
     def __createLinkButton(self, proc, pageName, infoKey):
         page = proc.page
