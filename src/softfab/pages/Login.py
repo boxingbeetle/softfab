@@ -6,7 +6,8 @@ from softfab.authentication import NoAuthPage
 from softfab.formlib import (
     FormTable, makeForm, passwordInput, submitButton, textInput
     )
-from softfab.pageargs import ArgsCorrected, PageArgs, StrArg
+from softfab.pageargs import ArgsCorrected, StrArg
+from softfab.pagelinks import URLArgs
 from softfab.userlib import (
     IUser, PasswordMessage, authenticate, passwordQuality
     )
@@ -29,8 +30,8 @@ class Login_GET(UIPage, FabResource):
     '''
     authenticator = NoAuthPage
 
-    class Arguments(PageArgs):
-        url = StrArg(None)
+    class Arguments(URLArgs):
+        pass
 
     class Processor(PageProcessor):
 

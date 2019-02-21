@@ -181,3 +181,14 @@ def createUserDetailsURL(userId):
 
 def createUserDetailsLink(userId):
     return xhtml.a(href = createUserDetailsURL(userId))[ userId ]
+
+class URLArgs(PageArgs):
+    """Remembers a URL on this Control Center that we can return to.
+    """
+    url = StrArg(None)
+
+def loginURL(req):
+    """Returns a URL of the Login page, so that it returns to the request's
+    URL after the user has logged in.
+    """
+    return pageURL('Login', URLArgs(url=req.getURL()))

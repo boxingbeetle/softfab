@@ -4,11 +4,11 @@ from softfab.Page import (
     Authenticator, HTTPAuthenticator, InternalError, Redirector
     )
 from softfab.request import Request
+from softfab.pagelinks import loginURL
 from softfab.projectlib import project
 from softfab.userlib import (
     AnonGuestUser, IUser, SuperUser, UnknownUser, authenticate
     )
-from softfab.utils import encodeURL
 
 from twisted.cred.error import LoginFailed
 from twisted.internet import defer
@@ -45,9 +45,7 @@ class LoginAuthPage(Authenticator):
             return defer.succeed(user)
 
     def askForAuthentication(self, req):
-        return Redirector(
-            req, 'Login?%s' % encodeURL(( ('url', req.getURL()), ))
-            )
+        return Redirector(req, loginURL(req))
 
 class HTTPAuthPage(Authenticator):
     '''Authenticator that performs HTTP authentication.
