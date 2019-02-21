@@ -192,3 +192,9 @@ def loginURL(req):
     URL after the user has logged in.
     """
     return pageURL('Login', URLArgs(url=req.getURL()))
+
+def logoutURL(req):
+    """Returns a URL of the Logout page, so that it returns to the request's
+    URL after the user has logged out.
+    """
+    return pageURL('Logout', URLArgs(url=req.getURL()))
