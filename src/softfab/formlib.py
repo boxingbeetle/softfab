@@ -86,6 +86,8 @@ class _FormBuilder(AttrContainer, XMLPresentable):
 
         formId, args, setFocus = self.__formArgs
         form = _FormPresenter(formId, setFocus)
+        if args is None:
+            args = proc.args
 
         # Force all content presenters to run and register their
         # controls with the form.
@@ -581,12 +583,12 @@ class SingleCheckBoxTable(CheckBoxesTable):
     def iterOptions(self, **kwargs):
         yield 'true', ( self.label, )
 
-    def isActive(self, proc, **kwargs):
+    def isActive(self, formArgs, **kwargs):
         '''Returns True iff the single check box is active.
         The default implementation returns the value of the argument that
         matches the submission name of this check boxes table.
         '''
-        active = getattr(proc.args, self.name)
+        active = getattr(formArgs, self.name)
         if not isinstance(active, bool):
             raise TypeError(
                 'Invalid page argument value type: expected "bool", got "%s"'
@@ -639,12 +641,12 @@ class RadioTable(Table):
                 class_ = 'clickable'
                 )[ self.formatOption(box, item[1:]) ]
 
-    def getActive(self, proc, **kwargs):
+    def getActive(self, formArgs, **kwargs):
         '''Returns the active option, or None if no option is active.
         The default implementation returns the value of the page argument
         with the same name as this control.
         '''
-        return getattr(proc.args, self.name)
+        return getattr(formArgs, self.name)
 
     def iterOptions(self, **kwargs):
         '''Iterates through the multiple choice options.

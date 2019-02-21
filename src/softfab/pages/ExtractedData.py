@@ -233,9 +233,7 @@ class ExtractedData(FabPage):
     def presentContent(self, proc):
         parentArgs = ReportTaskArgs.subset(proc.args)
 
-        yield makeForm(
-            formId = 'keys', method = 'get', args = parentArgs
-            )[
+        yield makeForm(formId='keys', method='get')[
             KeysTable.instance,
             VisualizationTable.instance,
             xhtml.p[ submitButton[ 'Apply' ] ],
