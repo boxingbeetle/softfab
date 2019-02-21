@@ -357,6 +357,17 @@ class SuperUser:
         return bool(privileges[priv])
 
 @implementer(IUser)
+class AnonGuestUser:
+    '''Anonymous user who has guest privileges.
+    '''
+
+    def getUserName(self):
+        return None
+
+    def hasPrivilege(self, priv):
+        return 'guest' in privileges[priv]
+
+@implementer(IUser)
 class UnknownUser:
     '''Anonymous user who has no privileges.
     '''

@@ -4,7 +4,10 @@ from softfab.Page import (
     Authenticator, HTTPAuthenticator, InternalError, Redirector
     )
 from softfab.request import Request
-from softfab.userlib import IUser, SuperUser, UnknownUser, authenticate
+from softfab.projectlib import project
+from softfab.userlib import (
+    AnonGuestUser, IUser, SuperUser, UnknownUser, authenticate
+    )
 from softfab.utils import encodeURL
 
 from twisted.cred.error import LoginFailed
@@ -32,8 +35,11 @@ class LoginAuthPage(Authenticator):
     def authenticate(self, request):
         user = loggedInUser(request)
         if user is None:
-            # User must log in.
-            return defer.fail(LoginFailed())
+            if project['anonguest']:
+                return defer.succeed(AnonGuestUser())
+            else:
+                # User must log in.
+                return defer.fail(LoginFailed())
         else:
             # User has already authenticated.
             return defer.succeed(user)
@@ -64,7 +70,10 @@ class HTTPAuthPage(Authenticator):
             return authenticate(userName, password)
 
         # No user name supplied.
-        return defer.fail(LoginFailed())
+        if project['anonguest']:
+            return defer.succeed(AnonGuestUser())
+        else:
+            return defer.fail(LoginFailed())
 
     def askForAuthentication(self, req):
         return HTTPAuthenticator(req, 'SoftFab')
