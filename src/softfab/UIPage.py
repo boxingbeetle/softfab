@@ -2,7 +2,7 @@
 
 from softfab.Page import Responder
 from softfab.StyleResources import styleRoot
-from softfab.pagelinks import createUserDetailsLink
+from softfab.pagelinks import createUserDetailsLink, loginURL
 from softfab.projectlib import project
 from softfab.timelib import getTime
 from softfab.timeview import formatTime
@@ -137,7 +137,8 @@ class UIPage(Responder):
         return xhtml.div(class_ = 'titlebar')[
             xhtml.div(class_ = 'title')[ self.__title(proc) ],
             xhtml.div(class_ = 'info')[
-                xhtml.a(href='Login')[ 'log in' ] if userName is None else (
+                xhtml.a(href=loginURL(proc.req))[ 'log in' ]
+                if userName is None else (
                     createUserDetailsLink(userName), ' \u2013 ',
                     xhtml.a(href='Logout')[ 'log out' ]
                     ),
