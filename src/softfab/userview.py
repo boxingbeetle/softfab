@@ -3,7 +3,9 @@
 from softfab.datawidgets import DataColumn
 from softfab.pageargs import EnumArg, PageArgs, PasswordArg
 from softfab.pagelinks import UserIdArgs, createUserDetailsLink
+from softfab.projectlib import project
 from softfab.userlib import UIRoleNames, PasswordMessage, minimumPasswordLength
+from softfab.xmlgen import xhtml
 
 passwordStr = {
     PasswordMessage.SUCCESS  : 'The password has been changed successfully.',
@@ -45,6 +47,12 @@ def uiRoleToSet(role):
     '''
     assert role in UIRoleNames
     return set() if role is UIRoleNames.INACTIVE else { role.name.lower() }
+
+def presentAnonGuestSetting():
+    return xhtml.p[
+        'Anonymous guest access is ',
+        xhtml.b['enabled' if project['anonguest'] else 'disabled'], '.'
+        ]
 
 class OwnerColumn(DataColumn):
     keyName = 'owner'

@@ -119,7 +119,7 @@ class Project(XMLTag, SingletonElem):
     '''Overall project settings.
     '''
     tagName = 'project'
-    boolProperties = ('taskprio', 'trselect', 'reqtag')
+    boolProperties = ('taskprio', 'trselect', 'reqtag', 'anonguest')
     intProperties = ('maxjobs', )
     enumProperties = {'embed': EmbeddingPolicy}
 
@@ -176,6 +176,14 @@ class Project(XMLTag, SingletonElem):
 
     def getResourceServer(self):
         return self._properties.get('resources')
+
+    def setAnonGuestAccess(self, enabled: bool) -> None:
+        """Changes the anonymous guest access setting.
+
+        The change is immediately committed to the database.
+        """
+        self._properties['anonguest'] = bool(enabled)
+        self._notify()
 
     def updateVersion(self):
         '''Indicates that the database format is up-to-date.

@@ -7,10 +7,11 @@ from softfab.formlib import (
     SingleCheckBoxTable, dropDownList, hiddenInput, makeForm, submitButton
     )
 from softfab.pageargs import BoolArg, EnumArg, IntArg, PageArgs, StrArg, SortArg
-from softfab.pagelinks import UserIdArgs, createUserDetailsLink
+from softfab.pagelinks import AnonGuestArgs, UserIdArgs, createUserDetailsLink
+from softfab.projectlib import project
 from softfab.querylib import CustomFilter
 from softfab.userlib import UIRoleNames, rolesGrantPrivilege, userDB
-from softfab.userview import activeRole, uiRoleToSet
+from softfab.userview import activeRole, presentAnonGuestSetting, uiRoleToSet
 from softfab.webgui import pageLink, pageURL, script
 from softfab.xmlgen import xhtml
 
@@ -66,6 +67,18 @@ class FilterTable(SingleCheckBoxTable):
         yield from super().iterRows(**kwargs)
         yield submitButton[ 'Apply' ].present(**kwargs),
 
+class AnonGuestTable(SingleCheckBoxTable):
+    name = 'anonguest'
+    label = 'Anonymous guest access'
+
+    def iterRows(self, **kwargs):
+        yield from super().iterRows(**kwargs)
+        yield (
+            'This grants visitors that are not logged in read-only access '
+            'to your SoftFab.'
+            ),
+        yield submitButton[ 'Apply' ].present(**kwargs),
+
 class UserTable(DataTable):
     db = userDB
     objectName = 'users'
@@ -112,7 +125,7 @@ for (var i = 0; i < document.forms.length; i++) {
 class UserList_GET(FabPage):
     icon = 'UserList1'
     description = 'Users'
-    children = 'UserDetails', 'AddUser', 'ChangePassword'
+    children = 'UserDetails', 'AddUser', 'ChangePassword', 'AnonGuest'
 
     def fabTitle(self, proc):
         return 'Configure Users'
@@ -130,6 +143,7 @@ class UserList_GET(FabPage):
         def process(self, req):
             # pylint: disable=attribute-defined-outside-init
             self.canChangeRoles = req.getUser().hasPrivilege('u/m')
+            self.canChangeAnonGuest = req.getUser().hasPrivilege('p/m')
 
     def iterDataTables(self, proc):
         yield UserTable.instance
@@ -146,6 +160,15 @@ class UserList_GET(FabPage):
                 'set the user\'s role to "inactive".'
                 ]
             yield roleApplyScript.present(proc=proc)
+
+        if proc.canChangeAnonGuest:
+            yield makeForm(
+                formId='anonguest',
+                action='AnonGuest',
+                args=AnonGuestArgs(anonguest=project['anonguest'])
+                )[ AnonGuestTable.instance ].present(proc=proc)
+        else:
+            yield presentAnonGuestSetting()
 
 class UserList_POST(FabPage):
     icon = 'UserList1'

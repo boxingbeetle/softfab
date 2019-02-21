@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from softfab.configlib import configDB
-from softfab.pageargs import PageArgs, SetArg, StrArg
+from softfab.pageargs import BoolArg, PageArgs, SetArg, StrArg
 from softfab.restypelib import resTypeDB
 from softfab.shadowlib import shadowDB
 from softfab.taskrunnerlib import taskRunnerDB
@@ -170,6 +170,11 @@ class UserIdArgs(PageArgs):
     '''Identifies a particular user.
     '''
     user = StrArg()
+
+class AnonGuestArgs(PageArgs):
+    """Value for the anonymous guest access setting.
+    """
+    anonguest = BoolArg()
 
 def createUserDetailsURL(userId):
     return pageURL('UserDetails', UserIdArgs(user = userId))
