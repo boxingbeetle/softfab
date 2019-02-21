@@ -38,7 +38,6 @@ class ProjectEdit(EditPage):
         timezone = StrArg('')
         maxjobs = IntArg(defaultMaxJobs)
         taskprio = BoolArg()
-        resources = StrArg('')
         trselect = BoolArg()
         reqtag = BoolArg()
         embed = EnumArg(EmbeddingPolicy, None)
@@ -49,16 +48,12 @@ class ProjectEdit(EditPage):
         def createElement(self, req, recordId, args, oldElement):
             assert args is not None
             assert oldElement is not None
-            # TODO: Move this code to an earlier point.
-            #if len(args.resources) > 0 and args.resources[-1] != '/':
-            #    args = args.override(resources = args.resources + '/')
             element = Project( {
                 'name': args.name,
                 'maxjobs': args.maxjobs,
                 # TODO: Create a TimezoneArg?
                 'timezone': decodeTimezone(args.timezone),
                 'taskprio': args.taskprio,
-                'resources': args.resources,
                 'trselect': args.trselect,
                 'reqtag': args.reqtag,
                 'embed': args.embed,
@@ -84,7 +79,6 @@ class ProjectEdit(EditPage):
                     timezone = project['timezone'],
                     maxjobs = project['maxjobs'],
                     taskprio = project['taskprio'],
-                    resources = project.getResourceServer() or '',
                     trselect = project['trselect'],
                     reqtag = project['reqtag'],
                     embed = project['embed'],
@@ -232,8 +226,6 @@ class ProjectTable(PropertiesTable):
             'Link your task definitions with a requirements database'
             ' (experimental)'
             ]
-        # Feature is disabled, see bug 322.
-        #yield 'Resource server', textInput(name='resources', size=80)
         yield 'Configuration tags', xhtml.br.join((
             textInput(name='tagkeys', size=80),
             'Multiple tags must be comma-separated'

@@ -174,9 +174,6 @@ class Project(XMLTag, SingletonElem):
         """
         return len(self.__targets) > 1
 
-    def getResourceServer(self):
-        return self._properties.get('resources')
-
     def setAnonGuestAccess(self, enabled: bool) -> None:
         """Changes the anonymous guest access setting.
 
