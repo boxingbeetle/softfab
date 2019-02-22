@@ -5,7 +5,7 @@ from softfab.xmlgen import xhtml
 from softfab.webgui import docLink
 
 class Configure(FabPage):
-    icon = 'Configure'
+    icon = 'IconConfig'
     description = 'Configure'
     children = [
         'ProjectEdit', 'Design', 'UserList', 'About'
