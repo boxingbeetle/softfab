@@ -48,7 +48,7 @@ class FilterForm(ReportFilterForm):
                 )[ sorted(taskDefDB.keys()) ]
             ]
 
-class ReportTasks(FabPage):
+class ReportTasks_GET(FabPage):
     icon = 'IconReport'
     description = 'Task History'
     children = [ 'ExtractedData' ]

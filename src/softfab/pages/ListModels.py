@@ -56,7 +56,7 @@ def modelToXML(model, fmt):
     elif supports:
         yield xml.model(name = name)
 
-class ListModels(ControlPage):
+class ListModels_GET(ControlPage):
 
     class Arguments(PageArgs):
         model = StrArg(None)

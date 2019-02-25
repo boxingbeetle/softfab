@@ -89,7 +89,7 @@ class DetailsTable(PropertiesTable):
             'Status', statusDescription(scheduled)
             ]
 
-class ScheduleDetails(FabPage):
+class ScheduleDetails_GET(FabPage):
     icon = 'IconSchedule'
     description = 'Schedule Details'
 

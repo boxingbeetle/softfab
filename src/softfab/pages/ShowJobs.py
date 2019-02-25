@@ -15,7 +15,7 @@ class ShowJobsTable(JobsSubTable):
     def getRecordsToQuery(self, proc):
         return proc.jobs
 
-class ShowJobs(FabPage):
+class ShowJobs_GET(FabPage):
     icon = 'IconReport'
     description = 'Show Jobs'
     linkDescription = False

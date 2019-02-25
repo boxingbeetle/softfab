@@ -30,7 +30,7 @@ try:
 except ImportError:
     pyGraphvizVersion = 'not installed'
 
-class About(FabPage):
+class About_GET(FabPage):
     icon = 'IconHome'
     description = 'About'
 

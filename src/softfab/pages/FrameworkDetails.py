@@ -49,7 +49,7 @@ class DetailsTable(PropertiesTable):
             )
         yield 'Task Definitions', formatTaskDefs(proc.children)
 
-class FrameworkDetails(GraphPageMixin, FabPage):
+class FrameworkDetails_GET(GraphPageMixin, FabPage):
     icon = 'Framework1'
     description = 'Framework Details'
 

@@ -29,7 +29,7 @@ class TasksTable(DataTable):
         LinkColumn('Delete', 'TaskDelete'),
         )
 
-class TaskIndex(FabPage):
+class TaskIndex_GET(FabPage):
     icon = 'TaskDef2'
     description = 'Task Definitions'
     children = [ 'TaskDetails', 'TaskEdit', 'TaskDelete']

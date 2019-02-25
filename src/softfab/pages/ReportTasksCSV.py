@@ -8,7 +8,7 @@ from softfab.querylib import KeySorter, runQuery
 from softfab.setcalc import union
 from softfab.timeview import formatTime
 
-class ReportTasksCSV(CSVPage):
+class ReportTasksCSV_GET(CSVPage):
 
     class Arguments(ReportTaskCSVArgs):
         pass

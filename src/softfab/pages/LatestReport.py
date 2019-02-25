@@ -8,7 +8,7 @@ from softfab.pagelinks import TaskDefIdArgs
 from softfab.resultcode import ResultCode
 from softfab.xmlgen import xhtml
 
-class LatestReport(UIPage, FabResource):
+class LatestReport_GET(UIPage, FabResource):
     authenticator = LoginAuthPage
 
     class Arguments(TaskDefIdArgs):

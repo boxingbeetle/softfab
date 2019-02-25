@@ -150,7 +150,7 @@ class OutputTable(ProductTable):
         if taskName in producers:
             yield taskName
 
-class ShowTaskInfo(FabPage):
+class ShowTaskInfo_GET(FabPage):
     icon = 'IconReport'
     description = 'Show Task Info'
 

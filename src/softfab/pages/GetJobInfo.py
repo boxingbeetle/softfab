@@ -10,7 +10,7 @@ from softfab.taskrunnerlib import taskRunnerDB
 from softfab.timeview import formatTimeAttr
 from softfab.xmlgen import xml
 
-class GetJobInfo(ControlPage):
+class GetJobInfo_GET(ControlPage):
 
     class Arguments(JobIdArgs):
         pass

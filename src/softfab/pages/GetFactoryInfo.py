@@ -10,7 +10,7 @@ from softfab.userlib import privileges
 from softfab.version import version
 from softfab.xmlgen import xml
 
-class GetFactoryInfo(ControlPage):
+class GetFactoryInfo_GET(ControlPage):
 
     def checkAccess(self, req):
         req.checkPrivilege('p/a')

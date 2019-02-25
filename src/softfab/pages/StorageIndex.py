@@ -5,7 +5,7 @@ from softfab.Page import PageProcessor
 from softfab.pageargs import IntArg, PageArgs, SortArg
 from softfab.storageview import StorageTable
 
-class StorageIndex(FabPage):
+class StorageIndex_GET(FabPage):
     icon = 'IconReport'
     description = 'Report Storages'
     children = [ 'StorageEdit' ]

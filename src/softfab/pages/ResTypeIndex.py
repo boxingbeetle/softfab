@@ -26,7 +26,7 @@ class ResTypeTable(DataTable):
         ResTypeLinkColumn('Delete', 'ResTypeDelete'),
         )
 
-class ResTypeIndex(FabPage):
+class ResTypeIndex_GET(FabPage):
     icon = 'IconResources'
     description = 'Resource Types'
     children = [ 'ResTypeEdit', 'ResTypeDelete' ]

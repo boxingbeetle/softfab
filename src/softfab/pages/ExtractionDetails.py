@@ -9,7 +9,7 @@ from softfab.resultlib import getData, getKeys
 from softfab.webgui import Table, cell, pageLink
 from softfab.xmlgen import xhtml
 
-class ExtractionDetails(FabPage):
+class ExtractionDetails_GET(FabPage):
     icon = 'IconReport'
     description = 'Extracted Data'
 

@@ -27,7 +27,7 @@ class HistoryTable(TaskRunsTable):
         # so this column is not useful.
         return False
 
-class TaskRunnerHistory(FabPage):
+class TaskRunnerHistory_GET(FabPage):
     icon = 'TaskRunStat1'
     description = 'Task Runner History'
 

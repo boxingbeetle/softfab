@@ -9,7 +9,7 @@ from softfab.timelib import secondsPerDay
 
 import time
 
-class TaskMatrixCSV(CSVPage):
+class TaskMatrixCSV_GET(CSVPage):
 
     class Arguments(TaskMatrixCSVArgs):
         pass

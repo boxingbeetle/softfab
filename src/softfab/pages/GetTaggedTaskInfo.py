@@ -49,7 +49,7 @@ def filterTasks(tag, owner):
 
     return selected
 
-class GetTaggedTaskInfo(ControlPage):
+class GetTaggedTaskInfo_GET(ControlPage):
 
     class Arguments(PageArgs):
         tag = DictArg(SetArg())

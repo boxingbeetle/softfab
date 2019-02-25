@@ -5,7 +5,7 @@ from softfab.pageargs import PageArgs, SetArg
 from softfab.taskdeflib import taskDefDB
 from softfab.xmlgen import xml
 
-class GetTaskDefParams(ControlPage):
+class GetTaskDefParams_GET(ControlPage):
 
     class Arguments(PageArgs):
         param = SetArg()

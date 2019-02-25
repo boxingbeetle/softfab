@@ -183,7 +183,7 @@ class ExtractedDataTable(TaskRunsTable):
 
 VisualizationType = Enum('VisualizationType', 'CHART_BAR TABLE')
 
-class ExtractedData(FabPage):
+class ExtractedData_GET(FabPage):
     icon = 'Reports2'
     description = 'Extracted Data'
 

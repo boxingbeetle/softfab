@@ -10,7 +10,7 @@ from softfab.xmlgen import adaptToXML, xml
 
 from twisted.internet import defer
 
-class GetJobHistory(ControlPage):
+class GetJobHistory_GET(ControlPage):
 
     class Arguments(ReportArgs):
         configId = SetArg()

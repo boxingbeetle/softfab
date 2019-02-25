@@ -30,7 +30,7 @@ class DetailsTable(PropertiesTable):
         yield 'Producers', formatFrameworks(producers)
         yield 'Consumers', formatFrameworks(consumers)
 
-class ProductDetails(GraphPageMixin, FabPage):
+class ProductDetails_GET(GraphPageMixin, FabPage):
     icon = 'Product1'
     description = 'Product Details'
 
