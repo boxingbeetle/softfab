@@ -165,6 +165,7 @@ class UserList_GET(FabPage):
             yield makeForm(
                 formId='anonguest',
                 action='AnonGuest',
+                setFocus=False,
                 args=AnonGuestArgs(anonguest=project['anonguest'])
                 )[ AnonGuestTable.instance ].present(proc=proc)
         else:
