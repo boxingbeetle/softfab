@@ -90,6 +90,7 @@ class Login_POST(Login_GET):
     '''Page that handles submitted login form.
     '''
     authenticator = NoAuthPage
+    secureCookie = True
 
     class Arguments(Login_GET.Arguments, LoginPassArgs):
         loginname = StrArg()
@@ -116,7 +117,7 @@ class Login_POST(Login_GET):
                 # attacks that inject a valid session cookie that was
                 # generated for a different client.
                 #   http://en.wikipedia.org/wiki/Session_fixation
-                session = req.startSession()
+                session = req.startSession(self.page.secureCookie)
                 session.setComponent(IUser, user)
 
                 if passwordQuality(username, password) is not \

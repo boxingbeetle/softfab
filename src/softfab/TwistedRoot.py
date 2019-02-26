@@ -170,6 +170,8 @@ class PageLoader:
                 method = className[index + 1 : ]
                 assert method not in pagesByMethod
                 pagesByMethod[method] = page
+                if base == 'Login' and method == 'POST':
+                    page.secureCookie = root.secureCookie
             if name is None:
                 name = base
             else:
@@ -289,6 +291,11 @@ class SoftFabRoot(resource.Resource):
     anonOperator = abstract
     """Iff True, automatically give every client operator privileges
     to pages registered under this root, without forcing a login.
+    """
+
+    secureCookie = abstract
+    """Iff True, mark the session cookie as secure, meaning it will only
+    be submitted over HTTPS.
     """
 
     def __init__(self):

@@ -205,7 +205,7 @@ class Request(RequestBase):
         except KeyError:
             return None
 
-    def startSession(self):
+    def startSession(self, secure):
         '''Starts a new session and returns it.
         '''
         request = self._request
@@ -214,7 +214,8 @@ class Request(RequestBase):
         session = site.makeSession()
         session.touch()
         request.addCookie(
-            self.sessionCookieName, session.uid, path='/', httpOnly=True
+            self.sessionCookieName, session.uid, path='/',
+            httpOnly=True, secure=secure
             )
         return session
 
