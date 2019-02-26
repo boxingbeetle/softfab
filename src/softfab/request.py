@@ -213,7 +213,9 @@ class Request(RequestBase):
         site.sessionFactory = LongSession
         session = site.makeSession()
         session.touch()
-        request.addCookie(self.sessionCookieName, session.uid, path = '/')
+        request.addCookie(
+            self.sessionCookieName, session.uid, path='/', httpOnly=True
+            )
         return session
 
     def stopSession(self):
