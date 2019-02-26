@@ -107,8 +107,9 @@ class DialogPage(FabPage, ABC):
             yield xhtml.p(class_ = 'notice')[ proc.errorMessage ]
         yield proc.step.presentContent(proc)
 
-class DialogProcessor(PageProcessor):
-    """Processor designed to be used with `DialogPage`.
+class DialogProcessorBase(PageProcessor):
+    """Abstract base class for Processors designed to be used with
+    `DialogPage`.
     """
 
     def __retryStep(self, func):
@@ -132,34 +133,7 @@ class DialogProcessor(PageProcessor):
             )
 
     def process(self, req):
-        # Determine navigation path.
-        stepObjects = self.page.stepObjects
-        requestedPath = []
-        for name in self.args.path.split():
-            try:
-                requestedPath.append(stepObjects[name])
-            except KeyError:
-                raise InvalidRequest(
-                    'non-existing dialog step "%s" in navigation path'
-                    % name
-                    )
-        if not requestedPath:
-            initialClass, initialArgs = self.getInitial(req)
-            requestedPath = [stepObjects[initialClass.name]]
-            self.args = initialArgs
-
-        if self.args.error is not None:
-            # User pressed back button on error page.
-            self.walkSteps(requestedPath[:-1])
-        elif self.args.back is not None:
-            # User pressed back button on normal page.
-            # We must go back to the previous step that will be shown;
-            # we can't just go back two steps, since we might end up on
-            # a non-shown step and then automatically advance to the same
-            # step the user pressed the back button on.
-            self.walkSteps(requestedPath, requestedPath[-1])
-        else:
-            self.walkSteps(requestedPath)
+        raise NotImplementedError
 
     def walkSteps(self, requestedPath, limitStep=None):
         """Walk as far as possible through the steps in `requestedPath`.
@@ -233,6 +207,10 @@ class DialogProcessor(PageProcessor):
         The default implementation does nothing.
         '''
 
+class InitialDialogProcessor(DialogProcessorBase):
+    """Processor that loads the initial state for `DialogPage`.
+    """
+
     def getInitial(self, req):
         '''Called when the dialog is entered, to determine the first step
         and the initial argument values.
@@ -240,3 +218,39 @@ class DialogProcessor(PageProcessor):
         step and a PageArgs instance.
         '''
         raise NotImplementedError
+
+    def process(self, req):
+        initialClass, self.args = self.getInitial(req)
+        initialStep = self.page.stepObjects[initialClass.name]
+        self.walkSteps([initialStep])
+
+class ContinuedDialogProcessor(DialogProcessorBase):
+    """Processor handles the state for subsequent steps of `DialogPage`.
+    """
+
+    def process(self, req):
+        # Determine navigation path.
+        stepObjects = self.page.stepObjects
+        requestedPath = []
+        for name in self.args.path.split():
+            try:
+                requestedPath.append(stepObjects[name])
+            except KeyError:
+                raise InvalidRequest(
+                    'non-existing dialog step "%s" in navigation path' % name
+                    )
+        if not requestedPath:
+            raise InvalidRequest('Dialog state was lost')
+
+        if self.args.error is not None:
+            # User pressed back button on error page.
+            self.walkSteps(requestedPath[:-1])
+        elif self.args.back is not None:
+            # User pressed back button on normal page.
+            # We must go back to the previous step that will be shown;
+            # we can't just go back two steps, since we might end up on
+            # a non-shown step and then automatically advance to the same
+            # step the user pressed the back button on.
+            self.walkSteps(requestedPath, requestedPath[-1])
+        else:
+            self.walkSteps(requestedPath)

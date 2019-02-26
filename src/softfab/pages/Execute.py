@@ -7,7 +7,9 @@ from softfab.Page import (
 from softfab.config import mailDomain
 from softfab.configlib import Config, Task, configDB
 from softfab.configview import InputTable
-from softfab.dialog import DialogPage, DialogProcessor, DialogStep
+from softfab.dialog import (
+    ContinuedDialogProcessor, DialogPage, DialogStep, InitialDialogProcessor
+    )
 from softfab.formlib import (
     CheckBoxesTable, RadioTable, SingleCheckBoxTable,
     selectionList, textArea, textInput
@@ -363,15 +365,125 @@ EntranceSteps = Enum('EntranceSteps', 'EDIT')
 '''Names of steps that can be jumped to by other pages.
 '''
 
-class Execute(DialogPage):
+class ExecuteProcessorMixin:
+    __config = None
+
+    def iterTasks(self):
+        args = self.args
+        for taskId in args.tasks:
+            taskDef = taskDefDB[taskId]
+            taskParams = {}
+            for name, defValue in taskDef.getParameters().items():
+                paramKey = taskId + '/' + name
+                value = args.values.get(paramKey)
+                if args.poverride.get(paramKey, False):
+                    if value is None:
+                        value = defValue
+                    if value is not None:
+                        taskParams[name] = value
+            yield Task.create(
+                name = taskId,
+                priority = int(args.prio.get(taskId, 0)),
+                parameters = taskParams,
+                )
+
+    def getConfig(self):
+        if self.__config is None:
+            args = self.args
+
+            jobParams = {}
+            if args.notify:
+                jobParams['notify'] = 'mailto:' + args.notify
+                if args.onfail:
+                    jobParams['notify-mode'] = args.onfail
+
+            config = Config.create(
+                name = args.config,
+                target = args.target,
+                owner = self.req.getUserName(),
+                trselect = args.trselect,
+                comment = args.comment,
+                jobParams = jobParams,
+                tasks = self.iterTasks(),
+                runners = args.runners,
+                )
+
+            for group, inputs in config.getInputsGrouped():
+                localAt = None
+                if group is not None:
+                    # Local products.
+                    for inp in inputs:
+                        localAt = args.local.get(inp['name'])
+                        if localAt == '':
+                            # Browsers that support the 'required'
+                            # attribute won't allow form submissions
+                            # without filling in the location, but
+                            # we handle this just in case.
+                            localAt = None
+                        elif localAt is not None:
+                            break
+                for inp in inputs:
+                    if inp.getType() is ProductType.TOKEN:
+                        locator = 'token'
+                    else:
+                        locator = args.prod.get(inp['name'])
+                    if locator is not None:
+                        inp.setLocator(locator, localAt)
+
+            if args.pertask:
+                for item in config.getTaskGroupSequence():
+                    tasks = item.getTaskSequence() if item.isGroup() \
+                        else ( item, )
+                    runners = args.runnerspt.get(
+                        tasks[0].getName(), frozenset()
+                        )
+                    for task in tasks:
+                        # pylint: disable=protected-access
+                        task._setRunners(runners)
+
+            for index, key in args.tagkeys.items():
+                config.setTag(key, textToValues(
+                    args.tagvalues.get(index, '')
+                    ))
+
+            self.__config = config
+        return self.__config
+
+    def argsChanged(self):
+        self.__config = None
+
+class ExecuteBase(DialogPage):
     icon = 'IconExec'
     iconModifier = IconModifier.EDIT
     description = 'Execute'
-    linkDescription = 'Execute from Scratch'
+
     steps = (
         TargetStep, TaskStep, RunnerStep, RunnerPerTaskStep, ParamStep,
         ActionStep, StartStep, TagsStep, ConfirmStep, SaveStep,
         )
+
+    def checkAccess(self, req):
+        if not (req.hasPrivilege('c/a') or req.hasPrivilege('j/c')):
+            raise AccessDenied()
+
+class Execute_GET(ExecuteBase, DialogPage):
+    linkDescription = 'Execute from Scratch'
+
+    class Arguments(DialogPage.Arguments):
+        config = StrArg('')
+        step = EnumArg(EntranceSteps, None)
+
+    class Processor(ExecuteProcessorMixin, InitialDialogProcessor):
+
+        def getInitial(self, req):
+            if req.args.step is EntranceSteps.EDIT:
+                return TargetStep, Execute_POST.Arguments.load(req)
+            elif req.args.config != '':
+                return RunnerStep, Execute_POST.Arguments.load(req)
+            else:
+                return TargetStep, Execute_POST.Arguments()
+
+class Execute_POST(ExecuteBase):
 
     class Arguments(DialogPage.Arguments):
         target = StrArg('')
@@ -394,14 +506,15 @@ class Execute(DialogPage):
         runnerspt = DictArg(SetArg())
         lref = DictArg(StrArg()) # See configview.InputTable
         action = EnumArg(Actions, Actions.START)
-        step = EnumArg(EntranceSteps, None)
 
-        def load(self, req):
+        @classmethod
+        def load(cls, req):
+            args = req.args
             try:
-                config = configDB[self.config]
+                config = configDB[args.config]
             except KeyError:
                 raise InvalidRequest(
-                    'Configuration "%s" does not exist' % self.config
+                    'Configuration "%s" does not exist' % args.config
                     )
 
             req.checkPrivilege('c/a', 'access configurations')
@@ -438,7 +551,7 @@ class Execute(DialogPage):
                 tagkeys[indexStr] = key
                 tagvalues[indexStr] = valuesToText(config.getTagValues(key))
 
-            return self.__class__(
+            return cls(
                 config = config.getId(),
                 target = config['target'],
                 tasks = frozenset(
@@ -471,104 +584,8 @@ class Execute(DialogPage):
                 tagvalues = tagvalues,
                 )
 
-    class Processor(DialogProcessor):
-        __config = None
-
-        def iterTasks(self):
-            args = self.args
-            for taskId in args.tasks:
-                taskDef = taskDefDB[taskId]
-                taskParams = {}
-                for name, defValue in taskDef.getParameters().items():
-                    paramKey = taskId + '/' + name
-                    value = args.values.get(paramKey)
-                    if args.poverride.get(paramKey, False):
-                        if value is None:
-                            value = defValue
-                        if value is not None:
-                            taskParams[name] = value
-                yield Task.create(
-                    name = taskId,
-                    priority = int(args.prio.get(taskId, 0)),
-                    parameters = taskParams,
-                    )
-
-        def getConfig(self):
-            if self.__config is None:
-                args = self.args
-
-                jobParams = {}
-                if args.notify:
-                    jobParams['notify'] = 'mailto:' + args.notify
-                    if args.onfail:
-                        jobParams['notify-mode'] = args.onfail
-
-                config = Config.create(
-                    name = args.config,
-                    target = args.target,
-                    owner = self.req.getUserName(),
-                    trselect = args.trselect,
-                    comment = args.comment,
-                    jobParams = jobParams,
-                    tasks = self.iterTasks(),
-                    runners = args.runners,
-                    )
-
-                for group, inputs in config.getInputsGrouped():
-                    localAt = None
-                    if group is not None:
-                        # Local products.
-                        for inp in inputs:
-                            localAt = args.local.get(inp['name'])
-                            if localAt == '':
-                                # Browsers that support the 'required'
-                                # attribute won't allow form submissions
-                                # without filling in the location, but
-                                # we handle this just in case.
-                                localAt = None
-                            elif localAt is not None:
-                                break
-                    for inp in inputs:
-                        if inp.getType() is ProductType.TOKEN:
-                            locator = 'token'
-                        else:
-                            locator = args.prod.get(inp['name'])
-                        if locator is not None:
-                            inp.setLocator(locator, localAt)
-
-                if args.pertask:
-                    for item in config.getTaskGroupSequence():
-                        tasks = item.getTaskSequence() if item.isGroup() \
-                            else ( item, )
-                        runners = args.runnerspt.get(
-                            tasks[0].getName(), frozenset()
-                            )
-                        for task in tasks:
-                            # pylint: disable=protected-access
-                            task._setRunners(runners)
-
-                for index, key in args.tagkeys.items():
-                    config.setTag(key, textToValues(
-                        args.tagvalues.get(index, '')
-                        ))
-
-                self.__config = config
-            return self.__config
-
-        def argsChanged(self):
-            self.__config = None
-
-        def getInitial(self, req):
-            if req.args.step is EntranceSteps.EDIT:
-                return TargetStep, req.args.load(req)
-            elif req.args.config != '':
-                return RunnerStep, req.args.load(req)
-            else:
-                return TargetStep, Execute.Arguments()
-
-    def checkAccess(self, req):
-        if not (req.hasPrivilege('c/a') or req.hasPrivilege('j/c')):
-            raise AccessDenied()
+    class Processor(ExecuteProcessorMixin, ContinuedDialogProcessor):
+        pass
 
 class TargetTable(RadioTable):
     name = 'target'
