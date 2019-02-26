@@ -136,6 +136,10 @@ class DialogPage(FabPage, ABC):
                 requestedPath[-1 : ] = []
             elif args.back is not None:
                 # User pressed back button on normal page.
+                # We must go back to the previous step that will be shown;
+                # we can't just go back two steps, since we might end up on
+                # a non-shown step and then automatically advance to the same
+                # step the user pressed the back button on.
                 limitStep = requestedPath[-1]
 
             actualPath = []
