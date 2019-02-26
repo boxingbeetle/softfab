@@ -7,10 +7,15 @@ from softfab.useragent import UserAgent
 from softfab.userlib import AnonGuestUser, UnknownUser, privileges
 from softfab.utils import cachedProperty, iterable
 
+from twisted.web.http import Request as TwistedRequest
 from twisted.web.server import Session
 
 from cgi import parse_header
+from inspect import signature
 from urllib.parse import parse_qs, urlparse
+
+# The 'sameSite' parameter was added in Twisted 18.9.0.
+sameSiteSupport = 'sameSite' in signature(TwistedRequest.addCookie).parameters
 
 class LongSession(Session):
     sessionTimeout = 60 * 60 * 24 * 7 # one week in seconds
@@ -215,7 +220,8 @@ class Request(RequestBase):
         session.touch()
         request.addCookie(
             self.sessionCookieName, session.uid, path='/',
-            httpOnly=True, secure=secure
+            httpOnly=True, secure=secure,
+            **({'sameSite': 'lax'} if sameSiteSupport else {})
             )
         return session
 
