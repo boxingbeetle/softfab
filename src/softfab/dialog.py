@@ -87,138 +87,6 @@ class DialogPage(FabPage, ABC):
         back = StrArg(None) # back button on normal page
         error = StrArg(None) # back button on error page
 
-    class Processor(PageProcessor):
-
-        def __retryStep(self, func):
-            # Call function with corrected arguments until it accepts them.
-            for _ in range(100):
-                try:
-                    return func(self)
-                except ArgsCorrected as ex:
-                    # Usually ArgsCorrected is handled by a redirect, but POSTs
-                    # cannot be redirected. Even if it would be possible to
-                    # redirect them, it would not be useful since the POST body
-                    # is not accessible for the user, unlike the GET query in
-                    # the URL.
-                    self.args = ex.correctedArgs
-                    self.argsChanged()
-            # The function keeps correcting its arguments; by now it is
-            # safe to assume it has entered an infinite loop.
-            raise RuntimeError(
-                'dialog step "%s" method "%s" keeps raising ArgsCorrected'
-                % ( func.__self__.__class__.name, func.__name__ )
-                )
-
-        def process(self, req):
-            # Determine navigation path.
-            stepObjects = self.page.stepObjects
-            requestedPath = []
-            for name in self.args.path.split():
-                try:
-                    requestedPath.append(stepObjects[name])
-                except KeyError:
-                    raise InvalidRequest(
-                        'non-existing dialog step "%s" in navigation path'
-                        % name
-                        )
-            if not requestedPath:
-                initialClass, initialArgs = self.getInitial(req)
-                requestedPath = [stepObjects[initialClass.name]]
-                self.args = initialArgs
-
-            if self.args.error is not None:
-                # User pressed back button on error page.
-                self.walkSteps(requestedPath[:-1])
-            elif self.args.back is not None:
-                # User pressed back button on normal page.
-                # We must go back to the previous step that will be shown;
-                # we can't just go back two steps, since we might end up on
-                # a non-shown step and then automatically advance to the same
-                # step the user pressed the back button on.
-                self.walkSteps(requestedPath, requestedPath[-1])
-            else:
-                self.walkSteps(requestedPath)
-
-        def walkSteps(self, requestedPath, limitStep=None):
-            """Walk as far as possible through the steps in `requestedPath`.
-            The walk is stopped if a step doesn't pass verification, the walk
-            takes us off the requested path, or `limitStep` is reached.
-            """
-            self.nextLabel = 'Next >' # pylint: disable=attribute-defined-outside-init
-            stepObjects = self.page.stepObjects
-            actualPath = []
-            visibleSteps = []
-            errorMessage = None
-            step = requestedPath[0]
-            try:
-                while True:
-                    # Replay the path the user has followed.
-                    if requestedPath:
-                        nextStep = requestedPath.pop(0)
-                        requested = nextStep is step
-                        if not requested:
-                            # We are deviating from the path the user followed.
-                            # Stop trying to follow the rest of it.
-                            requestedPath = []
-                    else:
-                        requested = False
-
-                    actualPath.append(step.name)
-
-                    showStep = self.__retryStep(step.process)
-                    if showStep:
-                        visibleSteps.append(step)
-                        if not requested:
-                            # We have reached the step that should be presented.
-                            break
-
-                    # Validate input and determine next step.
-                    try:
-                        nextClass = self.__retryStep(step.verify)
-                    except PresentableError as ex:
-                        errorMessage = str(ex)
-                        break
-                    else:
-                        nextStep = stepObjects[nextClass.name]
-                    if nextStep is limitStep:
-                        break
-                    else:
-                        step = nextStep
-            finally:
-                # Note that not only the "break" statements but also exceptions
-                # will go through here, so do not assume too much about the
-                # state of the variables.
-                if visibleSteps:
-                    step = visibleSteps[-1]
-                while actualPath:
-                    if actualPath[-1] == step.name:
-                        break
-                    actualPath.pop()
-                else:
-                    actualPath = [ step.name ]
-                # pylint: disable=attribute-defined-outside-init
-                self.step = step
-                self.errorMessage = errorMessage
-                self.backName = 'back' if len(visibleSteps) > 1 else None
-                self.args = self.args.override(
-                    path = ' '.join(actualPath), back = None, error = None
-                    )
-
-        def argsChanged(self):
-            '''Called when the "args" field has been changed.
-            Interested subclasses can override this, for example to discard
-            cached objects that were created based on information from "args".
-            The default implementation does nothing.
-            '''
-
-        def getInitial(self, req):
-            '''Called when the dialog is entered, to determine the first step
-            and the initial argument values.
-            Returns a pair consisting of the DialogStep object for the initial
-            step and a PageArgs instance.
-            '''
-            raise NotImplementedError
-
     def __init__(self):
         FabPage.__init__(self)
         self.stepObjects = {
@@ -238,3 +106,137 @@ class DialogPage(FabPage, ABC):
         if proc.errorMessage is not None:
             yield xhtml.p(class_ = 'notice')[ proc.errorMessage ]
         yield proc.step.presentContent(proc)
+
+class DialogProcessor(PageProcessor):
+    """Processor designed to be used with `DialogPage`.
+    """
+
+    def __retryStep(self, func):
+        # Call function with corrected arguments until it accepts them.
+        for _ in range(100):
+            try:
+                return func(self)
+            except ArgsCorrected as ex:
+                # Usually ArgsCorrected is handled by a redirect, but POSTs
+                # cannot be redirected. Even if it would be possible to
+                # redirect them, it would not be useful since the POST body
+                # is not accessible for the user, unlike the GET query in
+                # the URL.
+                self.args = ex.correctedArgs
+                self.argsChanged()
+        # The function keeps correcting its arguments; by now it is
+        # safe to assume it has entered an infinite loop.
+        raise RuntimeError(
+            'dialog step "%s" method "%s" keeps raising ArgsCorrected'
+            % ( func.__self__.__class__.name, func.__name__ )
+            )
+
+    def process(self, req):
+        # Determine navigation path.
+        stepObjects = self.page.stepObjects
+        requestedPath = []
+        for name in self.args.path.split():
+            try:
+                requestedPath.append(stepObjects[name])
+            except KeyError:
+                raise InvalidRequest(
+                    'non-existing dialog step "%s" in navigation path'
+                    % name
+                    )
+        if not requestedPath:
+            initialClass, initialArgs = self.getInitial(req)
+            requestedPath = [stepObjects[initialClass.name]]
+            self.args = initialArgs
+
+        if self.args.error is not None:
+            # User pressed back button on error page.
+            self.walkSteps(requestedPath[:-1])
+        elif self.args.back is not None:
+            # User pressed back button on normal page.
+            # We must go back to the previous step that will be shown;
+            # we can't just go back two steps, since we might end up on
+            # a non-shown step and then automatically advance to the same
+            # step the user pressed the back button on.
+            self.walkSteps(requestedPath, requestedPath[-1])
+        else:
+            self.walkSteps(requestedPath)
+
+    def walkSteps(self, requestedPath, limitStep=None):
+        """Walk as far as possible through the steps in `requestedPath`.
+        The walk is stopped if a step doesn't pass verification, the walk
+        takes us off the requested path, or `limitStep` is reached.
+        """
+        self.nextLabel = 'Next >' # pylint: disable=attribute-defined-outside-init
+        stepObjects = self.page.stepObjects
+        actualPath = []
+        visibleSteps = []
+        errorMessage = None
+        step = requestedPath[0]
+        try:
+            while True:
+                # Replay the path the user has followed.
+                if requestedPath:
+                    nextStep = requestedPath.pop(0)
+                    requested = nextStep is step
+                    if not requested:
+                        # We are deviating from the path the user followed.
+                        # Stop trying to follow the rest of it.
+                        requestedPath = []
+                else:
+                    requested = False
+
+                actualPath.append(step.name)
+
+                showStep = self.__retryStep(step.process)
+                if showStep:
+                    visibleSteps.append(step)
+                    if not requested:
+                        # We have reached the step that should be presented.
+                        break
+
+                # Validate input and determine next step.
+                try:
+                    nextClass = self.__retryStep(step.verify)
+                except PresentableError as ex:
+                    errorMessage = str(ex)
+                    break
+                else:
+                    nextStep = stepObjects[nextClass.name]
+                if nextStep is limitStep:
+                    break
+                else:
+                    step = nextStep
+        finally:
+            # Note that not only the "break" statements but also exceptions
+            # will go through here, so do not assume too much about the
+            # state of the variables.
+            if visibleSteps:
+                step = visibleSteps[-1]
+            while actualPath:
+                if actualPath[-1] == step.name:
+                    break
+                actualPath.pop()
+            else:
+                actualPath = [ step.name ]
+            # pylint: disable=attribute-defined-outside-init
+            self.step = step
+            self.errorMessage = errorMessage
+            self.backName = 'back' if len(visibleSteps) > 1 else None
+            self.args = self.args.override(
+                path = ' '.join(actualPath), back = None, error = None
+                )
+
+    def argsChanged(self):
+        '''Called when the "args" field has been changed.
+        Interested subclasses can override this, for example to discard
+        cached objects that were created based on information from "args".
+        The default implementation does nothing.
+        '''
+
+    def getInitial(self, req):
+        '''Called when the dialog is entered, to determine the first step
+        and the initial argument values.
+        Returns a pair consisting of the DialogStep object for the initial
+        step and a PageArgs instance.
+        '''
+        raise NotImplementedError

@@ -7,7 +7,7 @@ from softfab.Page import (
 from softfab.config import mailDomain
 from softfab.configlib import Config, Task, configDB
 from softfab.configview import InputTable
-from softfab.dialog import DialogPage, DialogStep
+from softfab.dialog import DialogPage, DialogProcessor, DialogStep
 from softfab.formlib import (
     CheckBoxesTable, RadioTable, SingleCheckBoxTable,
     selectionList, textArea, textInput
@@ -471,7 +471,7 @@ class Execute(DialogPage):
                 tagvalues = tagvalues,
                 )
 
-    class Processor(DialogPage.Processor):
+    class Processor(DialogProcessor):
         __config = None
 
         def iterTasks(self):
