@@ -113,7 +113,7 @@ class DialogPage(FabPage, ABC):
             args = self.args
 
             # Determine navigation path.
-            stepObjects = self.page._stepObjects # pylint: disable=protected-access
+            stepObjects = self.page.stepObjects
             requestedPath = []
             for name in args.path.split():
                 try:
@@ -217,10 +217,10 @@ class DialogPage(FabPage, ABC):
 
     def __init__(self):
         FabPage.__init__(self)
-        self._stepObjects = dict(
-            ( stepClass.name, stepClass(self) )
+        self.stepObjects = {
+            stepClass.name: stepClass(self)
             for stepClass in self.steps
-            )
+            }
 
     def checkAccess(self, req):
         # This method is already declared abstract in FabPage, we re-assert
