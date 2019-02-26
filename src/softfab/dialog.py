@@ -138,7 +138,6 @@ class DialogPage(FabPage, ABC):
                 # User pressed back button on normal page.
                 limitStep = requestedPath[-1]
 
-            path = list(requestedPath) # copy
             actualPath = []
             visibleSteps = []
             errorMessage = None
@@ -146,13 +145,13 @@ class DialogPage(FabPage, ABC):
             try:
                 while True:
                     # Replay the path the user has followed.
-                    if path:
-                        nextStep = path.pop(0)
+                    if requestedPath:
+                        nextStep = requestedPath.pop(0)
                         requested = nextStep is step
                         if not requested:
                             # We are deviating from the path the user followed.
                             # Stop trying to follow the rest of it.
-                            path = []
+                            requestedPath = []
                     else:
                         requested = False
 
