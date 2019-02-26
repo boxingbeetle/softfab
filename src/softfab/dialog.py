@@ -110,12 +110,10 @@ class DialogPage(FabPage, ABC):
                 )
 
         def process(self, req):
-            args = self.args
-
             # Determine navigation path.
             stepObjects = self.page.stepObjects
             requestedPath = []
-            for name in args.path.split():
+            for name in self.args.path.split():
                 try:
                     requestedPath.append(stepObjects[name])
                 except KeyError:
@@ -123,29 +121,35 @@ class DialogPage(FabPage, ABC):
                         'non-existing dialog step "%s" in navigation path'
                         % name
                         )
-            if requestedPath:
-                step = requestedPath[0]
-            else:
+            if not requestedPath:
                 initialClass, initialArgs = self.getInitial(req)
-                step = stepObjects[initialClass.name]
-                self.args = args = initialArgs
+                requestedPath = [stepObjects[initialClass.name]]
+                self.args = initialArgs
 
-            limitStep = None
-            if args.error is not None:
+            if self.args.error is not None:
                 # User pressed back button on error page.
-                requestedPath[-1 : ] = []
-            elif args.back is not None:
+                self.walkSteps(requestedPath[:-1])
+            elif self.args.back is not None:
                 # User pressed back button on normal page.
                 # We must go back to the previous step that will be shown;
                 # we can't just go back two steps, since we might end up on
                 # a non-shown step and then automatically advance to the same
                 # step the user pressed the back button on.
-                limitStep = requestedPath[-1]
+                self.walkSteps(requestedPath, requestedPath[-1])
+            else:
+                self.walkSteps(requestedPath)
 
+        def walkSteps(self, requestedPath, limitStep=None):
+            """Walk as far as possible through the steps in `requestedPath`.
+            The walk is stopped if a step doesn't pass verification, the walk
+            takes us off the requested path, or `limitStep` is reached.
+            """
+            self.nextLabel = 'Next >' # pylint: disable=attribute-defined-outside-init
+            stepObjects = self.page.stepObjects
             actualPath = []
             visibleSteps = []
             errorMessage = None
-            self.nextLabel = 'Next >' # pylint: disable=attribute-defined-outside-init
+            step = requestedPath[0]
             try:
                 while True:
                     # Replay the path the user has followed.
