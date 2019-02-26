@@ -1,9 +1,9 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 import os, os.path, unittest
+from importlib import reload
 
 from softfab import config
-import imp
 config.dbDir = 'testdb'
 assert not os.path.exists(config.dbDir)
 
@@ -24,7 +24,7 @@ class TestResults(unittest.TestCase):
 
     def setUp(self):
         databases.reloadDatabases()
-        imp.reload(shadowtestutils)
+        reload(shadowtestutils)
 
     def tearDown(self):
         removeRec(config.dbDir)

@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-import imp
 import unittest
+from importlib import reload
 from io import StringIO
 
 from initconfig import config
@@ -76,13 +76,13 @@ class TestTRDatabase(unittest.TestCase):
         record1.sync(data1)
 
         # Check if cache and database are in sync:
-        imp.reload(taskrunnerlib)
+        reload(taskrunnerlib)
         record2 = taskrunnerlib.taskRunnerDB[record1.getId()]
         self.assertEqual(record1._properties, record2._properties)
         # Change data in database.
         # Check if cache and database are still in sync:
         record1.sync(data2)
-        imp.reload(taskrunnerlib)
+        reload(taskrunnerlib)
         record2 = taskrunnerlib.taskRunnerDB[record1.getId()]
         self.assertEqual(record1._properties, record2._properties)
 
@@ -141,7 +141,7 @@ class TestTRDatabase(unittest.TestCase):
         self.assertEqual(getResourceStatus(record), resultNotSuspended)
 
         # Check if status 'unknown' is returned after a cache flush:
-        imp.reload(taskrunnerlib)
+        reload(taskrunnerlib)
         record = taskrunnerlib.taskRunnerDB[record.getId()]
         self.assertEqual(getResourceStatus(record), 'unknown')
         # Check that pausing the TR doesn't change this status:

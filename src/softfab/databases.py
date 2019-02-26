@@ -6,7 +6,7 @@ from softfab import (
     taskrunlib, configlib, schedulelib, userlib
     )
 
-import imp
+from importlib import reload
 
 # Note: The databases should be ordered such that all if D2 depends on D1,
 #       D1 is positioned in the list before D2.
@@ -38,24 +38,24 @@ def reloadDatabases():
     # !!! NOTE: The order of reloading is very important:
     # dependent modules must be reloaded AFTER their dependencies
     # TODO: Automate this.
-    imp.reload(userlib)
-    imp.reload(restypelib)
-    imp.reload(resourcelib)
-    imp.reload(storagelib)
-    imp.reload(productdeflib)
-    imp.reload(frameworklib)
-    imp.reload(taskdeflib)
-    imp.reload(productlib)
-    imp.reload(shadowlib)
-    imp.reload(taskrunlib)
-    imp.reload(joblib)
-    imp.reload(configlib)
-    imp.reload(schedulelib)
+    reload(userlib)
+    reload(restypelib)
+    reload(resourcelib)
+    reload(storagelib)
+    reload(productdeflib)
+    reload(frameworklib)
+    reload(taskdeflib)
+    reload(productlib)
+    reload(shadowlib)
+    reload(taskrunlib)
+    reload(joblib)
+    reload(configlib)
+    reload(schedulelib)
     # There are a circular dependencies between joblib, shadowlib, taskrunlib
     # and taskrunnerlib.
     # Reloading taskrunnerlib last is needed to make the RunObservers work,
     # without this a Task Runner will not know it is busy.
-    imp.reload(taskrunnerlib)
+    reload(taskrunnerlib)
 
     for db in iterDatabasesToPreload():
         db.preload()
