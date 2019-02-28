@@ -283,24 +283,28 @@ stylePrefix = styleRoot.urlPrefix.encode()
 
 class SoftFabRoot(resource.Resource):
 
-    debugSupport = abstract
-    """Value for `softfab.FabResource.debugSupport` to set on pages
-    registered under this root.
-    """
+    def __init__(self, debugSupport, anonOperator, secureCookie):
+        """Creates a Control Center root resource.
 
-    anonOperator = abstract
-    """Iff True, automatically give every client operator privileges
-    to pages registered under this root, without forcing a login.
-    """
+        Parameters:
 
-    secureCookie = abstract
-    """Iff True, mark the session cookie as secure, meaning it will only
-    be submitted over HTTPS.
-    """
+        debugSupport: bool
+            Value for `softfab.FabResource.debugSupport` to set on pages
+            registered under this root.
 
-    def __init__(self):
-        '''Creates a Control Center root resource.
-        '''
+        anonOperator: bool
+            Automatically give every client operator privileges to
+            pages registered under this root, without forcing a login.
+
+        secureCookie: bool
+            Mark the session cookie as secure, meaning it will only
+            be submitted over HTTPS.
+
+        """
+        self.debugSupport = debugSupport
+        self.anonOperator = anonOperator
+        self.secureCookie = secureCookie
+
         resource.Resource.__init__(self)
         self.putChild(b'', PageRedirect('Home'))
         self.putChild(styleRoot.relativeURL.encode(), styleRoot)

@@ -4,40 +4,46 @@
 Main module for starting the Control Center inside Twisted.
 '''
 
-# pylint: disable=ungrouped-imports,useless-suppression
-# ungrouped-imports is the message we actually want to suppress,
-# but because of a bug we have to disable useless-suppression too.
-#   https://github.com/PyCQA/pylint/issues/2366
+def _createRoot(**config):
+    # Importing of this module triggers the logging system initialisation.
+    import softfab.initlog # pylint: disable=unused-import
 
-# Importing of this module triggers the logging system initialisation.
-import softfab.initlog # pylint: disable=unused-import
+    # This must be after importing initlog.
+    from softfab.TwistedRoot import SoftFabRoot
 
-# This must be after importing initlog
-from softfab.TwistedRoot import SoftFabRoot
+    return SoftFabRoot(**config)
 
-# The "twist" launcher will create an instance of one of these roots.
+# The "twist" launcher will call one of these functions to create
+# the root resource.
 # Currently the root runs the startup process, so there must be exactly
 # one root. Multiple roots might be supported in the future, since that
 # would allow exposing different user and programming interfaces to
 # different networks.
 
-class Root(SoftFabRoot):
-    """Root resource for production sites.
+def production():
+    """Creates a root resource for production sites.
     """
-    debugSupport = False
-    anonOperator = False
-    secureCookie = True
+    return _createRoot(
+        debugSupport=False,
+        anonOperator=False,
+        secureCookie=True
+        )
 
-class DebugRoot(SoftFabRoot):
-    """Root resource for development sites.
+def debug():
+    """Creates a root resource for development sites.
     """
-    debugSupport = True
-    anonOperator = True
-    secureCookie = False
+    return _createRoot(
+        debugSupport=True,
+        anonOperator=True,
+        secureCookie=False
+        )
 
-class DebugAuthRoot(SoftFabRoot):
-    """Root resource for development sites, with mandatory authentication.
+def debugAuth():
+    """Creates a root resource for development sites,
+    with mandatory authentication.
     """
-    debugSupport = True
-    anonOperator = False
-    secureCookie = False
+    return _createRoot(
+        debugSupport=True,
+        anonOperator=False,
+        secureCookie=False
+        )

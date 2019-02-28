@@ -33,7 +33,7 @@ def types(c, src=all_sources):
 def run(c, host='localhost', port=8180, auth=False):
     """Run a Control Center instance."""
     print('Starting Control Center at: http://%s:%d/' % (host, port))
-    root = 'DebugAuthRoot' if auth else 'DebugRoot'
+    root = 'debugAuth' if auth else 'debug'
     c.run('twist web'
             ' --listen tcp:interface=%s:port=%d'
             ' --class softfab.TwistedApp.%s' % (host, port, root),
