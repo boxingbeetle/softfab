@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from softfab.FabPage import FabPage
+from softfab.notification import sendmail
 from softfab.projectlib import getBootTime, project
 from softfab.timeview import formatTime
 from softfab.utils import parseVersion
@@ -12,13 +13,6 @@ from passlib import __version__ as passlibVersion
 from twisted import __version__ as twistedVersion
 
 from platform import python_version
-
-try:
-    import twisted.mail.smtp # pylint: disable=unused-import
-except ImportError:
-    twistedMail = False
-else:
-    twistedMail = True
 
 try:
     from pytz import VERSION as pytzVersion
@@ -85,7 +79,7 @@ class InstallationTable(Table):
         yield 'SoftFab version:', softFabVersion
         yield 'Twisted version:', twistedVersion
         yield 'twisted.mail package:', (
-            'installed' if twistedMail else 'not installed'
+            'not installed' if sendmail is None else 'installed'
             )
         yield 'Passlib version:', passlibVersion
         yield 'PyGraphviz version:', pyGraphvizVersion
