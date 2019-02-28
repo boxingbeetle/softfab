@@ -8,7 +8,7 @@ class Configure_GET(FabPage):
     icon = 'IconConfig'
     description = 'Configure'
     children = [
-        'ProjectEdit', 'Design', 'UserList', 'About'
+        'ProjectEdit', 'Design', 'UserList', 'Notifications', 'About'
         ]
 
     def checkAccess(self, req):
@@ -27,7 +27,11 @@ class Configure_GET(FabPage):
             ( 'Users',
                 'Add new users, change user passwords or '
                 'change user roles.'
-                    ),
+                ),
+            ( 'Notifications',
+                'Configure ways to stay informed of the current status '
+                'of your project.'
+                ),
             ( 'About',
                 'Look up version information of your SoftFab installation '
                 'and web browser.'
