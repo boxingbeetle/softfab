@@ -21,7 +21,6 @@ def presentNoEmail():
             ]
 
 def presentEmailForm():
-    assert False
     yield xhtml.h3[ 'SMTP relay' ]
     yield xhtml.p[
         textInput(value='mail.example.com', size=60)
