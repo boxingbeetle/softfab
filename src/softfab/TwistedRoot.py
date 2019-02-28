@@ -12,7 +12,6 @@ from softfab.request import Request
 from softfab.schedulelib import ScheduleManager
 from softfab.shadowlib import startShadowRunCleanup
 from softfab.userlib import UnknownUser
-from softfab.utils import abstract
 
 from twisted.cred.error import LoginFailed
 from twisted.internet import defer, reactor
