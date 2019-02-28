@@ -3,8 +3,6 @@
 import logging
 from typing import ClassVar, cast
 
-from twisted.internet import reactor
-
 from softfab.config import dbDir
 from softfab.databaselib import (
     Database, DatabaseElem, RecordObserver, createUniqueId
@@ -286,10 +284,9 @@ def _removeExpiredRecords():
         logging.warning('Removing expired shadow run %s', shadowRun.getId())
         shadowDB.remove(shadowRun)
 
-# This must happen after the import of taskRunDB has been set, because
-# ExtractionRun's implementation of hasExpired() checks whether the associated
-# task run still exists.
-def _startAutoCleanup():
+def startShadowRunCleanup():
+    """Starts automatic cleanup of shadow runs.
+    Must be called after database preloading.
+    """
     _removeExpiredRecords()
     RecordTrimmer()
-reactor.callLater(0, _startAutoCleanup)

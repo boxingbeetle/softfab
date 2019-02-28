@@ -10,6 +10,7 @@ from softfab.databases import iterDatabasesToPreload
 from softfab.render import NotFoundPage, parseAndProcess, present
 from softfab.request import Request
 from softfab.schedulelib import ScheduleManager
+from softfab.shadowlib import startShadowRunCleanup
 from softfab.userlib import UnknownUser
 from softfab.utils import abstract
 
@@ -316,6 +317,7 @@ class SoftFabRoot(resource.Resource):
 
     def startup(self):
         yield DatabaseLoader(self).process()
+        yield startShadowRunCleanup
         yield PageLoader(self).process
         # Start schedule processing.
         yield ScheduleManager().trigger
