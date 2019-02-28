@@ -89,7 +89,7 @@ class Design_GET(GraphPageMixin, FabPage):
             if show == 'yes':
                 for index, graph in enumerate(proc.graphs):
                     if index == len(proc.graphs) - 1:
-                        yield xhtml.h3[ 'legend' ]
+                        yield xhtml.h2[ 'Legend' ]
                     yield GraphPanel.instance.present(proc=proc, graph=graph)
             else:
                 yield xhtml.p[ xhtml.a(
