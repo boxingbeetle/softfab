@@ -4,7 +4,12 @@
 Main module for starting the Control Center inside Twisted.
 '''
 
+from os import getcwd
+
 def _createRoot(**config):
+    import softfab.config
+    softfab.config.dbDir = getcwd()
+
     # Importing of this module triggers the logging system initialisation.
     import softfab.initlog # pylint: disable=unused-import
 

@@ -1,9 +1,11 @@
+from os import getcwd, makedirs
 from shutil import rmtree
 
 from invoke import task
 
-SRC_ENV = {'PYTHONPATH': 'src'}
-PYLINT_ENV = {'PYTHONPATH': 'src:tests/pylint'}
+CWD = getcwd()
+SRC_ENV = {'PYTHONPATH': '{}/src'.format(CWD)}
+PYLINT_ENV = {'PYTHONPATH': '{0}/src:{0}/tests/pylint'.format(CWD)}
 
 all_sources = 'src/softfab/*.py src/softfab/pages/*.py'
 
@@ -34,10 +36,12 @@ def run(c, host='localhost', port=8180, auth=False):
     """Run a Control Center instance."""
     print('Starting Control Center at: http://%s:%d/' % (host, port))
     root = 'debugAuth' if auth else 'debug'
-    c.run('twist web'
-            ' --listen tcp:interface=%s:port=%d'
-            ' --class softfab.TwistedApp.%s' % (host, port, root),
-            env=SRC_ENV, pty=True)
+    makedirs('run/', exist_ok=True)
+    with c.cd('run'):
+        c.run('twist web'
+                ' --listen tcp:interface=%s:port=%d'
+                ' --class softfab.TwistedApp.%s' % (host, port, root),
+                env=SRC_ENV, pty=True)
 
 @task
 def livedocs(c, host='localhost', port=5000):
