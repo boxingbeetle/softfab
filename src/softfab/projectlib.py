@@ -133,6 +133,10 @@ class Project(XMLTag, SingletonElem):
         self._properties.setdefault('embedcustom', '')
         if not self._properties.get('timezone'):
             self._properties['timezone'] = _guessSystemTimezone()
+        if 'smtprelay' not in self._properties:
+            self._properties['smtprelay'] = 'localhost'
+        if 'mailsender' not in self._properties:
+            self._properties['mailsender'] = '%s@%s' % (getuser(), getfqdn())
 
         self.__targets = set()
         # Note: tag keys should be kept in a list rather than a set,
@@ -180,13 +184,22 @@ class Project(XMLTag, SingletonElem):
     def smtpRelay(self) -> str:
         """SMTP relay to send outgoing messages to.
         """
-        return 'localhost'
+        return self._properties['smtprelay']
 
     @property
     def mailSender(self) -> str:
         """Sender address (From:) to be used in outgoing messages.
         """
-        return '%s@%s' % (getuser(), getfqdn())
+        return self._properties['mailsender']
+
+    def setMailConfig(self, smtpRelay: str, mailSender: str) -> None:
+        """Changes the e-mail send settings.
+
+        The change is immediately committed to the database.
+        """
+        self._properties['smtprelay'] = smtpRelay
+        self._properties['mailsender'] = mailSender
+        self._notify()
 
     def setAnonGuestAccess(self, enabled: bool) -> None:
         """Changes the anonymous guest access setting.

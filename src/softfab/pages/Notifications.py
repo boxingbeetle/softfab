@@ -1,10 +1,15 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from enum import Enum
+import re
+
 from twisted import version as twistedVersion
 
 from softfab.FabPage import FabPage
-from softfab.formlib import makeForm, textInput
+from softfab.Page import PageProcessor, PresentableError, Redirect
+from softfab.formlib import actionButtons, makeForm, textInput
 from softfab.notification import sendmail
+from softfab.pageargs import EnumArg, PageArgs, StrArg
 from softfab.projectlib import project
 from softfab.xmlgen import xhtml
 
@@ -24,7 +29,7 @@ def presentNoEmail():
 def presentEmailForm():
     yield xhtml.h3[ 'SMTP relay' ]
     yield xhtml.p[
-        textInput(value=project.smtpRelay, size=60)
+        textInput(name='smtpRelay', value=project.smtpRelay, size=60)
         ]
     yield xhtml.p[
         'Notification e-mails will be sent via this SMTP server.'
@@ -39,14 +44,25 @@ def presentEmailForm():
 
     yield xhtml.h3[ 'Sender address' ]
     yield xhtml.p[
-        textInput(value=project.mailSender, size=60)
+        textInput(name='mailSender', value=project.mailSender, size=60)
         ]
     yield xhtml.p[
         'This address will be used in the "From:" field '
         'of notification e-mails.'
         ]
 
-class Notifications(FabPage):
+    yield xhtml.p[ actionButtons(Actions) ]
+
+def presentForm():
+    yield xhtml.h2[ 'E-mail' ]
+    if sendmail is None:
+        yield from presentNoEmail()
+    else:
+        yield makeForm()[
+            presentEmailForm()
+            ]
+
+class Notifications_GET(FabPage):
     icon = 'IconNotification'
     description = 'Notifications'
 
@@ -54,10 +70,52 @@ class Notifications(FabPage):
         pass
 
     def presentContent(self, proc):
-        yield xhtml.h2[ 'E-mail' ]
-        if sendmail is None:
-            yield from presentNoEmail()
-        else:
-            yield makeForm()[
-                presentEmailForm()
-                ]
+        yield from presentForm()
+
+# This is not an accurate check whether the address complies with the RFC,
+# but it should accept real addresses while rejecting most invalid ones.
+# Note that even if an e-mail address is syntactically correct, that still
+# doesn't guarantee that it's an existing address, so putting much effort
+# into syntax checking likely isn't worth it.
+reMailAddress = re.compile(r'[^@\s]+@([^@.\s]+\.)*[^@.\s]+$')
+
+Actions = Enum('Actions', 'SAVE CANCEL')
+
+class Notifications_POST(FabPage):
+    icon = 'IconNotification'
+    description = 'Notifications'
+
+    def checkAccess(self, req):
+        req.checkPrivilege('p/m')
+
+    class Arguments(PageArgs):
+        action = EnumArg(Actions)
+        smtpRelay = StrArg()
+        mailSender = StrArg()
+
+    class Processor(PageProcessor):
+
+        def process(self, req):
+            args = req.args
+
+            action = args.action
+            if action is not Actions.SAVE:
+                assert action is Actions.CANCEL, action
+                raise Redirect(self.page.getParentURL(req))
+
+            smtpRelay = args.smtpRelay
+            mailSender = args.mailSender
+            if mailSender and not reMailAddress.match(mailSender):
+                raise PresentableError(xhtml.p(class_='notice')[
+                    'Mail sender ', xhtml.code[mailSender],
+                    ' does not look like an e-mail address.'
+                    ])
+            project.setMailConfig(smtpRelay, mailSender)
+
+    def presentContent(self, proc):
+        yield xhtml.p[ 'Notification settings saved.' ]
+        yield self.backToParent(proc.req)
+
+    def presentError(self, proc, message):
+        yield super().presentError(proc, message)
+        yield from presentForm()
