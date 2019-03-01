@@ -30,12 +30,6 @@ loggingLevel = 'INFO'
 # Delay between the syncronization requests (seconds)
 syncDelay = 10
 
-# SMTP relay to send outgoing messages to
-smtpRelay = 'mail.example.com'
-
-# Sender address to be specified in the outgoing messages
-mailSender = 'factory@softfab.example.com'
-
 # Enables database change logging.
 # This is useful for system testing; in production it should be disabled.
 logChanges = False

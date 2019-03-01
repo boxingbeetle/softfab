@@ -6,7 +6,7 @@ It can be used to send certain recipients an email about a certain event
 that happened in the SoftFab (e.g. Job complete or Job failed).
 '''
 
-from softfab.config import mailSender, smtpRelay
+from softfab.projectlib import project
 
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -80,7 +80,7 @@ def sendNotification(locator, presenter, *presenterArgs):
             yield '</BODY></HTML> '
 
         messageStr = MIMEMultipart('alternative')
-        messageStr["From"] = mailSender
+        messageStr["From"] = project.mailSender
         messageStr["To"] = ', '.join(recipients)
         messageStr["Date"] = formatdate()
         messageStr["Subject"] = ''.join(
@@ -98,7 +98,7 @@ def sendNotification(locator, presenter, *presenterArgs):
                 )
         else:
             d = sendmail(
-                smtpRelay, mailSender, recipients,
+                project.smtpRelay, project.mailSender, recipients,
                 messageStr.as_string().encode()
                 )
             d.addErrback(lambda failure: logging.error(

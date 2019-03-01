@@ -5,6 +5,7 @@ from twisted import version as twistedVersion
 from softfab.FabPage import FabPage
 from softfab.formlib import makeForm, textInput
 from softfab.notification import sendmail
+from softfab.projectlib import project
 from softfab.xmlgen import xhtml
 
 def presentNoEmail():
@@ -23,7 +24,7 @@ def presentNoEmail():
 def presentEmailForm():
     yield xhtml.h3[ 'SMTP relay' ]
     yield xhtml.p[
-        textInput(value='mail.example.com', size=60)
+        textInput(value=project.smtpRelay, size=60)
         ]
     yield xhtml.p[
         'Notification e-mails will be sent via this SMTP server.'
@@ -38,7 +39,7 @@ def presentEmailForm():
 
     yield xhtml.h3[ 'Sender address' ]
     yield xhtml.p[
-        textInput(value='factory@softfab.example.com', size=60)
+        textInput(value=project.mailSender, size=60)
         ]
     yield xhtml.p[
         'This address will be used in the "From:" field '

@@ -12,6 +12,8 @@ from softfab.xmlbind import XMLTag
 from softfab.xmlgen import xml
 
 from enum import Enum
+from getpass import getuser
+from socket import getfqdn
 import logging
 import os
 import os.path
@@ -173,6 +175,18 @@ class Project(XMLTag, SingletonElem):
         Returns True iff more than one target is defined.
         """
         return len(self.__targets) > 1
+
+    @property
+    def smtpRelay(self) -> str:
+        """SMTP relay to send outgoing messages to.
+        """
+        return 'localhost'
+
+    @property
+    def mailSender(self) -> str:
+        """Sender address (From:) to be used in outgoing messages.
+        """
+        return '%s@%s' % (getuser(), getfqdn())
 
     def setAnonGuestAccess(self, enabled: bool) -> None:
         """Changes the anonymous guest access setting.
