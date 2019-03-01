@@ -13,19 +13,6 @@ from softfab.pageargs import EnumArg, PageArgs, StrArg
 from softfab.projectlib import project
 from softfab.xmlgen import xhtml
 
-def presentNoEmail():
-    yield xhtml.p[
-        'Notifications by e-mail require the ', xhtml.code['twisted.mail'],
-        ' package, which is not installed.'
-        ]
-    if (twistedVersion.major, twistedVersion.minor) < (17, 5):
-        yield xhtml.p[
-            'The Python 3 version of ', xhtml.code['twisted.mail'],
-            ' is only available since Twisted 17.5.0, '
-            'while this SoftFab is currently running on Twisted ',
-            twistedVersion.public(), '.'
-            ]
-
 def presentEmailForm():
     yield xhtml.h3[ 'SMTP relay' ]
     yield xhtml.p[
@@ -56,11 +43,23 @@ def presentEmailForm():
 def presentForm():
     yield xhtml.h2[ 'E-mail' ]
     if sendmail is None:
-        yield from presentNoEmail()
-    else:
-        yield makeForm()[
-            presentEmailForm()
+        yield xhtml.p(class_='notice')[
+            'Cannot send e-mail notifications.'
             ]
+        yield xhtml.p[
+            'Notifications by e-mail require the ', xhtml.code['twisted.mail'],
+            ' package, which is not installed.'
+            ]
+        if (twistedVersion.major, twistedVersion.minor) < (17, 5):
+            yield xhtml.p[
+                'The Python 3 version of ', xhtml.code['twisted.mail'],
+                ' is only available since Twisted 17.5.0, '
+                'while this SoftFab is currently running on Twisted ',
+                twistedVersion.public(), '.'
+                ]
+    yield makeForm()[
+        presentEmailForm()
+        ]
 
 class Notifications_GET(FabPage):
     icon = 'IconNotification'
