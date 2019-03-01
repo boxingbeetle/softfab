@@ -6,7 +6,7 @@ It can be used to send certain recipients an email about a certain event
 that happened in the SoftFab (e.g. Job complete or Job failed).
 '''
 
-from softfab.config import mailDomain, mailSender, smtpRelay
+from softfab.config import mailSender, smtpRelay
 
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -26,12 +26,6 @@ except ImportError:
     sendmail = None
 
 _reAddressSep = re.compile(r'[\s,;]+')
-def genRecipients(path):
-    for recipient in _reAddressSep.split(path):
-        if mailDomain is None or '@' in recipient:
-            yield recipient
-        else:
-            yield recipient + '@' + mailDomain
 
 def sendNotification(locator, presenter, *presenterArgs):
     '''Sends a notification about some event that happened in the SoftFab.
@@ -48,7 +42,7 @@ def sendNotification(locator, presenter, *presenterArgs):
     if protocol == 'mailto':
         # Create message text.
         # TODO: Parse and validate address when it is input.
-        recipients = list(genRecipients(path))
+        recipients = _reAddressSep.split(path)
 
         def createPlaintextContent():
             yield 'SoftFab\n'

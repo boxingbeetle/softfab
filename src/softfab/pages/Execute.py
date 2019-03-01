@@ -4,7 +4,6 @@ from softfab.FabPage import IconModifier
 from softfab.Page import (
     AccessDenied, InternalError, InvalidRequest, PresentableError, Redirect
     )
-from softfab.config import mailDomain
 from softfab.configlib import Config, Task, configDB
 from softfab.configview import InputTable
 from softfab.dialog import (
@@ -224,8 +223,6 @@ class ActionStep(DialogStep):
                 name = 'notify', cols = 60, rows = 4, spellcheck = 'false'
                 ).present(**kwargs),
             xhtml.br,
-            'It is possible to enter a prefix if the mail domain is: @',
-            mailDomain, xhtml.br,
             'Multiple email addresses and prefixes can be entered, ',
             'separated by commas.'
             ]

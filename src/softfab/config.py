@@ -36,9 +36,6 @@ smtpRelay = 'mail.example.com'
 # Sender address to be specified in the outgoing messages
 mailSender = 'factory@softfab.example.com'
 
-# This domain will be appended to mail addresses without '@'
-mailDomain = 'example.com'
-
 # Enables database change logging.
 # This is useful for system testing; in production it should be disabled.
 logChanges = False

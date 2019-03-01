@@ -45,17 +45,6 @@ def presentEmailForm():
         'of notification e-mails.'
         ]
 
-    yield xhtml.h3[ 'Default mail domain' ]
-    yield xhtml.p[
-        textInput(value='example.com', size=60)
-        ]
-    yield xhtml.p[
-        'This domain will be appended to mail addresses '
-        "that don't contain an @. "
-        'You can leave this empty if your SoftFab does not belong '
-        'to a single organisation.'
-        ]
-
 class Notifications(FabPage):
     icon = 'IconNotification'
     description = 'Notifications'
