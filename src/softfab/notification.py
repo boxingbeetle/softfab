@@ -91,8 +91,13 @@ def sendNotification(locator, presenter, *presenterArgs):
         messageStr.attach(textpart)
         messageStr.attach(htmlpart)
         # Send message asynchronously.
-        if sendmail is None:
-            logging.error(
+        if not project['mailnotification']:
+            logging.debug(
+                'Dropping notification e-mail because notifications '
+                'by e-mail are disabled'
+                )
+        elif sendmail is None:
+            logging.warning(
                 'Dropping notification e-mail because twisted.mail is '
                 'not installed'
                 )

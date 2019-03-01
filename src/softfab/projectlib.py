@@ -121,7 +121,9 @@ class Project(XMLTag, SingletonElem):
     '''Overall project settings.
     '''
     tagName = 'project'
-    boolProperties = ('taskprio', 'trselect', 'reqtag', 'anonguest')
+    boolProperties = (
+        'taskprio', 'trselect', 'reqtag', 'anonguest', 'mailnotification'
+        )
     intProperties = ('maxjobs', )
     enumProperties = {'embed': EmbeddingPolicy}
 
@@ -192,11 +194,14 @@ class Project(XMLTag, SingletonElem):
         """
         return self._properties['mailsender']
 
-    def setMailConfig(self, smtpRelay: str, mailSender: str) -> None:
+    def setMailConfig(self,
+            enabled: bool, smtpRelay: str, mailSender: str
+            ) -> None:
         """Changes the e-mail send settings.
 
         The change is immediately committed to the database.
         """
+        self._properties['mailnotification'] = enabled
         self._properties['smtprelay'] = smtpRelay
         self._properties['mailsender'] = mailSender
         self._notify()

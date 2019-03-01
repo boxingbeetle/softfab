@@ -7,13 +7,19 @@ from twisted import version as twistedVersion
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor, PresentableError, Redirect
-from softfab.formlib import actionButtons, makeForm, textInput
+from softfab.formlib import actionButtons, checkBox, makeForm, textInput
 from softfab.notification import sendmail
-from softfab.pageargs import EnumArg, PageArgs, StrArg
+from softfab.pageargs import BoolArg, EnumArg, PageArgs, StrArg
 from softfab.projectlib import project
 from softfab.xmlgen import xhtml
 
 def presentEmailForm():
+    yield xhtml.p[
+        checkBox(name='mailNotification', checked=project['mailnotification'])[
+            'Send notifications via e-mail'
+            ]
+        ]
+
     yield xhtml.h3[ 'SMTP relay' ]
     yield xhtml.p[
         textInput(name='smtpRelay', value=project.smtpRelay, size=60)
@@ -89,6 +95,7 @@ class Notifications_POST(FabPage):
 
     class Arguments(PageArgs):
         action = EnumArg(Actions)
+        mailNotification = BoolArg()
         smtpRelay = StrArg()
         mailSender = StrArg()
 
@@ -109,7 +116,7 @@ class Notifications_POST(FabPage):
                     'Mail sender ', xhtml.code[mailSender],
                     ' does not look like an e-mail address.'
                     ])
-            project.setMailConfig(smtpRelay, mailSender)
+            project.setMailConfig(args.mailNotification, smtpRelay, mailSender)
 
     def presentContent(self, proc):
         yield xhtml.p[ 'Notification settings saved.' ]
