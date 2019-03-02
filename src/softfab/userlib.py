@@ -224,7 +224,7 @@ def authenticate(userName, password):
         _writePasswordFile()
 
     try:
-        user = userDB[userName]
+        return userDB[userName]
     except KeyError:
         logging.warning(
             'User "%s" exists in the password file but not in the user DB',
@@ -234,8 +234,6 @@ def authenticate(userName, password):
         #       reluctant to provide helpful messages to potential attackers.
         #       If you ever encounter it, look in the log for the real info.
         raise error.LoginFailed('Internal error')
-    else:
-        defer.returnValue(user)
 
 def _checkPassword(password):
     '''Checks whether the given password is valid.

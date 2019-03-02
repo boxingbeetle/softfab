@@ -192,7 +192,7 @@ def parseAndProcess(page, req):
             responder = NotFoundPage(req)
 
     req.processEnd()
-    defer.returnValue((responder, proc))
+    return (responder, proc)
 
 def present(request, responder, proc):
     '''Presentation step: write a response based on the processing results.
