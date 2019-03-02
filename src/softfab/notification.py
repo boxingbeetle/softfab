@@ -7,6 +7,7 @@ that happened in the SoftFab (e.g. Job complete or Job failed).
 '''
 
 from softfab.projectlib import project
+from softfab.utils import IllegalStateError
 
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -102,12 +103,31 @@ def sendNotification(locator, presenter, *presenterArgs):
                 'not installed'
                 )
         else:
-            d = sendmail(
-                project.smtpRelay, project.mailSender, recipients,
-                messageStr.as_string().encode()
+            _sendMailLogged(
+                project.smtpRelay, project.mailSender, recipients, messageStr
                 )
-            d.addErrback(lambda failure: logging.error(
-                'Notification sending failed: %s', failure.getErrorMessage()
-                ))
     else:
         logging.error('Unknown notification protocol "%s"', protocol)
+
+def _logMailSendFailure(failure):
+    logging.error('Notification sending failed: %s', failure.getErrorMessage())
+    return failure
+
+def _sendMailLogged(smtpRelay, mailSender, recipients, message):
+    if sendmail is None:
+        raise IllegalStateError('twisted.mail is not installed')
+    return sendmail(
+        smtpRelay, mailSender, recipients, message.as_string().encode()
+        ).addErrback(_logMailSendFailure)
+
+_testMailBody = '''
+This is a notification test e-mail sent by SoftFab.
+'''
+
+def sendTestMail(smtpRelay, mailSender, recipient):
+    message = MIMEText(_testMailBody)
+    message['From'] = mailSender
+    message['To'] = recipient
+    message['Date'] = formatdate()
+    message['Subject'] = 'SoftFab notification test'
+    return _sendMailLogged(smtpRelay, mailSender, (recipient,), message)

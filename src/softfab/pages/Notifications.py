@@ -2,28 +2,26 @@
 
 from enum import Enum
 import re
+import time
 
 from twisted import version as twistedVersion
+from twisted.internet.defer import inlineCallbacks
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor, PresentableError, Redirect
 from softfab.formlib import actionButtons, checkBox, makeForm, textInput
-from softfab.notification import sendmail
+from softfab.notification import sendTestMail, sendmail
 from softfab.pageargs import BoolArg, EnumArg, PageArgs, StrArg
 from softfab.projectlib import project
 from softfab.xmlgen import xhtml
 
 def presentEmailForm():
     yield xhtml.p[
-        checkBox(name='mailNotification', checked=project['mailnotification'])[
-            'Send notifications via e-mail'
-            ]
+        checkBox(name='mailNotification')['Send notifications via e-mail']
         ]
 
     yield xhtml.h3[ 'SMTP relay' ]
-    yield xhtml.p[
-        textInput(name='smtpRelay', value=project.smtpRelay, size=60)
-        ]
+    yield xhtml.p[textInput(name='smtpRelay', size=60)]
     yield xhtml.p[
         'Notification e-mails will be sent via this SMTP server.'
         ]
@@ -36,17 +34,20 @@ def presentEmailForm():
         ]
 
     yield xhtml.h3[ 'Sender address' ]
-    yield xhtml.p[
-        textInput(name='mailSender', value=project.mailSender, size=60)
-        ]
+    yield xhtml.p[textInput(name='mailSender', size=60)]
     yield xhtml.p[
         'This address will be used in the "From:" field '
         'of notification e-mails.'
         ]
 
-    yield xhtml.p[ actionButtons(Actions) ]
+    yield xhtml.p[ actionButtons(Actions.SAVE, Actions.CANCEL) ]
 
-def presentForm():
+    yield xhtml.h3[ 'Test' ]
+    yield xhtml.p[ 'Send a test e-mail to:' ]
+    yield xhtml.p[textInput(name='mailRecipient', size=60)]
+    yield xhtml.p[ actionButtons(Actions.TEST) ]
+
+def presentForm(args):
     yield xhtml.h2[ 'E-mail' ]
     if sendmail is None:
         yield xhtml.p(class_='notice')[
@@ -63,9 +64,7 @@ def presentForm():
                 'while this SoftFab is currently running on Twisted ',
                 twistedVersion.public(), '.'
                 ]
-    yield makeForm()[
-        presentEmailForm()
-        ]
+    yield makeForm(args=args)[ presentEmailForm() ]
 
 class Notifications_GET(FabPage):
     icon = 'IconNotification'
@@ -75,7 +74,11 @@ class Notifications_GET(FabPage):
         pass
 
     def presentContent(self, proc):
-        yield from presentForm()
+        yield from presentForm(MailConfigArgs(
+            mailNotification=project['mailnotification'],
+            smtpRelay=project.smtpRelay,
+            mailSender=project.mailSender,
+            ))
 
 # This is not an accurate check whether the address complies with the RFC,
 # but it should accept real addresses while rejecting most invalid ones.
@@ -84,7 +87,12 @@ class Notifications_GET(FabPage):
 # into syntax checking likely isn't worth it.
 reMailAddress = re.compile(r'[^@\s]+@([^@.\s]+\.)*[^@.\s]+$')
 
-Actions = Enum('Actions', 'SAVE CANCEL')
+Actions = Enum('Actions', 'TEST SAVE CANCEL')
+
+class MailConfigArgs(PageArgs):
+    mailNotification = BoolArg()
+    smtpRelay = StrArg()
+    mailSender = StrArg()
 
 class Notifications_POST(FabPage):
     icon = 'IconNotification'
@@ -93,35 +101,75 @@ class Notifications_POST(FabPage):
     def checkAccess(self, req):
         req.checkPrivilege('p/m')
 
-    class Arguments(PageArgs):
+    class Arguments(MailConfigArgs):
         action = EnumArg(Actions)
-        mailNotification = BoolArg()
-        smtpRelay = StrArg()
-        mailSender = StrArg()
+        mailRecipient = StrArg()
 
     class Processor(PageProcessor):
 
+        @inlineCallbacks
         def process(self, req):
             args = req.args
-
             action = args.action
-            if action is not Actions.SAVE:
-                assert action is Actions.CANCEL, action
-                raise Redirect(self.page.getParentURL(req))
-
             smtpRelay = args.smtpRelay
             mailSender = args.mailSender
-            if mailSender and not reMailAddress.match(mailSender):
-                raise PresentableError(xhtml.p(class_='notice')[
-                    'Mail sender ', xhtml.code[mailSender],
-                    ' does not look like an e-mail address.'
-                    ])
-            project.setMailConfig(args.mailNotification, smtpRelay, mailSender)
+
+            if action is Actions.CANCEL:
+                raise Redirect(self.page.getParentURL(req))
+            elif action is Actions.TEST:
+                # pylint: disable=attribute-defined-outside-init
+                recipient = args.mailRecipient
+                if not recipient:
+                    raise PresentableError(xhtml.p(class_='notice')[
+                        'Please enter a recipient address '
+                        'to send the test-email to'
+                        ])
+                self.mailTestTime = time.localtime()
+                try:
+                    numOk_, addresses = yield sendTestMail(
+                        smtpRelay, mailSender, args.mailRecipient
+                        )
+                except Exception as ex:
+                    raise PresentableError(xhtml.p(class_='notice')[
+                        'Sending test mail failed: %s' % ex
+                        ])
+                self.mailTestResult = tuple(
+                    ( address.decode(errors='replace'),
+                      '%s (%d)' % (resp.decode(errors='replace'), code) )
+                    for address, code, resp in addresses
+                    )
+            elif action is Actions.SAVE:
+                if mailSender and not reMailAddress.match(mailSender):
+                    raise PresentableError(xhtml.p(class_='notice')[
+                        'Mail sender ', xhtml.code[mailSender],
+                        ' does not look like an e-mail address.'
+                        ])
+                project.setMailConfig(
+                    args.mailNotification, smtpRelay, mailSender
+                    )
+            else:
+                assert False, action
 
     def presentContent(self, proc):
-        yield xhtml.p[ 'Notification settings saved.' ]
-        yield self.backToParent(proc.req)
+        action = proc.args.action
+        if action is Actions.TEST:
+            yield xhtml.p(class_='notice')[
+                'Result for notification test of %s:'
+                % time.strftime('%H:%M:%S', proc.mailTestTime)
+                ]
+            yield xhtml.p[
+                xhtml.br.join(
+                    (address, ' : ', result)
+                    for address, result in proc.mailTestResult
+                    )
+                ]
+            yield from presentForm(proc.args)
+        elif action is Actions.SAVE:
+            yield xhtml.p[ 'Notification settings saved.' ]
+            yield self.backToParent(proc.req)
+        else:
+            assert False, action
 
     def presentError(self, proc, message):
         yield super().presentError(proc, message)
-        yield from presentForm()
+        yield from presentForm(proc.args)
