@@ -225,6 +225,8 @@ def actionButtons(*values, name = 'action', **kwargs):
     for value in values:
         if isinstance(value, str):
             valueStrings.append(value)
+        elif isinstance(value, Enum):
+            valueStrings.append(value.name)
         elif isinstance(value, type) and issubclass(value, Enum):
             valueStrings += value.__members__
         else:
