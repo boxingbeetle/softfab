@@ -16,7 +16,7 @@ homePage = 'https://boxingbeetle.com/tools/softfab/'
 docPage = 'https://softfab.example.com/docs'
 
 # Directory this fab's database is located in.
-dbDir = '/home/factory/db/projname'
+dbDir = 'run'
 
 # Enables the use atomic writes for updating database records.
 # This is safer but slower, therefore atomic writes are disabled during
