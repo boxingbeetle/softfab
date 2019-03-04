@@ -614,7 +614,7 @@ class BoolArg(SingularArgument[bool]):
     '''
 
     def __init__(self) -> None:
-        SingularArgument[bool].__init__(self, False)
+        super().__init__(False)
 
     def parseValue(self, strValue: str) -> bool:
         lowerValue = strValue.lower()
