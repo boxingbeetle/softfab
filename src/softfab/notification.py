@@ -130,4 +130,5 @@ def sendTestMail(smtpRelay, mailSender, recipient):
     message['To'] = recipient
     message['Date'] = formatdate()
     message['Subject'] = 'SoftFab notification test'
-    return _sendMailLogged(smtpRelay, mailSender, (recipient,), message)
+    recipients = _reAddressSep.split(recipient)
+    return _sendMailLogged(smtpRelay, mailSender, recipients, message)
