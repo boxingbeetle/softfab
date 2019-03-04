@@ -70,7 +70,8 @@ class UIPage(Responder):
     def presentHeadParts(self, proc):
         yield xhtml.meta(charset='UTF-8')
         yield xhtml.meta(
-            name = 'viewport', content = 'width=device-width, initial-scale=1'
+            name='viewport',
+            content='width=device-width, initial-scale=1, minimum-scale=1'
             )
         yield xhtml.title[ '%s - %s' % (project['name'], self.fabTitle(proc)) ]
         for sheet in iterStyleSheets(proc):
