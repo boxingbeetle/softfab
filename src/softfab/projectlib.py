@@ -14,6 +14,7 @@ from softfab.xmlgen import xml
 from enum import Enum
 from getpass import getuser
 from socket import getfqdn
+from typing import cast
 import logging
 import os
 import os.path
@@ -186,13 +187,13 @@ class Project(XMLTag, SingletonElem):
     def smtpRelay(self) -> str:
         """SMTP relay to send outgoing messages to.
         """
-        return self._properties['smtprelay']
+        return cast(str, self._properties['smtprelay'])
 
     @property
     def mailSender(self) -> str:
         """Sender address (From:) to be used in outgoing messages.
         """
-        return self._properties['mailsender']
+        return cast(str, self._properties['mailsender'])
 
     def setMailConfig(self,
             enabled: bool, smtpRelay: str, mailSender: str
