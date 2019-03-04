@@ -81,9 +81,6 @@ def sendNotification(locator, presenter, *presenterArgs):
             yield '</BODY></HTML> '
 
         messageStr = MIMEMultipart('alternative')
-        messageStr["From"] = project.mailSender
-        messageStr["To"] = ', '.join(recipients)
-        messageStr["Date"] = formatdate()
         messageStr["Subject"] = ''.join(
             presenter.singleLineSummary(*presenterArgs)
             )
@@ -116,6 +113,9 @@ def _logMailSendFailure(failure):
 def _sendMailLogged(smtpRelay, mailSender, recipients, message):
     if sendmail is None:
         raise IllegalStateError('twisted.mail is not installed')
+    message['From'] = mailSender
+    message['To'] = ', '.join(recipients)
+    message['Date'] = formatdate()
     return sendmail(
         smtpRelay, mailSender, recipients, message.as_string().encode()
         ).addErrback(_logMailSendFailure)
@@ -126,9 +126,6 @@ This is a notification test e-mail sent by SoftFab.
 
 def sendTestMail(smtpRelay, mailSender, recipient):
     message = MIMEText(_testMailBody)
-    message['From'] = mailSender
-    message['To'] = recipient
-    message['Date'] = formatdate()
     message['Subject'] = 'SoftFab notification test'
     recipients = _reAddressSep.split(recipient)
     return _sendMailLogged(smtpRelay, mailSender, recipients, message)
