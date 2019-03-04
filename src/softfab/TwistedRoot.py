@@ -1,12 +1,15 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from softfab.InternalErrorPage import InternalErrorPage
-from softfab.Page import FabResource, InternalError, Redirect, Redirector
+from softfab.Page import (
+    FabResource, InternalError, PageProcessor, Redirect, Redirector
+    )
 from softfab.SplashPage import SplashPage, startupMessages
 from softfab.StyleResources import styleRoot
 from softfab.TwistedUtil import PageRedirect
 from softfab.authentication import DisabledAuthPage, NoAuthPage
 from softfab.databases import iterDatabasesToPreload
+from softfab.pageargs import PageArgs
 from softfab.render import NotFoundPage, parseAndProcess, present
 from softfab.request import Request
 from softfab.schedulelib import ScheduleManager
@@ -156,6 +159,19 @@ class PageLoader:
             page.debugSupport = root.debugSupport
             if root.anonOperator:
                 page.authenticator = DisabledAuthPage
+
+            if not issubclass(page.Arguments, PageArgs):
+                startupLogger.error(
+                    '%s does not inherit from %s.%s',
+                    page.Arguments.__qualname__,
+                    PageArgs.__module__, PageArgs.__name__
+                    )
+            if not issubclass(page.Processor, PageProcessor):
+                startupLogger.error(
+                    '%s does not inherit from %s.%s',
+                    page.Processor.__qualname__,
+                    PageProcessor.__module__, PageProcessor.__name__
+                    )
 
             className = pageClass.__name__
             index = className.find('_')
