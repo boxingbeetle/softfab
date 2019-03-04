@@ -247,8 +247,6 @@ def renderAuthenticated(page, request):
 @defer.inlineCallbacks
 def renderAsync(page, request):
     try:
-        if page.streaming:
-            Request(request, UnknownUser()).checkDirect()
         authenticator = page.authenticator.instance
         try:
             user = yield authenticator.authenticate(request)

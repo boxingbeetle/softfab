@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from softfab.Page import AccessDenied, InvalidRequest, Redirect
+from softfab.Page import AccessDenied, InvalidRequest
 from softfab.config import rootURL
 from softfab.projectlib import project
 from softfab.useragent import UserAgent
@@ -178,20 +178,6 @@ class Request(RequestBase):
             fields[key] = values
 
         self.args = page.Arguments.parse(fields, self) # pylint: disable=attribute-defined-outside-init
-
-    def checkDirect(self):
-        '''If request is made through our proxy, redirect directly to Twisted's
-        HTTP server. This avoids Apache's mod_proxy buffering the reply, which
-        causes big delays in reception of streamed data.
-        A cleaner solution would be to use the HTTP 1.1 chunked transfer
-        encoding, but twisted.web does not support that yet (web2 does, but is
-        being phased out). Also we would have to check that all clients
-        understand HTTP 1.1 (or keep this workaround for HTTP 1.0 clients).
-        '''
-        hostIP = self._request.host
-        directHost = '%s:%d' % ( hostIP.host, hostIP.port )
-        if self._request.getHeader('host') != directHost:
-            raise Redirect('http://%s%s' % ( directHost, self._request.uri ))
 
     # Session management:
 
