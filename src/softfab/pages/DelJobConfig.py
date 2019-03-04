@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from softfab.Page import PageProcessor
 from softfab.RecordDelete import (
     RecordDelete_GET, RecordDelete_POSTMixin, RecordInUseError
     )
@@ -7,10 +8,6 @@ from softfab.configlib import configDB
 from softfab.configview import schedulesUsingConfig
 from softfab.pageargs import RefererArg
 from softfab.schedulerefs import createScheduleDetailsLink
-
-class ParentArgs:
-    detailsQuery = RefererArg('ConfigDetails')
-    indexQuery = RefererArg('LoadExecute')
 
 class DelJobConfig_GET(RecordDelete_GET):
     db = configDB
@@ -20,8 +17,9 @@ class DelJobConfig_GET(RecordDelete_GET):
     description = 'Delete Configuration'
     icon = 'IconExec'
 
-    class Arguments(RecordDelete_GET.Arguments, ParentArgs):
-        pass
+    class Arguments(RecordDelete_GET.Arguments):
+        detailsQuery = RefererArg('ConfigDetails')
+        indexQuery = RefererArg('LoadExecute')
 
     def checkState(self, record):
         schedules = list(schedulesUsingConfig(record.getId()))
@@ -32,5 +30,9 @@ class DelJobConfig_GET(RecordDelete_GET):
 
 class DelJobConfig_POST(RecordDelete_POSTMixin, DelJobConfig_GET):
 
-    class Arguments(RecordDelete_POSTMixin.Arguments, ParentArgs):
+    class Arguments(RecordDelete_POSTMixin.ArgumentsMixin,
+                    DelJobConfig_GET.Arguments):
+        pass
+
+    class Processor(RecordDelete_POSTMixin.ProcessorMixin, PageProcessor):
         pass

@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from softfab.Page import PageProcessor
 from softfab.RecordDelete import (
     RecordDelete_GET, RecordDelete_POSTMixin, RecordInUseError
     )
@@ -9,9 +10,6 @@ from softfab.pagelinks import createFrameworkDetailsLink, createTaskDetailsLink
 from softfab.resourcelib import resourceDB
 from softfab.restypelib import resTypeDB
 from softfab.taskdeflib import taskDefDB
-
-class ParentArgs:
-    indexQuery = RefererArg('ResTypeIndex')
 
 def checkRequirements(db, typeName, linkFunc):
     usedBy = set(
@@ -30,8 +28,8 @@ class ResTypeDelete_GET(RecordDelete_GET):
     description = 'Delete Resource Type'
     icon = 'IconResources'
 
-    class Arguments(RecordDelete_GET.Arguments, ParentArgs):
-        pass
+    class Arguments(RecordDelete_GET.Arguments):
+        indexQuery = RefererArg('ResTypeIndex')
 
     def checkState(self, record):
         name = record.getId()
@@ -55,5 +53,9 @@ class ResTypeDelete_GET(RecordDelete_GET):
 
 class ResTypeDelete_POST(RecordDelete_POSTMixin, ResTypeDelete_GET):
 
-    class Arguments(RecordDelete_POSTMixin.Arguments, ParentArgs):
+    class Arguments(RecordDelete_POSTMixin.ArgumentsMixin,
+                    RecordDelete_GET.Arguments):
+        pass
+
+    class Processor(RecordDelete_POSTMixin.ProcessorMixin, PageProcessor):
         pass

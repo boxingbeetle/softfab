@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from softfab.Page import PageProcessor
 from softfab.RecordDelete import (
     RecordDelete_GET, RecordDelete_POSTMixin, RecordInUseError
     )
@@ -32,5 +33,9 @@ class TaskDelete_GET(RecordDelete_GET):
 
 class TaskDelete_POST(RecordDelete_POSTMixin, TaskDelete_GET):
 
-    class Arguments(RecordDelete_POSTMixin.Arguments, ParentArgs):
+    class Arguments(RecordDelete_POSTMixin.ArgumentsMixin,
+                    TaskDelete_GET.Arguments):
+        pass
+
+    class Processor(RecordDelete_POSTMixin.ProcessorMixin, PageProcessor):
         pass

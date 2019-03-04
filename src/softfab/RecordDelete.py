@@ -117,10 +117,10 @@ class RecordDelete_POSTMixin:
     Subclasses are expected to inherit from this mixin and the GET page.
     """
 
-    class Arguments(DeleteArgs):
+    class ArgumentsMixin:
         action = EnumArg(Actions)
 
-    class Processor(PageProcessor):
+    class ProcessorMixin:
         def process(self, req):
             action = req.args.action
             if action is not Actions.DELETE:
