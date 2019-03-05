@@ -13,7 +13,8 @@ from softfab.pageargs import ArgsCorrected, ArgsInvalid, dynamic
 from softfab.response import Response
 from softfab.xmlgen import xhtml
 
-from twisted.internet import defer, interfaces
+from twisted.internet.defer import Deferred, inlineCallbacks
+from twisted.internet.interfaces import IPullProducer, IProducer, IPushProducer
 
 import logging
 
@@ -103,7 +104,7 @@ def _checkActive(req, page):
             #       therefore it will have getParentURL() as well.
             raise Redirect(page.getParentURL(req))
 
-@defer.inlineCallbacks
+@inlineCallbacks
 def parseAndProcess(page, req):
     '''Parse step: determine values for page arguments.
     Processing step: database interaction.
@@ -212,15 +213,15 @@ def present(request, responder, proc):
         end = time()
         print('Responding took %1.3f seconds' % (end - start))
 
-    if interfaces.IProducer.providedBy(presenter):
+    if IProducer.providedBy(presenter):
         # Producer which will write to the request object.
         d = response.registerProducer(presenter)
-        if interfaces.IPushProducer.providedBy(presenter):
+        if IPushProducer.providedBy(presenter):
             assert streaming
             # Note: This only finishes the headers.
             response.finish()
             return d
-        elif interfaces.IPullProducer.providedBy(presenter):
+        elif IPullProducer.providedBy(presenter):
             assert not streaming
             # We don't actually have any pull producers at the moment.
             # TODO: Decide whether to use pull producers or remove support.
@@ -228,7 +229,7 @@ def present(request, responder, proc):
         else:
             raise TypeError(type(presenter))
     else:
-        if isinstance(presenter, defer.Deferred):
+        if isinstance(presenter, Deferred):
             presenter.addCallback(
                 lambda result, response: response.finish(),
                 response

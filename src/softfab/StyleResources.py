@@ -7,7 +7,9 @@ from softfab.webgui import ShortcutIcon, StyleSheet, pngIcon, svgIcon
 from softfab import styles
 
 from importlib_resources import is_resource, read_binary
-from twisted.web import http, resource, static
+from twisted.web.http import datetimeToString
+from twisted.web.resource import Resource
+from twisted.web.static import Data
 
 from gzip import GzipFile
 from io import BytesIO
@@ -21,17 +23,16 @@ def _load(fileName):
         logging.error('Error reading style resource "%s": %s', fileName, ex)
         return None
 
-class _StyleResource(static.Data):
+class _StyleResource(Data):
 
     def render(self, request):
         # File expires a long time from now.
         # RFC-2616 section 14.21: "HTTP/1.1 servers SHOULD NOT send Expires
         # dates more than one year in the future."
         request.setHeader(
-            'expires',
-            http.datetimeToString(getTime() + 365 * secondsPerDay)
+            'expires', datetimeToString(getTime() + 365 * secondsPerDay)
             )
-        return static.Data.render(self, request)
+        return super().render(request)
 
 class _CompressedStyleResource(_StyleResource):
 
@@ -56,7 +57,7 @@ class _CompressedStyleResource(_StyleResource):
             request.setHeader('Content-Encoding', 'gzip')
             return self.__gzippedResource.render(request)
         else:
-            return static.Data.render(self, request)
+            return super().render(request)
 
 _reStyleImage = re.compile(r'url\((\w+\.png)\)')
 
@@ -68,7 +69,7 @@ def _compressableType(mediaType):
     '''
     return mediaType.startswith('text/') or mediaType.endswith('+xml')
 
-class _StyleRoot(resource.Resource):
+class _StyleRoot(Resource):
     # Create a new URL every time the Control Center is restarted.
     # This allows to set the expiry time really high without running the risk
     # of using outdated cached style files.
@@ -76,7 +77,7 @@ class _StyleRoot(resource.Resource):
     relativeURL = urlPrefix + createInternalId()
 
     def __init__(self):
-        resource.Resource.__init__(self)
+        Resource.__init__(self)
         self.__icons = {}
 
     def __addFile(self, fileName, mediaType):

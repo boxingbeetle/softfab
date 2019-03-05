@@ -13,8 +13,8 @@ from softfab.userview import LoginPassArgs, PasswordMsgArgs, passwordStr
 from softfab.webgui import pageURL
 from softfab.xmlgen import xhtml
 
-from twisted.cred import error
-from twisted.internet import defer
+from twisted.cred.error import LoginFailed
+from twisted.internet.defer import inlineCallbacks
 
 from enum import Enum
 
@@ -131,7 +131,7 @@ class ChangePassword_POST(FabPage):
 
     class Processor(PageProcessor):
 
-        @defer.inlineCallbacks
+        @inlineCallbacks
         def process(self, req):
             if req.args.action is Actions.CANCEL:
                 raise Redirect(self.page.getCancelURL(req))
@@ -170,7 +170,7 @@ class ChangePassword_POST(FabPage):
                         user_ = yield authenticate(
                             reqUserName, req.args.loginpass
                             )
-                    except error.LoginFailed as ex:
+                    except LoginFailed as ex:
                         self.retry = True # pylint: disable=attribute-defined-outside-init
                         raise PresentableError(
                             'Verification of %s password failed%s.' % (

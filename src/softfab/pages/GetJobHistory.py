@@ -8,7 +8,7 @@ from softfab.querylib import SetFilter, runQuery
 from softfab.utils import chop
 from softfab.xmlgen import adaptToXML, xml
 
-from twisted.internet import defer
+from twisted.internet.defer import inlineCallbacks
 
 class GetJobHistory_GET(ControlPage):
 
@@ -35,7 +35,7 @@ class GetJobHistory_GET(ControlPage):
             if configId:
                 yield SetFilter('configId', configId, jobDB)
 
-    @defer.inlineCallbacks
+    @inlineCallbacks
     def writeReply(self, response, proc):
         jobs = proc.jobs
         response.write('<jobrefs>')

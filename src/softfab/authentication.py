@@ -11,7 +11,7 @@ from softfab.userlib import (
     )
 
 from twisted.cred.error import LoginFailed
-from twisted.internet import defer
+from twisted.internet.defer import fail, succeed
 
 from typing import Optional
 
@@ -36,13 +36,13 @@ class LoginAuthPage(Authenticator):
         user = loggedInUser(request)
         if user is None:
             if project['anonguest']:
-                return defer.succeed(AnonGuestUser())
+                return succeed(AnonGuestUser())
             else:
                 # User must log in.
-                return defer.fail(LoginFailed())
+                return fail(LoginFailed())
         else:
             # User has already authenticated.
-            return defer.succeed(user)
+            return succeed(user)
 
     def askForAuthentication(self, req):
         return Redirector(req, loginURL(req))
@@ -64,14 +64,14 @@ class HTTPAuthPage(Authenticator):
                 userName = userNameBytes.decode()
                 password = request.getPassword().decode()
             except UnicodeDecodeError as ex:
-                return defer.fail(LoginFailed(ex))
+                return fail(LoginFailed(ex))
             return authenticate(userName, password)
 
         # No user name supplied.
         if project['anonguest']:
-            return defer.succeed(AnonGuestUser())
+            return succeed(AnonGuestUser())
         else:
-            return defer.fail(LoginFailed())
+            return fail(LoginFailed())
 
     def askForAuthentication(self, req):
         return HTTPAuthenticator(req, 'SoftFab')
@@ -82,7 +82,7 @@ class NoAuthPage(Authenticator):
     '''
 
     def authenticate(self, request):
-        return defer.succeed(UnknownUser())
+        return succeed(UnknownUser())
 
     def askForAuthentication(self, req):
         raise InternalError(
@@ -98,10 +98,10 @@ class DisabledAuthPage(Authenticator):
     def authenticate(self, request):
         user = loggedInUser(request)
         if user is None:
-            return defer.succeed(SuperUser())
+            return succeed(SuperUser())
         else:
             # Use logged-in user.
-            return defer.succeed(user)
+            return succeed(user)
 
     def askForAuthentication(self, req):
         raise InternalError(

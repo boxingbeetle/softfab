@@ -15,8 +15,8 @@ from softfab.userview import LoginPassArgs, PasswordMsgArgs
 from softfab.webgui import pageURL
 from softfab.xmlgen import xhtml
 
-from twisted.cred import error
-from twisted.internet import defer
+from twisted.cred.error import LoginFailed
+from twisted.internet.defer import inlineCallbacks
 
 
 class LoginTable(FormTable):
@@ -97,7 +97,7 @@ class Login_POST(Login_GET):
 
     class Processor(Login_GET.Processor):
 
-        @defer.inlineCallbacks
+        @inlineCallbacks
         def process(self, req):
             super().process(req)
 
@@ -106,7 +106,7 @@ class Login_POST(Login_GET):
 
             try:
                 user = yield authenticate(username, password)
-            except error.LoginFailed:
+            except LoginFailed:
                 raise PresentableError('Login failed')
             else:
                 # Inactive users are not allowed to log in.

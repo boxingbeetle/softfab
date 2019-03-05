@@ -17,11 +17,13 @@ from softfab.shadowlib import startShadowRunCleanup
 from softfab.userlib import UnknownUser
 
 from twisted.cred.error import LoginFailed
-from twisted.internet import defer, reactor
+from twisted.internet import reactor
+from twisted.internet.defer import Deferred, inlineCallbacks
 from twisted.internet.error import ConnectionLost
 from twisted.python import log
 from twisted.python.failure import Failure
-from twisted.web import resource, server
+from twisted.web.resource import Resource
+from twisted.web.server import NOT_DONE_YET
 
 from functools import partial
 from importlib import import_module
@@ -49,7 +51,7 @@ class ChunkCaller:
             return
         else:
             if isinstance(ret, GeneratorType):
-                d = defer.Deferred()
+                d = Deferred()
                 ChunkCaller(ret, d)
                 d.addCallback(self.scheduleNext)
             else:
@@ -82,7 +84,7 @@ def callInChunks(gen):
     - a callable, which will be called as one chunk
     '''
     assert isinstance(gen, GeneratorType)
-    d = defer.Deferred()
+    d = Deferred()
     ChunkCaller(gen, d)
     return d
 
@@ -212,7 +214,7 @@ class PageLoader:
             else:
                 self.__addPage(module, moduleName)
 
-class PageResource(resource.Resource):
+class PageResource(Resource):
     '''Twisted Resource that serves Control Center pages.
     '''
     isLeaf = True
@@ -242,9 +244,9 @@ def renderAuthenticated(page, request):
         # Otherwise, it will be logged twice.
     d = renderAsync(page, request)
     d.addCallback(done).addErrback(failed) # pylint: disable=no-member
-    return server.NOT_DONE_YET
+    return NOT_DONE_YET
 
-@defer.inlineCallbacks
+@inlineCallbacks
 def renderAsync(page, request):
     try:
         authenticator = page.authenticator.instance
@@ -295,7 +297,7 @@ class ResourceNotFound(FabResource):
 # Twisted.web paths are bytes.
 stylePrefix = styleRoot.urlPrefix.encode()
 
-class SoftFabRoot(resource.Resource):
+class SoftFabRoot(Resource):
 
     def __init__(self, debugSupport, anonOperator, secureCookie):
         """Creates a Control Center root resource.
@@ -319,7 +321,7 @@ class SoftFabRoot(resource.Resource):
         self.anonOperator = anonOperator
         self.secureCookie = secureCookie
 
-        resource.Resource.__init__(self)
+        Resource.__init__(self)
         self.putChild(b'', PageRedirect('Home'))
         self.putChild(styleRoot.relativeURL.encode(), styleRoot)
 

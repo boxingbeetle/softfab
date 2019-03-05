@@ -5,8 +5,10 @@ from softfab.useragent import AcceptedEncodings
 from softfab.utils import iterable
 from softfab.xmlgen import XMLPresentable
 
-from twisted.internet import defer, interfaces, reactor
-from twisted.web import http
+from twisted.internet import reactor
+from twisted.internet.defer import Deferred
+from twisted.internet.interfaces import IPullProducer, IPushProducer
+from twisted.web.http import CACHED
 from twisted.web.server import NOT_DONE_YET
 
 from base64 import standard_b64encode
@@ -92,7 +94,7 @@ class Response:
         etag = standard_b64encode(md5(body).digest()).rstrip(b'=')
         if gzipContent:
             etag += b'-gzip'
-        if request.setETag(etag) is http.CACHED:
+        if request.setETag(etag) is CACHED:
             # ETag match; no body should be written.
             return
 
@@ -109,14 +111,14 @@ class Response:
         self.__connectionLostFailure = reason
 
     def registerProducer(self, producer):
-        if interfaces.IPushProducer.providedBy(producer):
+        if IPushProducer.providedBy(producer):
             streaming = True
-        elif interfaces.IPullProducer.providedBy(producer):
+        elif IPullProducer.providedBy(producer):
             streaming = False
         else:
             raise TypeError(type(producer))
         self.__request.registerProducer(producer, streaming)
-        self.__producerDone = d = defer.Deferred()
+        self.__producerDone = d = Deferred()
         return d
 
     def unregisterProducer(self):
@@ -134,13 +136,13 @@ class Response:
         disconnected.
 
         Example use:
-            @defer.inlineCallbacks
+            @inlineCallbacks
             def writeReply(self, response, proc):
                 for chunk in chop(proc.records, 1000):
                     response.write(record.format() for record in chunk)
                     yield response.returnToReactor()
         '''
-        d = defer.Deferred()
+        d = Deferred()
 
         def resume(resumeResult):
             assert resumeResult is result

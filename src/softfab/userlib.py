@@ -7,8 +7,8 @@ from softfab.xmlbind import XMLTag
 from softfab.xmlgen import xml
 
 from passlib.apache import HtpasswdFile
-from twisted.cred import error
-from twisted.internet import defer
+from twisted.cred.error import LoginFailed, UnauthorizedLogin
+from twisted.internet.defer import inlineCallbacks
 from zope.interface import Interface, implementer
 
 from enum import Enum
@@ -185,7 +185,7 @@ def _writePasswordFile():
 
 _passwordFile = _initPasswordFile(dbDir + '/passwords')
 
-@defer.inlineCallbacks
+@inlineCallbacks
 def authenticate(userName, password):
     '''Authenticates a user with the given password.
     Returns a deferred.
@@ -197,18 +197,18 @@ def authenticate(userName, password):
     # Twisted returns empty string if there is no "authorization" header,
     # it would be a waste of time to look that up in the password file.
     if not userName:
-        raise error.UnauthorizedLogin('No user name specified')
+        raise UnauthorizedLogin('No user name specified')
 
     # Handle None password, for example a missing password field in a form.
     # Note that when the password is the empty string, authentication occurs
     # as normal: if empty passwords are not allowed, it is the responsibility
     # of the password set routine to refuse them.
     if password is None:
-        raise error.UnauthorizedLogin('No password provided')
+        raise UnauthorizedLogin('No password provided')
     try:
         _checkPassword(password)
     except ValueError as ex:
-        raise error.UnauthorizedLogin(ex)
+        raise UnauthorizedLogin(ex)
 
     # Have passlib check the password. When passed a None hash, it will
     # perform a dummy computation to keep the timing consistent.
@@ -217,7 +217,7 @@ def authenticate(userName, password):
         password.encode(), _passwordFile.get_hash(userName)
         )
     if not correct:
-        raise error.UnauthorizedLogin('Authentication failed')
+        raise UnauthorizedLogin('Authentication failed')
 
     if newHash is not None:
         # Replace hash with better algorithm or config.
@@ -234,7 +234,7 @@ def authenticate(userName, password):
         # Note: The "Internal error" message is not very helpful, but I am
         #       reluctant to provide helpful messages to potential attackers.
         #       If you ever encounter it, look in the log for the real info.
-        raise error.LoginFailed('Internal error')
+        raise LoginFailed('Internal error')
 
 def _checkPassword(password):
     '''Checks whether the given password is valid.
