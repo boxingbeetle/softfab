@@ -15,6 +15,7 @@ from enum import Enum
 from functools import total_ordering
 from os import makedirs
 from os.path import dirname, exists
+from typing import Mapping, Optional, Sequence
 import logging
 
 roleNames = frozenset([ 'guest', 'user', 'operator' ])
@@ -137,7 +138,7 @@ privileges = {
     'p/a': ('guest', 'user', 'operator'),
     'p/m': ('operator', ),
 #    'p/d': (),
-}
+} # type: Mapping[str, Sequence[str]]
 
 def rolesGrantPrivilege(roles, priv):
     return any(role in roles for role in privileges[priv])
@@ -335,11 +336,11 @@ class IUser(Interface): # pylint: disable=inherit-non-class
     '''A user account.
     '''
 
-    def getUserName(self):
+    def getUserName() -> Optional[str]:
         '''Returns the name of the user account, or None for anonymous users.
         '''
 
-    def hasPrivilege(self, priv):
+    def hasPrivilege(priv: str) -> bool:
         '''Returns True iff this user has the given privilege.
         '''
 
@@ -348,10 +349,10 @@ class SuperUser:
     '''Anonymous user who has the combined privileges of all roles.
     '''
 
-    def getUserName(self):
+    def getUserName(self) -> Optional[str]:
         return None
 
-    def hasPrivilege(self, priv):
+    def hasPrivilege(self, priv: str) -> bool:
         return bool(privileges[priv])
 
 @implementer(IUser)
@@ -359,10 +360,10 @@ class AnonGuestUser:
     '''Anonymous user who has guest privileges.
     '''
 
-    def getUserName(self):
+    def getUserName(self) -> Optional[str]:
         return None
 
-    def hasPrivilege(self, priv):
+    def hasPrivilege(self, priv: str) -> bool:
         return 'guest' in privileges[priv]
 
 @implementer(IUser)
@@ -370,10 +371,10 @@ class UnknownUser:
     '''Anonymous user who has no privileges.
     '''
 
-    def getUserName(self):
+    def getUserName(self) -> Optional[str]:
         return None
 
-    def hasPrivilege(self, priv):
+    def hasPrivilege(self, priv: str) -> bool:
         # pylint: disable=unused-argument
         # We have no privileges by definition, so we don't inspect "priv".
         return False
