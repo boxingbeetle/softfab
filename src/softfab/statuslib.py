@@ -3,7 +3,7 @@
 from abc import ABC
 from typing import ClassVar, Type
 
-from twisted.internet import interfaces
+from twisted.internet.interfaces import IPushProducer
 from zope.interface import implementer
 
 from softfab.databaselib import Database, RecordObserver
@@ -391,7 +391,7 @@ class StatusView:
         for client in self.__clients:
             client.update(message)
 
-@implementer(interfaces.IPushProducer)
+@implementer(IPushProducer)
 class StatusViewClient:
     '''A client that monitors a status view.
     An object of this type can be constructed in the Processor, but it will
