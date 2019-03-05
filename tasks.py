@@ -32,8 +32,11 @@ def lint(c, src=all_sources, rule=None):
     c.run('pylint %s' % ' '.join(args), env=PYLINT_ENV, pty=True)
 
 @task
-def types(c, src=all_sources):
+def types(c, src=all_sources, clean=False):
     """Check sources with mypy."""
+    if clean:
+        print('Clearing mypy cache...')
+        remove_dir('.mypy_cache')
     print('Checking sources with mypy...')
     c.run('mypy --ignore-missing-imports %s' % src, env=SRC_ENV, pty=True)
 
