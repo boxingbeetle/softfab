@@ -217,14 +217,14 @@ class ActionStep(DialogStep):
             ]
         yield NotifyTable.instance.present(**kwargs)
         yield xhtml.p[
-            'Enter email addresses / prefixes: ',
+            'Enter email addresses: ',
             xhtml.br,
             textArea(
                 name = 'notify', cols = 60, rows = 4, spellcheck = 'false'
                 ).present(**kwargs),
             xhtml.br,
-            'Multiple email addresses and prefixes can be entered, ',
-            'separated by commas.'
+            'Multiple email addresses can be entered, ',
+            'separated by commas, semicolons and/or whitespace.'
             ]
 
     def verify(self, proc):
