@@ -72,11 +72,14 @@ import time
 
 asap = 0 # Schedule runs as soon as possible.
 
-ScheduleRepeat = Enum(
-    'ScheduleRepeat', 'ONCE DAILY WEEKLY CONTINUOUSLY PASSIVE'
-    )
-'''Ways in which a schedule can repeat.
-'''
+class ScheduleRepeat(Enum):
+    """Ways in which a schedule can repeat.
+    """
+    ONCE = 1
+    DAILY = 2
+    WEEKLY = 3
+    CONTINUOUSLY = 4
+    PASSIVE = 5
 
 class ScheduledFactory:
     @staticmethod

@@ -2,4 +2,8 @@
 
 from enum import Enum
 
-ConnectionStatus = Enum('ConnectionStatus', 'UNKNOWN CONNECTED WARNING LOST')
+class ConnectionStatus(Enum):
+    UNKNOWN = 1
+    CONNECTED = 2
+    WARNING = 3
+    LOST = 4

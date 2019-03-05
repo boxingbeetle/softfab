@@ -25,9 +25,14 @@ class ProductDefDB(VersionedDatabase):
 
 productDefDB = ProductDefDB()
 
-ProductType = Enum('ProductType', 'STRING URL TOKEN')
-'''Available product locator types. The first element is the default type.
-'''
+class ProductType(Enum):
+    """Available product locator types.
+
+    The first element is the default type.
+    """
+    STRING = 1
+    URL = 2
+    TOKEN = 3
 
 class ProductDef(XMLTag, DatabaseElem):
     tagName = 'product'

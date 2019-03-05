@@ -21,7 +21,11 @@ from softfab.utils import SharedInstance, abstract
 from softfab.webgui import script
 from softfab.xmlgen import xhtml
 
-ExecutionState = Enum('ExecutionState', 'ALL COMPLETED FINISHED UNFINISHED')
+class ExecutionState(Enum):
+    ALL = 1
+    COMPLETED = 2
+    FINISHED = 3
+    UNFINISHED = 4
 
 class ReportArgs(PageArgs):
     ctabove = DateTimeArg(None)

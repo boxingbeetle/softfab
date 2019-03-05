@@ -2,15 +2,24 @@
 
 from enum import Enum
 
-ResultCode = Enum('ResultCode', 'OK CANCELLED WARNING ERROR INSPECT')
-'''Result codes for tasks and jobs.
-The meaning of the different values:
-ok: process was correct, content was correct;
-warning: process was correct, content had problems;
-error: process had problems;
-inspect: waiting for postponed inspection;
-cancelled: will never get a result.
-'''
+class ResultCode(Enum):
+    """Result codes for tasks and jobs.
+    """
+
+    OK = 1
+    """Process was correct, content was correct."""
+
+    CANCELLED = 2
+    """Will never get a result."""
+
+    WARNING = 3
+    """Process was correct, content had problems."""
+
+    ERROR = 4
+    """Process had problems, content unknown."""
+
+    INSPECT = 5
+    """Waiting for postponed inspection."""
 
 def combineResults(items):
     '''Computes the result over a series of items.
