@@ -1,4 +1,5 @@
 from os import getcwd, makedirs
+from os.path import exists
 from shutil import rmtree
 
 from invoke import task
@@ -9,11 +10,16 @@ PYLINT_ENV = {'PYTHONPATH': '{0}/src:{0}/tests/pylint'.format(CWD)}
 
 all_sources = 'src/softfab/*.py src/softfab/pages/*.py'
 
+def remove_dir(path):
+    """Recursively removes a directory."""
+    if exists(path):
+        rmtree(path)
+
 @task
 def clean(c):
     """Clean up our output."""
     print('Cleaning up...')
-    rmtree('docs/output')
+    remove_dir('docs/output')
 
 @task
 def lint(c, src=all_sources, rule=None):
