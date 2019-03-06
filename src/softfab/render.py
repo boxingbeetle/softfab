@@ -140,7 +140,7 @@ def parseAndProcess(page, req):
         else:
             assert all(
                     value is not dynamic
-                    for name_, value in getattr(req, 'args', {}).items()
+                    for name_, value in req.args.items()
                 ), 'unhandled dynamic defaults: ' + ', '.join(
                     name
                     for name, value in req.args.items()
