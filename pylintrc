@@ -106,6 +106,8 @@ disable=bad-continuation,
         fixme,
         # A lot of TODOs mark poor design, which should be fixed at some
         # point, but are not urgent enough to be included in every run.
+        no-else-raise,
+        # Satisfying this rule doesn't always improve code readability.
 
 [REPORTS]
 
