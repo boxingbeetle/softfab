@@ -3,6 +3,7 @@
 '''Export data in CSV format
 '''
 
+from softfab.ControlPage import plainTextErrorResponder
 from softfab.Page import FabResource, Responder
 from softfab.authentication import LoginAuthPage
 from softfab.pageargs import EnumArg, PageArgs
@@ -27,6 +28,9 @@ class CSVPage(FabResource, Responder):
 
     class Arguments(PageArgs):
         sep = EnumArg(Separator, Separator.COMMA)
+
+    def errorResponder(self, ex):
+        return plainTextErrorResponder
 
     def respond(self, response, proc):
         response.setHeader('Content-Type', 'text/x-csv; charset=UTF-8')

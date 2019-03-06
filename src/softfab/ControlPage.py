@@ -15,6 +15,8 @@ class _ErrorResponder(Responder):
             'Details were written to the server log.\n'
             )
 
+plainTextErrorResponder = _ErrorResponder()
+
 class ControlPage(FabResource, Responder):
     '''Base class for resources that allow processes to talk to the Control
     Center. Such processes include our clients (Task Runner, Notifier) and
@@ -23,13 +25,11 @@ class ControlPage(FabResource, Responder):
     contentType = 'text/xml; charset=UTF-8'
     authenticator = HTTPAuthPage # type: ClassVar[Type[Authenticator]]
 
-    __errorResponder = _ErrorResponder()
-
     def getContentType(self, proc): # pylint: disable=unused-argument
         return self.contentType
 
     def errorResponder(self, ex):
-        return self.__errorResponder
+        return plainTextErrorResponder
 
     def respond(self, response, proc):
         response.setHeader('Content-Type', self.getContentType(proc))
