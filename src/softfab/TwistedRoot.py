@@ -1,6 +1,5 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from softfab.InternalErrorPage import InternalErrorPage
 from softfab.Page import (
     FabResource, InternalError, PageProcessor, Redirect, Redirector
     )
@@ -10,7 +9,9 @@ from softfab.TwistedUtil import PageRedirect
 from softfab.authentication import DisabledAuthPage, NoAuthPage
 from softfab.databases import iterDatabasesToPreload
 from softfab.pageargs import PageArgs
-from softfab.render import NotFoundPage, parseAndProcess, present
+from softfab.render import (
+    InternalErrorPage, NotFoundPage, parseAndProcess, present
+    )
 from softfab.request import Request
 from softfab.schedulelib import ScheduleManager
 from softfab.shadowlib import startShadowRunCleanup

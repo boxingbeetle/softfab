@@ -11,6 +11,7 @@ from softfab.Page import (
 from softfab.UIPage import UIPage
 from softfab.pageargs import ArgsCorrected, ArgsInvalid, dynamic
 from softfab.response import Response
+from softfab.webgui import docLink
 from softfab.xmlgen import xhtml
 
 from twisted.internet.defer import Deferred, inlineCallbacks
@@ -93,6 +94,29 @@ class NotFoundPage(UIPage, PageProcessor):
         return (
             xhtml.p[ 'The page you requested was not found on this server.' ],
             xhtml.p[ xhtml.a(href = 'Home')[ 'Back to Home' ] ]
+            )
+
+class InternalErrorPage(UIPage, PageProcessor):
+    '''500 error page: shown when an internal error occurred.
+    '''
+
+    def __init__(self, req, messageText):
+        PageProcessor.__init__(self, req)
+        UIPage.__init__(self)
+        self.__messageText = messageText
+
+    def fabTitle(self, proc):
+        return 'Internal Error'
+
+    def writeHTTPHeaders(self, response):
+        response.setStatus(500, self.__messageText)
+        UIPage.writeHTTPHeaders(self, response)
+
+    def presentContent(self, proc):
+        return (
+            xhtml.p[ 'Internal error: %s.' % self.__messageText ],
+            xhtml.p[ 'Please ', docLink('/reference/contact/')[
+                'report this as a bug' ], '.' ]
             )
 
 def _checkActive(req, page):
