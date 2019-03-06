@@ -395,7 +395,7 @@ class DataTable(Table, ABC):
                 ]
             ] ]
 
-    def present(self, proc, **kwargs):
+    def present(self, *, proc, **kwargs):
         data = proc.getTableData(self)
         return super().present(proc=proc, data=data, table=self, **kwargs)
 

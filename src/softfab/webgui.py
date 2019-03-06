@@ -184,7 +184,7 @@ class _GroupItem(AttrContainer):
         '''
         return obj if isinstance(obj, _GroupItem) else groupItem[obj]
 
-    def present(self, tag: XMLNode, **kwargs: object) -> XMLContent:
+    def present(self, *, tag: XMLNode, **kwargs: object) -> XMLContent:
         presentations = [
             presentation
             for presentation in self._presentContents(**kwargs)
@@ -408,8 +408,8 @@ class Table(Widget):
     style = None # type: Optional[str]
     hideWhenEmpty = False
 
-    def present(self, # type: ignore
-                      # https://github.com/python/mypy/issues/5669
+    def present(self, *, # type: ignore
+                         # https://github.com/python/mypy/issues/5669
             data: Optional['_TableData'] = None,
             columns: Sequence[Column] = (),
             **kwargs: object

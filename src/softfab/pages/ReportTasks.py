@@ -69,7 +69,7 @@ class ReportTasks_GET(FabPage):
     def presentContent(self, proc):
         taskFilter = proc.args.task
 
-        yield FilterForm.instance.present(proc, numListItems=10)
+        yield FilterForm.instance.present(proc=proc, numListItems=10)
 
         if len(taskFilter) == 0:
             return

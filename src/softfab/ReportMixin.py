@@ -121,7 +121,7 @@ class ReportFilterForm:
     instance = SharedInstance() # type: ClassVar
     objectName = abstract # type: ClassVar[str]
 
-    def present(self, proc, **kwargs):
+    def present(self, *, proc, **kwargs):
         yield makeForm(
             method = 'get', formId = 'filters', args = proc.args,
             onsubmit = 'return checkFilters()'

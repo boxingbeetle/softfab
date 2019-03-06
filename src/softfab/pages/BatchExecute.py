@@ -269,7 +269,7 @@ class BatchInputTable(InputTable):
     def filterTaskRunner(self, taskRunner, taskSet, group, inp):
         return taskRunner['target'] == taskSet.getTarget(inp)
 
-    def present(self, taskSet, **kwargs):
+    def present(self, *, taskSet, **kwargs):
         tablePresentation = super().present(taskSet=taskSet, **kwargs)
         if tablePresentation:
             yield xhtml.h2[ 'Inputs for the jobs:' ]
@@ -288,7 +288,7 @@ class ParamTable(ParamOverrideTable):
             size=72
             )
 
-    def present(self, proc, **kwargs):
+    def present(self, *, proc, **kwargs):
         # Because we're wrapped in a decoration, the presentation should
         # evaluate to False if there are only empty tables.
         presentation = []

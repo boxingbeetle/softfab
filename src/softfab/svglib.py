@@ -27,7 +27,7 @@ class SVGPanel(Widget):
     "svgElement", or it can be None, in which case the panel is not presented.
     '''
 
-    def present(self, svgElement, **kwargs): # pylint: disable=arguments-differ
+    def present(self, *, svgElement, **kwargs): # pylint: disable=arguments-differ
         if svgElement is None:
             return None
         else:

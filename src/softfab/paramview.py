@@ -209,7 +209,7 @@ function initRowIndices(node, index) {
                 checkBox(name='final.' + index, checked = final)
                 )
 
-    def present(self, proc, **kwargs):
+    def present(self, *, proc, **kwargs):
         numParams = len(
             set(proc.args.params.values()) & set(self.__parentParams)
             )

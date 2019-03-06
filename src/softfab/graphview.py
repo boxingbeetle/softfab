@@ -290,7 +290,7 @@ class GraphPanel(SVGPanel):
     tables. The graph should be passed to the present method as "graph".
     '''
 
-    def present(self, graph, **kwargs): # pylint: disable=arguments-differ
+    def present(self, *, graph, **kwargs): # pylint: disable=arguments-differ
         svgElement = graph.toSVG()
         if svgElement is None:
             return None
