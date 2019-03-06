@@ -18,6 +18,18 @@ class SoftFabChecker(BaseChecker):
             'function from being garbage collected by the reference counting '
             'collector.'
             ),
+        'E9002': (
+            'Positional parameter %r in present() method',
+            'xmlgen-present-pos',
+            'Issued when an XML presentation method defines a positional '
+            'parameter.'
+            ),
+        'E9003': (
+            'Missing var-keyword (**) parameter in present() method',
+            'xmlgen-present-varkey',
+            'Issued when an XML presentation method does not define '
+            'a var-keyword parameter.'
+            ),
         'W9001' : (
             'Class attribute %r is abstract in class %r but is not overridden',
             'abstract-class-attribute',
@@ -34,6 +46,12 @@ class SoftFabChecker(BaseChecker):
 
     def visit_functiondef(self, node):
         self.active_functions.append(node)
+
+        if node.is_method() and node.name == 'present':
+            for pos_arg in node.args.args[1:]:
+                self.add_message('E9002', args=(pos_arg.name,), node=pos_arg)
+            if node.args.kwarg is None:
+                self.add_message('E9003', node=node)
 
     def leave_functiondef(self, node):
         active = self.active_functions.pop()
