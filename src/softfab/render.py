@@ -115,9 +115,7 @@ def parseAndProcess(page, req):
         # It is possible for additional access checks to fail during the
         # processing step.
         page.checkAccess(req)
-        # Create processor early, since we'll need it if argument parsing fails.
-        proc = page.Processor(req)
-        proc.page = page
+
         # Argument parsing.
         try:
             req._parse(page) # pylint: disable=protected-access
@@ -127,11 +125,14 @@ def parseAndProcess(page, req):
             else:
                 # We can't correct args using redirection if args may have
                 # come from the request body instead of the URL.
-                proc.args = req.args = ex.correctedArgs
-        else:
-            proc.args = req.args
+                req.args = ex.correctedArgs
+
         _checkActive(req, page)
+
         # Processing step.
+        proc = page.Processor(req)
+        proc.page = page
+        proc.args = req.args
         try:
             yield proc.process(req)
         except PresentableError as ex:
