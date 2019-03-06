@@ -11,6 +11,7 @@ from softfab.Page import (
 from softfab.UIPage import UIPage
 from softfab.pageargs import ArgsCorrected, ArgsInvalid, dynamic
 from softfab.response import Response
+from softfab.utils import abstract
 from softfab.webgui import docLink
 from softfab.xmlgen import xhtml
 
@@ -34,61 +35,62 @@ if _timeRender:
 if _profileRender:
     from cProfile import Profile
 
-class BadRequestPage(UIPage, PageProcessor):
+class ErrorPage(UIPage, PageProcessor):
+    """Abstract base class for error pages.
+    """
+    status = abstract
+    title = abstract
+
+    def __init__(self, req, messageText=None):
+        PageProcessor.__init__(self, req)
+        UIPage.__init__(self)
+
+        if messageText is None:
+            messageText = self.title
+        self.messageText = messageText
+
+    def fabTitle(self, proc):
+        return self.title
+
+    def writeHTTPHeaders(self, response):
+        response.setStatus(self.status, self.messageText)
+        super().writeHTTPHeaders(response)
+
+    def presentContent(self, proc):
+        raise NotImplementedError
+
+class BadRequestPage(ErrorPage):
     '''400 error page.
     '''
 
+    status = 400
+    title = 'Bad Request'
+
     def __init__(self, req, messageText, messageHTML):
-        PageProcessor.__init__(self, req)
-        UIPage.__init__(self)
-        self.__messageText = messageText
-        self.__messageHTML = messageHTML
-
-    def fabTitle(self, proc):
-        return 'Bad Request'
-
-    def writeHTTPHeaders(self, response):
-        response.setStatus(400, self.__messageText)
-        UIPage.writeHTTPHeaders(self, response)
+        ErrorPage.__init__(self, req, messageText)
+        self.messageHTML = messageHTML
 
     def presentContent(self, proc):
-        return self.__messageHTML
+        return self.messageHTML
 
-class ForbiddenPage(UIPage, PageProcessor):
+class ForbiddenPage(ErrorPage):
     '''403 error page: shown when access is denied.
     '''
 
-    def __init__(self, req, messageText):
-        PageProcessor.__init__(self, req)
-        UIPage.__init__(self)
-        self.__messageText = messageText
-
-    def fabTitle(self, proc):
-        return 'Access Denied'
-
-    def writeHTTPHeaders(self, response):
-        response.setStatus(403, self.__messageText)
-        UIPage.writeHTTPHeaders(self, response)
+    status = 403
+    title = 'Access Denied'
 
     def presentContent(self, proc):
-        return xhtml.p[ 'Access denied: %s.' % self.__messageText ]
+        return xhtml.p[ 'Access denied: %s.' % self.messageText ]
 
-class NotFoundPage(UIPage, PageProcessor):
+class NotFoundPage(ErrorPage):
     '''404 error page.
     TODO: When there is a directory in the URL, the style sheets and images
           are not properly referenced.
     '''
 
-    def __init__(self, req):
-        PageProcessor.__init__(self, req)
-        UIPage.__init__(self)
-
-    def fabTitle(self, proc):
-        return 'Page Not Found'
-
-    def writeHTTPHeaders(self, response):
-        response.setStatus(404, 'Page not found')
-        UIPage.writeHTTPHeaders(self, response)
+    status = 404
+    title = 'Page Not Found'
 
     def presentContent(self, proc):
         return (
@@ -96,25 +98,16 @@ class NotFoundPage(UIPage, PageProcessor):
             xhtml.p[ xhtml.a(href = 'Home')[ 'Back to Home' ] ]
             )
 
-class InternalErrorPage(UIPage, PageProcessor):
+class InternalErrorPage(ErrorPage):
     '''500 error page: shown when an internal error occurred.
     '''
 
-    def __init__(self, req, messageText):
-        PageProcessor.__init__(self, req)
-        UIPage.__init__(self)
-        self.__messageText = messageText
-
-    def fabTitle(self, proc):
-        return 'Internal Error'
-
-    def writeHTTPHeaders(self, response):
-        response.setStatus(500, self.__messageText)
-        UIPage.writeHTTPHeaders(self, response)
+    status = 500
+    title = 'Internal Error'
 
     def presentContent(self, proc):
         return (
-            xhtml.p[ 'Internal error: %s.' % self.__messageText ],
+            xhtml.p[ 'Internal error: %s.' % self.messageText ],
             xhtml.p[ 'Please ', docLink('/reference/contact/')[
                 'report this as a bug' ], '.' ]
             )
