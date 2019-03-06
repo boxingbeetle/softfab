@@ -14,7 +14,7 @@ class ResTypeTableMixin:
     columns = 'Resource Type', DescriptionColumn.instance
     reserved = True
 
-    def iterOptions(self, **kwargs):
+    def iterOptions(self, **_kwargs):
         resTypeNames = sorted(resTypeDB.keys())
         resTypeNames.remove(taskRunnerResourceTypeName)
         if self.reserved:

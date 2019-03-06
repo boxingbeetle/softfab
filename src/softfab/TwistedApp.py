@@ -11,7 +11,7 @@ def _createRoot(**config):
     softfab.config.dbDir = getcwd()
 
     # Importing of this module triggers the logging system initialisation.
-    import softfab.initlog # pylint: disable=unused-import
+    import softfab.initlog
 
     # This must be after importing initlog.
     from softfab.TwistedRoot import SoftFabRoot

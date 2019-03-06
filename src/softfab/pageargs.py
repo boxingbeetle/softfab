@@ -543,7 +543,7 @@ class SingularArgument(Argument[Optional[ValueT]]):
     '''Argument which consists of a single value, as opposed to a sequence.
     '''
 
-    def _sameArg(self, other: Argument) -> bool: # pylint: disable=unused-argument
+    def _sameArg(self, other: Argument) -> bool:
         return True
 
     def parse(self, *strValues: str) -> ValueT:
@@ -853,7 +853,7 @@ class _SetArg(CollectionArg[ValueT]):
         return frozenset(items)
 
     # https://github.com/PyCQA/pylint/issues/2377
-    def parse(self, *strValues: str) -> Collection[ValueT]: # pylint: disable=unsubscriptable-object
+    def parse(self, *strValues: str) -> Collection[ValueT]: # pylint: disable=unsubscriptable-object,useless-suppression
         values = super().parse(*strValues)
         if len(values) == len(strValues):
             return values

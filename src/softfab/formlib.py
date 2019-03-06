@@ -455,7 +455,7 @@ class DropDownList(Widget):
         '''
         raise NotImplementedError
 
-    def getDefault(self, formArgs, **kwargs):
+    def getDefault(self, formArgs, **_kwargs):
         '''Returns the default option, or None so skip the generation of
         the form clear code.
         The default implementation returns the default value of the form
@@ -585,7 +585,7 @@ class SingleCheckBoxTable(CheckBoxesTable):
     def iterOptions(self, **kwargs):
         yield 'true', ( self.label, )
 
-    def isActive(self, formArgs, **kwargs):
+    def isActive(self, formArgs, **_kwargs):
         '''Returns True iff the single check box is active.
         The default implementation returns the value of the argument that
         matches the submission name of this check boxes table.
@@ -643,7 +643,7 @@ class RadioTable(Table):
                 class_ = 'clickable'
                 )[ self.formatOption(box, item[1:]) ]
 
-    def getActive(self, formArgs, **kwargs):
+    def getActive(self, formArgs, **_kwargs):
         '''Returns the active option, or None if no option is active.
         The default implementation returns the value of the page argument
         with the same name as this control.
