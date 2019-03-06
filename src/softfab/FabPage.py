@@ -285,5 +285,5 @@ class LinkBar(Widget):
             if button is not None:
                 yield button
 
-    def present(self, *, proc):
+    def present(self, *, proc, **kwargs):
         return xhtml.div(class_ = 'linkbar')[ self.__presentButtons(proc) ]
