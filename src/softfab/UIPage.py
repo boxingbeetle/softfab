@@ -4,10 +4,11 @@ from softfab.Page import ProcT, Responder, logPageException
 from softfab.StyleResources import styleRoot
 from softfab.pagelinks import createUserDetailsLink, loginURL, logoutURL
 from softfab.projectlib import project
+from softfab.response import Response
 from softfab.timelib import getTime
 from softfab.timeview import formatTime
 from softfab.version import version
-from softfab.xmlgen import xhtml
+from softfab.xmlgen import XMLContent, xhtml
 
 from traceback import TracebackException
 from typing import Generic
@@ -55,7 +56,7 @@ class UIPage(Responder, Generic[ProcT]):
             contentType = 'text/html'
         response.setHeader('Content-Type', contentType + '; charset=UTF-8')
 
-    def __writeHTML(self, response, proc):
+    def __writeHTML(self, response: Response, proc: ProcT) -> None:
         self.__writeDocType(response)
         response.write(
             xhtml.html(lang = 'en')[
@@ -64,7 +65,7 @@ class UIPage(Responder, Generic[ProcT]):
                 ]
             )
 
-    def __writeDocType(self, response):
+    def __writeDocType(self, response: Response) -> None:
         response.write('<!DOCTYPE html>\n')
 
     def presentHeadParts(self, proc):
@@ -81,7 +82,7 @@ class UIPage(Responder, Generic[ProcT]):
             yield xhtml.style[customStyleDefs]
         yield _shortcutIcon.present(proc=proc)
 
-    def __title(self, proc):
+    def __title(self, proc: ProcT) -> XMLContent:
         return (
             xhtml.span(class_ = 'project')[ project['name'] ],
             xhtml.span(class_ = 'softfab')[ ' SoftFab' ],
@@ -125,7 +126,7 @@ class UIPage(Responder, Generic[ProcT]):
             response.setStatus(500, 'Error presenting page')
             yield from self.formatError(ex)
 
-    def __presentBody(self, proc):
+    def __presentBody(self, proc: ProcT) -> XMLContent:
         if proc.processingError is not None:
             return self.formatError(proc.processingError)
         elif proc.error is not None:
