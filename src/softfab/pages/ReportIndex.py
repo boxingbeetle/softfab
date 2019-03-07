@@ -46,7 +46,7 @@ class ReportIndex_GET(FabPage):
     class Processor(JobReportProcessor):
 
         def iterFilters(self):
-            yield from JobReportProcessor.iterFilters(self)
+            yield from super().iterFilters()
             if self.args.desc:
                 yield WildcardFilter('description', self.args.desc, self.db)
 

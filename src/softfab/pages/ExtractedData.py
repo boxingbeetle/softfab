@@ -201,7 +201,7 @@ class ExtractedData_GET(FabPage):
     class Processor(ReportProcessor):
 
         def process(self, req):
-            ReportProcessor.process(self, req)
+            super().process(req)
 
             taskNames = req.args.task
 

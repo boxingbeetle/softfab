@@ -376,7 +376,7 @@ class EditPage(FabPage, ABC):
         self.confirmOverwritePhase = ConfirmOverwritePhase(self)
 
     def presentHeadParts(self, proc):
-        yield FabPage.presentHeadParts(self, proc)
+        yield super().presentHeadParts(proc)
         if self.useScript:
             yield rowManagerScript.present(proc=proc)
 

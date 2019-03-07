@@ -16,7 +16,7 @@ class ReportTasksCSV_GET(CSVPage):
     class Processor(ReportProcessor):
 
         def process(self, req):
-            ReportProcessor.process(self, req)
+            super().process(req)
 
             # Note: iterDoneTasks() can efficiently handle an empty (nothing
             #       matches) filter, no need for a special case here.

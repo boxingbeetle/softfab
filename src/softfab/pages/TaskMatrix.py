@@ -183,7 +183,7 @@ class TaskMatrix_GET(FabPage):
 
         def process(self, req):
             # pylint: disable=attribute-defined-outside-init
-            TaskMatrixProcessor.process(self, req)
+            super().process(req)
             self.tasksByName = tasksByName = defaultdict(list)
             self.tasksByDay = tasksByDay = []
             self.allTasks = allTasks = []

@@ -612,7 +612,7 @@ class Job(TaskSet, TaskRunnerSet, XMLTag, DatabaseElem):
 
     def _getMainGroup(self):
         if self.__mainGroup is None:
-            self.__mainGroup = TaskSet._getMainGroup(self)
+            self.__mainGroup = super()._getMainGroup()
         return self.__mainGroup
 
     def getTaskSequence(self):
@@ -633,7 +633,7 @@ class Job(TaskSet, TaskRunnerSet, XMLTag, DatabaseElem):
         # Since task definition is fixed, caching is possible.
         if self.__description is None:
             self.__description = self._properties.get('configId') or \
-            TaskSet.getDescription(self)
+                                 super().getDescription()
         return self.__description
 
     def canRunOn(self, runner):
@@ -697,7 +697,7 @@ class Job(TaskSet, TaskRunnerSet, XMLTag, DatabaseElem):
 
     def getInputSet(self):
         if self.__inputSet is None:
-            self.__inputSet = TaskSet.getInputSet(self)
+            self.__inputSet = super().getInputSet()
         return self.__inputSet
 
     def getInputs(self):

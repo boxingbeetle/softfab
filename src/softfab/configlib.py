@@ -488,7 +488,7 @@ class Config(
 
     def getDescription(self):
         if self.__description is None:
-            self.__description = TaskSet.getDescription(self)
+            self.__description = super().getDescription()
             self.__registerNotify()
         return self.__description
 

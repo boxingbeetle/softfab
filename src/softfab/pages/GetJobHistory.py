@@ -21,7 +21,7 @@ class GetJobHistory_GET(ControlPage):
     class Processor(JobReportProcessor):
 
         def process(self, req):
-            JobReportProcessor.process(self, req)
+            super().process(req)
 
             jobs = runQuery(self.iterFilters(), jobDB)
 
@@ -29,7 +29,7 @@ class GetJobHistory_GET(ControlPage):
             self.jobs = jobs
 
         def iterFilters(self):
-            yield from JobReportProcessor.iterFilters(self)
+            yield from super().iterFilters()
 
             configId = self.args.configId
             if configId:

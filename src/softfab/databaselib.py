@@ -632,7 +632,7 @@ class VersionedDatabase(Database[Record]):
         return self.baseDir + '/' + key + '.removed'
 
     def _keyForFileName(self, fileName: str) -> str:
-        key = Database._keyForFileName(self, fileName)
+        key = super()._keyForFileName(fileName)
         # Replace version separator dot by pipe.
         sep = key.rindex('.')
         return key[ : sep] + '|' + key[sep + 1 : ]

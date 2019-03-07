@@ -45,7 +45,7 @@ class SplashPage(UIPage, FabResource):
         response.setHeader('Retry-After', str(retryDelay))
         response.setHeader('Refresh', str(retryDelay))
 
-        UIPage.writeHTTPHeaders(self, response)
+        super().writeHTTPHeaders(response)
 
     def presentContent(self, proc):
         return (

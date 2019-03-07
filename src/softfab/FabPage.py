@@ -167,7 +167,7 @@ class FabPage(UIPage, FabResource, ABC):
         return self.description
 
     def presentHeader(self, proc):
-        yield UIPage.presentHeader(self, proc)
+        yield super().presentHeader(proc)
         yield LinkBar.instance.present(proc=proc)
 
     def presentContent(self, proc):

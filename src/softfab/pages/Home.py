@@ -62,7 +62,7 @@ class Home_GET(FabPage):
         yield RecentJobsTable.instance
 
     def presentHeadParts(self, proc):
-        yield FabPage.presentHeadParts(self, proc)
+        yield super().presentHeadParts(proc)
         yield xhtml.link(
             rel = 'alternate',
             type = 'application/atom+xml',

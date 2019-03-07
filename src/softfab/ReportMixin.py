@@ -108,7 +108,7 @@ class JobReportProcessor(ReportProcessor):
     db = jobDB
 
     def iterFilters(self):
-        yield from ReportProcessor.iterFilters(self)
+        yield from super().iterFilters()
         execState = self.args.execState
         if execState is ExecutionState.COMPLETED:
             yield CustomFilter(lambda record: record.isCompleted())

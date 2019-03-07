@@ -114,18 +114,18 @@ class Framework(TaskDefBase):
         self.__outputs.add(attributes['name'])
 
     def getParametersSelf(self):
-        params = TaskDefBase.getParametersSelf(self)
+        params = super().getParametersSelf()
         params.setdefault('sf.wrapper', self.getId())
         return params
 
     def getFinalSelf(self):
-        finals = TaskDefBase.getFinalSelf(self)
+        finals = super().getFinalSelf()
         finals.add('sf.wrapper')
         return finals
 
     def isFinal(self, parameter, getParent = frameworkDB.__getitem__):
         return parameter in ('sf.wrapper', 'sf.extractor') \
-            or TaskDefBase.isFinal(self, parameter, getParent)
+            or super().isFinal(parameter, getParent)
 
     def getInputs(self):
         """Gets a set of the names of all products
