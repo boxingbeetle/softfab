@@ -189,7 +189,7 @@ class PageLoader:
                 method = className[index + 1 : ]
                 assert method not in pagesByMethod
                 pagesByMethod[method] = page
-                if base == 'Login' and method == 'POST':
+                if base == 'Login':
                     page.secureCookie = root.secureCookie
             if name is None:
                 name = base

@@ -29,6 +29,7 @@ class Login_GET(UIPage, FabResource):
     '''Page that presents login form.
     '''
     authenticator = NoAuthPage
+    secureCookie = True
 
     class Arguments(URLArgs):
         pass
@@ -48,10 +49,18 @@ class Login_GET(UIPage, FabResource):
         return 'Log In'
 
     def presentContent(self, proc):
-        yield makeForm(args = proc.args)[
-            LoginTable.instance,
-            xhtml.p[ submitButton[ 'Log In' ] ]
-            ].present(proc=proc)
+        if self.secureCookie and not proc.req.secure:
+            yield xhtml.p(class_='notice')[
+                'Login is not possible over insecure channel.'
+                ]
+            yield xhtml.p[
+                'Please connect over HTTPS instead.'
+                ]
+        else:
+            yield makeForm(args = proc.args)[
+                LoginTable.instance,
+                xhtml.p[ submitButton[ 'Log In' ] ]
+                ].present(proc=proc)
 
         userAgent = proc.req.userAgent
         if userAgent.family == 'MSIE':
@@ -89,8 +98,6 @@ _downloadURLs = {
 class Login_POST(Login_GET):
     '''Page that handles submitted login form.
     '''
-    authenticator = NoAuthPage
-    secureCookie = True
 
     class Arguments(Login_GET.Arguments, LoginPassArgs):
         loginname = StrArg()
