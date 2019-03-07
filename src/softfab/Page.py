@@ -51,11 +51,11 @@ class PresentableError(Exception):
     calling presentContent().
     '''
 
-class InvalidRequest(BaseException):
+class InvalidRequest(Exception):
     '''Raised when the client request is found to be invalid.
     '''
 
-class InternalError(BaseException):
+class InternalError(Exception):
     '''Raised when the Control Center encounters an internal problem or a
     configuration issue or invalid database state that cannot be corrected by
     the user.
