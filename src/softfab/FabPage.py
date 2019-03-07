@@ -34,7 +34,7 @@ class FabPage(UIPage, FabResource, ABC):
 
     icon = abstract # type: ClassVar[Optional[str]]
     iconModifier = IconModifier.NONE # type: ClassVar[IconModifier]
-    description = abstract # type: ClassVar[Optional[str]]
+    description = abstract # type: ClassVar[str]
     # Description used to link from the parent to this page.
     # If set to None (default), the value of the "description" field is used.
     # If set to False, the parent will not link to this page.
@@ -168,8 +168,7 @@ class FabPage(UIPage, FabResource, ABC):
 
     def presentHeader(self, proc):
         yield UIPage.presentHeader(self, proc)
-        if self.description is not None:
-            yield LinkBar.instance.present(proc=proc)
+        yield LinkBar.instance.present(proc=proc)
 
     def presentContent(self, proc):
         # This method is already declared abstract in UIPage, we re-assert
