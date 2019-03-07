@@ -1,5 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from typing import Iterator
+
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
 from softfab.frameworklib import frameworkDB
@@ -17,7 +19,7 @@ from softfab.taskdeflib import taskDefDB
 from softfab.taskdefview import formatTimeout
 from softfab.taskrunnerlib import taskRunnerDB
 from softfab.tasktables import JobTaskRunsTable
-from softfab.webgui import PropertiesTable
+from softfab.webgui import PropertiesTable, WidgetT
 from softfab.xmlgen import txt, xhtml
 
 taskParametersTable = ParametersTable('task')
@@ -180,7 +182,7 @@ class ShowTaskInfo_GET(FabPage['ShowTaskInfo_GET.Processor']):
     def checkAccess(self, req):
         req.checkPrivilege('j/a')
 
-    def iterWidgets(self, proc):
+    def iterWidgets(self, proc: Processor) -> Iterator[WidgetT]:
         yield SelfTaskRunsTable
         yield InputTable
         yield OutputTable

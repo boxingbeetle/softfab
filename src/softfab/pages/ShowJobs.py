@@ -1,11 +1,13 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from typing import Iterator
+
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
 from softfab.joblib import jobDB
 from softfab.jobview import JobsSubTable
 from softfab.pagelinks import JobIdSetArgs
-from softfab.webgui import unorderedList
+from softfab.webgui import WidgetT, unorderedList
 from softfab.xmlgen import xhtml
 
 class ShowJobsTable(JobsSubTable):
@@ -42,7 +44,7 @@ class ShowJobs_GET(FabPage['ShowJobs_GET.Processor']):
     def checkAccess(self, req):
         req.checkPrivilege('j/l')
 
-    def iterWidgets(self, proc):
+    def iterWidgets(self, proc: Processor) -> Iterator[WidgetT]:
         yield ShowJobsTable
 
     def iterDataTables(self, proc):

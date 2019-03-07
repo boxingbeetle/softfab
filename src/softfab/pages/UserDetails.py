@@ -1,5 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from typing import Iterator
+
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
 from softfab.ReportMixin import ReportArgs
@@ -10,7 +12,7 @@ from softfab.pagelinks import UserIdArgs
 from softfab.querylib import KeySorter, ValueFilter, runQuery
 from softfab.userlib import userDB
 from softfab.userview import activeRole
-from softfab.webgui import PropertiesTable, pageLink
+from softfab.webgui import PropertiesTable, WidgetT, pageLink
 from softfab.xmlgen import xhtml
 
 class DetailsTable(PropertiesTable):
@@ -53,7 +55,7 @@ class UserDetails_GET(FabPage['UserDetails_GET.Processor']):
     def checkAccess(self, req):
         pass
 
-    def iterWidgets(self, proc):
+    def iterWidgets(self, proc: Processor) -> Iterator[WidgetT]:
         yield OwnedJobsTable
 
     def iterDataTables(self, proc):

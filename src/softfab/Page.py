@@ -2,11 +2,11 @@
 
 from abc import ABC
 from collections import defaultdict
-from typing import ClassVar, Generic, Type, TypeVar
+from typing import ClassVar, Generic, Iterator, Type, TypeVar
 import logging
 
 from softfab.pageargs import PageArgs
-from softfab.webgui import pageURL
+from softfab.webgui import WidgetT, pageURL
 from softfab.utils import SharedInstance, abstract
 
 def logPageException(req, message: str) -> None:
@@ -227,7 +227,9 @@ class FabResource(ABC, Generic[ProcT]):
         '''
         raise NotImplementedError
 
-    def iterWidgets(self, proc): # pylint: disable=unused-argument
+    def iterWidgets(self,
+                    proc: ProcT # pylint: disable=unused-argument
+                    ) -> Iterator[WidgetT]:
         '''Iterates through the widgets in the presentation of this resource.
         Currently only auto-updating widgets must be listed here, all other
         widgets are ignored for now.

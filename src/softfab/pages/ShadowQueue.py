@@ -1,10 +1,13 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from typing import Iterator
+
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
 from softfab.pageargs import IntArg, PageArgs, SortArg
 from softfab.shadowlib import shadowDB
 from softfab.shadowview import ShadowTable, trimPolicy
+from softfab.webgui import WidgetT
 
 class ShadowQueue_GET(FabPage['ShadowQueue_GET.Processor']):
     icon = 'TaskRunStat1'
@@ -24,7 +27,7 @@ class ShadowQueue_GET(FabPage['ShadowQueue_GET.Processor']):
     def iterDataTables(self, proc):
         yield ShadowTable.instance
 
-    def iterWidgets(self, proc):
+    def iterWidgets(self, proc: Processor) -> Iterator[WidgetT]:
         yield ShadowTable
 
     def presentContent(self, proc):

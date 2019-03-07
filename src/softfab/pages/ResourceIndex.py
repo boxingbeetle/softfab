@@ -13,11 +13,12 @@ from softfab.resourcelib import resourceDB
 from softfab.resourceview import getResourceStatus, presentCapabilities
 from softfab.restypelib import resTypeDB, taskRunnerResourceTypeName
 from softfab.taskrunnerlib import taskRunnerDB
-from softfab.webgui import docLink, header, pageLink, pageURL, row
+from softfab.webgui import WidgetT, docLink, header, pageLink, pageURL, row
 from softfab.xmlgen import xhtml
 
 from collections import defaultdict
 from enum import Enum
+from typing import Iterator
 
 class NameColumn(DataColumn):
     def presentCell(self, record, **kwargs):
@@ -151,7 +152,7 @@ class ResourceIndex_GET(FabPage['ResourceIndex_GET.Processor']):
     def iterDataTables(self, proc):
         yield ResourcesTable.instance
 
-    def iterWidgets(self, proc):
+    def iterWidgets(self, proc: Processor) -> Iterator[WidgetT]:
         yield ResourcesTable
 
     def presentContent(self, proc):

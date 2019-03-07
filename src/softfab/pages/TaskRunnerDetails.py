@@ -1,5 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from typing import Iterator
+
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
 from softfab.connection import ConnectionStatus
@@ -10,7 +12,7 @@ from softfab.resourceview import getResourceStatus, presentCapabilities
 from softfab.restypelib import taskRunnerResourceTypeName
 from softfab.taskrunnerlib import taskRunnerDB
 from softfab.timeview import formatDuration, formatTime
-from softfab.webgui import Column, Table, pageLink, row
+from softfab.webgui import Column, Table, WidgetT, pageLink, row
 from softfab.xmlgen import xhtml
 
 class TaskRunnerDetails_GET(FabPage['TaskRunnerDetails_GET.Processor']):
@@ -30,7 +32,7 @@ class TaskRunnerDetails_GET(FabPage['TaskRunnerDetails_GET.Processor']):
     def checkAccess(self, req):
         req.checkPrivilege('tr/a')
 
-    def iterWidgets(self, proc):
+    def iterWidgets(self, proc: Processor) -> Iterator[WidgetT]:
         yield DetailsTable
 
     def presentContent(self, proc):

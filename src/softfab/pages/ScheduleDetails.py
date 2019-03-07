@@ -1,5 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from typing import Iterator
+
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
 from softfab.RecordDelete import DeleteArgs
@@ -13,7 +15,7 @@ from softfab.scheduleview import (
     )
 from softfab.selectview import TagArgs
 from softfab.utils import pluralize
-from softfab.webgui import PropertiesTable, Table, cell, pageLink, row
+from softfab.webgui import PropertiesTable, Table, WidgetT, cell, pageLink, row
 from softfab.xmlgen import xhtml
 
 def statusDescription(scheduled):
@@ -105,7 +107,7 @@ class ScheduleDetails_GET(FabPage['ScheduleDetails_GET.Processor']):
     def checkAccess(self, req):
         req.checkPrivilege('s/a')
 
-    def iterWidgets(self, proc):
+    def iterWidgets(self, proc: Processor) -> Iterator[WidgetT]:
         yield DetailsTable
 
     def presentContent(self, proc):

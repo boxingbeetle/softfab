@@ -1,5 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from typing import Iterator
+
 from softfab.FabPage import FabPage
 from softfab.StyleResources import styleRoot
 from softfab.Page import PageProcessor
@@ -7,7 +9,7 @@ from softfab.databaselib import RecordObserver
 from softfab.joblib import jobDB
 from softfab.jobview import JobsSubTable
 from softfab.querylib import KeySorter, runQuery
-from softfab.webgui import docLink, pageLink, pageURL
+from softfab.webgui import WidgetT, docLink, pageLink, pageURL
 from softfab.xmlgen import xhtml
 
 class MostRecent(RecordObserver):
@@ -55,7 +57,7 @@ class Home_GET(FabPage['Home_GET.Processor']):
     def checkAccess(self, req):
         req.checkPrivilege('j/l')
 
-    def iterWidgets(self, proc):
+    def iterWidgets(self, proc: Processor) -> Iterator[WidgetT]:
         yield RecentJobsTable
 
     def iterDataTables(self, proc):

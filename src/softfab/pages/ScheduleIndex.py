@@ -12,10 +12,11 @@ from softfab.scheduleview import (
     createLastJobLink, describeNextRun, getScheduleStatus
     )
 from softfab.userview import OwnerColumn
-from softfab.webgui import pageLink, pageURL
+from softfab.webgui import WidgetT, pageLink, pageURL
 from softfab.xmlgen import xhtml
 
 from enum import Enum
+from typing import Iterator
 
 class NameColumn(DataColumn):
     label = 'Name'
@@ -103,7 +104,7 @@ class ScheduleIndex_GET(FabPage['ScheduleIndex_GET.Processor']):
     def iterDataTables(self, proc):
         yield ScheduleTable.instance
 
-    def iterWidgets(self, proc):
+    def iterWidgets(self, proc: Processor) -> Iterator[WidgetT]:
         yield ScheduleTable
 
     def presentContent(self, proc):

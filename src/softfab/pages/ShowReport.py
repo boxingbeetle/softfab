@@ -1,5 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from typing import Iterator
+
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
 from softfab.joblib import jobDB
@@ -11,7 +13,7 @@ from softfab.productview import ProductTable
 from softfab.taskrunnerlib import taskRunnerDB
 from softfab.tasktables import JobTaskRunsTable
 from softfab.utils import pluralize
-from softfab.webgui import Table, cell, pageLink
+from softfab.webgui import Table, WidgetT, cell, pageLink
 from softfab.xmlgen import txt, xhtml
 
 class SelfJobsTable(JobsSubTable):
@@ -63,7 +65,7 @@ class ShowReport_GET(FabPage['ShowReport_GET.Processor']):
         yield SelfJobsTable.instance
         yield TaskRunsTable.instance
 
-    def iterWidgets(self, proc):
+    def iterWidgets(self, proc: Processor) -> Iterator[WidgetT]:
         yield SelfJobsTable
         yield TaskRunsTable
         yield OutputTable

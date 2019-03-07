@@ -19,7 +19,7 @@ from io import BytesIO
 from itertools import chain
 from typing import (
     TYPE_CHECKING, Callable, ClassVar, Iterable, Iterator, Mapping, Optional,
-    Sequence, Tuple, TypeVar, Union, cast
+    Sequence, Tuple, Type, TypeVar, Union, cast
     )
 from xml.etree import ElementTree
 import logging
@@ -287,6 +287,8 @@ class Widget(XMLPresentable):
         Returns an XML tree.
         '''
         raise NotImplementedError
+
+WidgetT = Union[Widget, Type[Widget]]
 
 class Column:
     instance = SharedInstance() # type: ClassVar[SharedInstance]
