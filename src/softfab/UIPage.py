@@ -61,7 +61,7 @@ class UIPage(Responder, Generic[ProcT]):
         response.write(
             xhtml.html(lang = 'en')[
                 xhtml.head[ self.presentHeadParts(proc) ],
-                xhtml.body[ self.presentBodyParts(response, proc) ],
+                xhtml.body[ self.__presentBodyParts(response, proc) ],
                 ]
             )
 
@@ -114,7 +114,7 @@ class UIPage(Responder, Generic[ProcT]):
         else:
             yield xhtml.p['Details were written to the server log.']
 
-    def presentBodyParts(self, response, proc):
+    def __presentBodyParts(self, response: Response, proc: ProcT) -> XMLContent:
         yield self.presentHeader(proc)
         try:
             yield (
