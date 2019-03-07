@@ -3,10 +3,21 @@
 from abc import ABC
 from collections import defaultdict
 from typing import ClassVar, Type
+import logging
 
 from softfab.pageargs import PageArgs
 from softfab.webgui import pageURL
 from softfab.utils import SharedInstance, abstract
+
+def logPageException(req, message: str) -> None:
+    """Logs an exception that occurred while handling a page request.
+    """
+    logging.exception(
+        '%s:\n%s %s\n%s',
+        message,
+        req.method, req.getURL(),
+        getattr(req, 'args', '(before or during argument parsing)')
+        )
 
 class Authenticator:
     '''Abstract base class of authenticators.

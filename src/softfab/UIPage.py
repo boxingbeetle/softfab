@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from softfab.Page import Responder
+from softfab.Page import Responder, logPageException
 from softfab.StyleResources import styleRoot
 from softfab.pagelinks import createUserDetailsLink, loginURL, logoutURL
 from softfab.projectlib import project
@@ -10,7 +10,6 @@ from softfab.version import version
 from softfab.xmlgen import xhtml
 
 from traceback import TracebackException
-import logging
 
 _logoIcon = styleRoot.addIcon('SoftFabLogo')
 _shortcutIcon = styleRoot.addShortcutIcon('SoftFabIcon')
@@ -121,7 +120,7 @@ class UIPage(Responder):
                 self.presentBackgroundScripts(proc)
                 )
         except Exception as ex:
-            logging.exception('Error presenting page: %s', ex)
+            logPageException(proc.req, 'Error presenting page')
             response.setStatus(500, 'Error presenting page')
             yield from self.formatError(ex)
 

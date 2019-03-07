@@ -6,7 +6,7 @@ Module to render the page
 
 from softfab.Page import (
     AccessDenied, InvalidRequest, PageProcessor, PresentableError, Redirect,
-    Redirector
+    Redirector, logPageException
     )
 from softfab.UIPage import UIPage
 from softfab.pageargs import ArgsCorrected, ArgsInvalid, dynamic
@@ -17,8 +17,6 @@ from softfab.xmlgen import xhtml
 
 from twisted.internet.defer import Deferred, inlineCallbacks
 from twisted.internet.interfaces import IPullProducer, IProducer, IPushProducer
-
-import logging
 
 # Profiling options:
 
@@ -196,13 +194,7 @@ def parseAndProcess(page, req):
             xhtml.p[ 'Invalid request: ', str(ex) ]
             )
     except Exception as ex:
-        logging.exception(
-            'Unexpected exception processing request:\n'
-            '%s %s\n'
-            '%s',
-            req.method, req.getURL(),
-            req.args if hasattr(req, 'args') else '(during argument parsing)'
-            )
+        logPageException(req, 'Unexpected exception processing request')
         responder = page.errorResponder(ex)
     else:
         try:
