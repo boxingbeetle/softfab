@@ -2,7 +2,7 @@
 
 from abc import ABC
 from collections import defaultdict
-from typing import ClassVar, Type
+from typing import ClassVar, Generic, Type, TypeVar
 import logging
 
 from softfab.pageargs import PageArgs
@@ -130,6 +130,8 @@ class PageProcessor:
         '''
         return pageURL('%s/%s' % ( self.page.name, subPath ), self.args)
 
+ProcT = TypeVar('ProcT', bound=PageProcessor)
+
 class Responder:
     '''Abstract base class for responders; responders are responsible for
     generating a response to an HTTP request.
@@ -167,7 +169,7 @@ class HTTPAuthenticator(PageProcessor, Responder):
             'WWW-Authenticate', 'Basic realm="%s"' % self.__realm
             )
 
-class FabResource(ABC):
+class FabResource(ABC, Generic[ProcT]):
     '''Abstract base class for Control Center pages.
     '''
     authenticator = abstract # type: ClassVar[Type[Authenticator]]

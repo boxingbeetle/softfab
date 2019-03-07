@@ -8,7 +8,7 @@ from softfab.pageargs import StrArg
 from softfab.pagelinks import JobIdArgs
 from softfab.xmlgen import xml
 
-class TaskAlert_POST(ControlPage):
+class TaskAlert_POST(ControlPage['TaskAlert_POST.Processor']):
 
     class Arguments(JobIdArgs):
         taskId = StrArg()

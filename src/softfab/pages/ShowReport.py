@@ -38,7 +38,7 @@ class TaskRunsTable(JobTaskRunsTable):
             ':'
             )
 
-class ShowReport_GET(FabPage):
+class ShowReport_GET(FabPage['ShowReport_GET.Processor']):
     icon = 'IconReport'
     description = 'Show Reports'
     children = [ 'AbortTask', 'ExtractionDetails', 'ShowTaskInfo' ]

@@ -13,7 +13,7 @@ from softfab.timeview import formatDuration, formatTime
 from softfab.webgui import Column, Table, pageLink, row
 from softfab.xmlgen import xhtml
 
-class TaskRunnerDetails_GET(FabPage):
+class TaskRunnerDetails_GET(FabPage['TaskRunnerDetails_GET.Processor']):
     icon = 'TaskRunStat1'
     description = 'Task Runner Details'
 

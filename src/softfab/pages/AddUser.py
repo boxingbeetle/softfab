@@ -22,7 +22,7 @@ from enum import Enum
 
 Actions = Enum('Actions', 'ADD CANCEL')
 
-class AddUser_GET(FabPage):
+class AddUser_GET(FabPage['AddUser_GET.Processor']):
     icon = 'AddUser1'
     description = 'Add User'
 

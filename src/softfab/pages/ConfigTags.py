@@ -31,7 +31,7 @@ class ParentArgs(SelectArgs):
 
 Actions = Enum('Actions', 'APPLY CANCEL')
 
-class ConfigTags_GET(FabPage):
+class ConfigTags_GET(FabPage['ConfigTags_GET.Processor']):
     icon = 'IconExec'
     iconModifier = IconModifier.EDIT
     description = 'Configuration Tags'

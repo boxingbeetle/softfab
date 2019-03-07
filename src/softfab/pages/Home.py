@@ -38,7 +38,7 @@ class RecentJobsTable(JobsSubTable):
     def getRecordsToQuery(self, proc):
         return proc.recentJobs.records
 
-class Home_GET(FabPage):
+class Home_GET(FabPage['Home_GET.Processor']):
     icon = 'IconHome'
     description = 'Home'
     children = [

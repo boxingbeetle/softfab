@@ -6,7 +6,7 @@ from softfab.pageargs import IntArg, PageArgs, SortArg
 from softfab.shadowlib import shadowDB
 from softfab.shadowview import ShadowTable, trimPolicy
 
-class ShadowQueue_GET(FabPage):
+class ShadowQueue_GET(FabPage['ShadowQueue_GET.Processor']):
     icon = 'TaskRunStat1'
     description = 'Shadow Queue'
     isActive = staticmethod(lambda: len(shadowDB) > 0)

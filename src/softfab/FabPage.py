@@ -5,7 +5,7 @@ from abc import ABC
 from enum import Enum
 from typing import ClassVar, Mapping, Optional, Sequence, Union
 
-from softfab.Page import FabResource, Responder
+from softfab.Page import FabResource, ProcT, Responder
 from softfab.StyleResources import styleRoot
 from softfab.UIPage import UIPage
 from softfab.authentication import LoginAuthPage
@@ -27,7 +27,7 @@ class _WidgetResponder(Responder):
 
 IconModifier = Enum('IconModifier', 'NONE EDIT DELETE')
 
-class FabPage(UIPage, FabResource, ABC):
+class FabPage(UIPage[ProcT], FabResource[ProcT], ABC):
     authenticator = LoginAuthPage
 
     __pageInfo = {} # type: ClassVar[Mapping[str, object]]

@@ -10,7 +10,7 @@ from enum import Enum
 
 Actions = Enum('Actions', 'SUSPEND RESUME')
 
-class ResourceControl_POST(ControlPage):
+class ResourceControl_POST(ControlPage['ResourceControl_POST.Processor']):
 
     class Arguments(PageArgs):
         name = SetArg()

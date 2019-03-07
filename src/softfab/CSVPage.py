@@ -4,7 +4,7 @@
 '''
 
 from softfab.ControlPage import plainTextErrorResponder
-from softfab.Page import FabResource, Responder
+from softfab.Page import FabResource, ProcT, Responder
 from softfab.authentication import LoginAuthPage
 from softfab.pageargs import EnumArg, PageArgs
 from softfab.webgui import pageLink
@@ -23,7 +23,7 @@ class Separator(Enum):
     SEMICOLON = ';'
     TAB = '\t'
 
-class CSVPage(FabResource, Responder):
+class CSVPage(FabResource[ProcT], Responder):
     authenticator = LoginAuthPage
 
     class Arguments(PageArgs):

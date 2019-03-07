@@ -13,7 +13,7 @@ from softfab.xmlgen import xml
 
 import logging
 
-class TaskDone_POST(ControlPage):
+class TaskDone_POST(ControlPage['TaskDone_POST.Processor']):
     authenticator = NoAuthPage
 
     class Arguments(PageArgs):

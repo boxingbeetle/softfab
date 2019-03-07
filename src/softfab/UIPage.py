@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from softfab.Page import Responder, logPageException
+from softfab.Page import ProcT, Responder, logPageException
 from softfab.StyleResources import styleRoot
 from softfab.pagelinks import createUserDetailsLink, loginURL, logoutURL
 from softfab.projectlib import project
@@ -10,6 +10,7 @@ from softfab.version import version
 from softfab.xmlgen import xhtml
 
 from traceback import TracebackException
+from typing import Generic
 
 _logoIcon = styleRoot.addIcon('SoftFabLogo')
 _shortcutIcon = styleRoot.addShortcutIcon('SoftFabIcon')
@@ -37,7 +38,7 @@ class _ErrorResponder(Responder):
         proc.processingError = self.__exception
         self.__page.respond(response, proc)
 
-class UIPage(Responder):
+class UIPage(Responder, Generic[ProcT]):
 
     def respond(self, response, proc):
         self.writeHTTPHeaders(response)

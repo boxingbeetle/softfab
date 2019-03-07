@@ -122,7 +122,7 @@ for (var i = 0; i < document.forms.length; i++) {
 }
 ''']
 
-class UserList_GET(FabPage):
+class UserList_GET(FabPage['UserList_GET.Processor']):
     icon = 'UserList1'
     description = 'Users'
     children = 'UserDetails', 'AddUser', 'ChangePassword', 'AnonGuest'
@@ -171,7 +171,7 @@ class UserList_GET(FabPage):
         else:
             yield presentAnonGuestSetting()
 
-class UserList_POST(FabPage):
+class UserList_POST(FabPage['UserList_POST.Processor']):
     icon = 'UserList1'
     description = 'Change Role'
 

@@ -11,7 +11,7 @@ from enum import Enum
 
 Actions = Enum('Actions', 'DELETE CANCEL')
 
-class DelFinishedSchedules_GET(FabPage):
+class DelFinishedSchedules_GET(FabPage[FabPage.Processor]):
     # Refuse child link from ScheduleIndex.
     linkDescription = False
     description = 'Delete Schedules'

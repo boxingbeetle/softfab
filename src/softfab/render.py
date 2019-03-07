@@ -33,7 +33,7 @@ if _timeRender:
 if _profileRender:
     from cProfile import Profile
 
-class ErrorPage(UIPage, PageProcessor):
+class ErrorPage(UIPage[PageProcessor], PageProcessor):
     """Abstract base class for error pages.
     """
     status = abstract

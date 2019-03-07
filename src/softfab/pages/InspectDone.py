@@ -9,7 +9,7 @@ from softfab.resultcode import ResultCode
 from softfab.resultlib import putData
 from softfab.xmlgen import xml
 
-class InspectDone_POST(ControlPage):
+class InspectDone_POST(ControlPage['InspectDone_POST.Processor']):
 
     class Arguments(TaskIdArgs):
         result = EnumArg(ResultCode)

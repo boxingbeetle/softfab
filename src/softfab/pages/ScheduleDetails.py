@@ -89,7 +89,7 @@ class DetailsTable(PropertiesTable):
             'Status', statusDescription(scheduled)
             ]
 
-class ScheduleDetails_GET(FabPage):
+class ScheduleDetails_GET(FabPage['ScheduleDetails_GET.Processor']):
     icon = 'IconSchedule'
     description = 'Schedule Details'
 

@@ -17,7 +17,7 @@ class PostArgs(PageArgs):
     capabilities = StrArg()
     description = StrArg()
 
-class TaskRunnerEdit_GET(FabPage):
+class TaskRunnerEdit_GET(FabPage['TaskRunnerEdit_GET.Processor']):
     icon = 'IconResources'
     description = 'Edit Task Runner'
     linkDescription = False

@@ -32,7 +32,7 @@ class PostArgs(RefererArgs):
 
 Actions = Enum('Actions', 'EXECUTE CANCEL')
 
-class FastExecute_GET(FabPage):
+class FastExecute_GET(FabPage['FastExecute_GET.Processor']):
     icon = 'IconExec'
     description = 'Execute Configurations'
     linkDescription = False
@@ -126,7 +126,7 @@ class FastExecute_GET(FabPage):
         yield message
         yield self.backToReferer(proc.req)
 
-class FastExecute_POST(FabPage):
+class FastExecute_POST(FabPage['FastExecute_POST.Processor']):
     icon = 'IconExec'
     description = 'Execute Configurations'
     linkDescription = False

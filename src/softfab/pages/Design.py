@@ -15,7 +15,7 @@ from softfab.webgui import docLink
 from softfab.utils import encodeURL
 from softfab.xmlgen import xhtml
 
-class Design_GET(GraphPageMixin, FabPage):
+class Design_GET(GraphPageMixin, FabPage['Design_GET.Processor']):
     icon = 'IconDesign'
     description = 'Design'
     children = [

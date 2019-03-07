@@ -16,7 +16,7 @@ class WaitingShadowRuns(SortedQueue):
     def _filter(self, record):
         return record.isWaiting()
 
-class Synchronize_POST(ControlPage):
+class Synchronize_POST(ControlPage['Synchronize_POST.Processor']):
     authenticator = NoAuthPage
 
     waitingShadowRuns = WaitingShadowRuns(shadowDB)

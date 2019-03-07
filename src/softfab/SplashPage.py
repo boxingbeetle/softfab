@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from softfab.Page import FabResource
+from softfab.Page import FabResource, PageProcessor
 from softfab.UIPage import UIPage
 from softfab.authentication import NoAuthPage
 from softfab.webgui import unorderedList
@@ -26,7 +26,7 @@ startupMessages = _StartupMessages()
 #       and only to authenticated users. However, currently page registration
 #       is done after loading databases, because module-level objects will
 #       be making database requests.
-class SplashPage(UIPage, FabResource):
+class SplashPage(UIPage[PageProcessor], FabResource[PageProcessor]):
     authenticator = NoAuthPage
 
     def checkAccess(self, req):

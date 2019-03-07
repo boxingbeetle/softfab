@@ -76,37 +76,6 @@ class DialogStep(ABC):
         '''
         raise NotImplementedError
 
-class DialogPage(FabPage, ABC):
-    description = abstract # type: ClassVar[str]
-    icon = abstract # type: ClassVar[str]
-
-    steps = abstract # type: ClassVar[Sequence[Type[DialogStep]]]
-
-    class Arguments(PageArgs):
-        path = StrArg('')
-        back = StrArg(None) # back button on normal page
-        error = StrArg(None) # back button on error page
-
-    def __init__(self):
-        FabPage.__init__(self)
-        self.stepObjects = {
-            stepClass.name: stepClass(self)
-            for stepClass in self.steps
-            }
-
-    def checkAccess(self, req):
-        # This method is already declared abstract in FabPage, we re-assert
-        # that here to please PyLint.
-        raise NotImplementedError
-
-    def pageTitle(self, proc):
-        return self.description + ' - ' + proc.step.title
-
-    def presentContent(self, proc):
-        if proc.errorMessage is not None:
-            yield xhtml.p(class_ = 'notice')[ proc.errorMessage ]
-        yield proc.step.presentContent(proc)
-
 class DialogProcessorBase(PageProcessor):
     """Abstract base class for Processors designed to be used with
     `DialogPage`.
@@ -254,3 +223,34 @@ class ContinuedDialogProcessor(DialogProcessorBase):
             self.walkSteps(requestedPath, requestedPath[-1])
         else:
             self.walkSteps(requestedPath)
+
+class DialogPage(FabPage[DialogProcessorBase], ABC):
+    description = abstract # type: ClassVar[str]
+    icon = abstract # type: ClassVar[str]
+
+    steps = abstract # type: ClassVar[Sequence[Type[DialogStep]]]
+
+    class Arguments(PageArgs):
+        path = StrArg('')
+        back = StrArg(None) # back button on normal page
+        error = StrArg(None) # back button on error page
+
+    def __init__(self):
+        FabPage.__init__(self)
+        self.stepObjects = {
+            stepClass.name: stepClass(self)
+            for stepClass in self.steps
+            }
+
+    def checkAccess(self, req):
+        # This method is already declared abstract in FabPage, we re-assert
+        # that here to please PyLint.
+        raise NotImplementedError
+
+    def pageTitle(self, proc):
+        return self.description + ' - ' + proc.step.title
+
+    def presentContent(self, proc):
+        if proc.errorMessage is not None:
+            yield xhtml.p(class_ = 'notice')[ proc.errorMessage ]
+        yield proc.step.presentContent(proc)

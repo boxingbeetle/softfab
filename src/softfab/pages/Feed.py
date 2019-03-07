@@ -82,7 +82,7 @@ class TasksTable(Table):
                 task.getResult()
                 ]
 
-class Feed_GET(ControlPage):
+class Feed_GET(ControlPage['Feed_GET.Processor']):
     contentType = 'application/atom+xml; charset=UTF-8'
 
     def checkAccess(self, req):

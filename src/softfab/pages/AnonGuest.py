@@ -6,7 +6,7 @@ from softfab.pagelinks import AnonGuestArgs
 from softfab.projectlib import project
 from softfab.userview import presentAnonGuestSetting
 
-class AnonGuest_GET(FabPage):
+class AnonGuest_GET(FabPage[FabPage.Processor]):
     icon = 'UserList1'
     description = 'Anonymous Guests'
     linkDescription = False

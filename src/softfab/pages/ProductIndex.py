@@ -35,7 +35,7 @@ class ProductDefTable(DataTable):
         LinkColumn('Delete', 'ProductDelete'),
         )
 
-class ProductIndex_GET(FabPage):
+class ProductIndex_GET(FabPage['ProductIndex_GET.Processor']):
     icon = 'Product1'
     description = 'Products'
     children = [ 'ProductDetails', 'ProductEdit', 'ProductDelete' ]

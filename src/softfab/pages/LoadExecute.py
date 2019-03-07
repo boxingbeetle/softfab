@@ -64,7 +64,7 @@ class BasketConfigTable(BaseTagConfigTable):
     def getRecordsToQuery(self, proc):
         return proc.selectedRecords
 
-class LoadExecute_GET(FabPage):
+class LoadExecute_GET(FabPage['LoadExecute_GET.Processor']):
     icon = 'IconExec'
     description = 'Execute'
     children = [

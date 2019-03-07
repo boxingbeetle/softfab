@@ -38,7 +38,11 @@ class CombinedProductGraphBuilder(ExecutionGraphBuilder):
     def populate(self): # pylint: disable=arguments-differ
         self.addProduct(ProductDef.create('coverage_data', combined = True))
 
-class ExecutionGraphExamples_GET(GraphPageMixin, UIPage, FabResource):
+class ExecutionGraphExamples_GET(
+        GraphPageMixin,
+        UIPage['ExecutionGraphExamples_GET.Processor'],
+        FabResource['ExecutionGraphExamples_GET.Processor']
+        ):
     authenticator = NoAuthPage
 
     class Processor(PageProcessor):

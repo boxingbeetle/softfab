@@ -25,7 +25,8 @@ class LoginTable(FormTable):
         yield 'User name', textInput(name = 'loginname')
         yield 'Password', passwordInput(name = 'loginpass')
 
-class Login_GET(UIPage, FabResource):
+class Login_GET(UIPage['Login_GET.Processor'],
+                FabResource['Login_GET.Processor']):
     '''Page that presents login form.
     '''
     authenticator = NoAuthPage

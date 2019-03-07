@@ -61,7 +61,7 @@ class ReqPasswordTable(FormTable):
 
 Actions = Enum('Actions', 'CHANGE CANCEL')
 
-class ChangePassword_GET(FabPage):
+class ChangePassword_GET(FabPage['ChangePassword_GET.Processor']):
     icon = 'UserList1'
     description = 'Change Password'
 
@@ -115,7 +115,7 @@ class ChangePassword_GET(FabPage):
             yield self.backToReferer(proc.req)
 
 
-class ChangePassword_POST(FabPage):
+class ChangePassword_POST(FabPage['ChangePassword_POST.Processor']):
     # Icon is determined by the GET variant of the page.
     # TODO: This asymmetry isn't good.
     #       Either give treat both the GET and POST handlers as full pages

@@ -41,7 +41,7 @@ class FrameworksTable(DataTable):
         yield self.editColumn
         yield self.deleteColumn
 
-class FrameworkIndex_GET(FabPage):
+class FrameworkIndex_GET(FabPage['FrameworkIndex_GET.Processor']):
     icon = 'Framework1'
     description = 'Frameworks'
     children = [ 'FrameworkDetails', 'FrameworkEdit', 'FrameworkDelete' ]

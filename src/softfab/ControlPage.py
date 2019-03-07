@@ -2,7 +2,7 @@
 
 from typing import ClassVar, Type
 
-from softfab.Page import Authenticator, FabResource, Responder
+from softfab.Page import Authenticator, FabResource, ProcT, Responder
 from softfab.authentication import HTTPAuthPage
 
 class _ErrorResponder(Responder):
@@ -17,7 +17,7 @@ class _ErrorResponder(Responder):
 
 plainTextErrorResponder = _ErrorResponder()
 
-class ControlPage(FabResource, Responder):
+class ControlPage(FabResource[ProcT], Responder):
     '''Base class for resources that allow processes to talk to the Control
     Center. Such processes include our clients (Task Runner, Notifier) and
     third party processes (through API calls).

@@ -24,7 +24,7 @@ try:
 except ImportError:
     pyGraphvizVersion = 'not installed'
 
-class About_GET(FabPage):
+class About_GET(FabPage[FabPage.Processor]):
     icon = 'IconHome'
     description = 'About'
 

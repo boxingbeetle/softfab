@@ -130,7 +130,7 @@ class ResourcesTable(DataTable):
                         for column in columns
                         )]
 
-class ResourceIndex_GET(FabPage):
+class ResourceIndex_GET(FabPage['ResourceIndex_GET.Processor']):
     icon = 'IconResources'
     description = 'Resources'
     children = [
@@ -171,7 +171,7 @@ class PostArgs(ResourceIndex_GET.Arguments):
 
 Actions = Enum('Actions', 'SUSPEND RESUME')
 
-class ResourceIndex_POST(FabPage):
+class ResourceIndex_POST(FabPage['ResourceIndex_POST.Processor']):
     icon = 'IconResources'
     description = 'Resources'
 

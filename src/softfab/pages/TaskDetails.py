@@ -47,7 +47,7 @@ class DetailsTable(PropertiesTable):
             )
         yield 'Configurations', formatConfigs(configs)
 
-class TaskDetails_GET(FabPage):
+class TaskDetails_GET(FabPage['TaskDetails_GET.Processor']):
     icon = 'TaskDef2'
     description = 'Task Definition Details'
 
