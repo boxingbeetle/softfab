@@ -77,7 +77,7 @@ class RecordDelete_GET(FabPage, ABC):
         def process(self, req):
             fetchRecordForDeletion(req.args.id, self.page)
 
-    def fabTitle(self, proc):
+    def pageTitle(self, proc):
         return 'Delete ' + ' '.join(
             word.capitalize() for word in self.recordName.split()
             )

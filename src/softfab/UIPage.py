@@ -72,7 +72,7 @@ class UIPage(Responder):
             name='viewport',
             content='width=device-width, initial-scale=1, minimum-scale=1'
             )
-        yield xhtml.title[ '%s - %s' % (project['name'], self.fabTitle(proc)) ]
+        yield xhtml.title[ '%s - %s' % (project['name'], self.pageTitle(proc)) ]
         for sheet in iterStyleSheets(proc):
             yield sheet.present(proc=proc)
         customStyleDefs = '\n'.join(self.iterStyleDefs())
@@ -85,10 +85,10 @@ class UIPage(Responder):
             xhtml.span(class_ = 'project')[ project['name'] ],
             xhtml.span(class_ = 'softfab')[ ' SoftFab' ],
             xhtml.span(class_ = 'project')[ ' \u2013 ' ],
-            self.fabTitle(proc)
+            self.pageTitle(proc)
             )
 
-    def fabTitle(self, proc):
+    def pageTitle(self, proc):
         raise NotImplementedError
 
     def iterStyleDefs(self):

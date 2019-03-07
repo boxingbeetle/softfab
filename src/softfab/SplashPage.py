@@ -32,7 +32,7 @@ class SplashPage(UIPage, FabResource):
     def checkAccess(self, req):
         pass
 
-    def fabTitle(self, proc):
+    def pageTitle(self, proc):
         return 'Startup in Progress'
 
     def writeHTTPHeaders(self, response):

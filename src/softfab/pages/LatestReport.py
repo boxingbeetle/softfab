@@ -33,7 +33,7 @@ class LatestReport_GET(UIPage, FabResource):
     def checkAccess(self, req):
         req.checkPrivilege('t/a', 'view task reports')
 
-    def fabTitle(self, proc):
+    def pageTitle(self, proc):
         return 'Latest Report'
 
     def presentContent(self, proc):

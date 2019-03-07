@@ -45,7 +45,7 @@ class Login_GET(UIPage, FabResource):
     def checkAccess(self, req):
         pass
 
-    def fabTitle(self, proc):
+    def pageTitle(self, proc):
         return 'Log In'
 
     def presentContent(self, proc):

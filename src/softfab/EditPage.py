@@ -177,7 +177,7 @@ class EditPage(FabPage, ABC):
         action = StrArg(None)
         back = StrArg(None)
 
-    def fabTitle(self, proc):
+    def pageTitle(self, proc):
         return 'Edit ' + self.elemTitle
 
     def checkAccess(self, req):

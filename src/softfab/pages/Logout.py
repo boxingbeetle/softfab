@@ -38,7 +38,7 @@ class Logout_GET(UIPage, FabResource):
     def checkAccess(self, req):
         pass
 
-    def fabTitle(self, proc):
+    def pageTitle(self, proc):
         return 'Log Out'
 
     def presentContent(self, proc):

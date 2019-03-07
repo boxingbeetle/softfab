@@ -59,7 +59,7 @@ class ExecutionGraphExamples_GET(GraphPageMixin, UIPage, FabResource):
             # pylint: disable=attribute-defined-outside-init
             self.graphs = graphs
 
-    def fabTitle(self, proc):
+    def pageTitle(self, proc):
         return 'Execution Graphs'
 
     def checkAccess(self, req):

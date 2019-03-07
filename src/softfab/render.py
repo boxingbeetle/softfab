@@ -47,7 +47,7 @@ class ErrorPage(UIPage, PageProcessor):
             messageText = self.title
         self.messageText = messageText
 
-    def fabTitle(self, proc):
+    def pageTitle(self, proc):
         return self.title
 
     def writeHTTPHeaders(self, response):

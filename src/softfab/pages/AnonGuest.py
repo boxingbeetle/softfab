@@ -11,7 +11,7 @@ class AnonGuest_GET(FabPage):
     description = 'Anonymous Guests'
     linkDescription = False
 
-    def fabTitle(self, proc):
+    def pageTitle(self, proc):
         return 'Anonymous Guest Access'
 
     def checkAccess(self, req):

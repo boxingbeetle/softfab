@@ -127,7 +127,7 @@ class UserList_GET(FabPage):
     description = 'Users'
     children = 'UserDetails', 'AddUser', 'ChangePassword', 'AnonGuest'
 
-    def fabTitle(self, proc):
+    def pageTitle(self, proc):
         return 'Configure Users'
 
     def checkAccess(self, req):
@@ -175,7 +175,7 @@ class UserList_POST(FabPage):
     icon = 'UserList1'
     description = 'Change Role'
 
-    def fabTitle(self, proc):
+    def pageTitle(self, proc):
         return 'Change User Role'
 
     def checkAccess(self, req):

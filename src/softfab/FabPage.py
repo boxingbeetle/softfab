@@ -163,7 +163,7 @@ class FabPage(UIPage, FabResource, ABC):
                 return _WidgetResponder(self, widget)
         raise KeyError('Page does not contain a widget named "%s"' % path)
 
-    def fabTitle(self, proc):
+    def pageTitle(self, proc):
         return self.description
 
     def presentHeader(self, proc):
