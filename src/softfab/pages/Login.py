@@ -46,7 +46,7 @@ class Login_GET(UIPage['Login_GET.Processor'],
     def checkAccess(self, req):
         pass
 
-    def pageTitle(self, proc):
+    def pageTitle(self, proc: Processor) -> str:
         return 'Log In'
 
     def presentContent(self, proc):

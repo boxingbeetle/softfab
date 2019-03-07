@@ -89,7 +89,7 @@ class UIPage(Responder, Generic[ProcT]):
             self.pageTitle(proc)
             )
 
-    def pageTitle(self, proc):
+    def pageTitle(self, proc: ProcT) -> str:
         raise NotImplementedError
 
     def iterStyleDefs(self):

@@ -39,7 +39,7 @@ class Logout_GET(UIPage['Logout_GET.Processor'],
     def checkAccess(self, req):
         pass
 
-    def pageTitle(self, proc):
+    def pageTitle(self, proc: Processor) -> str:
         return 'Log Out'
 
     def presentContent(self, proc):

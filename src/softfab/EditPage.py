@@ -177,9 +177,6 @@ class EditPage(FabPage['EditPage.Processor'], ABC):
         action = StrArg(None)
         back = StrArg(None)
 
-    def pageTitle(self, proc):
-        return 'Edit ' + self.elemTitle
-
     def checkAccess(self, req):
         # Access will be checked later by Processor.
         pass
@@ -374,6 +371,9 @@ class EditPage(FabPage['EditPage.Processor'], ABC):
         self.savePhase = SavePhase(self)
         self.saveAsPhase = SaveAsPhase(self)
         self.confirmOverwritePhase = ConfirmOverwritePhase(self)
+
+    def pageTitle(self, proc: Processor) -> str:
+        return 'Edit ' + self.elemTitle
 
     def presentHeadParts(self, proc):
         yield super().presentHeadParts(proc)

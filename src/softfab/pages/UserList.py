@@ -127,9 +127,6 @@ class UserList_GET(FabPage['UserList_GET.Processor']):
     description = 'Users'
     children = 'UserDetails', 'AddUser', 'ChangePassword', 'AnonGuest'
 
-    def pageTitle(self, proc):
-        return 'Configure Users'
-
     def checkAccess(self, req):
         req.checkPrivilege('u/l')
 
@@ -147,6 +144,9 @@ class UserList_GET(FabPage['UserList_GET.Processor']):
 
     def iterDataTables(self, proc):
         yield UserTable.instance
+
+    def pageTitle(self, proc: Processor) -> str:
+        return 'Configure Users'
 
     def presentContent(self, proc):
         yield makeForm(method = 'get', formId = 'inactive')[
@@ -174,9 +174,6 @@ class UserList_GET(FabPage['UserList_GET.Processor']):
 class UserList_POST(FabPage['UserList_POST.Processor']):
     icon = 'UserList1'
     description = 'Change Role'
-
-    def pageTitle(self, proc):
-        return 'Change User Role'
 
     def checkAccess(self, req):
         req.checkPrivilege('u/m', 'control user accounts')
@@ -224,6 +221,9 @@ class UserList_POST(FabPage['UserList_POST.Processor']):
                 'UserList',
                 UserList_GET.Arguments.subset(req.args)
                 ))
+
+    def pageTitle(self, proc: Processor) -> str:
+        return 'Change User Role'
 
     def presentContent(self, proc):
         assert False

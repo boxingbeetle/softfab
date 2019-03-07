@@ -34,7 +34,7 @@ class LatestReport_GET(UIPage['LatestReport_GET.Processor'],
     def checkAccess(self, req):
         req.checkPrivilege('t/a', 'view task reports')
 
-    def pageTitle(self, proc):
+    def pageTitle(self, proc: Processor) -> str:
         return 'Latest Report'
 
     def presentContent(self, proc):

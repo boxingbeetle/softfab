@@ -63,7 +63,7 @@ class ExecutionGraphExamples_GET(
             # pylint: disable=attribute-defined-outside-init
             self.graphs = graphs
 
-    def pageTitle(self, proc):
+    def pageTitle(self, proc: Processor) -> str:
         return 'Execution Graphs'
 
     def checkAccess(self, req):

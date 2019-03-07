@@ -247,7 +247,7 @@ class DialogPage(FabPage[DialogProcessorBase], ABC):
         # that here to please PyLint.
         raise NotImplementedError
 
-    def pageTitle(self, proc):
+    def pageTitle(self, proc: DialogProcessorBase) -> str:
         return self.description + ' - ' + proc.step.title
 
     def presentContent(self, proc):
