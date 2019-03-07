@@ -1,4 +1,4 @@
-from os import getcwd, makedirs
+from os import getcwd, makedirs, remove
 from os.path import exists
 from shutil import rmtree
 
@@ -9,6 +9,7 @@ SRC_ENV = {'PYTHONPATH': '{}/src'.format(CWD)}
 PYLINT_ENV = {'PYTHONPATH': '{0}/src:{0}/tests/pylint'.format(CWD)}
 
 all_sources = 'src/softfab/*.py src/softfab/pages/*.py'
+mypy_report = 'mypy-report'
 
 def remove_dir(path):
     """Recursively removes a directory."""
@@ -19,6 +20,7 @@ def remove_dir(path):
 def clean(c):
     """Clean up our output."""
     print('Cleaning up...')
+    remove_dir(mypy_report)
     remove_dir('docs/output')
 
 @task
@@ -32,13 +34,18 @@ def lint(c, src=all_sources, rule=None):
     c.run('pylint %s' % ' '.join(args), env=PYLINT_ENV, pty=True)
 
 @task
-def types(c, src=all_sources, clean=False):
+def types(c, src=all_sources, clean=False, report=False):
     """Check sources with mypy."""
     if clean:
         print('Clearing mypy cache...')
         remove_dir('.mypy_cache')
     print('Checking sources with mypy...')
-    c.run('mypy --ignore-missing-imports %s' % src, env=SRC_ENV, pty=True)
+    args = ['--ignore-missing-imports']
+    if report:
+        remove_dir(mypy_report)
+        args.append('--html-report ' + mypy_report)
+    args.append(src)
+    c.run('mypy %s' % ' '.join(args), env=SRC_ENV, pty=True)
 
 @task
 def run(c, host='localhost', port=8180, auth=False):
