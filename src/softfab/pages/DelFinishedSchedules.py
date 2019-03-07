@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from softfab.FabPage import FabPage
+from softfab.FabPage import FabPage, IconModifier
 from softfab.Page import PageProcessor, Redirect
 from softfab.formlib import actionButtons, makeForm
 from softfab.pageargs import EnumArg, PageArgs
@@ -14,12 +14,9 @@ Actions = Enum('Actions', 'DELETE CANCEL')
 class DelFinishedSchedules_GET(FabPage):
     # Refuse child link from ScheduleIndex.
     linkDescription = False
-    # Do not display navigation bar for this page.
-    description = None
-    icon = None
-
-    def fabTitle(self, proc):
-        return 'Delete Schedules'
+    description = 'Delete Schedules'
+    icon = 'IconSchedule'
+    iconModifier = IconModifier.DELETE
 
     class Arguments(PageArgs):
         pass
@@ -33,15 +30,7 @@ class DelFinishedSchedules_GET(FabPage):
             xhtml.p[ actionButtons(Actions) ]
             ].present(proc=proc)
 
-class DelFinishedSchedules_POST(FabPage):
-    # Refuse child link from ScheduleIndex.
-    linkDescription = False
-    # Do not display navigation bar for this page.
-    description = None
-    icon = None
-
-    def fabTitle(self, proc):
-        return 'Delete Schedules'
+class DelFinishedSchedules_POST(DelFinishedSchedules_GET):
 
     class Arguments(PageArgs):
         action = EnumArg(Actions)
@@ -61,9 +50,6 @@ class DelFinishedSchedules_POST(FabPage):
                     scheduleDB.remove(schedule)
             else:
                 assert False, action
-
-    def checkAccess(self, req):
-        pass
 
     def presentContent(self, proc):
         yield (
