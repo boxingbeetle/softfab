@@ -4,6 +4,7 @@ from typing import Iterator
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
+from softfab.datawidgets import DataTable
 from softfab.joblib import jobDB
 from softfab.jobview import JobsSubTable
 from softfab.pagelinks import JobIdSetArgs
@@ -47,7 +48,7 @@ class ShowJobs_GET(FabPage['ShowJobs_GET.Processor']):
     def iterWidgets(self, proc: Processor) -> Iterator[WidgetT]:
         yield ShowJobsTable
 
-    def iterDataTables(self, proc):
+    def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield ShowJobsTable.instance
 
     def presentContent(self, proc):

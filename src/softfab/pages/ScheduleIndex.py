@@ -101,7 +101,7 @@ class ScheduleIndex_GET(FabPage['ScheduleIndex_GET.Processor']):
     def checkAccess(self, req):
         req.checkPrivilege('s/l')
 
-    def iterDataTables(self, proc):
+    def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield ScheduleTable.instance
 
     def iterWidgets(self, proc: Processor) -> Iterator[WidgetT]:

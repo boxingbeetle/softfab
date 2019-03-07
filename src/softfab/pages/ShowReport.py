@@ -4,6 +4,7 @@ from typing import Iterator
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
+from softfab.datawidgets import DataTable
 from softfab.joblib import jobDB
 from softfab.jobview import CommentPanel, JobsSubTable
 from softfab.pagelinks import (
@@ -61,7 +62,7 @@ class ShowReport_GET(FabPage['ShowReport_GET.Processor']):
     def checkAccess(self, req):
         req.checkPrivilege('j/a')
 
-    def iterDataTables(self, proc):
+    def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield SelfJobsTable.instance
         yield TaskRunsTable.instance
 

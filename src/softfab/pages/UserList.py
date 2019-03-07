@@ -1,5 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from typing import Iterator
+
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor, PresentableError, Redirect
 from softfab.datawidgets import DataColumn, DataTable
@@ -142,7 +144,7 @@ class UserList_GET(FabPage['UserList_GET.Processor']):
             self.canChangeRoles = req.getUser().hasPrivilege('u/m')
             self.canChangeAnonGuest = req.getUser().hasPrivilege('p/m')
 
-    def iterDataTables(self, proc):
+    def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield UserTable.instance
 
     def pageTitle(self, proc: Processor) -> str:

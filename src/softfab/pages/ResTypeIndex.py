@@ -1,5 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from typing import Iterator
+
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
 from softfab.datawidgets import (
@@ -41,7 +43,7 @@ class ResTypeIndex_GET(FabPage['ResTypeIndex_GET.Processor']):
     def checkAccess(self, req):
         req.checkPrivilege('rt/l')
 
-    def iterDataTables(self, proc):
+    def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield ResTypeTable.instance
 
     def presentContent(self, proc):

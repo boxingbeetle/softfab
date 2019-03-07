@@ -10,7 +10,7 @@ from softfab.Page import PageProcessor
 from softfab.UIPage import iterStyleSheets
 from softfab.config import dbDir, homePage, rootURL
 from softfab.databaselib import RecordObserver
-from softfab.datawidgets import DataColumn
+from softfab.datawidgets import DataColumn, DataTable
 from softfab.joblib import jobDB
 from softfab.jobview import CommentPanel, JobsSubTable
 from softfab.pagelinks import createJobURL, createUserDetailsURL
@@ -25,6 +25,7 @@ from softfab.xmlgen import atom, xhtml
 
 from os.path import basename
 from time import gmtime, strftime
+from typing import Iterator
 
 # TODO: Give each factory a truly unique ID.
 factoryId = basename(dbDir)
@@ -100,7 +101,7 @@ class Feed_GET(ControlPage['Feed_GET.Processor']):
             self.jobs = jobs
             self.tables = [ SingleJobTable(job) for job in jobs ]
 
-    def iterDataTables(self, proc):
+    def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield from proc.tables
 
     def writeReply(self, response, proc):

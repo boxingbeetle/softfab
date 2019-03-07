@@ -1,7 +1,10 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from typing import Iterator
+
 from softfab.FabPage import FabPage
 from softfab.ReportMixin import JobReportProcessor, ReportArgs, ReportFilterForm
+from softfab.datawidgets import DataTable
 from softfab.formlib import textInput
 from softfab.joblib import jobDB
 from softfab.jobview import JobsTable
@@ -53,7 +56,7 @@ class ReportIndex_GET(FabPage['ReportIndex_GET.Processor']):
     def checkAccess(self, req):
         req.checkPrivilege('j/l', 'view the report list')
 
-    def iterDataTables(self, proc):
+    def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield FilteredJobsTable.instance
 
     def presentContent(self, proc):

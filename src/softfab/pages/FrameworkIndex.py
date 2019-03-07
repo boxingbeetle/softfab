@@ -1,5 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from typing import Iterator
+
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
 from softfab.datawidgets import (
@@ -56,7 +58,7 @@ class FrameworkIndex_GET(FabPage['FrameworkIndex_GET.Processor']):
     def checkAccess(self, req):
         req.checkPrivilege('fd/l')
 
-    def iterDataTables(self, proc):
+    def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield FrameworksTable.instance
 
     def presentContent(self, proc):

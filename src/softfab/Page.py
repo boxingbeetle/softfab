@@ -5,6 +5,7 @@ from collections import defaultdict
 from typing import ClassVar, Generic, Iterator, Type, TypeVar
 import logging
 
+from softfab.datawidgets import DataTable
 from softfab.pageargs import PageArgs
 from softfab.webgui import WidgetT, pageURL
 from softfab.utils import SharedInstance, abstract
@@ -236,8 +237,10 @@ class FabResource(ABC, Generic[ProcT]):
         '''
         return iter(())
 
-    def iterDataTables(self, proc): # pylint: disable=unused-argument
+    def iterDataTables(self,
+                       proc: ProcT # pylint: disable=unused-argument
+                       ) -> Iterator[DataTable]:
         '''Yields all DataTables on this resource.
         The default implementation yields no tables.
         '''
-        yield from ()
+        return iter(())

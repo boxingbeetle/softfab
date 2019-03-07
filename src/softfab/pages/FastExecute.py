@@ -4,6 +4,7 @@ from softfab.FabPage import FabPage
 from softfab.Page import AccessDenied, PageProcessor, PresentableError, Redirect
 from softfab.configlib import configDB, iterConfigsByTag
 from softfab.configview import SimpleConfigTable
+from softfab.datawidgets import DataTable
 from softfab.formlib import actionButtons, makeForm
 from softfab.joblib import jobDB
 from softfab.pageargs import EnumArg, PageArgs, RefererArg, SetArg, StrArg
@@ -13,6 +14,7 @@ from softfab.utils import pluralize
 from softfab.xmlgen import xhtml
 
 from enum import Enum
+from typing import Iterator
 
 class FastConfigTable(SimpleConfigTable):
     # Disable tabs and sorting because links would drop the stored referers.
@@ -81,7 +83,7 @@ class FastExecute_GET(FabPage['FastExecute_GET.Processor']):
     def checkAccess(self, req):
         req.checkPrivilege('c/l')
 
-    def iterDataTables(self, proc):
+    def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield FastConfigTable.instance
 
     def presentContent(self, proc):

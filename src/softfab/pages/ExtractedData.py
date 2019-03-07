@@ -2,7 +2,7 @@
 
 from softfab.FabPage import FabPage
 from softfab.ReportMixin import ReportProcessor, ReportTaskArgs
-from softfab.datawidgets import DataColumn
+from softfab.datawidgets import DataColumn, DataTable
 from softfab.formlib import CheckBoxesTable, RadioTable, makeForm, submitButton
 from softfab.joblib import iterDoneTasks
 from softfab.jobview import createTimeColumn
@@ -19,6 +19,7 @@ from softfab.xmlgen import xhtml
 
 from collections import defaultdict
 from enum import Enum
+from typing import Iterator
 
 def gatherData(taskFilter, tasks, activeKeys):
     taskRunIdsByName = dict( ( taskName, [] ) for taskName in taskFilter )
@@ -227,7 +228,7 @@ class ExtractedData_GET(FabPage['ExtractedData_GET.Processor']):
     def checkAccess(self, req):
         req.checkPrivilege('t/a')
 
-    def iterDataTables(self, proc):
+    def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield ExtractedDataTable.instance
 
     def presentContent(self, proc):

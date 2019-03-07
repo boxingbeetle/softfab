@@ -1,5 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from typing import Iterator
+
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
 from softfab.datawidgets import DataColumn, DataTable
@@ -169,7 +171,7 @@ class Capabilities_GET(FabPage['Capabilities_GET.Processor']):
             # pylint: disable=attribute-defined-outside-init
             self.capMap = capMap.values()
 
-    def iterDataTables(self, proc):
+    def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield ResourcesTable.instance
         yield CapabilitiesTable.instance
 

@@ -1,7 +1,10 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from typing import Iterator
+
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
+from softfab.datawidgets import DataTable
 from softfab.joblib import jobDB
 from softfab.pageargs import IntArg, SortArg
 from softfab.pagelinks import TaskRunnerIdArgs
@@ -66,7 +69,7 @@ class TaskRunnerHistory_GET(FabPage['TaskRunnerHistory_GET.Processor']):
         req.checkPrivilege('tr/a')
         req.checkPrivilege('t/l')
 
-    def iterDataTables(self, proc):
+    def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield HistoryTable.instance
 
     def presentContent(self, proc):

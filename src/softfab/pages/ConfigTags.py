@@ -4,6 +4,7 @@ from softfab.FabPage import FabPage, IconModifier
 from softfab.Page import PageProcessor, Redirect
 from softfab.configlib import Config, configDB
 from softfab.configview import SelectConfigsMixin, SimpleConfigTable
+from softfab.datawidgets import DataTable
 from softfab.formlib import actionButtons, hiddenInput, makeForm
 from softfab.pageargs import DictArg, EnumArg, RefererArg, SetArg, StrArg
 from softfab.projectlib import project
@@ -15,6 +16,7 @@ from softfab.utils import encodeURL
 from softfab.xmlgen import xhtml
 
 from enum import Enum
+from typing import Iterator
 
 class TagConfigTable(SimpleConfigTable):
     # Disable tabs and sorting because it would clear the forms.
@@ -58,7 +60,7 @@ class ConfigTags_GET(FabPage['ConfigTags_GET.Processor']):
     def checkAccess(self, req):
         req.checkPrivilege('c/a')
 
-    def iterDataTables(self, proc):
+    def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield TagConfigTable.instance
 
     def presentContent(self, proc):

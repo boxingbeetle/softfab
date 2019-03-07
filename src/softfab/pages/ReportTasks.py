@@ -1,11 +1,14 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from typing import Iterator
+
 from softfab.CSVPage import presentCSVLink
 from softfab.FabPage import FabPage
 from softfab.ReportMixin import (
     ExecutionState, ReportFilterForm, ReportProcessor, ReportTaskArgs,
     ReportTaskCSVArgs
     )
+from softfab.datawidgets import DataTable
 from softfab.formlib import selectionList
 from softfab.joblib import (
     iterAllTasks, iterDoneTasks, iterFinishedTasks, iterUnfinishedTasks,
@@ -63,7 +66,7 @@ class ReportTasks_GET(FabPage['ReportTasks_GET.Processor']):
     def checkAccess(self, req):
         req.checkPrivilege('j/a', 'view the task list')
 
-    def iterDataTables(self, proc):
+    def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield FilteredTaskRunsTable.instance
 
     def presentContent(self, proc):

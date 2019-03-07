@@ -1,10 +1,12 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from typing import Iterator
+
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
 from softfab.configlib import Config, configDB
 from softfab.configview import ConfigTable, SimpleConfigTable
-from softfab.datawidgets import DataColumn
+from softfab.datawidgets import DataColumn, DataTable
 from softfab.formlib import checkBox
 from softfab.pageargs import IntArg, SortArg
 from softfab.projectlib import project
@@ -89,7 +91,7 @@ class LoadExecute_GET(FabPage['LoadExecute_GET.Processor']):
         def process(self, req):
             self.processSelection()
 
-    def iterDataTables(self, proc):
+    def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield TagConfigTable.instance
         yield BasketConfigTable.instance
 

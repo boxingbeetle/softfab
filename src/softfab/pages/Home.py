@@ -6,6 +6,7 @@ from softfab.FabPage import FabPage
 from softfab.StyleResources import styleRoot
 from softfab.Page import PageProcessor
 from softfab.databaselib import RecordObserver
+from softfab.datawidgets import DataTable
 from softfab.joblib import jobDB
 from softfab.jobview import JobsSubTable
 from softfab.querylib import KeySorter, runQuery
@@ -60,7 +61,7 @@ class Home_GET(FabPage['Home_GET.Processor']):
     def iterWidgets(self, proc: Processor) -> Iterator[WidgetT]:
         yield RecentJobsTable
 
-    def iterDataTables(self, proc):
+    def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield RecentJobsTable.instance
 
     def presentHeadParts(self, proc):

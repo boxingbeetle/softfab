@@ -4,6 +4,7 @@ from typing import Iterator
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
+from softfab.datawidgets import DataTable
 from softfab.frameworklib import frameworkDB
 from softfab.joblib import jobDB
 from softfab.pagelinks import (
@@ -187,7 +188,7 @@ class ShowTaskInfo_GET(FabPage['ShowTaskInfo_GET.Processor']):
         yield InputTable
         yield OutputTable
 
-    def iterDataTables(self, proc):
+    def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield SelfTaskRunsTable.instance
 
     def presentContent(self, proc):

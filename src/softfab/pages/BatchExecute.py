@@ -1,11 +1,14 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from typing import Iterator
+
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor, Redirect
 from softfab.configlib import TaskSetWithInputs, configDB
 from softfab.configview import (
     InputTable, SelectConfigsMixin, SimpleConfigTable, presentMissingConfigs
     )
+from softfab.datawidgets import DataTable
 from softfab.formlib import actionButtons, hiddenInput, makeForm, textInput
 from softfab.joblib import jobDB
 from softfab.paramview import ParamOverrideTable
@@ -152,7 +155,7 @@ class BatchExecute_GET(FabPage['BatchExecute_GET.Processor']):
     def checkAccess(self, req):
         req.checkPrivilege('j/c')
 
-    def iterDataTables(self, proc):
+    def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield BatchConfigTable.instance
 
     def presentContent(self, proc):

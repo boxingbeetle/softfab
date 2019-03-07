@@ -149,7 +149,7 @@ class ResourceIndex_GET(FabPage['ResourceIndex_GET.Processor']):
     def checkAccess(self, req):
         req.checkPrivilege('r/l')
 
-    def iterDataTables(self, proc):
+    def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield ResourcesTable.instance
 
     def iterWidgets(self, proc: Processor) -> Iterator[WidgetT]:

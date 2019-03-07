@@ -5,6 +5,7 @@ from typing import Iterator
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
 from softfab.ReportMixin import ReportArgs
+from softfab.datawidgets import DataTable
 from softfab.joblib import jobDB
 from softfab.jobview import JobsSubTable
 from softfab.pageargs import PageArgs, StrArg
@@ -58,7 +59,7 @@ class UserDetails_GET(FabPage['UserDetails_GET.Processor']):
     def iterWidgets(self, proc: Processor) -> Iterator[WidgetT]:
         yield OwnedJobsTable
 
-    def iterDataTables(self, proc):
+    def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield OwnedJobsTable.instance
 
     def presentContent(self, proc):
