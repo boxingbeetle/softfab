@@ -50,7 +50,7 @@ class ErrorPage(UIPage[PageProcessor], PageProcessor):
     def pageTitle(self, proc: PageProcessor) -> str:
         return self.title
 
-    def writeHTTPHeaders(self, response):
+    def writeHTTPHeaders(self, response: Response) -> None:
         response.setStatus(self.status, self.messageText)
         super().writeHTTPHeaders(response)
 

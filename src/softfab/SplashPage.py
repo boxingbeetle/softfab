@@ -3,6 +3,7 @@
 from softfab.Page import FabResource, PageProcessor
 from softfab.UIPage import UIPage
 from softfab.authentication import NoAuthPage
+from softfab.response import Response
 from softfab.webgui import unorderedList
 from softfab.xmlgen import xhtml
 
@@ -35,7 +36,7 @@ class SplashPage(UIPage[PageProcessor], FabResource[PageProcessor]):
     def pageTitle(self, proc: PageProcessor) -> str:
         return 'Startup in Progress'
 
-    def writeHTTPHeaders(self, response):
+    def writeHTTPHeaders(self, response: Response) -> None:
         # Service unavailable.
         response.setStatus(503)
         # Retry in N seconds.

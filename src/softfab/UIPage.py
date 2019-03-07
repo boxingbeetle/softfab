@@ -45,7 +45,7 @@ class UIPage(Responder, Generic[ProcT]):
         self.writeHTTPHeaders(response)
         self.__writeHTML(response, proc)
 
-    def writeHTTPHeaders(self, response):
+    def writeHTTPHeaders(self, response: Response) -> None:
         if response.userAgent.acceptsXHTML:
             # All modern browsers accept the XHTML content type.
             contentType = 'application/xhtml+xml'
