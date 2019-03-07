@@ -11,7 +11,7 @@ from softfab.joblib import jobDB
 from softfab.jobview import JobsSubTable
 from softfab.querylib import KeySorter, runQuery
 from softfab.webgui import WidgetT, docLink, pageLink, pageURL
-from softfab.xmlgen import xhtml
+from softfab.xmlgen import XMLContent, xhtml
 
 class MostRecent(RecordObserver):
     '''Keeps a list of the N most recent jobs.
@@ -64,7 +64,7 @@ class Home_GET(FabPage['Home_GET.Processor']):
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield RecentJobsTable.instance
 
-    def presentHeadParts(self, proc):
+    def presentHeadParts(self, proc: Processor) -> XMLContent:
         yield super().presentHeadParts(proc)
         yield xhtml.link(
             rel = 'alternate',

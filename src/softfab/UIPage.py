@@ -68,7 +68,7 @@ class UIPage(Responder, Generic[ProcT]):
     def __writeDocType(self, response: Response) -> None:
         response.write('<!DOCTYPE html>\n')
 
-    def presentHeadParts(self, proc):
+    def presentHeadParts(self, proc: ProcT) -> XMLContent:
         yield xhtml.meta(charset='UTF-8')
         yield xhtml.meta(
             name='viewport',

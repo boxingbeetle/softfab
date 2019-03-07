@@ -13,7 +13,7 @@ from softfab.formlib import actionButtons, backButton, makeForm, textInput
 from softfab.pageargs import EnumArg, PageArgs, StrArg
 from softfab.utils import abstract
 from softfab.webgui import preserveSpaces, rowManagerScript
-from softfab.xmlgen import xhtml
+from softfab.xmlgen import XMLContent, xhtml
 
 class AbstractPhase:
     '''Note: This class is similar to DialogStep, but I don't know yet if/how
@@ -375,7 +375,7 @@ class EditPage(FabPage['EditPage.Processor'], ABC):
     def pageTitle(self, proc: Processor) -> str:
         return 'Edit ' + self.elemTitle
 
-    def presentHeadParts(self, proc):
+    def presentHeadParts(self, proc: Processor) -> XMLContent:
         yield super().presentHeadParts(proc)
         if self.useScript:
             yield rowManagerScript.present(proc=proc)
