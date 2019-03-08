@@ -44,6 +44,6 @@ class AnonGuest_POST(AnonGuestBase['AnonGuest_POST.Processor']):
     def presentContent(self, proc):
         assert False
 
-    def presentError(self, proc, message):
+    def presentError(self, proc: Processor, message: str) -> XMLContent:
         yield message
         yield self.backToParent(proc.req)

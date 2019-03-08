@@ -14,7 +14,7 @@ from softfab.resourceview import getResourceStatus, presentCapabilities
 from softfab.restypelib import resTypeDB, taskRunnerResourceTypeName
 from softfab.taskrunnerlib import taskRunnerDB
 from softfab.webgui import WidgetT, docLink, header, pageLink, pageURL, row
-from softfab.xmlgen import xhtml
+from softfab.xmlgen import XMLContent, xhtml
 
 from collections import defaultdict
 from enum import Enum
@@ -215,6 +215,6 @@ class ResourceIndex_POST(FabPage['ResourceIndex_POST.Processor']):
     def presentContent(self, proc):
         assert False
 
-    def presentError(self, proc, message):
+    def presentError(self, proc: Processor, message: str) -> XMLContent:
         yield message
         yield self.backToSelf()

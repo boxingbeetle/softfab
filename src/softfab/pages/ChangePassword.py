@@ -11,7 +11,7 @@ from softfab.userlib import (
     )
 from softfab.userview import LoginPassArgs, PasswordMsgArgs, passwordStr
 from softfab.webgui import pageURL
-from softfab.xmlgen import xhtml
+from softfab.xmlgen import XMLContent, xhtml
 
 from twisted.cred.error import LoginFailed
 from twisted.internet.defer import inlineCallbacks
@@ -107,7 +107,7 @@ class ChangePassword_GET(FabPage['ChangePassword_GET.Processor']):
     def presentContent(self, proc):
         return presentForm(proc)
 
-    def presentError(self, proc, message):
+    def presentError(self, proc: Processor, message: str) -> XMLContent:
         yield xhtml.p(class_ = 'notice')[ message ]
         if proc.retry:
             yield presentForm(proc)
@@ -205,7 +205,7 @@ class ChangePassword_POST(FabPage['ChangePassword_POST.Processor']):
     def getCancelURL(self, req):
         return req.args.refererURL or self.getParentURL(req)
 
-    def presentError(self, proc, message):
+    def presentError(self, proc: Processor, message: str) -> XMLContent:
         yield xhtml.p(class_ = 'notice')[ message ]
         if proc.retry:
             yield presentForm(proc)

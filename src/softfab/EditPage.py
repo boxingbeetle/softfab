@@ -383,7 +383,7 @@ class EditPage(FabPage['EditPage.Processor'], ABC):
     def presentContent(self, proc):
         return proc.phase.presentContent(proc)
 
-    def presentError(self, proc, message):
+    def presentError(self, proc: Processor, message: str) -> XMLContent:
         yield message
         if proc.showBackButton:
             yield makeForm(args = proc.args)[

@@ -141,7 +141,7 @@ class AddUser_POST(AddUserBase['AddUser_POST.Processor']):
             ]
         yield self.presentForm(proc, LoginPassArgs.subset(proc.args))
 
-    def presentError(self, proc, message):
+    def presentError(self, proc: Processor, message: str) -> XMLContent:
         yield xhtml.p(class_ = 'notice')[ message ]
         yield self.presentForm(proc, proc.args)
 

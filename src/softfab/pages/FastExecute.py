@@ -11,7 +11,7 @@ from softfab.pageargs import EnumArg, PageArgs, RefererArg, SetArg, StrArg
 from softfab.pagelinks import createJobsURL
 from softfab.selectview import TagArgs
 from softfab.utils import pluralize
-from softfab.xmlgen import xhtml
+from softfab.xmlgen import XMLContent, xhtml
 
 from enum import Enum
 from typing import Iterator
@@ -124,7 +124,7 @@ class FastExecute_GET(FabPage['FastExecute_GET.Processor']):
                 self.getBackHTML(proc.req)
                 )
 
-    def presentError(self, proc, message):
+    def presentError(self, proc: Processor, message: str) -> XMLContent:
         yield message
         yield self.backToReferer(proc.req)
 

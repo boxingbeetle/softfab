@@ -157,7 +157,10 @@ class UIPage(Responder, Generic[ProcT]):
     def presentContent(self, proc):
         raise NotImplementedError
 
-    def presentError(self, proc, message): # pylint: disable=unused-argument
+    def presentError(self,
+            proc: ProcT,
+            message: str # pylint: disable=unused-argument
+            ) -> XMLContent:
         return message
 
     def presentBackgroundScripts(self, proc): # pylint: disable=unused-argument

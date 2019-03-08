@@ -15,7 +15,7 @@ from softfab.querylib import CustomFilter
 from softfab.userlib import UIRoleNames, rolesGrantPrivilege, userDB
 from softfab.userview import activeRole, presentAnonGuestSetting, uiRoleToSet
 from softfab.webgui import pageLink, pageURL, script
-from softfab.xmlgen import xhtml
+from softfab.xmlgen import XMLContent, xhtml
 
 class NameColumn(DataColumn):
     label = 'Name'
@@ -230,7 +230,7 @@ class UserList_POST(FabPage['UserList_POST.Processor']):
     def presentContent(self, proc):
         assert False
 
-    def presentError(self, proc, message):
+    def presentError(self, proc: Processor, message: str) -> XMLContent:
         yield message
         yield xhtml.p[
             pageLink('UserList', UserList_GET.Arguments.subset(proc.args))[

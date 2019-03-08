@@ -13,7 +13,7 @@ from softfab.formlib import actionButtons, checkBox, makeForm, textInput
 from softfab.notification import sendTestMail, sendmail
 from softfab.pageargs import BoolArg, EnumArg, PageArgs, StrArg
 from softfab.projectlib import project
-from softfab.xmlgen import xhtml
+from softfab.xmlgen import XMLContent, xhtml
 
 def presentEmailForm():
     yield xhtml.p[
@@ -170,6 +170,6 @@ class Notifications_POST(FabPage['Notifications_POST.Processor']):
         else:
             assert False, action
 
-    def presentError(self, proc, message):
+    def presentError(self, proc: Processor, message: str) -> XMLContent:
         yield super().presentError(proc, message)
         yield from presentForm(proc.args)

@@ -11,7 +11,7 @@ from softfab.formlib import actionButtons, makeForm
 from softfab.pageargs import EnumArg, PageArgs, StrArg
 from softfab.utils import abstract, pluralize
 from softfab.webgui import unorderedList
-from softfab.xmlgen import xhtml
+from softfab.xmlgen import XMLContent, xhtml
 
 class RecordInUseError(Exception):
 
@@ -100,7 +100,7 @@ class RecordDelete_GET(FabPage['RecordDelete_GET.Processor'], ABC):
             xhtml.p[ actionButtons(Actions) ]
             ].present(proc=proc)
 
-    def presentError(self, proc, message):
+    def presentError(self, proc: Processor, message: str) -> XMLContent:
         yield message
         yield self.backToReferer(proc.req)
 
