@@ -1,18 +1,24 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from softfab.FabPage import FabPage
-from softfab.Page import PageProcessor, Redirect
+from softfab.Page import PageProcessor, ProcT, Redirect
 from softfab.pagelinks import AnonGuestArgs
 from softfab.projectlib import project
 from softfab.userview import presentAnonGuestSetting
+from softfab.xmlgen import XMLContent
 
-class AnonGuest_GET(FabPage[FabPage.Processor]):
+class AnonGuestBase(FabPage[ProcT]):
     icon = 'UserList1'
     description = 'Anonymous Guests'
     linkDescription = False
 
-    def pageTitle(self, proc: FabPage.Processor) -> str:
+    def pageTitle(self, proc: ProcT) -> str:
         return 'Anonymous Guest Access'
+
+    def presentContent(self, proc):
+        raise NotImplementedError
+
+class AnonGuest_GET(AnonGuestBase[FabPage.Processor]):
 
     def checkAccess(self, req):
         pass
@@ -21,7 +27,7 @@ class AnonGuest_GET(FabPage[FabPage.Processor]):
         yield presentAnonGuestSetting()
         yield self.backToParent(proc.req)
 
-class AnonGuest_POST(AnonGuest_GET):
+class AnonGuest_POST(AnonGuestBase['AnonGuest_POST.Processor']):
 
     def checkAccess(self, req):
         req.checkPrivilege('p/m', 'change project settings')
