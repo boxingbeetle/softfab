@@ -43,7 +43,7 @@ def pageURL(page: str, args: Optional[PageArgs] = None) -> str:
     encoded = '' if args is None else encodeURL(args.toQuery())
     return '%s?%s' % (page, encoded) if encoded else page
 
-def pageLink(page: str, args: Optional[PageArgs] = None) -> XML:
+def pageLink(page: str, args: Optional[PageArgs] = None) -> XMLSubscriptable:
     '''Creates a hyperlink to another page.
     '''
     return xhtml.a(href = pageURL(page, args))
@@ -60,7 +60,7 @@ def maybeLink(url: Optional[str]) -> XMLSubscriptable:
     else:
         return xhtml.a(href = url)
 
-def docLink(path: str) -> XML:
+def docLink(path: str) -> XMLSubscriptable:
     '''Creates a hyperlink to a documentation page.
     '''
     assert path.startswith('/'), path
