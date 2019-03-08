@@ -2,13 +2,19 @@
 
 from abc import ABC
 from collections import defaultdict
-from typing import ClassVar, Generic, Iterator, Type, TypeVar
+from typing import (
+    TYPE_CHECKING, ClassVar, DefaultDict, Dict, Generic, Iterator, Optional,
+    Set, Type, TypeVar
+    )
 import logging
 
 from softfab.datawidgets import DataTable
 from softfab.pageargs import PageArgs
 from softfab.webgui import WidgetT, pageURL
 from softfab.utils import SharedInstance, abstract
+
+if TYPE_CHECKING:
+    from softfab.datawidgets import _TableData
 
 def logPageException(req, message: str) -> None:
     """Logs an exception that occurred while handling a page request.
@@ -66,7 +72,7 @@ class Redirect(BaseException):
     '''Can be raised to immediately end page generation and redirect to another
     page.
     '''
-    def __init__(self, url):
+    def __init__(self, url: str):
         BaseException.__init__(self)
         self.url = url
 
@@ -74,14 +80,17 @@ class PageProcessor:
     '''Abstract base class for processors.
     '''
     error = None # page-specific error
-    processingError = None # exception caught during processing
-    page = None # set by parseAndProcess()
+    processingError = None # type: Optional[Exception]
+    """Exception caught during processing."""
+    # set by parseAndProcess():
+    page = None # type: FabResource
+    args = None # type: PageArgs
 
     def __init__(self, req):
         self.req = req
-        self.__tables = {}
+        self.__tables = {} # type: Dict[int, '_TableData']
 
-    def getTableData(self, table):
+    def getTableData(self, table: DataTable) -> '_TableData':
         return self.__tables[id(table)]
 
     def process(self, req):
@@ -112,10 +121,10 @@ class PageProcessor:
         The default implementation of this method does nothing.
         '''
 
-    def processTables(self):
+    def processTables(self) -> None:
         # While processing, perform a sanity check against multiple tables
         # using the same arguments.
-        fields = defaultdict(set)
+        fields = defaultdict(set) # type: DefaultDict[str, Set[str]]
         args = self.args
         for table in self.page.iterDataTables(self):
             for propName in 'sortField', 'tabOffsetField':
@@ -126,7 +135,7 @@ class PageProcessor:
                     used.add(field)
             self.__tables[id(table)] = table.process(self)
 
-    def subItemRelURL(self, subPath):
+    def subItemRelURL(self, subPath: str) -> str:
         '''Gets a relative URL to the given item subpath.
         '''
         return pageURL('%s/%s' % ( self.page.name, subPath ), self.args)
@@ -185,10 +194,12 @@ class FabResource(ABC, Generic[ProcT]):
     as the root resource.
     """
 
-    name = property(lambda self: self.getResourceName())
+    @property
+    def name(self) -> str:
+        return self.getResourceName()
 
     @classmethod
-    def getResourceName(cls):
+    def getResourceName(cls) -> str:
         return cls.__name__.partition('_')[0]
 
     class Arguments(PageArgs):
@@ -210,7 +221,10 @@ class FabResource(ABC, Generic[ProcT]):
         '''
         raise NotImplementedError
 
-    def getResponder(self, path, proc): # pylint: disable=unused-argument
+    def getResponder(self,
+                     path: str,
+                     proc: PageProcessor # pylint: disable=unused-argument
+                     ) -> Responder:
         '''Returns a Responder that can present the given path within this
         resource. If the given path does not point to an item within this
         resource, KeyError is raised.
