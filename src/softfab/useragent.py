@@ -2,12 +2,17 @@
 
 from softfab.utils import cachedProperty
 
+from typing import (
+    Dict, Iterator, Mapping, Optional, Sequence, Tuple, Union, cast
+    )
 import re
 
 # Content negotiation is described in:
 #   https://tools.ietf.org/html/rfc7231#section-5.3
 
-def parseAcceptValue(accepted):
+def parseAcceptValue(
+        accepted: Optional[str]
+        ) -> Iterator[Tuple[str, Mapping[str, str]]]:
     '''Parses an HTTP content negotiation header.
     Iterates through the things that are accepted; each element is a pair
     consisting of a name and a parameters dictionary.
@@ -32,7 +37,9 @@ def parseAcceptValue(accepted):
                 params[key.strip()] = value.strip()
         yield name, params
 
-def parseAcceptQuality(accepted):
+def parseAcceptQuality(
+        accepted: Optional[str]
+        ) -> Iterator[Tuple[str, float]]:
     '''Parses an HTTP content negotiation header.
     Iterates through the things that are accepted; each element is a pair
     consisting of a name and a floating point value between 0.0 and 1.0
@@ -49,7 +56,7 @@ def parseAcceptQuality(accepted):
         else:
             yield name, min(max(quality, 0.0), 1.0)
 
-class AcceptedEncodings(dict):
+class AcceptedEncodings(Dict[str, float]):
     '''Dictionary that stores information about accepted encodings:
     keys are encoding names, values are floating-point weights.
     A lookup of an unspecified encoding will default to the value for "*";
@@ -58,15 +65,14 @@ class AcceptedEncodings(dict):
     '''
 
     @classmethod
-    def parse(cls, accepted):
+    def parse(cls, accepted: Optional[str]) -> 'AcceptedEncodings':
         '''Parses an HTTP "Accept-Encoding" header, or None presenting
         the absence of such a header.
-        Returns an AcceptedEncodings instance.
         '''
         return cls(parseAcceptQuality(accepted))
 
-    def __init__(self, *args, **kwargs):
-        dict.__init__(self, *args, **kwargs)
+    def __init__(self, iterable: Iterator[Tuple[str, float]]):
+        super().__init__(iterable)
         # Convert deprecated names to preferred ones.
         # Note that "x-deflate" does not occur in RFC 7230, but it is
         # sent by some browsers, such as Konqueror.
@@ -75,14 +81,16 @@ class AcceptedEncodings(dict):
             if value is not None:
                 self.setdefault(encoding, value)
 
-    def __missing__(self, key):
+    def __missing__(self, key: str) -> float:
         return self.get('*', 0.1 if key == 'identity' else 0.0)
 
 class UserAgent:
 
     __reUserAgentPart = re.compile(r'\([^\)]*\)|[^ ]+')
     @classmethod
-    def __parseUserAgent(cls, userAgent):
+    def __parseUserAgent(cls,
+            userAgent: str
+            ) -> Iterator[Union[str, Sequence[str]]]:
         matcher = cls.__reUserAgentPart
         i = 0
         while True:
@@ -101,12 +109,12 @@ class UserAgent:
                 # Product string.
                 yield part
 
-    def __init__(self, userAgentHeader, acceptHeader):
+    def __init__(self, userAgentHeader: str, acceptHeader: str):
         self.__userAgentHeader = userAgentHeader
         self.__acceptHeader = acceptHeader
 
     @property
-    def rawUserAgent(self):
+    def rawUserAgent(self) -> str:
         '''The User-Agent header that was part of the request, or None
         if the header wasn't present.
         Page generation code should use the various properties of this
@@ -116,7 +124,7 @@ class UserAgent:
         return self.__userAgentHeader
 
     @cachedProperty
-    def client(self):
+    def client(self) -> Optional[str]:
         '''Best effort to identify the user agent that made this request.
         Contains a string in the form "name/version" if successful,
         "name" if the name could be determined but the version could not,
@@ -126,11 +134,11 @@ class UserAgent:
         if userAgent is None:
             return None
 
-        main = None
-        compat = None
+        main = None # type: Optional[str]
+        compat = None # type: Optional[str]
         for productOrComment in self.__parseUserAgent(userAgent):
             if isinstance(productOrComment, tuple):
-                comment = productOrComment
+                comment = cast(Sequence[str], productOrComment)
                 if main is not None and compat is None:
                     if len(comment) >= 2 and comment[0] == 'compatible':
                         # Internet Explorer identifies as "MSIE x.y" instead of
@@ -144,7 +152,7 @@ class UserAgent:
                                 if item.startswith('MSOffice '):
                                     compat = '/'.join(item.split(' ')[ : 2])
             else:
-                product = productOrComment
+                product = cast(str, productOrComment)
                 if main is None:
                     if product.startswith('Mozilla/'):
                         # Several browser families identify as Mozilla, so keep
@@ -165,11 +173,11 @@ class UserAgent:
                     # Second product encountered, so any following "compatible"
                     # comments will likely apply to the second product.
                     if compat is None:
-                        compat = False
+                        compat = ''
         return compat if compat else main
 
     @cachedProperty
-    def family(self):
+    def family(self) -> Optional[str]:
         '''Best effort to identify the family of the user agent that
         made this request.
         Contains the family name, or None if it has no clue.
@@ -180,7 +188,7 @@ class UserAgent:
         return client.split('/', 1)[0] if client else None
 
     @cachedProperty
-    def version(self):
+    def version(self) -> Optional[Sequence[int]]:
         '''Best effort to identify the version of the user agent that
         made this request. Contains a tuple of integers, or None if it has
         no clue. For example, Firefox 2.x identifies as Mozilla 5.0, so the
@@ -209,7 +217,7 @@ class UserAgent:
             return None
 
     @cachedProperty
-    def operatingSystem(self):
+    def operatingSystem(self) -> Optional[str]:
         '''Best effort to identify the operating system of the user
         agent that made this request.
         Contains a string, or None if it has no clue.
@@ -229,7 +237,8 @@ class UserAgent:
             if isinstance(productOrComment, tuple):
                 # Prefer longer matches over short ones.
                 commentParts = sorted(
-                    productOrComment, key = len, reverse = True
+                    cast(Sequence[str], productOrComment),
+                    key=len, reverse=True
                     )
                 # Look for known operating system names.
                 for osName in (
@@ -244,7 +253,7 @@ class UserAgent:
         return None
 
     @cachedProperty
-    def acceptedTypes(self):
+    def acceptedTypes(self) -> Mapping[str, float]:
         '''A parsed version of the HTTP "accept" header, which describes
         the media types that the user agent is capable of handling and
         its preferences for one type over another.
@@ -259,7 +268,7 @@ class UserAgent:
             return dict(parseAcceptQuality(accepted))
 
     @cachedProperty
-    def acceptsXHTML(self):
+    def acceptsXHTML(self) -> bool:
         '''True iff the user agent is likely to be able to display
         XHTML when it is served as XML.
         '''
