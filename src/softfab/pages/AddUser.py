@@ -1,53 +1,50 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from softfab.FabPage import FabPage
-from softfab.Page import PageProcessor, PresentableError, Redirect
+from softfab.Page import PageProcessor, PresentableError, ProcT, Redirect
 from softfab.formlib import (
     FormTable, actionButtons, dropDownList, emptyOption, hiddenInput,
     makeForm, passwordInput, textInput
     )
 from softfab.pageargs import EnumArg, PageArgs, RefererArg, StrArg
+from softfab.request import Request
 from softfab.userlib import (
     PasswordMessage, addUserAccount, authenticate, passwordQuality
     )
 from softfab.userview import (
     LoginPassArgs, UIRoleNames, passwordStr, uiRoleToSet
     )
-from softfab.xmlgen import xhtml
+from softfab.xmlgen import XMLContent, xhtml
 
 from twisted.cred.error import LoginFailed
 from twisted.internet.defer import inlineCallbacks
 
 from enum import Enum
+from typing import Optional
 
 Actions = Enum('Actions', 'ADD CANCEL')
 
-class AddUser_GET(FabPage['AddUser_GET.Processor']):
+class AddUserBase(FabPage[ProcT]):
     icon = 'AddUser1'
     description = 'Add User'
 
     def checkAccess(self, req):
         req.checkPrivilege('u/c', 'add new users')
 
-    class Arguments(PageArgs):
-        indexQuery = RefererArg('UserList')
-
-    class Processor(PageProcessor):
-        def process(self, req):
-            pass
-
     def iterStyleDefs(self):
         yield 'td.formlabel { width: 16em; }'
 
     def presentContent(self, proc):
-        yield self.presentForm(proc, None)
+        raise NotImplementedError
 
-    def presentForm(self, proc, prefill):
+    def presentForm(self,
+            proc: ProcT, prefill: Optional[PageArgs]
+            ) -> XMLContent:
         return makeForm(args = prefill)[
-            self.presentFormBody(proc.req)
+            self.__presentFormBody(proc.req)
             ].present(proc=proc)
 
-    def presentFormBody(self, req):
+    def __presentFormBody(self, req: Request) -> XMLContent:
         yield xhtml.p[ 'Enter information about new user:' ]
         yield UserTable.instance
         if req.getUserName() is None:
@@ -60,7 +57,22 @@ class AddUser_GET(FabPage['AddUser_GET.Processor']):
             yield ReqPasswordTable.instance
         yield xhtml.p[ actionButtons(Actions) ]
 
-class AddUser_POST(AddUser_GET):
+    def getCancelURL(self, req):
+        return req.args.refererURL or self.getParentURL(req)
+
+class AddUser_GET(AddUserBase['AddUser_GET.Processor']):
+
+    class Arguments(PageArgs):
+        indexQuery = RefererArg('UserList')
+
+    class Processor(PageProcessor):
+        def process(self, req):
+            pass
+
+    def presentContent(self, proc):
+        yield self.presentForm(proc, None)
+
+class AddUser_POST(AddUserBase['AddUser_POST.Processor']):
 
     class Arguments(AddUser_GET.Arguments, LoginPassArgs):
         action = EnumArg(Actions)
@@ -116,9 +128,6 @@ class AddUser_POST(AddUser_GET):
                     raise PresentableError('%s.' % str(ex))
             else:
                 assert False, req.args.action
-
-    def getCancelURL(self, req):
-        return req.args.refererURL or self.getParentURL(req)
 
     def presentContent(self, proc):
         yield xhtml.p[ xhtml.b[
