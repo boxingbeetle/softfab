@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from softfab.Page import FabResource, PageProcessor, PresentableError, Redirect
+from softfab.Page import (
+    FabResource, PageProcessor, PresentableError, ProcT, Redirect
+    )
 from softfab.UIPage import UIPage
 from softfab.authentication import NoAuthPage
 from softfab.formlib import (
@@ -13,7 +15,7 @@ from softfab.userlib import (
     )
 from softfab.userview import LoginPassArgs, PasswordMsgArgs
 from softfab.webgui import pageURL
-from softfab.xmlgen import xhtml
+from softfab.xmlgen import XMLContent, xhtml
 
 from twisted.cred.error import LoginFailed
 from twisted.internet.defer import inlineCallbacks
@@ -25,31 +27,17 @@ class LoginTable(FormTable):
         yield 'User name', textInput(name = 'loginname')
         yield 'Password', passwordInput(name = 'loginpass')
 
-class Login_GET(UIPage['Login_GET.Processor'],
-                FabResource['Login_GET.Processor']):
-    '''Page that presents login form.
-    '''
+class LoginBase(UIPage[ProcT], FabResource[ProcT]):
     authenticator = NoAuthPage
     secureCookie = True
-
-    class Arguments(URLArgs):
-        pass
-
-    class Processor(PageProcessor):
-
-        def process(self, req):
-            url = req.args.url
-            if url is not None and '/' in url:
-                # Only accept relative URLs.
-                raise ArgsCorrected(req.args, url = None)
 
     def checkAccess(self, req):
         pass
 
-    def pageTitle(self, proc: Processor) -> str:
+    def pageTitle(self, proc: ProcT) -> str:
         return 'Log In'
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: ProcT) -> XMLContent:
         if self.secureCookie and not proc.req.secure:
             yield xhtml.p(class_='notice')[
                 'Login is not possible over insecure channel.'
@@ -87,6 +75,21 @@ class Login_GET(UIPage['Login_GET.Processor'],
                     'with JavaScript.'
                     ]
 
+class Login_GET(LoginBase['Login_GET.Processor']):
+    '''Page that presents login form.
+    '''
+
+    class Arguments(URLArgs):
+        pass
+
+    class Processor(PageProcessor):
+
+        def process(self, req):
+            url = req.args.url
+            if url is not None and '/' in url:
+                # Only accept relative URLs.
+                raise ArgsCorrected(req.args, url = None)
+
 _downloadURLs = {
     'MSIE':
         'https://support.microsoft.com/en-us/products/internet-explorer',
@@ -96,7 +99,7 @@ _downloadURLs = {
         'https://www.google.com/chrome/',
     }
 
-class Login_POST(Login_GET):
+class Login_POST(LoginBase['Login_POST.Processor']):
     '''Page that handles submitted login form.
     '''
 
@@ -142,6 +145,6 @@ class Login_POST(Login_GET):
                     url = req.args.url
                     raise Redirect('Home' if url is None else url)
 
-    def presentError(self, proc, message):
+    def presentError(self, proc: Processor, message: str) -> XMLContent:
         yield xhtml.p(class_ = 'notice')[ message ]
         yield self.presentContent(proc)
