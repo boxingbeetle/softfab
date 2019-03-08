@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from softfab.Page import (
-    FabResource, InternalError, PageProcessor, Redirect, Redirector
+    FabResource, InternalError, PageProcessor, Redirect, Redirector, Responder
     )
 from softfab.SplashPage import SplashPage, startupMessages
 from softfab.StyleResources import styleRoot
@@ -290,7 +290,7 @@ class ResourceNotFound(FabResource[PageProcessor]):
     def getResponder(self, path, proc):
         return NotFoundPage(proc.req)
 
-    def errorResponder(self, ex):
+    def errorResponder(self, ex: Exception) -> Responder:
         # No processing errors can happen because we use the default processor
         # which does nothing.
         assert False, ex

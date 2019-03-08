@@ -28,7 +28,7 @@ class ControlPage(FabResource[ProcT], Responder):
     def getContentType(self, proc): # pylint: disable=unused-argument
         return self.contentType
 
-    def errorResponder(self, ex):
+    def errorResponder(self, ex: Exception) -> Responder:
         return plainTextErrorResponder
 
     def respond(self, response, proc):

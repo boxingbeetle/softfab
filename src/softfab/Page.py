@@ -222,7 +222,7 @@ class FabResource(ABC, Generic[ProcT]):
         else:
             raise KeyError('Resource does not contain subitems')
 
-    def errorResponder(self, ex):
+    def errorResponder(self, ex: Exception) -> Responder:
         '''Returns a Responder that can present an error page for the given
         exception.
         '''

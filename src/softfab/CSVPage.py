@@ -29,7 +29,7 @@ class CSVPage(FabResource[ProcT], Responder):
     class Arguments(PageArgs):
         sep = EnumArg(Separator, Separator.COMMA)
 
-    def errorResponder(self, ex):
+    def errorResponder(self, ex: Exception) -> Responder:
         return plainTextErrorResponder
 
     def respond(self, response, proc):

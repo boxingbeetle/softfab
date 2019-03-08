@@ -99,7 +99,7 @@ class UIPage(Responder, Generic[ProcT]):
         '''
         return ()
 
-    def errorResponder(self, ex):
+    def errorResponder(self, ex: Exception) -> Responder:
         return _ErrorResponder(self, ex)
 
     def formatError(self, ex):
