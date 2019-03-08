@@ -1,43 +1,31 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from softfab.Page import ProcT, Responder, logPageException
-from softfab.StyleResources import styleRoot
+from softfab.Page import PageProcessor, ProcT, Responder, logPageException
+from softfab.StyleResources import StyleSheet, styleRoot
 from softfab.pagelinks import createUserDetailsLink, loginURL, logoutURL
 from softfab.projectlib import project
 from softfab.response import Response
 from softfab.timelib import getTime
 from softfab.timeview import formatTime
 from softfab.version import version
-from softfab.xmlgen import XMLContent, xhtml
+from softfab.xmlgen import XMLContent, XMLNode, xhtml
 
 from traceback import TracebackException
-from typing import Generic
+from typing import Generic, Iterator
 
 _logoIcon = styleRoot.addIcon('SoftFabLogo')
 _shortcutIcon = styleRoot.addShortcutIcon('SoftFabIcon')
 
-def _createStyleSheets():
+def _createStyleSheets() -> Iterator[StyleSheet]:
     yield styleRoot.addStyleSheet('sw-factory')
 _styleSheets = tuple(_createStyleSheets())
 # This sheet contains workarounds for the very limited CSS support in MSOffice.
 # For example it is used to correct the Atom feed rendering in MS Outlook.
 _msOfficeSheet = styleRoot.addStyleSheet('msoffice')
-def iterStyleSheets(proc):
+def iterStyleSheets(proc: PageProcessor) -> Iterator[StyleSheet]:
     yield from _styleSheets
     if proc.req.userAgent.family == 'MSOffice':
         yield _msOfficeSheet
-
-class _ErrorResponder(Responder):
-
-    def __init__(self, page, ex):
-        Responder.__init__(self)
-        self.__page = page
-        self.__exception = ex
-
-    def respond(self, response, proc):
-        response.setStatus(500, 'Unexpected exception processing request')
-        proc.processingError = self.__exception
-        self.__page.respond(response, proc)
 
 class UIPage(Responder, Generic[ProcT]):
 
@@ -93,16 +81,16 @@ class UIPage(Responder, Generic[ProcT]):
     def pageTitle(self, proc: ProcT) -> str:
         raise NotImplementedError
 
-    def iterStyleDefs(self):
+    def iterStyleDefs(self) -> Iterator[str]:
         '''Iterates through page-specific CSS definition strings.
         The default implementation contains no style definitions.
         '''
-        return ()
+        return iter(())
 
     def errorResponder(self, ex: Exception) -> Responder:
         return _ErrorResponder(self, ex)
 
-    def formatError(self, ex):
+    def __formatError(self, ex: Exception) -> Iterator[XMLNode]:
         '''Yields HTML informing the user of the given exception.
         '''
         yield xhtml.p(class_ = 'notice')[
@@ -124,17 +112,17 @@ class UIPage(Responder, Generic[ProcT]):
         except Exception as ex:
             logPageException(proc.req, 'Error presenting page')
             response.setStatus(500, 'Error presenting page')
-            yield from self.formatError(ex)
+            yield from self.__formatError(ex)
 
     def __presentBody(self, proc: ProcT) -> XMLContent:
         if proc.processingError is not None:
-            return self.formatError(proc.processingError)
+            return self.__formatError(proc.processingError)
         elif proc.error is not None:
             return self.presentError(proc, proc.error)
         else:
             return self.presentContent(proc)
 
-    def presentHeader(self, proc):
+    def presentHeader(self, proc: ProcT) -> XMLContent:
         userName = proc.req.getUserName()
         return xhtml.div(class_ = 'titlebar')[
             xhtml.div(class_ = 'title')[ self.__title(proc) ],
@@ -154,14 +142,28 @@ class UIPage(Responder, Generic[ProcT]):
                 ]
             ]
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: ProcT) -> XMLContent:
         raise NotImplementedError
 
     def presentError(self,
-            proc: ProcT,
-            message: str # pylint: disable=unused-argument
+            proc: ProcT, # pylint: disable=unused-argument
+            message: str
             ) -> XMLContent:
         return message
 
-    def presentBackgroundScripts(self, proc): # pylint: disable=unused-argument
+    def presentBackgroundScripts(self,
+            proc: ProcT # pylint: disable=unused-argument
+            ) -> XMLContent:
         return None
+
+class _ErrorResponder(Responder, Generic[ProcT]):
+
+    def __init__(self, page: UIPage[ProcT], ex: Exception):
+        Responder.__init__(self)
+        self.__page = page
+        self.__exception = ex
+
+    def respond(self, response: Response, proc: ProcT) -> None:
+        response.setStatus(500, 'Unexpected exception processing request')
+        proc.processingError = self.__exception
+        self.__page.respond(response, proc)
