@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from softfab.Page import PageProcessor
 from softfab.projectlib import project
 from softfab.useragent import AcceptedEncodings
 from softfab.utils import iterable
@@ -8,18 +9,21 @@ from softfab.xmlgen import XMLPresentable
 from twisted.internet import reactor
 from twisted.internet.defer import Deferred
 from twisted.internet.interfaces import IPullProducer, IPushProducer
+from twisted.python.failure import Failure
 from twisted.web.http import CACHED
+from twisted.web.iweb import IRequest
 from twisted.web.server import NOT_DONE_YET
 
 from base64 import standard_b64encode
 from gzip import GzipFile
 from hashlib import md5
 from io import BytesIO
+from typing import Any, Callable, Optional, Union
 from urllib.parse import urljoin
 
 class Response:
 
-    def __init__(self, request, proc, streaming):
+    def __init__(self, request: IRequest, proc: PageProcessor, streaming: bool):
         self.__request = request
         self.__proc = proc
         self.userAgent = proc.req.userAgent
@@ -27,20 +31,21 @@ class Response:
         if streaming:
             # Streaming pages must not be buffered.
             self.__buffer = None
-            self.__writeBytes = request.write
+            self.__writeBytes = request.write \
+                    # type: Callable[[Union[bytes, bytearray]], int]
         else:
             # Present entire page before deciding whether and how to send it
             # to the client.
             self.__buffer = BytesIO()
             self.__writeBytes = self.__buffer.write
 
-        self.__producerDone = None
+        self.__producerDone = None # type: Optional[Deferred]
 
-        self.__connectionLostFailure = None
+        self.__connectionLostFailure = None # type: Optional[Failure]
         d = request.notifyFinish()
         d.addErrback(self.__connectionLost)
 
-    def finish(self):
+    def finish(self) -> None:
         request = self.__request
 
         # Cache control was introduced in HTTP 1.1.
@@ -75,8 +80,8 @@ class Response:
         body = self.__buffer.getvalue()
         self.__buffer.close()
         # Any write attempt after this is an error.
-        self.__buffer = None
-        self.__writeBytes = None
+        self.__buffer = None # type: ignore
+        self.__writeBytes = None # type: ignore
 
         # Determine whether or not we will gzip the body.
         # We prefer gzip to save on bandwidth.
@@ -107,10 +112,10 @@ class Response:
         else:
             request.write(body)
 
-    def __connectionLost(self, reason):
+    def __connectionLost(self, reason: Failure) -> None:
         self.__connectionLostFailure = reason
 
-    def registerProducer(self, producer):
+    def registerProducer(self, producer) -> Deferred:
         if IPushProducer.providedBy(producer):
             streaming = True
         elif IPullProducer.providedBy(producer):
@@ -121,12 +126,12 @@ class Response:
         self.__producerDone = d = Deferred()
         return d
 
-    def unregisterProducer(self):
+    def unregisterProducer(self) -> None:
         assert self.__producerDone is not None, 'producer was never registered'
         self.__request.unregisterProducer()
         self.__producerDone.callback(None)
 
-    def returnToReactor(self, result = None):
+    def returnToReactor(self, result: object = None) -> object:
         '''A page that writes a large response can hog the reactor for quite
         some time, during which other requests are not serviced. To prevent
         this, a large response should be cut into chunks and control should be
@@ -144,7 +149,7 @@ class Response:
         '''
         d = Deferred()
 
-        def resume(resumeResult):
+        def resume(resumeResult: object) -> None:
             assert resumeResult is result
             lost = self.__connectionLostFailure
             if lost is None:
@@ -155,13 +160,13 @@ class Response:
         reactor.callLater(0, resume, result)
         return NOT_DONE_YET        # Fixed ticket 448
 
-    def setStatus(self, code, msg = None):
-        if isinstance(msg, str):
-            # HTTP headers should be pure ASCII.
-            msg = msg.encode('ascii', 'ignore')
-        self.__request.setResponseCode(code, msg)
+    def setStatus(self, code: int, msg: Optional[str] = None) -> None:
+        self.__request.setResponseCode(
+            code,
+            None if msg is None else msg.encode('ascii', 'ignore')
+            )
 
-    def __encodeHeaderValue(self, key, value):
+    def __encodeHeaderValue(self, key: bytes, value: str) -> bytes:
         '''Encodes a string that is used in the value part of an HTTP header.
         If the string contains non-ASCII characters, this method does a best
         effort to encode it in a way the user agent might understand.
@@ -208,42 +213,39 @@ class Response:
         # they implement the spec correctly.
         return key + b"*=utf8'en'" + encoded
 
-    def setHeader(self, name, value):
-        if isinstance(value, str):
-            # HTTP headers should be pure ASCII.
-            value = value.encode('ascii', 'ignore')
-        self.__request.setHeader(name.lower(), value)
+    def setHeader(self, name: str, value: str) -> None:
+        self.__request.setHeader(name.lower(), value.encode('ascii', 'ignore'))
 
-    def setFileName(self, fileName):
+    def setFileName(self, fileName: str) -> None:
         '''Suggest a file name to the browser for saving this document.
         This method sets an HTTP header, so call it before you do any output.
         To be compatible with IE's lack of proper mime type handling,
         it is recommended to use a file name extension that implies the
         desired mime type.
         '''
-        self.setHeader(
-            'Content-Disposition',
+        self.__request.setHeader(
+            'content-disposition',
             b'attachment; ' + self.__encodeHeaderValue(b'filename', fileName)
             )
 
-    def sendRedirect(self, url):
+    def sendRedirect(self, url: str) -> None:
         # Relative URLs must include page name: although a relative URL
         # containing only a query is valid, it is resolved to the parent of
         # the current page, which is not what we want.
         assert not url.startswith('?'), 'page is missing from URL'
         # The Location header must have an absolute URL as its value (see
         # RFC-2616 section 14.30).
-        url = urljoin(self.__request.prePathURL(), url.encode())
+        urlBytes = urljoin(self.__request.prePathURL(), url.encode())
         # Set HTTP headers for redirect.
         # Response code 303 specifies the way most existing clients incorrectly
         # handle 302 (see RFC-2616 section 10.3.3).
         self.setStatus(303 if self.__request.clientproto == 'HTTP/1.1' else 302)
-        self.setHeader('Location', url)
+        self.__request.setHeader('location', urlBytes)
 
-    def write(self, *texts):
+    def write(self, *texts: Any) -> None:
         for text in texts:
             if isinstance(text, type):
-                text = text.instance
+                text = text.instance # type: ignore
             if isinstance(text, XMLPresentable):
                 text = text.present(proc=self.__proc)
             if iterable(text):
