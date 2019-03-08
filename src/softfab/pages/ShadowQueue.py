@@ -13,7 +13,10 @@ from softfab.webgui import WidgetT
 class ShadowQueue_GET(FabPage['ShadowQueue_GET.Processor']):
     icon = 'TaskRunStat1'
     description = 'Shadow Queue'
-    isActive = staticmethod(lambda: len(shadowDB) > 0)
+
+    @staticmethod
+    def isActive():
+        return len(shadowDB) > 0
 
     class Arguments(PageArgs):
         first = IntArg(0)

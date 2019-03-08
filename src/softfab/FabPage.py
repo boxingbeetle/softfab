@@ -3,34 +3,26 @@
 import sys
 from abc import ABC
 from enum import Enum
-from typing import ClassVar, Mapping, Optional, Sequence, Union
+from typing import (
+    Any, ClassVar, Dict, Iterator, Mapping, Optional, Sequence, Union, cast
+    )
 
-from softfab.Page import FabResource, ProcT, Responder
+from softfab.Page import FabResource, ProcT, PageProcessor, Responder
 from softfab.StyleResources import styleRoot
 from softfab.UIPage import UIPage
 from softfab.authentication import LoginAuthPage
 from softfab.refresh import RefreshScript
+from softfab.request import Request
 from softfab.utils import abstract
 from softfab.webgui import Widget, pageURL
-from softfab.xmlgen import xhtml
-
-class _WidgetResponder(Responder):
-
-    def __init__(self, page, widget):
-        Responder.__init__(self)
-        self.__page = page
-        self.__widget = widget
-
-    def respond(self, response, proc):
-        self.__page.writeHTTPHeaders(response)
-        response.write(self.__widget.present(proc=proc))
+from softfab.xmlgen import XMLContent, XMLNode, xhtml
 
 IconModifier = Enum('IconModifier', 'NONE EDIT DELETE')
 
 class FabPage(UIPage[ProcT], FabResource[ProcT], ABC):
     authenticator = LoginAuthPage
 
-    __pageInfo = {} # type: ClassVar[Mapping[str, object]]
+    __pageInfo = {} # type: ClassVar[Dict[str, Mapping[str, Any]]]
 
     icon = abstract # type: ClassVar[Optional[str]]
     iconModifier = IconModifier.NONE # type: ClassVar[IconModifier]
@@ -48,7 +40,7 @@ class FabPage(UIPage[ProcT], FabResource[ProcT], ABC):
     #       However, we would have to redesign the __pageInfo mechanism,
     #       since currently this does not contain instances of pages.
     @staticmethod
-    def isActive():
+    def isActive() -> bool:
         """Returns True iff this page should currently be shown.
 
         Inactive pages are not shown in the navigation bar and when accessed
@@ -58,7 +50,7 @@ class FabPage(UIPage[ProcT], FabResource[ProcT], ABC):
         return True
 
     @classmethod
-    def __processPage(cls, name, parents = ()):
+    def __processPage(cls, name: str, parents: Sequence[str] = ()) -> None:
         baseModule = cls.__module__.split('.')[ : -1]
         fullName = '.'.join(baseModule + [name])
         if fullName not in sys.modules:
@@ -88,13 +80,13 @@ class FabPage(UIPage[ProcT], FabResource[ProcT], ABC):
             cls.__processPage(child, parentsInc)
 
     @classmethod
-    def getPageInfo(cls, page = None):
+    def getPageInfo(cls, page: Optional[str] = None) -> Mapping[str, Any]:
         if len(cls.__pageInfo) == 0:
             cls.__processPage('Home')
         return cls.__pageInfo[page or cls.getResourceName()]
 
     @classmethod
-    def getPageURL(cls, req, page):
+    def getPageURL(cls, req: Request, page: str) -> Optional[str]:
         '''Gets the URL of another page, relative to this page.
         This URL includes in its query part the arguments shared between
         this page and the other page.
@@ -139,13 +131,13 @@ class FabPage(UIPage[ProcT], FabResource[ProcT], ABC):
         return pageURL(page, otherArgClass(sharedArgs))
 
     @classmethod
-    def iterRootPath(cls):
+    def iterRootPath(cls) -> Iterator[str]:
         currPageName = cls.getResourceName()
         yield from cls.getPageInfo(currPageName)['parents']
         yield currPageName
 
     @classmethod
-    def iterActiveChildren(cls):
+    def iterActiveChildren(cls) -> Iterator[str]:
         myParameters = cls.getPageInfo()['parameters']
         for childName in cls.children:
             pageInfo = cls.getPageInfo(childName)
@@ -166,16 +158,16 @@ class FabPage(UIPage[ProcT], FabResource[ProcT], ABC):
     def pageTitle(self, proc: ProcT) -> str:
         return self.description
 
-    def presentHeader(self, proc):
+    def presentHeader(self, proc: ProcT) -> XMLContent:
         yield super().presentHeader(proc)
         yield LinkBar.instance.present(proc=proc)
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: ProcT) -> XMLContent:
         # This method is already declared abstract in UIPage, we re-assert
         # that here to please PyLint.
         raise NotImplementedError
 
-    def presentBackgroundScripts(self, proc):
+    def presentBackgroundScripts(self, proc: ProcT) -> XMLContent:
         autoUpdateWidgets = [
             widget
             for widget in self.iterWidgets(proc)
@@ -184,7 +176,7 @@ class FabPage(UIPage[ProcT], FabResource[ProcT], ABC):
         if autoUpdateWidgets:
             yield RefreshScript(*autoUpdateWidgets).present(proc=proc)
 
-    def getParentURL(self, req):
+    def getParentURL(self, req: Request) -> str:
         for ancestor in reversed(self.getPageInfo()['parents']):
             url = self.getPageURL(req, ancestor)
             if url is not None:
@@ -193,7 +185,7 @@ class FabPage(UIPage[ProcT], FabResource[ProcT], ABC):
         # so it is unlikely we will ever get here.
         return 'Home'
 
-    def backToParent(self, req):
+    def backToParent(self, req: Request) -> XMLNode:
         parentName = self.getPageInfo()['parents'][-1]
         parentURL = self.getPageURL(req, parentName)
         return xhtml.p[
@@ -202,7 +194,7 @@ class FabPage(UIPage[ProcT], FabResource[ProcT], ABC):
                 ]
             ]
 
-    def backToReferer(self, req):
+    def backToReferer(self, req: Request) -> XMLNode:
         refererName = req.args.refererName
         if refererName is None:
             # No referer, fall back to page hierarchy.
@@ -214,9 +206,20 @@ class FabPage(UIPage[ProcT], FabResource[ProcT], ABC):
                 ]
             ]
 
-    def backToSelf(self):
+    def backToSelf(self) -> XMLNode:
         url = self.name
         return xhtml.p[ xhtml.a(href = url)[ 'Back to ', self.description ] ]
+
+class _WidgetResponder(Responder):
+
+    def __init__(self, page: FabPage, widget: Widget):
+        Responder.__init__(self)
+        self.__page = page
+        self.__widget = widget
+
+    def respond(self, response, proc):
+        self.__page.writeHTTPHeaders(response)
+        response.write(self.__widget.present(proc=proc))
 
 class LinkBar(Widget):
     '''A bar which contains links to other pages.
@@ -229,8 +232,10 @@ class LinkBar(Widget):
 
     __levelSep = xhtml.div(class_ = 'level')[ '\u25B8' ]
 
-    def __createLinkButton(self, proc, pageName, infoKey):
-        page = proc.page
+    def __createLinkButton(self,
+            proc: PageProcessor, pageName: str, infoKey: str
+            ) -> Optional[XMLNode]:
+        page = cast(FabPage, proc.page)
         pageInfo = page.getPageInfo(pageName)
         description = pageInfo[infoKey]
         if description is False:
@@ -257,7 +262,7 @@ class LinkBar(Widget):
                 ]
             ]
 
-    def __presentButtons(self, proc):
+    def __presentButtons(self, proc: PageProcessor) -> XMLContent:
         childButtons = tuple(self.__presentChildButtons(proc))
         levelSep = self.__levelSep
         # Root path.
@@ -267,8 +272,10 @@ class LinkBar(Widget):
             yield levelSep
             yield from childButtons
 
-    def __presentRootButtons(self, proc, styleThis):
-        page = proc.page
+    def __presentRootButtons(self,
+            proc: PageProcessor, styleThis: bool
+            ) -> Iterator[XMLNode]:
+        page = cast(FabPage, proc.page)
         thisPage = page.name
         for pageName in page.iterRootPath():
             button = self.__createLinkButton(proc, pageName, 'description')
@@ -278,8 +285,9 @@ class LinkBar(Widget):
                 else:
                     yield button
 
-    def __presentChildButtons(self, proc):
-        for pageName in proc.page.iterActiveChildren():
+    def __presentChildButtons(self, proc: PageProcessor) -> Iterator[XMLNode]:
+        page = cast(FabPage, proc.page)
+        for pageName in page.iterActiveChildren():
             button = self.__createLinkButton(proc, pageName, 'linkDescription')
             if button is not None:
                 yield button
