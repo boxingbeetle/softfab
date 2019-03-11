@@ -13,7 +13,7 @@ from softfab.selectview import (
     SelectArgs, TagValueEditTable, textToValues, valuesToText
     )
 from softfab.utils import encodeURL
-from softfab.xmlgen import xhtml
+from softfab.xmlgen import XMLContent, xhtml
 
 from enum import Enum
 from typing import Iterator
@@ -33,14 +33,11 @@ class ParentArgs(SelectArgs):
 
 Actions = Enum('Actions', 'APPLY CANCEL')
 
-class ConfigTags_GET(FabPage['ConfigTags_GET.Processor']):
+class ConfigTagsBase(FabPage['ConfigTagsBase.Processor']):
     icon = 'IconExec'
     iconModifier = IconModifier.EDIT
     description = 'Configuration Tags'
     linkDescription = False
-
-    class Arguments(ParentArgs):
-        pass
 
     class Processor(SelectConfigsMixin, PageProcessor):
 
@@ -63,7 +60,7 @@ class ConfigTags_GET(FabPage['ConfigTags_GET.Processor']):
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield TagConfigTable.instance
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: Processor) -> XMLContent:
         for notice in proc.notices:
             yield xhtml.p(class_ = 'notice')[ notice ]
         configs = proc.configs
@@ -96,7 +93,12 @@ class ConfigTags_GET(FabPage['ConfigTags_GET.Processor']):
                     ] ]
                 )
 
-class ConfigTags_POST(ConfigTags_GET):
+class ConfigTags_GET(ConfigTagsBase):
+
+    class Arguments(ParentArgs):
+        pass
+
+class ConfigTags_POST(ConfigTagsBase):
 
     class Arguments(ParentArgs):
         action = EnumArg(Actions)
