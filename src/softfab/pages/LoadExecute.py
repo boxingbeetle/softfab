@@ -34,7 +34,7 @@ class BaseTagConfigTable(ConfigTable):
     def _simpleMode(self, proc):
         raise NotImplementedError
 
-    def iterRowStyles(self, rowNr, record, proc, **kwargs):
+    def iterRowStyles(self, rowNr, record, *, proc, **kwargs):
         yield from super().iterRowStyles(rowNr, record, proc=proc, **kwargs)
         style = proc.getRowStyle(record)
         if style is not None:

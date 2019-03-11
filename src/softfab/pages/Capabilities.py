@@ -110,7 +110,7 @@ class CapabilitiesTable(DataTable):
         TaskDefinitionsColumn('Required for Tasks', 'taskDefIds'),
         )
 
-    def iterRowStyles(self, rowNr, record, proc, **kwargs):
+    def iterRowStyles(self, rowNr, record, *, proc, **kwargs):
         if record['capability'] == proc.args.cap:
             yield 'match'
 
