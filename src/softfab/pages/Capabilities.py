@@ -44,7 +44,7 @@ class CapabilitiesColumn(DataColumn):
     def presentHeader(self, **kwargs):
         return super().presentHeader(**kwargs)(style='width:62%')
 
-    def presentCell(self, record, proc, **kwargs):
+    def presentCell(self, record, *, proc, **kwargs):
         args = proc.args
         return presentCapabilities(
             record[self.keyName],
@@ -75,7 +75,7 @@ class ResourcesTable(DataTable):
 class CapabilityColumn(DataColumn):
     cellStyle = 'nobreak'
 
-    def presentCell(self, record, proc, **kwargs):
+    def presentCell(self, record, *, proc, **kwargs):
         return presentCapabilities(
             [record[self.keyName]],
             proc.args.restype

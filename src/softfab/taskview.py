@@ -42,7 +42,7 @@ class TaskColumn(DataColumn):
     label = 'Task'
     keyName = 'name'
 
-    def presentCell(self, record, table, **kwargs):
+    def presentCell(self, record, *, table, **kwargs):
         if table.taskNameLink:
             return createTaskInfoLink(record.getJob().getId(), record.getName())
         else:
@@ -58,7 +58,7 @@ class ExtractedColumn(DataColumn):
     label = 'Data'
     cellStyle = 'nobreak'
 
-    def presentCell(self, record, proc, **kwargs):
+    def presentCell(self, record, *, proc, **kwargs):
         dataLink = pageLink(
             'ExtractionDetails',
             TaskIdArgs(
@@ -116,7 +116,7 @@ class ExportColumn(DataColumn):
 class AbortColumn(DataColumn):
     label = 'Abort'
 
-    def presentCell(self, record, proc, **kwargs):
+    def presentCell(self, record, *, proc, **kwargs):
         if record.hasResult():
             return '-'
         else:

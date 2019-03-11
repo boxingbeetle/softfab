@@ -49,7 +49,7 @@ class ReservedByColumn(DataColumn):
             return '-'
 
 class ReserveColumn(DataColumn):
-    def presentCell(self, record, proc, **kwargs):
+    def presentCell(self, record, *, proc, **kwargs):
         action = Actions.RESUME if record.isSuspended() else Actions.SUSPEND
         return makeForm(
             args=PostArgs(proc.args, resource=record.getId()),

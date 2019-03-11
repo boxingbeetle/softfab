@@ -29,7 +29,7 @@ class RoleColumn(DataColumn):
     label = 'Role'
     keyName = 'roles'
 
-    def presentCell(self, record, proc, **kwargs):
+    def presentCell(self, record, *, proc, **kwargs):
         role = activeRole(record)
         if proc.canChangeRoles:
             userName = record.getId()
@@ -47,7 +47,7 @@ class RoleColumn(DataColumn):
 class PasswordColumn(DataColumn):
     label = 'Password'
 
-    def presentCell(self, record, proc, **kwargs):
+    def presentCell(self, record, *, proc, **kwargs):
         requestUser = proc.req.getUser()
         userName = record.getId()
         if requestUser.hasPrivilege('u/m') or (

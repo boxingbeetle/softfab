@@ -20,7 +20,7 @@ class SelectColumn(DataColumn):
     keyName = None
     label = None
 
-    def presentCell(self, record, proc, **kwargs):
+    def presentCell(self, record, *, proc, **kwargs):
         recordId = record.getId()
         checked, enabled = proc.selectFunc(recordId)
         return checkBox(

@@ -121,7 +121,7 @@ _scheduleIconGray = styleRoot.addIcon('ScheduleSmallD')
 class _DescriptionColumn(DataColumn):
     keyName = 'description'
 
-    def presentCell(self, record, proc, table, **kwargs):
+    def presentCell(self, record, *, table, **kwargs):
         if table.descriptionLink:
             yield xhtml.a(
                 href = createJobURL(record.getId()),
@@ -142,7 +142,7 @@ class _DescriptionColumn(DataColumn):
                 href = url,
                 title = scheduleId,
                 class_ = 'jobicon'
-                )[ icon.present(proc=proc, **kwargs) ]
+                )[ icon.present(**kwargs) ]
 
 class _StatusColumn(DataColumn):
     label = 'Status'

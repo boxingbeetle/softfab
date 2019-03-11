@@ -166,7 +166,7 @@ class ExtractedDataColumn(DataColumn):
         DataColumn.__init__(self, key, cellStyle = 'rightalign')
         self.__key = key
 
-    def presentCell(self, record, proc, **kwargs):
+    def presentCell(self, record, *, proc, **kwargs):
         runId = record.getLatestRun().getId()
         data = proc.dataByRunId.get(runId)
         return '-' if data is None else data.get(self.__key, '-')
