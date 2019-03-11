@@ -74,7 +74,6 @@ class ConfigTags_GET(FabPage['ConfigTags_GET.Processor']):
             yield xhtml.h2[ 'Common Selection Tags:' ]
             tagKeys = project.getTagKeys()
             commonTags = getCommonTags(tagKeys, configs)
-            proc.getValues = lambda key: valuesToText(commonTags[key].values())
             yield makeForm(
                 args=ParentArgs.subset(proc.args).override(
                     sel={config.getId() for config in configs}
@@ -85,7 +84,10 @@ class ConfigTags_GET(FabPage['ConfigTags_GET.Processor']):
                 ( hiddenInput(name='commontags.%d' % index, value=tagName)
                   for index, tagKey in enumerate(tagKeys)
                   for tagName in commonTags[tagKey].keys() )
-                ].present(proc=proc)
+                ].present(
+                    proc=proc,
+                    getValues=lambda key: valuesToText(commonTags[key].values())
+                    )
         else:
             yield (
                 xhtml.h2[ 'No configurations selected' ],

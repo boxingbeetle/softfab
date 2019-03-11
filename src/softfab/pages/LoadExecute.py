@@ -20,11 +20,11 @@ class SelectColumn(DataColumn):
     keyName = None
     label = None
 
-    def presentCell(self, record, *, proc, **kwargs):
+    def presentCell(self, record, *, selectName, selectFunc, **kwargs):
         recordId = record.getId()
-        checked, enabled = proc.selectFunc(recordId)
+        checked, enabled = selectFunc(recordId)
         return checkBox(
-            name=proc.selectName, value=recordId, checked=checked,
+            name=selectName, value=recordId, checked=checked,
             disabled=not enabled
             )
 
@@ -34,9 +34,9 @@ class BaseTagConfigTable(ConfigTable):
     def _simpleMode(self, proc):
         raise NotImplementedError
 
-    def iterRowStyles(self, rowNr, record, *, proc, **kwargs):
-        yield from super().iterRowStyles(rowNr, record, proc=proc, **kwargs)
-        style = proc.getRowStyle(record)
+    def iterRowStyles(self, rowNr, record, *, getRowStyle, **kwargs):
+        yield from super().iterRowStyles(rowNr, record, **kwargs)
+        style = getRowStyle(record)
         if style is not None:
             yield style
 

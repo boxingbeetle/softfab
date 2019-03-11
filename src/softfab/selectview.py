@@ -209,7 +209,6 @@ def selectDialog(proc, formAction, tagCache, filterTable, basketTable, title):
         bsk = set(),
         action = None
         )
-    proc.selectName = 'sel'
 
     yield xhtml.p[
         'Number of %ss shown: %d of %d'
@@ -224,8 +223,6 @@ def selectDialog(proc, formAction, tagCache, filterTable, basketTable, title):
 
     tagKeys = tagCache.getKeys()
     if len(tagKeys) == 0:
-        proc.selectFunc = lambda recordId: (recordId in selected, True)
-        proc.getRowStyle = lambda record: None
         yield makeForm(
             formId = 'selform1', action = formAction, method = 'get',
             args = cleanedArgs
@@ -243,7 +240,12 @@ def selectDialog(proc, formAction, tagCache, filterTable, basketTable, title):
                         ] + actionButtons()
                     )
                 ]
-            ].present(proc=proc)
+            ].present(
+                proc=proc,
+                getRowStyle=lambda record: None,
+                selectName='sel',
+                selectFunc=lambda recordId: (recordId in selected, True)
+                )
         return
 
     def createKeyCell(key):
@@ -293,9 +295,6 @@ def selectDialog(proc, formAction, tagCache, filterTable, basketTable, title):
     def selectedDisable(recordId):
         sel = recordId in selected
         return sel, not sel
-    proc.selectFunc = selectedDisable
-    proc.getRowStyle = lambda record: \
-            'selected' if record.getId() in selected else None
     if filtered - selected:
         buttons = [
             _scriptButton(True)[ _selButtonLabel ],
@@ -323,7 +322,13 @@ def selectDialog(proc, formAction, tagCache, filterTable, basketTable, title):
         # active checkboxes will be merged with these hidden fields.
         (hiddenInput(name='sel', value=item) for item in selected),
         xhtml.p[ txt('\u00A0').join(buttons) ]
-        ].present(proc=proc)
+        ].present(
+            proc=proc,
+            getRowStyle=lambda record:
+                'selected' if record.getId() in selected else None,
+            selectName='sel',
+            selectFunc=selectedDisable
+            )
 
     if selected:
         yield xhtml.hr
@@ -333,9 +338,6 @@ def selectDialog(proc, formAction, tagCache, filterTable, basketTable, title):
             'Number of %ss in basket: %d'
              % ( proc.db.description, len(proc.selectedRecords) )
             ]
-        proc.selectName = 'bsk'
-        proc.selectFunc = lambda recordId: (False, True)
-        proc.getRowStyle = lambda record: 'selected'
         buttons = [
             _scriptButton(True, 'bsk')[ _selButtonLabel ],
             resetButton[ _resButtonLabel ],
@@ -347,7 +349,12 @@ def selectDialog(proc, formAction, tagCache, filterTable, basketTable, title):
             )[
             basketTable,
             xhtml.p[ txt('\u00A0').join(buttons) ]
-            ].present(proc=proc)
+            ].present(
+                proc=proc,
+                getRowStyle=lambda record: 'selected',
+                selectName='bsk',
+                selectFunc=lambda recordId: (False, True)
+                )
 
 class TagValueEditTable(Table, ABC):
     valTitle = 'Tag Values'
@@ -386,8 +393,7 @@ class TagValueEditTable(Table, ABC):
         yield self.valTitle
         yield 'Add Existing Value'
 
-    def iterRows(self, proc, **kwargs):
-        getValues = proc.getValues
+    def iterRows(self, *, getValues, **kwargs):
         tagKeys = self.tagCache.getKeys()
         for index, key in enumerate(tagKeys):
             indexStr = str(index)

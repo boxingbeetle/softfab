@@ -300,8 +300,11 @@ class TagsStep(DialogStep):
             ( key, proc.args.tagvalues.get(index, '') )
             for index, key in proc.args.tagkeys.items()
             )
-        proc.getValues = lambda key: tags.get(key, '')
-        yield ConfigTagValueEditTable.instance.present(proc=proc, **kwargs)
+        yield ConfigTagValueEditTable.instance.present(
+            proc=proc,
+            getValues=lambda key: tags.get(key, ''),
+            **kwargs
+            )
 
     def verify(self, proc):
         return ConfirmStep
