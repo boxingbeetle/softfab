@@ -482,9 +482,19 @@ class Argument(Generic[ValueT]):
         '''
         raise NotImplementedError
 
+    @overload
     def __get__(self,
-             instance: Optional[PageArgs], owner: PageArgs
-             ) -> Union['Argument[ValueT]', ValueT]:
+            instance: None, owner: Type[PageArgs]
+            ) -> 'Argument[ValueT]':
+        pass
+
+    @overload
+    def __get__(self,
+            instance: PageArgs, owner: Type[PageArgs]
+            ) -> ValueT:
+        pass
+
+    def __get__(self, instance, owner):
         if instance is None:
             # Class attribute access.
             return self
