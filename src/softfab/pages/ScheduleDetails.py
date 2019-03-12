@@ -37,7 +37,7 @@ def statusDescription(scheduled):
 class TagsTable(Table):
     columns = None, None
     style = 'hollow'
-    def iterRows(self, proc, **kwargs):
+    def iterRows(self, *, proc, **kwargs):
         tagKey = proc.scheduled['tagKey']
         tagValue = proc.scheduled['tagValue']
         numMatches = len(proc.scheduled.getMatchingConfigIds())
@@ -55,7 +55,7 @@ class DetailsTable(PropertiesTable):
     widgetId = 'detailsTable'
     autoUpdate = True
 
-    def iterRows(self, proc, **kwargs):
+    def iterRows(self, *, proc, **kwargs):
         scheduled = proc.scheduled
         configId = scheduled['configId']
         if configId is None:

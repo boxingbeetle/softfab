@@ -69,7 +69,7 @@ class DetailsTable(Table):
     autoUpdate = True
     columns = Column('Property', cellStyle = 'nobreak'), 'Value'
 
-    def iterRows(self, proc, **kwargs):
+    def iterRows(self, *, proc, **kwargs):
         runner = proc.taskRunner
         yield 'Description', runner.description
         yield 'Version', runner['runnerVersion']

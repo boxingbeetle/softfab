@@ -73,7 +73,7 @@ class SingleJobTable(JobsSubTable):
 class TasksTable(Table):
     columns = 'Task', 'Start Time', 'Duration', 'Summary', 'Result'
 
-    def iterRows(self, proc, **kwargs):
+    def iterRows(self, *, proc, **kwargs):
         for task in proc.job.getTaskSequence():
             yield row(class_ = task.getResult())[
                 task.getName(),

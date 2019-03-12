@@ -41,7 +41,7 @@ class DetailsTable(PropertiesTable):
         yield 'Task ', (xhtml.b[ taskName ], ' is part of Job: ',
             createJobLink(jobId))
 
-    def iterRows(self, proc, **kwargs):
+    def iterRows(self, *, proc, **kwargs):
         task = proc.task
         run = task.getLatestRun()
         taskDef = proc.taskDef

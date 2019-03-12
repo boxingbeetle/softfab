@@ -35,7 +35,7 @@ def formatTaskDefs(children):
 
 class DetailsTable(PropertiesTable):
 
-    def iterRows(self, proc, **kwargs):
+    def iterRows(self, *, proc, **kwargs):
         taskDef = proc.taskDef
         yield 'Wrapper', taskDef['wrapper']
         yield 'Extractor', 'yes' if taskDef['extract'] else 'no'

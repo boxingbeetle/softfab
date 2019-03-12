@@ -34,7 +34,7 @@ class TagsTable(Table):
     columns = 'Key', 'Values'
     hideWhenEmpty = True
 
-    def iterRows(self, proc, **kwargs):
+    def iterRows(self, *, proc, **kwargs):
         config = proc.config
         for key in project.getTagKeys():
             values = config.getTagValues(key)
@@ -55,7 +55,7 @@ decoratedTagsTable = decoration[
 class TasksTable(Table):
     columns = 'Task', 'Parameter', 'Value'
 
-    def iterRows(self, proc, **kwargs):
+    def iterRows(self, *, proc, **kwargs):
         tasksByName = sorted(
             ( task.getName(), task )
             for task in proc.config.getTasks()
@@ -82,7 +82,7 @@ class InputTable(Table):
         if proc.config.hasLocalInputs():
             yield 'Local at'
 
-    def iterRows(self, proc, **kwargs):
+    def iterRows(self, *, proc, **kwargs):
         config = proc.config
         hasLocal = config.hasLocalInputs()
         for product in sorted(config.getInputs()):
@@ -119,7 +119,7 @@ class SchedulesTable(Table):
     columns = 'Schedule',
     hideWhenEmpty = True
 
-    def iterRows(self, proc, **kwargs):
+    def iterRows(self, *, proc, **kwargs):
         for scheduleId in sorted(proc.scheduleIds):
             yield createScheduleDetailsLink(scheduleId),
 

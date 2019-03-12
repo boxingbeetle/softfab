@@ -83,7 +83,7 @@ class PNGPanel(Table):
     columns = None,
     hideWhenEmpty = True
 
-    def iterRows(self, proc, **kwargs):
+    def iterRows(self, *, proc, **kwargs):
         imagePath = proc.imagePath
         if imagePath is not None:
             baseName = imagePath[imagePath.rfind('/') + 1 : ]

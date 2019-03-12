@@ -13,7 +13,7 @@ from softfab.xmlgen import xhtml
 
 class DetailsTable(PropertiesTable):
 
-    def iterRows(self, proc, **kwargs):
+    def iterRows(self, *, proc, **kwargs):
         productDef = proc.productDef
         producers = proc.producers
         consumers = proc.consumers

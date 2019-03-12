@@ -74,7 +74,7 @@ class ProductTable(Table, ABC):
         '''
         return iter(producers)
 
-    def iterRows(self, proc, **kwargs):
+    def iterRows(self, *, proc, **kwargs):
         job = proc.job
         jobId = job.getId()
         products = self.getProducts(proc)

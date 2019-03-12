@@ -109,7 +109,7 @@ class ResourcesTable(DataTable):
         if user.hasPrivilege('r/d'):
             yield self.deleteColumn
 
-    def iterRows(self, data, **kwargs):
+    def iterRows(self, *, data, **kwargs):
         recordsByType = defaultdict(list)
         for record in data.records:
             recordsByType[record.typeName].append(record)

@@ -48,7 +48,7 @@ class ProductEdit(EditPage):
 
 class ProductTable(PropertiesTable):
 
-    def iterRows(self, proc, **kwargs):
+    def iterRows(self, *, proc, **kwargs):
         yield 'Product ID', proc.args.id or '(untitled)'
         yield 'Locator type', dropDownList(name='type')[ ProductType ]
         yield 'Local', (

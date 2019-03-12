@@ -84,7 +84,7 @@ class ParamOverrideTable(Table):
     hideWhenEmpty = True
     suppressedParams = 'sf.summary',
 
-    def iterRows(self, proc, **kwargs):
+    def iterRows(self, *, proc, **kwargs):
         # Sort tasks by name (first element in tuple).
         sortedTasks = sorted(proc.tasks)
 
@@ -168,7 +168,7 @@ function initRowIndices(node, index) {
         super().__init__()
         self.__parentParams = parent.getParameters()
 
-    def iterRows(self, proc, **kwargs):
+    def iterRows(self, *, proc, **kwargs):
         args = proc.args
         parentParams = self.__parentParams
         valueFieldAttribs = {}
@@ -243,7 +243,7 @@ class ParametersTable(Table):
         Table.__init__(self)
         self.__fieldName = fieldName
 
-    def iterRows(self, proc, **kwargs):
+    def iterRows(self, *, proc, **kwargs):
         obj = getattr(proc, self.__fieldName)
         parameters = set(obj.getParameters()) - specialParameters
         reservedParameters = set(

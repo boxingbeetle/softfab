@@ -21,7 +21,7 @@ taskDefParametersTable = ParametersTable('taskDef')
 
 class DetailsTable(PropertiesTable):
 
-    def iterRows(self, proc, **kwargs):
+    def iterRows(self, *, proc, **kwargs):
         taskDef = proc.taskDef
         configs = proc.configs
 

@@ -165,7 +165,7 @@ class ResourceRequirementsTable(Table):
         super().__init__()
         self.__parentClaim = parentClaim
 
-    def iterRows(self, proc, **kwargs):
+    def iterRows(self, *, proc, **kwargs):
         nonFixedResTypeNames = sorted(
             set(resTypeDB.keys()) - {taskRunnerResourceTypeName}
             )
@@ -234,7 +234,7 @@ class _CapabilitiesTable(Table):
     columns = None, None
     style = 'hollow'
 
-    def iterRows(self, resType, capMap, **kwargs):
+    def iterRows(self, *, resType, capMap, **kwargs):
         yield 'inherited:\u00A0', presentCapabilities(
             capMap.get(True, []), resType
             )
@@ -262,7 +262,7 @@ class InlineResourcesTable(Table):
     columns = None, None, None
     style = 'hollow'
 
-    def iterRows(self, claim, **kwargs):
+    def iterRows(self, *, claim, **kwargs):
         for spec in claim:
             ref = spec.reference
             resType = spec.typeName

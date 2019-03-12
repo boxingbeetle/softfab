@@ -50,7 +50,7 @@ class ExtractionDetails_GET(FabPage['ExtractionDetails_GET.Processor']):
 class DetailsTable(Table):
     columns = 'Key', 'Value'
 
-    def iterRows(self, proc, **kwargs):
+    def iterRows(self, *, proc, **kwargs):
         taskRun = proc.task.getLatestRun()
         taskRunId = taskRun.getId()
         taskName = taskRun.getName()

@@ -153,7 +153,7 @@ class FrameworkEdit(EditPage):
 
 class FrameworkPropertiesTable(PropertiesTable):
 
-    def iterRows(self, proc, **kwargs):
+    def iterRows(self, *, proc, **kwargs):
         yield 'Name', proc.args.id or '(untitled)'
         yield 'Wrapper', textInput(name='wrapper', size=40)
         yield 'Extractor', checkBox(name='extractor')[
@@ -164,7 +164,7 @@ class FrameworkPropertiesTable(PropertiesTable):
 class ProductSetTable(Table, ABC):
     argName = abstract # type: ClassVar[str]
 
-    def iterRows(self, proc, **kwargs):
+    def iterRows(self, *, proc, **kwargs):
         name = self.argName
         options = [
             emptyOption[ '(none)' ]

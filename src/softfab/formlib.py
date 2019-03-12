@@ -538,7 +538,7 @@ class CheckBoxesTable(Table):
         #       the same page, we now duplicate the script.
         yield _toggleRowScript.present(**kwargs)
 
-    def iterRows(self, form, **kwargs):
+    def iterRows(self, *, form, **kwargs):
         active = self.getActive(form=form, **kwargs)
         first = True
         for key, cells in self.iterOptions(form=form, **kwargs):
@@ -624,7 +624,7 @@ class RadioTable(Table):
     name = None # type: str
     '''Name is mandatory, but sometimes static and sometimes computed.'''
 
-    def iterRows(self, form, **kwargs):
+    def iterRows(self, *, form, **kwargs):
         formId = form.id
         name = self.name
         active = self.getActive(form=form, **kwargs)
@@ -682,7 +682,7 @@ class FormTable(Table):
         yield Column(None, cellStyle = self.labelStyle)
         yield Column(None, cellStyle = self.fieldStyle)
 
-    def iterRows(self, proc, **kwargs):
+    def iterRows(self, *, proc, **kwargs):
         for label, widget in self.iterFields(proc):
             yield label + ':', widget
 

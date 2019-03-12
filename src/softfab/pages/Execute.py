@@ -716,7 +716,7 @@ class ParamTable(ParamOverrideTable):
 class TaskRunnersTable(Table):
     columns = 'Task', 'Task Runners'
 
-    def iterRows(self, proc, **kwargs):
+    def iterRows(self, *, proc, **kwargs):
         runnerspt = proc.args.runnerspt
         config = proc.config
         taskRunners = proc.taskRunners

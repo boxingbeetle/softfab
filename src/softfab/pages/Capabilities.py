@@ -22,7 +22,7 @@ from softfab.xmlgen import txt, xhtml
 
 class ResTypeTable(ResTypeTableMixin, Table):
 
-    def iterRows(self, proc, **kwargs):
+    def iterRows(self, *, proc, **kwargs):
         args = proc.args
         active = proc.args.restype
         for value, name, desc in self.iterOptions(proc=proc, **kwargs):

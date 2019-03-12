@@ -89,7 +89,7 @@ class InstallationTable(Table):
 class BrowserTable(Table):
     columns = None, None
 
-    def iterRows(self, proc, **kwargs):
+    def iterRows(self, *, proc, **kwargs):
         userAgent = proc.req.userAgent
         yield 'Browser:', userAgent.family or 'unknown'
         versionTuple = userAgent.version

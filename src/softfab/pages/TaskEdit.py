@@ -131,7 +131,7 @@ class TaskEdit(EditPage):
 
 class TaskPropertiesTable(PropertiesTable):
 
-    def iterRows(self, proc, **kwargs):
+    def iterRows(self, *, proc, **kwargs):
         yield 'Task ID', proc.args.id or '(untitled)'
         yield 'Title', textInput(name='title', size=80)
         yield 'Description', textArea(name='descr', cols=80, rows=3)

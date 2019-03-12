@@ -135,7 +135,7 @@ class ParamTable(Table):
     def presentCaptionParts(self, **kwargs):
         yield 'Job uses the following parameters:'
 
-    def iterRows(self, proc, **kwargs):
+    def iterRows(self, *, proc, **kwargs):
         jobId = proc.args.jobId
         for task in proc.job.getTaskSequence():
             params = task.getVisibleParameters()
@@ -202,7 +202,7 @@ class TaskRunnerTable(Table):
     def presentCaptionParts(self, **kwargs):
         yield 'The following Task Runners may be used:'
 
-    def iterRows(self, proc, **kwargs):
+    def iterRows(self, *, proc, **kwargs):
         tasks = proc.job.getTaskSequence()
         trsPerTask = []
         for task in tasks:

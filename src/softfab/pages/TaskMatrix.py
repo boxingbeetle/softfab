@@ -24,7 +24,7 @@ class NavigationBar(Table):
     '''
     columns = None, None, None, None
 
-    def iterRows(self, proc, **kwargs):
+    def iterRows(self, *, proc, **kwargs):
         args = proc.args
         week = args.week
         year = args.year
@@ -91,7 +91,7 @@ class Matrix(Table):
         yield 'Total'
         yield 'Week'
 
-    def iterRows(self, proc, **kwargs):
+    def iterRows(self, *, proc, **kwargs):
         beginWeek = proc.beginWeek
         endWeek = proc.endWeek
         taskData = proc.taskData

@@ -296,7 +296,7 @@ class DataTable(Table, ABC):
         '''
         return ()
 
-    def iterRows(self, data, **kwargs):
+    def iterRows(self, *, data, **kwargs):
         columns = data.columns
         for rowNr, record in enumerate(data.records):
             style = self.joinStyles(

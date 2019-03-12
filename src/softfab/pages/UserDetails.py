@@ -18,7 +18,7 @@ from softfab.xmlgen import xhtml
 
 class DetailsTable(PropertiesTable):
 
-    def iterRows(self, proc, **kwargs):
+    def iterRows(self, *, proc, **kwargs):
         yield 'Role', activeRole(proc.infoUser)
 
 class OwnedJobsTable(JobsSubTable):

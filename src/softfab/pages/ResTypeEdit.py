@@ -70,7 +70,7 @@ class ExclusiveWidget(CheckBoxesTable):
 
 class ResTypeTable(PropertiesTable):
 
-    def iterRows(self, proc, **kwargs):
+    def iterRows(self, *, proc, **kwargs):
         yield 'Name', proc.args.id or '(unnamed)'
         yield 'Description', \
             textInput(name = 'description', size = 80).present(

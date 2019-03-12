@@ -247,7 +247,7 @@ class TimeTable(Table):
     widgetId = 'timeTable'
     columns = 'Start Time',
 
-    def iterRows(self, proc, **kwargs):
+    def iterRows(self, *, proc, **kwargs):
         timeStr = proc.args.startTime
         if timeStr == '':
             timeStr = formatTime(getTime())

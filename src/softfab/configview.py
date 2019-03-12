@@ -49,7 +49,7 @@ class InputTable(Table):
         if taskSet.hasLocalInputs():
             yield 'Local at'
 
-    def iterRows(self, taskSet, **kwargs):
+    def iterRows(self, *, taskSet, **kwargs):
         grouped = taskSet.getInputsGrouped()
         localInputs = taskSet.hasLocalInputs()
         taskRunners = None
