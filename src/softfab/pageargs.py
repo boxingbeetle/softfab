@@ -1001,12 +1001,9 @@ class QueryArg(SingularArgument[Optional[Query]]):
     be omitted from the stored query. It can be a sequence of names or a
     subclass of PageArgs; in the latter case all arguments in that class
     will be excluded.
-
-    We might introduce an "includes" argument in the future, so always
-    explicitly provide the argument name in the constructor call.
     '''
 
-    def __init__(self,
+    def __init__(self, *,
             excludes: Union[None, Type[PageArgs], Iterable[str]] = None
             ):
         super().__init__(None)
@@ -1055,10 +1052,10 @@ class RefererArg(QueryArg):
     '''
 
     def __init__(self,
-            page: str,
+            page: str, *,
             excludes: Union[None, Type[PageArgs], Iterable[str]] = None
             ):
-        QueryArg.__init__(self, excludes)
+        QueryArg.__init__(self, excludes=excludes)
         self.__page = page
 
     def _sameArg(self, other: Argument) -> bool:
