@@ -71,24 +71,22 @@ class ExecutionGraphExamples_GET(
 
     def presentContent(self, proc):
         for graph in proc.graphs:
-            proc.imagePath = '%s.png' % graph.getName()
-            yield PNGPanel.instance.present(proc=proc)
+            yield PNGPanel.instance.present(
+                proc=proc,
+                imagePath='%s.png' % graph.getName()
+                )
 
 class PNGPanel(Table):
     '''Presents an PNG image on a panel, with the same frame and background as
     tables.
-    The image should be specified using a subitem path in "proc.imagePath",
-    or it can be None, in which case the panel is not presented.
     '''
     columns = None,
     hideWhenEmpty = True
 
-    def iterRows(self, *, proc, **kwargs):
-        imagePath = proc.imagePath
-        if imagePath is not None:
-            baseName = imagePath[imagePath.rfind('/') + 1 : ]
-            description = baseName.rsplit('.', 1)[0]
-            yield xhtml.img(
-                src = proc.subItemRelURL(imagePath),
-                alt = description,
-                ),
+    def iterRows(self, *, proc, imagePath, **kwargs):
+        baseName = imagePath[imagePath.rfind('/') + 1 : ]
+        description = baseName.rsplit('.', 1)[0]
+        yield xhtml.img(
+            src=proc.subItemRelURL(imagePath),
+            alt=description,
+            ),
