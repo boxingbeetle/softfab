@@ -7,7 +7,7 @@ from softfab.frameworklib import Framework
 from softfab.graphview import ExecutionGraphBuilder, GraphPageMixin
 from softfab.productdeflib import ProductDef, ProductType
 from softfab.webgui import Table
-from softfab.xmlgen import xhtml
+from softfab.xmlgen import XMLContent, xhtml
 
 class TaskGraphBuilder(ExecutionGraphBuilder):
 
@@ -69,7 +69,7 @@ class ExecutionGraphExamples_GET(
     def checkAccess(self, req):
         pass
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: Processor) -> XMLContent:
         for graph in proc.graphs:
             yield PNGPanel.instance.present(
                 proc=proc,

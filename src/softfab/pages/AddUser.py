@@ -34,7 +34,7 @@ class AddUserBase(FabPage[ProcT]):
     def iterStyleDefs(self):
         yield 'td.formlabel { width: 16em; }'
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: ProcT) -> XMLContent:
         raise NotImplementedError
 
     def presentForm(self,
@@ -69,7 +69,7 @@ class AddUser_GET(AddUserBase['AddUser_GET.Processor']):
         def process(self, req):
             pass
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: Processor) -> XMLContent:
         yield self.presentForm(proc, None)
 
 class AddUser_POST(AddUserBase['AddUser_POST.Processor']):
@@ -129,7 +129,7 @@ class AddUser_POST(AddUserBase['AddUser_POST.Processor']):
             else:
                 assert False, req.args.action
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: Processor) -> XMLContent:
         yield xhtml.p[ xhtml.b[
             'User "%s" has been added successfully.' % proc.args.user
             ] ]

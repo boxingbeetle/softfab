@@ -5,7 +5,7 @@ from softfab.Page import PageProcessor, ProcT, Redirect
 from softfab.formlib import actionButtons, makeForm
 from softfab.pageargs import EnumArg, PageArgs
 from softfab.schedulelib import scheduleDB
-from softfab.xmlgen import xhtml
+from softfab.xmlgen import XMLContent, xhtml
 
 from enum import Enum
 
@@ -29,7 +29,7 @@ class DelFinishedSchedules_GET(DelFinishedSchedulesBase[FabPage.Processor]):
     class Arguments(PageArgs):
         pass
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: FabPage.Processor) -> XMLContent:
         yield xhtml.p[ 'Delete all finished schedules?' ]
         yield makeForm()[
             xhtml.p[ actionButtons(Actions) ]
@@ -58,7 +58,7 @@ class DelFinishedSchedules_POST(
             else:
                 assert False, action
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: Processor) -> XMLContent:
         yield (
             xhtml.p[ 'All finished schedules have been deleted.' ],
             self.backToParent(proc.req)

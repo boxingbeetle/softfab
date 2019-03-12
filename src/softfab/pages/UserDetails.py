@@ -14,7 +14,7 @@ from softfab.querylib import KeySorter, ValueFilter, runQuery
 from softfab.userlib import userDB
 from softfab.userview import activeRole
 from softfab.webgui import PropertiesTable, WidgetT, pageLink
-from softfab.xmlgen import xhtml
+from softfab.xmlgen import XMLContent, xhtml
 
 class DetailsTable(PropertiesTable):
 
@@ -62,7 +62,7 @@ class UserDetails_GET(FabPage['UserDetails_GET.Processor']):
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield OwnedJobsTable.instance
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: Processor) -> XMLContent:
         infoUser = proc.infoUser
         infoUserName = proc.args.user
         requestUser = proc.req.getUser()

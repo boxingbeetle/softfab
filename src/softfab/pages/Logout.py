@@ -6,7 +6,7 @@ from softfab.authentication import NoAuthPage
 from softfab.pageargs import ArgsCorrected
 from softfab.pagelinks import URLArgs
 from softfab.webgui import pageLink
-from softfab.xmlgen import xhtml
+from softfab.xmlgen import XMLContent, xhtml
 
 class Logout_GET(UIPage['Logout_GET.Processor'],
                  FabResource['Logout_GET.Processor']):
@@ -42,7 +42,7 @@ class Logout_GET(UIPage['Logout_GET.Processor'],
     def pageTitle(self, proc: Processor) -> str:
         return 'Log Out'
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: Processor) -> XMLContent:
         return (
             xhtml.p[
                 'You have been logged out.'

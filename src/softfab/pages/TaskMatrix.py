@@ -11,7 +11,7 @@ from softfab.formlib import dropDownList, emptyOption, makeForm, submitButton
 from softfab.jobview import createStatusBar
 from softfab.timelib import normalizeWeek, secondsPerDay, weeksInYear, iterDays
 from softfab.webgui import Table, cell, pageLink, pageURL
-from softfab.xmlgen import xhtml
+from softfab.xmlgen import XMLContent, xhtml
 
 from collections import defaultdict
 import time
@@ -198,7 +198,7 @@ class TaskMatrix_GET(FabPage['TaskMatrix_GET.Processor']):
     def checkAccess(self, req):
         req.checkPrivilege('j/a', 'view the task list')
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: Processor) -> XMLContent:
         yield makeForm(method = 'get', args = proc.args)[
             NavigationBar.instance
             ].present(proc=proc)

@@ -17,7 +17,7 @@ from softfab.pagelinks import createJobsURL
 from softfab.selectview import SelectArgs
 from softfab.utils import encodeURL
 from softfab.webgui import decoration
-from softfab.xmlgen import xhtml
+from softfab.xmlgen import XMLContent, xhtml
 
 from enum import Enum
 
@@ -158,7 +158,7 @@ class BatchExecute_GET(FabPage['BatchExecute_GET.Processor']):
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield BatchConfigTable.instance
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: Processor) -> XMLContent:
         for notice in proc.notices:
             yield xhtml.p(class_ = 'notice')[ notice ]
         configs = proc.configs

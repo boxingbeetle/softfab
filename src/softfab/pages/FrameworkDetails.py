@@ -13,7 +13,7 @@ from softfab.paramview import ParametersTable
 from softfab.resourceview import InlineResourcesTable
 from softfab.utils import pluralize
 from softfab.webgui import PropertiesTable, hgroup, pageLink
-from softfab.xmlgen import xhtml
+from softfab.xmlgen import XMLContent, xhtml
 
 # Note: We use "taskDef" here to refer to instances of TaskDefBase,
 #       mostly frameworks. This was done in anticipation of replacing
@@ -79,7 +79,7 @@ class FrameworkDetails_GET(GraphPageMixin,
     def checkAccess(self, req):
         req.checkPrivilege('fd/a')
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: Processor) -> XMLContent:
         taskDef = proc.taskDef
         frameworkId = proc.args.id
         if taskDef is None:
@@ -104,10 +104,7 @@ class FrameworkDetails_GET(GraphPageMixin,
             GraphPanel.instance.present(proc=proc, graph=proc.graph)
             ].present(proc=proc)
         yield xhtml.p[
-            xhtml.br.join((
-                pageLink('FrameworkEdit', proc.args)[
-                    'Edit this framework'
-                    ],
-                deleteFramework
-                ))
+            pageLink('FrameworkEdit', proc.args)[ 'Edit this framework' ],
+            xhtml.br,
+            deleteFramework
             ]

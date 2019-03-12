@@ -73,7 +73,7 @@ class Home_GET(FabPage['Home_GET.Processor']):
             title = 'SoftFab Jobs Atom Feed',
             )
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: Processor) -> XMLContent:
         atomFeedLink = pageLink('Feed')[
             self.feedIcon.present(proc=proc)
             ]

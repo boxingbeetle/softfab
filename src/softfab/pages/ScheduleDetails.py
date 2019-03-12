@@ -16,7 +16,7 @@ from softfab.scheduleview import (
 from softfab.selectview import TagArgs
 from softfab.utils import pluralize
 from softfab.webgui import PropertiesTable, Table, WidgetT, cell, pageLink, row
-from softfab.xmlgen import xhtml
+from softfab.xmlgen import XMLContent, xhtml
 
 def statusDescription(scheduled):
     status = getScheduleStatus(scheduled)
@@ -110,7 +110,7 @@ class ScheduleDetails_GET(FabPage['ScheduleDetails_GET.Processor']):
     def iterWidgets(self, proc: Processor) -> Iterator[WidgetT]:
         yield DetailsTable
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: Processor) -> XMLContent:
         scheduleId = proc.args.id
         scheduled = proc.scheduled
         if scheduled is None:

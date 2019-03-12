@@ -6,7 +6,7 @@ from softfab.authentication import LoginAuthPage
 from softfab.joblib import getAllTasksWithId
 from softfab.pagelinks import TaskDefIdArgs
 from softfab.resultcode import ResultCode
-from softfab.xmlgen import xhtml
+from softfab.xmlgen import XMLContent, xhtml
 
 class LatestReport_GET(UIPage['LatestReport_GET.Processor'],
                        FabResource['LatestReport_GET.Processor']):
@@ -37,5 +37,5 @@ class LatestReport_GET(UIPage['LatestReport_GET.Processor'],
     def pageTitle(self, proc: Processor) -> str:
         return 'Latest Report'
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: Processor) -> XMLContent:
         return xhtml.p[ 'No reports found for task "%s".' % proc.args.id ]

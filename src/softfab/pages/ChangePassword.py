@@ -104,7 +104,7 @@ class ChangePassword_GET(FabPage['ChangePassword_GET.Processor']):
     def iterStyleDefs(self):
         yield 'td.formlabel { width: 16em; }'
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: Processor) -> XMLContent:
         return presentForm(proc)
 
     def presentError(self, proc: Processor, message: str) -> XMLContent:
@@ -212,5 +212,5 @@ class ChangePassword_POST(FabPage['ChangePassword_POST.Processor']):
         else:
             yield self.backToReferer(proc.req)
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: Processor) -> XMLContent:
         assert False

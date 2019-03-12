@@ -41,7 +41,7 @@ class TaskRunnerEdit_GET(FabPage['TaskRunnerEdit_GET.Processor']):
     def checkAccess(self, req):
         req.checkPrivilege('tr/m')
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: Processor) -> XMLContent:
         args = proc.args
         runner = proc.runner
         yield xhtml.h2[ 'Task Runner: ', xhtml.b[ args.id ]]

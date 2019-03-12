@@ -1,7 +1,9 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from typing import Sequence, Tuple
+
 from softfab.FabPage import FabPage
-from softfab.xmlgen import xhtml
+from softfab.xmlgen import XMLContent, xhtml
 from softfab.webgui import docLink
 
 class Configure_GET(FabPage[FabPage.Processor]):
@@ -14,7 +16,7 @@ class Configure_GET(FabPage[FabPage.Processor]):
     def checkAccess(self, req):
         pass
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: FabPage.Processor) -> XMLContent:
         descriptions = (
             ( 'Project',
                 'Change overall settings, such as the project name '
@@ -41,7 +43,7 @@ class Configure_GET(FabPage[FabPage.Processor]):
                 'on the general '
                 + docLink('/')[ 'documentation pages' ] + '.'
                 ),
-            )
+            ) # type: Sequence[Tuple[str, XMLContent]]
         return xhtml.dl[(
             ( xhtml.dt[name], xhtml.dd[descr] ) for name, descr in descriptions
             )]

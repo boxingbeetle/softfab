@@ -15,7 +15,7 @@ from softfab.tasktables import TaskRunsTable
 from softfab.taskview import TaskColumn
 from softfab.timeview import formatTime
 from softfab.webgui import pageLink
-from softfab.xmlgen import xhtml
+from softfab.xmlgen import XMLContent, xhtml
 
 from collections import defaultdict
 from enum import Enum
@@ -231,7 +231,7 @@ class ExtractedData_GET(FabPage['ExtractedData_GET.Processor']):
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield ExtractedDataTable.instance
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: Processor) -> XMLContent:
         parentArgs = ReportTaskArgs.subset(proc.args)
 
         yield makeForm(formId='keys', method='get')[

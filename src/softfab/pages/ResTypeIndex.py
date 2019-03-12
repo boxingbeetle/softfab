@@ -9,6 +9,7 @@ from softfab.datawidgets import (
     )
 from softfab.pageargs import IntArg, PageArgs, SortArg
 from softfab.restypelib import resTypeDB
+from softfab.xmlgen import XMLContent
 
 class ResTypeLinkColumn(LinkColumn):
 
@@ -46,5 +47,5 @@ class ResTypeIndex_GET(FabPage['ResTypeIndex_GET.Processor']):
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield ResTypeTable.instance
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: Processor) -> XMLContent:
         return ResTypeTable.instance.present(proc=proc)

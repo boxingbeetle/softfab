@@ -2,7 +2,8 @@
 
 from softfab.FabPage import IconModifier
 from softfab.Page import (
-    AccessDenied, InternalError, InvalidRequest, PresentableError, Redirect
+    AccessDenied, InternalError, InvalidRequest, PageProcessor,
+    PresentableError, Redirect
     )
 from softfab.configlib import Config, Task, configDB
 from softfab.configview import InputTable
@@ -25,7 +26,7 @@ from softfab.selectview import TagValueEditTable, textToValues, valuesToText
 from softfab.taskdeflib import taskDefDB
 from softfab.taskrunnerlib import taskRunnerDB
 from softfab.webgui import Table, cell
-from softfab.xmlgen import xhtml
+from softfab.xmlgen import XMLContent, xhtml
 
 from enum import Enum
 
@@ -349,7 +350,7 @@ class SaveStep(DialogStep):
             configDB.update(config)
         return True
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: PageProcessor) -> XMLContent:
         yield (
             xhtml.p[ 'Configuration saved.' ],
             self.backToParent(proc.req)

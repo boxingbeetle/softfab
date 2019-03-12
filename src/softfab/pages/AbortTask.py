@@ -6,7 +6,7 @@ from softfab.formlib import actionButtons, makeForm
 from softfab.joblib import jobDB
 from softfab.pageargs import EnumArg
 from softfab.pagelinks import TaskIdArgs
-from softfab.xmlgen import xhtml
+from softfab.xmlgen import XMLContent, xhtml
 
 from enum import Enum
 
@@ -24,7 +24,7 @@ class AbortTask_GET(FabPage[FabPage.Processor]):
         # No permission needed to display the confirmation dialog.
         pass
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: FabPage.Processor) -> XMLContent:
         # Ask for confirmation.
         taskName = proc.args.taskName
         if taskName == '/all-waiting':
@@ -89,7 +89,7 @@ class AbortTask_POST(FabPage['AbortTask_POST.Processor']):
         # The permission is checked by the Processor.
         pass
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: Processor) -> XMLContent:
         message = proc.message
         if isinstance(message, tuple):
             yield xhtml.p[

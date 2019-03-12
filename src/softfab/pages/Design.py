@@ -13,7 +13,7 @@ from softfab.graphview import (
 from softfab.pageargs import PageArgs, StrArg
 from softfab.webgui import docLink
 from softfab.utils import encodeURL
-from softfab.xmlgen import xhtml
+from softfab.xmlgen import XMLContent, xhtml
 
 class Design_GET(GraphPageMixin, FabPage['Design_GET.Processor']):
     icon = 'IconDesign'
@@ -67,7 +67,7 @@ class Design_GET(GraphPageMixin, FabPage['Design_GET.Processor']):
         req.checkPrivilege('fd/a')
         req.checkPrivilege('pd/a')
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: Processor) -> XMLContent:
         show = proc.args.show
         if show == 'yes':
             if len(proc.graphs) == 1: # only containing the Legend

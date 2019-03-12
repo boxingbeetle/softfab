@@ -1,5 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from typing import Iterable
+
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
 from softfab.RecordDelete import DeleteArgs
@@ -18,7 +20,7 @@ from softfab.utils import encodeURL, pluralize
 from softfab.webgui import (
     PresenterFunction, Table, cell, decoration, pageLink, unorderedList
     )
-from softfab.xmlgen import txt, xhtml
+from softfab.xmlgen import XMLContent, txt, xhtml
 
 # Note:
 # The following pieces of information are not included in this page:
@@ -173,7 +175,7 @@ class ConfigDetails_GET(GraphPageMixin, FabPage['ConfigDetails_GET.Processor']):
     def checkAccess(self, req):
         req.checkPrivilege('c/a')
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: Processor) -> XMLContent:
         config = proc.config
         configId = proc.args.configId
         if config is None:
@@ -194,29 +196,30 @@ class ConfigDetails_GET(GraphPageMixin, FabPage['ConfigDetails_GET.Processor']):
         yield xhtml.p[ 'Configuration contains the following tasks:' ]
         yield TasksTable.instance.present(proc=proc)
         yield decoratedSchedulesTable.present(proc=proc)
-        numSchedules = len(proc.scheduleIds)
-        yield xhtml.p[
-            xhtml.br.join((
-                ( pageLink('FastExecute', proc.args)[
-                    'Execute this configuration'
-                    ], ' (confirmation only)' ),
-                ( xhtml.a(
-                    href = 'Execute?' + encodeURL(( ('config', configId), ))
-                    )[ 'Load this configuration' ],
-                    ' (provide inputs and parameters)' ),
-                ( xhtml.a(
-                    href = 'ReportIndex?' + encodeURL(( ('desc', configId), ))
-                    )[ 'Show history of this configuration' ] ),
-                ( xhtml.a(
-                    href = 'Execute?' + encodeURL((
-                        ('config', configId), ('step', 'edit')
-                        ))
-                    )[ 'Edit this configuration' ] ),
-                ( 'Delete this configuration: not possible, because it is'
-                  ' currently being used by ', str(numSchedules), ' ',
-                  pluralize('schedule', numSchedules), '.'
-                  ) if proc.scheduleIds else pageLink(
-                    'DelJobConfig', DeleteArgs(id = configId)
-                    )[ 'Delete this configuration' ]
-                ))
+        yield xhtml.p[ xhtml.br.join(self.iterLinks(proc)) ]
+
+    def iterLinks(self, proc: Processor) -> Iterable[XMLContent]:
+        yield pageLink('FastExecute', proc.args)[
+            'Execute this configuration'
+            ], ' (confirmation only)'
+        configId = proc.args.configId
+        yield xhtml.a(href='Execute?' + encodeURL(( ('config', configId), )))[
+            'Load this configuration'
+            ], ' (provide inputs and parameters)'
+        yield xhtml.a(href='ReportIndex?' + encodeURL(( ('desc', configId), )))[
+            'Show history of this configuration'
             ]
+        yield xhtml.a(href='Execute?' + encodeURL((
+            ('config', configId), ('step', 'edit')
+            )))[ 'Edit this configuration' ]
+        if proc.scheduleIds:
+            numSchedules = len(proc.scheduleIds)
+            yield (
+                'Delete this configuration: not possible, because it is'
+                ' currently being used by ', str(numSchedules), ' ',
+                pluralize('schedule', numSchedules), '.'
+                )
+        else:
+            yield pageLink('DelJobConfig', DeleteArgs(id=configId))[
+                'Delete this configuration'
+                ]

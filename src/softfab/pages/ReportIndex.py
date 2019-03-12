@@ -10,7 +10,7 @@ from softfab.joblib import jobDB
 from softfab.jobview import JobsTable
 from softfab.pageargs import IntArg, SortArg, StrArg
 from softfab.querylib import WildcardFilter
-from softfab.xmlgen import xhtml
+from softfab.xmlgen import XMLContent, xhtml
 
 class FilteredJobsTable(JobsTable):
 
@@ -59,6 +59,6 @@ class ReportIndex_GET(FabPage['ReportIndex_GET.Processor']):
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield FilteredJobsTable.instance
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: Processor) -> XMLContent:
         yield FilterForm.instance.present(proc=proc, numListItems=5)
         yield FilteredJobsTable.instance.present(proc=proc)

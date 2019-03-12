@@ -7,6 +7,7 @@ from softfab.Page import PageProcessor
 from softfab.datawidgets import DataTable
 from softfab.pageargs import IntArg, PageArgs, SortArg
 from softfab.storageview import StorageTable
+from softfab.xmlgen import XMLContent
 
 class StorageIndex_GET(FabPage['StorageIndex_GET.Processor']):
     icon = 'IconReport'
@@ -26,5 +27,5 @@ class StorageIndex_GET(FabPage['StorageIndex_GET.Processor']):
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield StorageTable.instance
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: Processor) -> XMLContent:
         return StorageTable.instance.present(proc=proc)

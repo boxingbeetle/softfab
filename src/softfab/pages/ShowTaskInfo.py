@@ -21,7 +21,7 @@ from softfab.taskdefview import formatTimeout
 from softfab.taskrunnerlib import taskRunnerDB
 from softfab.tasktables import JobTaskRunsTable
 from softfab.webgui import PropertiesTable, WidgetT
-from softfab.xmlgen import txt, xhtml
+from softfab.xmlgen import XMLContent, txt, xhtml
 
 taskParametersTable = ParametersTable('task')
 
@@ -191,7 +191,7 @@ class ShowTaskInfo_GET(FabPage['ShowTaskInfo_GET.Processor']):
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield SelfTaskRunsTable.instance
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: Processor) -> XMLContent:
         job = proc.job
         task = proc.task
         jobId = proc.args.jobId

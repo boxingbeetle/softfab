@@ -29,7 +29,7 @@ class AbstractPhase:
         The default implementation does nothing.
         '''
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: 'EditPage.Processor') -> XMLContent:
         '''Presents this phase.
         '''
         raise NotImplementedError
@@ -38,7 +38,7 @@ class EditPhase(AbstractPhase):
     '''First and main phase: actual editing of the record.
     '''
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: 'EditPage.Processor') -> XMLContent:
         page = self.page
 
         buttons = ['save']
@@ -96,7 +96,7 @@ class SavePhase(AbstractPhase):
     def updateRecord(self, proc, element): # pylint: disable=unused-argument
         self.page.db.update(element)
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: 'EditPage.Processor') -> XMLContent:
         page = self.page
         if page.autoName:
             elementId = None
@@ -113,7 +113,7 @@ class SaveAsPhase(AbstractPhase):
     '''Ask for a name for the record.
     '''
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: 'EditPage.Processor') -> XMLContent:
         page = self.page
         args = proc.args
         yield xhtml.h2[ 'Save As' ]
@@ -127,7 +127,7 @@ class ConfirmOverwritePhase(AbstractPhase):
     '''Asks the user for confirmation before overwriting an existing record.
     '''
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: 'EditPage.Processor') -> XMLContent:
         page = self.page
         args = proc.args
         yield xhtml.p[
@@ -380,7 +380,7 @@ class EditPage(FabPage['EditPage.Processor'], ABC):
         if self.useScript:
             yield rowManagerScript.present(proc=proc)
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: Processor) -> XMLContent:
         return proc.phase.presentContent(proc)
 
     def presentError(self, proc: Processor, message: str) -> XMLContent:

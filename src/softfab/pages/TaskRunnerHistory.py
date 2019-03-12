@@ -12,7 +12,7 @@ from softfab.querylib import runQuery
 from softfab.taskrunnerlib import taskRunnerDB
 from softfab.tasktables import TaskRunsTable
 from softfab.webgui import pageLink
-from softfab.xmlgen import xhtml
+from softfab.xmlgen import XMLContent, xhtml
 
 # For large factories, sorting through all tasks that ever ran will take
 # several minutes. The typical use case for Task Runner History is to see
@@ -72,7 +72,7 @@ class TaskRunnerHistory_GET(FabPage['TaskRunnerHistory_GET.Processor']):
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield HistoryTable.instance
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: Processor) -> XMLContent:
         runnerId = proc.args.runnerId
 
         if proc.taskRunner is None:

@@ -9,7 +9,7 @@ from softfab.formlib import backButton, makeForm, submitButton
 from softfab.pageargs import ArgsCorrected, PageArgs, StrArg
 from softfab.utils import abstract
 from softfab.webgui import PresenterFunction
-from softfab.xmlgen import xhtml
+from softfab.xmlgen import XMLContent, xhtml
 
 def _backAndNextButton(backName, nextLabel):
     back = backButton(name=backName)
@@ -49,7 +49,7 @@ class DialogStep(ABC):
         '''
         return True
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: 'DialogProcessorBase') -> XMLContent:
         '''Presents this step.
         Is only called if process() returned True.
         The default implementation presents a form.
@@ -250,7 +250,7 @@ class DialogPage(FabPage[DialogProcessorBase], ABC):
     def pageTitle(self, proc: DialogProcessorBase) -> str:
         return self.description + ' - ' + proc.step.title
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: DialogProcessorBase) -> XMLContent:
         if proc.errorMessage is not None:
             yield xhtml.p(class_ = 'notice')[ proc.errorMessage ]
         yield proc.step.presentContent(proc)

@@ -8,7 +8,7 @@ from softfab.storagelib import (
     Storage, getStorageIdByName, getStorageIdByURL, storageDB
     )
 from softfab.webgui import PropertiesTable
-from softfab.xmlgen import xhtml
+from softfab.xmlgen import XMLContent, xhtml
 
 from urllib.parse import urlparse
 
@@ -56,14 +56,15 @@ class MergePhase(AbstractPhase):
                     ])
             newElement.takeOver(oldElement)
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: EditPage.Processor) -> XMLContent:
         if proc.args.newId != proc.args.id:
             return (
                 xhtml.p[ 'The storages have been merged.' ],
                 self.page.backToParent(proc.req)
                 )
 
-        element = proc.element
+        # TODO: Design a way of passing data that mypy understands.
+        element = proc.element # type: ignore
         idByName = getStorageIdByName(element['name'])
         idByURL = getStorageIdByURL(element['url'])
         if idByName is not None and idByName != element.getId():
@@ -72,7 +73,9 @@ class MergePhase(AbstractPhase):
                 theSame = 'name and URL'
             else:
                 theSame = 'name'
-            message = ['A storage with the same ', theSame, ' already exists.']
+            message = [
+                'A storage with the same ', theSame, ' already exists.'
+                ] # type: XMLContent
         elif idByURL is not None and idByURL != element.getId():
             mergeId = idByURL
             otherName = storageDB[idByURL]['name']

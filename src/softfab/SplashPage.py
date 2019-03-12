@@ -5,7 +5,7 @@ from softfab.UIPage import UIPage
 from softfab.authentication import NoAuthPage
 from softfab.response import Response
 from softfab.webgui import unorderedList
-from softfab.xmlgen import xhtml
+from softfab.xmlgen import XMLContent, xhtml
 
 class _StartupMessages:
 
@@ -48,7 +48,7 @@ class SplashPage(UIPage[PageProcessor], FabResource[PageProcessor]):
 
         super().writeHTTPHeaders(response)
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: PageProcessor) -> XMLContent:
         return (
             xhtml.h2[ 'Server starting:' ],
             unorderedList[ startupMessages ]

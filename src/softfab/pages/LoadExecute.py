@@ -14,7 +14,7 @@ from softfab.selectview import (
     BasketArgs, SelectProcMixin, TagArgs, selectDialog
     )
 from softfab.webgui import docLink
-from softfab.xmlgen import xhtml
+from softfab.xmlgen import XMLContent, xhtml
 
 class SelectColumn(DataColumn):
     keyName = None
@@ -98,7 +98,7 @@ class LoadExecute_GET(FabPage['LoadExecute_GET.Processor']):
     def checkAccess(self, req):
         req.checkPrivilege('c/l')
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: Processor) -> XMLContent:
         yield xhtml.h2[ 'Execute from Configuration' ],
         yield selectDialog(
             proc, self.name, Config.cache,

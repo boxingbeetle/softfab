@@ -15,7 +15,7 @@ from softfab.taskdeflib import taskDefDB
 from softfab.taskdefview import configsUsingTaskDef, formatTimeout
 from softfab.utils import pluralize
 from softfab.webgui import PropertiesTable, pageLink
-from softfab.xmlgen import xhtml
+from softfab.xmlgen import XMLContent, xhtml
 
 taskDefParametersTable = ParametersTable('taskDef')
 
@@ -64,7 +64,7 @@ class TaskDetails_GET(FabPage['TaskDetails_GET.Processor']):
     def checkAccess(self, req):
         req.checkPrivilege('td/a')
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: Processor) -> XMLContent:
         taskDef = proc.taskDef
         taskDefId = proc.args.id
         configs = proc.configs
@@ -81,13 +81,12 @@ class TaskDetails_GET(FabPage['TaskDetails_GET.Processor']):
         yield xhtml.p[ createTaskHistoryLink(taskDefId) ]
         numConfigs = len(configs)
         yield xhtml.p[
-            xhtml.br.join((
-                pageLink('TaskEdit', proc.args)[ 'Edit this task definition' ],
-                ( 'Delete this task definition: not possible, because it is '
-                  'currently being used by ', str(numConfigs), ' ',
-                  pluralize('configuration', numConfigs), '.'
-                  ) if configs else pageLink(
-                    'TaskDelete', DeleteArgs(id = taskDefId)
-                    )[ 'Delete this task definition' ]
-                ))
+            pageLink('TaskEdit', proc.args)[ 'Edit this task definition' ],
+            xhtml.br,
+            ( 'Delete this task definition: not possible, because it is '
+              'currently being used by ', str(numConfigs), ' ',
+              pluralize('configuration', numConfigs), '.'
+            ) if configs else pageLink(
+                'TaskDelete', DeleteArgs(id = taskDefId)
+                )[ 'Delete this task definition' ]
             ]

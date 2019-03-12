@@ -9,7 +9,7 @@ from softfab.pagelinks import ProductDefIdArgs, createFrameworkDetailsLink
 from softfab.productdeflib import productDefDB
 from softfab.utils import pluralize
 from softfab.webgui import PropertiesTable, hgroup, pageLink
-from softfab.xmlgen import xhtml
+from softfab.xmlgen import XMLContent, xhtml
 
 class DetailsTable(PropertiesTable):
 
@@ -69,7 +69,7 @@ class ProductDetails_GET(GraphPageMixin,
     def checkAccess(self, req):
         req.checkPrivilege('pd/a')
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: Processor) -> XMLContent:
         productDef = proc.productDef
         productDefId = proc.args.id
         producers = proc.producers
@@ -98,8 +98,7 @@ class ProductDetails_GET(GraphPageMixin,
             GraphPanel.instance.present(proc=proc, graph=proc.graph)
             ].present(proc=proc)
         yield xhtml.p[
-            xhtml.br.join((
-                pageLink('ProductEdit', proc.args)[ 'Edit this product' ],
-                deleteProduct
-                ))
+            pageLink('ProductEdit', proc.args)[ 'Edit this product' ],
+            xhtml.br,
+            deleteProduct
             ]

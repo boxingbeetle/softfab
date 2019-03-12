@@ -12,7 +12,7 @@ from softfab.frameworkview import FrameworkColumn
 from softfab.pageargs import IntArg, PageArgs, SortArg
 from softfab.pagelinks import createProductDetailsLink
 from softfab.webgui import docLink
-from softfab.xmlgen import txt, xhtml
+from softfab.xmlgen import XMLContent, txt, xhtml
 
 class ProductColumn(DataColumn):
     def presentCell(self, record, **kwargs):
@@ -61,7 +61,7 @@ class FrameworkIndex_GET(FabPage['FrameworkIndex_GET.Processor']):
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield FrameworksTable.instance
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: Processor) -> XMLContent:
         yield FrameworksTable.instance.present(proc=proc)
         yield xhtml.p[
             'Final parameters are not shown in the table above. '

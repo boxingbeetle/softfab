@@ -18,7 +18,7 @@ from softfab.taskdeflib import taskDefDB
 from softfab.taskrunnerlib import taskRunnerDB
 from softfab.utils import ResultKeeper
 from softfab.webgui import Table, pageLink, row, vgroup
-from softfab.xmlgen import txt, xhtml
+from softfab.xmlgen import XMLContent, txt, xhtml
 
 class ResTypeTable(ResTypeTableMixin, Table):
 
@@ -178,7 +178,7 @@ class Capabilities_GET(FabPage['Capabilities_GET.Processor']):
     def checkAccess(self, req):
         req.checkPrivilege('tr/l')
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: Processor) -> XMLContent:
         resType = resTypeDB[proc.args.restype]
         yield vgroup[
             ResTypeTable.instance,

@@ -73,7 +73,7 @@ class Notifications_GET(FabPage[FabPage.Processor]):
     def checkAccess(self, req):
         pass
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: FabPage.Processor) -> XMLContent:
         yield from presentForm(MailConfigArgs(
             mailNotification=project['mailnotification'],
             smtpRelay=project.smtpRelay,
@@ -150,7 +150,7 @@ class Notifications_POST(FabPage['Notifications_POST.Processor']):
             else:
                 assert False, action
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: Processor) -> XMLContent:
         action = proc.args.action
         if action is Actions.TEST:
             yield xhtml.p(class_='notice')[

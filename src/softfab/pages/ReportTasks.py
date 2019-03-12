@@ -20,7 +20,7 @@ from softfab.setcalc import intersection, union
 from softfab.taskdeflib import taskDefDB
 from softfab.tasktables import TaskRunsTable
 from softfab.webgui import pageLink
-from softfab.xmlgen import xhtml
+from softfab.xmlgen import XMLContent, xhtml
 
 class FilteredTaskRunsTable(TaskRunsTable):
 
@@ -69,7 +69,7 @@ class ReportTasks_GET(FabPage['ReportTasks_GET.Processor']):
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield FilteredTaskRunsTable.instance
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: Processor) -> XMLContent:
         taskFilter = proc.args.task
 
         yield FilterForm.instance.present(proc=proc, numListItems=10)

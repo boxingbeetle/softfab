@@ -13,7 +13,7 @@ from softfab.restypelib import taskRunnerResourceTypeName
 from softfab.taskrunnerlib import taskRunnerDB
 from softfab.timeview import formatDuration, formatTime
 from softfab.webgui import Column, Table, WidgetT, pageLink, row
-from softfab.xmlgen import xhtml
+from softfab.xmlgen import XMLContent, xhtml
 
 class TaskRunnerDetails_GET(FabPage['TaskRunnerDetails_GET.Processor']):
     icon = 'TaskRunStat1'
@@ -35,7 +35,7 @@ class TaskRunnerDetails_GET(FabPage['TaskRunnerDetails_GET.Processor']):
     def iterWidgets(self, proc: Processor) -> Iterator[WidgetT]:
         yield DetailsTable
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: Processor) -> XMLContent:
         taskRunner = proc.taskRunner
         if taskRunner is None:
             yield xhtml.p[

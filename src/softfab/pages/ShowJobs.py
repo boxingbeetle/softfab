@@ -9,7 +9,7 @@ from softfab.joblib import jobDB
 from softfab.jobview import JobsSubTable
 from softfab.pagelinks import JobIdSetArgs
 from softfab.webgui import WidgetT, unorderedList
-from softfab.xmlgen import xhtml
+from softfab.xmlgen import XMLContent, xhtml
 
 class ShowJobsTable(JobsSubTable):
     widgetId = 'jobsTable'
@@ -51,7 +51,7 @@ class ShowJobs_GET(FabPage['ShowJobs_GET.Processor']):
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield ShowJobsTable.instance
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: Processor) -> XMLContent:
         if len(proc.jobs) != 0:
             if proc.req.refererPage in (
                 'BatchExecute', 'Execute', 'FastExecute'

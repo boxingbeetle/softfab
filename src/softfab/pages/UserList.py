@@ -150,7 +150,7 @@ class UserList_GET(FabPage['UserList_GET.Processor']):
     def pageTitle(self, proc: Processor) -> str:
         return 'Configure Users'
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: Processor) -> XMLContent:
         yield makeForm(method = 'get', formId = 'inactive')[
             FilterTable.instance
             ].present(proc=proc)
@@ -227,7 +227,7 @@ class UserList_POST(FabPage['UserList_POST.Processor']):
     def pageTitle(self, proc: Processor) -> str:
         return 'Change User Role'
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: Processor) -> XMLContent:
         assert False
 
     def presentError(self, proc: Processor, message: str) -> XMLContent:

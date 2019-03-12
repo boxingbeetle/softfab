@@ -86,7 +86,7 @@ class FastExecute_GET(FabPage['FastExecute_GET.Processor']):
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield FastConfigTable.instance
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: Processor) -> XMLContent:
         configs = proc.configs
         tagged = proc.args.configId is None
         if configs:
@@ -173,5 +173,5 @@ class FastExecute_POST(FabPage['FastExecute_POST.Processor']):
     def checkAccess(self, req):
         req.checkPrivilege('c/l')
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: Processor) -> XMLContent:
         assert False

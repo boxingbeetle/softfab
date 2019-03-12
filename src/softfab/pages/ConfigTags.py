@@ -106,7 +106,7 @@ class ConfigTags_POST(ConfigTagsBase):
         tagvalues = DictArg(StrArg())
         commontags = DictArg(SetArg())
 
-    class Processor(ConfigTags_GET.Processor):
+    class Processor(ConfigTagsBase.Processor):
 
         def process(self, req):
             action = req.args.action
@@ -171,9 +171,9 @@ class ConfigTags_POST(ConfigTagsBase):
                                     })
                                 config._notify()
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: ConfigTagsBase.Processor) -> XMLContent:
         if proc.notices:
-            yield from super().presentContent(proc)
+            yield super().presentContent(proc)
         else:
             yield xhtml.p[ 'The tags have been updated successfully.' ]
             yield xhtml.p[ xhtml.a(href = proc.getBackURL())[

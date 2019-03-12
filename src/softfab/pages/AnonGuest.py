@@ -15,7 +15,7 @@ class AnonGuestBase(FabPage[ProcT]):
     def pageTitle(self, proc: ProcT) -> str:
         return 'Anonymous Guest Access'
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: ProcT) -> XMLContent:
         raise NotImplementedError
 
 class AnonGuest_GET(AnonGuestBase[FabPage.Processor]):
@@ -23,7 +23,7 @@ class AnonGuest_GET(AnonGuestBase[FabPage.Processor]):
     def checkAccess(self, req):
         pass
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: FabPage.Processor) -> XMLContent:
         yield presentAnonGuestSetting()
         yield self.backToParent(proc.req)
 
@@ -41,7 +41,7 @@ class AnonGuest_POST(AnonGuestBase['AnonGuest_POST.Processor']):
             project.setAnonGuestAccess(req.args.anonguest)
             raise Redirect('AnonGuest')
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: Processor) -> XMLContent:
         assert False
 
     def presentError(self, proc: Processor, message: str) -> XMLContent:

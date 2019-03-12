@@ -13,7 +13,7 @@ from softfab.scheduleview import (
     )
 from softfab.userview import OwnerColumn
 from softfab.webgui import WidgetT, pageLink, pageURL
-from softfab.xmlgen import xhtml
+from softfab.xmlgen import XMLContent, xhtml
 
 from enum import Enum
 from typing import Iterator
@@ -107,7 +107,7 @@ class ScheduleIndex_GET(FabPage['ScheduleIndex_GET.Processor']):
     def iterWidgets(self, proc: Processor) -> Iterator[WidgetT]:
         yield ScheduleTable
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: Processor) -> XMLContent:
         yield makeForm(args=proc.args)[
             ScheduleTable.instance
             ].present(proc=proc)
@@ -149,5 +149,5 @@ class ScheduleIndex_POST(FabPage['ScheduleIndex_POST.Processor']):
     def checkAccess(self, req):
         pass # Processor checks privs.
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: Processor) -> XMLContent:
         assert False

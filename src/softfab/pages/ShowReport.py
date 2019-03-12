@@ -15,7 +15,7 @@ from softfab.taskrunnerlib import taskRunnerDB
 from softfab.tasktables import JobTaskRunsTable
 from softfab.utils import pluralize
 from softfab.webgui import Table, WidgetT, cell, pageLink
-from softfab.xmlgen import txt, xhtml
+from softfab.xmlgen import XMLContent, txt, xhtml
 
 class SelfJobsTable(JobsSubTable):
     descriptionLink = False
@@ -71,7 +71,7 @@ class ShowReport_GET(FabPage['ShowReport_GET.Processor']):
         yield TaskRunsTable
         yield OutputTable
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: Processor) -> XMLContent:
         jobId = proc.args.jobId
         job = proc.job
         if job is None:

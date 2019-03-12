@@ -12,7 +12,7 @@ from softfab.pageargs import IntArg, PageArgs, SortArg
 from softfab.pagelinks import createTaskDetailsLink
 from softfab.taskdeflib import taskDefDB
 from softfab.webgui import docLink
-from softfab.xmlgen import xhtml
+from softfab.xmlgen import XMLContent, xhtml
 
 class NameColumn(DataColumn):
     label = 'Task Definition ID'
@@ -49,7 +49,7 @@ class TaskIndex_GET(FabPage['TaskIndex_GET.Processor']):
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield TasksTable.instance
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: Processor) -> XMLContent:
         yield TasksTable.instance.present(proc=proc)
         yield xhtml.p[
             'Final parameters are not shown in the table above. '

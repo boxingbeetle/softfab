@@ -11,7 +11,7 @@ from softfab.pageargs import IntArg, PageArgs, SortArg
 from softfab.pagelinks import createProductDetailsLink
 from softfab.productdeflib import productDefDB
 from softfab.webgui import docLink
-from softfab.xmlgen import xhtml
+from softfab.xmlgen import XMLContent, xhtml
 
 class NameColumn(DataColumn):
     label = 'Product ID'
@@ -55,7 +55,7 @@ class ProductIndex_GET(FabPage['ProductIndex_GET.Processor']):
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield ProductDefTable.instance
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: Processor) -> XMLContent:
         yield ProductDefTable.instance.present(proc=proc)
         yield xhtml.p[
             'For help about "Products", please read the following document: ',

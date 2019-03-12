@@ -92,7 +92,7 @@ class RecordDelete_GET(FabPage['RecordDelete_GET.Processor'], ABC):
         '''
         return req.args.refererURL or self.getParentURL(req)
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: Processor) -> XMLContent:
         yield xhtml.p[
             'Delete ', self.recordName, ' ', xhtml.b[ proc.args.id ], '?'
             ]
@@ -136,7 +136,8 @@ class RecordDelete_POSTMixin:
                 )
             self.page.db.remove(record)
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: PageProcessor) -> XMLContent:
+        assert isinstance(self, FabPage), self # indirect type hint
         yield (
             xhtml.p[
                 self.recordName.capitalize(), ' ',

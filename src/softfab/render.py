@@ -13,7 +13,7 @@ from softfab.pageargs import ArgsCorrected, ArgsInvalid, dynamic
 from softfab.response import Response
 from softfab.utils import abstract
 from softfab.webgui import docLink
-from softfab.xmlgen import xhtml
+from softfab.xmlgen import XMLContent, xhtml
 
 from twisted.internet.defer import Deferred, inlineCallbacks
 from twisted.internet.interfaces import IPullProducer, IProducer, IPushProducer
@@ -54,7 +54,7 @@ class ErrorPage(UIPage[PageProcessor], PageProcessor):
         response.setStatus(self.status, self.messageText)
         super().writeHTTPHeaders(response)
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: PageProcessor) -> XMLContent:
         raise NotImplementedError
 
 class BadRequestPage(ErrorPage):
@@ -68,7 +68,7 @@ class BadRequestPage(ErrorPage):
         ErrorPage.__init__(self, req, messageText)
         self.messageHTML = messageHTML
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: PageProcessor) -> XMLContent:
         return self.messageHTML
 
 class ForbiddenPage(ErrorPage):
@@ -78,7 +78,7 @@ class ForbiddenPage(ErrorPage):
     status = 403
     title = 'Access Denied'
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: PageProcessor) -> XMLContent:
         return xhtml.p[ 'Access denied: %s.' % self.messageText ]
 
 class NotFoundPage(ErrorPage):
@@ -90,7 +90,7 @@ class NotFoundPage(ErrorPage):
     status = 404
     title = 'Page Not Found'
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: PageProcessor) -> XMLContent:
         return (
             xhtml.p[ 'The page you requested was not found on this server.' ],
             xhtml.p[ xhtml.a(href = 'Home')[ 'Back to Home' ] ]
@@ -103,7 +103,7 @@ class InternalErrorPage(ErrorPage):
     status = 500
     title = 'Internal Error'
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: PageProcessor) -> XMLContent:
         return (
             xhtml.p[ 'Internal error: %s.' % self.messageText ],
             xhtml.p[ 'Please ', docLink('/reference/contact/')[

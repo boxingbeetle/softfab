@@ -7,7 +7,7 @@ from softfab.joblib import jobDB
 from softfab.pagelinks import TaskIdArgs
 from softfab.resultlib import getData, getKeys
 from softfab.webgui import Table, cell, pageLink
-from softfab.xmlgen import xhtml
+from softfab.xmlgen import XMLContent, xhtml
 
 class ExtractionDetails_GET(FabPage['ExtractionDetails_GET.Processor']):
     icon = 'IconReport'
@@ -37,7 +37,7 @@ class ExtractionDetails_GET(FabPage['ExtractionDetails_GET.Processor']):
     def checkAccess(self, req):
         req.checkPrivilege('t/a')
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: Processor) -> XMLContent:
         taskName = proc.task.getName()
         yield xhtml.p[ 'Extracted data for task ', xhtml.b[ taskName ], ':' ]
         yield DetailsTable.instance.present(proc=proc)

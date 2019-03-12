@@ -9,6 +9,7 @@ from softfab.pageargs import IntArg, PageArgs, SortArg
 from softfab.shadowlib import shadowDB
 from softfab.shadowview import ShadowTable, trimPolicy
 from softfab.webgui import WidgetT
+from softfab.xmlgen import XMLContent
 
 class ShadowQueue_GET(FabPage['ShadowQueue_GET.Processor']):
     icon = 'TaskRunStat1'
@@ -34,6 +35,6 @@ class ShadowQueue_GET(FabPage['ShadowQueue_GET.Processor']):
     def iterWidgets(self, proc: Processor) -> Iterator[WidgetT]:
         yield ShadowTable
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: Processor) -> XMLContent:
         yield trimPolicy
         yield ShadowTable.instance.present(proc=proc)

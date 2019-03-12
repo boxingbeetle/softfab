@@ -7,7 +7,7 @@ from softfab.timeview import formatTime
 from softfab.utils import parseVersion
 from softfab.version import version as softFabVersion
 from softfab.webgui import Table, docLink
-from softfab.xmlgen import xhtml
+from softfab.xmlgen import XMLContent, xhtml
 
 from passlib import __version__ as passlibVersion
 from twisted import __version__ as twistedVersion
@@ -31,7 +31,7 @@ class About_GET(FabPage[FabPage.Processor]):
     def checkAccess(self, req):
         pass
 
-    def presentContent(self, proc):
+    def presentContent(self, proc: FabPage.Processor) -> XMLContent:
         yield xhtml.h2[ 'Status' ]
         yield StatusTable.instance.present(proc=proc)
 
