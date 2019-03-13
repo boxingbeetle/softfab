@@ -48,7 +48,7 @@ The "Home" page is the default SoftFab page. From here you have access to all fu
 
 More about jobs in the section titled [History](#history).
 
-## Configure ![Configure](/styles/Configure.png)
+## Configure ![Configure](/styles/Configure.png)<a id=configure></a>
 
 This is the starting point where you have to define the project settings, create or extend the design of the SoftFab project by building an executation graph including frameworks and products and where you can create new task definitions and resources.
 
@@ -85,7 +85,7 @@ To be able to create and run a new job configuration you must have or create at 
 
 On this page you can see all the SoftFab users for this factory. You can add a new user, change password(s) and change the user roles (inactive, guest, user or operator). It is not possible to delete a user. Set the user role to inactive this such case (this is done for traceability; the job history of all users are kept).
 
-## Execute ![Execute](/styles/ExecConf2.png)
+## Execute ![Execute](/styles/ExecConf2.png)<a id=execute></a>
 
 From this page you are able to start remotely one or more builds, one or more tests or any other type of task an operator has integrated into the SoftFab tool. A 'task' in SoftFab terminology is the smallest unit of execution. A task runs on exactly one (available) Task Runner. It is possible that the tasks of a multi task job configuration run on many different, possibly globally distributed, Task Runners in parallel. In this way a job can complete in shorter time.
 
@@ -280,7 +280,7 @@ Task Matrix is again another new way of displaying which tasks have run and thei
 
 Filtering on (Job) configuration means: show only tasks that occur in this/these particular configuration(s).
 
-## Resources![Resources](/styles/Resources1.png)
+## Resources![Resources](/styles/Resources1.png)<a id=resources></a>
 
 In this section all resources instances, ordered by their type, and their status are presented.
 

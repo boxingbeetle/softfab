@@ -10,7 +10,7 @@ body:
 
 ##Control Center Configuration
 
-### Framework Definition
+### Framework Definition<a id=frameworkdef></a>
 
 You can add a framework definition by starting at the home page and select Configure / Design / Frameworks / Create New Framework in the top navigation bar.
 
@@ -40,7 +40,7 @@ Not every Task Runner is necessarily capable of executing every framework. E.g. 
 
 To execute tasks, first a configuration has to be created. A configuration contains one or more tasks. E.g. you can create a configuration to perform all tasks or a configuration without tests or a configuration with only some major tests. You can create a configuration by starting at the home page and select Execute / Execute from scratch. Next you will see a list of all the task definitions to choose from. You can further save this as a new configuration, or run it at once.
 
-### Execution Tasks versus Extraction Tasks
+### Execution Tasks versus Extraction Tasks<a id=extract></a>
 
 With SoftFab it is possible to store mid-level data and to visualize this so-called mid-level data by plotting trend graphs (examples are e.g. number of lines of code, number of problems reported by a static code check tool, number of compiler errors/warnings, etc.) In this way it is possible to track the evolution of the software developed in the project. It will help to run and lead the project if the extracted data is chosen well. In order to plot a trend graph, the mid-level data has to be extracted from a low-level log report or from the executing environment and stored in the factory. In SoftFab the following two ways are available to send the extracted mid-level data to the control center:
 

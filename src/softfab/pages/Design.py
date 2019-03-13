@@ -129,9 +129,9 @@ class Design_GET(GraphPageMixin, FabPage['Design_GET.Processor']):
                 ]
         yield xhtml.p[
             'For help please read the documentation about the ',
-            docLink('/concepts/execution_graph/')[ 'Execution Graph' ], ', ',
-            docLink('/concepts/task_definitions/')[
+            docLink('/introduction/execution-graph/')[ 'Execution Graph' ], ', ',
+            docLink('/introduction/framework-and-task-definitions/')[
                 'Framework and Task Definitions'
                 ], ' or ',
-            docLink('/reference/user_manual/#resources')[ 'Resources' ], '.'
+            docLink('/reference/user-manual/#resources')[ 'Resources' ], '.'
             ]

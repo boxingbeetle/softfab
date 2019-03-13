@@ -55,13 +55,19 @@ class ProductTable(PropertiesTable):
             checkBox(name='local')[
                 'Product is only accessible to the Task Runner that created it'
                 ],
-            ' (', docLink('/concepts/execution_graph/#local_product')[
-                'documentation' ], ')'
+            ' (',
+			docLink('/introduction/execution-graph/#local_product')[
+                'documentation'
+				],
+			')'
             )
         yield 'Combined', (
             checkBox(name='combined')[
                 'Product is the combination of outputs from multiple tasks'
                 ],
-            ' (', docLink('/concepts/execution_graph/#combined_product')[
-                'documentation' ], ')'
+            ' (',
+			docLink('/introduction/execution-graph/#combined_product')[
+                'documentation'
+				],
+			')'
             )

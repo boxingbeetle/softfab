@@ -159,12 +159,16 @@ class ResourceIndex_GET(FabPage['ResourceIndex_GET.Processor']):
         yield ResourcesTable.instance.present(proc=proc)
         yield xhtml.p[
             'The Task Runner installation package can be found on the ',
-            docLink('/downloads/#taskrunner_downloads')[ 'downloads page' ], '.'
+            docLink('/installation/downloads/#taskrunner_downloads')[
+				'downloads page'
+				],
+			'.'
             ]
         yield xhtml.p[
             'For help about "Resources" or "Resource Types" read the '
             'document: ',
-            docLink('/reference/user_manual/#resources')[ 'Resources' ], '.'
+            docLink('/reference/user-manual/#resources')[ 'Resources' ],
+			'.'
             ]
 
 class PostArgs(ResourceIndex_GET.Arguments):

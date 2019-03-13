@@ -288,7 +288,7 @@ class CMTriggerPanel(Panel):
         yield (
             'This sets the "', xhtml.code[ 'sf.cmtrigger' ], '" tag '
             'on this schedule, for use by a ',
-            docLink('/reference/cmtrigger/')[ 'CM trigger script' ], '.'
+            docLink('/reference/cm-triggered-build-and-test/')[ 'CM trigger script' ], '.'
             )
 
 class CommentPanel(Panel):

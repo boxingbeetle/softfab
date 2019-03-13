@@ -56,13 +56,13 @@ A token product is presented as the name of the product inside a dashed rectangl
 
 ![Execution graph containing a token product](token.png)
 
-#### Local Product
+#### Local Product<a id=local_product></a>
 
 By default, a product is assumed to be accessible by every Task Runner in the factory. This is true if the product is for example a file on a web server or on a network drive available to all project PCs. However, sometimes a product is bound to a particular Task Runner, for example files on the local harddisk of the Factory PC. Such a product is called a _local product_.
 
 The use of a local product can sometimes simplify the implementation of wrappers. It can also lead to better performance in some cases: for example building on a local harddisk is often a lot faster than building on a network drive. However, it also limits the ability of SoftFab to execute tasks on different Task Runners, thus reducing parallelism and increasing lead time. So we recommend looking at your execution graph when deciding whether a product should be local or not: if a product is an input to a lot of tasks, you should try to avoid making it local.
 
-#### Combined Product
+#### Combined Product<a id=combined_product></a>
 
 Sometimes a task has to gather the output of several other tasks, for example a combined test report generated from the test results of several test tasks. The final report task should not run until all test tasks have finished. For these situations the _combined product_ was introduced.
 
