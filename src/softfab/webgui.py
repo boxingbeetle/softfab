@@ -33,20 +33,29 @@ if TYPE_CHECKING:
 else:
     NoReturn = None
 
-def pageURL(page: str, args: Optional[PageArgs] = None) -> str:
+def pageURL(
+        page: str,
+        args: Optional[PageArgs] = None,
+        **kwargs: str
+        ) -> str:
     '''Constructs URL of another page.
     '''
     # Note: Require the page name even when linking to the same page,
     #       since otherwise if the query is empty, the result will be
     #       an empty URL, which does not lead to a page fetch.
     assert page
-    encoded = '' if args is None else encodeURL(args.toQuery())
-    return '%s?%s' % (page, encoded) if encoded else page
+    query = [] if args is None else list(args.toQuery())
+    query += kwargs.items()
+    return '%s?%s' % (page, encodeURL(query)) if query else page
 
-def pageLink(page: str, args: Optional[PageArgs] = None) -> XMLSubscriptable:
+def pageLink(
+        page: str,
+        args: Optional[PageArgs] = None,
+        **kwargs: str
+        ) -> XMLSubscriptable:
     '''Creates a hyperlink to another page.
     '''
-    return xhtml.a(href = pageURL(page, args))
+    return xhtml.a(href=pageURL(page, args, **kwargs))
 
 def maybeLink(url: Optional[str]) -> XMLSubscriptable:
     '''Creates a hyperlink if the URL is not None, otherwise returns the label
