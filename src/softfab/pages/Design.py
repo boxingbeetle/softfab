@@ -11,8 +11,7 @@ from softfab.graphview import (
     createExecutionGraph, createLegend, iterConnectedExecutionGraphs
     )
 from softfab.pageargs import PageArgs, StrArg
-from softfab.webgui import docLink
-from softfab.utils import encodeURL
+from softfab.webgui import docLink, pageLink
 from softfab.xmlgen import XMLContent, xhtml
 
 class Design_GET(GraphPageMixin, FabPage['Design_GET.Processor']):
@@ -92,9 +91,8 @@ class Design_GET(GraphPageMixin, FabPage['Design_GET.Processor']):
                         yield xhtml.h2[ 'Legend' ]
                     yield GraphPanel.instance.present(proc=proc, graph=graph)
             else:
-                yield xhtml.p[ xhtml.a(
-                    href = 'Design?' + encodeURL(( ('show', 'yes'), )))[
-                    'Execution Graph(s)' ],
+                yield xhtml.p[
+                    pageLink('Design', show='yes')[ 'Execution Graph(s)' ],
                     ': Show the graph(s) of the Frameworks and Products and '
                     'their interconnections.'
                     ]

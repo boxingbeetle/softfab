@@ -7,8 +7,8 @@ from softfab.databaselib import Database
 from softfab.pageargs import ArgsCorrected
 from softfab.querylib import KeySorter, runQuery
 from softfab.timeview import formatDuration, formatTime
-from softfab.utils import abstract, encodeURL, escapeURL, pluralize
-from softfab.webgui import Column, Table, cell, pageURL, row
+from softfab.utils import abstract, escapeURL, pluralize
+from softfab.webgui import Column, Table, cell, pageLink, pageURL, row
 from softfab.xmlgen import xhtml
 
 def listToStr(lst):
@@ -65,15 +65,13 @@ class DataColumn(Column):
         del sortOrder[index]
         sortOrder.insert(0, keyName)
 
+        override = {sortField: sortOrder}
         tabOffsetField = table.tabOffsetField
-        return xhtml.a(class_='sortorder', href = '?' + encodeURL(
-            ( key, value )
-            for key, value in
-                proc.args.override(**{ sortField: sortOrder }).toQuery()
-            # Note: "tabOffsetField" can be None, but "key" cannot, so there is
-            #       no need to make this a special case.
-            if key != tabOffsetField
-            ))[
+        if tabOffsetField is not None:
+            override[tabOffsetField] = 0
+        return pageLink(proc.page.name, proc.args.override(**override))(
+            class_='sortorder'
+            )[
             content, ' ', xhtml.span(class_='sortorder')['%d' % (index + 1)]
             ]
 

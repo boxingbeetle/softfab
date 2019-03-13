@@ -16,7 +16,7 @@ from softfab.projectlib import project
 from softfab.schedulelib import scheduleDB
 from softfab.schedulerefs import createScheduleDetailsLink
 from softfab.selectview import TagArgs
-from softfab.utils import encodeURL, pluralize
+from softfab.utils import pluralize
 from softfab.webgui import (
     PresenterFunction, Table, cell, decoration, pageLink, unorderedList
     )
@@ -203,15 +203,15 @@ class ConfigDetails_GET(GraphPageMixin, FabPage['ConfigDetails_GET.Processor']):
             'Execute this configuration'
             ], ' (confirmation only)'
         configId = proc.args.configId
-        yield xhtml.a(href='Execute?' + encodeURL(( ('config', configId), )))[
+        yield pageLink('Execute', config=configId)[
             'Load this configuration'
             ], ' (provide inputs and parameters)'
-        yield xhtml.a(href='ReportIndex?' + encodeURL(( ('desc', configId), )))[
+        yield pageLink('ReportIndex', desc=configId)[
             'Show history of this configuration'
             ]
-        yield xhtml.a(href='Execute?' + encodeURL((
-            ('config', configId), ('step', 'edit')
-            )))[ 'Edit this configuration' ]
+        yield pageLink('Execute', config=configId, step='edit')[
+            'Edit this configuration'
+            ]
         if proc.scheduleIds:
             numSchedules = len(proc.scheduleIds)
             yield (
