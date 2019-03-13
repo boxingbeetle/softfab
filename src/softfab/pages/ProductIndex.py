@@ -59,7 +59,7 @@ class ProductIndex_GET(FabPage['ProductIndex_GET.Processor']):
         yield ProductDefTable.instance.present(proc=proc)
         yield xhtml.p[
             'For help about "Products", please read the following document: ',
-            docLink('/concepts/execution_graph/')[
+            docLink('/introduction/execution-graph/')[
                 'Products in the Execution Graph'
                 ], '.'
             ]
