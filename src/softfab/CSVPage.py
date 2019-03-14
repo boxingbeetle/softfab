@@ -23,7 +23,7 @@ class Separator(Enum):
     SEMICOLON = ';'
     TAB = '\t'
 
-class CSVPage(FabResource[ProcT], Responder):
+class CSVPage(FabResource['CSVPage.Arguments', ProcT], Responder):
     authenticator = LoginAuthPage
 
     class Arguments(PageArgs):

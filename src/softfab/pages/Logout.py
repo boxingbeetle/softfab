@@ -9,7 +9,7 @@ from softfab.webgui import pageLink
 from softfab.xmlgen import XMLContent, xhtml
 
 class Logout_GET(UIPage['Logout_GET.Processor'],
-                 FabResource['Logout_GET.Processor']):
+                 FabResource['Logout_GET.Arguments', 'Logout_GET.Processor']):
     '''Page that logs out the user that requests it.
     '''
     authenticator = NoAuthPage

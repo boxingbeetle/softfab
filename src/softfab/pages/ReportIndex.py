@@ -33,7 +33,7 @@ class FilterForm(ReportFilterForm):
                 )
             ]
 
-class ReportIndex_GET(FabPage['ReportIndex_GET.Processor']):
+class ReportIndex_GET(FabPage['ReportIndex_GET.Processor', 'ReportIndex_GET.Arguments']):
     icon = 'IconReport'
     description = 'History'
     children = [

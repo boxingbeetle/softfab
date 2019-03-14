@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from softfab.Page import (
-    FabResource, PageProcessor, PresentableError, ProcT, Redirect
+    ArgT, FabResource, PageProcessor, PresentableError, ProcT, Redirect
     )
 from softfab.UIPage import UIPage
 from softfab.authentication import NoAuthPage
@@ -27,7 +27,7 @@ class LoginTable(FormTable):
         yield 'User name', textInput(name = 'loginname')
         yield 'Password', passwordInput(name = 'loginpass')
 
-class LoginBase(UIPage[ProcT], FabResource[ProcT]):
+class LoginBase(UIPage[ProcT], FabResource[ArgT, ProcT]):
     authenticator = NoAuthPage
     secureCookie = True
 
@@ -75,7 +75,7 @@ class LoginBase(UIPage[ProcT], FabResource[ProcT]):
                     'with JavaScript.'
                     ]
 
-class Login_GET(LoginBase['Login_GET.Processor']):
+class Login_GET(LoginBase['Login_GET.Processor', 'Login_GET.Arguments']):
     '''Page that presents login form.
     '''
 
@@ -99,7 +99,7 @@ _downloadURLs = {
         'https://www.google.com/chrome/',
     }
 
-class Login_POST(LoginBase['Login_POST.Processor']):
+class Login_POST(LoginBase['Login_POST.Processor', 'Login_POST.Arguments']):
     '''Page that handles submitted login form.
     '''
 

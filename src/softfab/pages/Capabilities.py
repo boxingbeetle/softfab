@@ -117,7 +117,7 @@ class CapabilitiesTable(DataTable):
     def getRecordsToQuery(self, proc):
         return proc.capMap
 
-class Capabilities_GET(FabPage['Capabilities_GET.Processor']):
+class Capabilities_GET(FabPage['Capabilities_GET.Processor', 'Capabilities_GET.Arguments']):
     # TODO: Think of a good icon.
     icon = 'TaskRunStat1'
     description = 'Capabilities'

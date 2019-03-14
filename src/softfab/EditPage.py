@@ -148,7 +148,7 @@ class ConfirmOverwritePhase(AbstractPhase):
 EditPagePrev = Enum('EditPagePrev', 'CONFIRM SAVE_AS EDIT')
 """Names for the previous dialog step."""
 
-class EditPage(FabPage['EditPage.Processor'], ABC):
+class EditPage(FabPage['EditPage.Processor', 'EditPage.Arguments'], ABC):
     description = abstract # type: ClassVar[str]
     icon = abstract # type: ClassVar[str]
     iconModifier = IconModifier.EDIT

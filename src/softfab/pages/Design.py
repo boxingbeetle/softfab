@@ -14,7 +14,10 @@ from softfab.pageargs import PageArgs, StrArg
 from softfab.webgui import docLink, pageLink
 from softfab.xmlgen import XMLContent, xhtml
 
-class Design_GET(GraphPageMixin, FabPage['Design_GET.Processor']):
+class Design_GET(
+        GraphPageMixin,
+        FabPage['Design_GET.Processor', 'Design_GET.Arguments']
+        ):
     icon = 'IconDesign'
     description = 'Design'
     children = [

@@ -12,7 +12,7 @@ from enum import Enum
 
 Actions = Enum('Actions', 'ABORT CANCEL')
 
-class AbortTask_GET(FabPage[FabPage.Processor]):
+class AbortTask_GET(FabPage[FabPage.Processor, FabPage.Arguments]):
     icon = 'IconExec'
     iconModifier = IconModifier.DELETE
     description = 'Abort Task'
@@ -37,7 +37,7 @@ class AbortTask_GET(FabPage[FabPage.Processor]):
             xhtml.p[ actionButtons(Actions) ]
             ].present(proc=proc)
 
-class AbortTask_POST(FabPage['AbortTask_POST.Processor']):
+class AbortTask_POST(FabPage['AbortTask_POST.Processor', 'AbortTask_POST.Arguments']):
     icon = 'IconExec'
     iconModifier = IconModifier.DELETE
     description = 'Abort Task'

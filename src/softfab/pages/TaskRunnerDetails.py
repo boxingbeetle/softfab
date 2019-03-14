@@ -15,7 +15,7 @@ from softfab.timeview import formatDuration, formatTime
 from softfab.webgui import Column, Table, WidgetT, pageLink, row
 from softfab.xmlgen import XMLContent, xhtml
 
-class TaskRunnerDetails_GET(FabPage['TaskRunnerDetails_GET.Processor']):
+class TaskRunnerDetails_GET(FabPage['TaskRunnerDetails_GET.Processor', 'TaskRunnerDetails_GET.Arguments']):
     icon = 'TaskRunStat1'
     description = 'Task Runner Details'
 

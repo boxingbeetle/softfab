@@ -53,7 +53,8 @@ def fetchRecordForDeletion(recordId, page):
 
     return record
 
-class RecordDelete_GET(FabPage['RecordDelete_GET.Processor'], ABC):
+class RecordDelete_GET(FabPage['RecordDelete_GET.Processor',
+                               'RecordDelete_GET.Arguments'], ABC):
     """Reusable implementation for handling a GET of a "delete record" dialog.
     Inherit from RecordDelete_GET and define the following fields:
         db = database to delete record from

@@ -91,7 +91,7 @@ class DetailsTable(PropertiesTable):
             'Status', statusDescription(scheduled)
             ]
 
-class ScheduleDetails_GET(FabPage['ScheduleDetails_GET.Processor']):
+class ScheduleDetails_GET(FabPage['ScheduleDetails_GET.Processor', 'ScheduleDetails_GET.Arguments']):
     icon = 'IconSchedule'
     description = 'Schedule Details'
 

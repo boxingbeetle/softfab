@@ -6,7 +6,7 @@ from softfab.FabPage import FabPage
 from softfab.xmlgen import XMLContent, xhtml
 from softfab.webgui import docLink
 
-class Configure_GET(FabPage[FabPage.Processor]):
+class Configure_GET(FabPage[FabPage.Processor, FabPage.Arguments]):
     icon = 'IconConfig'
     description = 'Configure'
     children = [

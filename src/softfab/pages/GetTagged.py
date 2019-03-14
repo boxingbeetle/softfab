@@ -14,7 +14,7 @@ subjectToDB = dict(
     taskdef = taskDefDB,
     )
 
-class GetTagged_GET(ControlPage['GetTagged_GET.Processor']):
+class GetTagged_GET(ControlPage['GetTagged_GET.Arguments', 'GetTagged_GET.Processor']):
 
     class Arguments(PageArgs):
         subject = StrArg()

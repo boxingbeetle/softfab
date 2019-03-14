@@ -7,7 +7,7 @@ from typing import (
     Any, ClassVar, Dict, Iterator, Mapping, Optional, Sequence, Union, cast
     )
 
-from softfab.Page import FabResource, ProcT, PageProcessor, Responder
+from softfab.Page import ArgT, FabResource, ProcT, PageProcessor, Responder
 from softfab.StyleResources import styleRoot
 from softfab.UIPage import UIPage
 from softfab.authentication import LoginAuthPage
@@ -19,7 +19,7 @@ from softfab.xmlgen import XMLContent, XMLNode, xhtml
 
 IconModifier = Enum('IconModifier', 'NONE EDIT DELETE')
 
-class FabPage(UIPage[ProcT], FabResource[ProcT], ABC):
+class FabPage(UIPage[ProcT], FabResource[ArgT, ProcT], ABC):
     authenticator = LoginAuthPage
 
     __pageInfo = {} # type: ClassVar[Dict[str, Mapping[str, Any]]]

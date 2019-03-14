@@ -49,7 +49,7 @@ def filterTasks(tag, owner):
 
     return selected
 
-class GetTaggedTaskInfo_GET(ControlPage['GetTaggedTaskInfo_GET.Processor']):
+class GetTaggedTaskInfo_GET(ControlPage['GetTaggedTaskInfo_GET.Arguments', 'GetTaggedTaskInfo_GET.Processor']):
 
     class Arguments(PageArgs):
         tag = DictArg(SetArg())

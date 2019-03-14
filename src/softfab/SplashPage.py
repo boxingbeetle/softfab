@@ -27,7 +27,8 @@ startupMessages = _StartupMessages()
 #       and only to authenticated users. However, currently page registration
 #       is done after loading databases, because module-level objects will
 #       be making database requests.
-class SplashPage(UIPage[PageProcessor], FabResource[PageProcessor]):
+class SplashPage(UIPage[PageProcessor],
+                 FabResource[FabResource.Arguments, PageProcessor]):
     authenticator = NoAuthPage
 
     def checkAccess(self, req):

@@ -10,7 +10,7 @@ from softfab.taskrunnerlib import taskRunnerDB
 from softfab.timeview import formatTimeAttr
 from softfab.xmlgen import xml
 
-class GetResourceInfo_GET(ControlPage['GetResourceInfo_GET.Processor']):
+class GetResourceInfo_GET(ControlPage['GetResourceInfo_GET.Arguments', 'GetResourceInfo_GET.Processor']):
 
     class Arguments(PageArgs):
         type = SetArg()

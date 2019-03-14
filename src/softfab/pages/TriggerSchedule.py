@@ -6,7 +6,7 @@ from softfab.pageargs import PageArgs, StrArg
 from softfab.schedulelib import scheduleDB
 from softfab.xmlgen import xml
 
-class TriggerSchedule_POST(ControlPage['TriggerSchedule_POST.Processor']):
+class TriggerSchedule_POST(ControlPage['TriggerSchedule_POST.Arguments', 'TriggerSchedule_POST.Processor']):
 
     class Arguments(PageArgs):
         scheduleId = StrArg()

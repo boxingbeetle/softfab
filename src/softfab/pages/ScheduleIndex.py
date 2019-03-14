@@ -78,7 +78,7 @@ class ScheduleTable(DataTable):
 
 Actions = Enum('Actions', 'SUSPEND RESUME')
 
-class ScheduleIndex_GET(FabPage['ScheduleIndex_GET.Processor']):
+class ScheduleIndex_GET(FabPage['ScheduleIndex_GET.Processor', 'ScheduleIndex_GET.Arguments']):
     icon = 'IconSchedule'
     description = 'Schedules'
     children = [
@@ -118,7 +118,7 @@ class ScheduleIndex_GET(FabPage['ScheduleIndex_GET.Processor']):
                     ]
                 ]
 
-class ScheduleIndex_POST(FabPage['ScheduleIndex_POST.Processor']):
+class ScheduleIndex_POST(FabPage['ScheduleIndex_POST.Processor', 'ScheduleIndex_POST.Arguments']):
     icon = 'IconSchedule'
     description = 'Schedules'
 

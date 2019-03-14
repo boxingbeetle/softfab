@@ -6,7 +6,7 @@ from softfab.joblib import jobDB
 from softfab.pageargs import BoolArg, PageArgs, SetArg
 from softfab.xmlgen import xml
 
-class Abort_POST(ControlPage['Abort_POST.Processor']):
+class Abort_POST(ControlPage['Abort_POST.Arguments', 'Abort_POST.Processor']):
 
     class Arguments(PageArgs):
         jobId = SetArg()

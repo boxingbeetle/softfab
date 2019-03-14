@@ -10,7 +10,7 @@ from softfab.xmlgen import xml
 
 from urllib.parse import urlsplit
 
-class TaskReport_POST(ControlPage['TaskReport_POST.Processor']):
+class TaskReport_POST(ControlPage['TaskReport_POST.Arguments', 'TaskReport_POST.Processor']):
     authenticator = NoAuthPage
 
     class Arguments(PageArgs):

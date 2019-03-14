@@ -281,7 +281,7 @@ def renderAsync(page, request):
                 )
             )
 
-class ResourceNotFound(FabResource[PageProcessor]):
+class ResourceNotFound(FabResource[FabResource.Arguments, PageProcessor]):
     authenticator = NoAuthPage
 
     def checkAccess(self, req):

@@ -7,7 +7,7 @@ from softfab.joblib import jobDB
 from softfab.pageargs import DictArg, PageArgs, StrArg
 from softfab.xmlgen import xml
 
-class LoadExecuteDefault_POST(ControlPage['LoadExecuteDefault_POST.Processor']):
+class LoadExecuteDefault_POST(ControlPage['LoadExecuteDefault_POST.Arguments', 'LoadExecuteDefault_POST.Processor']):
 
     class Arguments(PageArgs):
         config = StrArg()

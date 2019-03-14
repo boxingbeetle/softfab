@@ -11,7 +11,7 @@ from softfab.shadowview import ShadowTable, trimPolicy
 from softfab.webgui import WidgetT
 from softfab.xmlgen import XMLContent
 
-class ShadowQueue_GET(FabPage['ShadowQueue_GET.Processor']):
+class ShadowQueue_GET(FabPage['ShadowQueue_GET.Processor', 'ShadowQueue_GET.Arguments']):
     icon = 'TaskRunStat1'
     description = 'Shadow Queue'
 

@@ -66,7 +66,7 @@ def presentForm(args):
                 ]
     yield makeForm(args=args)[ presentEmailForm() ]
 
-class Notifications_GET(FabPage[FabPage.Processor]):
+class Notifications_GET(FabPage[FabPage.Processor, FabPage.Arguments]):
     icon = 'IconNotification'
     description = 'Notifications'
 
@@ -94,7 +94,7 @@ class MailConfigArgs(PageArgs):
     smtpRelay = StrArg()
     mailSender = StrArg()
 
-class Notifications_POST(FabPage['Notifications_POST.Processor']):
+class Notifications_POST(FabPage['Notifications_POST.Processor', 'Notifications_POST.Arguments']):
     icon = 'IconNotification'
     description = 'Notifications'
 

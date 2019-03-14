@@ -76,7 +76,9 @@ class Redirect(BaseException):
         BaseException.__init__(self)
         self.url = url
 
-class PageProcessor:
+ArgT = TypeVar('ArgT', bound=PageArgs)
+
+class PageProcessor(Generic[ArgT]):
     '''Abstract base class for processors.
     '''
     error = None # page-specific error
@@ -84,7 +86,7 @@ class PageProcessor:
     """Exception caught during processing."""
     # set by parseAndProcess():
     page = None # type: FabResource
-    args = None # type: PageArgs
+    args = None # type: ArgT
 
     def __init__(self, req):
         self.req = req
@@ -140,7 +142,7 @@ class PageProcessor:
         '''
         return pageURL('%s/%s' % ( self.page.name, subPath ), self.args)
 
-ProcT = TypeVar('ProcT', bound=PageProcessor)
+ProcT = TypeVar('ProcT', bound=PageProcessor[PageArgs])
 
 class Responder:
     '''Abstract base class for responders; responders are responsible for
@@ -179,7 +181,7 @@ class HTTPAuthenticator(PageProcessor, Responder):
             'WWW-Authenticate', 'Basic realm="%s"' % self.__realm
             )
 
-class FabResource(ABC, Generic[ProcT]):
+class FabResource(ABC, Generic[ArgT, ProcT]):
     '''Abstract base class for Control Center pages.
     '''
     authenticator = abstract # type: ClassVar[Type[Authenticator]]
@@ -208,7 +210,7 @@ class FabResource(ABC, Generic[ProcT]):
         This default declaration does not contain any arguments.
         '''
 
-    class Processor(PageProcessor):
+    class Processor(PageProcessor[ArgT]):
         '''Every resource should have a Processor.
         This is a dummy one for resources that have no need for processing.
         '''

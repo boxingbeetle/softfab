@@ -41,7 +41,8 @@ class CombinedProductGraphBuilder(ExecutionGraphBuilder):
 class ExecutionGraphExamples_GET(
         GraphPageMixin,
         UIPage['ExecutionGraphExamples_GET.Processor'],
-        FabResource['ExecutionGraphExamples_GET.Processor']
+        FabResource['FabResource.Arguments',
+                    'ExecutionGraphExamples_GET.Processor']
         ):
     authenticator = NoAuthPage
 

@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from softfab.FabPage import FabPage
-from softfab.Page import PageProcessor, PresentableError, ProcT, Redirect
+from softfab.Page import ArgT, PageProcessor, PresentableError, ProcT, Redirect
 from softfab.formlib import (
     FormTable, actionButtons, dropDownList, emptyOption, hiddenInput,
     makeForm, passwordInput, textInput
@@ -24,7 +24,7 @@ from typing import Optional
 
 Actions = Enum('Actions', 'ADD CANCEL')
 
-class AddUserBase(FabPage[ProcT]):
+class AddUserBase(FabPage[ProcT, ArgT]):
     icon = 'AddUser1'
     description = 'Add User'
 
@@ -60,7 +60,8 @@ class AddUserBase(FabPage[ProcT]):
     def getCancelURL(self, req):
         return req.args.refererURL or self.getParentURL(req)
 
-class AddUser_GET(AddUserBase['AddUser_GET.Processor']):
+class AddUser_GET(AddUserBase['AddUser_GET.Processor',
+                              'AddUser_GET.Arguments']):
 
     class Arguments(PageArgs):
         indexQuery = RefererArg('UserList')
@@ -72,7 +73,8 @@ class AddUser_GET(AddUserBase['AddUser_GET.Processor']):
     def presentContent(self, proc: Processor) -> XMLContent:
         yield self.presentForm(proc, None)
 
-class AddUser_POST(AddUserBase['AddUser_POST.Processor']):
+class AddUser_POST(AddUserBase['AddUser_POST.Processor',
+                               'AddUser_POST.Arguments']):
 
     class Arguments(AddUser_GET.Arguments, LoginPassArgs):
         action = EnumArg(Actions)

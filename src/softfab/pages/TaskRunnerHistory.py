@@ -30,7 +30,7 @@ class HistoryTable(TaskRunsTable):
         # so this column is not useful.
         return False
 
-class TaskRunnerHistory_GET(FabPage['TaskRunnerHistory_GET.Processor']):
+class TaskRunnerHistory_GET(FabPage['TaskRunnerHistory_GET.Processor', 'TaskRunnerHistory_GET.Arguments']):
     icon = 'TaskRunStat1'
     description = 'Task Runner History'
 

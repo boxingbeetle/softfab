@@ -4,7 +4,7 @@ from abc import ABC
 from typing import ClassVar, Sequence, Type
 
 from softfab.FabPage import FabPage
-from softfab.Page import InvalidRequest, PageProcessor, PresentableError
+from softfab.Page import ArgT, InvalidRequest, PageProcessor, PresentableError
 from softfab.formlib import backButton, makeForm, submitButton
 from softfab.pageargs import ArgsCorrected, PageArgs, StrArg
 from softfab.utils import abstract
@@ -76,7 +76,7 @@ class DialogStep(ABC):
         '''
         raise NotImplementedError
 
-class DialogProcessorBase(PageProcessor):
+class DialogProcessorBase(PageProcessor[ArgT]):
     """Abstract base class for Processors designed to be used with
     `DialogPage`.
     """
@@ -224,7 +224,7 @@ class ContinuedDialogProcessor(DialogProcessorBase):
         else:
             self.walkSteps(requestedPath)
 
-class DialogPage(FabPage[DialogProcessorBase], ABC):
+class DialogPage(FabPage[DialogProcessorBase, 'DialogPage.Arguments'], ABC):
     description = abstract # type: ClassVar[str]
     icon = abstract # type: ClassVar[str]
 

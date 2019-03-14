@@ -130,7 +130,10 @@ decoratedSchedulesTable = decoration[
     SchedulesTable.instance
     ]
 
-class ConfigDetails_GET(GraphPageMixin, FabPage['ConfigDetails_GET.Processor']):
+class ConfigDetails_GET(
+        GraphPageMixin,
+        FabPage['ConfigDetails_GET.Processor', 'ConfigDetails_GET.Arguments']
+        ):
     icon = 'IconExec'
     description = 'Configuration Details'
 

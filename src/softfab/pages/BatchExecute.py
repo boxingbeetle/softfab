@@ -109,7 +109,7 @@ Actions = Enum('Actions', 'EXECUTE CANCEL')
 
 submitButtons = xhtml.p[ actionButtons(Actions) ]
 
-class BatchExecute_GET(FabPage['BatchExecute_GET.Processor']):
+class BatchExecute_GET(FabPage['BatchExecute_GET.Processor', 'BatchExecute_GET.Arguments']):
     icon = 'IconExec'
     description = 'Execute Batch'
     linkDescription = False

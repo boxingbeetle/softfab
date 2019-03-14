@@ -28,7 +28,7 @@ class OwnedJobsTable(JobsSubTable):
     def getRecordsToQuery(self, proc):
         return proc.jobs
 
-class UserDetails_GET(FabPage['UserDetails_GET.Processor']):
+class UserDetails_GET(FabPage['UserDetails_GET.Processor', 'UserDetails_GET.Arguments']):
     icon = 'UserList1'
     description = 'User Details'
 

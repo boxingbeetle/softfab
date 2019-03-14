@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from softfab.FabPage import FabPage, IconModifier
-from softfab.Page import PageProcessor, ProcT, Redirect
+from softfab.Page import ArgT, PageProcessor, ProcT, Redirect
 from softfab.formlib import actionButtons, makeForm
 from softfab.pageargs import EnumArg, PageArgs
 from softfab.schedulelib import scheduleDB
@@ -11,7 +11,7 @@ from enum import Enum
 
 Actions = Enum('Actions', 'DELETE CANCEL')
 
-class DelFinishedSchedulesBase(FabPage[ProcT]):
+class DelFinishedSchedulesBase(FabPage[ProcT, ArgT]):
     # Refuse child link from ScheduleIndex.
     linkDescription = False
     description = 'Delete Schedules'
@@ -24,7 +24,10 @@ class DelFinishedSchedulesBase(FabPage[ProcT]):
     def presentContent(self, proc: ProcT):
         raise NotImplementedError
 
-class DelFinishedSchedules_GET(DelFinishedSchedulesBase[FabPage.Processor]):
+class DelFinishedSchedules_GET(
+        DelFinishedSchedulesBase[FabPage.Processor,
+                                 'DelFinishedSchedules_GET.Arguments']
+        ):
 
     class Arguments(PageArgs):
         pass
@@ -36,7 +39,8 @@ class DelFinishedSchedules_GET(DelFinishedSchedulesBase[FabPage.Processor]):
             ].present(proc=proc)
 
 class DelFinishedSchedules_POST(
-        DelFinishedSchedulesBase['DelFinishedSchedules_POST.Processor']
+        DelFinishedSchedulesBase['DelFinishedSchedules_POST.Processor',
+                                 'DelFinishedSchedules_POST.Arguments']
         ):
 
     class Arguments(PageArgs):
