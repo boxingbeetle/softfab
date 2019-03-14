@@ -1,10 +1,10 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from softfab.Page import AccessDenied, InvalidRequest
+from softfab.Page import AccessDenied, FabResource, InvalidRequest
 from softfab.config import rootURL
 from softfab.projectlib import project
 from softfab.useragent import UserAgent
-from softfab.userlib import AnonGuestUser, UnknownUser, privileges
+from softfab.userlib import AnonGuestUser, IUser, UnknownUser, privileges
 from softfab.utils import cachedProperty, iterable
 
 from twisted.web.http import Request as TwistedRequest
@@ -12,6 +12,7 @@ from twisted.web.server import Session
 
 from cgi import parse_header
 from inspect import signature
+from typing import IO, Mapping, Optional, Sequence, Tuple
 from urllib.parse import parse_qs, urlparse
 
 # The 'sameSite' parameter was added in Twisted 18.9.0.
@@ -25,22 +26,22 @@ class RequestBase:
     handling steps.
     '''
 
-    def __init__(self, request, user):
+    def __init__(self, request: TwistedRequest, user: IUser):
         self._request = request
         self._user = user
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return '%s(%r, %r)' % (
             self.__class__.__name__, self._request, self._user
             )
 
     @cachedProperty
-    def userAgent(self):
+    def userAgent(self) -> UserAgent:
         getHeader = self._request.getHeader
         return UserAgent(getHeader('user-agent'), getHeader('accept'))
 
     @cachedProperty
-    def referer(self):
+    def referer(self) -> Optional[str]:
         '''The Control Center page plus query that the user visited
         before the current page, or None if not applicable.
         '''
@@ -60,7 +61,7 @@ class RequestBase:
         return referer
 
     @cachedProperty
-    def refererPage(self):
+    def refererPage(self) -> Optional[str]:
         '''The Control Center page without query that the user visited
         before the current page, or None if not applicable.
         '''
@@ -70,7 +71,7 @@ class RequestBase:
         return urlparse(referer).path
 
     @cachedProperty
-    def refererQuery(self):
+    def refererQuery(self) -> Optional[Sequence[Tuple[str, Sequence[str]]]]:
         '''The query of the Control Center page that the user visited
         before the current page, or None if not applicable.
         '''
@@ -84,7 +85,7 @@ class RequestBase:
             )
 
     @cachedProperty
-    def contentType(self):
+    def contentType(self) -> Tuple[Optional[str], Optional[Mapping[str, str]]]:
         '''A pair of the media type and a dictionary of parameters
         that describes the body of this request, or (None, None)
         if the request did not contain a Content-Type header.
@@ -103,7 +104,7 @@ class RequestBase:
 
     # Generic request methods:
 
-    def rawInput(self):
+    def rawInput(self) -> IO[bytes]:
         return self._request.content
 
     @property
@@ -111,10 +112,10 @@ class RequestBase:
         return self._request.isSecure()
 
     @cachedProperty
-    def method(self):
+    def method(self) -> str:
         return self._request.method.decode()
 
-    def getURL(self):
+    def getURL(self) -> str:
         url = self._request.uri.decode()
         if url.startswith('/'):
             # Make URL relative so it will work behind a reverse proxy.
@@ -122,7 +123,7 @@ class RequestBase:
         else:
             return url
 
-    def getSubPath(self):
+    def getSubPath(self) -> Optional[str]:
         '''If an item inside a page was requested, returns the path of that
         item in the page. If the page itself was requested None is returned.
         '''
@@ -136,13 +137,13 @@ class RequestBase:
 
     # User information:
 
-    def getUser(self):
+    def getUser(self) -> IUser:
         '''Returns an object that implements IUser and describes the user who
         made this request.
         '''
         return self._user
 
-    def getUserName(self):
+    def getUserName(self) -> Optional[str]:
         '''Returns the name of the user who made this request.
         If this request does not (yet) have an authenticated user associated
         with it, None is returned.
@@ -154,13 +155,13 @@ class Request(RequestBase):
     "parse" and "process" request handling steps.
     '''
 
-    def processEnd(self):
+    def processEnd(self) -> None:
         '''Called when the processing step is done.
         Reduces the interface of the request object.
         '''
-        self.__class__ = RequestBase
+        self.__class__ = RequestBase # type: ignore
 
-    def _parse(self, page):
+    def _parse(self, page: FabResource) -> None:
         '''Initialises the Arguments, if the page has one.
         '''
         # Decode field names.
@@ -188,7 +189,7 @@ class Request(RequestBase):
     sessionCookieName = b'SF_CC_SESSION'
 
     @classmethod
-    def getSession(cls, request):
+    def getSession(cls, request: TwistedRequest) -> Optional[Session]:
         '''Returns the active session on the given Twisted request object,
         or None if there is no active session.
         '''
@@ -200,7 +201,7 @@ class Request(RequestBase):
         except KeyError:
             return None
 
-    def startSession(self, secure):
+    def startSession(self, secure: bool) -> Session:
         '''Starts a new session and returns it.
         '''
         request = self._request
@@ -215,7 +216,7 @@ class Request(RequestBase):
             )
         return session
 
-    def stopSession(self):
+    def stopSession(self) -> bool:
         '''Expires the current session, if any.
         Returns True iff there was an active session.
         '''
@@ -224,9 +225,10 @@ class Request(RequestBase):
             return False
         else:
             session.expire()
-            self._user = (
-                AnonGuestUser() if project['anonguest'] else UnknownUser()
-                )
+            if project['anonguest']:
+                self._user = AnonGuestUser()
+            else:
+                self._user = UnknownUser()
             return True
 
     # Privilege checks:
