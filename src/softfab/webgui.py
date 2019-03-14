@@ -7,9 +7,9 @@ TODO: Currently the "css" Python argument sets the XHTML "style" attribute and
 '''
 
 from softfab.config import docPage
-from softfab.pageargs import PageArgs
+from softfab.pageargs import PageArgs, Query
 from softfab.pnglib import getPNGDimensions
-from softfab.utils import SharedInstance, encodeURL, iterable
+from softfab.utils import SharedInstance, iterable
 from softfab.xmlgen import (
     XML, XMLAttributeValue, XMLContent, XMLNode, XMLPresentable,
     XMLSubscriptable, adaptToXML, xhtml
@@ -44,9 +44,9 @@ def pageURL(
     #       since otherwise if the query is empty, the result will be
     #       an empty URL, which does not lead to a page fetch.
     assert page
-    query = [] if args is None else list(args.toQuery())
-    query += kwargs.items()
-    return '%s?%s' % (page, encodeURL(query)) if query else page
+    query = Query({}) if args is None else Query.fromArgs(args)
+    query = query.override(**kwargs)
+    return '%s?%s' % (page, query.toURL()) if query else page
 
 def pageLink(
         page: str,

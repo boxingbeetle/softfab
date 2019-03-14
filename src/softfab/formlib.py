@@ -62,9 +62,10 @@ class _FormPresenter:
     def iterCloseItems(self, args):
         if args is not None:
             controls = self.__controls
-            for key, value in args.toQuery():
-                if key not in controls and value is not None:
-                    yield xhtml.input(type='hidden', name=key, value=value)
+            for key, values in args.externalize():
+                if key not in controls:
+                    for value in values:
+                        yield xhtml.input(type='hidden', name=key, value=value)
         yield script[ self.__iterScriptFragments() ].present()
 
 class _FormBuilder(AttrContainer, XMLPresentable):

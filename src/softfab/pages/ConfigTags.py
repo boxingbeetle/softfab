@@ -12,7 +12,6 @@ from softfab.selectlib import getCommonTags
 from softfab.selectview import (
     SelectArgs, TagValueEditTable, textToValues, valuesToText
     )
-from softfab.utils import encodeURL
 from softfab.xmlgen import XMLContent, xhtml
 
 from enum import Enum
@@ -42,11 +41,9 @@ class ConfigTagsBase(FabPage['ConfigTagsBase.Processor']):
     class Processor(SelectConfigsMixin, PageProcessor):
 
         def getBackURL(self):
-            parentQuery = self.args.parentQuery
-            args = list(SelectArgs.subset(self.args).toQuery())
-            if parentQuery is not None:
-                args += parentQuery
-            return '%s?%s' % ( parentPage, encodeURL(args) )
+            args = self.args
+            query = args.parentQuery.override(SelectArgs.subset(args))
+            return '%s?%s' % (parentPage, query.toURL())
 
         def process(self, req):
             # pylint: disable=attribute-defined-outside-init

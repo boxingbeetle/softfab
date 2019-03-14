@@ -11,7 +11,7 @@ from urllib.parse import parse_qs
 
 from softfab.timelib import stringToTime
 from softfab.timeview import formatDate, formatTime
-from softfab.utils import cachedProperty, encodeURL, iterable
+from softfab.utils import cachedProperty, escapeURL, iterable
 
 if TYPE_CHECKING:
     from softfab.request import Request
@@ -55,11 +55,6 @@ class ArgsCorrected(Exception):
         # Note: The Exception base class has an attribute named "args", so we
         #       should use a different name.
         self.correctedArgs = args.override(**kvArgs) if kvArgs else args
-
-    def toQuery(self) -> str:
-        '''Returns a query string corresponding to the corrected arguments.
-        '''
-        return '?' + encodeURL(self.correctedArgs.toQuery())
 
 class ArgsInvalid(Exception):
     '''Raised when one or more page arguments are invalid and cannot be
@@ -389,6 +384,23 @@ class PageArgs:
         for name, member_ in self._iterArguments():
             yield name, self.__dict__[name]
 
+    def externalize(self) -> Iterator[Tuple[str, Sequence[str]]]:
+        """Iterates through string representations of the non-default
+        values of the arguments.
+        """
+        for name, member in self._iterArguments():
+            value = self.__dict__[name]
+            if isinstance(member, DictArg):
+                yield from member.externalize(name, value)
+            elif value != member.default:
+                assert isinstance(member, (SingularArgument, CollectionArg)), \
+                        member
+                externalized = member.externalize(value)
+                if isinstance(externalized, str):
+                    yield name, (externalized,)
+                else:
+                    yield name, externalized
+
     def override(self, **kwargs: object) -> 'PageArgs':
         '''Creates a copy of this PageArgs object, with given values
         replacing the original values.
@@ -396,14 +408,6 @@ class PageArgs:
         keyValues = dict(self.items())
         keyValues.update(kwargs)
         return self.__class__(**keyValues)
-
-    def toQuery(self) -> Iterator[Tuple[str, str]]:
-        '''Iterates through name/valueStr tuples for all arguments that have
-        a non-default value.
-        '''
-        data = self.__dict__
-        for name, member in self._iterArguments():
-            yield from member.toQuery(name, data[name])
 
     @cachedProperty
     def refererName(self) -> Optional[str]:
@@ -426,7 +430,7 @@ class PageArgs:
             if isinstance(member, RefererArg):
                 query = self.__dict__[name]
                 if query is not None:
-                    return '%s?%s' % ( member.getPage(), encodeURL(query) )
+                    return '%s?%s' % (member.getPage(), query.toURL())
         return None
 
 class _MandatoryValue:
@@ -542,13 +546,6 @@ class Argument(Generic[ValueT]):
         '''
         raise NotImplementedError
 
-    def toQuery(self, name: str, value: ValueT) -> Iterator[Tuple[str, str]]:
-        '''Expands the given value to a series of (name, value) pairs
-        and iterates through them.
-        Default values are skipped over.
-        '''
-        raise NotImplementedError
-
 class SingularArgument(Argument[Optional[ValueT]]):
     '''Argument which consists of a single value, as opposed to a sequence.
     '''
@@ -577,12 +574,6 @@ class SingularArgument(Argument[Optional[ValueT]]):
         It should be done such that parse(externalize(value)) == value.
         '''
         raise NotImplementedError
-
-    def toQuery(self,
-            name: str, value: Optional[ValueT]
-            ) -> Iterator[Tuple[str, str]]:
-        if value != self.default:
-            yield name, self.externalize(cast(ValueT, value))
 
 class StrArg(SingularArgument[str]):
     '''Argument whose value is a string.
@@ -808,13 +799,6 @@ class CollectionArg(Argument[Collection[ValueT]]):
         else:
             raise TypeError('value is not iterable')
 
-    def toQuery(self,
-             name: str, value: Iterable[ValueT]
-             ) -> Iterator[Tuple[str, str]]:
-        externalize = self.__prototype.externalize
-        for item in value:
-            yield name, externalize(item)
-
 class _ListArg(CollectionArg[ValueT]):
     '''Argument that keeps a list of values in the same order that
     they were in the request.
@@ -899,6 +883,8 @@ DictValue = Union[ValueT, 'DictArgInstance[ValueT]']
 class DictArg(Argument[DictValue[ValueT]]):
 
     def __init__(self, element: Argument[ValueT], separators: str = '.'):
+        if isinstance(element, DictArg):
+            raise TypeError('element type cannot be another dictionary')
         empty = {} # type: Mapping[str, DictValue[ValueT]]
         super().__init__(DictArgInstance(empty))
         self.__element = element
@@ -933,12 +919,12 @@ class DictArg(Argument[DictValue[ValueT]]):
         else:
             raise TypeError('value is not a dictionary')
 
-    def toQuery(self,
-             name: str, value: DictValue[ValueT]
-             ) -> Iterator[Tuple[str, str]]:
-        elemToQuery = self.__element.toQuery
+    def externalize(self,
+            name: str, value: DictValue[ValueT]
+            ) -> Iterator[Tuple[str, Union[str, Sequence[str]]]]:
+        externalizeElem = self.__element.externalize # type: ignore
         for fullName, subValue in _expandNames(name, value, self.__separators):
-            yield from elemToQuery(fullName, subValue)
+            yield fullName, externalizeElem(subValue)
 
 def _expandNames(
         prefix: str, value: DictValue[ValueT], separators: str
@@ -987,7 +973,68 @@ class DictArgInstance(dict, Mapping[str, DictValue[ValueT]]):
     def update(self, *d: Any, **kwargs: Any) -> NoReturn:
         raise TypeError('attempt to modify read-only dictionary')
 
-Query = Sequence[Tuple[str, Sequence[str]]]
+class Query:
+    """The query part of a URL.
+
+    Instances of this class are immutable.
+    """
+
+    @classmethod
+    def fromArgs(cls, args: PageArgs) -> 'Query':
+        """Creates a query from page arguments.
+        """
+        return cls(dict(args.externalize()))
+
+    def __init__(self, data: Mapping[str, Sequence[str]]):
+        self._data = data
+
+    def __bool__(self) -> bool:
+        return bool(self._data)
+
+    def __str__(self) -> str:
+        return self.toURL()
+
+    def __repr__(self) -> str:
+        return '%s(%r)' % (self.__class__.__name__, self._data)
+
+    def override(self,
+            *args: PageArgs,
+            **kwargs: Union[None, str, Sequence[str]]
+            ) -> 'Query':
+        """Return this query, with the given arguments replaced.
+
+        If an argument exists in both `args` and `kwargs`, the value from
+        `kwargs` is used.
+
+        A `None` replacement removes the argument from the query, if it exists.
+        A `str` replacement is treated as a sequence of length 1.
+        """
+
+        # Merge overrides.
+        override = {} # type: Dict[str, Union[None, str, Sequence[str]]]
+        for pageArgs in args:
+            override.update(pageArgs.externalize())
+        override.update(kwargs)
+
+        # Apply overrides to this query.
+        data = dict(self._data)
+        for key, value in override.items():
+            if value is None:
+                data.pop(key, None)
+            elif isinstance(value, str):
+                data[key] = (value,)
+            else:
+                data[key] = value
+        return self.__class__(data)
+
+    def toURL(self) -> str:
+        """Encodes this query to a string that can be appened to a URL.
+        """
+        return '&'.join(
+            '%s=%s' % (escapeURL(key), escapeURL(value))
+            for key, values in self._data.items()
+            for value in values
+            )
 
 class QueryArg(SingularArgument[Optional[Query]]):
     '''Stores an arbitrary query as a single argument.
@@ -1024,26 +1071,20 @@ class QueryArg(SingularArgument[Optional[Query]]):
         return self.__excludes == cast(QueryArg, other).__excludes
 
     def parseValue(self, strValue: str) -> Query:
-        excludes = self.__excludes
-        return tuple(
-            (key, tuple(value))
-            for key, value in parse_qs(strValue, keep_blank_values=True).items()
-            if key not in excludes
-            )
+        data = parse_qs(strValue, keep_blank_values=True)
+        for exclude in self.__excludes:
+            data.pop(exclude, None)
+        return Query(data)
 
     def externalize(self, value: Optional[Query]) -> str:
         assert value is not None
-        return encodeURL(value)
+        return value.toURL()
 
-    def convert(self, value: Iterable[Tuple[str, Sequence[str]]]) -> Query:
-        if iterable(value):
-            ret = tuple(value)
-            if all(hasattr(item, '__len__') and len(item) == 2 for item in ret):
-                return ret
-            else:
-                raise TypeError('value sequence does not contains pairs')
+    def convert(self, value: Query) -> Query:
+        if isinstance(value, Query):
+            return value
         else:
-            raise TypeError('value is not iterable')
+            raise TypeError('value is not a query')
 
 class RefererArg(QueryArg):
     '''Stores a query from a refering page.

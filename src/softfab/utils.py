@@ -157,23 +157,6 @@ class Heap(Generic[T]):
 def escapeURL(text: str) -> str:
     return quote_plus(utf8encode(text)[0])
 
-def encodeURL(query: Iterable[Tuple[str, Union[str, Iterable[str]]]]) -> str:
-    '''Encodes the query part of a URL using query arguments from the given
-    sequence. Each element should be a pair of the argument name and the
-    argument value. The value can be a string or a sequence of strings.
-    '''
-    def iterElems() -> Iterator[Tuple[str, str]]:
-        for name, value in query:
-            if isinstance(value, str):
-                yield name, value
-            else:
-                for subValue in value:
-                    yield name, subValue
-    return '&'.join(
-        '%s=%s' % ( escapeURL(name), escapeURL(value) )
-        for name, value in iterElems()
-        )
-
 @contextmanager
 def atomicWrite(
         path: str, mode: str, fsync: bool = True, **kwargs: Any

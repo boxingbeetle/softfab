@@ -15,7 +15,6 @@ from softfab.paramview import ParamOverrideTable
 from softfab.pageargs import DictArg, EnumArg, RefererArg, StrArg
 from softfab.pagelinks import createJobsURL
 from softfab.selectview import SelectArgs
-from softfab.utils import encodeURL
 from softfab.webgui import decoration
 from softfab.xmlgen import XMLContent, xhtml
 
@@ -121,11 +120,9 @@ class BatchExecute_GET(FabPage['BatchExecute_GET.Processor']):
     class Processor(SelectConfigsMixin, PageProcessor):
 
         def getBackURL(self):
-            parentQuery = self.args.parentQuery
-            args = list(SelectArgs.subset(self.args).toQuery())
-            if parentQuery is not None:
-                args += parentQuery
-            return '%s?%s' % ( parentPage, encodeURL(args) )
+            args = self.args
+            query = args.parentQuery.override(SelectArgs.subset(args))
+            return '%s?%s' % (parentPage, query.toURL())
 
         def initTaskSet(self):
             '''Initializes our `taskSet` attribute with a TaskSetWithInputs

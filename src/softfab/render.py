@@ -9,7 +9,7 @@ from softfab.Page import (
     Redirector, logPageException
     )
 from softfab.UIPage import UIPage
-from softfab.pageargs import ArgsCorrected, ArgsInvalid, dynamic
+from softfab.pageargs import ArgsCorrected, ArgsInvalid, Query, dynamic
 from softfab.response import Response
 from softfab.utils import abstract
 from softfab.webgui import docLink
@@ -171,10 +171,11 @@ def parseAndProcess(page, req):
             )
     except ArgsCorrected as ex:
         subPath = req.getSubPath()
+        query = Query.fromArgs(ex.correctedArgs)
         if subPath is None:
-            url = page.name + ex.toQuery()
+            url = '%s?%s' % (page.name, query.toURL())
         else:
-            url = '%s/%s%s' % ( page.name, subPath, ex.toQuery() )
+            url = '%s/%s?%s' % (page.name, subPath, query.toURL())
         responder = proc = Redirector(req, url)
     except ArgsInvalid as ex:
         responder = proc = BadRequestPage(
