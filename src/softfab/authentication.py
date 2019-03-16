@@ -1,19 +1,20 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from softfab.Page import (
-    Authenticator, HTTPAuthenticator, InternalError, Redirector
-    )
-from softfab.request import Request
-from softfab.pagelinks import loginURL
-from softfab.projectlib import project
-from softfab.userlib import (
-    AnonGuestUser, IUser, SuperUser, UnknownUser, authenticate
-    )
+from typing import Optional
 
 from twisted.cred.error import LoginFailed
 from twisted.internet.defer import fail, succeed
 
-from typing import Optional
+from softfab.Page import (
+    Authenticator, HTTPAuthenticator, InternalError, Redirector
+)
+from softfab.pagelinks import loginURL
+from softfab.projectlib import project
+from softfab.request import Request
+from softfab.userlib import (
+    AnonGuestUser, IUser, SuperUser, UnknownUser, authenticate
+)
+
 
 def loggedInUser(request) -> Optional[IUser]:
     """Gets the logged-in user making the request.

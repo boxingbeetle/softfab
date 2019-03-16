@@ -1,14 +1,15 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from twisted.internet.defer import inlineCallbacks
+
 from softfab.ControlPage import ControlPage
-from softfab.ReportMixin import ReportArgs, JobReportProcessor
+from softfab.ReportMixin import JobReportProcessor, ReportArgs
 from softfab.joblib import jobDB
 from softfab.pageargs import SetArg
 from softfab.querylib import SetFilter, runQuery
 from softfab.utils import chop
 from softfab.xmlgen import adaptToXML, xml
 
-from twisted.internet.defer import inlineCallbacks
 
 class GetJobHistory_GET(ControlPage['GetJobHistory_GET.Arguments', 'GetJobHistory_GET.Processor']):
 

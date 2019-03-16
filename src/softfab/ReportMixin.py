@@ -9,7 +9,7 @@ from softfab.databaselib import Database
 from softfab.formlib import (
     clearButton, dropDownList, makeForm, option, resetButton, selectionList,
     submitButton, textInput
-    )
+)
 from softfab.joblib import jobDB
 from softfab.pageargs import DateTimeArg, EnumArg, PageArgs, SetArg
 from softfab.pagelinks import TaskIdSetArgs
@@ -20,6 +20,7 @@ from softfab.userlib import userDB
 from softfab.utils import SharedInstance, abstract
 from softfab.webgui import script
 from softfab.xmlgen import xhtml
+
 
 class ExecutionState(Enum):
     ALL = 1

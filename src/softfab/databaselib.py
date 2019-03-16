@@ -1,15 +1,5 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from softfab.config import dbAtomicWrites, logChanges
-from softfab.utils import abstract, atomicWrite, cachedProperty
-from softfab.xmlbind import parse
-from softfab.xmlgen import XML
-
-import logging
-import os
-import os.path
-import re
-import time
 from abc import ABC
 from collections.abc import ItemsView, ValuesView
 from operator import itemgetter
@@ -17,7 +7,17 @@ from typing import (
     Any, Callable, ClassVar, Dict, FrozenSet, Generic, ItemsView as ItemsViewT,
     Iterator, KeysView as KeysViewT, List, Mapping, Optional, Sequence, Set,
     TypeVar, ValuesView as ValuesViewT, cast
-    )
+)
+import logging
+import os
+import os.path
+import re
+import time
+
+from softfab.config import dbAtomicWrites, logChanges
+from softfab.utils import abstract, atomicWrite, cachedProperty
+from softfab.xmlbind import parse
+from softfab.xmlgen import XML
 
 # TODO: Use weakref.WeakValueDictionary to ensure value objects which are
 #       dropped from the cache but still in use elsewhere returned the next

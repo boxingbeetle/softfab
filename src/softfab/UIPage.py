@@ -1,5 +1,8 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from traceback import TracebackException
+from typing import Generic, Iterator
+
 from softfab.Page import PageProcessor, ProcT, Responder, logPageException
 from softfab.StyleResources import StyleSheet, styleRoot
 from softfab.pagelinks import createUserDetailsLink, loginURL, logoutURL
@@ -9,9 +12,6 @@ from softfab.timelib import getTime
 from softfab.timeview import formatTime
 from softfab.version import version
 from softfab.xmlgen import XMLContent, XMLNode, xhtml
-
-from traceback import TracebackException
-from typing import Generic, Iterator
 
 _logoIcon = styleRoot.addIcon('SoftFabLogo')
 _shortcutIcon = styleRoot.addShortcutIcon('SoftFabIcon')

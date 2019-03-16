@@ -10,7 +10,7 @@ from softfab.joblib import jobDB
 from softfab.pagelinks import (
     TaskIdArgs, createFrameworkDetailsLink, createJobLink,
     createTaskDetailsLink, createTaskHistoryLink, createTaskRunnerDetailsLink
-    )
+)
 from softfab.paramview import ParametersTable
 from softfab.productview import ProductTable
 from softfab.projectlib import project

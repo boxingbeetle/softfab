@@ -2,15 +2,16 @@
 
 from softfab.datawidgets import (
     DataColumn, DataTable, DurationColumn, TimeColumn
-    )
+)
 from softfab.jobview import targetColumn
 from softfab.pagelinks import createTaskRunnerDetailsLink
 from softfab.projectlib import project
 from softfab.taskview import (
     AbortColumn, ExportColumn, ExtractedColumn, SummaryColumn, TaskColumn,
     getTaskStatus
-    )
+)
 from softfab.userview import OwnerColumn
+
 
 class TaskRunsTable(DataTable):
     db = None

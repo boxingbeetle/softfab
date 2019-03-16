@@ -1,5 +1,8 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from collections import defaultdict
+from functools import total_ordering
+
 from softfab.config import dbDir
 from softfab.databaselib import Database, DatabaseElem, RecordObserver
 from softfab.frameworklib import frameworkDB
@@ -7,15 +10,13 @@ from softfab.joblib import Job
 from softfab.productdeflib import ProductType, productDefDB
 from softfab.projectlib import project
 from softfab.restypelib import resTypeDB
-from softfab.selectlib import Selectable, ObservingTagCache
+from softfab.selectlib import ObservingTagCache, Selectable
 from softfab.taskdeflib import taskDefDB
 from softfab.taskgroup import PriorityMixin, TaskSet
 from softfab.tasklib import ResourceRequirementsMixin, TaskRunnerSet
 from softfab.xmlbind import XMLTag
 from softfab.xmlgen import xml
 
-from collections import defaultdict
-from functools import total_ordering
 
 class _ObserverProxy(RecordObserver):
 

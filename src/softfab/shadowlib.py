@@ -1,15 +1,15 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-import logging
 from typing import ClassVar, cast
+import logging
 
 from softfab.config import dbDir
 from softfab.databaselib import (
     Database, DatabaseElem, RecordObserver, createUniqueId
-    )
+)
 from softfab.resultcode import ResultCode
-from softfab.storagelib import StorageURLMixin
 from softfab.sortedqueue import SortedQueue
+from softfab.storagelib import StorageURLMixin
 from softfab.timelib import getTime
 from softfab.utils import abstract, cachedProperty
 from softfab.xmlbind import XMLTag

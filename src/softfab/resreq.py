@@ -5,7 +5,7 @@
 
 from typing import (
     AbstractSet, Dict, FrozenSet, Iterable, Iterator, Mapping, cast
-    )
+)
 
 from softfab.xmlbind import XMLTag
 from softfab.xmlgen import xml

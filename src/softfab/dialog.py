@@ -11,6 +11,7 @@ from softfab.utils import abstract
 from softfab.webgui import PresenterFunction
 from softfab.xmlgen import XMLContent, xhtml
 
+
 def _backAndNextButton(backName, nextLabel):
     back = backButton(name=backName)
     if nextLabel is None:

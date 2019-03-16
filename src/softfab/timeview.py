@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-import time
 from typing import Optional
+import time
 
 _dateFormat = '%Y-%m-%d'
 _timeFormat = _dateFormat + ' %H:%M'

@@ -1,22 +1,22 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from softfab.FabPage import FabPage
-from softfab.Page import PageProcessor, PresentableError, Redirect
-from softfab.formlib import (
-    FormTable, actionButtons, hiddenInput, makeForm, passwordInput
-    )
-from softfab.pageargs import EnumArg, PasswordArg, RefererArg
-from softfab.userlib import (
-    PasswordMessage, authenticate, changePassword, passwordQuality, userDB
-    )
-from softfab.userview import LoginPassArgs, PasswordMsgArgs, passwordStr
-from softfab.webgui import pageURL
-from softfab.xmlgen import XMLContent, xhtml
+from enum import Enum
 
 from twisted.cred.error import LoginFailed
 from twisted.internet.defer import inlineCallbacks
 
-from enum import Enum
+from softfab.FabPage import FabPage
+from softfab.Page import PageProcessor, PresentableError, Redirect
+from softfab.formlib import (
+    FormTable, actionButtons, hiddenInput, makeForm, passwordInput
+)
+from softfab.pageargs import EnumArg, PasswordArg, RefererArg
+from softfab.userlib import (
+    PasswordMessage, authenticate, changePassword, passwordQuality, userDB
+)
+from softfab.userview import LoginPassArgs, PasswordMsgArgs, passwordStr
+from softfab.webgui import pageURL
+from softfab.xmlgen import XMLContent, xhtml
 
 
 def presentForm(proc):

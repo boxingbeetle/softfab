@@ -2,6 +2,7 @@
 
 from softfab.webgui import Script
 
+
 class RefreshScript(Script):
 
     def __init__(self, *widgets):

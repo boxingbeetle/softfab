@@ -8,6 +8,7 @@ from softfab.productdeflib import ProductType, productDefDB
 from softfab.xmlbind import XMLTag
 from softfab.xmlgen import xml
 
+
 class ProductFactory:
     @staticmethod
     def createProduct(attributes):

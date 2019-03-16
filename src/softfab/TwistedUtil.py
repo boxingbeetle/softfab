@@ -6,6 +6,7 @@ from twisted.web.iweb import IRequest
 from twisted.web.resource import Resource
 from twisted.web.util import redirectTo
 
+
 class PageRedirect(Resource):
     '''Redirect to a fixed page.
     '''

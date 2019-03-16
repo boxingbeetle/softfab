@@ -3,11 +3,12 @@
 from softfab.Page import PageProcessor
 from softfab.RecordDelete import (
     RecordDelete_GET, RecordDelete_POSTMixin, RecordInUseError
-    )
+)
 from softfab.configlib import configDB
 from softfab.configview import schedulesUsingConfig
 from softfab.pageargs import RefererArg
 from softfab.schedulerefs import createScheduleDetailsLink
+
 
 class DelJobConfig_GET(RecordDelete_GET):
     db = configDB

@@ -1,5 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from urllib.parse import urlsplit
+
 from softfab.ControlPage import ControlPage
 from softfab.Page import InvalidRequest, PageProcessor
 from softfab.authentication import NoAuthPage
@@ -8,7 +10,6 @@ from softfab.pageargs import PageArgs, StrArg
 from softfab.shadowlib import shadowDB
 from softfab.xmlgen import xml
 
-from urllib.parse import urlsplit
 
 class TaskReport_POST(ControlPage['TaskReport_POST.Arguments', 'TaskReport_POST.Processor']):
     authenticator = NoAuthPage

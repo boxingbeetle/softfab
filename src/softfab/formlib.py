@@ -7,8 +7,9 @@ from softfab.pageargs import dynamic, mandatory
 from softfab.utils import abstract, iterable
 from softfab.webgui import (
     AttrContainer, Column, Table, Widget, cell, row, script
-    )
+)
 from softfab.xmlgen import XMLPresentable, txt, xhtml
+
 
 class _FormPresenter:
     '''Utility class to create forms in HTML pages.

@@ -6,6 +6,7 @@ from softfab.pageargs import PageArgs, StrArg
 from softfab.statuslib import StatusModelRegistry
 from softfab.xmlgen import xml
 
+
 def treeSupportsFormat(modelClass, fmt):
     '''Returns True iff the given model class or one of its descendants might
     support the given format, False iff the given format is certainly not

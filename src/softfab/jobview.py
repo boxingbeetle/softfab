@@ -7,7 +7,7 @@ from softfab.config import rootURL
 from softfab.databaselib import RecordObserver
 from softfab.datawidgets import (
     DataColumn, DataTable, DurationColumn, TimeColumn
-    )
+)
 from softfab.joblib import jobDB
 from softfab.notification import sendNotification
 from softfab.pagelinks import createJobURL

@@ -5,6 +5,7 @@ from softfab.Page import PageProcessor
 from softfab.pageargs import PageArgs, StrArg
 from softfab.statuslib import StatusModelRegistry, StatusViewClient
 
+
 class ObserveStatus_GET(ControlPage['ObserveStatus_GET.Arguments', 'ObserveStatus_GET.Processor']):
     streaming = True
 

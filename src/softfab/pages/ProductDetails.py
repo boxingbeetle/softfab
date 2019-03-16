@@ -11,6 +11,7 @@ from softfab.utils import pluralize
 from softfab.webgui import PropertiesTable, hgroup, pageLink
 from softfab.xmlgen import XMLContent, xhtml
 
+
 class DetailsTable(PropertiesTable):
 
     def iterRows(self, *, proc, **kwargs):

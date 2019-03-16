@@ -6,6 +6,7 @@ from softfab.pageargs import SetArg, StrArg
 from softfab.restypelib import ResType, resTypeDB
 from softfab.webgui import Column, PropertiesTable, cell
 
+
 class ResTypeEdit(EditPage):
     # FabPage constants:
     icon = 'IconResources'

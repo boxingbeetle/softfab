@@ -1,21 +1,10 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from softfab.Page import (
-    FabResource, InternalError, PageProcessor, Redirect, Redirector, Responder
-    )
-from softfab.SplashPage import SplashPage, startupMessages
-from softfab.StyleResources import styleRoot
-from softfab.TwistedUtil import PageRedirect
-from softfab.authentication import DisabledAuthPage, NoAuthPage
-from softfab.databases import iterDatabasesToPreload
-from softfab.pageargs import PageArgs
-from softfab.render import (
-    InternalErrorPage, NotFoundPage, parseAndProcess, present
-    )
-from softfab.request import Request
-from softfab.schedulelib import ScheduleManager
-from softfab.shadowlib import startShadowRunCleanup
-from softfab.userlib import UnknownUser
+from functools import partial
+from importlib import import_module
+from inspect import getmodulename
+from types import GeneratorType
+import logging
 
 from twisted.cred.error import LoginFailed
 from twisted.internet import reactor
@@ -25,13 +14,24 @@ from twisted.python import log
 from twisted.python.failure import Failure
 from twisted.web.resource import Resource
 from twisted.web.server import NOT_DONE_YET
-
-from functools import partial
-from importlib import import_module
-from inspect import getmodulename
-from types import GeneratorType
 import importlib_resources
-import logging
+
+from softfab.Page import (
+    FabResource, InternalError, PageProcessor, Redirect, Redirector, Responder
+)
+from softfab.SplashPage import SplashPage, startupMessages
+from softfab.StyleResources import styleRoot
+from softfab.TwistedUtil import PageRedirect
+from softfab.authentication import DisabledAuthPage, NoAuthPage
+from softfab.databases import iterDatabasesToPreload
+from softfab.pageargs import PageArgs
+from softfab.render import (
+    InternalErrorPage, NotFoundPage, parseAndProcess, present
+)
+from softfab.request import Request
+from softfab.schedulelib import ScheduleManager
+from softfab.shadowlib import startShadowRunCleanup
+from softfab.userlib import UnknownUser
 
 startupLogger = logging.getLogger('ControlCenter.startup')
 

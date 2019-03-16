@@ -1,12 +1,12 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from enum import Enum
+
 from softfab.ControlPage import ControlPage
 from softfab.Page import InvalidRequest, PageProcessor
 from softfab.pageargs import EnumArg, PageArgs, SetArg
 from softfab.taskrunnerlib import taskRunnerDB
 from softfab.xmlgen import xml
-
-from enum import Enum
 
 Actions = Enum('Actions', 'SUSPEND RESUME')
 

@@ -1,11 +1,11 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from softfab.utils import cachedProperty
-
 from typing import (
     Dict, Iterator, Mapping, Optional, Sequence, Tuple, Union, cast
-    )
+)
 import re
+
+from softfab.utils import cachedProperty
 
 # Content negotiation is described in:
 #   https://tools.ietf.org/html/rfc7231#section-5.3

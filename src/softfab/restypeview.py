@@ -3,6 +3,7 @@
 from softfab.restypelib import resTypeDB, taskRunnerResourceTypeName
 from softfab.webgui import Column
 
+
 class DescriptionColumn(Column):
     label = 'Description'
 

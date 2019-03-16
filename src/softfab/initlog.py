@@ -1,11 +1,12 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from softfab.config import dbDir, loggingLevel
-from softfab.version import version
-
 import logging
 import os
 import os.path
+
+from softfab.config import dbDir, loggingLevel
+from softfab.version import version
+
 
 def _convertLoggingLevel(level):
     if isinstance(level, int):

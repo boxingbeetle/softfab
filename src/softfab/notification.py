@@ -6,15 +6,14 @@ It can be used to send certain recipients an email about a certain event
 that happened in the SoftFab (e.g. Job complete or Job failed).
 '''
 
-from softfab.projectlib import project
-from softfab.utils import IllegalStateError
-
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import formatdate
-
 import logging
 import re
+
+from softfab.projectlib import project
+from softfab.utils import IllegalStateError
 
 # The twisted.mail package wasn't ported to Python 3 until Twisted 17.x.
 try:

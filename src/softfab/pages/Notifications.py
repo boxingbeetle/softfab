@@ -15,6 +15,7 @@ from softfab.pageargs import BoolArg, EnumArg, PageArgs, StrArg
 from softfab.projectlib import project
 from softfab.xmlgen import XMLContent, xhtml
 
+
 def presentEmailForm():
     yield xhtml.p[
         checkBox(name='mailNotification')['Send notifications via e-mail']

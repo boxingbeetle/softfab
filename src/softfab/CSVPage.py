@@ -3,6 +3,8 @@
 '''Export data in CSV format
 '''
 
+from enum import Enum
+
 from softfab.ControlPage import plainTextErrorResponder
 from softfab.Page import FabResource, ProcT, Responder
 from softfab.authentication import LoginAuthPage
@@ -10,7 +12,6 @@ from softfab.pageargs import EnumArg, PageArgs
 from softfab.webgui import pageLink
 from softfab.xmlgen import xhtml
 
-from enum import Enum
 
 class Separator(Enum):
     '''Identifies the separator character to place between values.

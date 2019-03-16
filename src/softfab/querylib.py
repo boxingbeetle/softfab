@@ -1,8 +1,9 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from operator import itemgetter
+
 from softfab.utils import missing, wildcardMatcher
 
-from operator import itemgetter
 
 class RecordFilter:
     '''When called, returns a subset of the records, in the same order as

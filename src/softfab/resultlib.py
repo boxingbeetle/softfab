@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from typing import Iterator, Mapping, Sequence, Set, Tuple
 import os.path
 import re
-from typing import Iterator, Mapping, Sequence, Set, Tuple
 
 from softfab.config import dbDir
 from softfab.taskrunlib import taskRunDB

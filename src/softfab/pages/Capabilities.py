@@ -8,7 +8,7 @@ from softfab.datawidgets import DataColumn, DataTable
 from softfab.pageargs import ArgsCorrected, IntArg
 from softfab.pagelinks import (
     CapFilterArgs, createTaskDetailsLink, createTaskRunnerDetailsLink
-    )
+)
 from softfab.querylib import CustomFilter
 from softfab.resourcelib import resourceDB
 from softfab.resourceview import presentCapabilities
@@ -19,6 +19,7 @@ from softfab.taskrunnerlib import taskRunnerDB
 from softfab.utils import ResultKeeper
 from softfab.webgui import Table, pageLink, row, vgroup
 from softfab.xmlgen import XMLContent, txt, xhtml
+
 
 class ResTypeTable(ResTypeTableMixin, Table):
 

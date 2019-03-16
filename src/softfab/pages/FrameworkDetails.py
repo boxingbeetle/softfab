@@ -8,7 +8,7 @@ from softfab.frameworkview import taskDefsUsingFramework
 from softfab.graphview import GraphPageMixin, GraphPanel, createExecutionGraph
 from softfab.pagelinks import (
     FrameworkIdArgs, createProductDetailsLink, createTaskDetailsLink
-    )
+)
 from softfab.paramview import ParametersTable
 from softfab.resourceview import InlineResourcesTable
 from softfab.utils import pluralize

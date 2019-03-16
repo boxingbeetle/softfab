@@ -1,12 +1,13 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from softfab import (
-    projectlib, restypelib, resourcelib, productdeflib, frameworklib,
-    taskdeflib, storagelib, shadowlib, taskrunnerlib, productlib, joblib,
-    taskrunlib, configlib, schedulelib, userlib
-    )
-
 from importlib import reload
+
+from softfab import (
+    configlib, frameworklib, joblib, productdeflib, productlib, projectlib,
+    resourcelib, restypelib, schedulelib, shadowlib, storagelib, taskdeflib,
+    taskrunlib, taskrunnerlib, userlib
+)
+
 
 # Note: The databases should be ordered such that all if D2 depends on D1,
 #       D1 is positioned in the list before D2.

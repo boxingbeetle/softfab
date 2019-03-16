@@ -13,6 +13,7 @@ from softfab.utils import abstract, pluralize
 from softfab.webgui import unorderedList
 from softfab.xmlgen import XMLContent, xhtml
 
+
 class RecordInUseError(Exception):
 
     def __init__(self, refererName, presenter, referers):

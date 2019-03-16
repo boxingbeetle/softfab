@@ -5,6 +5,7 @@ from softfab.RecordDelete import RecordDelete_GET, RecordDelete_POSTMixin
 from softfab.pageargs import RefererArg
 from softfab.resourcelib import resourceDB
 
+
 class ResourceDelete_GET(RecordDelete_GET):
     db = resourceDB
     recordName = 'resource'

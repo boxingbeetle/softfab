@@ -7,6 +7,7 @@ from softfab.pageargs import RefererArg
 from softfab.taskrunnerlib import taskRunnerDB
 from softfab.xmlgen import xhtml
 
+
 class DelTaskRunnerRecord_GET(RecordDelete_GET):
     db = taskRunnerDB
     recordName = 'record of Task Runner'

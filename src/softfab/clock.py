@@ -1,10 +1,12 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from time import localtime, strftime
+
+from twisted.internet import reactor
+
 from softfab.statuslib import StatusModel, StatusModelRegistry
 from softfab.xmlgen import xml
 
-from twisted.internet import reactor
-from time import localtime, strftime
 
 # TODO: Make separate model for second-accuracy and minute-accuracy clock.
 #       The latter is needed for updating the clock in the bottom bar if we

@@ -1,10 +1,10 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-import logging
 from typing import (
     AbstractSet, ClassVar, FrozenSet, Iterable, Iterator, Mapping, Optional,
     Set, cast
-    )
+)
+import logging
 
 from softfab.config import dbDir
 from softfab.connection import ConnectionStatus
@@ -13,6 +13,7 @@ from softfab.timelib import getTime
 from softfab.utils import abstract
 from softfab.xmlbind import XMLTag
 from softfab.xmlgen import xml
+
 
 class ResourceBase(XMLTag, DatabaseElem):
     """Base class for Resource and TaskRunner.

@@ -7,13 +7,14 @@ from typing import ClassVar, Union
 from softfab.FabPage import FabPage, IconModifier
 from softfab.Page import (
     InternalError, InvalidRequest, PageProcessor, PresentableError, Redirect
-    )
+)
 from softfab.databaselib import Database
 from softfab.formlib import actionButtons, backButton, makeForm, textInput
 from softfab.pageargs import EnumArg, PageArgs, StrArg
 from softfab.utils import abstract
 from softfab.webgui import preserveSpaces, rowManagerScript
 from softfab.xmlgen import XMLContent, xhtml
+
 
 class AbstractPhase:
     '''Note: This class is similar to DialogStep, but I don't know yet if/how

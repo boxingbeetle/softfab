@@ -7,8 +7,10 @@ from softfab.Page import PageProcessor, PresentableError, Redirect
 from softfab.datawidgets import DataColumn, DataTable
 from softfab.formlib import (
     SingleCheckBoxTable, dropDownList, hiddenInput, makeForm, submitButton
-    )
-from softfab.pageargs import BoolArg, EnumArg, IntArg, PageArgs, StrArg, SortArg
+)
+from softfab.pageargs import (
+    BoolArg, EnumArg, IntArg, PageArgs, SortArg, StrArg
+)
 from softfab.pagelinks import AnonGuestArgs, UserIdArgs, createUserDetailsLink
 from softfab.projectlib import project
 from softfab.querylib import CustomFilter
@@ -16,6 +18,7 @@ from softfab.userlib import UIRoleNames, rolesGrantPrivilege, userDB
 from softfab.userview import activeRole, presentAnonGuestSetting, uiRoleToSet
 from softfab.webgui import pageLink, pageURL, script
 from softfab.xmlgen import XMLContent, xhtml
+
 
 class NameColumn(DataColumn):
     label = 'Name'

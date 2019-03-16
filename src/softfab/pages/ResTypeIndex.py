@@ -6,10 +6,11 @@ from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
 from softfab.datawidgets import (
     BoolDataColumn, DataColumn, DataTable, LinkColumn
-    )
+)
 from softfab.pageargs import IntArg, PageArgs, SortArg
 from softfab.restypelib import resTypeDB
 from softfab.xmlgen import XMLContent
+
 
 class ResTypeLinkColumn(LinkColumn):
 

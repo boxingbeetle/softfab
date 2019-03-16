@@ -1,5 +1,8 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from urllib.parse import urlparse
+import time
+
 from softfab.EditPage import EditPage
 from softfab.FabPage import IconModifier
 from softfab.Page import PresentableError
@@ -8,13 +11,11 @@ from softfab.pageargs import ArgsCorrected, BoolArg, EnumArg, IntArg, StrArg
 from softfab.projectlib import (
     EmbeddingPolicy, Project, _projectDB, defaultMaxJobs, getKnownTimezones,
     project
-    )
+)
 from softfab.setcalc import categorizedLists
 from softfab.webgui import PropertiesTable, Widget, docLink
 from softfab.xmlgen import xhtml
 
-from urllib.parse import urlparse
-import time
 
 class ProjectEdit(EditPage):
     # FabPage constants:

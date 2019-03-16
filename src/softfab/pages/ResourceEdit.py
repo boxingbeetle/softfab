@@ -11,6 +11,7 @@ from softfab.restypeview import ResTypeTableMixin
 from softfab.webgui import Panel, pageLink, vgroup
 from softfab.xmlgen import xhtml
 
+
 class CustomResTypeTable(ResTypeTableMixin, RadioTable):
     reserved = False
 

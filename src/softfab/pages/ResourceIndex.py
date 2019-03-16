@@ -1,11 +1,15 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from collections import defaultdict
+from enum import Enum
+from typing import Iterator
+
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor, PresentableError, Redirect
 from softfab.RecordDelete import DeleteArgs
 from softfab.datawidgets import (
     DataColumn, DataTable, LinkColumn, ListDataColumn
-    )
+)
 from softfab.formlib import makeForm, submitButton
 from softfab.pageargs import EnumArg, IntArg, PageArgs, SortArg, StrArg
 from softfab.pagelinks import createTaskLink, createTaskRunnerDetailsLink
@@ -16,9 +20,6 @@ from softfab.taskrunnerlib import taskRunnerDB
 from softfab.webgui import WidgetT, docLink, header, pageLink, pageURL, row
 from softfab.xmlgen import XMLContent, xhtml
 
-from collections import defaultdict
-from enum import Enum
-from typing import Iterator
 
 class NameColumn(DataColumn):
     def presentCell(self, record, **kwargs):

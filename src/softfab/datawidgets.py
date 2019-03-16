@@ -11,6 +11,7 @@ from softfab.utils import abstract, escapeURL, pluralize
 from softfab.webgui import Column, Table, cell, pageLink, pageURL, row
 from softfab.xmlgen import xhtml
 
+
 def listToStr(lst):
     return ', '.join(lst)
 

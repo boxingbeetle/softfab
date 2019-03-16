@@ -3,11 +3,12 @@
 from softfab.Page import PageProcessor
 from softfab.RecordDelete import (
     RecordDelete_GET, RecordDelete_POSTMixin, RecordInUseError
-    )
+)
 from softfab.pageargs import RefererArg
 from softfab.pagelinks import createConfigDetailsLink
 from softfab.taskdeflib import taskDefDB
 from softfab.taskdefview import configsUsingTaskDef
+
 
 class ParentArgs:
     indexQuery = RefererArg('TaskIndex')

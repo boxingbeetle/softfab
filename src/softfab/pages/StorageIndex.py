@@ -9,6 +9,7 @@ from softfab.pageargs import IntArg, PageArgs, SortArg
 from softfab.storageview import StorageTable
 from softfab.xmlgen import XMLContent
 
+
 class StorageIndex_GET(FabPage['StorageIndex_GET.Processor', 'StorageIndex_GET.Arguments']):
     icon = 'IconReport'
     description = 'Report Storages'

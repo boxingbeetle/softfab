@@ -1,13 +1,14 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from softfab.FabPage import FabPage
-from softfab.ReportMixin import ReportTaskArgs
 from softfab.Page import PageProcessor, PresentableError
+from softfab.ReportMixin import ReportTaskArgs
 from softfab.joblib import jobDB
 from softfab.pagelinks import TaskIdArgs
 from softfab.resultlib import getData, getKeys
 from softfab.webgui import Table, cell, pageLink
 from softfab.xmlgen import XMLContent, xhtml
+
 
 class ExtractionDetails_GET(FabPage['ExtractionDetails_GET.Processor', 'ExtractionDetails_GET.Arguments']):
     icon = 'IconReport'

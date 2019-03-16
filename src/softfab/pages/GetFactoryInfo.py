@@ -10,6 +10,7 @@ from softfab.userlib import privileges
 from softfab.version import version
 from softfab.xmlgen import xml
 
+
 class GetFactoryInfo_GET(ControlPage[ControlPage.Arguments,
                                      'GetFactoryInfo_GET.Processor']):
 

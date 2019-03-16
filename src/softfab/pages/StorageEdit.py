@@ -1,16 +1,17 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from urllib.parse import urlparse
+
 from softfab.EditPage import AbstractPhase, EditPage, EditPagePrev
 from softfab.Page import PresentableError
 from softfab.formlib import checkBox, makeForm, submitButton, textInput
 from softfab.pageargs import BoolArg, StrArg
 from softfab.storagelib import (
     Storage, getStorageIdByName, getStorageIdByURL, storageDB
-    )
+)
 from softfab.webgui import PropertiesTable
 from softfab.xmlgen import XMLContent, xhtml
 
-from urllib.parse import urlparse
 
 class MergePhase(AbstractPhase):
 

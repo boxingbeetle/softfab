@@ -4,13 +4,13 @@ from collections import defaultdict
 from typing import (
     TYPE_CHECKING, Dict, Iterable, List, Mapping, Optional, Sequence, Set,
     cast, overload
-    )
+)
 
 from softfab.resreq import ResourceClaim, ResourceSpec
 from softfab.waiting import (
     ReasonForWaiting, ResourceCapsReason, ResourceSpecReason,
     ResourceTypeReason, StatusLevel, statusLevelForResource
-    )
+)
 
 if TYPE_CHECKING:
     from softfab.resourcelib import Resource

@@ -5,6 +5,7 @@ from softfab.pageargs import PageArgs, SetArg
 from softfab.taskdeflib import taskDefDB
 from softfab.xmlgen import xml
 
+
 class GetTaskDefParams_GET(ControlPage['GetTaskDefParams_GET.Arguments',
                                        ControlPage.Processor]):
 

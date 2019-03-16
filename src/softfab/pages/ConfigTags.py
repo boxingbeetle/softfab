@@ -1,5 +1,8 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from enum import Enum
+from typing import Iterator
+
 from softfab.FabPage import FabPage, IconModifier
 from softfab.Page import PageProcessor, Redirect
 from softfab.configlib import Config, configDB
@@ -11,11 +14,9 @@ from softfab.projectlib import project
 from softfab.selectlib import getCommonTags
 from softfab.selectview import (
     SelectArgs, TagValueEditTable, textToValues, valuesToText
-    )
+)
 from softfab.xmlgen import XMLContent, xhtml
 
-from enum import Enum
-from typing import Iterator
 
 class TagConfigTable(SimpleConfigTable):
     # Disable tabs and sorting because it would clear the forms.

@@ -6,6 +6,7 @@ from softfab.pagelinks import TaskRunnerIdArgs
 from softfab.taskrunnerlib import taskRunnerDB
 from softfab.xmlgen import xml
 
+
 class TaskRunnerExit_POST(ControlPage['TaskRunnerExit_POST.Arguments', 'TaskRunnerExit_POST.Processor']):
 
     class Arguments(TaskRunnerIdArgs):

@@ -1,20 +1,21 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from collections import defaultdict
+import time
+
 from softfab.CSVPage import presentCSVLink
 from softfab.FabPage import FabPage
 from softfab.ReportMixin import ReportTaskArgs
 from softfab.TaskMatrixCommon import (
     TaskMatrixArgs, TaskMatrixCSVArgs, TaskMatrixProcessor, dateRange
-    )
+)
 from softfab.configlib import configDB
 from softfab.formlib import dropDownList, emptyOption, makeForm, submitButton
 from softfab.jobview import createStatusBar
-from softfab.timelib import normalizeWeek, secondsPerDay, weeksInYear, iterDays
+from softfab.timelib import iterDays, normalizeWeek, secondsPerDay, weeksInYear
 from softfab.webgui import Table, cell, pageLink, pageURL
 from softfab.xmlgen import XMLContent, xhtml
 
-from collections import defaultdict
-import time
 
 def dateLink(args, year, week):
     return pageLink('TaskMatrix', args.override(year = year, week = week))

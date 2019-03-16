@@ -1,5 +1,8 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from collections import defaultdict
+import time
+
 from softfab.CSVPage import CSVPage
 from softfab.Page import PageProcessor
 from softfab.databaselib import RecordObserver
@@ -8,10 +11,8 @@ from softfab.pageargs import ArgsCorrected, IntArg, PageArgs, StrArg, dynamic
 from softfab.querylib import CustomFilter, runQuery
 from softfab.timelib import (
     getTime, getWeekNr, secondsPerDay, weekRange, weeksInYear
-    )
+)
 
-from collections import defaultdict
-import time
 
 class DateRangeMonitor(RecordObserver):
     minTime = property(lambda self: self.__minTime)

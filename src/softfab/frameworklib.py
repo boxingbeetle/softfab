@@ -5,10 +5,11 @@ from softfab.databaselib import DatabaseElem, VersionedDatabase
 from softfab.paramlib import ParamMixin
 from softfab.resreq import (
     ResourceClaim, ResourceSpec, taskRunnerResourceRefName
-    )
+)
 from softfab.restypelib import taskRunnerResourceTypeName
 from softfab.xmlbind import XMLTag
 from softfab.xmlgen import xml
+
 
 class FrameworkFactory:
     @staticmethod

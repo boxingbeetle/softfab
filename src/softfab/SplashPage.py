@@ -7,6 +7,7 @@ from softfab.response import Response
 from softfab.webgui import unorderedList
 from softfab.xmlgen import XMLContent, xhtml
 
+
 class _StartupMessages:
 
     def __init__(self):

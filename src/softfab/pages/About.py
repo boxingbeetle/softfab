@@ -1,5 +1,10 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from platform import python_version
+
+from passlib import __version__ as passlibVersion
+from twisted import __version__ as twistedVersion
+
 from softfab.FabPage import FabPage
 from softfab.notification import sendmail
 from softfab.projectlib import getBootTime, project
@@ -8,11 +13,6 @@ from softfab.utils import parseVersion
 from softfab.version import version as softFabVersion
 from softfab.webgui import Table, docLink
 from softfab.xmlgen import XMLContent, xhtml
-
-from passlib import __version__ as passlibVersion
-from twisted import __version__ as twistedVersion
-
-from platform import python_version
 
 try:
     from pytz import VERSION as pytzVersion

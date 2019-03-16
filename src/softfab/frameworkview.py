@@ -4,6 +4,7 @@ from softfab.datawidgets import DataColumn
 from softfab.pagelinks import createFrameworkDetailsLink
 from softfab.taskdeflib import taskDefDB
 
+
 class FrameworkColumn(DataColumn):
     def presentCell(self, record, **kwargs):
         return createFrameworkDetailsLink(record[self.keyName])

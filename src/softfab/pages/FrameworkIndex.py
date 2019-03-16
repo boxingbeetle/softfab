@@ -6,13 +6,14 @@ from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
 from softfab.datawidgets import (
     BoolDataColumn, DataColumn, DataTable, LinkColumn, ListDataColumn
-    )
+)
 from softfab.frameworklib import anyExtract, frameworkDB
 from softfab.frameworkview import FrameworkColumn
 from softfab.pageargs import IntArg, PageArgs, SortArg
 from softfab.pagelinks import createProductDetailsLink
 from softfab.webgui import docLink
 from softfab.xmlgen import XMLContent, txt, xhtml
+
 
 class ProductColumn(DataColumn):
     def presentCell(self, record, **kwargs):

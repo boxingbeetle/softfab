@@ -11,6 +11,7 @@ from softfab.pagelinks import JobIdSetArgs
 from softfab.webgui import WidgetT, unorderedList
 from softfab.xmlgen import XMLContent, xhtml
 
+
 class ShowJobsTable(JobsSubTable):
     widgetId = 'jobsTable'
     autoUpdate = True

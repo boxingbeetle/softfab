@@ -7,7 +7,7 @@ from softfab.config import dbDir
 from softfab.conversionflags import upgradeInProgress
 from softfab.databaselib import (
     Database, DatabaseElem, ObsoleteRecordError, createInternalId
-    )
+)
 from softfab.resreq import ResourceClaim
 from softfab.restypelib import taskRunnerResourceTypeName
 from softfab.resultcode import ResultCode

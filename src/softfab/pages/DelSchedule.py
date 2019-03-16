@@ -5,6 +5,7 @@ from softfab.RecordDelete import RecordDelete_GET, RecordDelete_POSTMixin
 from softfab.pageargs import RefererArg
 from softfab.schedulelib import scheduleDB
 
+
 class DelSchedule_GET(RecordDelete_GET):
     db = scheduleDB
     recordName = 'schedule'

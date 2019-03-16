@@ -1,22 +1,22 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from softfab.config import dbDir
-from softfab.databaselib import Database, DatabaseElem
-from softfab.utils import atomicWrite
-from softfab.xmlbind import XMLTag
-from softfab.xmlgen import xml
-
-from passlib.apache import HtpasswdFile
-from twisted.cred.error import LoginFailed, UnauthorizedLogin
-from twisted.internet.defer import inlineCallbacks
-from zope.interface import Interface, implementer
-
 from enum import Enum
 from functools import total_ordering
 from os import makedirs
 from os.path import dirname, exists
 from typing import Mapping, Optional, Sequence
 import logging
+
+from passlib.apache import HtpasswdFile
+from twisted.cred.error import LoginFailed, UnauthorizedLogin
+from twisted.internet.defer import inlineCallbacks
+from zope.interface import Interface, implementer
+
+from softfab.config import dbDir
+from softfab.databaselib import Database, DatabaseElem
+from softfab.utils import atomicWrite
+from softfab.xmlbind import XMLTag
+from softfab.xmlgen import xml
 
 roleNames = frozenset([ 'guest', 'user', 'operator' ])
 

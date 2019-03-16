@@ -7,13 +7,14 @@ from softfab.Page import PageProcessor
 from softfab.connection import ConnectionStatus
 from softfab.pagelinks import (
     ResourceIdArgs, TaskRunnerIdArgs, createJobLink, createTaskLink
-    )
+)
 from softfab.resourceview import getResourceStatus, presentCapabilities
 from softfab.restypelib import taskRunnerResourceTypeName
 from softfab.taskrunnerlib import taskRunnerDB
 from softfab.timeview import formatDuration, formatTime
 from softfab.webgui import Column, Table, WidgetT, pageLink, row
 from softfab.xmlgen import XMLContent, xhtml
+
 
 class TaskRunnerDetails_GET(FabPage['TaskRunnerDetails_GET.Processor', 'TaskRunnerDetails_GET.Arguments']):
     icon = 'TaskRunStat1'

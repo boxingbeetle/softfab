@@ -1,11 +1,12 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-import logging
 from abc import ABC
 from typing import ClassVar
+import logging
 
 from twisted.internet import reactor
 
+from softfab import joblib
 from softfab.config import dbDir, syncDelay
 from softfab.connection import ConnectionStatus
 from softfab.databaselib import Database, RecordObserver
@@ -14,12 +15,13 @@ from softfab.restypelib import taskRunnerResourceTypeName
 from softfab.shadowlib import shadowDB
 from softfab.statuslib import (
     DBStatusModelGroup, StatusModel, StatusModelRegistry
-    )
+)
 from softfab.taskrunlib import taskRunDB
 from softfab.timelib import getTime
 from softfab.utils import abstract, cachedProperty, parseVersion
 from softfab.xmlbind import XMLTag
 from softfab.xmlgen import xml
+
 
 class RequestFactory:
     @staticmethod
@@ -726,5 +728,3 @@ class TaskRunnerModelGroup(DBStatusModelGroup):
 # (see comment in TaskRunner docstring), I disabled the model registration.
 # pylint: disable=pointless-statement
 StatusModelRegistry#.addModelGroup(TaskRunnerModelGroup, 'taskrunner')
-
-from softfab import joblib

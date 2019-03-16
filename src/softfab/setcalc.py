@@ -4,7 +4,7 @@ from collections import defaultdict
 from typing import (
     AbstractSet, DefaultDict, Dict, Generic, Iterable, Iterator, List,
     Optional, Set, Tuple, TypeVar
-    )
+)
 
 KT = TypeVar('KT')
 VT = TypeVar('VT')

@@ -1,26 +1,26 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from softfab.FabPage import FabPage
-from softfab.Page import ArgT, PageProcessor, PresentableError, ProcT, Redirect
-from softfab.formlib import (
-    FormTable, actionButtons, dropDownList, emptyOption, hiddenInput,
-    makeForm, passwordInput, textInput
-    )
-from softfab.pageargs import EnumArg, PageArgs, RefererArg, StrArg
-from softfab.request import Request
-from softfab.userlib import (
-    PasswordMessage, addUserAccount, authenticate, passwordQuality
-    )
-from softfab.userview import (
-    LoginPassArgs, UIRoleNames, passwordStr, uiRoleToSet
-    )
-from softfab.xmlgen import XMLContent, xhtml
+from enum import Enum
+from typing import Optional
 
 from twisted.cred.error import LoginFailed
 from twisted.internet.defer import inlineCallbacks
 
-from enum import Enum
-from typing import Optional
+from softfab.FabPage import FabPage
+from softfab.Page import ArgT, PageProcessor, PresentableError, ProcT, Redirect
+from softfab.formlib import (
+    FormTable, actionButtons, dropDownList, emptyOption, hiddenInput, makeForm,
+    passwordInput, textInput
+)
+from softfab.pageargs import EnumArg, PageArgs, RefererArg, StrArg
+from softfab.request import Request
+from softfab.userlib import (
+    PasswordMessage, addUserAccount, authenticate, passwordQuality
+)
+from softfab.userview import (
+    LoginPassArgs, UIRoleNames, passwordStr, uiRoleToSet
+)
+from softfab.xmlgen import XMLContent, xhtml
 
 Actions = Enum('Actions', 'ADD CANCEL')
 

@@ -9,6 +9,7 @@ from softfab.productdeflib import ProductDef, ProductType
 from softfab.webgui import Table
 from softfab.xmlgen import XMLContent, xhtml
 
+
 class TaskGraphBuilder(ExecutionGraphBuilder):
 
     def populate(self): # pylint: disable=arguments-differ

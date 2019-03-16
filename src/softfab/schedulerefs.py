@@ -3,6 +3,7 @@
 from softfab.pageargs import PageArgs, StrArg
 from softfab.webgui import pageLink, pageURL
 
+
 class ScheduleIdArgs(PageArgs):
     '''Identifies a particular schedule.
     '''

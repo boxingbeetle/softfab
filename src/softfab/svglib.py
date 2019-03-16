@@ -3,10 +3,10 @@
 '''Presents SVG images.
 '''
 
+from xml.etree import ElementTree
+
 from softfab.webgui import Widget
 from softfab.xmlgen import adaptToXML, xhtml
-
-from xml.etree import ElementTree
 
 svgNamespace = 'http://www.w3.org/2000/svg'
 xlinkNamespace = 'http://www.w3.org/1999/xlink'

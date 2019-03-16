@@ -1,23 +1,25 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from enum import Enum
+
 from softfab.FabPage import IconModifier
 from softfab.Page import (
     AccessDenied, InternalError, InvalidRequest, PageProcessor,
     PresentableError, Redirect
-    )
+)
 from softfab.configlib import Config, Task, configDB
 from softfab.configview import InputTable
 from softfab.dialog import (
     ContinuedDialogProcessor, DialogPage, DialogStep, InitialDialogProcessor
-    )
+)
 from softfab.formlib import (
-    CheckBoxesTable, RadioTable, SingleCheckBoxTable,
-    selectionList, textArea, textInput
-    )
+    CheckBoxesTable, RadioTable, SingleCheckBoxTable, selectionList, textArea,
+    textInput
+)
 from softfab.joblib import jobDB
 from softfab.pageargs import (
     ArgsCorrected, BoolArg, DictArg, EnumArg, IntArg, SetArg, StrArg
-    )
+)
 from softfab.pagelinks import createJobsURL
 from softfab.paramview import ParamCell, ParamOverrideTable
 from softfab.productdeflib import ProductType
@@ -27,8 +29,6 @@ from softfab.taskdeflib import taskDefDB
 from softfab.taskrunnerlib import taskRunnerDB
 from softfab.webgui import Table, cell
 from softfab.xmlgen import XMLContent, xhtml
-
-from enum import Enum
 
 
 class TargetStep(DialogStep):

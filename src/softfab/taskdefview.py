@@ -3,6 +3,7 @@
 from softfab.configlib import configDB
 from softfab.utils import pluralize
 
+
 def configsUsingTaskDef(taskDefId):
     '''Iterates through the IDs of those configurations that contain the given
     task definition.

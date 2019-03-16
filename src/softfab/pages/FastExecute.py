@@ -1,5 +1,8 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from enum import Enum
+from typing import Iterator
+
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor, PresentableError, Redirect
 from softfab.configlib import configDB, iterConfigsByTag
@@ -13,8 +16,6 @@ from softfab.selectview import TagArgs
 from softfab.utils import pluralize
 from softfab.xmlgen import XMLContent, xhtml
 
-from enum import Enum
-from typing import Iterator
 
 class FastConfigTable(SimpleConfigTable):
     # Disable tabs and sorting because links would drop the stored referers.

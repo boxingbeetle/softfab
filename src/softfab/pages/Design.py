@@ -7,12 +7,13 @@ The Design page containing the execution graph(s).
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
 from softfab.graphview import (
-    GraphPageMixin, GraphPanel, canCreateGraphs,
-    createExecutionGraph, createLegend, iterConnectedExecutionGraphs
-    )
+    GraphPageMixin, GraphPanel, canCreateGraphs, createExecutionGraph,
+    createLegend, iterConnectedExecutionGraphs
+)
 from softfab.pageargs import PageArgs, StrArg
 from softfab.webgui import docLink, pageLink
 from softfab.xmlgen import XMLContent, xhtml
+
 
 class Design_GET(
         GraphPageMixin,

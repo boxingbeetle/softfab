@@ -7,6 +7,7 @@ from softfab.projectlib import project
 from softfab.userview import presentAnonGuestSetting
 from softfab.xmlgen import XMLContent
 
+
 class AnonGuestBase(FabPage[ProcT, ArgT]):
     icon = 'UserList1'
     description = 'Anonymous Guests'

@@ -18,6 +18,7 @@ from softfab.userview import OwnerColumn
 from softfab.webgui import Table, cell
 from softfab.xmlgen import xml
 
+
 class SelectConfigsMixin:
     '''Mixin for PageProcessors that want to use the `sel` argument to
     select configurations.

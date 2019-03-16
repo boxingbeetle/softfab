@@ -37,18 +37,18 @@ If you are creating a long sequence, returning an iterable will perform better
 than repeated addition.
 '''
 
-import re
 from abc import ABC, abstractmethod
 from enum import Enum
 from itertools import chain
 from sys import intern
 from types import MappingProxyType
 from typing import (
-    TYPE_CHECKING, Callable, Dict, Iterable, Iterator, List, Match, Mapping,
+    TYPE_CHECKING, Callable, Dict, Iterable, Iterator, List, Mapping, Match,
     Optional, Sequence, Type, Union
-    )
+)
 from xml.etree import ElementTree
 from xml.sax.saxutils import escape
+import re
 
 from softfab.utils import cachedProperty
 

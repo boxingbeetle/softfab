@@ -1,12 +1,13 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from enum import Enum
+
 from softfab.config import dbDir
 from softfab.databaselib import (
     DatabaseElem, VersionedDatabase, checkWrapperVarName
-    )
+)
 from softfab.xmlbind import XMLTag
 
-from enum import Enum
 
 class ProductFactory:
     @staticmethod

@@ -8,6 +8,7 @@ from softfab.taskrunnerlib import taskRunnerDB
 from softfab.webgui import pageLink, pageURL
 from softfab.xmlgen import txt, xhtml
 
+
 class ProductDefIdArgs(PageArgs):
     '''Identifies a particular product definition.
     '''

@@ -3,13 +3,14 @@
 from softfab.Page import PageProcessor
 from softfab.RecordDelete import (
     RecordDelete_GET, RecordDelete_POSTMixin, RecordInUseError
-    )
+)
 from softfab.frameworklib import frameworkDB
 from softfab.pageargs import RefererArg
 from softfab.pagelinks import createFrameworkDetailsLink, createTaskDetailsLink
 from softfab.resourcelib import resourceDB
 from softfab.restypelib import resTypeDB
 from softfab.taskdeflib import taskDefDB
+
 
 def checkRequirements(db, typeName, linkFunc):
     usedBy = set(

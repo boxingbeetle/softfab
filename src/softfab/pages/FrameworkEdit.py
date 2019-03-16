@@ -10,21 +10,22 @@ from softfab.frameworklib import Framework, frameworkDB
 from softfab.pageargs import BoolArg, SetArg, StrArg
 from softfab.paramlib import paramTop
 from softfab.paramview import (
-    ParamArgsMixin, ParamDefTable,
-    addParamsToElement, checkParamState, initParamArgs, validateParamState
-    )
+    ParamArgsMixin, ParamDefTable, addParamsToElement, checkParamState,
+    initParamArgs, validateParamState
+)
 from softfab.productdeflib import productDefDB
 from softfab.resourceview import (
     ResourceRequirementsArgsMixin, addResourceRequirementsToElement,
     checkResourceRequirementsState, initResourceRequirementsArgs,
     resourceRequirementsWidget, validateResourceRequirementsState
-    )
+)
 from softfab.taskdeflib import taskDefDB
 from softfab.utils import abstract
 from softfab.webgui import (
     PropertiesTable, Table, docLink, hgroup, rowManagerInstanceScript
-    )
+)
 from softfab.xmlgen import xhtml
+
 
 class FrameworkEdit(EditPage):
     # FabPage constants:

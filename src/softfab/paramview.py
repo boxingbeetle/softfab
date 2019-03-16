@@ -1,14 +1,14 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from enum import Enum
+import re
+
 from softfab.Page import PresentableError
 from softfab.formlib import RadioTable, checkBox, hiddenInput, textInput
 from softfab.pageargs import BoolArg, DictArg, EnumArg, StrArg
 from softfab.paramlib import specialParameters
 from softfab.webgui import Table, cell, rowManagerInstanceScript, script
 from softfab.xmlgen import xhtml
-
-from enum import Enum
-import re
 
 reParamName = re.compile(r'^(?:sf\.|[A-Za-z_])[A-Za-z_0-9]*$')
 '''Regular expression which defines valid parameter names.

@@ -1,28 +1,29 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from collections import defaultdict
+import logging
+
 from softfab import frameworklib, taskdeflib, taskrunlib
 from softfab.config import dbDir
 from softfab.databaselib import (
     Database, DatabaseElem, RecordObserver, createUniqueId
-    )
+)
 from softfab.dispatchlib import pickResources
 from softfab.paramlib import specialParameters
 from softfab.productlib import Product, productDB
-from softfab.resreq import ResourceClaim, ResourceSpec
 from softfab.resourcelib import resourceDB
+from softfab.resreq import ResourceClaim, ResourceSpec
 from softfab.restypelib import resTypeDB
 from softfab.resultcode import combineResults
 from softfab.taskgroup import PriorityMixin, TaskSet
 from softfab.tasklib import (
     ResourceRequirementsMixin, TaskRunnerSet, TaskStateMixin
-    )
+)
 from softfab.timelib import getTime
 from softfab.waiting import InputReason, ResourceMissingReason, checkRunners
 from softfab.xmlbind import XMLTag
 from softfab.xmlgen import xml
 
-from collections import defaultdict
-import logging
 
 class JobFactory:
     @staticmethod

@@ -9,7 +9,7 @@ from enum import IntEnum
 from typing import (
     TYPE_CHECKING, Callable, ClassVar, Iterable, List, NewType, Optional,
     Sequence, Set, Tuple, cast
-    )
+)
 
 from softfab.connection import ConnectionStatus
 from softfab.resreq import ResourceSpec

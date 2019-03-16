@@ -6,6 +6,7 @@ from softfab.pageargs import BoolArg, EnumArg
 from softfab.productdeflib import ProductDef, ProductType, productDefDB
 from softfab.webgui import PropertiesTable, docLink
 
+
 class ProductEdit(EditPage):
     # FabPage constants:
     icon = 'Product1'

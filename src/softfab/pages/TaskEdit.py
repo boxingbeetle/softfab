@@ -7,19 +7,20 @@ from softfab.frameworklib import frameworkDB
 from softfab.pageargs import IntArg, StrArg
 from softfab.paramlib import paramTop
 from softfab.paramview import (
-    ParamArgsMixin, ParamDefTable,
-    addParamsToElement, checkParamState, initParamArgs, validateParamState
-    )
+    ParamArgsMixin, ParamDefTable, addParamsToElement, checkParamState,
+    initParamArgs, validateParamState
+)
 from softfab.projectlib import project
 from softfab.resourceview import (
     ResourceRequirementsArgsMixin, addResourceRequirementsToElement,
     checkResourceRequirementsState, initResourceRequirementsArgs,
     resourceRequirementsWidget, validateResourceRequirementsState
-    )
+)
 from softfab.selectview import textToValues, valuesToText
 from softfab.taskdeflib import TaskDef, taskDefDB
 from softfab.webgui import PropertiesTable
 from softfab.xmlgen import xhtml
+
 
 class TaskEdit(EditPage):
     # FabPage constants:

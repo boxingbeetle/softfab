@@ -10,6 +10,7 @@ from softfab.taskrunnerlib import RequestFactory, TaskRunner, taskRunnerDB
 from softfab.xmlbind import parse
 from softfab.xmlgen import xml
 
+
 class WaitingShadowRuns(SortedQueue):
     compareField = 'createtime'
 

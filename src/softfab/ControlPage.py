@@ -5,6 +5,7 @@ from typing import ClassVar, Type
 from softfab.Page import ArgT, Authenticator, FabResource, ProcT, Responder
 from softfab.authentication import HTTPAuthPage
 
+
 class _ErrorResponder(Responder):
 
     def respond(self, response, proc):

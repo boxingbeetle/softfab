@@ -53,6 +53,13 @@ A: For repeating schedules, advance to next time.
    For non-repeating schedules, run as soon as schedule is resumed.
 '''
 
+from enum import Enum
+from typing import ClassVar
+import logging
+import time
+
+from twisted.internet import reactor
+
 from softfab.config import dbDir
 from softfab.configlib import Config, configDB, iterConfigsByTag
 from softfab.databaselib import Database, DatabaseElem, RecordObserver
@@ -62,13 +69,6 @@ from softfab.timelib import endOfTime, getTime
 from softfab.utils import Heap, SharedInstance
 from softfab.xmlbind import XMLTag
 from softfab.xmlgen import xml
-
-from twisted.internet import reactor
-
-from enum import Enum
-from typing import ClassVar
-import logging
-import time
 
 asap = 0 # Schedule runs as soon as possible.
 

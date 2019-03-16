@@ -5,6 +5,10 @@ but much better defined.
 Its specification is in RFC 4287:  http://tools.ietf.org/html/rfc4287
 '''
 
+from os.path import basename
+from time import gmtime, strftime
+from typing import Iterator
+
 from softfab.ControlPage import ControlPage
 from softfab.Page import PageProcessor
 from softfab.UIPage import iterStyleSheets
@@ -22,10 +26,6 @@ from softfab.utils import pluralize
 from softfab.version import version
 from softfab.webgui import Table, cell, pageURL, row
 from softfab.xmlgen import atom, xhtml
-
-from os.path import basename
-from time import gmtime, strftime
-from typing import Iterator
 
 # TODO: Give each factory a truly unique ID.
 factoryId = basename(dbDir)

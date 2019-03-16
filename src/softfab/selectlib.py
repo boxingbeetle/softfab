@@ -8,6 +8,7 @@ from softfab.databaselib import RecordObserver
 from softfab.utils import abstract
 from softfab.xmlgen import xml
 
+
 class Selectable(ABC):
     cache = abstract # type: ClassVar[TagCache]
 

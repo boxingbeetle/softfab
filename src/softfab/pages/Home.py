@@ -3,8 +3,8 @@
 from typing import Iterator
 
 from softfab.FabPage import FabPage
-from softfab.StyleResources import styleRoot
 from softfab.Page import PageProcessor
+from softfab.StyleResources import styleRoot
 from softfab.databaselib import RecordObserver
 from softfab.datawidgets import DataTable
 from softfab.joblib import jobDB
@@ -12,6 +12,7 @@ from softfab.jobview import JobsSubTable
 from softfab.querylib import KeySorter, runQuery
 from softfab.webgui import WidgetT, docLink, pageLink, pageURL
 from softfab.xmlgen import XMLContent, xhtml
+
 
 class MostRecent(RecordObserver):
     '''Keeps a list of the N most recent jobs.

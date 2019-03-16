@@ -10,6 +10,7 @@ from softfab.databaselib import Database, RecordObserver
 from softfab.utils import SharedInstance, abstract
 from softfab.xmlgen import xml
 
+
 class StatusModel:
     '''A piece of Control Center state that can be observed.
     Objects of this type act as nodes in the model tree.

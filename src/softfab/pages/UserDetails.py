@@ -16,6 +16,7 @@ from softfab.userview import activeRole
 from softfab.webgui import PropertiesTable, WidgetT, pageLink
 from softfab.xmlgen import XMLContent, xhtml
 
+
 class DetailsTable(PropertiesTable):
 
     def iterRows(self, *, proc, **kwargs):

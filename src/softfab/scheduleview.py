@@ -9,7 +9,7 @@ from softfab.schedulelib import JobDBObserver, ScheduleRepeat, asap, scheduleDB
 from softfab.schedulerefs import createScheduleDetailsURL
 from softfab.statuslib import (
     DBStatusModelGroup, StatusModel, StatusModelRegistry
-    )
+)
 from softfab.timeview import formatTime
 from softfab.webgui import maybeLink
 from softfab.xmlgen import xml

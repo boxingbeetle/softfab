@@ -3,11 +3,12 @@
 from softfab.Page import PageProcessor
 from softfab.RecordDelete import (
     RecordDelete_GET, RecordDelete_POSTMixin, RecordInUseError
-    )
+)
 from softfab.frameworklib import frameworkDB
 from softfab.frameworkview import taskDefsUsingFramework
 from softfab.pageargs import RefererArg
 from softfab.pagelinks import createTaskDetailsLink
+
 
 class FrameworkDelete_GET(RecordDelete_GET):
     db = frameworkDB

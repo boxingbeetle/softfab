@@ -1,19 +1,19 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from cgi import parse_header
+from inspect import signature
+from typing import IO, Mapping, Optional, Sequence, Tuple
+from urllib.parse import parse_qs, urlparse
+
+from twisted.web.http import Request as TwistedRequest
+from twisted.web.server import Session
+
 from softfab.Page import AccessDenied, FabResource, InvalidRequest
 from softfab.config import rootURL
 from softfab.projectlib import project
 from softfab.useragent import UserAgent
 from softfab.userlib import AnonGuestUser, IUser, UnknownUser, privileges
 from softfab.utils import cachedProperty, iterable
-
-from twisted.web.http import Request as TwistedRequest
-from twisted.web.server import Session
-
-from cgi import parse_header
-from inspect import signature
-from typing import IO, Mapping, Optional, Sequence, Tuple
-from urllib.parse import parse_qs, urlparse
 
 # The 'sameSite' parameter was added in Twisted 18.9.0.
 sameSiteSupport = 'sameSite' in signature(TwistedRequest.addCookie).parameters

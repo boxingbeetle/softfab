@@ -1,5 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from collections import defaultdict
+
 from softfab.Page import PresentableError
 from softfab.connection import ConnectionStatus
 from softfab.databaselib import checkWrapperVarName
@@ -11,7 +13,6 @@ from softfab.restypelib import resTypeDB, taskRunnerResourceTypeName
 from softfab.webgui import Panel, Table, rowManagerInstanceScript
 from softfab.xmlgen import txt, xhtml
 
-from collections import defaultdict
 
 def getResourceStatus(resource):
     """Returns a status summary string for `resource`."""

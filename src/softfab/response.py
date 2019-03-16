@@ -1,10 +1,11 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from softfab.Page import PageProcessor
-from softfab.projectlib import project
-from softfab.useragent import AcceptedEncodings
-from softfab.utils import iterable
-from softfab.xmlgen import XMLPresentable
+from base64 import standard_b64encode
+from gzip import GzipFile
+from hashlib import md5
+from io import BytesIO
+from typing import Any, Callable, Optional, Union
+from urllib.parse import urljoin
 
 from twisted.internet import reactor
 from twisted.internet.defer import Deferred
@@ -14,12 +15,12 @@ from twisted.web.http import CACHED
 from twisted.web.iweb import IRequest
 from twisted.web.server import NOT_DONE_YET
 
-from base64 import standard_b64encode
-from gzip import GzipFile
-from hashlib import md5
-from io import BytesIO
-from typing import Any, Callable, Optional, Union
-from urllib.parse import urljoin
+from softfab.Page import PageProcessor
+from softfab.projectlib import project
+from softfab.useragent import AcceptedEncodings
+from softfab.utils import iterable
+from softfab.xmlgen import XMLPresentable
+
 
 class Response:
 

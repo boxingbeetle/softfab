@@ -9,13 +9,14 @@ from softfab.joblib import jobDB
 from softfab.jobview import CommentPanel, JobsSubTable
 from softfab.pagelinks import (
     JobIdArgs, TaskIdArgs, createConfigDetailsLink, createTaskInfoLink
-    )
+)
 from softfab.productview import ProductTable
 from softfab.taskrunnerlib import taskRunnerDB
 from softfab.tasktables import JobTaskRunsTable
 from softfab.utils import pluralize
 from softfab.webgui import Table, WidgetT, cell, pageLink
 from softfab.xmlgen import XMLContent, txt, xhtml
+
 
 class SelfJobsTable(JobsSubTable):
     descriptionLink = False

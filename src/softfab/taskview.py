@@ -7,6 +7,7 @@ from softfab.shadowview import getShadowRunStatus
 from softfab.webgui import cell, maybeLink, pageLink
 from softfab.xmlgen import xhtml
 
+
 def getTaskStatus(task):
     '''Returns a short string describing the current status of the given task
     or task run.

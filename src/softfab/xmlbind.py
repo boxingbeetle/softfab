@@ -3,15 +3,14 @@
 from abc import ABC
 from enum import Enum
 from typing import (
-    Callable, ClassVar, Dict, Generic, IO, Iterable, Iterator, List, Mapping,
+    IO, Callable, ClassVar, Dict, Generic, Iterable, Iterator, List, Mapping,
     Optional, Sequence, Type, TypeVar, Union, cast
-    )
+)
 from xml.sax import make_parser
 from xml.sax.handler import (
-    ContentHandler, ErrorHandler,
-    feature_external_ges, feature_external_pes, feature_string_interning,
-    property_interning_dict
-    )
+    ContentHandler, ErrorHandler, feature_external_ges, feature_external_pes,
+    feature_string_interning, property_interning_dict
+)
 
 from softfab.utils import abstract
 from softfab.xmlgen import XML, XMLAttributeValue, XMLContent, xml as xmlnode

@@ -1,5 +1,9 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from collections import defaultdict
+from enum import Enum
+from typing import Iterator
+
 from softfab.FabPage import FabPage
 from softfab.ReportMixin import ReportProcessor, ReportTaskArgs
 from softfab.datawidgets import DataColumn, DataTable
@@ -17,9 +21,6 @@ from softfab.timeview import formatTime
 from softfab.webgui import pageLink
 from softfab.xmlgen import XMLContent, xhtml
 
-from collections import defaultdict
-from enum import Enum
-from typing import Iterator
 
 def gatherData(taskFilter, tasks, activeKeys):
     taskRunIdsByName = dict( ( taskName, [] ) for taskName in taskFilter )

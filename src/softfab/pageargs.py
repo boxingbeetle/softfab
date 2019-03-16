@@ -4,9 +4,9 @@ from enum import Enum
 from re import compile as re_compile
 from typing import (
     TYPE_CHECKING, AbstractSet, Any, Callable, Dict, FrozenSet, Generic,
-    Iterable, Iterator, Mapping, Match, Optional, Sequence, Set, Tuple,
-    Type, TypeVar, Union, cast, overload
-    )
+    Iterable, Iterator, Mapping, Match, Optional, Sequence, Set, Tuple, Type,
+    TypeVar, Union, cast, overload
+)
 from urllib.parse import parse_qs
 
 from softfab.timelib import stringToTime

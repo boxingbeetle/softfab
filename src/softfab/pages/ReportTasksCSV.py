@@ -3,10 +3,11 @@
 from softfab.CSVPage import CSVPage
 from softfab.ReportMixin import ReportProcessor, ReportTaskCSVArgs
 from softfab.joblib import iterDoneTasks
-from softfab.resultlib import getData, getKeys
 from softfab.querylib import KeySorter, runQuery
+from softfab.resultlib import getData, getKeys
 from softfab.setcalc import union
 from softfab.timeview import formatTime
+
 
 class ReportTasksCSV_GET(CSVPage['ReportTasksCSV_GET.Processor']):
 

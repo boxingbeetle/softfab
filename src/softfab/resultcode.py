@@ -2,6 +2,7 @@
 
 from enum import Enum
 
+
 class ResultCode(Enum):
     """Result codes for tasks and jobs.
     """

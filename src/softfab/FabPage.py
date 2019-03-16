@@ -1,13 +1,13 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-import sys
 from abc import ABC
 from enum import Enum
 from typing import (
     Any, ClassVar, Dict, Iterator, Mapping, Optional, Sequence, Union, cast
-    )
+)
+import sys
 
-from softfab.Page import ArgT, FabResource, ProcT, PageProcessor, Responder
+from softfab.Page import ArgT, FabResource, PageProcessor, ProcT, Responder
 from softfab.StyleResources import styleRoot
 from softfab.UIPage import UIPage
 from softfab.authentication import LoginAuthPage

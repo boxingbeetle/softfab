@@ -5,13 +5,13 @@ from collections import defaultdict
 from typing import (
     TYPE_CHECKING, ClassVar, DefaultDict, Dict, Generic, Iterator, Optional,
     Set, Type, TypeVar
-    )
+)
 import logging
 
 from softfab.datawidgets import DataTable
 from softfab.pageargs import PageArgs
-from softfab.webgui import WidgetT, pageURL
 from softfab.utils import SharedInstance, abstract
+from softfab.webgui import WidgetT, pageURL
 
 if TYPE_CHECKING:
     from softfab.datawidgets import _TableData

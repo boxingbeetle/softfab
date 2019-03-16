@@ -2,11 +2,12 @@
 
 from softfab.datawidgets import (
     DataColumn, DataTable, DurationColumn, TimeColumn
-    )
+)
 from softfab.pagelinks import createTaskRunnerDetailsLink
-from softfab.shadowlib import maxOKRecords, maxDoneRecords, shadowDB
+from softfab.shadowlib import maxDoneRecords, maxOKRecords, shadowDB
 from softfab.webgui import maybeLink
 from softfab.xmlgen import xhtml
+
 
 def getShadowRunStatus(run):
     state = run['state']

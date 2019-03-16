@@ -2,6 +2,7 @@
 
 from enum import Enum
 
+
 class ConnectionStatus(Enum):
     UNKNOWN = 1
     CONNECTED = 2

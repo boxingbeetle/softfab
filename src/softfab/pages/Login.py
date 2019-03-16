@@ -1,24 +1,24 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from twisted.cred.error import LoginFailed
+from twisted.internet.defer import inlineCallbacks
+
 from softfab.Page import (
     ArgT, FabResource, PageProcessor, PresentableError, ProcT, Redirect
-    )
+)
 from softfab.UIPage import UIPage
 from softfab.authentication import NoAuthPage
 from softfab.formlib import (
     FormTable, makeForm, passwordInput, submitButton, textInput
-    )
+)
 from softfab.pageargs import ArgsCorrected, StrArg
 from softfab.pagelinks import URLArgs
 from softfab.userlib import (
     IUser, PasswordMessage, authenticate, passwordQuality
-    )
+)
 from softfab.userview import LoginPassArgs, PasswordMsgArgs
 from softfab.webgui import pageURL
 from softfab.xmlgen import XMLContent, xhtml
-
-from twisted.cred.error import LoginFailed
-from twisted.internet.defer import inlineCallbacks
 
 
 class LoginTable(FormTable):

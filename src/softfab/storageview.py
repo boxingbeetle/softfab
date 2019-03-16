@@ -4,6 +4,7 @@ from softfab.datawidgets import DataColumn, DataTable, LinkColumn
 from softfab.storagelib import storageDB
 from softfab.xmlgen import xhtml
 
+
 class _URLColumn(DataColumn):
     keyName = 'url'
     label = 'URL'

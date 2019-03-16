@@ -7,6 +7,7 @@ from softfab.restypelib import taskRunnerResourceTypeName
 from softfab.resultcode import ResultCode
 from softfab.xmlgen import xml
 
+
 class TaskRunnerSet:
 
     def __init__(self):

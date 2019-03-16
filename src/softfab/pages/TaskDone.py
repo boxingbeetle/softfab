@@ -1,5 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+import logging
+
 from softfab.ControlPage import ControlPage
 from softfab.Page import InvalidRequest, PageProcessor
 from softfab.authentication import NoAuthPage
@@ -11,7 +13,6 @@ from softfab.shadowlib import shadowDB
 from softfab.taskrunlib import defaultSummaries
 from softfab.xmlgen import xml
 
-import logging
 
 class TaskDone_POST(ControlPage['TaskDone_POST.Arguments', 'TaskDone_POST.Processor']):
     authenticator = NoAuthPage

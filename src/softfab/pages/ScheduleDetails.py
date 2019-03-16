@@ -12,11 +12,12 @@ from softfab.schedulelib import ScheduleRepeat, scheduleDB
 from softfab.schedulerefs import ScheduleIdArgs
 from softfab.scheduleview import (
     createLastJobLink, describeNextRun, getScheduleStatus, stringToListDays
-    )
+)
 from softfab.selectview import TagArgs
 from softfab.utils import pluralize
 from softfab.webgui import PropertiesTable, Table, WidgetT, cell, pageLink, row
 from softfab.xmlgen import XMLContent, xhtml
+
 
 def statusDescription(scheduled):
     status = getScheduleStatus(scheduled)

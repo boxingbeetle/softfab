@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from enum import Enum
 from typing import Iterator
 
 from softfab.FabPage import FabPage
@@ -7,18 +8,16 @@ from softfab.Page import PageProcessor, Redirect
 from softfab.configlib import TaskSetWithInputs, configDB
 from softfab.configview import (
     InputTable, SelectConfigsMixin, SimpleConfigTable, presentMissingConfigs
-    )
+)
 from softfab.datawidgets import DataTable
 from softfab.formlib import actionButtons, hiddenInput, makeForm, textInput
 from softfab.joblib import jobDB
-from softfab.paramview import ParamOverrideTable
 from softfab.pageargs import DictArg, EnumArg, RefererArg, StrArg
 from softfab.pagelinks import createJobsURL
+from softfab.paramview import ParamOverrideTable
 from softfab.selectview import SelectArgs
 from softfab.webgui import decoration
 from softfab.xmlgen import XMLContent, xhtml
-
-from enum import Enum
 
 # TODO: The thing with FakeTask and FakeTaskSet is a quick trick to use
 #       the existing code in joblib/configlib. A better solution is needed.

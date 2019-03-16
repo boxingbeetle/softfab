@@ -1,5 +1,8 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from enum import Enum
+from typing import Iterator
+
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor, Redirect
 from softfab.datawidgets import DataColumn, DataTable, LinkColumn
@@ -10,13 +13,11 @@ from softfab.schedulelib import scheduleDB
 from softfab.schedulerefs import createScheduleDetailsLink
 from softfab.scheduleview import (
     createLastJobLink, describeNextRun, getScheduleStatus
-    )
+)
 from softfab.userview import OwnerColumn
 from softfab.webgui import WidgetT, pageLink, pageURL
 from softfab.xmlgen import XMLContent, xhtml
 
-from enum import Enum
-from typing import Iterator
 
 class NameColumn(DataColumn):
     label = 'Name'

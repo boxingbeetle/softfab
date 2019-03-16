@@ -10,7 +10,7 @@ from softfab.graphview import GraphPageMixin, GraphPanel, createExecutionGraph
 from softfab.jobview import CommentPanel
 from softfab.pagelinks import (
     ConfigIdArgs, createTaskDetailsLink, createTaskRunnerDetailsLink
-    )
+)
 from softfab.productview import formatLocator
 from softfab.projectlib import project
 from softfab.schedulelib import scheduleDB
@@ -19,7 +19,7 @@ from softfab.selectview import TagArgs
 from softfab.utils import pluralize
 from softfab.webgui import (
     PresenterFunction, Table, cell, decoration, pageLink, unorderedList
-    )
+)
 from softfab.xmlgen import XMLContent, txt, xhtml
 
 # Note:

@@ -12,9 +12,10 @@ from softfab.pageargs import IntArg, SortArg
 from softfab.projectlib import project
 from softfab.selectview import (
     BasketArgs, SelectProcMixin, TagArgs, selectDialog
-    )
+)
 from softfab.webgui import docLink
 from softfab.xmlgen import XMLContent, xhtml
+
 
 class SelectColumn(DataColumn):
     keyName = None

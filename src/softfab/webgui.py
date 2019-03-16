@@ -6,6 +6,15 @@ TODO: Currently the "css" Python argument sets the XHTML "style" attribute and
       The fact that "style" does not map to "style" is confusing.
 '''
 
+from io import BytesIO
+from itertools import chain
+from typing import (
+    TYPE_CHECKING, Callable, ClassVar, Iterable, Iterator, Mapping, Optional,
+    Sequence, Tuple, Type, TypeVar, Union, cast
+)
+from xml.etree import ElementTree
+import logging
+
 from softfab.config import docPage
 from softfab.pageargs import PageArgs, Query
 from softfab.pnglib import getPNGDimensions
@@ -13,16 +22,7 @@ from softfab.utils import SharedInstance, iterable
 from softfab.xmlgen import (
     XML, XMLAttributeValue, XMLContent, XMLNode, XMLPresentable,
     XMLSubscriptable, adaptToXML, xhtml
-    )
-
-from io import BytesIO
-from itertools import chain
-from typing import (
-    TYPE_CHECKING, Callable, ClassVar, Iterable, Iterator, Mapping, Optional,
-    Sequence, Tuple, Type, TypeVar, Union, cast
-    )
-from xml.etree import ElementTree
-import logging
+)
 
 if TYPE_CHECKING:
     from softfab.datawidgets import _TableData

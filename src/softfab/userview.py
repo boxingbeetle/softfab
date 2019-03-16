@@ -4,7 +4,7 @@ from softfab.datawidgets import DataColumn
 from softfab.pageargs import EnumArg, PageArgs, PasswordArg
 from softfab.pagelinks import UserIdArgs, createUserDetailsLink
 from softfab.projectlib import project
-from softfab.userlib import UIRoleNames, PasswordMessage, minimumPasswordLength
+from softfab.userlib import PasswordMessage, UIRoleNames, minimumPasswordLength
 from softfab.xmlgen import xhtml
 
 passwordStr = {

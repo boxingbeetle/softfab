@@ -7,13 +7,12 @@ from softfab.FabPage import FabPage
 from softfab.ReportMixin import (
     ExecutionState, ReportFilterForm, ReportProcessor, ReportTaskArgs,
     ReportTaskCSVArgs
-    )
+)
 from softfab.datawidgets import DataTable
 from softfab.formlib import selectionList
 from softfab.joblib import (
-    iterAllTasks, iterDoneTasks, iterFinishedTasks, iterUnfinishedTasks,
-    jobDB
-    )
+    iterAllTasks, iterDoneTasks, iterFinishedTasks, iterUnfinishedTasks, jobDB
+)
 from softfab.pageargs import IntArg, SortArg
 from softfab.resultlib import getKeys
 from softfab.setcalc import intersection, union
@@ -21,6 +20,7 @@ from softfab.taskdeflib import taskDefDB
 from softfab.tasktables import TaskRunsTable
 from softfab.webgui import pageLink
 from softfab.xmlgen import XMLContent, xhtml
+
 
 class FilteredTaskRunsTable(TaskRunsTable):
 

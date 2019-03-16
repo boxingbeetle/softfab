@@ -3,7 +3,9 @@
 from typing import Iterator
 
 from softfab.FabPage import FabPage
-from softfab.ReportMixin import JobReportProcessor, ReportArgs, ReportFilterForm
+from softfab.ReportMixin import (
+    JobReportProcessor, ReportArgs, ReportFilterForm
+)
 from softfab.datawidgets import DataTable
 from softfab.formlib import textInput
 from softfab.joblib import jobDB
@@ -11,6 +13,7 @@ from softfab.jobview import JobsTable
 from softfab.pageargs import IntArg, SortArg, StrArg
 from softfab.querylib import WildcardFilter
 from softfab.xmlgen import XMLContent, xhtml
+
 
 class FilteredJobsTable(JobsTable):
 

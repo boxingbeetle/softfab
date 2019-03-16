@@ -1,5 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from enum import Enum
+
 from softfab.FabPage import FabPage, IconModifier
 from softfab.Page import PageProcessor, Redirect
 from softfab.formlib import actionButtons, makeForm
@@ -7,8 +9,6 @@ from softfab.joblib import jobDB
 from softfab.pageargs import EnumArg
 from softfab.pagelinks import TaskIdArgs
 from softfab.xmlgen import XMLContent, xhtml
-
-from enum import Enum
 
 Actions = Enum('Actions', 'ABORT CANCEL')
 

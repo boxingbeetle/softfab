@@ -5,9 +5,9 @@ from codecs import getencoder
 from contextlib import contextmanager
 from itertools import islice
 from typing import (
-    Any, Callable, Generic, IO, Iterable, Iterator, List, Match,
-    Optional, Pattern, Sized, Tuple, Type, TypeVar, Union, cast
-    )
+    IO, Any, Callable, Generic, Iterable, Iterator, List, Match, Optional,
+    Pattern, Sized, Tuple, Type, TypeVar, Union, cast
+)
 from urllib.parse import quote_plus
 import os
 import os.path

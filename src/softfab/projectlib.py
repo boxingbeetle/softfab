@@ -1,16 +1,5 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from softfab.config import dbDir
-from softfab.databaselib import (
-    Database, SingletonElem, SingletonObserver, SingletonWrapper
-    )
-from softfab.timelib import getTime
-from softfab.userlib import userDB
-from softfab.utils import cachedProperty
-from softfab.version import version
-from softfab.xmlbind import XMLTag
-from softfab.xmlgen import xml
-
 from enum import Enum
 from getpass import getuser
 from socket import getfqdn
@@ -20,6 +9,17 @@ import os
 import os.path
 import re
 import time
+
+from softfab.config import dbDir
+from softfab.databaselib import (
+    Database, SingletonElem, SingletonObserver, SingletonWrapper
+)
+from softfab.timelib import getTime
+from softfab.userlib import userDB
+from softfab.utils import cachedProperty
+from softfab.version import version
+from softfab.xmlbind import XMLTag
+from softfab.xmlgen import xml
 
 # Check for pytz (package python-tz in Debian).
 # Full SoftFab installations should have this, but by making it optional it

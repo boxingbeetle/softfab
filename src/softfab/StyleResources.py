@@ -1,11 +1,10 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from softfab.databaselib import createInternalId
-from softfab.timelib import getTime, secondsPerDay
-from softfab.useragent import AcceptedEncodings
-from softfab.webgui import ShortcutIcon, StyleSheet, pngIcon, svgIcon
-from softfab.xmlgen import XMLNode
-from softfab import styles
+from gzip import GzipFile
+from io import BytesIO
+from typing import Dict, Optional
+import logging
+import re
 
 from importlib_resources import is_resource, read_binary
 from twisted.web.http import datetimeToString
@@ -13,11 +12,13 @@ from twisted.web.iweb import IRequest
 from twisted.web.resource import Resource
 from twisted.web.static import Data
 
-from gzip import GzipFile
-from io import BytesIO
-from typing import Dict, Optional
-import logging
-import re
+from softfab import styles
+from softfab.databaselib import createInternalId
+from softfab.timelib import getTime, secondsPerDay
+from softfab.useragent import AcceptedEncodings
+from softfab.webgui import ShortcutIcon, StyleSheet, pngIcon, svgIcon
+from softfab.xmlgen import XMLNode
+
 
 def _load(fileName: str) -> Optional[bytes]:
     try:

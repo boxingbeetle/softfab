@@ -6,7 +6,7 @@ from softfab.RecordDelete import DeleteArgs
 from softfab.pagelinks import (
     TaskDefIdArgs, createConfigDetailsLink, createFrameworkDetailsLink,
     createTaskHistoryLink
-    )
+)
 from softfab.paramview import ParametersTable
 from softfab.projectlib import project
 from softfab.resourceview import InlineResourcesTable

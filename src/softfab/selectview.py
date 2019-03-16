@@ -8,7 +8,7 @@ from softfab.databaselib import Database
 from softfab.formlib import (
     disabledButton, dropDownList, hiddenInput, makeForm, resetButton,
     submitButton, textInput
-    )
+)
 from softfab.pageargs import ArgsCorrected, PageArgs, SetArg, StrArg
 from softfab.querylib import CustomFilter, runQuery
 from softfab.selectlib import TagCache
@@ -16,8 +16,9 @@ from softfab.utils import abstract
 from softfab.webgui import (
     Table, addRemoveStyleScript, cell, hgroup, pageLink, pageURL,
     preserveSpaces, script
-    )
+)
 from softfab.xmlgen import txt, xhtml
+
 
 class TagArgs(PageArgs):
     tagkey = StrArg(None)

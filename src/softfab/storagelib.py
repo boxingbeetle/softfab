@@ -1,14 +1,14 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from re import split as re_split, compile as re_compile
+from re import compile as re_compile, split as re_split
 from typing import Mapping
+from urllib.parse import quote, urljoin, urlsplit, urlunsplit
 import logging
 
 from softfab.config import dbDir
 from softfab.databaselib import (
     Database, DatabaseElem, RecordObserver, createInternalId
-    )
-from urllib.parse import quote, urljoin, urlsplit, urlunsplit
+)
 from softfab.xmlbind import XMLTag
 from softfab.xmlgen import xml
 

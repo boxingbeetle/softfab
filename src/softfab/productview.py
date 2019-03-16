@@ -11,6 +11,7 @@ from softfab.utils import abstract
 from softfab.webgui import Table, cell, row
 from softfab.xmlgen import txt, xhtml
 
+
 def formatLocator(product, locator, finishedTask):
     if locator is None:
         return 'unavailable' if finishedTask else 'not yet'

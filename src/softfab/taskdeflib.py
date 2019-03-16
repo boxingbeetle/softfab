@@ -3,8 +3,9 @@
 from softfab import frameworklib
 from softfab.config import dbDir
 from softfab.databaselib import VersionedDatabase
-from softfab.selectlib import Selectable, ObservingTagCache
+from softfab.selectlib import ObservingTagCache, Selectable
 from softfab.xmlgen import xml
+
 
 class TaskDefFactory:
     @staticmethod

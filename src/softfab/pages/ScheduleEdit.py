@@ -1,28 +1,28 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from enum import Enum
+from time import localtime
+
 from softfab.EditPage import EditPage
 from softfab.Page import PresentableError
 from softfab.configlib import Config, configDB
 from softfab.formlib import (
-    CheckBoxesTable, DropDownList, RadioTable,
-    checkBox, dropDownList, textArea, textInput
-    )
+    CheckBoxesTable, DropDownList, RadioTable, checkBox, dropDownList,
+    textArea, textInput
+)
 from softfab.pageargs import BoolArg, EnumArg, IntArg, SetArg, StrArg
 from softfab.projectlib import project
 from softfab.schedulelib import (
     ScheduleRepeat, Scheduled, asap, endOfTime, scheduleDB
-    )
+)
 from softfab.scheduleview import listToStringDays, stringToListDays, weekDays
 from softfab.timelib import getTime, stringToTime
 from softfab.timeview import formatTime
 from softfab.webgui import (
-    Column, Panel, Script, Table, addRemoveStyleScript, docLink,
-    groupItem, vgroup
-    )
+    Column, Panel, Script, Table, addRemoveStyleScript, docLink, groupItem,
+    vgroup
+)
 from softfab.xmlgen import txt, xhtml
-
-from enum import Enum
-from time import localtime
 
 SelectBy = Enum('SelectBy', 'NAME TAG')
 '''Mechanism by which a schedule selects the configurations it will start.
