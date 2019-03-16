@@ -152,7 +152,7 @@ class FastExecute_POST(FabPage['FastExecute_POST.Processor', 'FastExecute_POST.A
 
                 # Create jobs.
                 jobIds = []
-                user = req.getUserName()
+                user = req.userName
                 for configId in sorted(req.args.confirmedId):
                     # TODO: Configs that have disappeared or become invalid are
                     #       silently ignored. Since this is a rare situation,

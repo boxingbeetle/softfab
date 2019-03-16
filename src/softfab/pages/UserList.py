@@ -48,7 +48,7 @@ class PasswordColumn(DataColumn):
     label = 'Password'
 
     def presentCell(self, record, *, proc, **kwargs):
-        requestUser = proc.req.getUser()
+        requestUser = proc.req.user
         userName = record.getId()
         if requestUser.hasPrivilege('u/m') or (
                 requestUser.hasPrivilege('u/mo') and
@@ -92,7 +92,7 @@ class UserTable(DataTable):
     def iterColumns(self, proc, **kwargs):
         yield NameColumn.instance
         yield RoleColumn.instance
-        requestUser = proc.req.getUser()
+        requestUser = proc.req.user
         if requestUser.hasPrivilege('u/m') or requestUser.hasPrivilege('u/mo'):
             yield PasswordColumn.instance
 
@@ -141,8 +141,8 @@ class UserList_GET(FabPage['UserList_GET.Processor', 'UserList_GET.Arguments']):
 
         def process(self, req):
             # pylint: disable=attribute-defined-outside-init
-            self.canChangeRoles = req.getUser().hasPrivilege('u/m')
-            self.canChangeAnonGuest = req.getUser().hasPrivilege('p/m')
+            self.canChangeRoles = req.user.hasPrivilege('u/m')
+            self.canChangeAnonGuest = req.user.hasPrivilege('p/m')
 
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield UserTable.instance
@@ -199,7 +199,7 @@ class UserList_POST(FabPage['UserList_POST.Processor', 'UserList_POST.Arguments'
                     )
 
             # Parse and check all changes.
-            requestUserName = req.getUserName()
+            requestUserName = req.userName
             newRoles = uiRoleToSet(req.args.role)
             if (userName == requestUserName
                     and not rolesGrantPrivilege(newRoles, 'u/m')):

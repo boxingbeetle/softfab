@@ -123,7 +123,7 @@ class UIPage(Responder, Generic[ProcT]):
             return self.presentContent(proc)
 
     def presentHeader(self, proc: ProcT) -> XMLContent:
-        userName = proc.req.getUserName()
+        userName = proc.req.userName
         return xhtml.div(class_ = 'titlebar')[
             xhtml.div(class_ = 'title')[ self.__title(proc) ],
             xhtml.div(class_ = 'info')[

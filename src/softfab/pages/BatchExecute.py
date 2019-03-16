@@ -243,7 +243,7 @@ class BatchExecute_POST(BatchExecute_GET):
 
             if not notices:
                 # Create jobs.
-                userName = req.getUserName()
+                userName = req.userName
                 jobs = []
                 for config in configs:
                     try:

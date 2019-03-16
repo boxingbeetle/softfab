@@ -99,7 +99,7 @@ class ScheduleEdit(EditPage):
                 'suspended': str(args.suspended),
                 'startTime': startTime,
                 'sequence': sequence.name,
-                'owner': req.getUserName(),
+                'owner': req.userName,
                 }
             if args.selectBy is SelectBy.NAME:
                 parameters['configId'] = args.configId

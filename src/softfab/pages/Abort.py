@@ -44,7 +44,7 @@ class Abort_POST(ControlPage['Abort_POST.Arguments', 'Abort_POST.Processor']):
             else:
                 nameFunc = lambda task: True
 
-            userName = req.getUserName()
+            userName = req.userName
             abortedTasks = {}
 
             for jobId in jobIds:

@@ -137,17 +137,17 @@ class RequestBase:
 
     # User information:
 
-    def getUser(self) -> IUser:
-        '''Returns an object that implements IUser and describes the user who
-        made this request.
-        '''
+    @property
+    def user(self) -> IUser:
+        """The user who made this request.
+        """
         return self._user
 
-    def getUserName(self) -> Optional[str]:
-        '''Returns the name of the user who made this request.
-        If this request does not (yet) have an authenticated user associated
-        with it, None is returned.
-        '''
+    @property
+    def userName(self) -> Optional[str]:
+        """The name of the user who made this request, or None if the user
+        is anonymous.
+        """
         return self._user.getUserName()
 
 class Request(RequestBase):

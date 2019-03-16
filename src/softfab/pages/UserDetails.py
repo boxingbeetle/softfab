@@ -65,7 +65,7 @@ class UserDetails_GET(FabPage['UserDetails_GET.Processor', 'UserDetails_GET.Argu
     def presentContent(self, proc: Processor) -> XMLContent:
         infoUser = proc.infoUser
         infoUserName = proc.args.user
-        requestUser = proc.req.getUser()
+        requestUser = proc.req.user
         requestUserName = requestUser.getUserName()
 
         if infoUser is None:

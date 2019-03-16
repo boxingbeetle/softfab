@@ -101,7 +101,7 @@ class ResourcesTable(DataTable):
 
     def iterColumns(self, proc, **kwargs):
         yield from self.fixedColumns
-        user = proc.req.getUser()
+        user = proc.req.user
         if user.hasPrivilege('r/a'):
             yield self.reserveColumn
         if user.hasPrivilege('r/m'):
@@ -192,7 +192,7 @@ class ResourceIndex_POST(FabPage['ResourceIndex_POST.Processor', 'ResourceIndex_
             resource = self.getResource(args.resource)
 
             # Update suspend state.
-            userName = req.getUserName()
+            userName = req.userName
             resource.setSuspend(args.action is Actions.SUSPEND, userName)
 
             # Show new status, forget commands.
