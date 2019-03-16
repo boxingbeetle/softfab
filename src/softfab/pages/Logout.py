@@ -33,7 +33,7 @@ class Logout_GET(UIPage['Logout_GET.Processor'],
             # where they logged out from.
             # The privilege we check is semi-arbitrary: listing jobs is needed
             # to see the Home page, so even guests have this privilege.
-            if req.hasPrivilege('j/l'):
+            if req.user.hasPrivilege('j/l'):
                 raise Redirect('Home' if url is None else url)
 
     def checkAccess(self, req):

@@ -464,7 +464,8 @@ class ExecuteBase(DialogPage):
         )
 
     def checkAccess(self, req):
-        if not (req.hasPrivilege('c/a') or req.hasPrivilege('j/c')):
+        user = req.user
+        if not (user.hasPrivilege('c/a') or user.hasPrivilege('j/c')):
             raise AccessDenied()
 
 class Execute_GET(ExecuteBase, DialogPage):

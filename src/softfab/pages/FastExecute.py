@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from softfab.FabPage import FabPage
-from softfab.Page import AccessDenied, PageProcessor, PresentableError, Redirect
+from softfab.Page import PageProcessor, PresentableError, Redirect
 from softfab.configlib import configDB, iterConfigsByTag
 from softfab.configview import SimpleConfigTable
 from softfab.datawidgets import DataTable
@@ -147,8 +147,7 @@ class FastExecute_POST(FabPage['FastExecute_POST.Processor', 'FastExecute_POST.A
                     )
 
             if action is Actions.EXECUTE:
-                if not req.hasPrivilege('j/c'):
-                    raise AccessDenied('create jobs')
+                req.checkPrivilege('j/c', 'create jobs')
 
                 # Create jobs.
                 jobIds = []

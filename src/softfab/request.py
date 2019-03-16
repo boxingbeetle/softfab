@@ -233,11 +233,8 @@ class Request(RequestBase):
 
     # Privilege checks:
 
-    def hasPrivilege(self, priv):
-        return self._user.hasPrivilege(priv)
-
     def checkPrivilege(self, priv, text = None):
-        if not self.hasPrivilege(priv):
+        if not self._user.hasPrivilege(priv):
             if text is None:
                 raise AccessDenied()
             else:
@@ -255,14 +252,15 @@ class Request(RequestBase):
           of this type.
         '''
         assert not priv.endswith('o'), priv
-        if self.hasPrivilege(priv):
+        user = self._user
+        if user.hasPrivilege(priv):
             # User is allowed to take action also for non-owned records.
             return
         ownedPriv = priv + 'o'
-        hasOwnedPriv = ownedPriv in privileges and self.hasPrivilege(ownedPriv)
+        hasOwnedPriv = ownedPriv in privileges and user.hasPrivilege(ownedPriv)
         if hasOwnedPriv:
             # User is allowed to perform action, but only for owned records.
-            userName = self._user.getUserName()
+            userName = user.getUserName()
             if not iterable(records):
                 records = ( records, )
             if all(record.getOwner() == userName for record in records):
