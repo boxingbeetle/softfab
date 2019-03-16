@@ -18,6 +18,7 @@ from softfab.resultlib import getKeys
 from softfab.setcalc import intersection, union
 from softfab.taskdeflib import taskDefDB
 from softfab.tasktables import TaskRunsTable
+from softfab.userlib import checkPrivilege
 from softfab.webgui import pageLink
 from softfab.xmlgen import XMLContent, xhtml
 
@@ -64,7 +65,7 @@ class ReportTasks_GET(FabPage['ReportTasks_GET.Processor', 'ReportTasks_GET.Argu
         pass
 
     def checkAccess(self, req):
-        req.checkPrivilege('j/a', 'view the task list')
+        checkPrivilege(req.user, 'j/a', 'view the task list')
 
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield FilteredTaskRunsTable.instance

@@ -4,8 +4,7 @@ from enum import Enum
 
 from softfab.FabPage import IconModifier
 from softfab.Page import (
-    AccessDenied, InternalError, InvalidRequest, PageProcessor,
-    PresentableError, Redirect
+    InternalError, InvalidRequest, PageProcessor, PresentableError, Redirect
 )
 from softfab.configlib import Config, Task, configDB
 from softfab.configview import InputTable
@@ -27,6 +26,9 @@ from softfab.projectlib import project
 from softfab.selectview import TagValueEditTable, textToValues, valuesToText
 from softfab.taskdeflib import taskDefDB
 from softfab.taskrunnerlib import taskRunnerDB
+from softfab.userlib import (
+    AccessDenied, checkPrivilege, checkPrivilegeForOwned
+)
 from softfab.webgui import Table, cell
 from softfab.xmlgen import XMLContent, xhtml
 
@@ -54,7 +56,7 @@ class TaskStep(DialogStep):
     def process(self, proc):
         # TODO: Maybe check privileges for individual steps at the page level?
         #       It would be a bit strange to be stopped halfway a wizard.
-        proc.req.checkPrivilege('td/l', 'access task list')
+        checkPrivilege(proc.req.user, 'td/l', 'access task list')
         return True
 
     def presentFormBody(self, **kwargs):
@@ -263,7 +265,7 @@ class StartStep(DialogStep):
     title = 'Started'
 
     def process(self, proc):
-        proc.req.checkPrivilege('j/c', 'create jobs')
+        checkPrivilege(proc.req.user, 'j/c', 'create jobs')
         if len(proc.args.tasks) == 0:
             # Normally this will be stopped by TaskStep.verify(), but it is
             # not safe to rely on that because the request might be mangled
@@ -339,11 +341,11 @@ class SaveStep(DialogStep):
         config = proc.getConfig()
         oldConfig = configDB.get(config.getId())
         if oldConfig is None:
-            proc.req.checkPrivilege('c/c', 'create configurations')
+            checkPrivilege(proc.req.user, 'c/c', 'create configurations')
             configDB.add(config)
         else:
-            proc.req.checkPrivilegeForOwned(
-                'c/m', oldConfig,
+            checkPrivilegeForOwned(
+                proc.req.user, 'c/m', oldConfig,
                 ( 'modify configurations owned by other users',
                   'modify configurations' )
                 )
@@ -519,7 +521,7 @@ class Execute_POST(ExecuteBase):
                     'Configuration "%s" does not exist' % args.config
                     )
 
-            req.checkPrivilege('c/a', 'access configurations')
+            checkPrivilege(req.user, 'c/a', 'access configurations')
             tasks = config.getTasks()
 
             values = {}

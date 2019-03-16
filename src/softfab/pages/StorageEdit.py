@@ -9,6 +9,7 @@ from softfab.pageargs import BoolArg, StrArg
 from softfab.storagelib import (
     Storage, getStorageIdByName, getStorageIdByURL, storageDB
 )
+from softfab.userlib import checkPrivilege
 from softfab.webgui import PropertiesTable
 from softfab.xmlgen import XMLContent, xhtml
 
@@ -19,7 +20,11 @@ class MergePhase(AbstractPhase):
         req = proc.req
         args = proc.args
 
-        req.checkPrivilege(storageDB.privilegeObject + '/m', 'modify storages')
+        checkPrivilege(
+            req.user,
+            storageDB.privilegeObject + '/m',
+            'modify storages'
+            )
 
         oldElement = proc.oldElement
         if oldElement is None:

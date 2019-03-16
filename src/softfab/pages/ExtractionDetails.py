@@ -6,6 +6,7 @@ from softfab.ReportMixin import ReportTaskArgs
 from softfab.joblib import jobDB
 from softfab.pagelinks import TaskIdArgs
 from softfab.resultlib import getData, getKeys
+from softfab.userlib import checkPrivilege
 from softfab.webgui import Table, cell, pageLink
 from softfab.xmlgen import XMLContent, xhtml
 
@@ -36,7 +37,7 @@ class ExtractionDetails_GET(FabPage['ExtractionDetails_GET.Processor', 'Extracti
             self.task = task
 
     def checkAccess(self, req):
-        req.checkPrivilege('t/a')
+        checkPrivilege(req.user, 't/a')
 
     def presentContent(self, proc: Processor) -> XMLContent:
         taskName = proc.task.getName()

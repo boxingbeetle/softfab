@@ -16,6 +16,7 @@ from softfab.pageargs import DictArg, EnumArg, RefererArg, StrArg
 from softfab.pagelinks import createJobsURL
 from softfab.paramview import ParamOverrideTable
 from softfab.selectview import SelectArgs
+from softfab.userlib import checkPrivilege
 from softfab.webgui import decoration
 from softfab.xmlgen import XMLContent, xhtml
 
@@ -149,7 +150,7 @@ class BatchExecute_GET(FabPage['BatchExecute_GET.Processor', 'BatchExecute_GET.A
             self.initTaskSet()
 
     def checkAccess(self, req):
-        req.checkPrivilege('j/c')
+        checkPrivilege(req.user, 'j/c')
 
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield BatchConfigTable.instance

@@ -8,7 +8,7 @@ from urllib.parse import parse_qs, urlparse
 from twisted.web.http import Request as TwistedRequest
 from twisted.web.server import Session
 
-from softfab.Page import AccessDenied, FabResource, InvalidRequest
+from softfab.Page import FabResource, InvalidRequest
 from softfab.config import rootURL
 from softfab.projectlib import project
 from softfab.useragent import UserAgent
@@ -230,45 +230,3 @@ class Request(RequestBase):
             else:
                 self._user = UnknownUser()
             return True
-
-    # Privilege checks:
-
-    def checkPrivilege(self, priv, text = None):
-        if not self._user.hasPrivilege(priv):
-            if text is None:
-                raise AccessDenied()
-            else:
-                raise AccessDenied(text)
-
-    def checkPrivilegeForOwned(self, priv, records, text = ''):
-        '''Checks whether the current user is allowed to perform an action
-        on an owned database record.
-        @param records Record or sequence of records to test for ownership.
-        @param text String to display if the user is not allowed to perform
-          the action, or a tuple of which the first element is the string to
-          display if the user is not allowed to perform the action on this
-          particular record and the second element is the string to display
-          if the user is not allowed to perform the action on any record
-          of this type.
-        '''
-        assert not priv.endswith('o'), priv
-        user = self._user
-        if user.hasPrivilege(priv):
-            # User is allowed to take action also for non-owned records.
-            return
-        ownedPriv = priv + 'o'
-        hasOwnedPriv = ownedPriv in privileges and user.hasPrivilege(ownedPriv)
-        if hasOwnedPriv:
-            # User is allowed to perform action, but only for owned records.
-            userName = user.getUserName()
-            if not iterable(records):
-                records = ( records, )
-            if all(record.getOwner() == userName for record in records):
-                return
-        # Construct error message.
-        if isinstance(text, tuple):
-            text = text[0 if hasOwnedPriv else 1]
-        if text is None:
-            raise AccessDenied()
-        else:
-            raise AccessDenied(text)

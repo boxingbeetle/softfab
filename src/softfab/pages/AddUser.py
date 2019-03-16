@@ -15,7 +15,8 @@ from softfab.formlib import (
 from softfab.pageargs import EnumArg, PageArgs, RefererArg, StrArg
 from softfab.request import Request
 from softfab.userlib import (
-    PasswordMessage, addUserAccount, authenticate, passwordQuality
+    PasswordMessage, addUserAccount, authenticate, checkPrivilege,
+    passwordQuality
 )
 from softfab.userview import (
     LoginPassArgs, UIRoleNames, passwordStr, uiRoleToSet
@@ -29,7 +30,7 @@ class AddUserBase(FabPage[ProcT, ArgT]):
     description = 'Add User'
 
     def checkAccess(self, req):
-        req.checkPrivilege('u/c', 'add new users')
+        checkPrivilege(req.user, 'u/c', 'add new users')
 
     def iterStyleDefs(self):
         yield 'td.formlabel { width: 16em; }'

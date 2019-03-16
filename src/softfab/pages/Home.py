@@ -10,6 +10,7 @@ from softfab.datawidgets import DataTable
 from softfab.joblib import jobDB
 from softfab.jobview import JobsSubTable
 from softfab.querylib import KeySorter, runQuery
+from softfab.userlib import checkPrivilege
 from softfab.webgui import WidgetT, docLink, pageLink, pageURL
 from softfab.xmlgen import XMLContent, xhtml
 
@@ -57,7 +58,7 @@ class Home_GET(FabPage['Home_GET.Processor', FabPage.Arguments]):
         recentJobs = MostRecent(jobDB, 'recent', 50)
 
     def checkAccess(self, req):
-        req.checkPrivilege('j/l')
+        checkPrivilege(req.user, 'j/l')
 
     def iterWidgets(self, proc: Processor) -> Iterator[WidgetT]:
         yield RecentJobsTable

@@ -14,6 +14,7 @@ from softfab.scheduleview import (
     createLastJobLink, describeNextRun, getScheduleStatus, stringToListDays
 )
 from softfab.selectview import TagArgs
+from softfab.userlib import checkPrivilege
 from softfab.utils import pluralize
 from softfab.webgui import PropertiesTable, Table, WidgetT, cell, pageLink, row
 from softfab.xmlgen import XMLContent, xhtml
@@ -106,7 +107,7 @@ class ScheduleDetails_GET(FabPage['ScheduleDetails_GET.Processor', 'ScheduleDeta
             self.scheduled = scheduleDB.get(req.args.id)
 
     def checkAccess(self, req):
-        req.checkPrivilege('s/a')
+        checkPrivilege(req.user, 's/a')
 
     def iterWidgets(self, proc: Processor) -> Iterator[WidgetT]:
         yield DetailsTable

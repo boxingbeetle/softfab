@@ -8,6 +8,7 @@ from softfab.productdeflib import ProductType
 from softfab.projectlib import project
 from softfab.taskrunnerlib import taskRunnerDB
 from softfab.timeview import formatTimeAttr
+from softfab.userlib import checkPrivilege
 from softfab.xmlgen import xml
 
 
@@ -27,7 +28,7 @@ class GetJobInfo_GET(ControlPage['GetJobInfo_GET.Arguments', 'GetJobInfo_GET.Pro
                 raise InvalidRequest('Job "%s" does not exist' % jobId)
 
     def checkAccess(self, req):
-        req.checkPrivilege('j/a')
+        checkPrivilege(req.user, 'j/a')
 
     def writeReply(self, response, proc):
         taskprio = project['taskprio']

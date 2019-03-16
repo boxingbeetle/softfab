@@ -13,6 +13,7 @@ from softfab.projectlib import project
 from softfab.selectview import (
     BasketArgs, SelectProcMixin, TagArgs, selectDialog
 )
+from softfab.userlib import checkPrivilege
 from softfab.webgui import docLink
 from softfab.xmlgen import XMLContent, xhtml
 
@@ -97,7 +98,7 @@ class LoadExecute_GET(FabPage['LoadExecute_GET.Processor', 'LoadExecute_GET.Argu
         yield BasketConfigTable.instance
 
     def checkAccess(self, req):
-        req.checkPrivilege('c/l')
+        checkPrivilege(req.user, 'c/l')
 
     def presentContent(self, proc: Processor) -> XMLContent:
         yield xhtml.h2[ 'Execute from Configuration' ],

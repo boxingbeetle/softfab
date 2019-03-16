@@ -17,6 +17,7 @@ from softfab.resourcelib import resourceDB
 from softfab.resourceview import getResourceStatus, presentCapabilities
 from softfab.restypelib import resTypeDB, taskRunnerResourceTypeName
 from softfab.taskrunnerlib import taskRunnerDB
+from softfab.userlib import checkPrivilege
 from softfab.webgui import WidgetT, docLink, header, pageLink, pageURL, row
 from softfab.xmlgen import XMLContent, xhtml
 
@@ -148,7 +149,7 @@ class ResourceIndex_GET(FabPage['ResourceIndex_GET.Processor', 'ResourceIndex_GE
         pass
 
     def checkAccess(self, req):
-        req.checkPrivilege('r/l')
+        checkPrivilege(req.user, 'r/l')
 
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield ResourcesTable.instance
@@ -215,7 +216,7 @@ class ResourceIndex_POST(FabPage['ResourceIndex_POST.Processor', 'ResourceIndex_
                         ])
 
     def checkAccess(self, req):
-        req.checkPrivilege('r/a', 'reserve resources')
+        checkPrivilege(req.user, 'r/a', 'reserve resources')
 
     def presentContent(self, proc: Processor) -> XMLContent:
         assert False

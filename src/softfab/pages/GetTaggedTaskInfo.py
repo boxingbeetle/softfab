@@ -6,6 +6,7 @@ from softfab.joblib import getAllTasksWithId
 from softfab.pageargs import DictArg, PageArgs, SetArg, StrArg
 from softfab.taskdeflib import TaskDef, taskDefDB
 from softfab.timeview import formatTimeAttr
+from softfab.userlib import checkPrivilege
 from softfab.xmlgen import xml
 
 
@@ -63,10 +64,10 @@ class GetTaggedTaskInfo_GET(ControlPage['GetTaggedTaskInfo_GET.Arguments', 'GetT
             self.selected = filterTasks(req.args.tag, req.args.owner)
 
     def checkAccess(self, req):
-        req.checkPrivilege('td/l', 'list task definitions')
-        req.checkPrivilege('td/a', 'access task definitions')
-        req.checkPrivilege('t/l', 'list tasks')
-        req.checkPrivilege('t/a', 'access tasks')
+        checkPrivilege(req.user, 'td/l', 'list task definitions')
+        checkPrivilege(req.user, 'td/a', 'access task definitions')
+        checkPrivilege(req.user, 't/l', 'list tasks')
+        checkPrivilege(req.user, 't/a', 'access tasks')
 
     def writeReply(self, response, proc):
         def taskToXML(task):

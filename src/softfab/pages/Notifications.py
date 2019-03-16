@@ -13,6 +13,7 @@ from softfab.formlib import actionButtons, checkBox, makeForm, textInput
 from softfab.notification import sendTestMail, sendmail
 from softfab.pageargs import BoolArg, EnumArg, PageArgs, StrArg
 from softfab.projectlib import project
+from softfab.userlib import checkPrivilege
 from softfab.xmlgen import XMLContent, xhtml
 
 
@@ -100,7 +101,7 @@ class Notifications_POST(FabPage['Notifications_POST.Processor', 'Notifications_
     description = 'Notifications'
 
     def checkAccess(self, req):
-        req.checkPrivilege('p/m')
+        checkPrivilege(req.user, 'p/m')
 
     class Arguments(MailConfigArgs):
         action = EnumArg(Actions)

@@ -14,6 +14,7 @@ from softfab.schedulerefs import createScheduleDetailsLink
 from softfab.scheduleview import (
     createLastJobLink, describeNextRun, getScheduleStatus
 )
+from softfab.userlib import checkPrivilege, checkPrivilegeForOwned
 from softfab.userview import OwnerColumn
 from softfab.webgui import WidgetT, pageLink, pageURL
 from softfab.xmlgen import XMLContent, xhtml
@@ -100,7 +101,7 @@ class ScheduleIndex_GET(FabPage['ScheduleIndex_GET.Processor', 'ScheduleIndex_GE
 
 
     def checkAccess(self, req):
-        req.checkPrivilege('s/l')
+        checkPrivilege(req.user, 's/l')
 
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield ScheduleTable.instance
@@ -129,13 +130,14 @@ class ScheduleIndex_POST(FabPage['ScheduleIndex_POST.Processor', 'ScheduleIndex_
     class Processor(PageProcessor):
 
         def process(self, req):
+            user = req.user
             for scheduleId, action in req.args.action.items():
                 # Toggle suspend.
                 scheduled = scheduleDB.get(scheduleId)
                 # TODO: Report when action is not possible, instead of ignoring.
                 if scheduled is not None:
-                    req.checkPrivilegeForOwned(
-                        's/m', scheduled, (
+                    checkPrivilegeForOwned(
+                        user, 's/m', scheduled, (
                             'suspend/resume this schedule',
                             'suspend/resume schedules'
                             )

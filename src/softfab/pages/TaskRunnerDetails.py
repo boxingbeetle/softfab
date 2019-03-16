@@ -12,6 +12,7 @@ from softfab.resourceview import getResourceStatus, presentCapabilities
 from softfab.restypelib import taskRunnerResourceTypeName
 from softfab.taskrunnerlib import taskRunnerDB
 from softfab.timeview import formatDuration, formatTime
+from softfab.userlib import checkPrivilege
 from softfab.webgui import Column, Table, WidgetT, pageLink, row
 from softfab.xmlgen import XMLContent, xhtml
 
@@ -31,7 +32,7 @@ class TaskRunnerDetails_GET(FabPage['TaskRunnerDetails_GET.Processor', 'TaskRunn
             self.taskRunner = taskRunnerDB.get(runnerId)
 
     def checkAccess(self, req):
-        req.checkPrivilege('tr/a')
+        checkPrivilege(req.user, 'tr/a')
 
     def iterWidgets(self, proc: Processor) -> Iterator[WidgetT]:
         yield DetailsTable

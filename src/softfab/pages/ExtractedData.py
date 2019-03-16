@@ -18,6 +18,7 @@ from softfab.setcalc import intersection
 from softfab.tasktables import TaskRunsTable
 from softfab.taskview import TaskColumn
 from softfab.timeview import formatTime
+from softfab.userlib import checkPrivilege
 from softfab.webgui import pageLink
 from softfab.xmlgen import XMLContent, xhtml
 
@@ -227,7 +228,7 @@ class ExtractedData_GET(FabPage['ExtractedData_GET.Processor', 'ExtractedData_GE
             self.dataByRunId = dataByRunId
 
     def checkAccess(self, req):
-        req.checkPrivilege('t/a')
+        checkPrivilege(req.user, 't/a')
 
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield ExtractedDataTable.instance

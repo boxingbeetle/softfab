@@ -47,9 +47,6 @@ class Authenticator:
         '''
         raise NotImplementedError
 
-class AccessDenied(Exception):
-    pass
-
 class PresentableError(Exception):
     '''Raised if processing failed and there is a message describing the problem
     that can be presented to the user.

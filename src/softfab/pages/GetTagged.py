@@ -6,6 +6,7 @@ from softfab.configlib import configDB
 from softfab.pageargs import PageArgs, SetArg, StrArg
 from softfab.schedulelib import scheduleDB
 from softfab.taskdeflib import taskDefDB
+from softfab.userlib import checkPrivilege
 from softfab.xmlgen import xml
 
 subjectToDB = dict(
@@ -35,8 +36,8 @@ class GetTagged_GET(ControlPage['GetTagged_GET.Arguments', 'GetTagged_GET.Proces
                 raise InvalidRequest(
                     'Invalid subject type "%s"' % req.args.subject
                     )
-            req.checkPrivilege(
-                db.privilegeObject + '/l',
+            checkPrivilege(
+                req.user, db.privilegeObject + '/l',
                 'list %ss' % db.description
                 )
 

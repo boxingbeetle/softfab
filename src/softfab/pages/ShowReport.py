@@ -13,6 +13,7 @@ from softfab.pagelinks import (
 from softfab.productview import ProductTable
 from softfab.taskrunnerlib import taskRunnerDB
 from softfab.tasktables import JobTaskRunsTable
+from softfab.userlib import checkPrivilege
 from softfab.utils import pluralize
 from softfab.webgui import Table, WidgetT, cell, pageLink
 from softfab.xmlgen import XMLContent, txt, xhtml
@@ -61,7 +62,7 @@ class ShowReport_GET(FabPage['ShowReport_GET.Processor', 'ShowReport_GET.Argumen
             self.job = job
 
     def checkAccess(self, req):
-        req.checkPrivilege('j/a')
+        checkPrivilege(req.user, 'j/a')
 
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield SelfJobsTable.instance

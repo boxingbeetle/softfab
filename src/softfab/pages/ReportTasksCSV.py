@@ -7,6 +7,7 @@ from softfab.querylib import KeySorter, runQuery
 from softfab.resultlib import getData, getKeys
 from softfab.setcalc import union
 from softfab.timeview import formatTime
+from softfab.userlib import checkPrivilege
 
 
 class ReportTasksCSV_GET(CSVPage['ReportTasksCSV_GET.Processor']):
@@ -29,7 +30,7 @@ class ReportTasksCSV_GET(CSVPage['ReportTasksCSV_GET.Processor']):
             self.tasks = tasks
 
     def checkAccess(self, req):
-        req.checkPrivilege('j/a', 'view the task list')
+        checkPrivilege(req.user, 'j/a', 'view the task list')
 
     def getFileName(self, proc):
         return '_'.join(['export'] + sorted(proc.args.task)) + '.csv'

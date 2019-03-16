@@ -8,6 +8,7 @@ from softfab.formlib import actionButtons, makeForm
 from softfab.joblib import jobDB
 from softfab.pageargs import EnumArg
 from softfab.pagelinks import TaskIdArgs
+from softfab.userlib import checkPrivilegeForOwned
 from softfab.xmlgen import XMLContent, xhtml
 
 Actions = Enum('Actions', 'ABORT CANCEL')
@@ -58,8 +59,8 @@ class AbortTask_POST(FabPage['AbortTask_POST.Processor', 'AbortTask_POST.Argumen
             assert action is Actions.ABORT, action
 
             job = jobDB[jobId]
-            req.checkPrivilegeForOwned(
-                't/d', job, ('abort tasks in this job', 'abort tasks')
+            checkPrivilegeForOwned(
+                req.user, 't/d', job, ('abort tasks in this job', 'abort tasks')
                 )
             if taskName == '/all-waiting':
                 aborted = job.abortAll(

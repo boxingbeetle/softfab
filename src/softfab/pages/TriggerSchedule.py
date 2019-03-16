@@ -4,6 +4,7 @@ from softfab.ControlPage import ControlPage
 from softfab.Page import InvalidRequest, PageProcessor
 from softfab.pageargs import PageArgs, StrArg
 from softfab.schedulelib import scheduleDB
+from softfab.userlib import checkPrivilege, checkPrivilegeForOwned
 from softfab.xmlgen import xml
 
 
@@ -22,8 +23,8 @@ class TriggerSchedule_POST(ControlPage['TriggerSchedule_POST.Arguments', 'Trigge
                 raise InvalidRequest(
                     'Schedule "%s" does not exist' % scheduleId
                     )
-            req.checkPrivilegeForOwned(
-                's/m', schedule,
+            checkPrivilegeForOwned(
+                req.user, 's/m', schedule,
                 ( 'trigger schedule "%s" that is not owned by you' % scheduleId,
                   'trigger schedules' )
                 )
@@ -36,7 +37,7 @@ class TriggerSchedule_POST(ControlPage['TriggerSchedule_POST.Arguments', 'Trigge
         # Error messages might leak info about schedule, so make sure at least
         # read-only access is allowed.
         # The processor will do additional checks.
-        req.checkPrivilege('s/a')
+        checkPrivilege(req.user, 's/a')
 
     def writeReply(self, response, proc):
         response.write(xml.ok)

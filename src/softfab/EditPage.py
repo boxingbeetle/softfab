@@ -11,6 +11,7 @@ from softfab.Page import (
 from softfab.databaselib import Database
 from softfab.formlib import actionButtons, backButton, makeForm, textInput
 from softfab.pageargs import EnumArg, PageArgs, StrArg
+from softfab.userlib import checkPrivilege, checkPrivilegeForOwned
 from softfab.utils import abstract
 from softfab.webgui import preserveSpaces, rowManagerScript
 from softfab.xmlgen import XMLContent, xhtml
@@ -81,12 +82,14 @@ class SavePhase(AbstractPhase):
             existingElement = None
 
         if existingElement is None:
-            req.checkPrivilege(
+            checkPrivilege(
+                req.user,
                 page.db.privilegeObject + '/c', 'create ' + page.privDenyText
                 )
             page.db.add(element)
         else:
-            req.checkPrivilegeForOwned(
+            checkPrivilegeForOwned(
+                req.user,
                 page.db.privilegeObject + '/m',
                 existingElement,
                 ( 'modify this ' + page.elemName,
@@ -192,7 +195,7 @@ class EditPage(FabPage['EditPage.Processor', 'EditPage.Arguments'], ABC):
 
         def process(self, req):
             # pylint: disable=attribute-defined-outside-init
-            req.checkPrivilege(self.page.db.privilegeObject + '/a')
+            checkPrivilege(req.user, self.page.db.privilegeObject + '/a')
 
             args = self.args
 

@@ -8,12 +8,13 @@ from twisted.internet.defer import Deferred, inlineCallbacks
 from twisted.internet.interfaces import IProducer, IPullProducer, IPushProducer
 
 from softfab.Page import (
-    AccessDenied, InvalidRequest, PageProcessor, PresentableError, Redirect,
-    Redirector, logPageException
+    InvalidRequest, PageProcessor, PresentableError, Redirect, Redirector,
+    logPageException
 )
 from softfab.UIPage import UIPage
 from softfab.pageargs import ArgsCorrected, ArgsInvalid, Query, dynamic
 from softfab.response import Response
+from softfab.userlib import AccessDenied
 from softfab.utils import abstract
 from softfab.webgui import docLink
 from softfab.xmlgen import XMLContent, xhtml

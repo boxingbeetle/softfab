@@ -9,6 +9,7 @@ from softfab.datawidgets import (
 )
 from softfab.pageargs import IntArg, PageArgs, SortArg
 from softfab.restypelib import resTypeDB
+from softfab.userlib import checkPrivilege
 from softfab.xmlgen import XMLContent
 
 
@@ -43,7 +44,7 @@ class ResTypeIndex_GET(FabPage['ResTypeIndex_GET.Processor', 'ResTypeIndex_GET.A
         pass
 
     def checkAccess(self, req):
-        req.checkPrivilege('rt/l')
+        checkPrivilege(req.user, 'rt/l')
 
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield ResTypeTable.instance

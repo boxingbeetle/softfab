@@ -11,6 +11,7 @@ from softfab.pagelinks import TaskRunnerIdArgs
 from softfab.querylib import runQuery
 from softfab.taskrunnerlib import taskRunnerDB
 from softfab.tasktables import TaskRunsTable
+from softfab.userlib import checkPrivilege
 from softfab.webgui import pageLink
 from softfab.xmlgen import XMLContent, xhtml
 
@@ -66,8 +67,8 @@ class TaskRunnerHistory_GET(FabPage['TaskRunnerHistory_GET.Processor', 'TaskRunn
             self.tasks = tasks
 
     def checkAccess(self, req):
-        req.checkPrivilege('tr/a')
-        req.checkPrivilege('t/l')
+        checkPrivilege(req.user, 'tr/a')
+        checkPrivilege(req.user, 't/l')
 
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield HistoryTable.instance

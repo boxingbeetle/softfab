@@ -11,6 +11,7 @@ from softfab.graphview import (
     createLegend, iterConnectedExecutionGraphs
 )
 from softfab.pageargs import PageArgs, StrArg
+from softfab.userlib import checkPrivilege
 from softfab.webgui import docLink, pageLink
 from softfab.xmlgen import XMLContent, xhtml
 
@@ -67,8 +68,8 @@ class Design_GET(
             self.show = req.args.show
 
     def checkAccess(self, req):
-        req.checkPrivilege('fd/a')
-        req.checkPrivilege('pd/a')
+        checkPrivilege(req.user, 'fd/a')
+        checkPrivilege(req.user, 'pd/a')
 
     def presentContent(self, proc: Processor) -> XMLContent:
         show = proc.args.show

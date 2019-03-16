@@ -14,7 +14,7 @@ from zope.interface import Interface, implementer
 
 from softfab.config import dbDir
 from softfab.databaselib import Database, DatabaseElem
-from softfab.utils import atomicWrite
+from softfab.utils import atomicWrite, iterable
 from softfab.xmlbind import XMLTag
 from softfab.xmlgen import xml
 
@@ -142,6 +142,48 @@ privileges = {
 
 def rolesGrantPrivilege(roles, priv):
     return any(role in roles for role in privileges[priv])
+
+class AccessDenied(Exception):
+    pass
+
+def checkPrivilege(user, priv, text = None):
+    if not user.hasPrivilege(priv):
+        if text is None:
+            raise AccessDenied()
+        else:
+            raise AccessDenied(text)
+
+def checkPrivilegeForOwned(user, priv, records, text = ''):
+    '''Checks whether a user is allowed to perform an action on an owned
+    database record.
+    @param records Record or sequence of records to test for ownership.
+    @param text String to display if the user is not allowed to perform
+        the action, or a tuple of which the first element is the string to
+        display if the user is not allowed to perform the action on this
+        particular record and the second element is the string to display
+        if the user is not allowed to perform the action on any record
+        of this type.
+    '''
+    assert not priv.endswith('o'), priv
+    if user.hasPrivilege(priv):
+        # User is allowed to take action also for non-owned records.
+        return
+    ownedPriv = priv + 'o'
+    hasOwnedPriv = ownedPriv in privileges and user.hasPrivilege(ownedPriv)
+    if hasOwnedPriv:
+        # User is allowed to perform action, but only for owned records.
+        userName = user.getUserName()
+        if not iterable(records):
+            records = ( records, )
+        if all(record.getOwner() == userName for record in records):
+            return
+    # Construct error message.
+    if isinstance(text, tuple):
+        text = text[0 if hasOwnedPriv else 1]
+    if text is None:
+        raise AccessDenied()
+    else:
+        raise AccessDenied(text)
 
 PasswordMessage = Enum('PasswordMessage', 'SUCCESS POOR SHORT EMPTY MISMATCH')
 '''Reasons for rejecting a password.

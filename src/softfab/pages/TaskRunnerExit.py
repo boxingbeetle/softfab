@@ -4,6 +4,7 @@ from softfab.ControlPage import ControlPage
 from softfab.Page import InvalidRequest, PageProcessor
 from softfab.pagelinks import TaskRunnerIdArgs
 from softfab.taskrunnerlib import taskRunnerDB
+from softfab.userlib import checkPrivilege
 from softfab.xmlgen import xml
 
 
@@ -24,7 +25,7 @@ class TaskRunnerExit_POST(ControlPage['TaskRunnerExit_POST.Arguments', 'TaskRunn
             runner.setExitFlag(True)
 
     def checkAccess(self, req):
-        req.checkPrivilege('tr/m', 'control Task Runners')
+        checkPrivilege(req.user, 'tr/m', 'control Task Runners')
 
     def writeReply(self, response, proc):
         response.write(xml.ok)

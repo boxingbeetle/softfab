@@ -13,6 +13,7 @@ from softfab.resourceview import InlineResourcesTable
 from softfab.selectview import valuesToText
 from softfab.taskdeflib import taskDefDB
 from softfab.taskdefview import configsUsingTaskDef, formatTimeout
+from softfab.userlib import checkPrivilege
 from softfab.utils import pluralize
 from softfab.webgui import PropertiesTable, pageLink
 from softfab.xmlgen import XMLContent, xhtml
@@ -62,7 +63,7 @@ class TaskDetails_GET(FabPage['TaskDetails_GET.Processor', 'TaskDetails_GET.Argu
             self.configs = list(configsUsingTaskDef(req.args.id))
 
     def checkAccess(self, req):
-        req.checkPrivilege('td/a')
+        checkPrivilege(req.user, 'td/a')
 
     def presentContent(self, proc: Processor) -> XMLContent:
         taskDef = proc.taskDef

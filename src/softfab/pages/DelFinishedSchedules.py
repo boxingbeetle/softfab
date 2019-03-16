@@ -7,6 +7,7 @@ from softfab.Page import ArgT, PageProcessor, ProcT, Redirect
 from softfab.formlib import actionButtons, makeForm
 from softfab.pageargs import EnumArg, PageArgs
 from softfab.schedulelib import scheduleDB
+from softfab.userlib import checkPrivilege
 from softfab.xmlgen import XMLContent, xhtml
 
 Actions = Enum('Actions', 'DELETE CANCEL')
@@ -53,7 +54,7 @@ class DelFinishedSchedules_POST(
             if action is Actions.CANCEL:
                 raise Redirect(self.page.getParentURL(req))
             elif action is Actions.DELETE:
-                req.checkPrivilege('s/d', 'delete all finished schedules')
+                checkPrivilege(req.user, 's/d', 'delete all finished schedules')
                 finishedSchedules = [
                     schedule for schedule in scheduleDB if schedule.isDone()
                     ]

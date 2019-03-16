@@ -6,7 +6,7 @@ from softfab.config import rootURL
 from softfab.databases import iterDatabases
 from softfab.projectlib import getBootTime, project
 from softfab.timeview import formatTimeAttr
-from softfab.userlib import privileges
+from softfab.userlib import checkPrivilege, privileges
 from softfab.version import version
 from softfab.xmlgen import xml
 
@@ -15,12 +15,13 @@ class GetFactoryInfo_GET(ControlPage[ControlPage.Arguments,
                                      'GetFactoryInfo_GET.Processor']):
 
     def checkAccess(self, req):
-        req.checkPrivilege('p/a')
+        user = req.user
+        checkPrivilege(user, 'p/a')
 
         # Check that user has 'list' privileges for all databases.
         for priv in privileges.keys():
             if priv.endswith('/l'):
-                req.checkPrivilege(priv)
+                checkPrivilege(user, priv)
 
     class Processor(PageProcessor):
 

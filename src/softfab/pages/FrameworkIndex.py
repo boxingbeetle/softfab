@@ -11,6 +11,7 @@ from softfab.frameworklib import anyExtract, frameworkDB
 from softfab.frameworkview import FrameworkColumn
 from softfab.pageargs import IntArg, PageArgs, SortArg
 from softfab.pagelinks import createProductDetailsLink
+from softfab.userlib import checkPrivilege
 from softfab.webgui import docLink
 from softfab.xmlgen import XMLContent, txt, xhtml
 
@@ -57,7 +58,7 @@ class FrameworkIndex_GET(FabPage['FrameworkIndex_GET.Processor', 'FrameworkIndex
         pass
 
     def checkAccess(self, req):
-        req.checkPrivilege('fd/l')
+        checkPrivilege(req.user, 'fd/l')
 
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield FrameworksTable.instance

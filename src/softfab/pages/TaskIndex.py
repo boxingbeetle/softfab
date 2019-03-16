@@ -11,6 +11,7 @@ from softfab.frameworkview import FrameworkColumn
 from softfab.pageargs import IntArg, PageArgs, SortArg
 from softfab.pagelinks import createTaskDetailsLink
 from softfab.taskdeflib import taskDefDB
+from softfab.userlib import checkPrivilege
 from softfab.webgui import docLink
 from softfab.xmlgen import XMLContent, xhtml
 
@@ -45,7 +46,7 @@ class TaskIndex_GET(FabPage['TaskIndex_GET.Processor', 'TaskIndex_GET.Arguments'
         pass
 
     def checkAccess(self, req):
-        req.checkPrivilege('td/l')
+        checkPrivilege(req.user, 'td/l')
 
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield TasksTable.instance

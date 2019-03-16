@@ -8,6 +8,7 @@ from softfab.datawidgets import DataTable
 from softfab.joblib import jobDB
 from softfab.jobview import JobsSubTable
 from softfab.pagelinks import JobIdSetArgs
+from softfab.userlib import checkPrivilege
 from softfab.webgui import WidgetT, unorderedList
 from softfab.xmlgen import XMLContent, xhtml
 
@@ -44,7 +45,7 @@ class ShowJobs_GET(FabPage['ShowJobs_GET.Processor', 'ShowJobs_GET.Arguments']):
             self.invalidJobIds = invalidJobIds
 
     def checkAccess(self, req):
-        req.checkPrivilege('j/l')
+        checkPrivilege(req.user, 'j/l')
 
     def iterWidgets(self, proc: Processor) -> Iterator[WidgetT]:
         yield ShowJobsTable

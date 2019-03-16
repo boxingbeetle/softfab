@@ -12,7 +12,8 @@ from softfab.formlib import (
 )
 from softfab.pageargs import EnumArg, PasswordArg, RefererArg
 from softfab.userlib import (
-    PasswordMessage, authenticate, changePassword, passwordQuality, userDB
+    PasswordMessage, authenticate, changePassword, checkPrivilege,
+    passwordQuality, userDB
 )
 from softfab.userview import LoginPassArgs, PasswordMsgArgs, passwordStr
 from softfab.webgui import pageURL
@@ -76,11 +77,11 @@ class ChangePassword_GET(FabPage['ChangePassword_GET.Processor', 'ChangePassword
             userName = req.args.user
             reqUserName = req.userName # get current logged-in user
             if userName == reqUserName:
-                req.checkPrivilege('u/mo',
+                checkPrivilege(req.user, 'u/mo',
                     'change your password (ask an operator)'
                     )
             else:
-                req.checkPrivilege('u/m',
+                checkPrivilege(req.user, 'u/m',
                     "change other user's password (ask an operator)"
                     )
 
@@ -140,11 +141,11 @@ class ChangePassword_POST(FabPage['ChangePassword_POST.Processor', 'ChangePasswo
                 userName = req.args.user
                 reqUserName = req.userName # get current logged-in user
                 if userName == reqUserName:
-                    req.checkPrivilege('u/mo',
+                    checkPrivilege(req.user, 'u/mo',
                         'change your password (ask an operator)'
                         )
                 else:
-                    req.checkPrivilege('u/m',
+                    checkPrivilege(req.user, 'u/m',
                         "change other user's password (ask an operator)"
                         )
 

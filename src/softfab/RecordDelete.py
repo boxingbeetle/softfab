@@ -9,6 +9,7 @@ from softfab.Page import PageProcessor, PresentableError, Redirect
 from softfab.databaselib import Database
 from softfab.formlib import actionButtons, makeForm
 from softfab.pageargs import EnumArg, PageArgs, StrArg
+from softfab.userlib import checkPrivilegeForOwned
 from softfab.utils import abstract, pluralize
 from softfab.webgui import unorderedList
 from softfab.xmlgen import XMLContent, xhtml
@@ -130,7 +131,8 @@ class RecordDelete_POSTMixin:
                 raise Redirect(self.page.getCancelURL(req))
 
             record = fetchRecordForDeletion(req.args.id, self.page)
-            req.checkPrivilegeForOwned(
+            checkPrivilegeForOwned(
+                req.user,
                 self.page.db.privilegeObject + '/d',
                 record,
                 ( 'delete this ' + self.page.recordName,

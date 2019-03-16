@@ -4,6 +4,7 @@ from softfab.ControlPage import ControlPage
 from softfab.Page import InvalidRequest, PageProcessor
 from softfab.joblib import jobDB
 from softfab.pageargs import BoolArg, PageArgs, SetArg
+from softfab.userlib import checkPrivilege
 from softfab.xmlgen import xml
 
 
@@ -15,7 +16,7 @@ class Abort_POST(ControlPage['Abort_POST.Arguments', 'Abort_POST.Processor']):
         onlyWaiting = BoolArg()
 
     def checkAccess(self, req):
-        req.checkPrivilege('t/m')
+        checkPrivilege(req.user, 't/m')
 
     class Processor(PageProcessor):
 

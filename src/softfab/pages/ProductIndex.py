@@ -10,6 +10,7 @@ from softfab.datawidgets import (
 from softfab.pageargs import IntArg, PageArgs, SortArg
 from softfab.pagelinks import createProductDetailsLink
 from softfab.productdeflib import productDefDB
+from softfab.userlib import checkPrivilege
 from softfab.webgui import docLink
 from softfab.xmlgen import XMLContent, xhtml
 
@@ -51,7 +52,7 @@ class ProductIndex_GET(FabPage['ProductIndex_GET.Processor', 'ProductIndex_GET.A
         pass
 
     def checkAccess(self, req):
-        req.checkPrivilege('pd/l')
+        checkPrivilege(req.user, 'pd/l')
 
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield ProductDefTable.instance

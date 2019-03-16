@@ -22,6 +22,7 @@ from softfab.projectlib import project
 from softfab.querylib import CustomFilter, KeySorter, runQuery
 from softfab.timelib import getTime
 from softfab.timeview import formatDuration, formatTime
+from softfab.userlib import checkPrivilege
 from softfab.utils import pluralize
 from softfab.version import version
 from softfab.webgui import Table, cell, pageURL, row
@@ -87,8 +88,8 @@ class Feed_GET(ControlPage[ControlPage.Arguments, 'Feed_GET.Processor']):
     contentType = 'application/atom+xml; charset=UTF-8'
 
     def checkAccess(self, req):
-        req.checkPrivilege('j/l')
-        req.checkPrivilege('j/a')
+        checkPrivilege(req.user, 'j/l')
+        checkPrivilege(req.user, 'j/a')
 
     class Processor(PageProcessor):
         # N (where N=50) MostRecent & Completed Jobs
