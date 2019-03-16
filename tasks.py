@@ -48,6 +48,12 @@ def types(c, src=all_sources, clean=False, report=False):
     c.run('mypy %s' % ' '.join(args), env=SRC_ENV, pty=True)
 
 @task
+def isort(c, src=all_sources):
+    """Sort imports."""
+    print('Sorting imports...')
+    c.run('isort %s' % src, pty=True)
+
+@task
 def run(c, host='localhost', port=8180, auth=False):
     """Run a Control Center instance."""
     print('Starting Control Center at: http://%s:%d/' % (host, port))
