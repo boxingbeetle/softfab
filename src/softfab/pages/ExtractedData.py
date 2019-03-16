@@ -227,8 +227,8 @@ class ExtractedData_GET(FabPage['ExtractedData_GET.Processor', 'ExtractedData_GE
             self.tasks = tasks
             self.dataByRunId = dataByRunId
 
-    def checkAccess(self, req):
-        checkPrivilege(req.user, 't/a')
+    def checkAccess(self, user):
+        checkPrivilege(user, 't/a')
 
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield ExtractedDataTable.instance

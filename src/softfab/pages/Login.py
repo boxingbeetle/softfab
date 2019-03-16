@@ -31,7 +31,7 @@ class LoginBase(UIPage[ProcT], FabResource[ArgT, ProcT]):
     authenticator = NoAuthPage
     secureCookie = True
 
-    def checkAccess(self, req):
+    def checkAccess(self, user):
         pass
 
     def pageTitle(self, proc: ProcT) -> str:

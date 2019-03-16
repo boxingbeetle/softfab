@@ -67,9 +67,9 @@ class Design_GET(
             self.graphs = graphs
             self.show = req.args.show
 
-    def checkAccess(self, req):
-        checkPrivilege(req.user, 'fd/a')
-        checkPrivilege(req.user, 'pd/a')
+    def checkAccess(self, user):
+        checkPrivilege(user, 'fd/a')
+        checkPrivilege(user, 'pd/a')
 
     def presentContent(self, proc: Processor) -> XMLContent:
         show = proc.args.show

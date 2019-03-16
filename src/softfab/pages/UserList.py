@@ -134,8 +134,8 @@ class UserList_GET(FabPage['UserList_GET.Processor', 'UserList_GET.Arguments']):
     description = 'Users'
     children = 'UserDetails', 'AddUser', 'ChangePassword', 'AnonGuest'
 
-    def checkAccess(self, req):
-        checkPrivilege(req.user, 'u/l')
+    def checkAccess(self, user):
+        checkPrivilege(user, 'u/l')
 
     class Arguments(PageArgs):
         inactive = BoolArg()
@@ -182,8 +182,8 @@ class UserList_POST(FabPage['UserList_POST.Processor', 'UserList_POST.Arguments'
     icon = 'UserList1'
     description = 'Change Role'
 
-    def checkAccess(self, req):
-        checkPrivilege(req.user, 'u/m', 'control user accounts')
+    def checkAccess(self, user):
+        checkPrivilege(user, 'u/m', 'control user accounts')
 
     class Arguments(UserList_GET.Arguments):
         user = StrArg()

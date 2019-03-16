@@ -98,7 +98,7 @@ class ChangePassword_GET(FabPage['ChangePassword_GET.Processor', 'ChangePassword
                 self.retry = msg is not PasswordMessage.SUCCESS # pylint: disable=attribute-defined-outside-init
                 raise PresentableError(passwordStr[msg])
 
-    def checkAccess(self, req):
+    def checkAccess(self, user):
         # Processor checks privileges.
         pass
 
@@ -199,8 +199,8 @@ class ChangePassword_POST(FabPage['ChangePassword_POST.Processor', 'ChangePasswo
             else:
                 assert False, req.args.action
 
-    def checkAccess(self, req):
-        # Processor checks privs
+    def checkAccess(self, user):
+        # Processor checks privileges.
         pass
 
     def getCancelURL(self, req):

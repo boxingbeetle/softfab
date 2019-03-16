@@ -29,8 +29,8 @@ class AddUserBase(FabPage[ProcT, ArgT]):
     icon = 'AddUser1'
     description = 'Add User'
 
-    def checkAccess(self, req):
-        checkPrivilege(req.user, 'u/c', 'add new users')
+    def checkAccess(self, user):
+        checkPrivilege(user, 'u/c', 'add new users')
 
     def iterStyleDefs(self):
         yield 'td.formlabel { width: 16em; }'

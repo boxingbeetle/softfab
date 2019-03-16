@@ -33,11 +33,11 @@ class TriggerSchedule_POST(ControlPage['TriggerSchedule_POST.Arguments', 'Trigge
             except ValueError as ex:
                 raise InvalidRequest( str(ex) )
 
-    def checkAccess(self, req):
+    def checkAccess(self, user):
         # Error messages might leak info about schedule, so make sure at least
         # read-only access is allowed.
         # The processor will do additional checks.
-        checkPrivilege(req.user, 's/a')
+        checkPrivilege(user, 's/a')
 
     def writeReply(self, response, proc):
         response.write(xml.ok)

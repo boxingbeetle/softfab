@@ -177,8 +177,8 @@ class Capabilities_GET(FabPage['Capabilities_GET.Processor', 'Capabilities_GET.A
         yield ResourcesTable.instance
         yield CapabilitiesTable.instance
 
-    def checkAccess(self, req):
-        checkPrivilege(req.user, 'tr/l')
+    def checkAccess(self, user):
+        checkPrivilege(user, 'tr/l')
 
     def presentContent(self, proc: Processor) -> XMLContent:
         resType = resTypeDB[proc.args.restype]

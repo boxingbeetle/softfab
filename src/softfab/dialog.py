@@ -243,7 +243,7 @@ class DialogPage(FabPage[DialogProcessorBase, 'DialogPage.Arguments'], ABC):
             for stepClass in self.steps
             }
 
-    def checkAccess(self, req):
+    def checkAccess(self, user):
         # This method is already declared abstract in FabPage, we re-assert
         # that here to please PyLint.
         raise NotImplementedError

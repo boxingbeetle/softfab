@@ -97,8 +97,8 @@ class LoadExecute_GET(FabPage['LoadExecute_GET.Processor', 'LoadExecute_GET.Argu
         yield TagConfigTable.instance
         yield BasketConfigTable.instance
 
-    def checkAccess(self, req):
-        checkPrivilege(req.user, 'c/l')
+    def checkAccess(self, user):
+        checkPrivilege(user, 'c/l')
 
     def presentContent(self, proc: Processor) -> XMLContent:
         yield xhtml.h2[ 'Execute from Configuration' ],

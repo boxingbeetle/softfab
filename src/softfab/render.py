@@ -130,7 +130,7 @@ def parseAndProcess(page, req):
         # Page-level authorization.
         # It is possible for additional access checks to fail during the
         # processing step.
-        page.checkAccess(req)
+        page.checkAccess(req.user)
 
         # Argument parsing.
         try:

@@ -68,7 +68,7 @@ class ExecutionGraphExamples_GET(
     def pageTitle(self, proc: Processor) -> str:
         return 'Execution Graphs'
 
-    def checkAccess(self, req):
+    def checkAccess(self, user):
         pass
 
     def presentContent(self, proc: Processor) -> XMLContent:

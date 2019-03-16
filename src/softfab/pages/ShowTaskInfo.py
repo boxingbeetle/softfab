@@ -181,8 +181,8 @@ class ShowTaskInfo_GET(FabPage['ShowTaskInfo_GET.Processor', 'ShowTaskInfo_GET.A
             self.task = task
             self.taskDef = taskDef
 
-    def checkAccess(self, req):
-        checkPrivilege(req.user, 'j/a')
+    def checkAccess(self, user):
+        checkPrivilege(user, 'j/a')
 
     def iterWidgets(self, proc: Processor) -> Iterator[WidgetT]:
         yield SelfTaskRunsTable

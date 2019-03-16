@@ -112,7 +112,7 @@ class TaskDone_POST(ControlPage['TaskDone_POST.Arguments', 'TaskDone_POST.Proces
                 # not come.
                 shadowRun.done(extResult)
 
-    def checkAccess(self, req):
+    def checkAccess(self, user):
         pass
 
     def writeReply(self, response, proc):

@@ -181,7 +181,7 @@ class EditPage(FabPage['EditPage.Processor', 'EditPage.Arguments'], ABC):
         action = StrArg(None)
         back = StrArg(None)
 
-    def checkAccess(self, req):
+    def checkAccess(self, user):
         # Access will be checked later by Processor.
         pass
 

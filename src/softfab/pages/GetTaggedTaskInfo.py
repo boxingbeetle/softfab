@@ -63,11 +63,11 @@ class GetTaggedTaskInfo_GET(ControlPage['GetTaggedTaskInfo_GET.Arguments', 'GetT
             # pylint: disable=attribute-defined-outside-init
             self.selected = filterTasks(req.args.tag, req.args.owner)
 
-    def checkAccess(self, req):
-        checkPrivilege(req.user, 'td/l', 'list task definitions')
-        checkPrivilege(req.user, 'td/a', 'access task definitions')
-        checkPrivilege(req.user, 't/l', 'list tasks')
-        checkPrivilege(req.user, 't/a', 'access tasks')
+    def checkAccess(self, user):
+        checkPrivilege(user, 'td/l', 'list task definitions')
+        checkPrivilege(user, 'td/a', 'access task definitions')
+        checkPrivilege(user, 't/l', 'list tasks')
+        checkPrivilege(user, 't/a', 'access tasks')
 
     def writeReply(self, response, proc):
         def taskToXML(task):

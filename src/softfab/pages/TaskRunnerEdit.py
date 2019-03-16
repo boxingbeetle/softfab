@@ -39,8 +39,8 @@ class TaskRunnerEdit_GET(FabPage['TaskRunnerEdit_GET.Processor', 'TaskRunnerEdit
             # pylint: disable=attribute-defined-outside-init
             self.runner = runner
 
-    def checkAccess(self, req):
-        checkPrivilege(req.user, 'tr/m')
+    def checkAccess(self, user):
+        checkPrivilege(user, 'tr/m')
 
     def presentContent(self, proc: Processor) -> XMLContent:
         args = proc.args

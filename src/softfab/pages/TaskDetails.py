@@ -62,8 +62,8 @@ class TaskDetails_GET(FabPage['TaskDetails_GET.Processor', 'TaskDetails_GET.Argu
             self.taskDef = taskDefDB.get(req.args.id)
             self.configs = list(configsUsingTaskDef(req.args.id))
 
-    def checkAccess(self, req):
-        checkPrivilege(req.user, 'td/a')
+    def checkAccess(self, user):
+        checkPrivilege(user, 'td/a')
 
     def presentContent(self, proc: Processor) -> XMLContent:
         taskDef = proc.taskDef

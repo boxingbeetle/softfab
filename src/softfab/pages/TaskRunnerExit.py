@@ -24,8 +24,8 @@ class TaskRunnerExit_POST(ControlPage['TaskRunnerExit_POST.Arguments', 'TaskRunn
                     )
             runner.setExitFlag(True)
 
-    def checkAccess(self, req):
-        checkPrivilege(req.user, 'tr/m', 'control Task Runners')
+    def checkAccess(self, user):
+        checkPrivilege(user, 'tr/m', 'control Task Runners')
 
     def writeReply(self, response, proc):
         response.write(xml.ok)

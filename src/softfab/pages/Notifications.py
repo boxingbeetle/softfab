@@ -72,7 +72,7 @@ class Notifications_GET(FabPage[FabPage.Processor, FabPage.Arguments]):
     icon = 'IconNotification'
     description = 'Notifications'
 
-    def checkAccess(self, req):
+    def checkAccess(self, user):
         pass
 
     def presentContent(self, proc: FabPage.Processor) -> XMLContent:
@@ -100,8 +100,8 @@ class Notifications_POST(FabPage['Notifications_POST.Processor', 'Notifications_
     icon = 'IconNotification'
     description = 'Notifications'
 
-    def checkAccess(self, req):
-        checkPrivilege(req.user, 'p/m')
+    def checkAccess(self, user):
+        checkPrivilege(user, 'p/m')
 
     class Arguments(MailConfigArgs):
         action = EnumArg(Actions)

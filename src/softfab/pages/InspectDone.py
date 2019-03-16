@@ -58,12 +58,12 @@ class InspectDone_POST(ControlPage['InspectDone_POST.Arguments', 'InspectDone_PO
             # Store inspection result.
             job.inspectDone(taskName, result, summary)
 
-    def checkAccess(self, req):
+    def checkAccess(self, user):
         # Error messages might leak info about job/task existence, so make sure
         # at least read-only access is allowed.
         # The processor will do additional checks.
-        checkPrivilege(req.user, 'j/l')
-        checkPrivilege(req.user, 't/l')
+        checkPrivilege(user, 'j/l')
+        checkPrivilege(user, 't/l')
 
     def writeReply(self, response, proc):
         response.write(xml.ok)

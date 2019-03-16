@@ -36,8 +36,8 @@ class ExtractionDetails_GET(FabPage['ExtractionDetails_GET.Processor', 'Extracti
                     ])
             self.task = task
 
-    def checkAccess(self, req):
-        checkPrivilege(req.user, 't/a')
+    def checkAccess(self, user):
+        checkPrivilege(user, 't/a')
 
     def presentContent(self, proc: Processor) -> XMLContent:
         taskName = proc.task.getName()

@@ -16,7 +16,7 @@ class ObserveStatus_GET(ControlPage['ObserveStatus_GET.Arguments', 'ObserveStatu
     class Processor(PageProcessor):
         pass
 
-    def checkAccess(self, req):
+    def checkAccess(self, user):
         # For a streaming request, we have to deal with permissions changing
         # while the request is open. Also, the model might not exist now but
         # come into existance later. So there is no point in checking access

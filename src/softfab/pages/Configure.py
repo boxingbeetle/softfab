@@ -14,7 +14,7 @@ class Configure_GET(FabPage[FabPage.Processor, FabPage.Arguments]):
         'ProjectEdit', 'Design', 'UserList', 'Notifications', 'About'
         ]
 
-    def checkAccess(self, req):
+    def checkAccess(self, user):
         pass
 
     def presentContent(self, proc: FabPage.Processor) -> XMLContent:

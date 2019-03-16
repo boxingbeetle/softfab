@@ -13,9 +13,9 @@ class GetTaskDefParams_GET(ControlPage['GetTaskDefParams_GET.Arguments',
     class Arguments(PageArgs):
         param = SetArg()
 
-    def checkAccess(self, req):
-        checkPrivilege(req.user, 'td/l', 'list task definitions')
-        checkPrivilege(req.user, 'td/a', 'access task definitions')
+    def checkAccess(self, user):
+        checkPrivilege(user, 'td/l', 'list task definitions')
+        checkPrivilege(user, 'td/a', 'access task definitions')
 
     def writeReply(self, response, proc):
         requestedParams = proc.args.param

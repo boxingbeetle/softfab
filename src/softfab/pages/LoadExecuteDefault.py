@@ -37,8 +37,8 @@ class LoadExecuteDefault_POST(ControlPage['LoadExecuteDefault_POST.Arguments', '
                 job.comment += '\n' + args.comment
                 jobDB.add(job)
 
-    def checkAccess(self, req):
-        checkPrivilege(req.user, 'j/c', 'start jobs')
+    def checkAccess(self, user):
+        checkPrivilege(user, 'j/c', 'start jobs')
 
     def writeReply(self, response, proc):
         response.write(xml.ok)

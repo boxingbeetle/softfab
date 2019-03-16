@@ -100,8 +100,8 @@ class ScheduleIndex_GET(FabPage['ScheduleIndex_GET.Processor', 'ScheduleIndex_GE
                 )
 
 
-    def checkAccess(self, req):
-        checkPrivilege(req.user, 's/l')
+    def checkAccess(self, user):
+        checkPrivilege(user, 's/l')
 
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield ScheduleTable.instance
@@ -149,7 +149,7 @@ class ScheduleIndex_POST(FabPage['ScheduleIndex_POST.Processor', 'ScheduleIndex_
                 ScheduleIndex_GET.Arguments.subset(req.args)
                 ))
 
-    def checkAccess(self, req):
+    def checkAccess(self, user):
         pass # Processor checks privs.
 
     def presentContent(self, proc: Processor) -> XMLContent:

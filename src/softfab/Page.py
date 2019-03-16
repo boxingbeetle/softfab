@@ -212,9 +212,9 @@ class FabResource(ABC, Generic[ArgT, ProcT]):
         This is a dummy one for resources that have no need for processing.
         '''
 
-    def checkAccess(self, req):
-        '''Check whether the user that made the given request is allowed to see
-        this resource at all and raise AccessDenied if not.
+    def checkAccess(self, user):
+        '''Check whether the given user is allowed to access this resource
+        at all and raise AccessDenied if not.
         It is also possible to raise AccessDenied from the Processor if an
         acccess violation is detected at a later stage.
         '''

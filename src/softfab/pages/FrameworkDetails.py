@@ -80,8 +80,8 @@ class FrameworkDetails_GET(
             self.children = taskDefs
             self.graph = graph
 
-    def checkAccess(self, req):
-        checkPrivilege(req.user, 'fd/a')
+    def checkAccess(self, user):
+        checkPrivilege(user, 'fd/a')
 
     def presentContent(self, proc: Processor) -> XMLContent:
         taskDef = proc.taskDef

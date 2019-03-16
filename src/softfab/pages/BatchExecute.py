@@ -149,8 +149,8 @@ class BatchExecute_GET(FabPage['BatchExecute_GET.Processor', 'BatchExecute_GET.A
             self.findConfigs()
             self.initTaskSet()
 
-    def checkAccess(self, req):
-        checkPrivilege(req.user, 'j/c')
+    def checkAccess(self, user):
+        checkPrivilege(user, 'j/c')
 
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield BatchConfigTable.instance

@@ -45,8 +45,8 @@ class TaskIndex_GET(FabPage['TaskIndex_GET.Processor', 'TaskIndex_GET.Arguments'
     class Processor(PageProcessor):
         pass
 
-    def checkAccess(self, req):
-        checkPrivilege(req.user, 'td/l')
+    def checkAccess(self, user):
+        checkPrivilege(user, 'td/l')
 
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield TasksTable.instance

@@ -42,8 +42,8 @@ class TaskAlert_POST(ControlPage['TaskAlert_POST.Arguments', 'TaskAlert_POST.Pro
                     )
             run.setAlert(alert)
 
-    def checkAccess(self, req):
-        checkPrivilege(req.user, 't/m', 'set alert status')
+    def checkAccess(self, user):
+        checkPrivilege(user, 't/m', 'set alert status')
 
     def writeReply(self, response, proc):
         response.write(xml.ok)

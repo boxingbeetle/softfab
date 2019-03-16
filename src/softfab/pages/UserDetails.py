@@ -54,7 +54,7 @@ class UserDetails_GET(FabPage['UserDetails_GET.Processor', 'UserDetails_GET.Argu
             self.infoUser = infoUser
             self.jobs = jobs
 
-    def checkAccess(self, req):
+    def checkAccess(self, user):
         pass
 
     def iterWidgets(self, proc: Processor) -> Iterator[WidgetT]:

@@ -19,8 +19,8 @@ class TaskMatrixCSV_GET(CSVPage['TaskMatrixCSV_GET.Processor']):
     class Processor(TaskMatrixProcessor):
         pass
 
-    def checkAccess(self, req):
-        checkPrivilege(req.user, 'j/a', 'view the task list')
+    def checkAccess(self, user):
+        checkPrivilege(user, 'j/a', 'view the task list')
 
     def getFileName(self, proc):
         configFilter = proc.args.config

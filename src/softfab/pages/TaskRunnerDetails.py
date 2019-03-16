@@ -31,8 +31,8 @@ class TaskRunnerDetails_GET(FabPage['TaskRunnerDetails_GET.Processor', 'TaskRunn
             # pylint: disable=attribute-defined-outside-init
             self.taskRunner = taskRunnerDB.get(runnerId)
 
-    def checkAccess(self, req):
-        checkPrivilege(req.user, 'tr/a')
+    def checkAccess(self, user):
+        checkPrivilege(user, 'tr/a')
 
     def iterWidgets(self, proc: Processor) -> Iterator[WidgetT]:
         yield DetailsTable

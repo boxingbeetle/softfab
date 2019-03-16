@@ -28,7 +28,7 @@ class About_GET(FabPage[FabPage.Processor, FabPage.Arguments]):
     icon = 'IconHome'
     description = 'About'
 
-    def checkAccess(self, req):
+    def checkAccess(self, user):
         pass
 
     def presentContent(self, proc: FabPage.Processor) -> XMLContent:

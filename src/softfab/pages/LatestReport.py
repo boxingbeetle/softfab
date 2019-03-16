@@ -35,8 +35,8 @@ class LatestReport_GET(
             else:
                 raise Redirect(task.getURL())
 
-    def checkAccess(self, req):
-        checkPrivilege(req.user, 't/a', 'view task reports')
+    def checkAccess(self, user):
+        checkPrivilege(user, 't/a', 'view task reports')
 
     def pageTitle(self, proc: Processor) -> str:
         return 'Latest Report'

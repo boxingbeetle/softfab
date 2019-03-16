@@ -37,7 +37,7 @@ class Logout_GET(UIPage['Logout_GET.Processor'],
             if req.user.hasPrivilege('j/l'):
                 raise Redirect('Home' if url is None else url)
 
-    def checkAccess(self, req):
+    def checkAccess(self, user):
         pass
 
     def pageTitle(self, proc: Processor) -> str:

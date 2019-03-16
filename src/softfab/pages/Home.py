@@ -57,8 +57,8 @@ class Home_GET(FabPage['Home_GET.Processor', FabPage.Arguments]):
     class Processor(PageProcessor):
         recentJobs = MostRecent(jobDB, 'recent', 50)
 
-    def checkAccess(self, req):
-        checkPrivilege(req.user, 'j/l')
+    def checkAccess(self, user):
+        checkPrivilege(user, 'j/l')
 
     def iterWidgets(self, proc: Processor) -> Iterator[WidgetT]:
         yield RecentJobsTable

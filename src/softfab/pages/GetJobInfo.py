@@ -27,8 +27,8 @@ class GetJobInfo_GET(ControlPage['GetJobInfo_GET.Arguments', 'GetJobInfo_GET.Pro
             except KeyError:
                 raise InvalidRequest('Job "%s" does not exist' % jobId)
 
-    def checkAccess(self, req):
-        checkPrivilege(req.user, 'j/a')
+    def checkAccess(self, user):
+        checkPrivilege(user, 'j/a')
 
     def writeReply(self, response, proc):
         taskprio = project['taskprio']

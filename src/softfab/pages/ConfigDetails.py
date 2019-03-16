@@ -176,8 +176,8 @@ class ConfigDetails_GET(
             self.graph = graph
             self.scheduleIds = scheduleIds
 
-    def checkAccess(self, req):
-        checkPrivilege(req.user, 'c/a')
+    def checkAccess(self, user):
+        checkPrivilege(user, 'c/a')
 
     def presentContent(self, proc: Processor) -> XMLContent:
         config = proc.config

@@ -58,7 +58,7 @@ class TaskReport_POST(ControlPage['TaskReport_POST.Arguments', 'TaskReport_POST.
                     )
             run.setURL(url)
 
-    def checkAccess(self, req):
+    def checkAccess(self, user):
         pass
 
     def writeReply(self, response, proc):

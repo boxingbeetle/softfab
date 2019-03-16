@@ -28,8 +28,8 @@ class ShadowQueue_GET(FabPage['ShadowQueue_GET.Processor', 'ShadowQueue_GET.Argu
     class Processor(PageProcessor):
         pass
 
-    def checkAccess(self, req):
-        checkPrivilege(req.user, 'sh/l')
+    def checkAccess(self, user):
+        checkPrivilege(user, 'sh/l')
 
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield ShadowTable.instance

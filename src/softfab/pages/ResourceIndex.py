@@ -148,8 +148,8 @@ class ResourceIndex_GET(FabPage['ResourceIndex_GET.Processor', 'ResourceIndex_GE
     class Processor(PageProcessor):
         pass
 
-    def checkAccess(self, req):
-        checkPrivilege(req.user, 'r/l')
+    def checkAccess(self, user):
+        checkPrivilege(user, 'r/l')
 
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield ResourcesTable.instance
@@ -215,8 +215,8 @@ class ResourceIndex_POST(FabPage['ResourceIndex_POST.Processor', 'ResourceIndex_
                         ' does not exist (anymore).'
                         ])
 
-    def checkAccess(self, req):
-        checkPrivilege(req.user, 'r/a', 'reserve resources')
+    def checkAccess(self, user):
+        checkPrivilege(user, 'r/a', 'reserve resources')
 
     def presentContent(self, proc: Processor) -> XMLContent:
         assert False

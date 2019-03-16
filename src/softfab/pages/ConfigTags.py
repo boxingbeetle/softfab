@@ -53,8 +53,8 @@ class ConfigTagsBase(FabPage['ConfigTagsBase.Processor', FabPage.Arguments]):
 
             self.findConfigs()
 
-    def checkAccess(self, req):
-        checkPrivilege(req.user, 'c/a')
+    def checkAccess(self, user):
+        checkPrivilege(user, 'c/a')
 
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield TagConfigTable.instance

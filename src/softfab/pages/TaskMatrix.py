@@ -197,8 +197,8 @@ class TaskMatrix_GET(FabPage['TaskMatrix_GET.Processor', 'TaskMatrix_GET.Argumen
                 tasksByDay.append(combinedDayTasks)
                 allTasks.extend(combinedDayTasks)
 
-    def checkAccess(self, req):
-        checkPrivilege(req.user, 'j/a', 'view the task list')
+    def checkAccess(self, user):
+        checkPrivilege(user, 'j/a', 'view the task list')
 
     def presentContent(self, proc: Processor) -> XMLContent:
         yield makeForm(method = 'get', args = proc.args)[

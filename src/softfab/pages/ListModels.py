@@ -66,7 +66,7 @@ class ListModels_GET(ControlPage['ListModels_GET.Arguments', 'ListModels_GET.Pro
     class Processor(PageProcessor):
         pass
 
-    def checkAccess(self, req):
+    def checkAccess(self, user):
         # Access will be checked for each model node.
         pass
 

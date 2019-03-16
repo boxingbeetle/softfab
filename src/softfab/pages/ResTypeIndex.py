@@ -43,8 +43,8 @@ class ResTypeIndex_GET(FabPage['ResTypeIndex_GET.Processor', 'ResTypeIndex_GET.A
     class Processor(PageProcessor):
         pass
 
-    def checkAccess(self, req):
-        checkPrivilege(req.user, 'rt/l')
+    def checkAccess(self, user):
+        checkPrivilege(user, 'rt/l')
 
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield ResTypeTable.instance

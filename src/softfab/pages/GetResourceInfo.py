@@ -18,9 +18,9 @@ class GetResourceInfo_GET(ControlPage['GetResourceInfo_GET.Arguments', 'GetResou
         type = SetArg()
         name = SetArg()
 
-    def checkAccess(self, req):
-        checkPrivilege(req.user, 'tr/a')
-        checkPrivilege(req.user, 'tr/l')
+    def checkAccess(self, user):
+        checkPrivilege(user, 'tr/a')
+        checkPrivilege(user, 'tr/l')
 
     class Processor(PageProcessor):
 

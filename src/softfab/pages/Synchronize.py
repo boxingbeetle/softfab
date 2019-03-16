@@ -93,7 +93,7 @@ class Synchronize_POST(ControlPage[ControlPage.Arguments,
                     waitSecs = taskRunner.getSyncWaitDelay()
                 yield xml.wait(seconds = waitSecs)
 
-    def checkAccess(self, req):
+    def checkAccess(self, user):
         pass
 
     def writeReply(self, response, proc):

@@ -465,8 +465,7 @@ class ExecuteBase(DialogPage):
         ActionStep, StartStep, TagsStep, ConfirmStep, SaveStep,
         )
 
-    def checkAccess(self, req):
-        user = req.user
+    def checkAccess(self, user):
         if not (user.hasPrivilege('c/a') or user.hasPrivilege('j/c')):
             raise AccessDenied()
 

@@ -17,8 +17,8 @@ class ResourceControl_POST(ControlPage['ResourceControl_POST.Arguments', 'Resour
         name = SetArg()
         action = EnumArg(Actions)
 
-    def checkAccess(self, req):
-        checkPrivilege(req.user, 'tr/m')
+    def checkAccess(self, user):
+        checkPrivilege(user, 'tr/m')
 
     class Processor(PageProcessor):
 

@@ -57,8 +57,8 @@ class FrameworkIndex_GET(FabPage['FrameworkIndex_GET.Processor', 'FrameworkIndex
     class Processor(PageProcessor):
         pass
 
-    def checkAccess(self, req):
-        checkPrivilege(req.user, 'fd/l')
+    def checkAccess(self, user):
+        checkPrivilege(user, 'fd/l')
 
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield FrameworksTable.instance

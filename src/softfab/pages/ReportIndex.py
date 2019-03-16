@@ -57,8 +57,8 @@ class ReportIndex_GET(FabPage['ReportIndex_GET.Processor', 'ReportIndex_GET.Argu
             if self.args.desc:
                 yield WildcardFilter('description', self.args.desc, self.db)
 
-    def checkAccess(self, req):
-        checkPrivilege(req.user, 'j/l', 'view the report list')
+    def checkAccess(self, user):
+        checkPrivilege(user, 'j/l', 'view the report list')
 
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield FilteredJobsTable.instance

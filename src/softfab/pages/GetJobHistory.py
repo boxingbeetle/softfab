@@ -17,8 +17,8 @@ class GetJobHistory_GET(ControlPage['GetJobHistory_GET.Arguments', 'GetJobHistor
     class Arguments(ReportArgs):
         configId = SetArg()
 
-    def checkAccess(self, req):
-        checkPrivilege(req.user, 'j/l', 'view the report list')
+    def checkAccess(self, user):
+        checkPrivilege(user, 'j/l', 'view the report list')
 
     class Processor(JobReportProcessor):
 

@@ -106,8 +106,8 @@ class ScheduleDetails_GET(FabPage['ScheduleDetails_GET.Processor', 'ScheduleDeta
             # pylint: disable=attribute-defined-outside-init
             self.scheduled = scheduleDB.get(req.args.id)
 
-    def checkAccess(self, req):
-        checkPrivilege(req.user, 's/a')
+    def checkAccess(self, user):
+        checkPrivilege(user, 's/a')
 
     def iterWidgets(self, proc: Processor) -> Iterator[WidgetT]:
         yield DetailsTable

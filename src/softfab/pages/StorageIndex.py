@@ -23,8 +23,8 @@ class StorageIndex_GET(FabPage['StorageIndex_GET.Processor', 'StorageIndex_GET.A
     class Processor(PageProcessor):
         pass
 
-    def checkAccess(self, req):
-        checkPrivilege(req.user, 'sp/l', 'view the storage list')
+    def checkAccess(self, user):
+        checkPrivilege(user, 'sp/l', 'view the storage list')
 
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield StorageTable.instance

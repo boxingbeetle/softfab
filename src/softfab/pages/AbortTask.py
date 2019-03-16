@@ -21,7 +21,7 @@ class AbortTask_GET(FabPage[FabPage.Processor, FabPage.Arguments]):
     class Arguments(TaskIdArgs):
         pass
 
-    def checkAccess(self, req):
+    def checkAccess(self, user):
         # No permission needed to display the confirmation dialog.
         pass
 
@@ -83,7 +83,7 @@ class AbortTask_POST(FabPage['AbortTask_POST.Processor', 'AbortTask_POST.Argumen
                     )
             self.message = message
 
-    def checkAccess(self, req):
+    def checkAccess(self, user):
         # The permission is checked by the Processor.
         pass
 

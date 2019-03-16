@@ -82,8 +82,8 @@ class FastExecute_GET(FabPage['FastExecute_GET.Processor', 'FastExecute_GET.Argu
                 except KeyError:
                     self.configs = []
 
-    def checkAccess(self, req):
-        checkPrivilege(req.user, 'c/l')
+    def checkAccess(self, user):
+        checkPrivilege(user, 'c/l')
 
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield FastConfigTable.instance
@@ -171,8 +171,8 @@ class FastExecute_POST(FabPage['FastExecute_POST.Processor', 'FastExecute_POST.A
 
             assert False, action
 
-    def checkAccess(self, req):
-        checkPrivilege(req.user, 'c/l')
+    def checkAccess(self, user):
+        checkPrivilege(user, 'c/l')
 
     def presentContent(self, proc: Processor) -> XMLContent:
         assert False

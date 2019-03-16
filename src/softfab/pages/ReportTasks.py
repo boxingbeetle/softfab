@@ -64,8 +64,8 @@ class ReportTasks_GET(FabPage['ReportTasks_GET.Processor', 'ReportTasks_GET.Argu
     class Processor(ReportProcessor):
         pass
 
-    def checkAccess(self, req):
-        checkPrivilege(req.user, 'j/a', 'view the task list')
+    def checkAccess(self, user):
+        checkPrivilege(user, 'j/a', 'view the task list')
 
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield FilteredTaskRunsTable.instance

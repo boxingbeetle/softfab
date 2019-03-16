@@ -61,8 +61,8 @@ class ShowReport_GET(FabPage['ShowReport_GET.Processor', 'ShowReport_GET.Argumen
             # pylint: disable=attribute-defined-outside-init
             self.job = job
 
-    def checkAccess(self, req):
-        checkPrivilege(req.user, 'j/a')
+    def checkAccess(self, user):
+        checkPrivilege(user, 'j/a')
 
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield SelfJobsTable.instance

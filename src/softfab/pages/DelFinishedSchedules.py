@@ -19,7 +19,7 @@ class DelFinishedSchedulesBase(FabPage[ProcT, ArgT]):
     icon = 'IconSchedule'
     iconModifier = IconModifier.DELETE
 
-    def checkAccess(self, req):
+    def checkAccess(self, user):
         pass
 
     def presentContent(self, proc: ProcT):

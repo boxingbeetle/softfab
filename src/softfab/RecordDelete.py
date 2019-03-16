@@ -85,7 +85,7 @@ class RecordDelete_GET(FabPage['RecordDelete_GET.Processor',
             word.capitalize() for word in self.recordName.split()
             )
 
-    def checkAccess(self, req):
+    def checkAccess(self, user):
         pass
 
     def getCancelURL(self, req):

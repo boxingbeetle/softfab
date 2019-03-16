@@ -70,8 +70,8 @@ class ProductDetails_GET(
             self.consumers = consumers
             self.graph = graph
 
-    def checkAccess(self, req):
-        checkPrivilege(req.user, 'pd/a')
+    def checkAccess(self, user):
+        checkPrivilege(user, 'pd/a')
 
     def presentContent(self, proc: Processor) -> XMLContent:
         productDef = proc.productDef

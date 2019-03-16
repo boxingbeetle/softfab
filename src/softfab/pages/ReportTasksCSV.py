@@ -29,8 +29,8 @@ class ReportTasksCSV_GET(CSVPage['ReportTasksCSV_GET.Processor']):
             # pylint: disable=attribute-defined-outside-init
             self.tasks = tasks
 
-    def checkAccess(self, req):
-        checkPrivilege(req.user, 'j/a', 'view the task list')
+    def checkAccess(self, user):
+        checkPrivilege(user, 'j/a', 'view the task list')
 
     def getFileName(self, proc):
         return '_'.join(['export'] + sorted(proc.args.task)) + '.csv'

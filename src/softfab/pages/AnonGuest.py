@@ -22,7 +22,7 @@ class AnonGuestBase(FabPage[ProcT, ArgT]):
 
 class AnonGuest_GET(AnonGuestBase[FabPage.Processor, FabPage.Arguments]):
 
-    def checkAccess(self, req):
+    def checkAccess(self, user):
         pass
 
     def presentContent(self, proc: FabPage.Processor) -> XMLContent:
@@ -32,8 +32,8 @@ class AnonGuest_GET(AnonGuestBase[FabPage.Processor, FabPage.Arguments]):
 class AnonGuest_POST(AnonGuestBase['AnonGuest_POST.Processor',
                                    'AnonGuest_POST.Arguments']):
 
-    def checkAccess(self, req):
-        checkPrivilege(req.user, 'p/m', 'change project settings')
+    def checkAccess(self, user):
+        checkPrivilege(user, 'p/m', 'change project settings')
 
     class Arguments(AnonGuestArgs):
         pass

@@ -87,9 +87,9 @@ class TasksTable(Table):
 class Feed_GET(ControlPage[ControlPage.Arguments, 'Feed_GET.Processor']):
     contentType = 'application/atom+xml; charset=UTF-8'
 
-    def checkAccess(self, req):
-        checkPrivilege(req.user, 'j/l')
-        checkPrivilege(req.user, 'j/a')
+    def checkAccess(self, user):
+        checkPrivilege(user, 'j/l')
+        checkPrivilege(user, 'j/a')
 
     class Processor(PageProcessor):
         # N (where N=50) MostRecent & Completed Jobs

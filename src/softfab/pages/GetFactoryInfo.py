@@ -14,7 +14,7 @@ from softfab.xmlgen import xml
 class GetFactoryInfo_GET(ControlPage[ControlPage.Arguments,
                                      'GetFactoryInfo_GET.Processor']):
 
-    def checkAccess(self, req):
+    def checkAccess(self, user):
         user = req.user
         checkPrivilege(user, 'p/a')
 

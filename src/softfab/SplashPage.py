@@ -32,7 +32,7 @@ class SplashPage(UIPage[PageProcessor],
                  FabResource[FabResource.Arguments, PageProcessor]):
     authenticator = NoAuthPage
 
-    def checkAccess(self, req):
+    def checkAccess(self, user):
         pass
 
     def pageTitle(self, proc: PageProcessor) -> str:

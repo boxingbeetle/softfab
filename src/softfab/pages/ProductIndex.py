@@ -51,8 +51,8 @@ class ProductIndex_GET(FabPage['ProductIndex_GET.Processor', 'ProductIndex_GET.A
     class Processor(PageProcessor):
         pass
 
-    def checkAccess(self, req):
-        checkPrivilege(req.user, 'pd/l')
+    def checkAccess(self, user):
+        checkPrivilege(user, 'pd/l')
 
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield ProductDefTable.instance

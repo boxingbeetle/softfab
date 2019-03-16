@@ -22,7 +22,7 @@ class GetTagged_GET(ControlPage['GetTagged_GET.Arguments', 'GetTagged_GET.Proces
         key = SetArg()
         value = SetArg()
 
-    def checkAccess(self, req):
+    def checkAccess(self, user):
         # Access check depends on subject, so check in Processor.
         pass
 

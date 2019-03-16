@@ -66,9 +66,9 @@ class TaskRunnerHistory_GET(FabPage['TaskRunnerHistory_GET.Processor', 'TaskRunn
             self.reachedJobsLimit = reachedJobsLimit
             self.tasks = tasks
 
-    def checkAccess(self, req):
-        checkPrivilege(req.user, 'tr/a')
-        checkPrivilege(req.user, 't/l')
+    def checkAccess(self, user):
+        checkPrivilege(user, 'tr/a')
+        checkPrivilege(user, 't/l')
 
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield HistoryTable.instance

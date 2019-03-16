@@ -15,8 +15,8 @@ class Abort_POST(ControlPage['Abort_POST.Arguments', 'Abort_POST.Processor']):
         taskName = SetArg()
         onlyWaiting = BoolArg()
 
-    def checkAccess(self, req):
-        checkPrivilege(req.user, 't/m')
+    def checkAccess(self, user):
+        checkPrivilege(user, 't/m')
 
     class Processor(PageProcessor):
 
