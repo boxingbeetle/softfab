@@ -58,9 +58,6 @@ class AbortTask_POST(FabPage['AbortTask_POST.Processor', 'AbortTask_POST.Argumen
             assert action is Actions.ABORT, action
 
             job = jobDB[jobId]
-            # The next line is safe with respect to 'None' values,
-            # because 'getUserName()' can return None only when security
-            # is disabled.
             req.checkPrivilegeForOwned(
                 't/d', job, ('abort tasks in this job', 'abort tasks')
                 )
