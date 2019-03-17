@@ -16,6 +16,7 @@ from softfab.pageargs import ArgsT, PageArgs
 from softfab.userlib import IUser
 from softfab.utils import SharedInstance, abstract
 from softfab.webgui import WidgetT, pageURL
+from softfab.xmlgen import XML
 
 if TYPE_CHECKING:
     from softfab.datawidgets import _TableData
@@ -59,6 +60,9 @@ class PresentableError(Exception):
     calling presentContent().
     '''
 
+    def __init__(self, message: XML):
+        super().__init__(message)
+
 class InvalidRequest(Exception):
     '''Raised when the client request is found to be invalid.
     '''
@@ -78,9 +82,12 @@ class Redirect(BaseException):
         self.url = url
 
 class PageProcessor(Generic[ArgsT]):
-    '''Abstract base class for processors.
-    '''
-    error = None # page-specific error
+    """Abstract base class for processors.
+    """
+
+    error = None # type: Optional[XML]
+    """Page-specific error."""
+
     processingError = None # type: Optional[Exception]
     """Exception caught during processing."""
 
