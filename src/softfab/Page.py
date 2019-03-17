@@ -225,7 +225,7 @@ class FabResource(ABC, Generic[ArgT, ProcT]):
         raise NotImplementedError
 
     def getResponder(self,
-                     path: str,
+                     path: Optional[str],
                      proc: PageProcessor # pylint: disable=unused-argument
                      ) -> Responder:
         '''Returns a Responder that can present the given path within this
