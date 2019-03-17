@@ -12,7 +12,7 @@ from softfab.formlib import (
 )
 from softfab.pageargs import EnumArg, PasswordArg, RefererArg
 from softfab.userlib import (
-    PasswordMessage, authenticate, changePassword, checkPrivilege,
+    IUser, PasswordMessage, authenticate, changePassword, checkPrivilege,
     passwordQuality, userDB
 )
 from softfab.userview import LoginPassArgs, PasswordMsgArgs, passwordStr
@@ -98,7 +98,7 @@ class ChangePassword_GET(FabPage['ChangePassword_GET.Processor', 'ChangePassword
                 self.retry = msg is not PasswordMessage.SUCCESS # pylint: disable=attribute-defined-outside-init
                 raise PresentableError(passwordStr[msg])
 
-    def checkAccess(self, user):
+    def checkAccess(self, user: IUser) -> None:
         # Processor checks privileges.
         pass
 
@@ -199,7 +199,7 @@ class ChangePassword_POST(FabPage['ChangePassword_POST.Processor', 'ChangePasswo
             else:
                 assert False, req.args.action
 
-    def checkAccess(self, user):
+    def checkAccess(self, user: IUser) -> None:
         # Processor checks privileges.
         pass
 

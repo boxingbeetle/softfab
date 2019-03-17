@@ -31,7 +31,7 @@ from softfab.render import (
 from softfab.request import Request
 from softfab.schedulelib import ScheduleManager
 from softfab.shadowlib import startShadowRunCleanup
-from softfab.userlib import UnknownUser
+from softfab.userlib import IUser, UnknownUser
 
 startupLogger = logging.getLogger('ControlCenter.startup')
 
@@ -284,7 +284,7 @@ def renderAsync(page, request):
 class ResourceNotFound(FabResource[FabResource.Arguments, PageProcessor]):
     authenticator = NoAuthPage
 
-    def checkAccess(self, user):
+    def checkAccess(self, user: IUser) -> None:
         pass
 
     def getResponder(self, path, proc):

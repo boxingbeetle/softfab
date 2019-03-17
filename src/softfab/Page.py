@@ -10,6 +10,7 @@ import logging
 
 from softfab.datawidgets import DataTable
 from softfab.pageargs import PageArgs
+from softfab.userlib import IUser
 from softfab.utils import SharedInstance, abstract
 from softfab.webgui import WidgetT, pageURL
 
@@ -212,7 +213,7 @@ class FabResource(ABC, Generic[ArgT, ProcT]):
         This is a dummy one for resources that have no need for processing.
         '''
 
-    def checkAccess(self, user):
+    def checkAccess(self, user: IUser) -> None:
         '''Check whether the given user is allowed to access this resource
         at all and raise AccessDenied if not.
         It is also possible to raise AccessDenied from the Processor if an

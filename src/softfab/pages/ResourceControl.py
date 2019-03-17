@@ -6,7 +6,7 @@ from softfab.ControlPage import ControlPage
 from softfab.Page import InvalidRequest, PageProcessor
 from softfab.pageargs import EnumArg, PageArgs, SetArg
 from softfab.taskrunnerlib import taskRunnerDB
-from softfab.userlib import checkPrivilege
+from softfab.userlib import IUser, checkPrivilege
 from softfab.xmlgen import xml
 
 Actions = Enum('Actions', 'SUSPEND RESUME')
@@ -17,7 +17,7 @@ class ResourceControl_POST(ControlPage['ResourceControl_POST.Arguments', 'Resour
         name = SetArg()
         action = EnumArg(Actions)
 
-    def checkAccess(self, user):
+    def checkAccess(self, user: IUser) -> None:
         checkPrivilege(user, 'tr/m')
 
     class Processor(PageProcessor):

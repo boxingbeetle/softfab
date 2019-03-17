@@ -8,7 +8,7 @@ from softfab.resourcelib import resourceDB
 from softfab.restypelib import resTypeDB, taskRunnerResourceTypeName
 from softfab.taskrunnerlib import taskRunnerDB
 from softfab.timeview import formatTimeAttr
-from softfab.userlib import checkPrivilege
+from softfab.userlib import IUser, checkPrivilege
 from softfab.xmlgen import xml
 
 
@@ -18,7 +18,7 @@ class GetResourceInfo_GET(ControlPage['GetResourceInfo_GET.Arguments', 'GetResou
         type = SetArg()
         name = SetArg()
 
-    def checkAccess(self, user):
+    def checkAccess(self, user: IUser) -> None:
         checkPrivilege(user, 'tr/a')
         checkPrivilege(user, 'tr/l')
 

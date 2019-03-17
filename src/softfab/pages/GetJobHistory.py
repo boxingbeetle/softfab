@@ -7,7 +7,7 @@ from softfab.ReportMixin import JobReportProcessor, ReportArgs
 from softfab.joblib import jobDB
 from softfab.pageargs import SetArg
 from softfab.querylib import SetFilter, runQuery
-from softfab.userlib import checkPrivilege
+from softfab.userlib import IUser, checkPrivilege
 from softfab.utils import chop
 from softfab.xmlgen import adaptToXML, xml
 
@@ -17,7 +17,7 @@ class GetJobHistory_GET(ControlPage['GetJobHistory_GET.Arguments', 'GetJobHistor
     class Arguments(ReportArgs):
         configId = SetArg()
 
-    def checkAccess(self, user):
+    def checkAccess(self, user: IUser) -> None:
         checkPrivilege(user, 'j/l', 'view the report list')
 
     class Processor(JobReportProcessor):

@@ -15,7 +15,7 @@ from softfab.formlib import (
 from softfab.pageargs import EnumArg, PageArgs, RefererArg, StrArg
 from softfab.request import Request
 from softfab.userlib import (
-    PasswordMessage, addUserAccount, authenticate, checkPrivilege,
+    IUser, PasswordMessage, addUserAccount, authenticate, checkPrivilege,
     passwordQuality
 )
 from softfab.userview import (
@@ -29,7 +29,7 @@ class AddUserBase(FabPage[ProcT, ArgT]):
     icon = 'AddUser1'
     description = 'Add User'
 
-    def checkAccess(self, user):
+    def checkAccess(self, user: IUser) -> None:
         checkPrivilege(user, 'u/c', 'add new users')
 
     def iterStyleDefs(self):

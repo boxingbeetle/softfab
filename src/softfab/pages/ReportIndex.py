@@ -12,7 +12,7 @@ from softfab.joblib import jobDB
 from softfab.jobview import JobsTable
 from softfab.pageargs import IntArg, SortArg, StrArg
 from softfab.querylib import WildcardFilter
-from softfab.userlib import checkPrivilege
+from softfab.userlib import IUser, checkPrivilege
 from softfab.xmlgen import XMLContent, xhtml
 
 
@@ -57,7 +57,7 @@ class ReportIndex_GET(FabPage['ReportIndex_GET.Processor', 'ReportIndex_GET.Argu
             if self.args.desc:
                 yield WildcardFilter('description', self.args.desc, self.db)
 
-    def checkAccess(self, user):
+    def checkAccess(self, user: IUser) -> None:
         checkPrivilege(user, 'j/l', 'view the report list')
 
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:

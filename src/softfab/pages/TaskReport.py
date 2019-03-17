@@ -8,6 +8,7 @@ from softfab.authentication import NoAuthPage
 from softfab.joblib import jobDB
 from softfab.pageargs import PageArgs, StrArg
 from softfab.shadowlib import shadowDB
+from softfab.userlib import IUser
 from softfab.xmlgen import xml
 
 
@@ -58,7 +59,7 @@ class TaskReport_POST(ControlPage['TaskReport_POST.Arguments', 'TaskReport_POST.
                     )
             run.setURL(url)
 
-    def checkAccess(self, user):
+    def checkAccess(self, user: IUser) -> None:
         pass
 
     def writeReply(self, response, proc):

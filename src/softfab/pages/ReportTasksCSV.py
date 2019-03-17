@@ -7,7 +7,7 @@ from softfab.querylib import KeySorter, runQuery
 from softfab.resultlib import getData, getKeys
 from softfab.setcalc import union
 from softfab.timeview import formatTime
-from softfab.userlib import checkPrivilege
+from softfab.userlib import IUser, checkPrivilege
 
 
 class ReportTasksCSV_GET(CSVPage['ReportTasksCSV_GET.Processor']):
@@ -29,7 +29,7 @@ class ReportTasksCSV_GET(CSVPage['ReportTasksCSV_GET.Processor']):
             # pylint: disable=attribute-defined-outside-init
             self.tasks = tasks
 
-    def checkAccess(self, user):
+    def checkAccess(self, user: IUser) -> None:
         checkPrivilege(user, 'j/a', 'view the task list')
 
     def getFileName(self, proc):

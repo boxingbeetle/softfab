@@ -5,7 +5,7 @@ from softfab.Page import InvalidRequest, PageProcessor
 from softfab.configlib import configDB
 from softfab.joblib import jobDB
 from softfab.pageargs import DictArg, PageArgs, StrArg
-from softfab.userlib import checkPrivilege
+from softfab.userlib import IUser, checkPrivilege
 from softfab.xmlgen import xml
 
 
@@ -37,7 +37,7 @@ class LoadExecuteDefault_POST(ControlPage['LoadExecuteDefault_POST.Arguments', '
                 job.comment += '\n' + args.comment
                 jobDB.add(job)
 
-    def checkAccess(self, user):
+    def checkAccess(self, user: IUser) -> None:
         checkPrivilege(user, 'j/c', 'start jobs')
 
     def writeReply(self, response, proc):

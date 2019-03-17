@@ -4,6 +4,7 @@ from softfab.Page import FabResource, PageProcessor
 from softfab.UIPage import UIPage
 from softfab.authentication import NoAuthPage
 from softfab.response import Response
+from softfab.userlib import IUser
 from softfab.webgui import unorderedList
 from softfab.xmlgen import XMLContent, xhtml
 
@@ -32,7 +33,7 @@ class SplashPage(UIPage[PageProcessor],
                  FabResource[FabResource.Arguments, PageProcessor]):
     authenticator = NoAuthPage
 
-    def checkAccess(self, user):
+    def checkAccess(self, user: IUser) -> None:
         pass
 
     def pageTitle(self, proc: PageProcessor) -> str:

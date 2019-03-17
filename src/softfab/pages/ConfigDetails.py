@@ -16,7 +16,7 @@ from softfab.projectlib import project
 from softfab.schedulelib import scheduleDB
 from softfab.schedulerefs import createScheduleDetailsLink
 from softfab.selectview import TagArgs
-from softfab.userlib import checkPrivilege
+from softfab.userlib import IUser, checkPrivilege
 from softfab.utils import pluralize
 from softfab.webgui import (
     PresenterFunction, Table, cell, decoration, pageLink, unorderedList
@@ -176,7 +176,7 @@ class ConfigDetails_GET(
             self.graph = graph
             self.scheduleIds = scheduleIds
 
-    def checkAccess(self, user):
+    def checkAccess(self, user: IUser) -> None:
         checkPrivilege(user, 'c/a')
 
     def presentContent(self, proc: Processor) -> XMLContent:

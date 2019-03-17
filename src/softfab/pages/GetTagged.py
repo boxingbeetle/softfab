@@ -6,7 +6,7 @@ from softfab.configlib import configDB
 from softfab.pageargs import PageArgs, SetArg, StrArg
 from softfab.schedulelib import scheduleDB
 from softfab.taskdeflib import taskDefDB
-from softfab.userlib import checkPrivilege
+from softfab.userlib import IUser, checkPrivilege
 from softfab.xmlgen import xml
 
 subjectToDB = dict(
@@ -22,7 +22,7 @@ class GetTagged_GET(ControlPage['GetTagged_GET.Arguments', 'GetTagged_GET.Proces
         key = SetArg()
         value = SetArg()
 
-    def checkAccess(self, user):
+    def checkAccess(self, user: IUser) -> None:
         # Access check depends on subject, so check in Processor.
         pass
 

@@ -16,7 +16,7 @@ from softfab.restypelib import resTypeDB, taskRunnerResourceTypeName
 from softfab.restypeview import ResTypeTableMixin
 from softfab.taskdeflib import taskDefDB
 from softfab.taskrunnerlib import taskRunnerDB
-from softfab.userlib import checkPrivilege
+from softfab.userlib import IUser, checkPrivilege
 from softfab.utils import ResultKeeper
 from softfab.webgui import Table, pageLink, row, vgroup
 from softfab.xmlgen import XMLContent, txt, xhtml
@@ -177,7 +177,7 @@ class Capabilities_GET(FabPage['Capabilities_GET.Processor', 'Capabilities_GET.A
         yield ResourcesTable.instance
         yield CapabilitiesTable.instance
 
-    def checkAccess(self, user):
+    def checkAccess(self, user: IUser) -> None:
         checkPrivilege(user, 'tr/l')
 
     def presentContent(self, proc: Processor) -> XMLContent:

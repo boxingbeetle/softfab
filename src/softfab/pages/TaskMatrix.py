@@ -13,7 +13,7 @@ from softfab.configlib import configDB
 from softfab.formlib import dropDownList, emptyOption, makeForm, submitButton
 from softfab.jobview import createStatusBar
 from softfab.timelib import iterDays, normalizeWeek, secondsPerDay, weeksInYear
-from softfab.userlib import checkPrivilege
+from softfab.userlib import IUser, checkPrivilege
 from softfab.webgui import Table, cell, pageLink, pageURL
 from softfab.xmlgen import XMLContent, xhtml
 
@@ -197,7 +197,7 @@ class TaskMatrix_GET(FabPage['TaskMatrix_GET.Processor', 'TaskMatrix_GET.Argumen
                 tasksByDay.append(combinedDayTasks)
                 allTasks.extend(combinedDayTasks)
 
-    def checkAccess(self, user):
+    def checkAccess(self, user: IUser) -> None:
         checkPrivilege(user, 'j/a', 'view the task list')
 
     def presentContent(self, proc: Processor) -> XMLContent:

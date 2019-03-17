@@ -15,7 +15,7 @@ from softfab.selectlib import getCommonTags
 from softfab.selectview import (
     SelectArgs, TagValueEditTable, textToValues, valuesToText
 )
-from softfab.userlib import checkPrivilege, checkPrivilegeForOwned
+from softfab.userlib import IUser, checkPrivilege, checkPrivilegeForOwned
 from softfab.xmlgen import XMLContent, xhtml
 
 
@@ -53,7 +53,7 @@ class ConfigTagsBase(FabPage['ConfigTagsBase.Processor', FabPage.Arguments]):
 
             self.findConfigs()
 
-    def checkAccess(self, user):
+    def checkAccess(self, user: IUser) -> None:
         checkPrivilege(user, 'c/a')
 
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:

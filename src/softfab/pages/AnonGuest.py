@@ -4,7 +4,7 @@ from softfab.FabPage import FabPage
 from softfab.Page import ArgT, PageProcessor, ProcT, Redirect
 from softfab.pagelinks import AnonGuestArgs
 from softfab.projectlib import project
-from softfab.userlib import checkPrivilege
+from softfab.userlib import IUser, checkPrivilege
 from softfab.userview import presentAnonGuestSetting
 from softfab.xmlgen import XMLContent
 
@@ -22,7 +22,7 @@ class AnonGuestBase(FabPage[ProcT, ArgT]):
 
 class AnonGuest_GET(AnonGuestBase[FabPage.Processor, FabPage.Arguments]):
 
-    def checkAccess(self, user):
+    def checkAccess(self, user: IUser) -> None:
         pass
 
     def presentContent(self, proc: FabPage.Processor) -> XMLContent:
@@ -32,7 +32,7 @@ class AnonGuest_GET(AnonGuestBase[FabPage.Processor, FabPage.Arguments]):
 class AnonGuest_POST(AnonGuestBase['AnonGuest_POST.Processor',
                                    'AnonGuest_POST.Arguments']):
 
-    def checkAccess(self, user):
+    def checkAccess(self, user: IUser) -> None:
         checkPrivilege(user, 'p/m', 'change project settings')
 
     class Arguments(AnonGuestArgs):

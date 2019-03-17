@@ -11,7 +11,7 @@ from softfab.pagelinks import TaskRunnerIdArgs
 from softfab.querylib import runQuery
 from softfab.taskrunnerlib import taskRunnerDB
 from softfab.tasktables import TaskRunsTable
-from softfab.userlib import checkPrivilege
+from softfab.userlib import IUser, checkPrivilege
 from softfab.webgui import pageLink
 from softfab.xmlgen import XMLContent, xhtml
 
@@ -66,7 +66,7 @@ class TaskRunnerHistory_GET(FabPage['TaskRunnerHistory_GET.Processor', 'TaskRunn
             self.reachedJobsLimit = reachedJobsLimit
             self.tasks = tasks
 
-    def checkAccess(self, user):
+    def checkAccess(self, user: IUser) -> None:
         checkPrivilege(user, 'tr/a')
         checkPrivilege(user, 't/l')
 

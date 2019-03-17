@@ -7,6 +7,7 @@ from softfab.FabPage import FabPage
 from softfab.Page import ArgT, InvalidRequest, PageProcessor, PresentableError
 from softfab.formlib import backButton, makeForm, submitButton
 from softfab.pageargs import ArgsCorrected, PageArgs, StrArg
+from softfab.userlib import IUser
 from softfab.utils import abstract
 from softfab.webgui import PresenterFunction
 from softfab.xmlgen import XMLContent, xhtml
@@ -243,7 +244,7 @@ class DialogPage(FabPage[DialogProcessorBase, 'DialogPage.Arguments'], ABC):
             for stepClass in self.steps
             }
 
-    def checkAccess(self, user):
+    def checkAccess(self, user: IUser) -> None:
         # This method is already declared abstract in FabPage, we re-assert
         # that here to please PyLint.
         raise NotImplementedError

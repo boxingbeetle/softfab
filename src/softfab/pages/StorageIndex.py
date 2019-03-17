@@ -7,7 +7,7 @@ from softfab.Page import PageProcessor
 from softfab.datawidgets import DataTable
 from softfab.pageargs import IntArg, PageArgs, SortArg
 from softfab.storageview import StorageTable
-from softfab.userlib import checkPrivilege
+from softfab.userlib import IUser, checkPrivilege
 from softfab.xmlgen import XMLContent
 
 
@@ -23,7 +23,7 @@ class StorageIndex_GET(FabPage['StorageIndex_GET.Processor', 'StorageIndex_GET.A
     class Processor(PageProcessor):
         pass
 
-    def checkAccess(self, user):
+    def checkAccess(self, user: IUser) -> None:
         checkPrivilege(user, 'sp/l', 'view the storage list')
 
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:

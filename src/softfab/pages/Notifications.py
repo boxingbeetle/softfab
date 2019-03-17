@@ -13,7 +13,7 @@ from softfab.formlib import actionButtons, checkBox, makeForm, textInput
 from softfab.notification import sendTestMail, sendmail
 from softfab.pageargs import BoolArg, EnumArg, PageArgs, StrArg
 from softfab.projectlib import project
-from softfab.userlib import checkPrivilege
+from softfab.userlib import IUser, checkPrivilege
 from softfab.xmlgen import XMLContent, xhtml
 
 
@@ -72,7 +72,7 @@ class Notifications_GET(FabPage[FabPage.Processor, FabPage.Arguments]):
     icon = 'IconNotification'
     description = 'Notifications'
 
-    def checkAccess(self, user):
+    def checkAccess(self, user: IUser) -> None:
         pass
 
     def presentContent(self, proc: FabPage.Processor) -> XMLContent:
@@ -100,7 +100,7 @@ class Notifications_POST(FabPage['Notifications_POST.Processor', 'Notifications_
     icon = 'IconNotification'
     description = 'Notifications'
 
-    def checkAccess(self, user):
+    def checkAccess(self, user: IUser) -> None:
         checkPrivilege(user, 'p/m')
 
     class Arguments(MailConfigArgs):

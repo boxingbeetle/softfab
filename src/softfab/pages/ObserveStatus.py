@@ -4,6 +4,7 @@ from softfab.ControlPage import ControlPage
 from softfab.Page import PageProcessor
 from softfab.pageargs import PageArgs, StrArg
 from softfab.statuslib import StatusModelRegistry, StatusViewClient
+from softfab.userlib import IUser
 
 
 class ObserveStatus_GET(ControlPage['ObserveStatus_GET.Arguments', 'ObserveStatus_GET.Processor']):
@@ -16,7 +17,7 @@ class ObserveStatus_GET(ControlPage['ObserveStatus_GET.Arguments', 'ObserveStatu
     class Processor(PageProcessor):
         pass
 
-    def checkAccess(self, user):
+    def checkAccess(self, user: IUser) -> None:
         # For a streaming request, we have to deal with permissions changing
         # while the request is open. Also, the model might not exist now but
         # come into existance later. So there is no point in checking access

@@ -11,7 +11,7 @@ from softfab.pagelinks import (
 )
 from softfab.paramview import ParametersTable
 from softfab.resourceview import InlineResourcesTable
-from softfab.userlib import checkPrivilege
+from softfab.userlib import IUser, checkPrivilege
 from softfab.utils import pluralize
 from softfab.webgui import PropertiesTable, hgroup, pageLink
 from softfab.xmlgen import XMLContent, xhtml
@@ -80,7 +80,7 @@ class FrameworkDetails_GET(
             self.children = taskDefs
             self.graph = graph
 
-    def checkAccess(self, user):
+    def checkAccess(self, user: IUser) -> None:
         checkPrivilege(user, 'fd/a')
 
     def presentContent(self, proc: Processor) -> XMLContent:

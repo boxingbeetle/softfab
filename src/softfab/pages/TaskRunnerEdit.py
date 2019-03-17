@@ -8,7 +8,7 @@ from softfab.formlib import actionButtons, makeForm
 from softfab.pageargs import EnumArg, PageArgs, StrArg
 from softfab.resourceview import CapabilitiesPanel, CommentPanel
 from softfab.taskrunnerlib import taskRunnerDB
-from softfab.userlib import checkPrivilege
+from softfab.userlib import IUser, checkPrivilege
 from softfab.xmlgen import XMLContent, xhtml
 
 Actions = Enum('Actions', 'SAVE CANCEL')
@@ -39,7 +39,7 @@ class TaskRunnerEdit_GET(FabPage['TaskRunnerEdit_GET.Processor', 'TaskRunnerEdit
             # pylint: disable=attribute-defined-outside-init
             self.runner = runner
 
-    def checkAccess(self, user):
+    def checkAccess(self, user: IUser) -> None:
         checkPrivilege(user, 'tr/m')
 
     def presentContent(self, proc: Processor) -> XMLContent:

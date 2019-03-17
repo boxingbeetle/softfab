@@ -8,7 +8,7 @@ from softfab.formlib import actionButtons, makeForm
 from softfab.joblib import jobDB
 from softfab.pageargs import EnumArg
 from softfab.pagelinks import TaskIdArgs
-from softfab.userlib import checkPrivilegeForOwned
+from softfab.userlib import IUser, checkPrivilegeForOwned
 from softfab.xmlgen import XMLContent, xhtml
 
 Actions = Enum('Actions', 'ABORT CANCEL')
@@ -21,7 +21,7 @@ class AbortTask_GET(FabPage[FabPage.Processor, FabPage.Arguments]):
     class Arguments(TaskIdArgs):
         pass
 
-    def checkAccess(self, user):
+    def checkAccess(self, user: IUser) -> None:
         # No permission needed to display the confirmation dialog.
         pass
 
@@ -83,7 +83,7 @@ class AbortTask_POST(FabPage['AbortTask_POST.Processor', 'AbortTask_POST.Argumen
                     )
             self.message = message
 
-    def checkAccess(self, user):
+    def checkAccess(self, user: IUser) -> None:
         # The permission is checked by the Processor.
         pass
 

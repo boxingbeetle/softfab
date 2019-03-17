@@ -6,7 +6,7 @@ from softfab.joblib import getAllTasksWithId
 from softfab.pageargs import DictArg, PageArgs, SetArg, StrArg
 from softfab.taskdeflib import TaskDef, taskDefDB
 from softfab.timeview import formatTimeAttr
-from softfab.userlib import checkPrivilege
+from softfab.userlib import IUser, checkPrivilege
 from softfab.xmlgen import xml
 
 
@@ -63,7 +63,7 @@ class GetTaggedTaskInfo_GET(ControlPage['GetTaggedTaskInfo_GET.Arguments', 'GetT
             # pylint: disable=attribute-defined-outside-init
             self.selected = filterTasks(req.args.tag, req.args.owner)
 
-    def checkAccess(self, user):
+    def checkAccess(self, user: IUser) -> None:
         checkPrivilege(user, 'td/l', 'list task definitions')
         checkPrivilege(user, 'td/a', 'access task definitions')
         checkPrivilege(user, 't/l', 'list tasks')

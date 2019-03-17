@@ -22,7 +22,7 @@ from softfab.projectlib import project
 from softfab.querylib import CustomFilter, KeySorter, runQuery
 from softfab.timelib import getTime
 from softfab.timeview import formatDuration, formatTime
-from softfab.userlib import checkPrivilege
+from softfab.userlib import IUser, checkPrivilege
 from softfab.utils import pluralize
 from softfab.version import version
 from softfab.webgui import Table, cell, pageURL, row
@@ -87,7 +87,7 @@ class TasksTable(Table):
 class Feed_GET(ControlPage[ControlPage.Arguments, 'Feed_GET.Processor']):
     contentType = 'application/atom+xml; charset=UTF-8'
 
-    def checkAccess(self, user):
+    def checkAccess(self, user: IUser) -> None:
         checkPrivilege(user, 'j/l')
         checkPrivilege(user, 'j/a')
 

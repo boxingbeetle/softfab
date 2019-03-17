@@ -9,7 +9,7 @@ from softfab.Page import PageProcessor, PresentableError, Redirect
 from softfab.databaselib import Database
 from softfab.formlib import actionButtons, makeForm
 from softfab.pageargs import EnumArg, PageArgs, StrArg
-from softfab.userlib import checkPrivilegeForOwned
+from softfab.userlib import IUser, checkPrivilegeForOwned
 from softfab.utils import abstract, pluralize
 from softfab.webgui import unorderedList
 from softfab.xmlgen import XMLContent, xhtml
@@ -85,7 +85,7 @@ class RecordDelete_GET(FabPage['RecordDelete_GET.Processor',
             word.capitalize() for word in self.recordName.split()
             )
 
-    def checkAccess(self, user):
+    def checkAccess(self, user: IUser) -> None:
         pass
 
     def getCancelURL(self, req):
