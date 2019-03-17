@@ -4,20 +4,24 @@
 Module to render the page
 '''
 
+from typing import ClassVar, Iterator, Optional, cast
+
 from twisted.internet.defer import Deferred, inlineCallbacks
 from twisted.internet.interfaces import IProducer, IPullProducer, IPushProducer
 
+from softfab.FabPage import FabPage
 from softfab.Page import (
-    InvalidRequest, PageProcessor, PresentableError, Redirect, Redirector,
-    logPageException
+    FabResource, InvalidRequest, PageProcessor, PresentableError, Redirect,
+    Redirector, Responder, logPageException
 )
 from softfab.UIPage import UIPage
-from softfab.pageargs import ArgsCorrected, ArgsInvalid, Query, dynamic
+from softfab.pageargs import ArgsCorrected, ArgsInvalid, ArgsT, Query, dynamic
+from softfab.request import Request
 from softfab.response import Response
 from softfab.userlib import AccessDenied
 from softfab.utils import abstract
 from softfab.webgui import docLink
-from softfab.xmlgen import XMLContent, xhtml
+from softfab.xmlgen import XML, XMLContent, xhtml
 
 # Profiling options:
 
@@ -34,13 +38,13 @@ if _timeRender:
 if _profileRender:
     from cProfile import Profile
 
-class ErrorPage(UIPage[PageProcessor], PageProcessor):
+class ErrorPage(UIPage[PageProcessor[ArgsT]], PageProcessor[ArgsT]):
     """Abstract base class for error pages.
     """
-    status = abstract
-    title = abstract
+    status = abstract # type: ClassVar[int]
+    title = abstract # type: ClassVar[str]
 
-    def __init__(self, req, messageText=None):
+    def __init__(self, req: Request[ArgsT], messageText: Optional[str] = None):
         PageProcessor.__init__(self, req)
         UIPage.__init__(self)
 
@@ -48,41 +52,43 @@ class ErrorPage(UIPage[PageProcessor], PageProcessor):
             messageText = self.title
         self.messageText = messageText
 
-    def pageTitle(self, proc: PageProcessor) -> str:
+    def pageTitle(self, proc: PageProcessor[ArgsT]) -> str:
         return self.title
 
     def writeHTTPHeaders(self, response: Response) -> None:
         response.setStatus(self.status, self.messageText)
         super().writeHTTPHeaders(response)
 
-    def presentContent(self, proc: PageProcessor) -> XMLContent:
+    def presentContent(self, proc: PageProcessor[ArgsT]) -> XMLContent:
         raise NotImplementedError
 
-class BadRequestPage(ErrorPage):
+class BadRequestPage(ErrorPage[ArgsT]):
     '''400 error page.
     '''
 
     status = 400
     title = 'Bad Request'
 
-    def __init__(self, req, messageText, messageHTML):
+    def __init__(self,
+            req: Request[ArgsT], messageText: str, messageHTML: XMLContent
+            ):
         ErrorPage.__init__(self, req, messageText)
         self.messageHTML = messageHTML
 
-    def presentContent(self, proc: PageProcessor) -> XMLContent:
+    def presentContent(self, proc: PageProcessor[ArgsT]) -> XMLContent:
         return self.messageHTML
 
-class ForbiddenPage(ErrorPage):
+class ForbiddenPage(ErrorPage[ArgsT]):
     '''403 error page: shown when access is denied.
     '''
 
     status = 403
     title = 'Access Denied'
 
-    def presentContent(self, proc: PageProcessor) -> XMLContent:
+    def presentContent(self, proc: PageProcessor[ArgsT]) -> XMLContent:
         return xhtml.p[ 'Access denied: %s.' % self.messageText ]
 
-class NotFoundPage(ErrorPage):
+class NotFoundPage(ErrorPage[ArgsT]):
     '''404 error page.
     TODO: When there is a directory in the URL, the style sheets and images
           are not properly referenced.
@@ -91,37 +97,40 @@ class NotFoundPage(ErrorPage):
     status = 404
     title = 'Page Not Found'
 
-    def presentContent(self, proc: PageProcessor) -> XMLContent:
+    def presentContent(self, proc: PageProcessor[ArgsT]) -> XMLContent:
         return (
             xhtml.p[ 'The page you requested was not found on this server.' ],
             xhtml.p[ xhtml.a(href = 'Home')[ 'Back to Home' ] ]
             )
 
-class InternalErrorPage(ErrorPage):
+class InternalErrorPage(ErrorPage[ArgsT]):
     '''500 error page: shown when an internal error occurred.
     '''
 
     status = 500
     title = 'Internal Error'
 
-    def presentContent(self, proc: PageProcessor) -> XMLContent:
+    def presentContent(self, proc: PageProcessor[ArgsT]) -> XMLContent:
         return (
             xhtml.p[ 'Internal error: %s.' % self.messageText ],
             xhtml.p[ 'Please ', docLink('/reference/contact/')[
                 'report this as a bug' ], '.' ]
             )
 
-def _checkActive(req, page):
+def _checkActive(
+        req: Request[ArgsT],
+        page: FabResource[ArgsT, PageProcessor[ArgsT]]
+        ) -> None:
     '''If page is not active, redirect to parent.
     '''
-    if hasattr(page, 'isActive'):
+    if isinstance(page, FabPage):
         if not page.isActive():
-            # Note: The presence of isActive() indicates this is a FabPage,
-            #       therefore it will have getParentURL() as well.
             raise Redirect(page.getParentURL(req))
 
 @inlineCallbacks
-def parseAndProcess(page, req):
+def parseAndProcess(
+        page: FabResource[ArgsT, PageProcessor[ArgsT]], req: Request[ArgsT]
+        ) -> Iterator[Deferred]:
     '''Parse step: determine values for page arguments.
     Processing step: database interaction.
     Returns a Deferred which has a (responder, proc) pair as its result.
@@ -141,12 +150,12 @@ def parseAndProcess(page, req):
             else:
                 # We can't correct args using redirection if args may have
                 # come from the request body instead of the URL.
-                req.args = ex.correctedArgs
+                req.args = cast(ArgsCorrected[ArgsT], ex).correctedArgs
 
         _checkActive(req, page)
 
         # Processing step.
-        proc = page.Processor(req)
+        proc = page.Processor(req) # type: PageProcessor[ArgsT]
         proc.page = page
         proc.args = req.args
         try:
@@ -164,12 +173,14 @@ def parseAndProcess(page, req):
                 )
             proc.processTables()
     except AccessDenied as ex:
-        responder = proc = ForbiddenPage(
+        forbiddenPage = ForbiddenPage(
             req,
             "You don't have permission to %s" % (
                 str(ex) or 'access this page'
                 )
             )
+        responder = forbiddenPage # type: Responder
+        proc = forbiddenPage
     except ArgsCorrected as ex:
         subPath = req.getSubPath()
         query = Query.fromArgs(ex.correctedArgs)
@@ -207,7 +218,11 @@ def parseAndProcess(page, req):
     req.processEnd()
     return (responder, proc)
 
-def present(request, responder, proc):
+def present(
+        request: Request[ArgsT],
+        responder: Responder,
+        proc: PageProcessor[ArgsT]
+        ) -> Optional[Deferred]:
     '''Presentation step: write a response based on the processing results.
     Returns None or a Deferred that does the actual presentation.
     '''
