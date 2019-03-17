@@ -50,12 +50,12 @@ class ArgsCorrected(Generic[ArgsT], Exception):
     as an error.
     '''
 
-    def __init__(self, args: ArgsT, **kvArgs: object):
+    def __init__(self, args: ArgsT, **kwargs: object):
         Exception.__init__(self)
         # Note: The Exception base class has an attribute named "args", so we
         #       should use a different name.
         self.correctedArgs = (
-            cast(ArgsT, args.override(**kvArgs)) if kvArgs else args
+            cast(ArgsT, args.override(**kwargs)) if kwargs else args
             )
 
 class ArgsInvalid(Exception):
