@@ -45,7 +45,7 @@ if dbVersion < (2, 16, 0):
 
 setConversionFlagsForVersion(dbVersion)
 
-def convertAll():
+def convertAll() -> None:
     '''Convert all databases to the current format.
     '''
 
