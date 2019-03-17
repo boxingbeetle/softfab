@@ -2,14 +2,15 @@
 
 from cgi import parse_header
 from inspect import signature
-from typing import IO, Mapping, Optional, Sequence, Tuple
+from typing import IO, Generic, Mapping, Optional, Sequence, Tuple, cast
 from urllib.parse import parse_qs, urlparse
 
 from twisted.web.http import Request as TwistedRequest
 from twisted.web.server import Session
 
-from softfab.Page import FabResource, InvalidRequest
+from softfab.Page import FabResource, InvalidRequest, ProcT
 from softfab.config import rootURL
+from softfab.pageargs import ArgsT
 from softfab.projectlib import project
 from softfab.useragent import UserAgent
 from softfab.userlib import AnonGuestUser, IUser, UnknownUser, privileges
@@ -150,7 +151,7 @@ class RequestBase:
         """
         return self._user.getUserName()
 
-class Request(RequestBase):
+class Request(RequestBase, Generic[ArgsT]):
     '''Contains the request information that is only available during the
     "parse" and "process" request handling steps.
     '''
@@ -161,7 +162,7 @@ class Request(RequestBase):
         '''
         self.__class__ = RequestBase # type: ignore
 
-    def _parse(self, page: FabResource) -> None:
+    def _parse(self, page: FabResource[ArgsT, ProcT]) -> None:
         '''Initialises the Arguments, if the page has one.
         '''
         # Decode field names.
@@ -182,7 +183,8 @@ class Request(RequestBase):
                     )
             fields[key] = values
 
-        self.args = page.Arguments.parse(fields, self) # pylint: disable=attribute-defined-outside-init
+        # pylint: disable=attribute-defined-outside-init
+        self.args = cast(ArgsT, page.Arguments).parse(fields, self)
 
     # Session management:
 
