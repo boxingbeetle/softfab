@@ -7,6 +7,7 @@ from softfab.Page import PageProcessor, ProcT, Responder, logPageException
 from softfab.StyleResources import StyleSheet, styleRoot
 from softfab.pagelinks import createUserDetailsLink, loginURL, logoutURL
 from softfab.projectlib import project
+from softfab.request import Request
 from softfab.response import Response
 from softfab.timelib import getTime
 from softfab.timeview import formatTime
@@ -22,9 +23,9 @@ _styleSheets = tuple(_createStyleSheets())
 # This sheet contains workarounds for the very limited CSS support in MSOffice.
 # For example it is used to correct the Atom feed rendering in MS Outlook.
 _msOfficeSheet = styleRoot.addStyleSheet('msoffice')
-def iterStyleSheets(proc: PageProcessor) -> Iterator[StyleSheet]:
+def iterStyleSheets(req: Request) -> Iterator[StyleSheet]:
     yield from _styleSheets
-    if proc.req.userAgent.family == 'MSOffice':
+    if req.userAgent.family == 'MSOffice':
         yield _msOfficeSheet
 
 class UIPage(Responder, Generic[ProcT]):
@@ -63,7 +64,7 @@ class UIPage(Responder, Generic[ProcT]):
             content='width=device-width, initial-scale=1, minimum-scale=1'
             )
         yield xhtml.title[ '%s - %s' % (project['name'], self.pageTitle(proc)) ]
-        for sheet in iterStyleSheets(proc):
+        for sheet in iterStyleSheets(proc.req):
             yield sheet.present(proc=proc)
         customStyleDefs = '\n'.join(self.iterStyleDefs())
         if customStyleDefs:

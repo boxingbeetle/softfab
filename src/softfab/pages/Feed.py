@@ -177,7 +177,7 @@ class Feed_GET(ControlPage[ControlPage.Arguments, 'Feed_GET.Processor']):
             # TODO: Does xhtml.style work with other RSS readers too?
             xhtml.style[(
                 '@import url(%s%s);' % (rootURL, sheet.getURL())
-                for sheet in iterStyleSheets(proc)
+                for sheet in iterStyleSheets(proc.req)
                 )],
             jobTable.present(proc=proc),
             xhtml.p[ self.presentJobInfo(job) ],
