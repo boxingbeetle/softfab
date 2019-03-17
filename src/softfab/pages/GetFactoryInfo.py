@@ -15,7 +15,6 @@ class GetFactoryInfo_GET(ControlPage[ControlPage.Arguments,
                                      'GetFactoryInfo_GET.Processor']):
 
     def checkAccess(self, user):
-        user = req.user
         checkPrivilege(user, 'p/a')
 
         # Check that user has 'list' privileges for all databases.
