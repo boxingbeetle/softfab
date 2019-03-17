@@ -3,16 +3,16 @@
 from enum import Enum
 
 from softfab.FabPage import FabPage, IconModifier
-from softfab.Page import ArgT, PageProcessor, ProcT, Redirect
+from softfab.Page import PageProcessor, ProcT, Redirect
 from softfab.formlib import actionButtons, makeForm
-from softfab.pageargs import EnumArg, PageArgs
+from softfab.pageargs import ArgsT, EnumArg, PageArgs
 from softfab.schedulelib import scheduleDB
 from softfab.userlib import IUser, checkPrivilege
 from softfab.xmlgen import XMLContent, xhtml
 
 Actions = Enum('Actions', 'DELETE CANCEL')
 
-class DelFinishedSchedulesBase(FabPage[ProcT, ArgT]):
+class DelFinishedSchedulesBase(FabPage[ProcT, ArgsT]):
     # Refuse child link from ScheduleIndex.
     linkDescription = False
     description = 'Delete Schedules'

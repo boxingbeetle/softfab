@@ -12,7 +12,7 @@ from twisted.internet.defer import Deferred
 from twisted.web.http import Request as TwistedRequest
 
 from softfab.datawidgets import DataTable
-from softfab.pageargs import PageArgs
+from softfab.pageargs import ArgsT, PageArgs
 from softfab.userlib import IUser
 from softfab.utils import SharedInstance, abstract
 from softfab.webgui import WidgetT, pageURL
@@ -77,9 +77,7 @@ class Redirect(BaseException):
         BaseException.__init__(self)
         self.url = url
 
-ArgT = TypeVar('ArgT', bound=PageArgs)
-
-class PageProcessor(Generic[ArgT]):
+class PageProcessor(Generic[ArgsT]):
     '''Abstract base class for processors.
     '''
     error = None # page-specific error
@@ -87,7 +85,7 @@ class PageProcessor(Generic[ArgT]):
     """Exception caught during processing."""
     # set by parseAndProcess():
     page = None # type: FabResource
-    args = None # type: ArgT
+    args = None # type: ArgsT
 
     def __init__(self, req):
         self.req = req
@@ -182,7 +180,7 @@ class HTTPAuthenticator(PageProcessor, Responder):
             'WWW-Authenticate', 'Basic realm="%s"' % self.__realm
             )
 
-class FabResource(ABC, Generic[ArgT, ProcT]):
+class FabResource(ABC, Generic[ArgsT, ProcT]):
     '''Abstract base class for Control Center pages.
     '''
     authenticator = abstract # type: ClassVar[Type[Authenticator]]
@@ -211,7 +209,7 @@ class FabResource(ABC, Generic[ArgT, ProcT]):
         This default declaration does not contain any arguments.
         '''
 
-    class Processor(PageProcessor[ArgT]):
+    class Processor(PageProcessor[ArgsT]):
         '''Every resource should have a Processor.
         This is a dummy one for resources that have no need for processing.
         '''

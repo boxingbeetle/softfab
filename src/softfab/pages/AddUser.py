@@ -7,12 +7,12 @@ from twisted.cred.error import LoginFailed
 from twisted.internet.defer import inlineCallbacks
 
 from softfab.FabPage import FabPage
-from softfab.Page import ArgT, PageProcessor, PresentableError, ProcT, Redirect
+from softfab.Page import PageProcessor, PresentableError, ProcT, Redirect
 from softfab.formlib import (
     FormTable, actionButtons, dropDownList, emptyOption, hiddenInput, makeForm,
     passwordInput, textInput
 )
-from softfab.pageargs import EnumArg, PageArgs, RefererArg, StrArg
+from softfab.pageargs import ArgsT, EnumArg, PageArgs, RefererArg, StrArg
 from softfab.request import Request
 from softfab.userlib import (
     IUser, PasswordMessage, addUserAccount, authenticate, checkPrivilege,
@@ -25,7 +25,7 @@ from softfab.xmlgen import XMLContent, xhtml
 
 Actions = Enum('Actions', 'ADD CANCEL')
 
-class AddUserBase(FabPage[ProcT, ArgT]):
+class AddUserBase(FabPage[ProcT, ArgsT]):
     icon = 'AddUser1'
     description = 'Add User'
 

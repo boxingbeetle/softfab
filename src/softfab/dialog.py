@@ -4,9 +4,9 @@ from abc import ABC
 from typing import ClassVar, Sequence, Type
 
 from softfab.FabPage import FabPage
-from softfab.Page import ArgT, InvalidRequest, PageProcessor, PresentableError
+from softfab.Page import InvalidRequest, PageProcessor, PresentableError
 from softfab.formlib import backButton, makeForm, submitButton
-from softfab.pageargs import ArgsCorrected, PageArgs, StrArg
+from softfab.pageargs import ArgsCorrected, ArgsT, PageArgs, StrArg
 from softfab.userlib import IUser
 from softfab.utils import abstract
 from softfab.webgui import PresenterFunction
@@ -78,7 +78,7 @@ class DialogStep(ABC):
         '''
         raise NotImplementedError
 
-class DialogProcessorBase(PageProcessor[ArgT]):
+class DialogProcessorBase(PageProcessor[ArgsT]):
     """Abstract base class for Processors designed to be used with
     `DialogPage`.
     """

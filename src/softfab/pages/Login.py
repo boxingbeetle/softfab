@@ -4,14 +4,14 @@ from twisted.cred.error import LoginFailed
 from twisted.internet.defer import inlineCallbacks
 
 from softfab.Page import (
-    ArgT, FabResource, PageProcessor, PresentableError, ProcT, Redirect
+    FabResource, PageProcessor, PresentableError, ProcT, Redirect
 )
 from softfab.UIPage import UIPage
 from softfab.authentication import NoAuthPage
 from softfab.formlib import (
     FormTable, makeForm, passwordInput, submitButton, textInput
 )
-from softfab.pageargs import ArgsCorrected, StrArg
+from softfab.pageargs import ArgsCorrected, ArgsT, StrArg
 from softfab.pagelinks import URLArgs
 from softfab.userlib import (
     IUser, PasswordMessage, authenticate, passwordQuality
@@ -27,7 +27,7 @@ class LoginTable(FormTable):
         yield 'User name', textInput(name = 'loginname')
         yield 'Password', passwordInput(name = 'loginpass')
 
-class LoginBase(UIPage[ProcT], FabResource[ArgT, ProcT]):
+class LoginBase(UIPage[ProcT], FabResource[ArgsT, ProcT]):
     authenticator = NoAuthPage
     secureCookie = True
 
