@@ -1,28 +1,29 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Optional
+from typing import Optional, cast
 
 from twisted.cred.error import LoginFailed
-from twisted.internet.defer import fail, succeed
+from twisted.internet.defer import Deferred, fail, succeed
+from twisted.web.http import Request as TwistedRequest
 
 from softfab.Page import (
-    Authenticator, HTTPAuthenticator, InternalError, Redirector
+    Authenticator, HTTPAuthenticator, InternalError, Redirector, Responder
 )
 from softfab.pagelinks import loginURL
 from softfab.projectlib import project
 from softfab.request import Request
 from softfab.userlib import (
-    AnonGuestUser, IUser, SuperUser, UnknownUser, authenticate
+    AnonGuestUser, IUser, SuperUser, UnknownUser, UserInfo, authenticate
 )
 
 
-def loggedInUser(request) -> Optional[IUser]:
+def loggedInUser(request: TwistedRequest) -> Optional[IUser]:
     """Gets the logged-in user making the request.
     Also resets the session timeout.
     """
     session = Request.getSession(request)
     if session is not None:
-        user = session.getComponent(IUser)
+        user = cast(Optional[UserInfo], session.getComponent(IUser))
         if user is not None and user.isActive():
             session.touch()
             return user
@@ -33,7 +34,7 @@ class LoginAuthPage(Authenticator):
     a session cookie.
     '''
 
-    def authenticate(self, request):
+    def authenticate(self, request: TwistedRequest) -> Deferred:
         user = loggedInUser(request)
         if user is None:
             if project['anonguest']:
@@ -45,20 +46,20 @@ class LoginAuthPage(Authenticator):
             # User has already authenticated.
             return succeed(user)
 
-    def askForAuthentication(self, req):
+    def askForAuthentication(self, req: Request) -> Responder:
         return Redirector(req, loginURL(req))
 
 class HTTPAuthPage(Authenticator):
     '''Authenticator that performs HTTP authentication.
     '''
 
-    def authenticate(self, request):
+    def authenticate(self, request: TwistedRequest) -> Deferred:
         # To avoid cross-site request forgery, we must authenticate every API
         # call and not use session cookies. Since API calls are not made using
         # web browsers, most likely the client is not using session cookies
         # anyway.
         #   http://en.wikipedia.org/wiki/Cross-site_request_forgery
-        userNameBytes = request.getUser()
+        userNameBytes = request.getUser() # type: bytes
         if userNameBytes:
             # If requester supplied user name, authenticate as that user.
             try:
@@ -74,7 +75,7 @@ class HTTPAuthPage(Authenticator):
         else:
             return fail(LoginFailed())
 
-    def askForAuthentication(self, req):
+    def askForAuthentication(self, req: Request) -> Responder:
         return HTTPAuthenticator(req, 'SoftFab')
 
 class NoAuthPage(Authenticator):
@@ -82,10 +83,10 @@ class NoAuthPage(Authenticator):
     a non-privileged user.
     '''
 
-    def authenticate(self, request):
+    def authenticate(self, request: TwistedRequest) -> Deferred:
         return succeed(UnknownUser())
 
-    def askForAuthentication(self, req):
+    def askForAuthentication(self, req: Request) -> Responder:
         raise InternalError(
             'Authentication requested for page that does not require it.'
             )
@@ -96,7 +97,7 @@ class DisabledAuthPage(Authenticator):
     This is for ease of development, not recommended for production.
     '''
 
-    def authenticate(self, request):
+    def authenticate(self, request: TwistedRequest) -> Deferred:
         user = loggedInUser(request)
         if user is None:
             return succeed(SuperUser())
@@ -104,7 +105,7 @@ class DisabledAuthPage(Authenticator):
             # Use logged-in user.
             return succeed(user)
 
-    def askForAuthentication(self, req):
+    def askForAuthentication(self, req: Request) -> Responder:
         raise InternalError(
             'Authentication requested while authentication is disabled.'
             )

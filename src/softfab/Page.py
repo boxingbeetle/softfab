@@ -8,6 +8,9 @@ from typing import (
 )
 import logging
 
+from twisted.internet.defer import Deferred
+from twisted.web.http import Request as TwistedRequest
+
 from softfab.datawidgets import DataTable
 from softfab.pageargs import PageArgs
 from softfab.userlib import IUser
@@ -33,7 +36,7 @@ class Authenticator:
 
     instance = SharedInstance() # type: ClassVar[SharedInstance]
 
-    def authenticate(self, request):
+    def authenticate(self, request: TwistedRequest) -> Deferred:
         '''Authentication step: selects an authentication method depending on
         the page and the request.
         Returns a Deferred that has the user as a result, or LoginFailed
@@ -41,7 +44,7 @@ class Authenticator:
         '''
         raise NotImplementedError
 
-    def askForAuthentication(self, req):
+    def askForAuthentication(self, req) -> 'Responder':
         '''Returns a Responder that asks the user to authenticate.
         Raises InternalError if there is something wrong with the
         authentication system.
