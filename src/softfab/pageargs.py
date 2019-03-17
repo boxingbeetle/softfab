@@ -44,17 +44,19 @@ class ParseCorrected(Generic[ValueT], Exception):
         Exception.__init__(self)
         self.correctValue = correctValue
 
-class ArgsCorrected(Exception):
+class ArgsCorrected(Generic[ArgsT], Exception):
     '''Raised by a Processor to issue a correction to the PageArgs.
     Depending on the type of page, this may be handled as a redirection or
     as an error.
     '''
 
-    def __init__(self, args: 'PageArgs', **kvArgs: object):
+    def __init__(self, args: ArgsT, **kvArgs: object):
         Exception.__init__(self)
         # Note: The Exception base class has an attribute named "args", so we
         #       should use a different name.
-        self.correctedArgs = args.override(**kvArgs) if kvArgs else args
+        self.correctedArgs = (
+            cast(ArgsT, args.override(**kvArgs)) if kvArgs else args
+            )
 
 class ArgsInvalid(Exception):
     '''Raised when one or more page arguments are invalid and cannot be
