@@ -4,19 +4,22 @@ from enum import Enum
 from functools import total_ordering
 from os import makedirs
 from os.path import dirname, exists
-from typing import Mapping, Optional, Sequence
+from typing import (
+    Any, FrozenSet, Iterable, Iterator, Mapping, Optional, Sequence, Set,
+    Tuple, Union, cast
+)
 import logging
 
 from passlib.apache import HtpasswdFile
 from twisted.cred.error import LoginFailed, UnauthorizedLogin
-from twisted.internet.defer import inlineCallbacks
+from twisted.internet.defer import Deferred, inlineCallbacks
 from zope.interface import Interface, implementer
 
 from softfab.config import dbDir
 from softfab.databaselib import Database, DatabaseElem
 from softfab.utils import atomicWrite, iterable
 from softfab.xmlbind import XMLTag
-from softfab.xmlgen import xml
+from softfab.xmlgen import XML, xml
 
 roleNames = frozenset([ 'guest', 'user', 'operator' ])
 
@@ -28,11 +31,11 @@ class UIRoleNames(Enum):
     GUEST = 2
     USER = 3
     OPERATOR = 4
-    def __lt__(self, other):
+    def __lt__(self, other: object) -> bool:
         if self.__class__ is other.__class__:
             # pylint: disable=comparison-with-callable
             # https://github.com/PyCQA/pylint/issues/2757
-            return self.value < other.value
+            return self.value < cast(Enum, other).value
         return NotImplemented
 assert set(elem.name.lower() for elem in list(UIRoleNames)[1 : ]) == roleNames
 
@@ -140,50 +143,8 @@ privileges = {
 #    'p/d': (),
 } # type: Mapping[str, Sequence[str]]
 
-def rolesGrantPrivilege(roles, priv):
+def rolesGrantPrivilege(roles: Iterable[str], priv: str) -> bool:
     return any(role in roles for role in privileges[priv])
-
-class AccessDenied(Exception):
-    pass
-
-def checkPrivilege(user, priv, text = None):
-    if not user.hasPrivilege(priv):
-        if text is None:
-            raise AccessDenied()
-        else:
-            raise AccessDenied(text)
-
-def checkPrivilegeForOwned(user, priv, records, text = ''):
-    '''Checks whether a user is allowed to perform an action on an owned
-    database record.
-    @param records Record or sequence of records to test for ownership.
-    @param text String to display if the user is not allowed to perform
-        the action, or a tuple of which the first element is the string to
-        display if the user is not allowed to perform the action on this
-        particular record and the second element is the string to display
-        if the user is not allowed to perform the action on any record
-        of this type.
-    '''
-    assert not priv.endswith('o'), priv
-    if user.hasPrivilege(priv):
-        # User is allowed to take action also for non-owned records.
-        return
-    ownedPriv = priv + 'o'
-    hasOwnedPriv = ownedPriv in privileges and user.hasPrivilege(ownedPriv)
-    if hasOwnedPriv:
-        # User is allowed to perform action, but only for owned records.
-        userName = user.getUserName()
-        if not iterable(records):
-            records = ( records, )
-        if all(record.getOwner() == userName for record in records):
-            return
-    # Construct error message.
-    if isinstance(text, tuple):
-        text = text[0 if hasOwnedPriv else 1]
-    if text is None:
-        raise AccessDenied()
-    else:
-        raise AccessDenied(text)
 
 PasswordMessage = Enum('PasswordMessage', 'SUCCESS POOR SHORT EMPTY MISMATCH')
 '''Reasons for rejecting a password.
@@ -191,7 +152,7 @@ PasswordMessage = Enum('PasswordMessage', 'SUCCESS POOR SHORT EMPTY MISMATCH')
 
 minimumPasswordLength = 8
 
-def _initPasswordFile(path):
+def _initPasswordFile(path: str) -> HtpasswdFile:
     passwordFile = HtpasswdFile(path, default_scheme='portable', new=True)
 
     # Marking schemes as deprecated tells passlib to re-hash when a password
@@ -219,7 +180,7 @@ def _initPasswordFile(path):
 
     return passwordFile
 
-def _writePasswordFile():
+def _writePasswordFile() -> None:
     # Note: Despite the name, to_string() returns bytes.
     data = _passwordFile.to_string()
     with atomicWrite(_passwordFile.path, 'wb') as out:
@@ -228,7 +189,7 @@ def _writePasswordFile():
 _passwordFile = _initPasswordFile(dbDir + '/passwords')
 
 @inlineCallbacks
-def authenticate(userName, password):
+def authenticate(userName: str, password: str) -> Iterator[Deferred]:
     '''Authenticates a user with the given password.
     Returns a deferred.
     Callback arguments: user object for the authenticated user.
@@ -278,7 +239,7 @@ def authenticate(userName, password):
         #       If you ever encounter it, look in the log for the real info.
         raise LoginFailed('Internal error')
 
-def _checkPassword(password):
+def _checkPassword(password: str) -> None:
     '''Checks whether the given password is valid.
     Does nothing if the password is valid; raises ValueError otherwise.
     '''
@@ -295,7 +256,7 @@ def _checkPassword(password):
             ', '.join('%d' % code for code in sorted(invalidCodes))
             )
 
-def addUserAccount(userName, password, roles):
+def addUserAccount(userName: str, password: str, roles: Iterable[str]) -> None:
     '''Creates a new user account.
     @param userName: The name of the new user account.
     @param password: New password for the new user.
@@ -330,7 +291,7 @@ def addUserAccount(userName, password, roles):
             userName
             )
 
-def changePassword(userInfo, password):
+def changePassword(userInfo: 'UserInfo', password: str) -> None:
     '''Changes the password of an existing user account.
     @param user: UserInfo object specifying the user.
     @param password: New password for the user.
@@ -357,9 +318,8 @@ def changePassword(userInfo, password):
             userName
             )
 
-def passwordQuality(userName, password):
+def passwordQuality(userName: str, password: str) -> PasswordMessage:
     '''Performs sanity checks on a username/password combination.
-    Returns a member of PasswordMessage.
     '''
     if not password:
         return PasswordMessage.EMPTY
@@ -423,10 +383,10 @@ class UnknownUser:
 
 class UserInfoFactory:
     @staticmethod
-    def createUser(attributes):
+    def createUser(attributes: Mapping[str, str]) -> 'UserInfo':
         return UserInfo(attributes)
 
-class UserDB(Database):
+class UserDB(Database['UserInfo']):
     baseDir = dbDir + '/users'
     factory = UserInfoFactory()
     privilegeObject = 'u'
@@ -434,7 +394,7 @@ class UserDB(Database):
     uniqueKeys = ( 'id', )
 
     @property
-    def numActiveUsers(self):
+    def numActiveUsers(self) -> int:
         """The number of user accounts in this factory, excluding accounts
         that are no longer allowed to login.
         """
@@ -446,12 +406,12 @@ userDB = UserDB()
 class UserInfo(XMLTag, DatabaseElem):
     tagName = 'user'
 
-    def __init__(self, properties):
+    def __init__(self, properties: Mapping[str, str]):
         XMLTag.__init__(self, properties)
         DatabaseElem.__init__(self)
-        self.__roles = set()
+        self.__roles = set() # type: Union[FrozenSet[str], Set[str]]
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: str) -> Any:
         if key == 'roles':
             return tuple(
                 UIRoleNames.__members__[role.upper()]
@@ -460,15 +420,15 @@ class UserInfo(XMLTag, DatabaseElem):
         else:
             return XMLTag.__getitem__(self, key)
 
-    def _addRole(self, attributes):
+    def _addRole(self, attributes: Mapping[str, str]) -> None:
         name = attributes['name']
         assert name in roleNames
-        self.__roles.add(name)
+        cast(Set[str], self.__roles).add(name)
 
-    def _endParse(self):
+    def _endParse(self) -> None:
         self.__roles = frozenset(self.__roles)
 
-    def setRoles(self, roles):
+    def setRoles(self, roles: Iterable[str]) -> None:
         roles = frozenset(roles)
         if roles - roleNames:
             raise ValueError('Unknown role(s): ' + ', '.join(
@@ -478,27 +438,74 @@ class UserInfo(XMLTag, DatabaseElem):
             self.__roles = roles
             self._notify()
 
-    def getId(self):
+    def getId(self) -> str:
         return self['id']
 
-    def getUserName(self):
+    def getUserName(self) -> str:
         return self.getId()
 
-    def isInRole(self, role):
+    def isInRole(self, role: str) -> bool:
         return role in self.__roles
 
-    def hasPrivilege(self, priv):
+    def hasPrivilege(self, priv: str) -> bool:
         return rolesGrantPrivilege(self.__roles, priv)
 
-    def isActive(self):
+    def isActive(self) -> bool:
         '''Returns True iff this user is assigned one or more roles.
         Inactive users are not allowed to be logged in.
         '''
         return bool(self.__roles)
 
-    def _getContent(self):
+    def _getContent(self) -> Iterator[XML]:
         for role in self.__roles:
             yield xml.role(name = role)
+
+class AccessDenied(Exception):
+    pass
+
+def checkPrivilege(user: IUser, priv: str, text: str = None) -> None:
+    if not user.hasPrivilege(priv):
+        if text is None:
+            raise AccessDenied()
+        else:
+            raise AccessDenied(text)
+
+def checkPrivilegeForOwned(
+        user: IUser,
+        priv: str,
+        records: Any,
+        text: Union[None, str, Tuple[str, str]] = None
+        ) -> None:
+    '''Checks whether a user is allowed to perform an action on an owned
+    database record.
+    @param records Record or sequence of records to test for ownership.
+    @param text String to display if the user is not allowed to perform
+        the action, or a tuple of which the first element is the string to
+        display if the user is not allowed to perform the action on this
+        particular record and the second element is the string to display
+        if the user is not allowed to perform the action on any record
+        of this type.
+    '''
+    assert not priv.endswith('o'), priv
+    if user.hasPrivilege(priv):
+        # User is allowed to take action also for non-owned records.
+        return
+    ownedPriv = priv + 'o'
+    hasOwnedPriv = ownedPriv in privileges and user.hasPrivilege(ownedPriv)
+    if hasOwnedPriv:
+        # User is allowed to perform action, but only for owned records.
+        userName = user.getUserName()
+        if not iterable(records):
+            records = ( records, )
+        if all(record.getOwner() == userName for record in records):
+            return
+    # Construct error message.
+    if isinstance(text, tuple):
+        text = text[0 if hasOwnedPriv else 1]
+    if text is None:
+        raise AccessDenied()
+    else:
+        raise AccessDenied(text)
 
 adminUserName = 'admin'
 adminDefaultPassword = 'admin'
