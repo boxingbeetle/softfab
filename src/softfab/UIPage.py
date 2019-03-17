@@ -12,7 +12,7 @@ from softfab.response import Response
 from softfab.timelib import getTime
 from softfab.timeview import formatTime
 from softfab.version import version
-from softfab.xmlgen import XMLContent, XMLNode, xhtml
+from softfab.xmlgen import XML, XMLContent, XMLNode, xhtml
 
 _logoIcon = styleRoot.addIcon('SoftFabLogo')
 _shortcutIcon = styleRoot.addShortcutIcon('SoftFabIcon')
@@ -148,7 +148,7 @@ class UIPage(Responder, Generic[ProcT]):
 
     def presentError(self,
             proc: ProcT, # pylint: disable=unused-argument
-            message: str
+            message: XML
             ) -> XMLContent:
         return message
 

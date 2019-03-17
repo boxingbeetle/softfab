@@ -15,7 +15,7 @@ from softfab.pagelinks import createJobsURL
 from softfab.selectview import TagArgs
 from softfab.userlib import IUser, checkPrivilege
 from softfab.utils import pluralize
-from softfab.xmlgen import XMLContent, xhtml
+from softfab.xmlgen import XML, XMLContent, xhtml
 
 
 class FastConfigTable(SimpleConfigTable):
@@ -126,7 +126,7 @@ class FastExecute_GET(FabPage['FastExecute_GET.Processor', 'FastExecute_GET.Argu
                 self.backToReferer(proc.req)
                 )
 
-    def presentError(self, proc: Processor, message: str) -> XMLContent:
+    def presentError(self, proc: Processor, message: XML) -> XMLContent:
         yield message
         yield self.backToReferer(proc.req)
 

@@ -7,7 +7,7 @@ from softfab.pagelinks import AnonGuestArgs
 from softfab.projectlib import project
 from softfab.userlib import IUser, checkPrivilege
 from softfab.userview import presentAnonGuestSetting
-from softfab.xmlgen import XMLContent
+from softfab.xmlgen import XML, XMLContent
 
 
 class AnonGuestBase(FabPage[ProcT, ArgsT]):
@@ -48,6 +48,6 @@ class AnonGuest_POST(AnonGuestBase['AnonGuest_POST.Processor',
     def presentContent(self, proc: Processor) -> XMLContent:
         assert False
 
-    def presentError(self, proc: Processor, message: str) -> XMLContent:
+    def presentError(self, proc: Processor, message: XML) -> XMLContent:
         yield message
         yield self.backToParent(proc.req)

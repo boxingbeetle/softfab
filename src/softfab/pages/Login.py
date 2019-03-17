@@ -18,7 +18,7 @@ from softfab.userlib import (
 )
 from softfab.userview import LoginPassArgs, PasswordMsgArgs
 from softfab.webgui import pageURL
-from softfab.xmlgen import XMLContent, xhtml
+from softfab.xmlgen import XML, XMLContent, xhtml
 
 
 class LoginTable(FormTable):
@@ -145,6 +145,6 @@ class Login_POST(LoginBase['Login_POST.Processor', 'Login_POST.Arguments']):
                     url = req.args.url
                     raise Redirect('Home' if url is None else url)
 
-    def presentError(self, proc: Processor, message: str) -> XMLContent:
+    def presentError(self, proc: Processor, message: XML) -> XMLContent:
         yield xhtml.p(class_ = 'notice')[ message ]
         yield self.presentContent(proc)

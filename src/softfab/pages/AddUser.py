@@ -21,7 +21,7 @@ from softfab.userlib import (
 from softfab.userview import (
     LoginPassArgs, UIRoleNames, passwordStr, uiRoleToSet
 )
-from softfab.xmlgen import XMLContent, xhtml
+from softfab.xmlgen import XML, XMLContent, xhtml
 
 Actions = Enum('Actions', 'ADD CANCEL')
 
@@ -144,7 +144,7 @@ class AddUser_POST(AddUserBase['AddUser_POST.Processor',
             ]
         yield self.presentForm(proc, LoginPassArgs.subset(proc.args))
 
-    def presentError(self, proc: Processor, message: str) -> XMLContent:
+    def presentError(self, proc: Processor, message: XML) -> XMLContent:
         yield xhtml.p(class_ = 'notice')[ message ]
         yield self.presentForm(proc, proc.args)
 

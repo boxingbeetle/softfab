@@ -17,7 +17,7 @@ from softfab.userlib import (
 )
 from softfab.userview import LoginPassArgs, PasswordMsgArgs, passwordStr
 from softfab.webgui import pageURL
-from softfab.xmlgen import XMLContent, xhtml
+from softfab.xmlgen import XML, XMLContent, xhtml
 
 
 def presentForm(proc):
@@ -108,7 +108,7 @@ class ChangePassword_GET(FabPage['ChangePassword_GET.Processor', 'ChangePassword
     def presentContent(self, proc: Processor) -> XMLContent:
         return presentForm(proc)
 
-    def presentError(self, proc: Processor, message: str) -> XMLContent:
+    def presentError(self, proc: Processor, message: XML) -> XMLContent:
         yield xhtml.p(class_ = 'notice')[ message ]
         if proc.retry:
             yield presentForm(proc)
@@ -206,7 +206,7 @@ class ChangePassword_POST(FabPage['ChangePassword_POST.Processor', 'ChangePasswo
     def getCancelURL(self, req):
         return req.args.refererURL or self.getParentURL(req)
 
-    def presentError(self, proc: Processor, message: str) -> XMLContent:
+    def presentError(self, proc: Processor, message: XML) -> XMLContent:
         yield xhtml.p(class_ = 'notice')[ message ]
         if proc.retry:
             yield presentForm(proc)

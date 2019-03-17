@@ -19,7 +19,7 @@ from softfab.restypelib import resTypeDB, taskRunnerResourceTypeName
 from softfab.taskrunnerlib import taskRunnerDB
 from softfab.userlib import IUser, checkPrivilege
 from softfab.webgui import WidgetT, docLink, header, pageLink, pageURL, row
-from softfab.xmlgen import XMLContent, xhtml
+from softfab.xmlgen import XML, XMLContent, xhtml
 
 
 class NameColumn(DataColumn):
@@ -221,6 +221,6 @@ class ResourceIndex_POST(FabPage['ResourceIndex_POST.Processor', 'ResourceIndex_
     def presentContent(self, proc: Processor) -> XMLContent:
         assert False
 
-    def presentError(self, proc: Processor, message: str) -> XMLContent:
+    def presentError(self, proc: Processor, message: XML) -> XMLContent:
         yield message
         yield self.backToSelf()

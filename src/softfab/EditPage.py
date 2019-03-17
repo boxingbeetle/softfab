@@ -14,7 +14,7 @@ from softfab.pageargs import EnumArg, PageArgs, StrArg
 from softfab.userlib import IUser, checkPrivilege, checkPrivilegeForOwned
 from softfab.utils import abstract
 from softfab.webgui import preserveSpaces, rowManagerScript
-from softfab.xmlgen import XMLContent, xhtml
+from softfab.xmlgen import XML, XMLContent, xhtml
 
 
 class AbstractPhase:
@@ -387,7 +387,7 @@ class EditPage(FabPage['EditPage.Processor', 'EditPage.Arguments'], ABC):
     def presentContent(self, proc: Processor) -> XMLContent:
         return proc.phase.presentContent(proc)
 
-    def presentError(self, proc: Processor, message: str) -> XMLContent:
+    def presentError(self, proc: Processor, message: XML) -> XMLContent:
         yield message
         if proc.showBackButton:
             yield makeForm(args = proc.args)[

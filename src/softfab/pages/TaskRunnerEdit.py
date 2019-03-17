@@ -9,7 +9,7 @@ from softfab.pageargs import EnumArg, PageArgs, StrArg
 from softfab.resourceview import CapabilitiesPanel, CommentPanel
 from softfab.taskrunnerlib import taskRunnerDB
 from softfab.userlib import IUser, checkPrivilege
-from softfab.xmlgen import XMLContent, xhtml
+from softfab.xmlgen import XML, XMLContent, xhtml
 
 Actions = Enum('Actions', 'SAVE CANCEL')
 
@@ -58,7 +58,7 @@ class TaskRunnerEdit_GET(FabPage['TaskRunnerEdit_GET.Processor', 'TaskRunnerEdit
             xhtml.p[ actionButtons(Actions) ]
             ].present(proc=proc)
 
-    def presentError(self, proc: Processor, message: str) -> XMLContent:
+    def presentError(self, proc: Processor, message: XML) -> XMLContent:
         yield message
         yield self.backToParent(proc.req)
 

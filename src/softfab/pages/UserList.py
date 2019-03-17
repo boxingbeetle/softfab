@@ -19,7 +19,7 @@ from softfab.userlib import (
 )
 from softfab.userview import activeRole, presentAnonGuestSetting, uiRoleToSet
 from softfab.webgui import pageLink, pageURL, script
-from softfab.xmlgen import XMLContent, xhtml
+from softfab.xmlgen import XML, XMLContent, xhtml
 
 
 class NameColumn(DataColumn):
@@ -235,7 +235,7 @@ class UserList_POST(FabPage['UserList_POST.Processor', 'UserList_POST.Arguments'
     def presentContent(self, proc: Processor) -> XMLContent:
         assert False
 
-    def presentError(self, proc: Processor, message: str) -> XMLContent:
+    def presentError(self, proc: Processor, message: XML) -> XMLContent:
         yield message
         yield xhtml.p[
             pageLink('UserList', UserList_GET.Arguments.subset(proc.args))[

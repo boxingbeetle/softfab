@@ -12,7 +12,7 @@ from softfab.pageargs import EnumArg, PageArgs, StrArg
 from softfab.userlib import IUser, checkPrivilegeForOwned
 from softfab.utils import abstract, pluralize
 from softfab.webgui import unorderedList
-from softfab.xmlgen import XMLContent, xhtml
+from softfab.xmlgen import XML, XMLContent, xhtml
 
 
 class RecordInUseError(Exception):
@@ -103,7 +103,7 @@ class RecordDelete_GET(FabPage['RecordDelete_GET.Processor',
             xhtml.p[ actionButtons(Actions) ]
             ].present(proc=proc)
 
-    def presentError(self, proc: Processor, message: str) -> XMLContent:
+    def presentError(self, proc: Processor, message: XML) -> XMLContent:
         yield message
         yield self.backToReferer(proc.req)
 
