@@ -3,8 +3,8 @@
 from abc import ABC
 from collections import defaultdict
 from typing import (
-    TYPE_CHECKING, ClassVar, DefaultDict, Dict, Generic, Iterator, Optional,
-    Set, Type, TypeVar
+    TYPE_CHECKING, Any, ClassVar, DefaultDict, Dict, Generic, Iterator,
+    Optional, Set, Type, TypeVar, cast
 )
 import logging
 
@@ -83,13 +83,13 @@ class PageProcessor(Generic[ArgsT]):
     error = None # page-specific error
     processingError = None # type: Optional[Exception]
     """Exception caught during processing."""
-    # set by parseAndProcess():
-    page = None # type: FabResource
-    args = None # type: ArgsT
 
-    def __init__(self, req):
+    def __init__(self, req: Any):
         self.req = req
         self.__tables = {} # type: Dict[int, '_TableData']
+        # set by parseAndProcess():
+        self.args = cast(ArgsT, None)
+        self.page = cast(FabResource[ArgsT, 'PageProcessor[ArgsT]'], None)
 
     def getTableData(self, table: DataTable) -> '_TableData':
         return self.__tables[id(table)]
@@ -141,7 +141,7 @@ class PageProcessor(Generic[ArgsT]):
         '''
         return pageURL('%s/%s' % ( self.page.name, subPath ), self.args)
 
-ProcT = TypeVar('ProcT', bound=PageProcessor[PageArgs])
+ProcT = TypeVar('ProcT', bound=PageProcessor)
 
 class Responder:
     '''Abstract base class for responders; responders are responsible for
