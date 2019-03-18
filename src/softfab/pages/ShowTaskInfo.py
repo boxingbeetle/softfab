@@ -21,7 +21,7 @@ from softfab.taskdefview import formatTimeout
 from softfab.taskrunnerlib import taskRunnerDB
 from softfab.tasktables import JobTaskRunsTable
 from softfab.userlib import IUser, checkPrivilege
-from softfab.webgui import PropertiesTable, WidgetT
+from softfab.webgui import PropertiesTable, Widget
 from softfab.xmlgen import XMLContent, txt, xhtml
 
 taskParametersTable = ParametersTable('task')
@@ -184,10 +184,10 @@ class ShowTaskInfo_GET(FabPage['ShowTaskInfo_GET.Processor', 'ShowTaskInfo_GET.A
     def checkAccess(self, user: IUser) -> None:
         checkPrivilege(user, 'j/a')
 
-    def iterWidgets(self, proc: Processor) -> Iterator[WidgetT]:
-        yield SelfTaskRunsTable
-        yield InputTable
-        yield OutputTable
+    def iterWidgets(self, proc: Processor) -> Iterator[Widget]:
+        yield SelfTaskRunsTable.instance
+        yield InputTable.instance
+        yield OutputTable.instance
 
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield SelfTaskRunsTable.instance

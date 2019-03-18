@@ -9,7 +9,7 @@ from softfab.pageargs import IntArg, PageArgs, SortArg
 from softfab.shadowlib import shadowDB
 from softfab.shadowview import ShadowTable, trimPolicy
 from softfab.userlib import IUser, checkPrivilege
-from softfab.webgui import WidgetT
+from softfab.webgui import Widget
 from softfab.xmlgen import XMLContent
 
 
@@ -34,8 +34,8 @@ class ShadowQueue_GET(FabPage['ShadowQueue_GET.Processor', 'ShadowQueue_GET.Argu
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield ShadowTable.instance
 
-    def iterWidgets(self, proc: Processor) -> Iterator[WidgetT]:
-        yield ShadowTable
+    def iterWidgets(self, proc: Processor) -> Iterator[Widget]:
+        yield ShadowTable.instance
 
     def presentContent(self, proc: Processor) -> XMLContent:
         yield trimPolicy

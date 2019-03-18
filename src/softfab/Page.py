@@ -15,7 +15,7 @@ from softfab.datawidgets import DataTable
 from softfab.pageargs import ArgsT, PageArgs
 from softfab.userlib import IUser
 from softfab.utils import SharedInstance, abstract
-from softfab.webgui import WidgetT, pageURL
+from softfab.webgui import Widget, pageURL
 from softfab.xmlgen import XML
 
 if TYPE_CHECKING:
@@ -253,7 +253,7 @@ class FabResource(ABC, Generic[ArgsT, ProcT]):
 
     def iterWidgets(self,
                     proc: ProcT # pylint: disable=unused-argument
-                    ) -> Iterator[WidgetT]:
+                    ) -> Iterator[Widget]:
         '''Iterates through the widgets in the presentation of this resource.
         Currently only auto-updating widgets must be listed here, all other
         widgets are ignored for now.

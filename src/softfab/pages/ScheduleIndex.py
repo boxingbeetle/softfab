@@ -16,7 +16,7 @@ from softfab.scheduleview import (
 )
 from softfab.userlib import IUser, checkPrivilege, checkPrivilegeForOwned
 from softfab.userview import OwnerColumn
-from softfab.webgui import WidgetT, pageLink, pageURL
+from softfab.webgui import Widget, pageLink, pageURL
 from softfab.xmlgen import XMLContent, xhtml
 
 
@@ -106,8 +106,8 @@ class ScheduleIndex_GET(FabPage['ScheduleIndex_GET.Processor', 'ScheduleIndex_GE
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield ScheduleTable.instance
 
-    def iterWidgets(self, proc: Processor) -> Iterator[WidgetT]:
-        yield ScheduleTable
+    def iterWidgets(self, proc: Processor) -> Iterator[Widget]:
+        yield ScheduleTable.instance
 
     def presentContent(self, proc: Processor) -> XMLContent:
         yield makeForm(args=proc.args)[

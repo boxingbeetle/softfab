@@ -15,7 +15,7 @@ from softfab.taskrunnerlib import taskRunnerDB
 from softfab.tasktables import JobTaskRunsTable
 from softfab.userlib import IUser, checkPrivilege
 from softfab.utils import pluralize
-from softfab.webgui import Table, WidgetT, cell, pageLink
+from softfab.webgui import Table, Widget, cell, pageLink
 from softfab.xmlgen import XMLContent, txt, xhtml
 
 
@@ -68,10 +68,10 @@ class ShowReport_GET(FabPage['ShowReport_GET.Processor', 'ShowReport_GET.Argumen
         yield SelfJobsTable.instance
         yield TaskRunsTable.instance
 
-    def iterWidgets(self, proc: Processor) -> Iterator[WidgetT]:
-        yield SelfJobsTable
-        yield TaskRunsTable
-        yield OutputTable
+    def iterWidgets(self, proc: Processor) -> Iterator[Widget]:
+        yield SelfJobsTable.instance
+        yield TaskRunsTable.instance
+        yield OutputTable.instance
 
     def presentContent(self, proc: Processor) -> XMLContent:
         jobId = proc.args.jobId

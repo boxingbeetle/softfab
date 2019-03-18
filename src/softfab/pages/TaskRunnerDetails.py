@@ -13,7 +13,7 @@ from softfab.restypelib import taskRunnerResourceTypeName
 from softfab.taskrunnerlib import taskRunnerDB
 from softfab.timeview import formatDuration, formatTime
 from softfab.userlib import IUser, checkPrivilege
-from softfab.webgui import Column, Table, WidgetT, pageLink, row
+from softfab.webgui import Column, Table, Widget, pageLink, row
 from softfab.xmlgen import XMLContent, xhtml
 
 
@@ -34,8 +34,8 @@ class TaskRunnerDetails_GET(FabPage['TaskRunnerDetails_GET.Processor', 'TaskRunn
     def checkAccess(self, user: IUser) -> None:
         checkPrivilege(user, 'tr/a')
 
-    def iterWidgets(self, proc: Processor) -> Iterator[WidgetT]:
-        yield DetailsTable
+    def iterWidgets(self, proc: Processor) -> Iterator[Widget]:
+        yield DetailsTable.instance
 
     def presentContent(self, proc: Processor) -> XMLContent:
         taskRunner = proc.taskRunner

@@ -18,7 +18,7 @@ from softfab.resourceview import getResourceStatus, presentCapabilities
 from softfab.restypelib import resTypeDB, taskRunnerResourceTypeName
 from softfab.taskrunnerlib import taskRunnerDB
 from softfab.userlib import IUser, checkPrivilege
-from softfab.webgui import WidgetT, docLink, header, pageLink, pageURL, row
+from softfab.webgui import Widget, docLink, header, pageLink, pageURL, row
 from softfab.xmlgen import XML, XMLContent, xhtml
 
 
@@ -154,8 +154,8 @@ class ResourceIndex_GET(FabPage['ResourceIndex_GET.Processor', 'ResourceIndex_GE
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield ResourcesTable.instance
 
-    def iterWidgets(self, proc: Processor) -> Iterator[WidgetT]:
-        yield ResourcesTable
+    def iterWidgets(self, proc: Processor) -> Iterator[Widget]:
+        yield ResourcesTable.instance
 
     def presentContent(self, proc: Processor) -> XMLContent:
         yield ResourcesTable.instance.present(proc=proc)

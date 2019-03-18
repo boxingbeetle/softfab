@@ -297,8 +297,6 @@ class Widget(XMLPresentable):
         '''
         raise NotImplementedError
 
-WidgetT = Union[Widget, Type[Widget]]
-
 class Column:
     instance = SharedInstance() # type: ClassVar[SharedInstance]
 

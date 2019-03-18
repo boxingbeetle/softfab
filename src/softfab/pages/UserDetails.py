@@ -13,7 +13,7 @@ from softfab.pagelinks import UserIdArgs
 from softfab.querylib import KeySorter, ValueFilter, runQuery
 from softfab.userlib import IUser, userDB
 from softfab.userview import activeRole
-from softfab.webgui import PropertiesTable, WidgetT, pageLink
+from softfab.webgui import PropertiesTable, Widget, pageLink
 from softfab.xmlgen import XMLContent, xhtml
 
 
@@ -57,8 +57,8 @@ class UserDetails_GET(FabPage['UserDetails_GET.Processor', 'UserDetails_GET.Argu
     def checkAccess(self, user: IUser) -> None:
         pass
 
-    def iterWidgets(self, proc: Processor) -> Iterator[WidgetT]:
-        yield OwnedJobsTable
+    def iterWidgets(self, proc: Processor) -> Iterator[Widget]:
+        yield OwnedJobsTable.instance
 
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield OwnedJobsTable.instance

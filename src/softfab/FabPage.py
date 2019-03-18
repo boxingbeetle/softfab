@@ -151,8 +151,6 @@ class FabPage(UIPage[ProcT], FabResource[ArgsT, ProcT], ABC):
             return self
         for widget in self.iterWidgets(proc):
             if widget.widgetId == path:
-                if isinstance(widget, type):
-                    widget = widget.instance
                 return _WidgetResponder(self, widget)
         raise KeyError('Page does not contain a widget named "%s"' % path)
 
