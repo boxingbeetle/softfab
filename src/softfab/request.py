@@ -13,8 +13,8 @@ from softfab.config import rootURL
 from softfab.pageargs import ArgsT
 from softfab.projectlib import project
 from softfab.useragent import UserAgent
-from softfab.userlib import AnonGuestUser, IUser, UnknownUser, privileges
-from softfab.utils import cachedProperty, iterable
+from softfab.userlib import AnonGuestUser, IUser, UnknownUser
+from softfab.utils import cachedProperty
 
 # The 'sameSite' parameter was added in Twisted 18.9.0.
 sameSiteSupport = 'sameSite' in signature(TwistedRequest.addCookie).parameters

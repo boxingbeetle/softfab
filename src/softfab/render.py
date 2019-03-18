@@ -21,7 +21,7 @@ from softfab.response import Response
 from softfab.userlib import AccessDenied
 from softfab.utils import abstract
 from softfab.webgui import docLink
-from softfab.xmlgen import XML, XMLContent, xhtml
+from softfab.xmlgen import XMLContent, xhtml
 
 # Profiling options:
 
