@@ -60,7 +60,8 @@ class PresentableError(Exception):
     calling presentContent().
     '''
 
-    def __init__(self, message: XML):
+    def __init__(self, message: XML): # pylint: disable=useless-super-delegation
+        # https://github.com/PyCQA/pylint/issues/2270
         super().__init__(message)
 
 class InvalidRequest(Exception):
