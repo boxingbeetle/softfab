@@ -88,7 +88,7 @@ class UIPage(Responder, Generic[ProcT]):
         '''
         return iter(())
 
-    def errorResponder(self, ex: Exception) -> Responder:
+    def errorResponder(self, ex: Exception, proc: PageProcessor) -> Responder:
         return _ErrorResponder(self, ex)
 
     def __formatError(self, ex: Exception) -> Iterator[XMLNode]:

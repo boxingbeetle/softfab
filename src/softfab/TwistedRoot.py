@@ -302,7 +302,7 @@ class ResourceNotFound(FabResource[FabResource.Arguments, PageProcessor]):
     def getResponder(self, path, proc):
         return NotFoundPage(proc.req)
 
-    def errorResponder(self, ex: Exception) -> Responder:
+    def errorResponder(self, ex: Exception, proc: PageProcessor) -> Responder:
         # No processing errors can happen because we use the default processor
         # which does nothing.
         assert False, ex

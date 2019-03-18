@@ -208,7 +208,7 @@ def parseAndProcess(
             )
     except Exception as ex:
         logPageException(req, 'Unexpected exception processing request')
-        responder = page.errorResponder(ex)
+        responder = page.errorResponder(ex, proc)
     else:
         try:
             responder = page.getResponder(req.getSubPath(), proc)

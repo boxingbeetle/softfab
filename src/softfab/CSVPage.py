@@ -6,7 +6,7 @@
 from enum import Enum
 
 from softfab.ControlPage import plainTextErrorResponder
-from softfab.Page import FabResource, ProcT, Responder
+from softfab.Page import FabResource, PageProcessor, ProcT, Responder
 from softfab.authentication import LoginAuthPage
 from softfab.pageargs import EnumArg, PageArgs
 from softfab.webgui import pageLink
@@ -30,7 +30,7 @@ class CSVPage(FabResource['CSVPage.Arguments', ProcT], Responder):
     class Arguments(PageArgs):
         sep = EnumArg(Separator, Separator.COMMA)
 
-    def errorResponder(self, ex: Exception) -> Responder:
+    def errorResponder(self, ex: Exception, proc: PageProcessor) -> Responder:
         return plainTextErrorResponder
 
     def respond(self, response, proc):

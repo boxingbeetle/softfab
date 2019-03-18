@@ -2,7 +2,9 @@
 
 from typing import ClassVar, Type
 
-from softfab.Page import Authenticator, FabResource, ProcT, Responder
+from softfab.Page import (
+    Authenticator, FabResource, PageProcessor, ProcT, Responder
+)
 from softfab.authentication import HTTPAuthPage
 from softfab.pageargs import ArgsT
 
@@ -30,7 +32,7 @@ class ControlPage(FabResource[ArgsT, ProcT], Responder):
     def getContentType(self, proc): # pylint: disable=unused-argument
         return self.contentType
 
-    def errorResponder(self, ex: Exception) -> Responder:
+    def errorResponder(self, ex: Exception, proc: PageProcessor) -> Responder:
         return plainTextErrorResponder
 
     def respond(self, response, proc):
