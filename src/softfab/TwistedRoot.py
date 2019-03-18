@@ -3,7 +3,10 @@
 from functools import partial
 from importlib import import_module
 from inspect import getmodulename
-from types import GeneratorType
+from types import GeneratorType, ModuleType
+from typing import (
+    Callable, Dict, Generator, Iterator, Mapping, Type, Union, cast
+)
 import logging
 
 from twisted.cred.error import LoginFailed
@@ -12,6 +15,7 @@ from twisted.internet.defer import Deferred, inlineCallbacks
 from twisted.internet.error import ConnectionLost
 from twisted.python import log
 from twisted.python.failure import Failure
+from twisted.web.http import Request as TwistedRequest
 from twisted.web.resource import Resource
 from twisted.web.server import NOT_DONE_YET
 import importlib_resources
@@ -36,12 +40,15 @@ from softfab.userlib import IUser, UnknownUser
 startupLogger = logging.getLogger('ControlCenter.startup')
 
 class ChunkCaller:
-    def __init__(self, gen, deferred):
+    def __init__(self,
+            gen: Iterator[Union[Generator, Callable[[], None], None]],
+            deferred: Deferred
+            ):
         self.__gen = gen
         self.__deferred = deferred
         self.scheduleNext()
 
-    def run(self):
+    def run(self) -> None:
         try:
             ret = next(self.__gen)
         except StopIteration:
@@ -71,10 +78,10 @@ class ChunkCaller:
                     return
                 self.scheduleNext()
 
-    def scheduleNext(self, _ = None):
+    def scheduleNext(self, _: object = None) -> None:
         reactor.callLater(0, self.run)
 
-def callInChunks(gen):
+def callInChunks(gen: Generator) -> Deferred:
     '''Calls a generator until it ends and gives control back to the reactor
     inbetween.
     Can be used to split a long-running operation in chunks without blocking
@@ -92,10 +99,10 @@ def callInChunks(gen):
 class DatabaseLoader:
     recordChunks = 100
 
-    def __init__(self, root):
+    def __init__(self, root: 'SoftFabRoot'):
         self.root = root
 
-    def process(self):
+    def process(self) -> Iterator[None]:
         for db in iterDatabasesToPreload():
             description = db.description
             failedRecordCount = 0
@@ -138,12 +145,12 @@ class DatabaseLoader:
 
 class PageLoader:
 
-    def __init__(self, root):
+    def __init__(self, root: 'SoftFabRoot'):
         self.root = root
 
-    def __addPage(self, module, pageName):
+    def __addPage(self, module: ModuleType, pageName: str) -> None:
         pageClasses = tuple(
-            getattr(module, name)
+            cast(Type[FabResource], getattr(module, name))
             for name in dir(module)
             if name.partition('_')[0] == pageName
             )
@@ -154,7 +161,7 @@ class PageLoader:
                 )
             return
 
-        pagesByMethod = {}
+        pagesByMethod = {} # type: Dict[str, FabResource]
         name = None
         root = self.root
         for pageClass in pageClasses:
@@ -190,15 +197,16 @@ class PageLoader:
                 assert method not in pagesByMethod
                 pagesByMethod[method] = page
                 if base == 'Login':
-                    page.secureCookie = root.secureCookie
+                    setattr(page, 'secureCookie', root.secureCookie)
             if name is None:
                 name = base
             else:
                 assert name == base
+        assert name is not None
         pageResource = PageResource.forMethods(pagesByMethod)
         self.root.putChild(name.encode(), pageResource)
 
-    def process(self):
+    def process(self) -> None:
         startupMessages.addMessage('Registering pages')
         pagesPackage = 'softfab.pages'
         for fileName in importlib_resources.contents(pagesPackage):
@@ -221,13 +229,15 @@ class PageResource(Resource):
     isLeaf = True
 
     @classmethod
-    def anyMethod(cls, page):
+    def anyMethod(cls, page: FabResource) -> 'PageResource':
         instance = cls()
         setattr(instance, 'render', partial(renderAuthenticated, page))
         return instance
 
     @classmethod
-    def forMethods(cls, pagesByMethod):
+    def forMethods(cls,
+            pagesByMethod: Mapping[str, FabResource]
+            ) -> 'PageResource':
         instance = cls()
         for method, page in pagesByMethod.items():
             setattr(
@@ -236,10 +246,10 @@ class PageResource(Resource):
                 )
         return instance
 
-def renderAuthenticated(page, request):
-    def done(result): # pylint: disable=unused-argument
+def renderAuthenticated(page: FabResource, request: TwistedRequest) -> object:
+    def done(result: object) -> None: # pylint: disable=unused-argument
         request.finish()
-    def failed(fail):
+    def failed(fail: Failure) -> None:
         request.processingFailed(fail)
         # Returning None (implicitly) because the error is handled.
         # Otherwise, it will be logged twice.
@@ -248,17 +258,19 @@ def renderAuthenticated(page, request):
     return NOT_DONE_YET
 
 @inlineCallbacks
-def renderAsync(page, request):
+def renderAsync(
+        page: FabResource, request: TwistedRequest
+        ) -> Iterator[Deferred]:
     try:
         authenticator = page.authenticator.instance
         try:
             user = yield authenticator.authenticate(request)
         except LoginFailed as ex:
-            req = Request(request, UnknownUser())
+            req = Request(request, UnknownUser()) # type: Request
             responder = proc = authenticator.askForAuthentication(req)
         else:
-            req = Request(request, user)
-            responder, proc = yield parseAndProcess(page, req)
+            req = Request(request, cast(IUser, user))
+            responder, proc = yield parseAndProcess(page, req) # type: ignore
     except Redirect as ex:
         req = Request(request, UnknownUser())
         responder = proc = Redirector(req, ex.url)
@@ -300,7 +312,9 @@ stylePrefix = styleRoot.urlPrefix.encode()
 
 class SoftFabRoot(Resource):
 
-    def __init__(self, debugSupport, anonOperator, secureCookie):
+    def __init__(self,
+            debugSupport: bool, anonOperator: bool, secureCookie: bool
+            ):
         """Creates a Control Center root resource.
 
         Parameters:
@@ -331,18 +345,20 @@ class SoftFabRoot(Resource):
         d.addCallback(self.startupComplete)
         d.addErrback(self.startupFailed)
 
-    def startup(self):
+    def startup(self) -> Generator:
         yield DatabaseLoader(self).process()
         yield startShadowRunCleanup
         yield PageLoader(self).process
         # Start schedule processing.
         yield ScheduleManager().trigger
 
-    def startupComplete(self, result): # pylint: disable=unused-argument
+    def startupComplete(self,
+            result: None # pylint: disable=unused-argument
+            ) -> None:
         # Serve a 404 page for non-existing URLs.
         self.defaultPage = PageResource.anyMethod(ResourceNotFound())
 
-    def startupFailed(self, failure):
+    def startupFailed(self, failure: Failure) -> None:
         startupLogger.error(
             'Error during startup: %s', failure.getTraceback()
             )
@@ -352,7 +368,7 @@ class SoftFabRoot(Resource):
         # piece of functionality would block the entire SoftFab.
         self.startupComplete(None)
 
-    def getChild(self, path, request):
+    def getChild(self, path: bytes, request: TwistedRequest) -> Resource:
         # This method is called to dynamically generate a Resource;
         # if a Resource is statically registered this call will not happen.
         if path.startswith(stylePrefix):
