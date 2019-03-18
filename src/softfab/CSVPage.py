@@ -4,6 +4,7 @@
 '''
 
 from enum import Enum
+from typing import Generic, Optional
 
 from softfab.ControlPage import plainTextErrorResponder
 from softfab.Page import FabResource, PageProcessor, ProcT, Responder
@@ -24,21 +25,36 @@ class Separator(Enum):
     SEMICOLON = ';'
     TAB = '\t'
 
-class CSVPage(FabResource['CSVPage.Arguments', ProcT], Responder):
+class CSVResponder(Responder, Generic[ProcT]):
+
+    def __init__(self, page: 'CSVPage[ProcT]', proc: ProcT):
+        super().__init__()
+        self.page = page
+        self.proc = proc
+
+    def respond(self, response):
+        page = self.page
+        proc = self.proc
+        response.setHeader('Content-Type', 'text/x-csv; charset=UTF-8')
+        response.setFileName(page.getFileName(proc))
+        sepChar = proc.args.sep.value
+        for row in page.iterRows(proc):
+            response.write(sepChar.join(row), '\r\n')
+
+class CSVPage(FabResource['CSVPage.Arguments', ProcT]):
     authenticator = LoginAuthPage
 
     class Arguments(PageArgs):
         sep = EnumArg(Separator, Separator.COMMA)
 
+    def getResponder(self, path: Optional[str], proc: ProcT) -> Responder:
+        if path is None:
+            return CSVResponder(self, proc)
+        else:
+            raise KeyError('Resource does not contain subitems')
+
     def errorResponder(self, ex: Exception, proc: PageProcessor) -> Responder:
         return plainTextErrorResponder
-
-    def respond(self, response, proc):
-        response.setHeader('Content-Type', 'text/x-csv; charset=UTF-8')
-        response.setFileName(self.getFileName(proc))
-        sepChar = proc.args.sep.value
-        for row in self.iterRows(proc):
-            response.write(sepChar.join(row), '\r\n')
 
     def getFileName(self, proc):
         raise NotImplementedError

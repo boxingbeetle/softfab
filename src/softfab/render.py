@@ -14,7 +14,7 @@ from softfab.Page import (
     FabResource, InvalidRequest, PageProcessor, PresentableError, Redirect,
     Redirector, Responder, logPageException
 )
-from softfab.UIPage import UIPage
+from softfab.UIPage import UIPage, UIResponder
 from softfab.pageargs import ArgsCorrected, ArgsInvalid, ArgsT, Query, dynamic
 from softfab.request import Request
 from softfab.response import Response
@@ -179,8 +179,8 @@ def parseAndProcess(
                 str(ex) or 'access this page'
                 )
             )
-        responder = forbiddenPage # type: Responder
         proc = forbiddenPage
+        responder = UIResponder(forbiddenPage, proc) # type: Responder
     except ArgsCorrected as ex:
         subPath = req.getSubPath()
         query = Query.fromArgs(ex.correctedArgs)
@@ -190,7 +190,7 @@ def parseAndProcess(
             url = '%s/%s?%s' % (page.name, subPath, query.toURL())
         responder = proc = Redirector(req, url)
     except ArgsInvalid as ex:
-        responder = proc = BadRequestPage(
+        badRequestPage = BadRequestPage(
             req,
             str(ex),
             (    xhtml.p[ 'Invalid arguments:' ],
@@ -200,8 +200,10 @@ def parseAndProcess(
                     )]
                 )
             )
+        proc = badRequestPage
+        responder = UIResponder(badRequestPage, proc)
     except InvalidRequest as ex:
-        responder = proc = BadRequestPage(
+        badRequestPage = BadRequestPage(
             req,
             str(ex),
             xhtml.p[ 'Invalid request: ', str(ex) ]
@@ -213,7 +215,7 @@ def parseAndProcess(
         try:
             responder = page.getResponder(req.getSubPath(), proc)
         except KeyError:
-            responder = NotFoundPage(req)
+            responder = UIResponder(NotFoundPage(req), proc)
 
     req.processEnd()
     return (responder, proc)
@@ -232,10 +234,10 @@ def present(
         start = time()
     if _profileRender:
         profile = Profile()
-        presenter = profile.runcall(responder.respond, response, proc)
+        presenter = profile.runcall(responder.respond, response)
         profile.dump_stats('request.prof')
     else:
-        presenter = responder.respond(response, proc)
+        presenter = responder.respond(response)
     if _timeRender:
         end = time()
         print('Responding took %1.3f seconds' % (end - start))

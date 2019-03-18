@@ -4,11 +4,12 @@
 Builds the execution graphs by using AGraph from the pygraphviz module.
 '''
 
+from typing import Optional
 from xml.etree import ElementTree
 import logging
 import re
 
-from softfab.Page import Responder
+from softfab.Page import PageProcessor, Responder
 from softfab.frameworklib import Framework, frameworkDB
 from softfab.graphrefs import Format, iterGraphFormats
 from softfab.pagelinks import (
@@ -320,7 +321,7 @@ class _GraphResponder(Responder):
         self.__fileName = fileName
         self.__format = fmt
 
-    def respond(self, response, proc):
+    def respond(self, response):
         fmt = self.__format
         response.setHeader('Content-Type', fmt.mediaType)
         response.setFileName('%s.%s' % ( self.__fileName, fmt.ext ))
@@ -329,9 +330,12 @@ class _GraphResponder(Responder):
 class GraphPageMixin:
     __reGraphPath = re.compile(r'(\w+)\.(\w+)')
 
-    def getResponder(self, path, proc):
+    def getResponder(self,
+                     path: Optional[str],
+                     proc: PageProcessor
+                     ) -> Responder:
         if path is None:
-            return super().getResponder(path, proc)
+            return super().getResponder(path, proc) # type: ignore
         match = self.__reGraphPath.match(path)
         if match is None:
             raise KeyError("Subitem path is not of the form 'file.ext'")

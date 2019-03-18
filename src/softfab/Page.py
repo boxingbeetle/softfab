@@ -155,8 +155,9 @@ class Responder:
     '''Abstract base class for responders; responders are responsible for
     generating a response to an HTTP request.
     '''
-    def respond(self, response, proc):
-        '''Respond to a request using the given processing result.
+
+    def respond(self, response):
+        '''Respond to a request.
         The output can either be written directly to the `response`
         object, or a delayed presenter can be returned as a Deferred
         or IProducer.
@@ -170,8 +171,7 @@ class Redirector(PageProcessor, Responder):
         Responder.__init__(self)
         self.__url = url
 
-    def respond(self, response, proc):
-        assert proc is self
+    def respond(self, response):
         response.sendRedirect(self.__url)
 
 class HTTPAuthenticator(PageProcessor, Responder):
@@ -181,8 +181,7 @@ class HTTPAuthenticator(PageProcessor, Responder):
         Responder.__init__(self)
         self.__realm = realm
 
-    def respond(self, response, proc):
-        assert proc is self
+    def respond(self, response):
         response.setStatus(401)
         response.setHeader(
             'WWW-Authenticate', 'Basic realm="%s"' % self.__realm
@@ -230,20 +229,14 @@ class FabResource(ABC, Generic[ArgsT, ProcT]):
         '''
         raise NotImplementedError
 
-    def getResponder(self,
-                     path: Optional[str],
-                     proc: PageProcessor # pylint: disable=unused-argument
-                     ) -> Responder:
+    def getResponder(self, path: Optional[str], proc: ProcT) -> Responder:
         '''Returns a Responder that can present the given path within this
         resource. If the given path does not point to an item within this
         resource, KeyError is raised.
         The default implementation returns this resource itself when the path
         is None and raises KeyError otherwise.
         '''
-        if path is None:
-            return self
-        else:
-            raise KeyError('Resource does not contain subitems')
+        raise NotImplementedError
 
     def errorResponder(self, ex: Exception, proc: PageProcessor) -> Responder:
         '''Returns a Responder that can present an error page for the given

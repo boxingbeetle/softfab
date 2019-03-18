@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from traceback import TracebackException
-from typing import Generic, Iterator
+from typing import Generic, Iterator, Optional, cast
 
 from softfab.Page import PageProcessor, ProcT, Responder, logPageException
 from softfab.StyleResources import StyleSheet, styleRoot
@@ -28,11 +28,31 @@ def iterStyleSheets(req: Request) -> Iterator[StyleSheet]:
     if req.userAgent.family == 'MSOffice':
         yield _msOfficeSheet
 
-class UIPage(Responder, Generic[ProcT]):
+class UIResponder(Responder, Generic[ProcT]):
 
-    def respond(self, response, proc):
-        self.writeHTTPHeaders(response)
-        self.__writeHTML(response, proc)
+    def __init__(self, page: 'UIPage[ProcT]', proc: ProcT):
+        super().__init__()
+        self.page = page
+        self.proc = proc
+
+    def respond(self, response):
+        page = self.page
+        proc = self.proc
+        page.writeHTTPHeaders(response)
+        page.writeHTML(response, proc)
+
+class _ErrorResponder(UIResponder):
+
+    def __init__(self, page: 'UIPage[ProcT]', ex: Exception, proc: ProcT):
+        super().__init__(page, proc)
+        self.__exception = ex
+
+    def respond(self, response: Response) -> None:
+        response.setStatus(500, 'Unexpected exception processing request')
+        self.proc.processingError = self.__exception
+        super().respond(response)
+
+class UIPage(Generic[ProcT]):
 
     def writeHTTPHeaders(self, response: Response) -> None:
         if response.userAgent.acceptsXHTML:
@@ -45,17 +65,14 @@ class UIPage(Responder, Generic[ProcT]):
             contentType = 'text/html'
         response.setHeader('Content-Type', contentType + '; charset=UTF-8')
 
-    def __writeHTML(self, response: Response, proc: ProcT) -> None:
-        self.__writeDocType(response)
+    def writeHTML(self, response: Response, proc: ProcT) -> None:
+        response.write('<!DOCTYPE html>\n')
         response.write(
             xhtml.html(lang = 'en')[
                 xhtml.head[ self.presentHeadParts(proc) ],
                 xhtml.body[ self.__presentBodyParts(response, proc) ],
                 ]
             )
-
-    def __writeDocType(self, response: Response) -> None:
-        response.write('<!DOCTYPE html>\n')
 
     def presentHeadParts(self, proc: ProcT) -> XMLContent:
         yield xhtml.meta(charset='UTF-8')
@@ -88,8 +105,17 @@ class UIPage(Responder, Generic[ProcT]):
         '''
         return iter(())
 
+    def getResponder(self,
+                     path: Optional[str],
+                     proc: PageProcessor
+                     ) -> Responder:
+        if path is None:
+            return UIResponder(self, cast(ProcT, proc))
+        else:
+            raise KeyError('Page does not contain subitems')
+
     def errorResponder(self, ex: Exception, proc: PageProcessor) -> Responder:
-        return _ErrorResponder(self, ex)
+        return _ErrorResponder(self, ex, cast(ProcT, proc))
 
     def __formatError(self, ex: Exception) -> Iterator[XMLNode]:
         '''Yields HTML informing the user of the given exception.
@@ -156,15 +182,3 @@ class UIPage(Responder, Generic[ProcT]):
             proc: ProcT # pylint: disable=unused-argument
             ) -> XMLContent:
         return None
-
-class _ErrorResponder(Responder, Generic[ProcT]):
-
-    def __init__(self, page: UIPage[ProcT], ex: Exception):
-        Responder.__init__(self)
-        self.__page = page
-        self.__exception = ex
-
-    def respond(self, response: Response, proc: ProcT) -> None:
-        response.setStatus(500, 'Unexpected exception processing request')
-        proc.processingError = self.__exception
-        self.__page.respond(response, proc)

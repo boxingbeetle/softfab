@@ -5,7 +5,7 @@ from importlib import import_module
 from inspect import getmodulename
 from types import GeneratorType, ModuleType
 from typing import (
-    Callable, Dict, Generator, Iterator, Mapping, Type, Union, cast
+    Callable, Dict, Generator, Iterator, Mapping, Optional, Type, Union, cast
 )
 import logging
 
@@ -26,6 +26,7 @@ from softfab.Page import (
 from softfab.SplashPage import SplashPage, startupMessages
 from softfab.StyleResources import styleRoot
 from softfab.TwistedUtil import PageRedirect
+from softfab.UIPage import UIResponder
 from softfab.authentication import DisabledAuthPage, NoAuthPage
 from softfab.databases import iterDatabasesToPreload
 from softfab.pageargs import PageArgs
@@ -299,8 +300,11 @@ class ResourceNotFound(FabResource[FabResource.Arguments, PageProcessor]):
     def checkAccess(self, user: IUser) -> None:
         pass
 
-    def getResponder(self, path, proc):
-        return NotFoundPage(proc.req)
+    def getResponder(self,
+                     path: Optional[str],
+                     proc: PageProcessor
+                     ) -> Responder:
+        return UIResponder(NotFoundPage(proc.req), proc)
 
     def errorResponder(self, ex: Exception, proc: PageProcessor) -> Responder:
         # No processing errors can happen because we use the default processor

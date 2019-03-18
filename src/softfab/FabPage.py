@@ -146,12 +146,15 @@ class FabPage(UIPage[ProcT], FabResource[ArgsT, ProcT], ABC):
                 if pageInfo['isActive']():
                     yield childName
 
-    def getResponder(self, path, proc):
+    def getResponder(self,
+                     path: Optional[str],
+                     proc: PageProcessor
+                     ) -> Responder:
         if path is None:
-            return self
-        for widget in self.iterWidgets(proc):
+            return super().getResponder(None, proc)
+        for widget in self.iterWidgets(cast(ProcT, proc)):
             if widget.widgetId == path:
-                return _WidgetResponder(self, widget)
+                return _WidgetResponder(self, widget, proc)
         raise KeyError('Page does not contain a widget named "%s"' % path)
 
     def pageTitle(self, proc: ProcT) -> str:
@@ -211,14 +214,15 @@ class FabPage(UIPage[ProcT], FabResource[ArgsT, ProcT], ABC):
 
 class _WidgetResponder(Responder):
 
-    def __init__(self, page: FabPage, widget: Widget):
+    def __init__(self, page: FabPage, widget: Widget, proc: PageProcessor):
         Responder.__init__(self)
         self.__page = page
         self.__widget = widget
+        self.__proc = proc
 
-    def respond(self, response, proc):
+    def respond(self, response):
         self.__page.writeHTTPHeaders(response)
-        response.write(self.__widget.present(proc=proc))
+        response.write(self.__widget.present(proc=self.__proc))
 
 class LinkBar(Widget):
     '''A bar which contains links to other pages.
