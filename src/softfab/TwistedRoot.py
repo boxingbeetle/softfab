@@ -342,7 +342,7 @@ class SoftFabRoot(Resource):
         self.putChild(b'', PageRedirect('Home'))
         self.putChild(styleRoot.relativeURL.encode(), styleRoot)
 
-        self.defaultPage = PageResource.anyMethod(SplashPage())
+        self.defaultResource = PageResource.anyMethod(SplashPage())
         d = callInChunks(self.startup())
         d.addCallback(self.startupComplete)
         d.addErrback(self.startupFailed)
@@ -358,7 +358,7 @@ class SoftFabRoot(Resource):
             result: None # pylint: disable=unused-argument
             ) -> None:
         # Serve a 404 page for non-existing URLs.
-        self.defaultPage = PageResource.anyMethod(ResourceNotFound())
+        self.defaultResource = PageResource.anyMethod(ResourceNotFound())
 
     def startupFailed(self, failure: Failure) -> None:
         startupLogger.error(
@@ -379,4 +379,4 @@ class SoftFabRoot(Resource):
             # the feed reader for a long time.
             return styleRoot
         else:
-            return self.defaultPage
+            return self.defaultResource
