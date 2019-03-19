@@ -13,7 +13,7 @@ from softfab.config import rootURL
 from softfab.pageargs import ArgsT
 from softfab.projectlib import project
 from softfab.useragent import UserAgent
-from softfab.userlib import AnonGuestUser, IUser, UnknownUser
+from softfab.userlib import AnonGuestUser, IUser, UnknownUser, UserInfo
 from softfab.utils import cachedProperty
 
 # The 'sameSite' parameter was added in Twisted 18.9.0.
@@ -191,7 +191,7 @@ class Request(RequestBase, Generic[ArgsT]):
     sessionCookieName = b'SF_CC_SESSION'
 
     @classmethod
-    def getSession(cls, request: TwistedRequest) -> Optional[Session]:
+    def _getSession(cls, request: TwistedRequest) -> Optional[Session]:
         '''Returns the active session on the given Twisted request object,
         or None if there is no active session.
         '''
@@ -222,7 +222,7 @@ class Request(RequestBase, Generic[ArgsT]):
         '''Expires the current session, if any.
         Returns True iff there was an active session.
         '''
-        session = self.getSession(self._request)
+        session = self._getSession(self._request)
         if session is None:
             return False
         else:
@@ -232,3 +232,16 @@ class Request(RequestBase, Generic[ArgsT]):
             else:
                 self._user = UnknownUser()
             return True
+
+    @classmethod
+    def loggedInUser(cls, request: TwistedRequest) -> Optional[IUser]:
+        """Gets the logged-in user making the request.
+        Also resets the session timeout.
+        """
+        session = cls._getSession(request)
+        if session is not None:
+            user = cast(Optional[UserInfo], session.getComponent(IUser))
+            if user is not None and user.isActive():
+                session.touch()
+                return user
+        return None

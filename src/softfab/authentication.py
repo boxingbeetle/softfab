@@ -1,7 +1,5 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Optional, cast
-
 from twisted.cred.error import LoginFailed
 from twisted.internet.defer import Deferred, fail, succeed
 from twisted.web.http import Request as TwistedRequest
@@ -12,22 +10,8 @@ from softfab.Page import (
 from softfab.pagelinks import loginURL
 from softfab.projectlib import project
 from softfab.request import Request
-from softfab.userlib import (
-    AnonGuestUser, IUser, SuperUser, UnknownUser, UserInfo, authenticate
-)
+from softfab.userlib import AnonGuestUser, SuperUser, UnknownUser, authenticate
 
-
-def loggedInUser(request: TwistedRequest) -> Optional[IUser]:
-    """Gets the logged-in user making the request.
-    Also resets the session timeout.
-    """
-    session = Request.getSession(request)
-    if session is not None:
-        user = cast(Optional[UserInfo], session.getComponent(IUser))
-        if user is not None and user.isActive():
-            session.touch()
-            return user
-    return None
 
 class LoginAuthPage(Authenticator):
     '''Authenticator that performs authentication using a login page and
@@ -35,7 +19,7 @@ class LoginAuthPage(Authenticator):
     '''
 
     def authenticate(self, request: TwistedRequest) -> Deferred:
-        user = loggedInUser(request)
+        user = Request.loggedInUser(request)
         if user is None:
             if project['anonguest']:
                 return succeed(AnonGuestUser())
@@ -98,7 +82,7 @@ class DisabledAuthPage(Authenticator):
     '''
 
     def authenticate(self, request: TwistedRequest) -> Deferred:
-        user = loggedInUser(request)
+        user = Request.loggedInUser(request)
         if user is None:
             return succeed(SuperUser())
         else:
