@@ -395,13 +395,7 @@ class PageArgs:
             if isinstance(member, DictArg):
                 yield from member.externalize(name, value)
             elif value != member.default:
-                assert isinstance(member, (SingularArgument, CollectionArg)), \
-                        member
-                externalized = member.externalize(value)
-                if isinstance(externalized, str):
-                    yield name, (externalized,)
-                else:
-                    yield name, externalized
+                yield name, _externalizeArg(member, value)
 
     def override(self, **kwargs: object) -> 'PageArgs':
         '''Creates a copy of this PageArgs object, with given values
@@ -924,9 +918,11 @@ class DictArg(Argument[DictValue[ValueT]]):
     def externalize(self,
             name: str, value: DictValue[ValueT]
             ) -> Iterator[Tuple[str, Union[str, Sequence[str]]]]:
-        externalizeElem = self.__element.externalize # type: ignore
+        element = self.__element
+        default = element.default
         for fullName, subValue in _expandNames(name, value, self.__separators):
-            yield fullName, externalizeElem(subValue)
+            if subValue != default:
+                yield fullName, _externalizeArg(element, subValue)
 
 def _expandNames(
         prefix: str, value: DictValue[ValueT], separators: str
@@ -1128,3 +1124,30 @@ class RenameToArg:
     @property
     def newName(self) -> str:
         return self.__newName
+
+@overload
+def _externalizeArg(arg: SingularArgument[ValueT],
+                    value: ValueT
+                    ) -> Sequence[str]:
+    pass
+
+@overload
+def _externalizeArg(arg: CollectionArg[ValueT],
+                    value: Collection[ValueT]
+                    ) -> Sequence[str]:
+    pass
+
+@overload
+def _externalizeArg(arg: Any, value: Any) -> Sequence[str]:
+    # Calling with this signature raises TypeError, but omitting this
+    # signature means the calling code has to duplicate the runtime
+    # type checks we do here just to please mypy.
+    pass
+
+def _externalizeArg(arg, value):
+    if isinstance(arg, SingularArgument):
+        return (arg.externalize(value),)
+    elif isinstance(arg, CollectionArg):
+        return arg.externalize(value)
+    else:
+        raise TypeError(type(arg))
