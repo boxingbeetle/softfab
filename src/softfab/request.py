@@ -186,16 +186,28 @@ class Request(RequestBase, Generic[ArgsT]):
         # pylint: disable=attribute-defined-outside-init
         self.args = cast(ArgsT, page.Arguments).parse(fields, self)
 
+    # For HTTP basic auth:
+
+    def getCredentials(self) -> Tuple[str, str]:
+        """Returns the name and password provided as part of this request.
+        If no name and/or password was provided, the string will be empty.
+        Raises UnicodeDecodeError if the strings are not valid UTF-8.
+        """
+        request = self._request
+        userName = request.getUser().decode()
+        password = request.getPassword().decode()
+        return userName, password
+
     # Session management:
 
     sessionCookieName = b'SF_CC_SESSION'
 
-    @classmethod
-    def _getSession(cls, request: TwistedRequest) -> Optional[Session]:
+    def _getSession(self) -> Optional[Session]:
         '''Returns the active session on the given Twisted request object,
         or None if there is no active session.
         '''
-        sessionID = request.getCookie(cls.sessionCookieName)
+        request = self._request
+        sessionID = request.getCookie(self.sessionCookieName)
         if sessionID is None:
             return None
         try:
@@ -222,7 +234,7 @@ class Request(RequestBase, Generic[ArgsT]):
         '''Expires the current session, if any.
         Returns True iff there was an active session.
         '''
-        session = self._getSession(self._request)
+        session = self._getSession()
         if session is None:
             return False
         else:
@@ -233,12 +245,11 @@ class Request(RequestBase, Generic[ArgsT]):
                 self._user = UnknownUser()
             return True
 
-    @classmethod
-    def loggedInUser(cls, request: TwistedRequest) -> Optional[IUser]:
-        """Gets the logged-in user making the request.
+    def loggedInUser(self) -> Optional[IUser]:
+        """Gets the logged-in user (if any) making this request.
         Also resets the session timeout.
         """
-        session = cls._getSession(request)
+        session = self._getSession()
         if session is not None:
             user = cast(Optional[UserInfo], session.getComponent(IUser))
             if user is not None and user.isActive():

@@ -2,7 +2,6 @@
 
 from twisted.cred.error import LoginFailed
 from twisted.internet.defer import Deferred, fail, succeed
-from twisted.web.http import Request as TwistedRequest
 
 from softfab.Page import (
     Authenticator, HTTPAuthenticator, InternalError, Redirector, Responder
@@ -18,17 +17,16 @@ class LoginAuthPage(Authenticator):
     a session cookie.
     '''
 
-    def authenticate(self, request: TwistedRequest) -> Deferred:
-        user = Request.loggedInUser(request)
-        if user is None:
-            if project['anonguest']:
-                return succeed(AnonGuestUser())
-            else:
-                # User must log in.
-                return fail(LoginFailed())
-        else:
+    def authenticate(self, req: Request) -> Deferred:
+        user = req.loggedInUser()
+        if user is not None:
             # User has already authenticated.
             return succeed(user)
+        elif project['anonguest']:
+            return succeed(AnonGuestUser())
+        else:
+            # User must log in.
+            return fail(LoginFailed())
 
     def askForAuthentication(self, req: Request) -> Responder:
         return Redirector(req, loginURL(req))
@@ -37,24 +35,20 @@ class HTTPAuthPage(Authenticator):
     '''Authenticator that performs HTTP authentication.
     '''
 
-    def authenticate(self, request: TwistedRequest) -> Deferred:
+    def authenticate(self, req: Request) -> Deferred:
         # To avoid cross-site request forgery, we must authenticate every API
         # call and not use session cookies. Since API calls are not made using
         # web browsers, most likely the client is not using session cookies
         # anyway.
         #   http://en.wikipedia.org/wiki/Cross-site_request_forgery
-        userNameBytes = request.getUser() # type: bytes
-        if userNameBytes:
-            # If requester supplied user name, authenticate as that user.
-            try:
-                userName = userNameBytes.decode()
-                password = request.getPassword().decode()
-            except UnicodeDecodeError as ex:
-                return fail(LoginFailed(ex))
-            return authenticate(userName, password)
+        try:
+            userName, password = req.getCredentials()
+        except UnicodeDecodeError as ex:
+            return fail(LoginFailed(ex))
 
-        # No user name supplied.
-        if project['anonguest']:
+        if userName:
+            return authenticate(userName, password)
+        elif project['anonguest']:
             return succeed(AnonGuestUser())
         else:
             return fail(LoginFailed())
@@ -67,7 +61,7 @@ class NoAuthPage(Authenticator):
     a non-privileged user.
     '''
 
-    def authenticate(self, request: TwistedRequest) -> Deferred:
+    def authenticate(self, req: Request) -> Deferred:
         return succeed(UnknownUser())
 
     def askForAuthentication(self, req: Request) -> Responder:
@@ -81,8 +75,8 @@ class DisabledAuthPage(Authenticator):
     This is for ease of development, not recommended for production.
     '''
 
-    def authenticate(self, request: TwistedRequest) -> Deferred:
-        user = Request.loggedInUser(request)
+    def authenticate(self, req: Request) -> Deferred:
+        user = req.loggedInUser()
         if user is None:
             return succeed(SuperUser())
         else:

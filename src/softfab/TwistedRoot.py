@@ -262,21 +262,19 @@ def renderAuthenticated(page: FabResource, request: TwistedRequest) -> object:
 def renderAsync(
         page: FabResource, request: TwistedRequest
         ) -> Iterator[Deferred]:
+    req = Request(request, UnknownUser()) # type: Request
     try:
         authenticator = page.authenticator.instance
         try:
-            user = yield authenticator.authenticate(request)
+            user = yield authenticator.authenticate(req)
         except LoginFailed as ex:
-            req = Request(request, UnknownUser()) # type: Request
             responder = proc = authenticator.askForAuthentication(req)
         else:
             req = Request(request, cast(IUser, user))
             responder, proc = yield parseAndProcess(page, req) # type: ignore
     except Redirect as ex:
-        req = Request(request, UnknownUser())
         responder = proc = Redirector(req, ex.url)
     except InternalError as ex:
-        req = Request(request, UnknownUser())
         logging.error(
             'Internal error processing %s: %s', page.name, str(ex)
             )
