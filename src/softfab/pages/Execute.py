@@ -277,7 +277,7 @@ class StartStep(DialogStep):
         config = proc.getConfig()
         jobIds = []
         for _ in range(proc.args.multi):
-            job = config.createJob(proc.req.userName)
+            job = config.createJob(proc.req.user.name)
             jobDB.add(job)
             jobIds.append(job.getId())
         raise Redirect(createJobsURL(jobIds))
@@ -403,7 +403,7 @@ class ExecuteProcessorMixin:
             config = Config.create(
                 name = args.config,
                 target = args.target,
-                owner = self.req.userName,
+                owner = self.req.user.name,
                 trselect = args.trselect,
                 comment = args.comment,
                 jobParams = jobParams,

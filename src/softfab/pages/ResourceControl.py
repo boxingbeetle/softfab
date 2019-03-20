@@ -42,7 +42,7 @@ class ResourceControl_POST(ControlPage['ResourceControl_POST.Arguments', 'Resour
                     % ', '.join(sorted(invalidNames))
                     )
 
-            userName = req.userName
+            userName = req.user.name
             for res in resources:
                 res.setSuspend(suspend, userName)
 

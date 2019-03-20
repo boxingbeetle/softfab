@@ -32,7 +32,7 @@ class LoadExecuteDefault_POST(ControlPage['LoadExecuteDefault_POST.Arguments', '
                     )
             else:
                 job = jobConfig.createJob(
-                    req.userName, None, args.prod, args.param, args.local
+                    req.user.name, None, args.prod, args.param, args.local
                     )
                 job.comment += '\n' + args.comment
                 jobDB.add(job)

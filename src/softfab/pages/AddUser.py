@@ -48,7 +48,7 @@ class AddUserBase(FabPage[ProcT, ArgsT]):
     def __presentFormBody(self, req: Request) -> XMLContent:
         yield xhtml.p[ 'Enter information about new user:' ]
         yield UserTable.instance
-        if req.userName is None:
+        if req.user.name is None:
             yield hiddenInput(name='loginpass', value='')
         else:
             yield xhtml.p[
@@ -109,7 +109,7 @@ class AddUser_POST(AddUserBase['AddUser_POST.Processor',
                     raise PresentableError(passwordStr[quality])
 
                 # Authentication of currently logged-in operator
-                reqUserName = req.userName
+                reqUserName = req.user.name
                 if reqUserName is not None:
                     try:
                         user_ = yield authenticate(

@@ -194,7 +194,7 @@ class ResourceIndex_POST(FabPage['ResourceIndex_POST.Processor', 'ResourceIndex_
             resource = self.getResource(args.resource)
 
             # Update suspend state.
-            userName = req.userName
+            userName = req.user.name
             resource.setSuspend(args.action is Actions.SUSPEND, userName)
 
             # Show new status, forget commands.

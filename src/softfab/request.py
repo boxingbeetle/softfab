@@ -145,13 +145,6 @@ class RequestBase:
         """
         return self._user
 
-    @property
-    def userName(self) -> Optional[str]:
-        """The name of the user who made this request, or None if the user
-        is anonymous.
-        """
-        return self._user.name
-
 class Request(RequestBase, Generic[ArgsT]):
     '''Contains the request information that is only available during the
     "parse" and "process" request handling steps.

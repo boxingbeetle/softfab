@@ -65,21 +65,21 @@ class AbortTask_POST(FabPage['AbortTask_POST.Processor', 'AbortTask_POST.Argumen
             if taskName == '/all-waiting':
                 aborted = job.abortAll(
                     lambda task: task.isWaiting(),
-                    req.userName
+                    req.user.name
                     )
                 if aborted:
                     message = 'All waiting tasks have been aborted.'
                 else:
                     message = 'There were no waiting tasks.'
             elif taskName == '/all':
-                aborted = job.abortAll(user = req.userName)
+                aborted = job.abortAll(user = req.user.name)
                 if aborted:
                     message = 'All unfinished tasks have been aborted.'
                 else:
                     message = 'There were no unfinished tasks.'
             else:
                 message = taskName, job.abortTask(
-                    taskName, req.userName
+                    taskName, req.user.name
                     )
             self.message = message
 

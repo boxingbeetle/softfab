@@ -30,13 +30,13 @@ def presentFormBody(proc):
         'Please enter a new password for user ', xhtml.b[ proc.args.user ], ':'
         ]
     yield NewPasswordTable.instance
-    if proc.req.userName is None:
+    if proc.req.user.name is None:
         yield hiddenInput(name='loginpass', value='')
     else:
         yield xhtml.p[
             'To verify your identity, '
             'please also enter your %s password:' % (
-                'old' if proc.args.user == proc.req.userName else 'own'
+                'old' if proc.args.user == proc.req.user.name else 'own'
                 )
             ]
         yield ReqPasswordTable.instance
@@ -54,7 +54,7 @@ class ReqPasswordTable(FormTable):
 
     def iterFields(self, proc):
         userName = proc.args.user
-        reqUserName = proc.req.userName
+        reqUserName = proc.req.user.name
         reqPasswordLabel = '%s password' % (
             'Old' if userName == reqUserName else 'Operator'
             )
@@ -75,7 +75,7 @@ class ChangePassword_GET(FabPage['ChangePassword_GET.Processor', 'ChangePassword
         def process(self, req):
             # Validate input.
             userName = req.args.user
-            reqUserName = req.userName # get current logged-in user
+            reqUserName = req.user.name # get current logged-in user
             if userName == reqUserName:
                 checkPrivilege(req.user, 'u/mo',
                     'change your password (ask an operator)'
@@ -139,7 +139,7 @@ class ChangePassword_POST(FabPage['ChangePassword_POST.Processor', 'ChangePasswo
             elif req.args.action is Actions.CHANGE:
                 # Validate input.
                 userName = req.args.user
-                reqUserName = req.userName # get current logged-in user
+                reqUserName = req.user.name # get current logged-in user
                 if userName == reqUserName:
                     checkPrivilege(req.user, 'u/mo',
                         'change your password (ask an operator)'

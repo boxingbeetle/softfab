@@ -204,7 +204,7 @@ class UserList_POST(FabPage['UserList_POST.Processor', 'UserList_POST.Arguments'
                     )
 
             # Parse and check all changes.
-            requestUserName = req.userName
+            requestUserName = req.user.name
             newRoles = uiRoleToSet(req.args.role)
             if (userName == requestUserName
                     and not rolesGrantPrivilege(newRoles, 'u/m')):
