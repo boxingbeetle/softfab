@@ -4,7 +4,7 @@
 Module to render the page
 '''
 
-from typing import ClassVar, Iterator, Optional, cast
+from typing import ClassVar, Iterator, Optional, Type, cast
 
 from twisted.internet.defer import Deferred, inlineCallbacks
 from twisted.internet.interfaces import IProducer, IPullProducer, IPushProducer
@@ -143,21 +143,22 @@ def parseAndProcess(
 
         # Argument parsing.
         try:
-            req._parse(page) # pylint: disable=protected-access
+            args = req.parseArgs(cast(Type[ArgsT], page.Arguments))
         except ArgsCorrected as ex:
             if req.method == 'GET':
                 raise
             else:
                 # We can't correct args using redirection if args may have
                 # come from the request body instead of the URL.
-                req.args = cast(ArgsCorrected[ArgsT], ex).correctedArgs
+                args = cast(ArgsCorrected[ArgsT], ex).correctedArgs
+        req.args = args
 
         _checkActive(req, page)
 
         # Processing step.
         proc = page.Processor(req) # type: PageProcessor[ArgsT]
         proc.page = page
-        proc.args = req.args
+        proc.args = args
         try:
             yield proc.process(req)
         except PresentableError as ex:
@@ -165,10 +166,10 @@ def parseAndProcess(
         else:
             assert all(
                     value is not dynamic
-                    for name_, value in req.args.items()
+                    for name_, value in args.items()
                 ), 'unhandled dynamic defaults: ' + ', '.join(
                     name
-                    for name, value in req.args.items()
+                    for name, value in args.items()
                     if value is dynamic
                 )
             proc.processTables()

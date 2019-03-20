@@ -2,13 +2,13 @@
 
 from cgi import parse_header
 from inspect import signature
-from typing import IO, Generic, Mapping, Optional, Sequence, Tuple, cast
+from typing import IO, Generic, Mapping, Optional, Sequence, Tuple, Type, cast
 from urllib.parse import parse_qs, urlparse
 
 from twisted.web.http import Request as TwistedRequest
 from twisted.web.server import Session
 
-from softfab.Page import FabResource, InvalidRequest, ProcT
+from softfab.Page import InvalidRequest
 from softfab.config import rootURL
 from softfab.pageargs import ArgsT
 from softfab.projectlib import project
@@ -156,13 +156,17 @@ class Request(RequestBase, Generic[ArgsT]):
     "parse" and "process" request handling steps.
     '''
 
+    def __init__(self, request: TwistedRequest, user: IUser):
+        super().__init__(request, user)
+        self.args = cast(ArgsT, None)
+
     def processEnd(self) -> None:
         '''Called when the processing step is done.
         Reduces the interface of the request object.
         '''
         self.__class__ = RequestBase # type: ignore
 
-    def _parse(self, page: FabResource[ArgsT, ProcT]) -> None:
+    def parseArgs(self, argsClass: Type[ArgsT]) -> ArgsT:
         '''Initialises the Arguments, if the page has one.
         '''
         # Decode field names.
@@ -183,8 +187,7 @@ class Request(RequestBase, Generic[ArgsT]):
                     )
             fields[key] = values
 
-        # pylint: disable=attribute-defined-outside-init
-        self.args = cast(ArgsT, page.Arguments).parse(fields, self)
+        return argsClass.parse(fields, self)
 
     # For HTTP basic auth:
 
