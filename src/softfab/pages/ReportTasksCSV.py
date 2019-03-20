@@ -6,6 +6,7 @@ from softfab.joblib import iterDoneTasks
 from softfab.querylib import KeySorter, runQuery
 from softfab.resultlib import getData, getKeys
 from softfab.setcalc import union
+from softfab.taskview import getTaskStatus
 from softfab.timeview import formatTime
 from softfab.userlib import IUser, checkPrivilege
 
@@ -50,10 +51,7 @@ class ReportTasksCSV_GET(CSVPage['ReportTasksCSV_GET.Processor']):
             # TODO: Which properties are useful to export?
             timestamp = formatTime(task['timestamp'])
             # Assuming format "2008-09-16 15:21"
-            results = [
-                timestamp[ : 10], timestamp[-5 : ],
-                str(task['result'] or 'unknown')
-                ]
+            results = [timestamp[:10], timestamp[-5:], getTaskStatus(task)]
             for key in keys:
                 if key in taskKeys:
                     # TODO: Querying one run at a time is not really efficient.
