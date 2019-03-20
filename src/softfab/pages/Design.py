@@ -31,7 +31,7 @@ class Design_GET(
 
     class Processor(PageProcessor):
 
-        def process(self, req):
+        def process(self, req, user):
             orphanProducts = set()
             orphanFrameworks = set()
             nonTrivialGraphs = []

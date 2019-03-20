@@ -21,7 +21,7 @@ class MergePhase(AbstractPhase):
         args = proc.args
 
         checkPrivilege(
-            req.user,
+            proc.user,
             storageDB.privilegeObject + '/m',
             'modify storages'
             )

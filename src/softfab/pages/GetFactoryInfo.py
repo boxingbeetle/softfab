@@ -24,7 +24,7 @@ class GetFactoryInfo_GET(ControlPage[ControlPage.Arguments,
 
     class Processor(PageProcessor):
 
-        def process(self, req):
+        def process(self, req, user):
             pass
 
     def writeReply(self, response, proc):

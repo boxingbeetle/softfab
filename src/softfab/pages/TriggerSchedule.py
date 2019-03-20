@@ -15,7 +15,7 @@ class TriggerSchedule_POST(ControlPage['TriggerSchedule_POST.Arguments', 'Trigge
 
     class Processor(PageProcessor):
 
-        def process(self, req):
+        def process(self, req, user):
             scheduleId = req.args.scheduleId
             try:
                 schedule = scheduleDB[scheduleId]
@@ -24,7 +24,7 @@ class TriggerSchedule_POST(ControlPage['TriggerSchedule_POST.Arguments', 'Trigge
                     'Schedule "%s" does not exist' % scheduleId
                     )
             checkPrivilegeForOwned(
-                req.user, 's/m', schedule,
+                user, 's/m', schedule,
                 ( 'trigger schedule "%s" that is not owned by you' % scheduleId,
                   'trigger schedules' )
                 )

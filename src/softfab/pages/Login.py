@@ -84,7 +84,7 @@ class Login_GET(LoginBase['Login_GET.Processor', 'Login_GET.Arguments']):
 
     class Processor(PageProcessor):
 
-        def process(self, req):
+        def process(self, req, user):
             url = req.args.url
             if url is not None and '/' in url:
                 # Only accept relative URLs.
@@ -109,8 +109,8 @@ class Login_POST(LoginBase['Login_POST.Processor', 'Login_POST.Arguments']):
     class Processor(Login_GET.Processor):
 
         @inlineCallbacks
-        def process(self, req):
-            super().process(req)
+        def process(self, req, user):
+            super().process(req, user)
 
             username = req.args.loginname
             password = req.args.loginpass

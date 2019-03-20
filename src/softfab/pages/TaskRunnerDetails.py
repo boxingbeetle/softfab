@@ -26,7 +26,7 @@ class TaskRunnerDetails_GET(FabPage['TaskRunnerDetails_GET.Processor', 'TaskRunn
 
     class Processor(PageProcessor):
 
-        def process(self, req):
+        def process(self, req, user):
             runnerId = req.args.runnerId
             # pylint: disable=attribute-defined-outside-init
             self.taskRunner = taskRunnerDB.get(runnerId)

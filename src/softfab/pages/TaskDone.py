@@ -30,7 +30,7 @@ class TaskDone_POST(ControlPage['TaskDone_POST.Arguments', 'TaskDone_POST.Proces
 
     class Processor(PageProcessor):
 
-        def process(self, req):
+        def process(self, req, user):
             # Verify arguments.
             try:
                 result = req.args.result

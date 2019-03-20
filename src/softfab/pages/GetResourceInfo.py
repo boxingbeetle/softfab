@@ -24,7 +24,7 @@ class GetResourceInfo_GET(ControlPage['GetResourceInfo_GET.Arguments', 'GetResou
 
     class Processor(PageProcessor):
 
-        def process(self, req):
+        def process(self, req, user):
             resTypeNames = req.args.type
             resNames = req.args.name
 

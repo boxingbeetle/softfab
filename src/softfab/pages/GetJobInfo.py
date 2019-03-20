@@ -19,7 +19,7 @@ class GetJobInfo_GET(ControlPage['GetJobInfo_GET.Arguments', 'GetJobInfo_GET.Pro
 
     class Processor(PageProcessor):
 
-        def process(self, req):
+        def process(self, req, user):
             jobId = req.args.jobId
             try:
                 # pylint: disable=attribute-defined-outside-init

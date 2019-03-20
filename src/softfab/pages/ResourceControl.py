@@ -22,7 +22,7 @@ class ResourceControl_POST(ControlPage['ResourceControl_POST.Arguments', 'Resour
 
     class Processor(PageProcessor):
 
-        def process(self, req):
+        def process(self, req, user):
             resNames = req.args.name
             suspend = req.args.action is Actions.SUSPEND
 
@@ -42,7 +42,7 @@ class ResourceControl_POST(ControlPage['ResourceControl_POST.Arguments', 'Resour
                     % ', '.join(sorted(invalidNames))
                     )
 
-            userName = req.user.name
+            userName = user.name
             for res in resources:
                 res.setSuspend(suspend, userName)
 

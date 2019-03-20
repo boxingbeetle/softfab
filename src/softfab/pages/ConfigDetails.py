@@ -143,7 +143,7 @@ class ConfigDetails_GET(
 
     class Processor(PageProcessor):
 
-        def process(self, req):
+        def process(self, req, user):
             configId = req.args.configId
             config = configDB.get(configId)
 

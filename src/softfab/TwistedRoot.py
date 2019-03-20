@@ -262,7 +262,7 @@ def renderAuthenticated(page: FabResource, request: TwistedRequest) -> object:
 def renderAsync(
         page: FabResource, request: TwistedRequest
         ) -> Iterator[Deferred]:
-    req = Request(request, UnknownUser()) # type: Request
+    req = Request(request) # type: Request
     try:
         authenticator = page.authenticator.instance
         try:
@@ -270,8 +270,7 @@ def renderAsync(
         except LoginFailed as ex:
             responder = proc = authenticator.askForAuthentication(req)
         else:
-            req = Request(request, cast(User, user))
-            responder, proc = yield parseAndProcess(page, req) # type: ignore
+            responder, proc = yield parseAndProcess(page, req, user) # type: ignore
     except Redirect as ex:
         responder = proc = Redirector(req, ex.url)
     except InternalError as ex:

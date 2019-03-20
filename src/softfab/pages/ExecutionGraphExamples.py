@@ -50,7 +50,7 @@ class ExecutionGraphExamples_GET(
 
     class Processor(PageProcessor):
 
-        def process(self, req):
+        def process(self, req, user):
             export = False
             graphs = [
                 cls.build(name, export, False)

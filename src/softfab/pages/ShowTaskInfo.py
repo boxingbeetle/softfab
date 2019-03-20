@@ -163,7 +163,7 @@ class ShowTaskInfo_GET(FabPage['ShowTaskInfo_GET.Processor', 'ShowTaskInfo_GET.A
 
     class Processor(PageProcessor):
 
-        def process(self, req):
+        def process(self, req, user):
             jobId = req.args.jobId
             taskName = req.args.taskName
 

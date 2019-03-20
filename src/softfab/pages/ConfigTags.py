@@ -47,7 +47,7 @@ class ConfigTagsBase(FabPage['ConfigTagsBase.Processor', FabPage.Arguments]):
             query = args.parentQuery.override(SelectArgs.subset(args))
             return '%s?%s' % (parentPage, query.toURL())
 
-        def process(self, req):
+        def process(self, req, user):
             # pylint: disable=attribute-defined-outside-init
             self.notices = []
 
@@ -107,7 +107,7 @@ class ConfigTags_POST(ConfigTagsBase):
 
     class Processor(ConfigTagsBase.Processor):
 
-        def process(self, req):
+        def process(self, req, user):
             action = req.args.action
             if action is not Actions.APPLY:
                 assert action is Actions.CANCEL, action
@@ -121,7 +121,7 @@ class ConfigTags_POST(ConfigTagsBase):
             configs = self.configs
 
             checkPrivilegeForOwned(
-                req.user, 'c/m', configs,
+                user, 'c/m', configs,
                 ( 'change tags on configurations owned by other users',
                     'change configuration tags' )
                 )

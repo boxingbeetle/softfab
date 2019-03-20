@@ -20,7 +20,7 @@ class ExtractionDetails_GET(FabPage['ExtractionDetails_GET.Processor', 'Extracti
 
     class Processor(PageProcessor):
 
-        def process(self, req):
+        def process(self, req, user):
             # pylint: disable=attribute-defined-outside-init
             try:
                 job = jobDB[req.args.jobId]

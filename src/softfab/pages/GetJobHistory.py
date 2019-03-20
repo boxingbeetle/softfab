@@ -22,8 +22,8 @@ class GetJobHistory_GET(ControlPage['GetJobHistory_GET.Arguments', 'GetJobHistor
 
     class Processor(JobReportProcessor):
 
-        def process(self, req):
-            super().process(req)
+        def process(self, req, user):
+            super().process(req, user)
 
             jobs = runQuery(self.iterFilters(), jobDB)
 

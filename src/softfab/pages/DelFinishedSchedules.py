@@ -49,12 +49,12 @@ class DelFinishedSchedules_POST(
 
     class Processor(PageProcessor):
 
-        def process(self, req):
+        def process(self, req, user):
             action = req.args.action
             if action is Actions.CANCEL:
                 raise Redirect(self.page.getParentURL(req))
             elif action is Actions.DELETE:
-                checkPrivilege(req.user, 's/d', 'delete all finished schedules')
+                checkPrivilege(user, 's/d', 'delete all finished schedules')
                 finishedSchedules = [
                     schedule for schedule in scheduleDB if schedule.isDone()
                     ]

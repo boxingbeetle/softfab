@@ -102,7 +102,7 @@ class PageProcessor(Generic[ArgsT]):
     def getTableData(self, table: DataTable) -> '_TableData':
         return self.__tables[id(table)]
 
-    def process(self, req):
+    def process(self, req, user):
         '''Process the given request for the page this processor belongs to.
         Typically this method returns nothing (implicit None).
         If processing uses an external service, a Deferred can be used to

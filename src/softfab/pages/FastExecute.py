@@ -46,7 +46,7 @@ class FastExecute_GET(FabPage['FastExecute_GET.Processor', 'FastExecute_GET.Argu
 
     class Processor(PageProcessor):
 
-        def process(self, req):
+        def process(self, req, user):
             configId = req.args.configId
             tagkey = req.args.tagkey
             tagvalue = req.args.tagvalue
@@ -140,7 +140,7 @@ class FastExecute_POST(FabPage['FastExecute_POST.Processor', 'FastExecute_POST.A
 
     class Processor(PageProcessor):
 
-        def process(self, req):
+        def process(self, req, user):
             action = req.args.action
 
             if action is Actions.CANCEL:
@@ -149,11 +149,11 @@ class FastExecute_POST(FabPage['FastExecute_POST.Processor', 'FastExecute_POST.A
                     )
 
             if action is Actions.EXECUTE:
-                checkPrivilege(req.user, 'j/c', 'create jobs')
+                checkPrivilege(user, 'j/c', 'create jobs')
 
                 # Create jobs.
                 jobIds = []
-                user = req.user.name
+                user = user.name
                 for configId in sorted(req.args.confirmedId):
                     # TODO: Configs that have disappeared or become invalid are
                     #       silently ignored. Since this is a rare situation,

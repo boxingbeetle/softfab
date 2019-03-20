@@ -103,7 +103,7 @@ class DialogProcessorBase(PageProcessor[ArgsT]):
             % ( func.__self__.__class__.name, func.__name__ )
             )
 
-    def process(self, req):
+    def process(self, req, user):
         raise NotImplementedError
 
     def walkSteps(self, requestedPath, limitStep=None):
@@ -190,8 +190,8 @@ class InitialDialogProcessor(DialogProcessorBase):
         '''
         raise NotImplementedError
 
-    def process(self, req):
-        initialClass, self.args = self.getInitial(self.args, self.user)
+    def process(self, req, user):
+        initialClass, self.args = self.getInitial(self.args, user)
         initialStep = self.page.stepObjects[initialClass.name]
         self.walkSteps([initialStep])
 
@@ -199,7 +199,7 @@ class ContinuedDialogProcessor(DialogProcessorBase):
     """Processor handles the state for subsequent steps of `DialogPage`.
     """
 
-    def process(self, req):
+    def process(self, req, user):
         # Determine navigation path.
         stepObjects = self.page.stepObjects
         requestedPath = []

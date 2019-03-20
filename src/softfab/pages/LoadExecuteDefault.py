@@ -20,7 +20,7 @@ class LoadExecuteDefault_POST(ControlPage['LoadExecuteDefault_POST.Arguments', '
 
     class Processor(PageProcessor):
 
-        def process(self, req):
+        def process(self, req, user):
             args = req.args
             if 'notify' in args.param and ':' not in args.param['notify']:
                 raise InvalidRequest('Invalid value of \'notify\' parameter')
@@ -32,7 +32,7 @@ class LoadExecuteDefault_POST(ControlPage['LoadExecuteDefault_POST.Arguments', '
                     )
             else:
                 job = jobConfig.createJob(
-                    req.user.name, None, args.prod, args.param, args.local
+                    user.name, None, args.prod, args.param, args.local
                     )
                 job.comment += '\n' + args.comment
                 jobDB.add(job)

@@ -21,7 +21,7 @@ class LatestReport_GET(
 
     class Processor(PageProcessor):
 
-        def process(self, req):
+        def process(self, req, user):
             taskId = req.args.id
             taskTimes = (
                 ( task['starttime'], task )

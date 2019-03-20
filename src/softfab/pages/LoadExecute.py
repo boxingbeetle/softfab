@@ -90,7 +90,7 @@ class LoadExecute_GET(FabPage['LoadExecute_GET.Processor', 'LoadExecute_GET.Argu
                 yield 'tags', 'Edit Tags...', 'ConfigTags'
             yield 'execute', 'Execute...', 'BatchExecute'
 
-        def process(self, req):
+        def process(self, req, user):
             self.processSelection()
 
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:

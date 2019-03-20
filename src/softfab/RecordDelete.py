@@ -77,7 +77,7 @@ class RecordDelete_GET(FabPage['RecordDelete_GET.Processor',
         pass
 
     class Processor(PageProcessor):
-        def process(self, req):
+        def process(self, req, user):
             fetchRecordForDeletion(req.args.id, self.page)
 
     def pageTitle(self, proc: Processor) -> str:
@@ -124,7 +124,7 @@ class RecordDelete_POSTMixin:
         action = EnumArg(Actions)
 
     class ProcessorMixin:
-        def process(self, req):
+        def process(self, req, user):
             action = req.args.action
             if action is not Actions.DELETE:
                 assert action is Actions.CANCEL, action
@@ -132,7 +132,7 @@ class RecordDelete_POSTMixin:
 
             record = fetchRecordForDeletion(req.args.id, self.page)
             checkPrivilegeForOwned(
-                req.user,
+                user,
                 self.page.db.privilegeObject + '/d',
                 record,
                 ( 'delete this ' + self.page.recordName,

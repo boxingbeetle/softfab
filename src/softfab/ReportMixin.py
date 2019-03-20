@@ -50,7 +50,7 @@ def executionStateBox(objectName):
 class ReportProcessor(PageProcessor):
     db = None # type: Optional[Database]
 
-    def process(self, req):
+    def process(self, req, user):
         # Set of targets for which jobs have run.
         targets = jobDB.uniqueValues('target')
         # Add targets that are available now.

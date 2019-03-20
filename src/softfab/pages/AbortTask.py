@@ -48,7 +48,7 @@ class AbortTask_POST(FabPage['AbortTask_POST.Processor', 'AbortTask_POST.Argumen
 
     class Processor(PageProcessor):
 
-        def process(self, req):
+        def process(self, req, user):
             # pylint: disable=attribute-defined-outside-init
             jobId = req.args.jobId
             taskName = req.args.taskName
@@ -60,26 +60,26 @@ class AbortTask_POST(FabPage['AbortTask_POST.Processor', 'AbortTask_POST.Argumen
 
             job = jobDB[jobId]
             checkPrivilegeForOwned(
-                req.user, 't/d', job, ('abort tasks in this job', 'abort tasks')
+                user, 't/d', job, ('abort tasks in this job', 'abort tasks')
                 )
             if taskName == '/all-waiting':
                 aborted = job.abortAll(
                     lambda task: task.isWaiting(),
-                    req.user.name
+                    user.name
                     )
                 if aborted:
                     message = 'All waiting tasks have been aborted.'
                 else:
                     message = 'There were no waiting tasks.'
             elif taskName == '/all':
-                aborted = job.abortAll(user = req.user.name)
+                aborted = job.abortAll(user = user.name)
                 if aborted:
                     message = 'All unfinished tasks have been aborted.'
                 else:
                     message = 'There were no unfinished tasks.'
             else:
                 message = taskName, job.abortTask(
-                    taskName, req.user.name
+                    taskName, user.name
                     )
             self.message = message
 

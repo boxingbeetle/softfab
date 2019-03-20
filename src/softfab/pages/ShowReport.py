@@ -53,7 +53,7 @@ class ShowReport_GET(FabPage['ShowReport_GET.Processor', 'ShowReport_GET.Argumen
 
     class Processor(PageProcessor):
 
-        def process(self, req):
+        def process(self, req, user):
             jobId = req.args.jobId
             job = jobDB.get(jobId)
             if job is not None:

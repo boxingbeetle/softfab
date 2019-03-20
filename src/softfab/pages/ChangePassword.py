@@ -72,16 +72,16 @@ class ChangePassword_GET(FabPage['ChangePassword_GET.Processor', 'ChangePassword
 
     class Processor(PageProcessor):
 
-        def process(self, req):
+        def process(self, req, user):
             # Validate input.
             userName = req.args.user
-            reqUserName = req.user.name # get current logged-in user
+            reqUserName = user.name # get current logged-in user
             if userName == reqUserName:
-                checkPrivilege(req.user, 'u/mo',
+                checkPrivilege(user, 'u/mo',
                     'change your password (ask an operator)'
                     )
             else:
-                checkPrivilege(req.user, 'u/m',
+                checkPrivilege(user, 'u/m',
                     "change other user's password (ask an operator)"
                     )
 
@@ -133,19 +133,19 @@ class ChangePassword_POST(FabPage['ChangePassword_POST.Processor', 'ChangePasswo
     class Processor(PageProcessor):
 
         @inlineCallbacks
-        def process(self, req):
+        def process(self, req, user):
             if req.args.action is Actions.CANCEL:
                 raise Redirect(self.page.getCancelURL(req))
             elif req.args.action is Actions.CHANGE:
                 # Validate input.
                 userName = req.args.user
-                reqUserName = req.user.name # get current logged-in user
+                reqUserName = user.name # get current logged-in user
                 if userName == reqUserName:
-                    checkPrivilege(req.user, 'u/mo',
+                    checkPrivilege(user, 'u/mo',
                         'change your password (ask an operator)'
                         )
                 else:
-                    checkPrivilege(req.user, 'u/m',
+                    checkPrivilege(user, 'u/m',
                         "change other user's password (ask an operator)"
                         )
 

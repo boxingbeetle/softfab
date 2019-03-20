@@ -39,7 +39,7 @@ class UserDetails_GET(FabPage['UserDetails_GET.Processor', 'UserDetails_GET.Argu
     class Processor(PageProcessor):
         visibleJobs = 12
 
-        def process(self, req):
+        def process(self, req, user):
             infoUserName = req.args.user
 
             infoUser = userDB.get(infoUserName)

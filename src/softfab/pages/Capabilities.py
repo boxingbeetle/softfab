@@ -131,7 +131,7 @@ class Capabilities_GET(FabPage['Capabilities_GET.Processor', 'Capabilities_GET.A
 
     class Processor(PageProcessor):
 
-        def process(self, req):
+        def process(self, req, user):
             args = req.args
 
             typeName = args.restype

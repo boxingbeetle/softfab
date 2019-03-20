@@ -30,7 +30,7 @@ class ShowJobs_GET(FabPage['ShowJobs_GET.Processor', 'ShowJobs_GET.Arguments']):
 
     class Processor(PageProcessor):
 
-        def process(self, req):
+        def process(self, req, user):
             jobs = []
             invalidJobIds = []
             for jobId in req.args.jobId:

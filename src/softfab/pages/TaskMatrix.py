@@ -183,9 +183,9 @@ class TaskMatrix_GET(FabPage['TaskMatrix_GET.Processor', 'TaskMatrix_GET.Argumen
 
     class Processor(TaskMatrixProcessor):
 
-        def process(self, req):
+        def process(self, req, user):
             # pylint: disable=attribute-defined-outside-init
-            super().process(req)
+            super().process(req, user)
             self.tasksByName = tasksByName = defaultdict(list)
             self.tasksByDay = tasksByDay = []
             self.allTasks = allTasks = []

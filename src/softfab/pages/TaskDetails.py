@@ -57,7 +57,7 @@ class TaskDetails_GET(FabPage['TaskDetails_GET.Processor', 'TaskDetails_GET.Argu
 
     class Processor(PageProcessor):
 
-        def process(self, req):
+        def process(self, req, user):
             # pylint: disable=attribute-defined-outside-init
             self.taskDef = taskDefDB.get(req.args.id)
             self.configs = list(configsUsingTaskDef(req.args.id))

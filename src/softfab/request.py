@@ -28,14 +28,11 @@ class RequestBase:
     handling steps.
     '''
 
-    def __init__(self, request: TwistedRequest, user: User):
+    def __init__(self, request: TwistedRequest):
         self._request = request
-        self._user = user
 
     def __repr__(self) -> str:
-        return '%s(%r, %r)' % (
-            self.__class__.__name__, self._request, self._user
-            )
+        return '%s(%r)' % (self.__class__.__name__, self._request)
 
     @cachedProperty
     def userAgent(self) -> UserAgent:
@@ -137,21 +134,13 @@ class RequestBase:
         assert path.startswith(pagePath + b'/')
         return path[len(pagePath) + 1 : ].decode()
 
-    # User information:
-
-    @property
-    def user(self) -> User:
-        """The user who made this request.
-        """
-        return self._user
-
 class Request(RequestBase, Generic[ArgsT]):
     '''Contains the request information that is only available during the
     "parse" and "process" request handling steps.
     '''
 
-    def __init__(self, request: TwistedRequest, user: User):
-        super().__init__(request, user)
+    def __init__(self, request: TwistedRequest):
+        super().__init__(request)
         self.args = cast(ArgsT, None)
 
     def processEnd(self) -> None:
@@ -243,7 +232,6 @@ class Request(RequestBase, Generic[ArgsT]):
             return False
         else:
             session.expire()
-            self._user = project.defaultUser
             return True
 
     def loggedInUser(self) -> Optional[User]:

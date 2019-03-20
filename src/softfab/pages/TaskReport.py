@@ -23,7 +23,7 @@ class TaskReport_POST(ControlPage['TaskReport_POST.Arguments', 'TaskReport_POST.
 
     class Processor(PageProcessor):
 
-        def process(self, req):
+        def process(self, req, user):
             jobId = req.args.id
             taskName = req.args.name
             shadowId = req.args.shadowId

@@ -15,7 +15,7 @@ class TaskRunnerExit_POST(ControlPage['TaskRunnerExit_POST.Arguments', 'TaskRunn
 
     class Processor(PageProcessor):
 
-        def process(self, req):
+        def process(self, req, user):
             runnerId = req.args.runnerId
             runner = taskRunnerDB.get(runnerId)
             if runner is None:

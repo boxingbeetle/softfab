@@ -18,8 +18,8 @@ class ReportTasksCSV_GET(CSVPage['ReportTasksCSV_GET.Processor']):
 
     class Processor(ReportProcessor):
 
-        def process(self, req):
-            super().process(req)
+        def process(self, req, user):
+            super().process(req, user)
 
             # Note: iterDoneTasks() can efficiently handle an empty (nothing
             #       matches) filter, no need for a special case here.

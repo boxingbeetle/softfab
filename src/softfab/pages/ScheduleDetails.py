@@ -102,7 +102,7 @@ class ScheduleDetails_GET(FabPage['ScheduleDetails_GET.Processor', 'ScheduleDeta
 
     class Processor(PageProcessor):
 
-        def process(self, req):
+        def process(self, req, user):
             # pylint: disable=attribute-defined-outside-init
             self.scheduled = scheduleDB.get(req.args.id)
 

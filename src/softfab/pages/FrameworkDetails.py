@@ -63,7 +63,7 @@ class FrameworkDetails_GET(
 
     class Processor(PageProcessor):
 
-        def process(self, req):
+        def process(self, req, user):
             frameworkId = req.args.id
             framework = frameworkDB.get(frameworkId)
             taskDefs = list(taskDefsUsingFramework(frameworkId))

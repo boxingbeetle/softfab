@@ -41,7 +41,7 @@ class AnonGuest_POST(AnonGuestBase['AnonGuest_POST.Processor',
 
     class Processor(PageProcessor):
 
-        def process(self, req):
+        def process(self, req, user):
             project.setAnonGuestAccess(req.args.anonguest)
             raise Redirect('AnonGuest')
 

@@ -44,7 +44,7 @@ class ProductDetails_GET(
 
     class Processor(PageProcessor):
 
-        def process(self, req):
+        def process(self, req, user):
             productDefId = req.args.id
 
             productDef = productDefDB.get(productDefId)

@@ -19,7 +19,7 @@ class TaskAlert_POST(ControlPage['TaskAlert_POST.Arguments', 'TaskAlert_POST.Pro
 
     class Processor(PageProcessor):
 
-        def process(self, req):
+        def process(self, req, user):
             jobId = req.args.jobId
             taskName = req.args.taskId
             runId = req.args.runId

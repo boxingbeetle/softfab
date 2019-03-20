@@ -144,10 +144,10 @@ class UserList_GET(FabPage['UserList_GET.Processor', 'UserList_GET.Arguments']):
 
     class Processor(PageProcessor):
 
-        def process(self, req):
+        def process(self, req, user):
             # pylint: disable=attribute-defined-outside-init
-            self.canChangeRoles = req.user.hasPrivilege('u/m')
-            self.canChangeAnonGuest = req.user.hasPrivilege('p/m')
+            self.canChangeRoles = user.hasPrivilege('u/m')
+            self.canChangeAnonGuest = user.hasPrivilege('p/m')
 
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield UserTable.instance
@@ -191,7 +191,7 @@ class UserList_POST(FabPage['UserList_POST.Processor', 'UserList_POST.Arguments'
 
     class Processor(PageProcessor):
 
-        def process(self, req):
+        def process(self, req, user):
             # Find user record.
             userName = req.args.user
             try:
@@ -204,7 +204,7 @@ class UserList_POST(FabPage['UserList_POST.Processor', 'UserList_POST.Arguments'
                     )
 
             # Parse and check all changes.
-            requestUserName = req.user.name
+            requestUserName = user.name
             newRoles = uiRoleToSet(req.args.role)
             if (userName == requestUserName
                     and not rolesGrantPrivilege(newRoles, 'u/m')):

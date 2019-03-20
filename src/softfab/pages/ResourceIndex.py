@@ -187,15 +187,14 @@ class ResourceIndex_POST(FabPage['ResourceIndex_POST.Processor', 'ResourceIndex_
 
     class Processor(PageProcessor):
 
-        def process(self, req):
+        def process(self, req, user):
             args = req.args
 
             # Get resource record.
             resource = self.getResource(args.resource)
 
             # Update suspend state.
-            userName = req.user.name
-            resource.setSuspend(args.action is Actions.SUSPEND, userName)
+            resource.setSuspend(args.action is Actions.SUSPEND, user.name)
 
             # Show new status, forget commands.
             raise Redirect(pageURL(

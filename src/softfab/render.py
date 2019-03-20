@@ -18,7 +18,7 @@ from softfab.UIPage import UIPage, UIResponder
 from softfab.pageargs import ArgsCorrected, ArgsInvalid, ArgsT, Query, dynamic
 from softfab.request import Request
 from softfab.response import Response
-from softfab.userlib import AccessDenied
+from softfab.userlib import AccessDenied, User
 from softfab.utils import abstract
 from softfab.webgui import docLink
 from softfab.xmlgen import XMLContent, xhtml
@@ -128,14 +128,14 @@ def _checkActive(
             raise Redirect(page.getParentURL(req))
 
 @inlineCallbacks
-def parseAndProcess(
-        page: FabResource[ArgsT, PageProcessor[ArgsT]], req: Request[ArgsT]
-        ) -> Iterator[Deferred]:
+def parseAndProcess(page: FabResource[ArgsT, PageProcessor[ArgsT]],
+                    req: Request[ArgsT],
+                    user: User
+                    ) -> Iterator[Deferred]:
     '''Parse step: determine values for page arguments.
     Processing step: database interaction.
     Returns a Deferred which has a (responder, proc) pair as its result.
     '''
-    user = req.user
     try:
         # Page-level authorization.
         # It is possible for additional access checks to fail during the
@@ -162,7 +162,7 @@ def parseAndProcess(
         proc.args = args
         proc.user = user
         try:
-            yield proc.process(req)
+            yield proc.process(req, user)
         except PresentableError as ex:
             proc.error = ex.args[0]
         else:

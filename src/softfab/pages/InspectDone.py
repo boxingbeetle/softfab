@@ -20,7 +20,7 @@ class InspectDone_POST(ControlPage['InspectDone_POST.Arguments', 'InspectDone_PO
 
     class Processor(PageProcessor):
 
-        def process(self, req):
+        def process(self, req, user):
             # Fetch and check job and task.
             jobId = req.args.jobId
             try:
@@ -49,7 +49,7 @@ class InspectDone_POST(ControlPage['InspectDone_POST.Arguments', 'InspectDone_PO
             summary = req.args.summary
 
             # Check store permissions.
-            checkPrivilegeForOwned(req.user, 't/m', job)
+            checkPrivilegeForOwned(user, 't/m', job)
 
             # Store mid-level data, if any.
             if req.args.data:

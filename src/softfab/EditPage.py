@@ -83,13 +83,13 @@ class SavePhase(AbstractPhase):
 
         if existingElement is None:
             checkPrivilege(
-                req.user,
+                proc.user,
                 page.db.privilegeObject + '/c', 'create ' + page.privDenyText
                 )
             page.db.add(element)
         else:
             checkPrivilegeForOwned(
-                req.user,
+                proc.user,
                 page.db.privilegeObject + '/m',
                 existingElement,
                 ( 'modify this ' + page.elemName,
@@ -193,9 +193,9 @@ class EditPage(FabPage['EditPage.Processor', 'EditPage.Arguments'], ABC):
 
     class Processor(PageProcessor):
 
-        def process(self, req):
+        def process(self, req, user):
             # pylint: disable=attribute-defined-outside-init
-            checkPrivilege(req.user, self.page.db.privilegeObject + '/a')
+            checkPrivilege(user, self.page.db.privilegeObject + '/a')
 
             args = self.args
 

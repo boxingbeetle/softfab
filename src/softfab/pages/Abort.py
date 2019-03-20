@@ -20,7 +20,7 @@ class Abort_POST(ControlPage['Abort_POST.Arguments', 'Abort_POST.Processor']):
 
     class Processor(PageProcessor):
 
-        def process(self, req):
+        def process(self, req, user):
             jobIds = req.args.jobId
             taskNames = req.args.taskName
             onlyWaiting = req.args.onlyWaiting
@@ -46,7 +46,7 @@ class Abort_POST(ControlPage['Abort_POST.Arguments', 'Abort_POST.Processor']):
             else:
                 nameFunc = lambda task: True
 
-            userName = req.user.name
+            userName = user.name
             abortedTasks = {}
 
             for jobId in jobIds:

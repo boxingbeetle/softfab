@@ -141,7 +141,7 @@ class BatchExecute_GET(FabPage['BatchExecute_GET.Processor', 'BatchExecute_GET.A
             else:
                 self.taskSet = taskSet
 
-        def process(self, req):
+        def process(self, req, user):
             # pylint: disable=attribute-defined-outside-init
             self.notices = []
             self.params = {}
@@ -199,7 +199,7 @@ class BatchExecute_POST(BatchExecute_GET):
 
     class Processor(BatchExecute_GET.Processor):
 
-        def process(self, req):
+        def process(self, req, user):
             args = req.args
             action = args.action
 
@@ -243,7 +243,7 @@ class BatchExecute_POST(BatchExecute_GET):
 
             if not notices:
                 # Create jobs.
-                userName = req.user.name
+                userName = user.name
                 jobs = []
                 for config in configs:
                     try:

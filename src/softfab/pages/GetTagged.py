@@ -28,7 +28,7 @@ class GetTagged_GET(ControlPage['GetTagged_GET.Arguments', 'GetTagged_GET.Proces
 
     class Processor(PageProcessor):
 
-        def process(self, req):
+        def process(self, req, user):
             # Determine subject and access rights.
             try:
                 db = subjectToDB[req.args.subject]
@@ -37,7 +37,7 @@ class GetTagged_GET(ControlPage['GetTagged_GET.Arguments', 'GetTagged_GET.Proces
                     'Invalid subject type "%s"' % req.args.subject
                     )
             checkPrivilege(
-                req.user, db.privilegeObject + '/l',
+                user, db.privilegeObject + '/l',
                 'list %ss' % db.description
                 )
 

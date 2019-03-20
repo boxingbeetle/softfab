@@ -28,7 +28,7 @@ class TaskRunnerEdit_GET(FabPage['TaskRunnerEdit_GET.Processor', 'TaskRunnerEdit
 
     class Processor(PageProcessor):
 
-        def process(self, req):
+        def process(self, req, user):
             try:
                 runner = taskRunnerDB[req.args.id]
             except KeyError:
@@ -69,9 +69,9 @@ class TaskRunnerEdit_POST(TaskRunnerEdit_GET):
 
     class Processor(TaskRunnerEdit_GET.Processor):
 
-        def process(self, req):
+        def process(self, req, user):
             if req.args.action is Actions.SAVE:
-                super().process(req)
+                super().process(req, user)
                 args = req.args
                 runner = self.runner
                 runner.capabilities = args.capabilities.split()

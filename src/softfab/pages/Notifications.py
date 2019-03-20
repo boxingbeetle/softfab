@@ -110,7 +110,7 @@ class Notifications_POST(FabPage['Notifications_POST.Processor', 'Notifications_
     class Processor(PageProcessor):
 
         @inlineCallbacks
-        def process(self, req):
+        def process(self, req, user):
             args = req.args
             action = args.action
             smtpRelay = args.smtpRelay

@@ -59,7 +59,7 @@ class GetTaggedTaskInfo_GET(ControlPage['GetTaggedTaskInfo_GET.Arguments', 'GetT
 
     class Processor(PageProcessor):
 
-        def process(self, req):
+        def process(self, req, user):
             # pylint: disable=attribute-defined-outside-init
             self.selected = filterTasks(req.args.tag, req.args.owner)
 

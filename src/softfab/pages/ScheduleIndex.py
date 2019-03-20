@@ -94,7 +94,7 @@ class ScheduleIndex_GET(FabPage['ScheduleIndex_GET.Processor', 'ScheduleIndex_GE
 
     class Processor(PageProcessor):
 
-        def process(self, req):
+        def process(self, req, user):
             self.finishedSchedules = any(
                 schedule.isDone() for schedule in scheduleDB
                 )
@@ -129,8 +129,7 @@ class ScheduleIndex_POST(FabPage['ScheduleIndex_POST.Processor', 'ScheduleIndex_
 
     class Processor(PageProcessor):
 
-        def process(self, req):
-            user = req.user
+        def process(self, req, user):
             for scheduleId, action in req.args.action.items():
                 # Toggle suspend.
                 scheduled = scheduleDB.get(scheduleId)

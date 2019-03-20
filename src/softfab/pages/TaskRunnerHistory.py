@@ -41,7 +41,7 @@ class TaskRunnerHistory_GET(FabPage['TaskRunnerHistory_GET.Processor', 'TaskRunn
 
     class Processor(PageProcessor):
 
-        def process(self, req):
+        def process(self, req, user):
             runnerId = req.args.runnerId
 
             taskRunner = taskRunnerDB.get(runnerId)

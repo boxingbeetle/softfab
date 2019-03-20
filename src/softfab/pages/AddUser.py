@@ -42,13 +42,13 @@ class AddUserBase(FabPage[ProcT, ArgsT]):
             proc: ProcT, prefill: Optional[PageArgs]
             ) -> XMLContent:
         return makeForm(args = prefill)[
-            self.__presentFormBody(proc.req)
+            self.__presentFormBody(proc.user)
             ].present(proc=proc)
 
-    def __presentFormBody(self, req: Request) -> XMLContent:
+    def __presentFormBody(self, user: User) -> XMLContent:
         yield xhtml.p[ 'Enter information about new user:' ]
         yield UserTable.instance
-        if req.user.name is None:
+        if user.name is None:
             yield hiddenInput(name='loginpass', value='')
         else:
             yield xhtml.p[
@@ -68,7 +68,7 @@ class AddUser_GET(AddUserBase['AddUser_GET.Processor',
         indexQuery = RefererArg('UserList')
 
     class Processor(PageProcessor):
-        def process(self, req):
+        def process(self, req, user):
             pass
 
     def presentContent(self, proc: Processor) -> XMLContent:
@@ -87,7 +87,7 @@ class AddUser_POST(AddUserBase['AddUser_POST.Processor',
     class Processor(PageProcessor):
 
         @inlineCallbacks
-        def process(self, req):
+        def process(self, req, user):
             if req.args.action is Actions.CANCEL:
                 raise Redirect(self.page.getCancelURL(req))
             elif req.args.action is Actions.ADD:
@@ -109,7 +109,7 @@ class AddUser_POST(AddUserBase['AddUser_POST.Processor',
                     raise PresentableError(passwordStr[quality])
 
                 # Authentication of currently logged-in operator
-                reqUserName = req.user.name
+                reqUserName = user.name
                 if reqUserName is not None:
                     try:
                         user_ = yield authenticate(
