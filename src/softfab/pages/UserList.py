@@ -57,7 +57,7 @@ class PasswordColumn(DataColumn):
         userName = record.getId()
         if requestUser.hasPrivilege('u/m') or (
                 requestUser.hasPrivilege('u/mo') and
-                requestUser.getUserName() == userName
+                requestUser.name == userName
                 ):
             # User is allowed to modify passwords.
             return pageLink('ChangePassword', UserIdArgs(user = userName))[

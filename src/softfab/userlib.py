@@ -338,8 +338,9 @@ class User(ABC):
     '''A user account.
     '''
 
-    def getUserName(self) -> Optional[str]:
-        '''Returns the name of the user account, or None for anonymous users.
+    @property
+    def name(self) -> Optional[str]:
+        '''Login name of the user account, or None for anonymous users.
         '''
         raise NotImplementedError
 
@@ -352,7 +353,8 @@ class SuperUser(User):
     '''Anonymous user who has the combined privileges of all roles.
     '''
 
-    def getUserName(self) -> Optional[str]:
+    @property
+    def name(self) -> Optional[str]:
         return None
 
     def hasPrivilege(self, priv: str) -> bool:
@@ -362,7 +364,8 @@ class AnonGuestUser(User):
     '''Anonymous user who has guest privileges.
     '''
 
-    def getUserName(self) -> Optional[str]:
+    @property
+    def name(self) -> Optional[str]:
         return None
 
     def hasPrivilege(self, priv: str) -> bool:
@@ -372,7 +375,8 @@ class UnknownUser(User):
     '''Anonymous user who has no privileges.
     '''
 
-    def getUserName(self) -> Optional[str]:
+    @property
+    def name(self) -> Optional[str]:
         return None
 
     def hasPrivilege(self, priv: str) -> bool:
@@ -437,7 +441,8 @@ class UserInfo(XMLTag, DatabaseElem, User):
     def getId(self) -> str:
         return self['id']
 
-    def getUserName(self) -> str:
+    @property
+    def name(self) -> Optional[str]:
         return self.getId()
 
     def isInRole(self, role: str) -> bool:
@@ -490,7 +495,7 @@ def checkPrivilegeForOwned(
     hasOwnedPriv = ownedPriv in privileges and user.hasPrivilege(ownedPriv)
     if hasOwnedPriv:
         # User is allowed to perform action, but only for owned records.
-        userName = user.getUserName()
+        userName = user.name
         if not iterable(records):
             records = ( records, )
         if all(record.getOwner() == userName for record in records):

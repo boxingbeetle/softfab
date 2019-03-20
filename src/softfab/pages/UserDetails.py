@@ -67,7 +67,7 @@ class UserDetails_GET(FabPage['UserDetails_GET.Processor', 'UserDetails_GET.Argu
         infoUser = proc.infoUser
         infoUserName = proc.args.user
         requestUser = proc.req.user
-        requestUserName = requestUser.getUserName()
+        requestUserName = requestUser.name
 
         if infoUser is None:
             yield xhtml.p[

@@ -150,7 +150,7 @@ class RequestBase:
         """The name of the user who made this request, or None if the user
         is anonymous.
         """
-        return self._user.getUserName()
+        return self._user.name
 
 class Request(RequestBase, Generic[ArgsT]):
     '''Contains the request information that is only available during the
