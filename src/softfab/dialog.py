@@ -182,7 +182,7 @@ class InitialDialogProcessor(DialogProcessorBase):
     """Processor that loads the initial state for `DialogPage`.
     """
 
-    def getInitial(self, req):
+    def getInitial(self, args, user):
         '''Called when the dialog is entered, to determine the first step
         and the initial argument values.
         Returns a pair consisting of the DialogStep object for the initial
@@ -191,7 +191,7 @@ class InitialDialogProcessor(DialogProcessorBase):
         raise NotImplementedError
 
     def process(self, req):
-        initialClass, self.args = self.getInitial(req)
+        initialClass, self.args = self.getInitial(self.args, self.user)
         initialStep = self.page.stepObjects[initialClass.name]
         self.walkSteps([initialStep])
 

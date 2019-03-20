@@ -478,11 +478,11 @@ class Execute_GET(ExecuteBase, DialogPage):
 
     class Processor(ExecuteProcessorMixin, InitialDialogProcessor):
 
-        def getInitial(self, req):
-            if req.args.step is EntranceSteps.EDIT:
-                return TargetStep, Execute_POST.Arguments.load(req)
-            elif req.args.config != '':
-                return RunnerStep, Execute_POST.Arguments.load(req)
+        def getInitial(self, args, user):
+            if args.step is EntranceSteps.EDIT:
+                return TargetStep, Execute_POST.Arguments.load(args, user)
+            elif args.config != '':
+                return RunnerStep, Execute_POST.Arguments.load(args, user)
             else:
                 return TargetStep, Execute_POST.Arguments()
 
@@ -511,8 +511,7 @@ class Execute_POST(ExecuteBase):
         action = EnumArg(Actions, Actions.START)
 
         @classmethod
-        def load(cls, req):
-            args = req.args
+        def load(cls, args, user):
             try:
                 config = configDB[args.config]
             except KeyError:
@@ -520,7 +519,7 @@ class Execute_POST(ExecuteBase):
                     'Configuration "%s" does not exist' % args.config
                     )
 
-            checkPrivilege(req.user, 'c/a', 'access configurations')
+            checkPrivilege(user, 'c/a', 'access configurations')
             tasks = config.getTasks()
 
             values = {}
