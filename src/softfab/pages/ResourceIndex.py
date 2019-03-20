@@ -103,7 +103,7 @@ class ResourcesTable(DataTable):
 
     def iterColumns(self, proc, **kwargs):
         yield from self.fixedColumns
-        user = proc.req.user
+        user = proc.user
         if user.hasPrivilege('r/a'):
             yield self.reserveColumn
         if user.hasPrivilege('r/m'):

@@ -56,7 +56,7 @@ class TaskStep(DialogStep):
     def process(self, proc):
         # TODO: Maybe check privileges for individual steps at the page level?
         #       It would be a bit strange to be stopped halfway a wizard.
-        checkPrivilege(proc.req.user, 'td/l', 'access task list')
+        checkPrivilege(proc.user, 'td/l', 'access task list')
         return True
 
     def presentFormBody(self, **kwargs):
@@ -265,7 +265,7 @@ class StartStep(DialogStep):
     title = 'Started'
 
     def process(self, proc):
-        checkPrivilege(proc.req.user, 'j/c', 'create jobs')
+        checkPrivilege(proc.user, 'j/c', 'create jobs')
         if len(proc.args.tasks) == 0:
             # Normally this will be stopped by TaskStep.verify(), but it is
             # not safe to rely on that because the request might be mangled
@@ -277,7 +277,7 @@ class StartStep(DialogStep):
         config = proc.getConfig()
         jobIds = []
         for _ in range(proc.args.multi):
-            job = config.createJob(proc.req.user.name)
+            job = config.createJob(proc.user.name)
             jobDB.add(job)
             jobIds.append(job.getId())
         raise Redirect(createJobsURL(jobIds))
@@ -341,11 +341,11 @@ class SaveStep(DialogStep):
         config = proc.getConfig()
         oldConfig = configDB.get(config.getId())
         if oldConfig is None:
-            checkPrivilege(proc.req.user, 'c/c', 'create configurations')
+            checkPrivilege(proc.user, 'c/c', 'create configurations')
             configDB.add(config)
         else:
             checkPrivilegeForOwned(
-                proc.req.user, 'c/m', oldConfig,
+                proc.user, 'c/m', oldConfig,
                 ( 'modify configurations owned by other users',
                   'modify configurations' )
                 )
@@ -403,7 +403,7 @@ class ExecuteProcessorMixin:
             config = Config.create(
                 name = args.config,
                 target = args.target,
-                owner = self.req.user.name,
+                owner = self.user.name,
                 trselect = args.trselect,
                 comment = args.comment,
                 jobParams = jobParams,

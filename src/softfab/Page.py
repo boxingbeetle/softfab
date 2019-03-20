@@ -97,6 +97,7 @@ class PageProcessor(Generic[ArgsT]):
         # set by parseAndProcess():
         self.args = cast(ArgsT, None)
         self.page = cast(FabResource[ArgsT, 'PageProcessor[ArgsT]'], None)
+        self.user = cast(User, None)
 
     def getTableData(self, table: DataTable) -> '_TableData':
         return self.__tables[id(table)]

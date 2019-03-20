@@ -135,11 +135,12 @@ def parseAndProcess(
     Processing step: database interaction.
     Returns a Deferred which has a (responder, proc) pair as its result.
     '''
+    user = req.user
     try:
         # Page-level authorization.
         # It is possible for additional access checks to fail during the
         # processing step.
-        page.checkAccess(req.user)
+        page.checkAccess(user)
 
         # Argument parsing.
         try:
@@ -159,6 +160,7 @@ def parseAndProcess(
         proc = page.Processor(req) # type: PageProcessor[ArgsT]
         proc.page = page
         proc.args = args
+        proc.user = user
         try:
             yield proc.process(req)
         except PresentableError as ex:
@@ -181,6 +183,7 @@ def parseAndProcess(
                 )
             )
         proc = forbiddenPage
+        proc.user = user
         responder = UIResponder(forbiddenPage, proc) # type: Responder
     except ArgsCorrected as ex:
         subPath = req.getSubPath()
@@ -190,6 +193,7 @@ def parseAndProcess(
         else:
             url = '%s/%s?%s' % (page.name, subPath, query.toURL())
         responder = proc = Redirector(req, url)
+        proc.user = user
     except ArgsInvalid as ex:
         badRequestPage = BadRequestPage(
             req,
@@ -202,6 +206,7 @@ def parseAndProcess(
                 )
             )
         proc = badRequestPage
+        proc.user = user
         responder = UIResponder(badRequestPage, proc)
     except InvalidRequest as ex:
         badRequestPage = BadRequestPage(

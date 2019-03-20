@@ -53,7 +53,7 @@ class PasswordColumn(DataColumn):
     label = 'Password'
 
     def presentCell(self, record, *, proc, **kwargs):
-        requestUser = proc.req.user
+        requestUser = proc.user
         userName = record.getId()
         if requestUser.hasPrivilege('u/m') or (
                 requestUser.hasPrivilege('u/mo') and
@@ -97,7 +97,7 @@ class UserTable(DataTable):
     def iterColumns(self, proc, **kwargs):
         yield NameColumn.instance
         yield RoleColumn.instance
-        requestUser = proc.req.user
+        requestUser = proc.user
         if requestUser.hasPrivilege('u/m') or requestUser.hasPrivilege('u/mo'):
             yield PasswordColumn.instance
 
