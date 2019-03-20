@@ -39,7 +39,7 @@ class AnonGuest_POST(AnonGuestBase['AnonGuest_POST.Processor',
     class Arguments(AnonGuestArgs):
         pass
 
-    class Processor(PageProcessor):
+    class Processor(PageProcessor[AnonGuestArgs]):
 
         def process(self, req, user):
             project.setAnonGuestAccess(req.args.anonguest)

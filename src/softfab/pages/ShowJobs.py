@@ -28,7 +28,7 @@ class ShowJobs_GET(FabPage['ShowJobs_GET.Processor', 'ShowJobs_GET.Arguments']):
     class Arguments(JobIdSetArgs):
         pass
 
-    class Processor(PageProcessor):
+    class Processor(PageProcessor[JobIdSetArgs]):
 
         def process(self, req, user):
             jobs = []

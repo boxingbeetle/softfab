@@ -68,7 +68,8 @@ class BasketConfigTable(BaseTagConfigTable):
     def getRecordsToQuery(self, proc):
         return proc.selectedRecords
 
-class LoadExecute_GET(FabPage['LoadExecute_GET.Processor', 'LoadExecute_GET.Arguments']):
+class LoadExecute_GET(FabPage['LoadExecute_GET.Processor',
+                              'LoadExecute_GET.Arguments']):
     icon = 'IconExec'
     description = 'Execute'
     children = [
@@ -81,7 +82,8 @@ class LoadExecute_GET(FabPage['LoadExecute_GET.Processor', 'LoadExecute_GET.Argu
         sort = SortArg()
         sort_basket = SortArg()
 
-    class Processor(PageProcessor, SelectProcMixin):
+    class Processor(PageProcessor['LoadExecute_GET.Arguments'],
+                    SelectProcMixin):
         tagCache = Config.cache
         db = configDB
 

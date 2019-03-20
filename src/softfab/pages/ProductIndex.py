@@ -39,7 +39,8 @@ class ProductDefTable(DataTable):
         LinkColumn('Delete', 'ProductDelete'),
         )
 
-class ProductIndex_GET(FabPage['ProductIndex_GET.Processor', 'ProductIndex_GET.Arguments']):
+class ProductIndex_GET(FabPage['ProductIndex_GET.Processor',
+                               'ProductIndex_GET.Arguments']):
     icon = 'Product1'
     description = 'Products'
     children = [ 'ProductDetails', 'ProductEdit', 'ProductDelete' ]
@@ -48,7 +49,7 @@ class ProductIndex_GET(FabPage['ProductIndex_GET.Processor', 'ProductIndex_GET.A
         first = IntArg(0)
         sort = SortArg()
 
-    class Processor(PageProcessor):
+    class Processor(PageProcessor['ProductIndex_GET.Arguments']):
         pass
 
     def checkAccess(self, user: User) -> None:

@@ -34,5 +34,6 @@ class DelTaskRunnerRecord_POST(RecordDelete_POSTMixin, DelTaskRunnerRecord_GET):
                     RecordDelete_GET.Arguments):
         pass
 
-    class Processor(RecordDelete_POSTMixin.ProcessorMixin, PageProcessor):
+    class Processor(RecordDelete_POSTMixin.ProcessorMixin,
+                    PageProcessor['DelTaskRunnerRecord_POST.Arguments']):
         pass

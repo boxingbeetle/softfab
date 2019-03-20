@@ -42,7 +42,7 @@ class ProductDetails_GET(
     class Arguments(ProductDefIdArgs):
         pass
 
-    class Processor(PageProcessor):
+    class Processor(PageProcessor[ProductDefIdArgs]):
 
         def process(self, req, user):
             productDefId = req.args.id

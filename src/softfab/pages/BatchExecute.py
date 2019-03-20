@@ -109,7 +109,8 @@ Actions = Enum('Actions', 'EXECUTE CANCEL')
 
 submitButtons = xhtml.p[ actionButtons(Actions) ]
 
-class BatchExecute_GET(FabPage['BatchExecute_GET.Processor', 'BatchExecute_GET.Arguments']):
+class BatchExecute_GET(FabPage['BatchExecute_GET.Processor',
+                               'BatchExecute_GET.Arguments']):
     icon = 'IconExec'
     description = 'Execute Batch'
     linkDescription = False
@@ -117,7 +118,7 @@ class BatchExecute_GET(FabPage['BatchExecute_GET.Processor', 'BatchExecute_GET.A
     class Arguments(ParentArgs):
         pass
 
-    class Processor(SelectConfigsMixin, PageProcessor):
+    class Processor(SelectConfigsMixin, PageProcessor[ParentArgs]):
 
         def getBackURL(self):
             args = self.args

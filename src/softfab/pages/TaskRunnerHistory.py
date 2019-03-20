@@ -31,7 +31,8 @@ class HistoryTable(TaskRunsTable):
         # so this column is not useful.
         return False
 
-class TaskRunnerHistory_GET(FabPage['TaskRunnerHistory_GET.Processor', 'TaskRunnerHistory_GET.Arguments']):
+class TaskRunnerHistory_GET(FabPage['TaskRunnerHistory_GET.Processor',
+                                    'TaskRunnerHistory_GET.Arguments']):
     icon = 'TaskRunStat1'
     description = 'Task Runner History'
 
@@ -39,7 +40,7 @@ class TaskRunnerHistory_GET(FabPage['TaskRunnerHistory_GET.Processor', 'TaskRunn
         first = IntArg(0)
         sort = SortArg()
 
-    class Processor(PageProcessor):
+    class Processor(PageProcessor['TaskRunnerHistory_GET.Arguments']):
 
         def process(self, req, user):
             runnerId = req.args.runnerId

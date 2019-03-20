@@ -40,7 +40,7 @@ class ConfigTagsBase(FabPage['ConfigTagsBase.Processor', FabPage.Arguments]):
     description = 'Configuration Tags'
     linkDescription = False
 
-    class Processor(SelectConfigsMixin, PageProcessor):
+    class Processor(SelectConfigsMixin, PageProcessor[ParentArgs]):
 
         def getBackURL(self):
             args = self.args

@@ -12,7 +12,8 @@ from softfab.userlib import User
 from softfab.xmlgen import xml
 
 
-class TaskReport_POST(ControlPage['TaskReport_POST.Arguments', 'TaskReport_POST.Processor']):
+class TaskReport_POST(ControlPage['TaskReport_POST.Arguments',
+                                  'TaskReport_POST.Processor']):
     authenticator = NoAuthPage
 
     class Arguments(PageArgs):
@@ -21,7 +22,7 @@ class TaskReport_POST(ControlPage['TaskReport_POST.Arguments', 'TaskReport_POST.
         shadowId = StrArg(None)
         url = StrArg()
 
-    class Processor(PageProcessor):
+    class Processor(PageProcessor['TaskReport_POST.Arguments']):
 
         def process(self, req, user):
             jobId = req.args.id

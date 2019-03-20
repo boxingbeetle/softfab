@@ -33,7 +33,8 @@ class TasksTable(DataTable):
         LinkColumn('Delete', 'TaskDelete'),
         )
 
-class TaskIndex_GET(FabPage['TaskIndex_GET.Processor', 'TaskIndex_GET.Arguments']):
+class TaskIndex_GET(FabPage['TaskIndex_GET.Processor',
+                            'TaskIndex_GET.Arguments']):
     icon = 'TaskDef2'
     description = 'Task Definitions'
     children = [ 'TaskDetails', 'TaskEdit', 'TaskDelete']
@@ -42,7 +43,7 @@ class TaskIndex_GET(FabPage['TaskIndex_GET.Processor', 'TaskIndex_GET.Arguments'
         first = IntArg(0)
         sort = SortArg()
 
-    class Processor(PageProcessor):
+    class Processor(PageProcessor['TaskIndex_GET.Arguments']):
         pass
 
     def checkAccess(self, user: User) -> None:

@@ -12,12 +12,13 @@ from softfab.userlib import User, checkPrivilege
 from softfab.xmlgen import xml
 
 
-class GetJobInfo_GET(ControlPage['GetJobInfo_GET.Arguments', 'GetJobInfo_GET.Processor']):
+class GetJobInfo_GET(ControlPage['GetJobInfo_GET.Arguments',
+                                 'GetJobInfo_GET.Processor']):
 
     class Arguments(JobIdArgs):
         pass
 
-    class Processor(PageProcessor):
+    class Processor(PageProcessor[JobIdArgs]):
 
         def process(self, req, user):
             jobId = req.args.jobId

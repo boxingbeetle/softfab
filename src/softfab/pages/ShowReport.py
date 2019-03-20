@@ -43,7 +43,8 @@ class TaskRunsTable(JobTaskRunsTable):
             ':'
             )
 
-class ShowReport_GET(FabPage['ShowReport_GET.Processor', 'ShowReport_GET.Arguments']):
+class ShowReport_GET(FabPage['ShowReport_GET.Processor',
+                             'ShowReport_GET.Arguments']):
     icon = 'IconReport'
     description = 'Show Reports'
     children = [ 'AbortTask', 'ExtractionDetails', 'ShowTaskInfo' ]
@@ -51,7 +52,7 @@ class ShowReport_GET(FabPage['ShowReport_GET.Processor', 'ShowReport_GET.Argumen
     class Arguments(JobIdArgs):
         pass
 
-    class Processor(PageProcessor):
+    class Processor(PageProcessor[JobIdArgs]):
 
         def process(self, req, user):
             jobId = req.args.jobId

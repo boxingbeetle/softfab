@@ -142,7 +142,7 @@ class UserList_GET(FabPage['UserList_GET.Processor', 'UserList_GET.Arguments']):
         first = IntArg(0)
         sort = SortArg()
 
-    class Processor(PageProcessor):
+    class Processor(PageProcessor['UserList_GET.Arguments']):
 
         def process(self, req, user):
             # pylint: disable=attribute-defined-outside-init
@@ -178,7 +178,8 @@ class UserList_GET(FabPage['UserList_GET.Processor', 'UserList_GET.Arguments']):
         else:
             yield presentAnonGuestSetting()
 
-class UserList_POST(FabPage['UserList_POST.Processor', 'UserList_POST.Arguments']):
+class UserList_POST(FabPage['UserList_POST.Processor',
+                            'UserList_POST.Arguments']):
     icon = 'UserList1'
     description = 'Change Role'
 
@@ -189,7 +190,7 @@ class UserList_POST(FabPage['UserList_POST.Processor', 'UserList_POST.Arguments'
         user = StrArg()
         role = EnumArg(UIRoleNames)
 
-    class Processor(PageProcessor):
+    class Processor(PageProcessor['UserList_POST.Arguments']):
 
         def process(self, req, user):
             # Find user record.

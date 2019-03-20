@@ -35,5 +35,6 @@ class DelJobConfig_POST(RecordDelete_POSTMixin, DelJobConfig_GET):
                     DelJobConfig_GET.Arguments):
         pass
 
-    class Processor(RecordDelete_POSTMixin.ProcessorMixin, PageProcessor):
+    class Processor(RecordDelete_POSTMixin.ProcessorMixin,
+                    PageProcessor['DelJobConfig_POST.Arguments']):
         pass

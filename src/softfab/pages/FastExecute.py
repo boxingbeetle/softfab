@@ -36,7 +36,8 @@ class PostArgs(RefererArgs):
 
 Actions = Enum('Actions', 'EXECUTE CANCEL')
 
-class FastExecute_GET(FabPage['FastExecute_GET.Processor', 'FastExecute_GET.Arguments']):
+class FastExecute_GET(FabPage['FastExecute_GET.Processor',
+                              'FastExecute_GET.Arguments']):
     icon = 'IconExec'
     description = 'Execute Configurations'
     linkDescription = False
@@ -44,7 +45,7 @@ class FastExecute_GET(FabPage['FastExecute_GET.Processor', 'FastExecute_GET.Argu
     class Arguments(TagArgs, RefererArgs):
         configId = StrArg(None)
 
-    class Processor(PageProcessor):
+    class Processor(PageProcessor['FastExecute_GET.Arguments']):
 
         def process(self, req, user):
             configId = req.args.configId
@@ -130,7 +131,8 @@ class FastExecute_GET(FabPage['FastExecute_GET.Processor', 'FastExecute_GET.Argu
         yield message
         yield self.backToReferer(proc.req)
 
-class FastExecute_POST(FabPage['FastExecute_POST.Processor', 'FastExecute_POST.Arguments']):
+class FastExecute_POST(FabPage['FastExecute_POST.Processor',
+                               'FastExecute_POST.Arguments']):
     icon = 'IconExec'
     description = 'Execute Configurations'
     linkDescription = False
@@ -138,7 +140,7 @@ class FastExecute_POST(FabPage['FastExecute_POST.Processor', 'FastExecute_POST.A
     class Arguments(PostArgs):
         action = EnumArg(Actions)
 
-    class Processor(PageProcessor):
+    class Processor(PageProcessor['FastExecute_POST.Arguments']):
 
         def process(self, req, user):
             action = req.args.action

@@ -11,14 +11,15 @@ from softfab.userlib import User, checkPrivilege, checkPrivilegeForOwned
 from softfab.xmlgen import xml
 
 
-class InspectDone_POST(ControlPage['InspectDone_POST.Arguments', 'InspectDone_POST.Processor']):
+class InspectDone_POST(ControlPage['InspectDone_POST.Arguments',
+                                   'InspectDone_POST.Processor']):
 
     class Arguments(TaskIdArgs):
         result = EnumArg(ResultCode)
         summary = StrArg(None)
         data = DictArg(StrArg())
 
-    class Processor(PageProcessor):
+    class Processor(PageProcessor['InspectDone_POST.Arguments']):
 
         def process(self, req, user):
             # Fetch and check job and task.

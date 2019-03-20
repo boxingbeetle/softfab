@@ -61,7 +61,7 @@ class FrameworkDetails_GET(
     class Arguments(FrameworkIdArgs):
         pass
 
-    class Processor(PageProcessor):
+    class Processor(PageProcessor[FrameworkIdArgs]):
 
         def process(self, req, user):
             frameworkId = req.args.id

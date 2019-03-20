@@ -11,7 +11,8 @@ from softfab.userlib import User, checkPrivilege
 from softfab.xmlgen import XMLContent
 
 
-class StorageIndex_GET(FabPage['StorageIndex_GET.Processor', 'StorageIndex_GET.Arguments']):
+class StorageIndex_GET(FabPage['StorageIndex_GET.Processor',
+                               'StorageIndex_GET.Arguments']):
     icon = 'IconReport'
     description = 'Report Storages'
     children = [ 'StorageEdit' ]
@@ -20,7 +21,7 @@ class StorageIndex_GET(FabPage['StorageIndex_GET.Processor', 'StorageIndex_GET.A
         first = IntArg(0)
         sort = SortArg()
 
-    class Processor(PageProcessor):
+    class Processor(PageProcessor['StorageIndex_GET.Arguments']):
         pass
 
     def checkAccess(self, user: User) -> None:

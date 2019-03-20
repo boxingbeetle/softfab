@@ -15,7 +15,8 @@ subjectToDB = dict(
     taskdef = taskDefDB,
     )
 
-class GetTagged_GET(ControlPage['GetTagged_GET.Arguments', 'GetTagged_GET.Processor']):
+class GetTagged_GET(ControlPage['GetTagged_GET.Arguments',
+                                'GetTagged_GET.Processor']):
 
     class Arguments(PageArgs):
         subject = StrArg()
@@ -26,7 +27,7 @@ class GetTagged_GET(ControlPage['GetTagged_GET.Arguments', 'GetTagged_GET.Proces
         # Access check depends on subject, so check in Processor.
         pass
 
-    class Processor(PageProcessor):
+    class Processor(PageProcessor['GetTagged_GET.Arguments']):
 
         def process(self, req, user):
             # Determine subject and access rights.

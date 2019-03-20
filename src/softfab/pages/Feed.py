@@ -91,7 +91,7 @@ class Feed_GET(ControlPage[ControlPage.Arguments, 'Feed_GET.Processor']):
         checkPrivilege(user, 'j/l')
         checkPrivilege(user, 'j/a')
 
-    class Processor(PageProcessor):
+    class Processor(PageProcessor[ControlPage.Arguments]):
         # N (where N=50) MostRecent & Completed Jobs
         recentJobs = MostRecent(jobDB, 'recent', 50)
 

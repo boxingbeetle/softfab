@@ -62,7 +62,8 @@ class ReqPasswordTable(FormTable):
 
 Actions = Enum('Actions', 'CHANGE CANCEL')
 
-class ChangePassword_GET(FabPage['ChangePassword_GET.Processor', 'ChangePassword_GET.Arguments']):
+class ChangePassword_GET(FabPage['ChangePassword_GET.Processor',
+                                 'ChangePassword_GET.Arguments']):
     icon = 'UserList1'
     description = 'Change Password'
 
@@ -70,7 +71,7 @@ class ChangePassword_GET(FabPage['ChangePassword_GET.Processor', 'ChangePassword
         indexQuery = RefererArg('UserList')
         detailsQuery = RefererArg('UserDetails')
 
-    class Processor(PageProcessor):
+    class Processor(PageProcessor['ChangePassword_GET.Arguments']):
 
         def process(self, req, user):
             # Validate input.
@@ -116,7 +117,8 @@ class ChangePassword_GET(FabPage['ChangePassword_GET.Processor', 'ChangePassword
             yield self.backToReferer(proc.req)
 
 
-class ChangePassword_POST(FabPage['ChangePassword_POST.Processor', 'ChangePassword_POST.Arguments']):
+class ChangePassword_POST(FabPage['ChangePassword_POST.Processor',
+                                  'ChangePassword_POST.Arguments']):
     # Icon is determined by the GET variant of the page.
     # TODO: This asymmetry isn't good.
     #       Either give treat both the GET and POST handlers as full pages
@@ -130,7 +132,7 @@ class ChangePassword_POST(FabPage['ChangePassword_POST.Processor', 'ChangePasswo
         password = PasswordArg(None)
         password2 = PasswordArg(None)
 
-    class Processor(PageProcessor):
+    class Processor(PageProcessor['ChangePassword_POST.Arguments']):
 
         @inlineCallbacks
         def process(self, req, user):

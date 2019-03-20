@@ -58,13 +58,14 @@ def modelToXML(model, fmt):
     elif supports:
         yield xml.model(name = name)
 
-class ListModels_GET(ControlPage['ListModels_GET.Arguments', 'ListModels_GET.Processor']):
+class ListModels_GET(ControlPage['ListModels_GET.Arguments',
+                                 'ListModels_GET.Processor']):
 
     class Arguments(PageArgs):
         model = StrArg(None)
         format = StrArg(None)
 
-    class Processor(PageProcessor):
+    class Processor(PageProcessor['ListModels_GET.Arguments']):
         pass
 
     def checkAccess(self, user: User) -> None:

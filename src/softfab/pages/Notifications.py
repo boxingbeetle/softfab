@@ -96,7 +96,8 @@ class MailConfigArgs(PageArgs):
     smtpRelay = StrArg()
     mailSender = StrArg()
 
-class Notifications_POST(FabPage['Notifications_POST.Processor', 'Notifications_POST.Arguments']):
+class Notifications_POST(FabPage['Notifications_POST.Processor',
+                                 'Notifications_POST.Arguments']):
     icon = 'IconNotification'
     description = 'Notifications'
 
@@ -107,7 +108,7 @@ class Notifications_POST(FabPage['Notifications_POST.Processor', 'Notifications_
         action = EnumArg(Actions)
         mailRecipient = StrArg()
 
-    class Processor(PageProcessor):
+    class Processor(PageProcessor['Notifications_POST.Arguments']):
 
         @inlineCallbacks
         def process(self, req, user):

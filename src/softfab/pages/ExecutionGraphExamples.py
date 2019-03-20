@@ -48,7 +48,7 @@ class ExecutionGraphExamples_GET(
         ):
     authenticator = NoAuthPage
 
-    class Processor(PageProcessor):
+    class Processor(PageProcessor['FabResource.Arguments']):
 
         def process(self, req, user):
             export = False

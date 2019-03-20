@@ -19,7 +19,7 @@ class LatestReport_GET(
     class Arguments(TaskDefIdArgs):
         pass
 
-    class Processor(PageProcessor):
+    class Processor(PageProcessor[TaskDefIdArgs]):
 
         def process(self, req, user):
             taskId = req.args.id

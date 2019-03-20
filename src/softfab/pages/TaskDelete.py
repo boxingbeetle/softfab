@@ -38,5 +38,6 @@ class TaskDelete_POST(RecordDelete_POSTMixin, TaskDelete_GET):
                     TaskDelete_GET.Arguments):
         pass
 
-    class Processor(RecordDelete_POSTMixin.ProcessorMixin, PageProcessor):
+    class Processor(RecordDelete_POSTMixin.ProcessorMixin,
+                    PageProcessor['TaskDelete_POST.Arguments']):
         pass

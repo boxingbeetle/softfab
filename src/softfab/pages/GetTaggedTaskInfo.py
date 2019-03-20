@@ -51,13 +51,14 @@ def filterTasks(tag, owner):
 
     return selected
 
-class GetTaggedTaskInfo_GET(ControlPage['GetTaggedTaskInfo_GET.Arguments', 'GetTaggedTaskInfo_GET.Processor']):
+class GetTaggedTaskInfo_GET(ControlPage['GetTaggedTaskInfo_GET.Arguments',
+                                        'GetTaggedTaskInfo_GET.Processor']):
 
     class Arguments(PageArgs):
         tag = DictArg(SetArg())
         owner = StrArg(None)
 
-    class Processor(PageProcessor):
+    class Processor(PageProcessor['GetTaggedTaskInfo_GET.Arguments']):
 
         def process(self, req, user):
             # pylint: disable=attribute-defined-outside-init

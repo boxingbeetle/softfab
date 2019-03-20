@@ -11,7 +11,8 @@ from softfab.xmlgen import xml
 
 Actions = Enum('Actions', 'SUSPEND RESUME')
 
-class ResourceControl_POST(ControlPage['ResourceControl_POST.Arguments', 'ResourceControl_POST.Processor']):
+class ResourceControl_POST(ControlPage['ResourceControl_POST.Arguments',
+                                       'ResourceControl_POST.Processor']):
 
     class Arguments(PageArgs):
         name = SetArg()
@@ -20,7 +21,7 @@ class ResourceControl_POST(ControlPage['ResourceControl_POST.Arguments', 'Resour
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'tr/m')
 
-    class Processor(PageProcessor):
+    class Processor(PageProcessor['ResourceControl_POST.Arguments']):
 
         def process(self, req, user):
             resNames = req.args.name

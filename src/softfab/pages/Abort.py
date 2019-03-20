@@ -18,7 +18,7 @@ class Abort_POST(ControlPage['Abort_POST.Arguments', 'Abort_POST.Processor']):
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 't/m')
 
-    class Processor(PageProcessor):
+    class Processor(PageProcessor['Abort_POST.Arguments']):
 
         def process(self, req, user):
             jobIds = req.args.jobId

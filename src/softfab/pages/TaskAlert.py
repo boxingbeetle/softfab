@@ -10,14 +10,15 @@ from softfab.userlib import User, checkPrivilege
 from softfab.xmlgen import xml
 
 
-class TaskAlert_POST(ControlPage['TaskAlert_POST.Arguments', 'TaskAlert_POST.Processor']):
+class TaskAlert_POST(ControlPage['TaskAlert_POST.Arguments',
+                                 'TaskAlert_POST.Processor']):
 
     class Arguments(JobIdArgs):
         taskId = StrArg()
         runId = StrArg('0')
         alert = StrArg()
 
-    class Processor(PageProcessor):
+    class Processor(PageProcessor['TaskAlert_POST.Arguments']):
 
         def process(self, req, user):
             jobId = req.args.jobId

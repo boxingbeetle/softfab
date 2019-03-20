@@ -22,7 +22,7 @@ class GetFactoryInfo_GET(ControlPage[ControlPage.Arguments,
             if priv.endswith('/l'):
                 checkPrivilege(user, priv)
 
-    class Processor(PageProcessor):
+    class Processor(PageProcessor[ControlPage.Arguments]):
 
         def process(self, req, user):
             pass

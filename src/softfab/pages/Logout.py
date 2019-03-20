@@ -20,7 +20,7 @@ class Logout_GET(UIPage['Logout_GET.Processor'],
     class Arguments(URLArgs):
         pass
 
-    class Processor(PageProcessor):
+    class Processor(PageProcessor['Logout_GET.Arguments']):
 
         def process(self, req, user):
             url = req.args.url

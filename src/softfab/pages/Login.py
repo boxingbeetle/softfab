@@ -82,7 +82,7 @@ class Login_GET(LoginBase['Login_GET.Processor', 'Login_GET.Arguments']):
     class Arguments(URLArgs):
         pass
 
-    class Processor(PageProcessor):
+    class Processor(PageProcessor[URLArgs]):
 
         def process(self, req, user):
             url = req.args.url
@@ -106,7 +106,7 @@ class Login_POST(LoginBase['Login_POST.Processor', 'Login_POST.Arguments']):
     class Arguments(Login_GET.Arguments, LoginPassArgs):
         loginname = StrArg()
 
-    class Processor(Login_GET.Processor):
+    class Processor(PageProcessor['Login_POST.Arguments']):
 
         @inlineCallbacks
         def process(self, req, user):

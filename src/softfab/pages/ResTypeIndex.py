@@ -31,7 +31,8 @@ class ResTypeTable(DataTable):
         ResTypeLinkColumn('Delete', 'ResTypeDelete'),
         )
 
-class ResTypeIndex_GET(FabPage['ResTypeIndex_GET.Processor', 'ResTypeIndex_GET.Arguments']):
+class ResTypeIndex_GET(FabPage['ResTypeIndex_GET.Processor',
+                               'ResTypeIndex_GET.Arguments']):
     icon = 'IconResources'
     description = 'Resource Types'
     children = [ 'ResTypeEdit', 'ResTypeDelete' ]
@@ -40,7 +41,7 @@ class ResTypeIndex_GET(FabPage['ResTypeIndex_GET.Processor', 'ResTypeIndex_GET.A
         first = IntArg(0)
         sort = SortArg()
 
-    class Processor(PageProcessor):
+    class Processor(PageProcessor['ResTypeIndex_GET.Arguments']):
         pass
 
     def checkAccess(self, user: User) -> None:

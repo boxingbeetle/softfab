@@ -141,7 +141,7 @@ class ConfigDetails_GET(
     class Arguments(ConfigIdArgs):
         pass
 
-    class Processor(PageProcessor):
+    class Processor(PageProcessor['ConfigDetails_GET.Arguments']):
 
         def process(self, req, user):
             configId = req.args.configId

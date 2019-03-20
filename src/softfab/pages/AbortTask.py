@@ -38,7 +38,8 @@ class AbortTask_GET(FabPage[FabPage.Processor, FabPage.Arguments]):
             xhtml.p[ actionButtons(Actions) ]
             ].present(proc=proc)
 
-class AbortTask_POST(FabPage['AbortTask_POST.Processor', 'AbortTask_POST.Arguments']):
+class AbortTask_POST(FabPage['AbortTask_POST.Processor',
+                             'AbortTask_POST.Arguments']):
     icon = 'IconExec'
     iconModifier = IconModifier.DELETE
     description = 'Abort Task'
@@ -46,7 +47,7 @@ class AbortTask_POST(FabPage['AbortTask_POST.Processor', 'AbortTask_POST.Argumen
     class Arguments(TaskIdArgs):
         action = EnumArg(Actions)
 
-    class Processor(PageProcessor):
+    class Processor(PageProcessor['AbortTask_POST.Arguments']):
 
         def process(self, req, user):
             # pylint: disable=attribute-defined-outside-init

@@ -96,7 +96,7 @@ class TaskMatrixArgs(PageArgs):
 class TaskMatrixCSVArgs(TaskMatrixArgs, CSVPage.Arguments):
     pass
 
-class TaskMatrixProcessor(PageProcessor):
+class TaskMatrixProcessor(PageProcessor[TaskMatrixCSVArgs]):
 
     def process(self, req, user):
         # TODO: It would be useful to have these as method arguments.

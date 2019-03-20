@@ -9,7 +9,8 @@ from softfab.userlib import User, checkPrivilege
 from softfab.xmlgen import xml
 
 
-class LoadExecuteDefault_POST(ControlPage['LoadExecuteDefault_POST.Arguments', 'LoadExecuteDefault_POST.Processor']):
+class LoadExecuteDefault_POST(ControlPage['LoadExecuteDefault_POST.Arguments',
+                                          'LoadExecuteDefault_POST.Processor']):
 
     class Arguments(PageArgs):
         config = StrArg()
@@ -18,7 +19,7 @@ class LoadExecuteDefault_POST(ControlPage['LoadExecuteDefault_POST.Arguments', '
         param = DictArg(StrArg())
         comment = StrArg('')
 
-    class Processor(PageProcessor):
+    class Processor(PageProcessor['LoadExecuteDefault_POST.Arguments']):
 
         def process(self, req, user):
             args = req.args

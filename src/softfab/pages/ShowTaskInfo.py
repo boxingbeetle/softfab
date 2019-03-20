@@ -154,14 +154,15 @@ class OutputTable(ProductTable):
         if taskName in producers:
             yield taskName
 
-class ShowTaskInfo_GET(FabPage['ShowTaskInfo_GET.Processor', 'ShowTaskInfo_GET.Arguments']):
+class ShowTaskInfo_GET(FabPage['ShowTaskInfo_GET.Processor',
+                               'ShowTaskInfo_GET.Arguments']):
     icon = 'IconReport'
     description = 'Show Task Info'
 
     class Arguments(TaskIdArgs):
         pass
 
-    class Processor(PageProcessor):
+    class Processor(PageProcessor[TaskIdArgs]):
 
         def process(self, req, user):
             jobId = req.args.jobId

@@ -93,14 +93,15 @@ class DetailsTable(PropertiesTable):
             'Status', statusDescription(scheduled)
             ]
 
-class ScheduleDetails_GET(FabPage['ScheduleDetails_GET.Processor', 'ScheduleDetails_GET.Arguments']):
+class ScheduleDetails_GET(FabPage['ScheduleDetails_GET.Processor',
+                                  'ScheduleDetails_GET.Arguments']):
     icon = 'IconSchedule'
     description = 'Schedule Details'
 
     class Arguments(ScheduleIdArgs):
         pass
 
-    class Processor(PageProcessor):
+    class Processor(PageProcessor[ScheduleIdArgs]):
 
         def process(self, req, user):
             # pylint: disable=attribute-defined-outside-init

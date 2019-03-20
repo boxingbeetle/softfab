@@ -7,14 +7,15 @@ from softfab.statuslib import StatusModelRegistry, StatusViewClient
 from softfab.userlib import User
 
 
-class ObserveStatus_GET(ControlPage['ObserveStatus_GET.Arguments', 'ObserveStatus_GET.Processor']):
+class ObserveStatus_GET(ControlPage['ObserveStatus_GET.Arguments',
+                                    'ObserveStatus_GET.Processor']):
     streaming = True
 
     class Arguments(PageArgs):
         model = StrArg()
         format = StrArg()
 
-    class Processor(PageProcessor):
+    class Processor(PageProcessor['ObserveStatus_GET.Arguments']):
         pass
 
     def checkAccess(self, user: User) -> None:

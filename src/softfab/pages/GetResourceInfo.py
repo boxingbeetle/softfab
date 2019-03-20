@@ -12,7 +12,8 @@ from softfab.userlib import User, checkPrivilege
 from softfab.xmlgen import xml
 
 
-class GetResourceInfo_GET(ControlPage['GetResourceInfo_GET.Arguments', 'GetResourceInfo_GET.Processor']):
+class GetResourceInfo_GET(ControlPage['GetResourceInfo_GET.Arguments',
+                                      'GetResourceInfo_GET.Processor']):
 
     class Arguments(PageArgs):
         type = SetArg()
@@ -22,7 +23,7 @@ class GetResourceInfo_GET(ControlPage['GetResourceInfo_GET.Arguments', 'GetResou
         checkPrivilege(user, 'tr/a')
         checkPrivilege(user, 'tr/l')
 
-    class Processor(PageProcessor):
+    class Processor(PageProcessor['GetResourceInfo_GET.Arguments']):
 
         def process(self, req, user):
             resTypeNames = req.args.type

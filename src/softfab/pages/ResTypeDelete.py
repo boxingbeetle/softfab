@@ -58,5 +58,6 @@ class ResTypeDelete_POST(RecordDelete_POSTMixin, ResTypeDelete_GET):
                     RecordDelete_GET.Arguments):
         pass
 
-    class Processor(RecordDelete_POSTMixin.ProcessorMixin, PageProcessor):
+    class Processor(RecordDelete_POSTMixin.ProcessorMixin,
+                    PageProcessor['ResTypeDelete_POST.Arguments']):
         pass

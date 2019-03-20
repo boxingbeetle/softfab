@@ -76,7 +76,7 @@ class RecordDelete_GET(FabPage['RecordDelete_GET.Processor',
     class Arguments(DeleteArgs):
         pass
 
-    class Processor(PageProcessor):
+    class Processor(PageProcessor[DeleteArgs]):
         def process(self, req, user):
             fetchRecordForDeletion(req.args.id, self.page)
 

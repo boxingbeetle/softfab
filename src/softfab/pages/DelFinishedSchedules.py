@@ -47,7 +47,7 @@ class DelFinishedSchedules_POST(
     class Arguments(PageArgs):
         action = EnumArg(Actions)
 
-    class Processor(PageProcessor):
+    class Processor(PageProcessor['DelFinishedSchedules_POST.Arguments']):
 
         def process(self, req, user):
             action = req.args.action

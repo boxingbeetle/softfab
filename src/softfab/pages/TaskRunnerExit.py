@@ -8,12 +8,13 @@ from softfab.userlib import User, checkPrivilege
 from softfab.xmlgen import xml
 
 
-class TaskRunnerExit_POST(ControlPage['TaskRunnerExit_POST.Arguments', 'TaskRunnerExit_POST.Processor']):
+class TaskRunnerExit_POST(ControlPage['TaskRunnerExit_POST.Arguments',
+                                      'TaskRunnerExit_POST.Processor']):
 
     class Arguments(TaskRunnerIdArgs):
         pass
 
-    class Processor(PageProcessor):
+    class Processor(PageProcessor[TaskRunnerIdArgs]):
 
         def process(self, req, user):
             runnerId = req.args.runnerId

@@ -54,7 +54,7 @@ class Home_GET(FabPage['Home_GET.Processor', FabPage.Arguments]):
         alt='Feed', title='Atom feed', width=17, height=17
         )
 
-    class Processor(PageProcessor):
+    class Processor(PageProcessor[FabPage.Arguments]):
         recentJobs = MostRecent(jobDB, 'recent', 50)
 
     def checkAccess(self, user: User) -> None:

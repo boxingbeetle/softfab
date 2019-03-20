@@ -29,7 +29,7 @@ class Design_GET(
     class Arguments(PageArgs):
         show = StrArg('no')
 
-    class Processor(PageProcessor):
+    class Processor(PageProcessor['Design_GET.Arguments']):
 
         def process(self, req, user):
             orphanProducts = set()

@@ -80,7 +80,8 @@ class ScheduleTable(DataTable):
 
 Actions = Enum('Actions', 'SUSPEND RESUME')
 
-class ScheduleIndex_GET(FabPage['ScheduleIndex_GET.Processor', 'ScheduleIndex_GET.Arguments']):
+class ScheduleIndex_GET(FabPage['ScheduleIndex_GET.Processor',
+                                'ScheduleIndex_GET.Arguments']):
     icon = 'IconSchedule'
     description = 'Schedules'
     children = [
@@ -92,7 +93,7 @@ class ScheduleIndex_GET(FabPage['ScheduleIndex_GET.Processor', 'ScheduleIndex_GE
         first = IntArg(0)
         sort = SortArg()
 
-    class Processor(PageProcessor):
+    class Processor(PageProcessor['ScheduleIndex_GET.Arguments']):
 
         def process(self, req, user):
             self.finishedSchedules = any(
@@ -120,14 +121,15 @@ class ScheduleIndex_GET(FabPage['ScheduleIndex_GET.Processor', 'ScheduleIndex_GE
                     ]
                 ]
 
-class ScheduleIndex_POST(FabPage['ScheduleIndex_POST.Processor', 'ScheduleIndex_POST.Arguments']):
+class ScheduleIndex_POST(FabPage['ScheduleIndex_POST.Processor',
+                                 'ScheduleIndex_POST.Arguments']):
     icon = 'IconSchedule'
     description = 'Schedules'
 
     class Arguments(ScheduleIndex_GET.Arguments):
         action = DictArg(EnumArg(Actions))
 
-    class Processor(PageProcessor):
+    class Processor(PageProcessor['ScheduleIndex_POST.Arguments']):
 
         def process(self, req, user):
             for scheduleId, action in req.args.action.items():

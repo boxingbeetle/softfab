@@ -29,14 +29,15 @@ class OwnedJobsTable(JobsSubTable):
     def getRecordsToQuery(self, proc):
         return proc.jobs
 
-class UserDetails_GET(FabPage['UserDetails_GET.Processor', 'UserDetails_GET.Arguments']):
+class UserDetails_GET(FabPage['UserDetails_GET.Processor',
+                              'UserDetails_GET.Arguments']):
     icon = 'UserList1'
     description = 'User Details'
 
     class Arguments(PageArgs):
         user = StrArg()
 
-    class Processor(PageProcessor):
+    class Processor(PageProcessor['UserDetails_GET.Arguments']):
         visibleJobs = 12
 
         def process(self, req, user):

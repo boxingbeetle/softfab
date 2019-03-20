@@ -41,5 +41,6 @@ class ProductDelete_POST(RecordDelete_POSTMixin, ProductDelete_GET):
                     ProductDelete_GET.Arguments):
         pass
 
-    class Processor(RecordDelete_POSTMixin.ProcessorMixin, PageProcessor):
+    class Processor(RecordDelete_POSTMixin.ProcessorMixin,
+                    PageProcessor['ProductDelete_POST.Arguments']):
         pass

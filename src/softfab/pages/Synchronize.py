@@ -51,7 +51,7 @@ class Synchronize_POST(ControlPage[ControlPage.Arguments,
                     return newRun
         return None
 
-    class Processor(PageProcessor):
+    class Processor(PageProcessor[ControlPage.Arguments]):
 
         def process(self, req, user):
             # pylint: disable=attribute-defined-outside-init

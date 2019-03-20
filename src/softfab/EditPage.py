@@ -191,7 +191,7 @@ class EditPage(FabPage['EditPage.Processor', 'EditPage.Arguments'], ABC):
         """
         raise NotImplementedError
 
-    class Processor(PageProcessor):
+    class Processor(PageProcessor['EditPage.Arguments']):
 
         def process(self, req, user):
             # pylint: disable=attribute-defined-outside-init

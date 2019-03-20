@@ -23,5 +23,6 @@ class ResourceDelete_POST(RecordDelete_POSTMixin, ResourceDelete_GET):
                     ResourceDelete_GET.Arguments):
         pass
 
-    class Processor(RecordDelete_POSTMixin.ProcessorMixin, PageProcessor):
+    class Processor(RecordDelete_POSTMixin.ProcessorMixin,
+                    PageProcessor['ResourceDelete_POST.Arguments']):
         pass

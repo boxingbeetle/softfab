@@ -13,7 +13,8 @@ from softfab.webgui import Widget
 from softfab.xmlgen import XMLContent
 
 
-class ShadowQueue_GET(FabPage['ShadowQueue_GET.Processor', 'ShadowQueue_GET.Arguments']):
+class ShadowQueue_GET(FabPage['ShadowQueue_GET.Processor',
+                              'ShadowQueue_GET.Arguments']):
     icon = 'TaskRunStat1'
     description = 'Shadow Queue'
 
@@ -25,7 +26,7 @@ class ShadowQueue_GET(FabPage['ShadowQueue_GET.Processor', 'ShadowQueue_GET.Argu
         first = IntArg(0)
         sort = SortArg()
 
-    class Processor(PageProcessor):
+    class Processor(PageProcessor['ShadowQueue_GET.Arguments']):
         pass
 
     def checkAccess(self, user: User) -> None:

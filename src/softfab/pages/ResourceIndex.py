@@ -133,7 +133,8 @@ class ResourcesTable(DataTable):
                         for column in columns
                         )]
 
-class ResourceIndex_GET(FabPage['ResourceIndex_GET.Processor', 'ResourceIndex_GET.Arguments']):
+class ResourceIndex_GET(FabPage['ResourceIndex_GET.Processor',
+                                'ResourceIndex_GET.Arguments']):
     icon = 'IconResources'
     description = 'Resources'
     children = [
@@ -145,7 +146,7 @@ class ResourceIndex_GET(FabPage['ResourceIndex_GET.Processor', 'ResourceIndex_GE
         first = IntArg(0)
         sort = SortArg()
 
-    class Processor(PageProcessor):
+    class Processor(PageProcessor['ResourceIndex_GET.Arguments']):
         pass
 
     def checkAccess(self, user: User) -> None:
@@ -178,14 +179,15 @@ class PostArgs(ResourceIndex_GET.Arguments):
 
 Actions = Enum('Actions', 'SUSPEND RESUME')
 
-class ResourceIndex_POST(FabPage['ResourceIndex_POST.Processor', 'ResourceIndex_POST.Arguments']):
+class ResourceIndex_POST(FabPage['ResourceIndex_POST.Processor',
+                                 'ResourceIndex_POST.Arguments']):
     icon = 'IconResources'
     description = 'Resources'
 
     class Arguments(PostArgs):
         action = EnumArg(Actions)
 
-    class Processor(PageProcessor):
+    class Processor(PageProcessor['ResourceIndex_POST.Arguments']):
 
         def process(self, req, user):
             args = req.args

@@ -17,14 +17,15 @@ from softfab.webgui import Column, Table, Widget, pageLink, row
 from softfab.xmlgen import XMLContent, xhtml
 
 
-class TaskRunnerDetails_GET(FabPage['TaskRunnerDetails_GET.Processor', 'TaskRunnerDetails_GET.Arguments']):
+class TaskRunnerDetails_GET(FabPage['TaskRunnerDetails_GET.Processor',
+                                    'TaskRunnerDetails_GET.Arguments']):
     icon = 'TaskRunStat1'
     description = 'Task Runner Details'
 
     class Arguments(TaskRunnerIdArgs):
         pass
 
-    class Processor(PageProcessor):
+    class Processor(PageProcessor[TaskRunnerIdArgs]):
 
         def process(self, req, user):
             runnerId = req.args.runnerId

@@ -35,5 +35,6 @@ class FrameworkDelete_POST(RecordDelete_POSTMixin, FrameworkDelete_GET):
                     FrameworkDelete_GET.Arguments):
         pass
 
-    class Processor(RecordDelete_POSTMixin.ProcessorMixin, PageProcessor):
+    class Processor(RecordDelete_POSTMixin.ProcessorMixin,
+                    PageProcessor['FrameworkDelete_POST.Arguments']):
         pass

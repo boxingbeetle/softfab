@@ -8,12 +8,13 @@ from softfab.userlib import User, checkPrivilege, checkPrivilegeForOwned
 from softfab.xmlgen import xml
 
 
-class TriggerSchedule_POST(ControlPage['TriggerSchedule_POST.Arguments', 'TriggerSchedule_POST.Processor']):
+class TriggerSchedule_POST(ControlPage['TriggerSchedule_POST.Arguments',
+                                       'TriggerSchedule_POST.Processor']):
 
     class Arguments(PageArgs):
         scheduleId = StrArg()
 
-    class Processor(PageProcessor):
+    class Processor(PageProcessor['TriggerSchedule_POST.Arguments']):
 
         def process(self, req, user):
             scheduleId = req.args.scheduleId

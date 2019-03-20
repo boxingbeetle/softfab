@@ -45,7 +45,8 @@ class FrameworksTable(DataTable):
         yield self.editColumn
         yield self.deleteColumn
 
-class FrameworkIndex_GET(FabPage['FrameworkIndex_GET.Processor', 'FrameworkIndex_GET.Arguments']):
+class FrameworkIndex_GET(FabPage['FrameworkIndex_GET.Processor',
+                                 'FrameworkIndex_GET.Arguments']):
     icon = 'Framework1'
     description = 'Frameworks'
     children = [ 'FrameworkDetails', 'FrameworkEdit', 'FrameworkDelete' ]
@@ -54,7 +55,7 @@ class FrameworkIndex_GET(FabPage['FrameworkIndex_GET.Processor', 'FrameworkIndex
         first = IntArg(0)
         sort = SortArg()
 
-    class Processor(PageProcessor):
+    class Processor(PageProcessor['FrameworkIndex_GET.Arguments']):
         pass
 
     def checkAccess(self, user: User) -> None:

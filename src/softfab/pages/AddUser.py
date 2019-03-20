@@ -67,7 +67,7 @@ class AddUser_GET(AddUserBase['AddUser_GET.Processor',
     class Arguments(PageArgs):
         indexQuery = RefererArg('UserList')
 
-    class Processor(PageProcessor):
+    class Processor(PageProcessor['AddUser_GET.Arguments']):
         def process(self, req, user):
             pass
 
@@ -84,7 +84,7 @@ class AddUser_POST(AddUserBase['AddUser_POST.Processor',
         password = StrArg()
         password2 = StrArg()
 
-    class Processor(PageProcessor):
+    class Processor(PageProcessor['AddUser_POST.Arguments']):
 
         @inlineCallbacks
         def process(self, req, user):

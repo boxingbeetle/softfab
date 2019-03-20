@@ -48,14 +48,15 @@ class DetailsTable(PropertiesTable):
             )
         yield 'Configurations', formatConfigs(configs)
 
-class TaskDetails_GET(FabPage['TaskDetails_GET.Processor', 'TaskDetails_GET.Arguments']):
+class TaskDetails_GET(FabPage['TaskDetails_GET.Processor',
+                              'TaskDetails_GET.Arguments']):
     icon = 'TaskDef2'
     description = 'Task Definition Details'
 
     class Arguments(TaskDefIdArgs):
         pass
 
-    class Processor(PageProcessor):
+    class Processor(PageProcessor[TaskDefIdArgs]):
 
         def process(self, req, user):
             # pylint: disable=attribute-defined-outside-init

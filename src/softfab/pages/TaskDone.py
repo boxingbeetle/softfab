@@ -15,7 +15,8 @@ from softfab.userlib import User
 from softfab.xmlgen import xml
 
 
-class TaskDone_POST(ControlPage['TaskDone_POST.Arguments', 'TaskDone_POST.Processor']):
+class TaskDone_POST(ControlPage['TaskDone_POST.Arguments',
+                                'TaskDone_POST.Processor']):
     authenticator = NoAuthPage
 
     class Arguments(PageArgs):
@@ -28,7 +29,7 @@ class TaskDone_POST(ControlPage['TaskDone_POST.Arguments', 'TaskDone_POST.Proces
         shadowId = StrArg(None)
         extraction = DictArg(StrArg())
 
-    class Processor(PageProcessor):
+    class Processor(PageProcessor['TaskDone_POST.Arguments']):
 
         def process(self, req, user):
             # Verify arguments.

@@ -11,14 +11,15 @@ from softfab.webgui import Table, cell, pageLink
 from softfab.xmlgen import XMLContent, xhtml
 
 
-class ExtractionDetails_GET(FabPage['ExtractionDetails_GET.Processor', 'ExtractionDetails_GET.Arguments']):
+class ExtractionDetails_GET(FabPage['ExtractionDetails_GET.Processor',
+                                    'ExtractionDetails_GET.Arguments']):
     icon = 'IconReport'
     description = 'Extracted Data'
 
     class Arguments(TaskIdArgs):
         pass
 
-    class Processor(PageProcessor):
+    class Processor(PageProcessor[TaskIdArgs]):
 
         def process(self, req, user):
             # pylint: disable=attribute-defined-outside-init

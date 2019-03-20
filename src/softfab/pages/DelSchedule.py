@@ -24,5 +24,6 @@ class DelSchedule_POST(RecordDelete_POSTMixin, DelSchedule_GET):
                     DelSchedule_GET.Arguments):
         pass
 
-    class Processor(RecordDelete_POSTMixin.ProcessorMixin, PageProcessor):
+    class Processor(RecordDelete_POSTMixin.ProcessorMixin,
+                    PageProcessor['DelSchedule_POST.Arguments']):
         pass
