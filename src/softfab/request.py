@@ -194,8 +194,15 @@ class Request(RequestBase, Generic[ArgsT]):
         Raises UnicodeDecodeError if the strings are not valid UTF-8.
         """
         request = self._request
-        userName = request.getUser().decode()
-        password = request.getPassword().decode()
+        # Twisted will return an empty 'str' instead of 'bytes' when the
+        # user or password is missing.
+        #   https://twistedmatrix.com/trac/ticket/9596
+        userName = request.getUser()
+        if isinstance(userName, bytes):
+            userName = userName.decode()
+        password = request.getPassword()
+        if isinstance(password, bytes):
+            password = password.decode()
         return userName, password
 
     # Session management:
