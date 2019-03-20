@@ -14,7 +14,7 @@ from softfab.schedulerefs import createScheduleDetailsLink
 from softfab.scheduleview import (
     createLastJobLink, describeNextRun, getScheduleStatus
 )
-from softfab.userlib import IUser, checkPrivilege, checkPrivilegeForOwned
+from softfab.userlib import User, checkPrivilege, checkPrivilegeForOwned
 from softfab.userview import OwnerColumn
 from softfab.webgui import Widget, pageLink, pageURL
 from softfab.xmlgen import XMLContent, xhtml
@@ -100,7 +100,7 @@ class ScheduleIndex_GET(FabPage['ScheduleIndex_GET.Processor', 'ScheduleIndex_GE
                 )
 
 
-    def checkAccess(self, user: IUser) -> None:
+    def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 's/l')
 
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
@@ -149,7 +149,7 @@ class ScheduleIndex_POST(FabPage['ScheduleIndex_POST.Processor', 'ScheduleIndex_
                 ScheduleIndex_GET.Arguments.subset(req.args)
                 ))
 
-    def checkAccess(self, user: IUser) -> None:
+    def checkAccess(self, user: User) -> None:
         pass # Processor checks privs.
 
     def presentContent(self, proc: Processor) -> XMLContent:

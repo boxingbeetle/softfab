@@ -11,7 +11,7 @@ from softfab.resultcode import ResultCode
 from softfab.resultlib import putData
 from softfab.shadowlib import shadowDB
 from softfab.taskrunlib import defaultSummaries
-from softfab.userlib import IUser
+from softfab.userlib import User
 from softfab.xmlgen import xml
 
 
@@ -113,7 +113,7 @@ class TaskDone_POST(ControlPage['TaskDone_POST.Arguments', 'TaskDone_POST.Proces
                 # not come.
                 shadowRun.done(extResult)
 
-    def checkAccess(self, user: IUser) -> None:
+    def checkAccess(self, user: User) -> None:
         pass
 
     def writeReply(self, response, proc):

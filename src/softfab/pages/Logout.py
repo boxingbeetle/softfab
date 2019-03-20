@@ -5,7 +5,7 @@ from softfab.UIPage import UIPage
 from softfab.authentication import NoAuthPage
 from softfab.pageargs import ArgsCorrected
 from softfab.pagelinks import URLArgs
-from softfab.userlib import IUser
+from softfab.userlib import User
 from softfab.webgui import pageLink
 from softfab.xmlgen import XMLContent, xhtml
 
@@ -38,7 +38,7 @@ class Logout_GET(UIPage['Logout_GET.Processor'],
             if req.user.hasPrivilege('j/l'):
                 raise Redirect('Home' if url is None else url)
 
-    def checkAccess(self, user: IUser) -> None:
+    def checkAccess(self, user: User) -> None:
         pass
 
     def pageTitle(self, proc: Processor) -> str:

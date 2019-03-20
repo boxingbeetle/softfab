@@ -7,13 +7,14 @@ from urllib.parse import parse_qs, urlparse
 
 from twisted.web.http import Request as TwistedRequest
 from twisted.web.server import Session
+from zope.interface import Attribute, Interface, implementer
 
 from softfab.Page import InvalidRequest
 from softfab.config import rootURL
 from softfab.pageargs import ArgsT
 from softfab.projectlib import project
 from softfab.useragent import UserAgent
-from softfab.userlib import AnonGuestUser, IUser, UnknownUser, UserInfo
+from softfab.userlib import AnonGuestUser, UnknownUser, User
 from softfab.utils import cachedProperty
 
 # The 'sameSite' parameter was added in Twisted 18.9.0.
@@ -27,7 +28,7 @@ class RequestBase:
     handling steps.
     '''
 
-    def __init__(self, request: TwistedRequest, user: IUser):
+    def __init__(self, request: TwistedRequest, user: User):
         self._request = request
         self._user = user
 
@@ -139,7 +140,7 @@ class RequestBase:
     # User information:
 
     @property
-    def user(self) -> IUser:
+    def user(self) -> User:
         """The user who made this request.
         """
         return self._user
@@ -156,7 +157,7 @@ class Request(RequestBase, Generic[ArgsT]):
     "parse" and "process" request handling steps.
     '''
 
-    def __init__(self, request: TwistedRequest, user: IUser):
+    def __init__(self, request: TwistedRequest, user: User):
         super().__init__(request, user)
         self.args = cast(ArgsT, None)
 
@@ -225,20 +226,20 @@ class Request(RequestBase, Generic[ArgsT]):
         except KeyError:
             return None
 
-    def startSession(self, secure: bool) -> Session:
+    def startSession(self, user: User, secure: bool) -> None:
         '''Starts a new session and returns it.
         '''
         request = self._request
         site = request.site
         site.sessionFactory = LongSession
         session = site.makeSession()
+        session.setComponent(ISessionData, SessionData(user))
         session.touch()
         request.addCookie(
             self.sessionCookieName, session.uid, path='/',
             httpOnly=True, secure=secure,
             **({'sameSite': 'lax'} if sameSiteSupport else {})
             )
-        return session
 
     def stopSession(self) -> bool:
         '''Expires the current session, if any.
@@ -255,14 +256,28 @@ class Request(RequestBase, Generic[ArgsT]):
                 self._user = UnknownUser()
             return True
 
-    def loggedInUser(self) -> Optional[IUser]:
+    def loggedInUser(self) -> Optional[User]:
         """Gets the logged-in user (if any) making this request.
         Also resets the session timeout.
         """
         session = self._getSession()
         if session is not None:
-            user = cast(Optional[UserInfo], session.getComponent(IUser))
-            if user is not None and user.isActive():
-                session.touch()
-                return user
+            sessionData = session.getComponent(ISessionData)
+            if sessionData is not None:
+                user = sessionData.user
+                if user.isActive():
+                    session.touch()
+                    return user
         return None
+
+class ISessionData(Interface): # pylint: disable=inherit-non-class
+    """State kept as part of a session.
+    """
+
+    user = Attribute("""User""")
+
+@implementer(ISessionData)
+class SessionData:
+
+    def __init__(self, user):
+        self.user = user

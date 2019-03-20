@@ -7,7 +7,7 @@ from softfab.Page import PageProcessor, ProcT, Redirect
 from softfab.formlib import actionButtons, makeForm
 from softfab.pageargs import ArgsT, EnumArg, PageArgs
 from softfab.schedulelib import scheduleDB
-from softfab.userlib import IUser, checkPrivilege
+from softfab.userlib import User, checkPrivilege
 from softfab.xmlgen import XMLContent, xhtml
 
 Actions = Enum('Actions', 'DELETE CANCEL')
@@ -19,7 +19,7 @@ class DelFinishedSchedulesBase(FabPage[ProcT, ArgsT]):
     icon = 'IconSchedule'
     iconModifier = IconModifier.DELETE
 
-    def checkAccess(self, user: IUser) -> None:
+    def checkAccess(self, user: User) -> None:
         pass
 
     def presentContent(self, proc: ProcT):

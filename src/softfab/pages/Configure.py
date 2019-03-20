@@ -3,7 +3,7 @@
 from typing import Sequence, Tuple
 
 from softfab.FabPage import FabPage
-from softfab.userlib import IUser
+from softfab.userlib import User
 from softfab.webgui import docLink
 from softfab.xmlgen import XMLContent, xhtml
 
@@ -15,7 +15,7 @@ class Configure_GET(FabPage[FabPage.Processor, FabPage.Arguments]):
         'ProjectEdit', 'Design', 'UserList', 'Notifications', 'About'
         ]
 
-    def checkAccess(self, user: IUser) -> None:
+    def checkAccess(self, user: User) -> None:
         pass
 
     def presentContent(self, proc: FabPage.Processor) -> XMLContent:

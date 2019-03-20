@@ -11,7 +11,7 @@ from softfab.Page import (
 from softfab.databaselib import Database
 from softfab.formlib import actionButtons, backButton, makeForm, textInput
 from softfab.pageargs import EnumArg, PageArgs, StrArg
-from softfab.userlib import IUser, checkPrivilege, checkPrivilegeForOwned
+from softfab.userlib import User, checkPrivilege, checkPrivilegeForOwned
 from softfab.utils import abstract
 from softfab.webgui import preserveSpaces, rowManagerScript
 from softfab.xmlgen import XML, XMLContent, xhtml
@@ -181,7 +181,7 @@ class EditPage(FabPage['EditPage.Processor', 'EditPage.Arguments'], ABC):
         action = StrArg(None)
         back = StrArg(None)
 
-    def checkAccess(self, user: IUser) -> None:
+    def checkAccess(self, user: User) -> None:
         # Access will be checked later by Processor.
         pass
 

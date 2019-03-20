@@ -13,7 +13,7 @@ from softfab.pagelinks import (
 from softfab.productview import ProductTable
 from softfab.taskrunnerlib import taskRunnerDB
 from softfab.tasktables import JobTaskRunsTable
-from softfab.userlib import IUser, checkPrivilege
+from softfab.userlib import User, checkPrivilege
 from softfab.utils import pluralize
 from softfab.webgui import Table, Widget, cell, pageLink
 from softfab.xmlgen import XMLContent, txt, xhtml
@@ -61,7 +61,7 @@ class ShowReport_GET(FabPage['ShowReport_GET.Processor', 'ShowReport_GET.Argumen
             # pylint: disable=attribute-defined-outside-init
             self.job = job
 
-    def checkAccess(self, user: IUser) -> None:
+    def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'j/a')
 
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:

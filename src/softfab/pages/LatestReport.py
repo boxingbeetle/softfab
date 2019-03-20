@@ -6,7 +6,7 @@ from softfab.authentication import LoginAuthPage
 from softfab.joblib import getAllTasksWithId
 from softfab.pagelinks import TaskDefIdArgs
 from softfab.resultcode import ResultCode
-from softfab.userlib import IUser, checkPrivilege
+from softfab.userlib import User, checkPrivilege
 from softfab.xmlgen import XMLContent, xhtml
 
 
@@ -35,7 +35,7 @@ class LatestReport_GET(
             else:
                 raise Redirect(task.getURL())
 
-    def checkAccess(self, user: IUser) -> None:
+    def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 't/a', 'view task reports')
 
     def pageTitle(self, proc: Processor) -> str:

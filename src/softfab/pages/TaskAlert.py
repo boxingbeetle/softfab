@@ -6,7 +6,7 @@ from softfab.joblib import jobDB
 from softfab.jobview import alertList
 from softfab.pageargs import StrArg
 from softfab.pagelinks import JobIdArgs
-from softfab.userlib import IUser, checkPrivilege
+from softfab.userlib import User, checkPrivilege
 from softfab.xmlgen import xml
 
 
@@ -42,7 +42,7 @@ class TaskAlert_POST(ControlPage['TaskAlert_POST.Arguments', 'TaskAlert_POST.Pro
                     )
             run.setAlert(alert)
 
-    def checkAccess(self, user: IUser) -> None:
+    def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 't/m', 'set alert status')
 
     def writeReply(self, response, proc):

@@ -9,7 +9,7 @@ from softfab.FabPage import FabPage
 from softfab.notification import sendmail
 from softfab.projectlib import getBootTime, project
 from softfab.timeview import formatTime
-from softfab.userlib import IUser
+from softfab.userlib import User
 from softfab.utils import parseVersion
 from softfab.version import version as softFabVersion
 from softfab.webgui import Table, docLink
@@ -29,7 +29,7 @@ class About_GET(FabPage[FabPage.Processor, FabPage.Arguments]):
     icon = 'IconHome'
     description = 'About'
 
-    def checkAccess(self, user: IUser) -> None:
+    def checkAccess(self, user: User) -> None:
         pass
 
     def presentContent(self, proc: FabPage.Processor) -> XMLContent:

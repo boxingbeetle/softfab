@@ -20,7 +20,7 @@ from softfab.taskdeflib import taskDefDB
 from softfab.taskdefview import formatTimeout
 from softfab.taskrunnerlib import taskRunnerDB
 from softfab.tasktables import JobTaskRunsTable
-from softfab.userlib import IUser, checkPrivilege
+from softfab.userlib import User, checkPrivilege
 from softfab.webgui import PropertiesTable, Widget
 from softfab.xmlgen import XMLContent, txt, xhtml
 
@@ -181,7 +181,7 @@ class ShowTaskInfo_GET(FabPage['ShowTaskInfo_GET.Processor', 'ShowTaskInfo_GET.A
             self.task = task
             self.taskDef = taskDef
 
-    def checkAccess(self, user: IUser) -> None:
+    def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'j/a')
 
     def iterWidgets(self, proc: Processor) -> Iterator[Widget]:

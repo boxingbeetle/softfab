@@ -15,7 +15,7 @@ from softfab.pagelinks import AnonGuestArgs, UserIdArgs, createUserDetailsLink
 from softfab.projectlib import project
 from softfab.querylib import CustomFilter
 from softfab.userlib import (
-    IUser, UIRoleNames, checkPrivilege, rolesGrantPrivilege, userDB
+    UIRoleNames, User, checkPrivilege, rolesGrantPrivilege, userDB
 )
 from softfab.userview import activeRole, presentAnonGuestSetting, uiRoleToSet
 from softfab.webgui import pageLink, pageURL, script
@@ -134,7 +134,7 @@ class UserList_GET(FabPage['UserList_GET.Processor', 'UserList_GET.Arguments']):
     description = 'Users'
     children = 'UserDetails', 'AddUser', 'ChangePassword', 'AnonGuest'
 
-    def checkAccess(self, user: IUser) -> None:
+    def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'u/l')
 
     class Arguments(PageArgs):
@@ -182,7 +182,7 @@ class UserList_POST(FabPage['UserList_POST.Processor', 'UserList_POST.Arguments'
     icon = 'UserList1'
     description = 'Change Role'
 
-    def checkAccess(self, user: IUser) -> None:
+    def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'u/m', 'control user accounts')
 
     class Arguments(UserList_GET.Arguments):

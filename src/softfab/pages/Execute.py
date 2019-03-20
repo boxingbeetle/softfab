@@ -27,7 +27,7 @@ from softfab.selectview import TagValueEditTable, textToValues, valuesToText
 from softfab.taskdeflib import taskDefDB
 from softfab.taskrunnerlib import taskRunnerDB
 from softfab.userlib import (
-    AccessDenied, IUser, checkPrivilege, checkPrivilegeForOwned
+    AccessDenied, User, checkPrivilege, checkPrivilegeForOwned
 )
 from softfab.webgui import Table, cell
 from softfab.xmlgen import XMLContent, xhtml
@@ -465,7 +465,7 @@ class ExecuteBase(DialogPage):
         ActionStep, StartStep, TagsStep, ConfirmStep, SaveStep,
         )
 
-    def checkAccess(self, user: IUser) -> None:
+    def checkAccess(self, user: User) -> None:
         if not (user.hasPrivilege('c/a') or user.hasPrivilege('j/c')):
             raise AccessDenied()
 

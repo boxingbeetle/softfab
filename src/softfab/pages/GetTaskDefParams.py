@@ -3,7 +3,7 @@
 from softfab.ControlPage import ControlPage
 from softfab.pageargs import PageArgs, SetArg
 from softfab.taskdeflib import taskDefDB
-from softfab.userlib import IUser, checkPrivilege
+from softfab.userlib import User, checkPrivilege
 from softfab.xmlgen import xml
 
 
@@ -13,7 +13,7 @@ class GetTaskDefParams_GET(ControlPage['GetTaskDefParams_GET.Arguments',
     class Arguments(PageArgs):
         param = SetArg()
 
-    def checkAccess(self, user: IUser) -> None:
+    def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'td/l', 'list task definitions')
         checkPrivilege(user, 'td/a', 'access task definitions')
 

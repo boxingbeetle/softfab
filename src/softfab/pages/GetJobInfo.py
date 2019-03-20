@@ -8,7 +8,7 @@ from softfab.productdeflib import ProductType
 from softfab.projectlib import project
 from softfab.taskrunnerlib import taskRunnerDB
 from softfab.timeview import formatTimeAttr
-from softfab.userlib import IUser, checkPrivilege
+from softfab.userlib import User, checkPrivilege
 from softfab.xmlgen import xml
 
 
@@ -27,7 +27,7 @@ class GetJobInfo_GET(ControlPage['GetJobInfo_GET.Arguments', 'GetJobInfo_GET.Pro
             except KeyError:
                 raise InvalidRequest('Job "%s" does not exist' % jobId)
 
-    def checkAccess(self, user: IUser) -> None:
+    def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'j/a')
 
     def writeReply(self, response, proc):

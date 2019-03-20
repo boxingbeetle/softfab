@@ -8,7 +8,7 @@ from softfab.datawidgets import DataTable
 from softfab.pageargs import IntArg, PageArgs, SortArg
 from softfab.shadowlib import shadowDB
 from softfab.shadowview import ShadowTable, trimPolicy
-from softfab.userlib import IUser, checkPrivilege
+from softfab.userlib import User, checkPrivilege
 from softfab.webgui import Widget
 from softfab.xmlgen import XMLContent
 
@@ -28,7 +28,7 @@ class ShadowQueue_GET(FabPage['ShadowQueue_GET.Processor', 'ShadowQueue_GET.Argu
     class Processor(PageProcessor):
         pass
 
-    def checkAccess(self, user: IUser) -> None:
+    def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'sh/l')
 
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:

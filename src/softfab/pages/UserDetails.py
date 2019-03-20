@@ -11,7 +11,7 @@ from softfab.jobview import JobsSubTable
 from softfab.pageargs import PageArgs, StrArg
 from softfab.pagelinks import UserIdArgs
 from softfab.querylib import KeySorter, ValueFilter, runQuery
-from softfab.userlib import IUser, userDB
+from softfab.userlib import User, userDB
 from softfab.userview import activeRole
 from softfab.webgui import PropertiesTable, Widget, pageLink
 from softfab.xmlgen import XMLContent, xhtml
@@ -54,7 +54,7 @@ class UserDetails_GET(FabPage['UserDetails_GET.Processor', 'UserDetails_GET.Argu
             self.infoUser = infoUser
             self.jobs = jobs
 
-    def checkAccess(self, user: IUser) -> None:
+    def checkAccess(self, user: User) -> None:
         pass
 
     def iterWidgets(self, proc: Processor) -> Iterator[Widget]:

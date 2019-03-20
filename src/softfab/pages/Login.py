@@ -14,7 +14,7 @@ from softfab.formlib import (
 from softfab.pageargs import ArgsCorrected, ArgsT, StrArg
 from softfab.pagelinks import URLArgs
 from softfab.userlib import (
-    IUser, PasswordMessage, authenticate, passwordQuality
+    PasswordMessage, User, authenticate, passwordQuality
 )
 from softfab.userview import LoginPassArgs, PasswordMsgArgs
 from softfab.webgui import pageURL
@@ -31,7 +31,7 @@ class LoginBase(UIPage[ProcT], FabResource[ArgsT, ProcT]):
     authenticator = NoAuthPage
     secureCookie = True
 
-    def checkAccess(self, user: IUser) -> None:
+    def checkAccess(self, user: User) -> None:
         pass
 
     def pageTitle(self, proc: ProcT) -> str:
@@ -128,8 +128,7 @@ class Login_POST(LoginBase['Login_POST.Processor', 'Login_POST.Arguments']):
                 # attacks that inject a valid session cookie that was
                 # generated for a different client.
                 #   http://en.wikipedia.org/wiki/Session_fixation
-                session = req.startSession(self.page.secureCookie)
-                session.setComponent(IUser, user)
+                req.startSession(user, self.page.secureCookie)
 
                 if passwordQuality(username, password) is not \
                         PasswordMessage.SUCCESS and user.hasPrivilege('u/mo'):

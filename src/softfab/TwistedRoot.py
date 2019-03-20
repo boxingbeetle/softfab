@@ -36,7 +36,7 @@ from softfab.render import (
 from softfab.request import Request
 from softfab.schedulelib import ScheduleManager
 from softfab.shadowlib import startShadowRunCleanup
-from softfab.userlib import IUser, UnknownUser
+from softfab.userlib import UnknownUser, User
 
 startupLogger = logging.getLogger('ControlCenter.startup')
 
@@ -270,7 +270,7 @@ def renderAsync(
         except LoginFailed as ex:
             responder = proc = authenticator.askForAuthentication(req)
         else:
-            req = Request(request, cast(IUser, user))
+            req = Request(request, cast(User, user))
             responder, proc = yield parseAndProcess(page, req) # type: ignore
     except Redirect as ex:
         responder = proc = Redirector(req, ex.url)
@@ -295,7 +295,7 @@ def renderAsync(
 class ResourceNotFound(FabResource[FabResource.Arguments, PageProcessor]):
     authenticator = NoAuthPage
 
-    def checkAccess(self, user: IUser) -> None:
+    def checkAccess(self, user: User) -> None:
         pass
 
     def getResponder(self,

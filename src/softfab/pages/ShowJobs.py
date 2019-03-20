@@ -8,7 +8,7 @@ from softfab.datawidgets import DataTable
 from softfab.joblib import jobDB
 from softfab.jobview import JobsSubTable
 from softfab.pagelinks import JobIdSetArgs
-from softfab.userlib import IUser, checkPrivilege
+from softfab.userlib import User, checkPrivilege
 from softfab.webgui import Widget, unorderedList
 from softfab.xmlgen import XMLContent, xhtml
 
@@ -44,7 +44,7 @@ class ShowJobs_GET(FabPage['ShowJobs_GET.Processor', 'ShowJobs_GET.Arguments']):
             self.jobs = jobs
             self.invalidJobIds = invalidJobIds
 
-    def checkAccess(self, user: IUser) -> None:
+    def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'j/l')
 
     def iterWidgets(self, proc: Processor) -> Iterator[Widget]:

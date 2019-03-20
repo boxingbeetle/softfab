@@ -12,7 +12,7 @@ from twisted.internet.defer import Deferred
 
 from softfab.datawidgets import DataTable
 from softfab.pageargs import ArgsT, PageArgs
-from softfab.userlib import IUser
+from softfab.userlib import User
 from softfab.utils import SharedInstance, abstract
 from softfab.webgui import Widget, pageURL
 from softfab.xmlgen import XML
@@ -220,7 +220,7 @@ class FabResource(ABC, Generic[ArgsT, ProcT]):
         This is a dummy one for resources that have no need for processing.
         '''
 
-    def checkAccess(self, user: IUser) -> None:
+    def checkAccess(self, user: User) -> None:
         '''Check whether the given user is allowed to access this resource
         at all and raise AccessDenied if not.
         It is also possible to raise AccessDenied from the Processor if an

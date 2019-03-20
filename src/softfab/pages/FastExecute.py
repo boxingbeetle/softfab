@@ -13,7 +13,7 @@ from softfab.joblib import jobDB
 from softfab.pageargs import EnumArg, PageArgs, RefererArg, SetArg, StrArg
 from softfab.pagelinks import createJobsURL
 from softfab.selectview import TagArgs
-from softfab.userlib import IUser, checkPrivilege
+from softfab.userlib import User, checkPrivilege
 from softfab.utils import pluralize
 from softfab.xmlgen import XML, XMLContent, xhtml
 
@@ -82,7 +82,7 @@ class FastExecute_GET(FabPage['FastExecute_GET.Processor', 'FastExecute_GET.Argu
                 except KeyError:
                     self.configs = []
 
-    def checkAccess(self, user: IUser) -> None:
+    def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'c/l')
 
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
@@ -171,7 +171,7 @@ class FastExecute_POST(FabPage['FastExecute_POST.Processor', 'FastExecute_POST.A
 
             assert False, action
 
-    def checkAccess(self, user: IUser) -> None:
+    def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'c/l')
 
     def presentContent(self, proc: Processor) -> XMLContent:

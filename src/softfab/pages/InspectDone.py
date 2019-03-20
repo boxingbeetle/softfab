@@ -7,7 +7,7 @@ from softfab.pageargs import DictArg, EnumArg, StrArg
 from softfab.pagelinks import TaskIdArgs
 from softfab.resultcode import ResultCode
 from softfab.resultlib import putData
-from softfab.userlib import IUser, checkPrivilege, checkPrivilegeForOwned
+from softfab.userlib import User, checkPrivilege, checkPrivilegeForOwned
 from softfab.xmlgen import xml
 
 
@@ -58,7 +58,7 @@ class InspectDone_POST(ControlPage['InspectDone_POST.Arguments', 'InspectDone_PO
             # Store inspection result.
             job.inspectDone(taskName, result, summary)
 
-    def checkAccess(self, user: IUser) -> None:
+    def checkAccess(self, user: User) -> None:
         # Error messages might leak info about job/task existence, so make sure
         # at least read-only access is allowed.
         # The processor will do additional checks.

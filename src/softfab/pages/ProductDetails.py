@@ -7,7 +7,7 @@ from softfab.frameworklib import frameworkDB
 from softfab.graphview import GraphPageMixin, GraphPanel, createExecutionGraph
 from softfab.pagelinks import ProductDefIdArgs, createFrameworkDetailsLink
 from softfab.productdeflib import productDefDB
-from softfab.userlib import IUser, checkPrivilege
+from softfab.userlib import User, checkPrivilege
 from softfab.utils import pluralize
 from softfab.webgui import PropertiesTable, hgroup, pageLink
 from softfab.xmlgen import XMLContent, xhtml
@@ -70,7 +70,7 @@ class ProductDetails_GET(
             self.consumers = consumers
             self.graph = graph
 
-    def checkAccess(self, user: IUser) -> None:
+    def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'pd/a')
 
     def presentContent(self, proc: Processor) -> XMLContent:

@@ -4,7 +4,7 @@ from softfab.ControlPage import ControlPage
 from softfab.Page import PageProcessor
 from softfab.pageargs import PageArgs, StrArg
 from softfab.statuslib import StatusModelRegistry
-from softfab.userlib import IUser
+from softfab.userlib import User
 from softfab.xmlgen import xml
 
 
@@ -67,7 +67,7 @@ class ListModels_GET(ControlPage['ListModels_GET.Arguments', 'ListModels_GET.Pro
     class Processor(PageProcessor):
         pass
 
-    def checkAccess(self, user: IUser) -> None:
+    def checkAccess(self, user: User) -> None:
         # Access will be checked for each model node.
         pass
 

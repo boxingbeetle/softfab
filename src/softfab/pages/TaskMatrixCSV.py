@@ -8,7 +8,7 @@ from softfab.querylib import KeySorter
 from softfab.resultcode import ResultCode
 from softfab.taskdeflib import taskDefDB
 from softfab.timelib import secondsPerDay
-from softfab.userlib import IUser, checkPrivilege
+from softfab.userlib import User, checkPrivilege
 
 
 class TaskMatrixCSV_GET(CSVPage['TaskMatrixCSV_GET.Processor']):
@@ -19,7 +19,7 @@ class TaskMatrixCSV_GET(CSVPage['TaskMatrixCSV_GET.Processor']):
     class Processor(TaskMatrixProcessor):
         pass
 
-    def checkAccess(self, user: IUser) -> None:
+    def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'j/a', 'view the task list')
 
     def getFileName(self, proc):

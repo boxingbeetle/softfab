@@ -7,7 +7,7 @@ from softfab.jobview import unfinishedJobs
 from softfab.shadowlib import shadowDB
 from softfab.sortedqueue import SortedQueue
 from softfab.taskrunnerlib import RequestFactory, TaskRunner, taskRunnerDB
-from softfab.userlib import IUser
+from softfab.userlib import User
 from softfab.xmlbind import parse
 from softfab.xmlgen import xml
 
@@ -94,7 +94,7 @@ class Synchronize_POST(ControlPage[ControlPage.Arguments,
                     waitSecs = taskRunner.getSyncWaitDelay()
                 yield xml.wait(seconds = waitSecs)
 
-    def checkAccess(self, user: IUser) -> None:
+    def checkAccess(self, user: User) -> None:
         pass
 
     def writeReply(self, response, proc):

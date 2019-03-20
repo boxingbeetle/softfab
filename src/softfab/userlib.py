@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from abc import ABC
 from enum import Enum
 from functools import total_ordering
 from os import makedirs
@@ -13,7 +14,6 @@ import logging
 from passlib.apache import HtpasswdFile
 from twisted.cred.error import LoginFailed, UnauthorizedLogin
 from twisted.internet.defer import Deferred, inlineCallbacks
-from zope.interface import Interface, implementer
 
 from softfab.config import dbDir
 from softfab.databaselib import Database, DatabaseElem
@@ -334,20 +334,21 @@ def passwordQuality(userName: str, password: str) -> PasswordMessage:
 
     return PasswordMessage.SUCCESS
 
-class IUser(Interface): # pylint: disable=inherit-non-class
+class User(ABC):
     '''A user account.
     '''
 
-    def getUserName() -> Optional[str]:
+    def getUserName(self) -> Optional[str]:
         '''Returns the name of the user account, or None for anonymous users.
         '''
+        raise NotImplementedError
 
-    def hasPrivilege(priv: str) -> bool:
+    def hasPrivilege(self, priv: str) -> bool:
         '''Returns True iff this user has the given privilege.
         '''
+        raise NotImplementedError
 
-@implementer(IUser)
-class SuperUser:
+class SuperUser(User):
     '''Anonymous user who has the combined privileges of all roles.
     '''
 
@@ -357,8 +358,7 @@ class SuperUser:
     def hasPrivilege(self, priv: str) -> bool:
         return bool(privileges[priv])
 
-@implementer(IUser)
-class AnonGuestUser:
+class AnonGuestUser(User):
     '''Anonymous user who has guest privileges.
     '''
 
@@ -368,8 +368,7 @@ class AnonGuestUser:
     def hasPrivilege(self, priv: str) -> bool:
         return 'guest' in privileges[priv]
 
-@implementer(IUser)
-class UnknownUser:
+class UnknownUser(User):
     '''Anonymous user who has no privileges.
     '''
 
@@ -377,8 +376,6 @@ class UnknownUser:
         return None
 
     def hasPrivilege(self, priv: str) -> bool:
-        # pylint: disable=unused-argument
-        # We have no privileges by definition, so we don't inspect "priv".
         return False
 
 class UserInfoFactory:
@@ -402,8 +399,7 @@ class UserDB(Database['UserInfo']):
 
 userDB = UserDB()
 
-@implementer(IUser)
-class UserInfo(XMLTag, DatabaseElem):
+class UserInfo(XMLTag, DatabaseElem, User):
     tagName = 'user'
 
     def __init__(self, properties: Mapping[str, str]):
@@ -463,7 +459,7 @@ class UserInfo(XMLTag, DatabaseElem):
 class AccessDenied(Exception):
     pass
 
-def checkPrivilege(user: IUser, priv: str, text: str = None) -> None:
+def checkPrivilege(user: User, priv: str, text: str = None) -> None:
     if not user.hasPrivilege(priv):
         if text is None:
             raise AccessDenied()
@@ -471,7 +467,7 @@ def checkPrivilege(user: IUser, priv: str, text: str = None) -> None:
             raise AccessDenied(text)
 
 def checkPrivilegeForOwned(
-        user: IUser,
+        user: User,
         priv: str,
         records: Any,
         text: Union[None, str, Tuple[str, str]] = None

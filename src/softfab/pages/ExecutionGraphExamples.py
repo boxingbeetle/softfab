@@ -6,7 +6,7 @@ from softfab.authentication import NoAuthPage
 from softfab.frameworklib import Framework
 from softfab.graphview import ExecutionGraphBuilder, GraphPageMixin
 from softfab.productdeflib import ProductDef, ProductType
-from softfab.userlib import IUser
+from softfab.userlib import User
 from softfab.webgui import Table
 from softfab.xmlgen import XMLContent, xhtml
 
@@ -69,7 +69,7 @@ class ExecutionGraphExamples_GET(
     def pageTitle(self, proc: Processor) -> str:
         return 'Execution Graphs'
 
-    def checkAccess(self, user: IUser) -> None:
+    def checkAccess(self, user: User) -> None:
         pass
 
     def presentContent(self, proc: Processor) -> XMLContent:

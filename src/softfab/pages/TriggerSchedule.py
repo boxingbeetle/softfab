@@ -4,7 +4,7 @@ from softfab.ControlPage import ControlPage
 from softfab.Page import InvalidRequest, PageProcessor
 from softfab.pageargs import PageArgs, StrArg
 from softfab.schedulelib import scheduleDB
-from softfab.userlib import IUser, checkPrivilege, checkPrivilegeForOwned
+from softfab.userlib import User, checkPrivilege, checkPrivilegeForOwned
 from softfab.xmlgen import xml
 
 
@@ -33,7 +33,7 @@ class TriggerSchedule_POST(ControlPage['TriggerSchedule_POST.Arguments', 'Trigge
             except ValueError as ex:
                 raise InvalidRequest( str(ex) )
 
-    def checkAccess(self, user: IUser) -> None:
+    def checkAccess(self, user: User) -> None:
         # Error messages might leak info about schedule, so make sure at least
         # read-only access is allowed.
         # The processor will do additional checks.
