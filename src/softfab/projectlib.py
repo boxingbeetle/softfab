@@ -15,7 +15,7 @@ from softfab.databaselib import (
     Database, SingletonElem, SingletonObserver, SingletonWrapper
 )
 from softfab.timelib import getTime
-from softfab.userlib import userDB
+from softfab.userlib import AnonGuestUser, UnknownUser, User, userDB
 from softfab.utils import cachedProperty
 from softfab.version import version
 from softfab.xmlbind import XMLTag
@@ -206,6 +206,12 @@ class Project(XMLTag, SingletonElem):
         self._properties['smtprelay'] = smtpRelay
         self._properties['mailsender'] = mailSender
         self._notify()
+
+    @property
+    def defaultUser(self) -> User:
+        """The user object when an unauthenticated request is made.
+        """
+        return AnonGuestUser() if self['anonguest'] else UnknownUser()
 
     def setAnonGuestAccess(self, enabled: bool) -> None:
         """Changes the anonymous guest access setting.

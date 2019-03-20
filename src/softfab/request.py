@@ -14,7 +14,7 @@ from softfab.config import rootURL
 from softfab.pageargs import ArgsT
 from softfab.projectlib import project
 from softfab.useragent import UserAgent
-from softfab.userlib import AnonGuestUser, UnknownUser, User
+from softfab.userlib import User
 from softfab.utils import cachedProperty
 
 # The 'sameSite' parameter was added in Twisted 18.9.0.
@@ -243,10 +243,7 @@ class Request(RequestBase, Generic[ArgsT]):
             return False
         else:
             session.expire()
-            if project['anonguest']:
-                self._user = AnonGuestUser()
-            else:
-                self._user = UnknownUser()
+            self._user = project.defaultUser
             return True
 
     def loggedInUser(self) -> Optional[User]:
