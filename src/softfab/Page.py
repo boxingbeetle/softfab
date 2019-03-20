@@ -4,7 +4,7 @@ from abc import ABC
 from collections import defaultdict
 from typing import (
     TYPE_CHECKING, Any, ClassVar, DefaultDict, Dict, Generic, Iterator,
-    Optional, Set, Type, TypeVar, cast
+    Optional, Set, Type, TypeVar
 )
 import logging
 
@@ -91,13 +91,17 @@ class PageProcessor(Generic[ArgsT]):
     processingError = None # type: Optional[Exception]
     """Exception caught during processing."""
 
-    def __init__(self, req: Any):
+    def __init__(self,
+                 page: 'FabResource[ArgsT, PageProcessor[ArgsT]]',
+                 req: Any,
+                 args: ArgsT,
+                 user: User
+                 ):
+        self.page = page
         self.req = req
+        self.args = args
+        self.user = user
         self.__tables = {} # type: Dict[int, '_TableData']
-        # set by parseAndProcess():
-        self.args = cast(ArgsT, None)
-        self.page = cast(FabResource[ArgsT, 'PageProcessor[ArgsT]'], None)
-        self.user = cast(User, None)
 
     def getTableData(self, table: DataTable) -> '_TableData':
         return self.__tables[id(table)]
@@ -167,7 +171,8 @@ class Responder:
 class Redirector(PageProcessor, Responder):
 
     def __init__(self, req, url):
-        PageProcessor.__init__(self, req)
+        # TODO: Passing None for page, args and user is not type-safe.
+        PageProcessor.__init__(self, None, req, None, None) # type: ignore
         Responder.__init__(self)
         self.__url = url
 
@@ -177,7 +182,8 @@ class Redirector(PageProcessor, Responder):
 class HTTPAuthenticator(PageProcessor, Responder):
 
     def __init__(self, req, realm):
-        PageProcessor.__init__(self, req)
+        # TODO: Passing None for page, args and user is not type-safe.
+        PageProcessor.__init__(self, None, req, None, None) # type: ignore
         Responder.__init__(self)
         self.__realm = realm
 

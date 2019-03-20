@@ -277,7 +277,10 @@ def renderAsync(
         logging.error(
             'Internal error processing %s: %s', page.name, str(ex)
             )
-        responder = proc = InternalErrorPage(req, str(ex))
+        # TODO: Passing None for args is not type-safe.
+        responder = proc = InternalErrorPage(
+            page, req, None, cast(User, user), str(ex)
+            )
 
     try:
         yield present(request, responder, proc)
@@ -301,7 +304,12 @@ class ResourceNotFound(FabResource[FabResource.Arguments, PageProcessor]):
                      path: Optional[str],
                      proc: PageProcessor
                      ) -> Responder:
-        return UIResponder(NotFoundPage(proc.req), proc)
+        # TODO: Passing None for page is not type-safe.
+        page = cast(FabResource, None)
+        return UIResponder(
+            NotFoundPage(page, proc.req, proc.args, proc.user),
+            proc
+            )
 
     def errorResponder(self, ex: Exception, proc: PageProcessor) -> Responder:
         # No processing errors can happen because we use the default processor

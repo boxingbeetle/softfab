@@ -44,8 +44,14 @@ class ErrorPage(UIPage[PageProcessor[ArgsT]], PageProcessor[ArgsT]):
     status = abstract # type: ClassVar[int]
     title = abstract # type: ClassVar[str]
 
-    def __init__(self, req: Request[ArgsT], messageText: Optional[str] = None):
-        PageProcessor.__init__(self, req)
+    def __init__(self,
+                 page: 'FabResource[ArgsT, PageProcessor[ArgsT]]',
+                 req: Request[ArgsT],
+                 args: ArgsT,
+                 user: User,
+                 messageText: Optional[str] = None
+                 ):
+        PageProcessor.__init__(self, page, req, args, user)
         UIPage.__init__(self)
 
         if messageText is None:
@@ -70,9 +76,14 @@ class BadRequestPage(ErrorPage[ArgsT]):
     title = 'Bad Request'
 
     def __init__(self,
-            req: Request[ArgsT], messageText: str, messageHTML: XMLContent
-            ):
-        ErrorPage.__init__(self, req, messageText)
+                 page: 'FabResource[ArgsT, PageProcessor[ArgsT]]',
+                 req: Request[ArgsT],
+                 args: ArgsT,
+                 user: User,
+                 messageText: str,
+                 messageHTML: XMLContent
+                 ):
+        ErrorPage.__init__(self, page, req, args, user, messageText)
         self.messageHTML = messageHTML
 
     def presentContent(self, proc: PageProcessor[ArgsT]) -> XMLContent:
@@ -157,10 +168,9 @@ def parseAndProcess(page: FabResource[ArgsT, PageProcessor[ArgsT]],
         _checkActive(req, page)
 
         # Processing step.
-        proc = page.Processor(req) # type: PageProcessor[ArgsT]
-        proc.page = page
-        proc.args = args
-        proc.user = user
+        proc = page.Processor(
+            page, req, args, user
+            ) # type: PageProcessor[ArgsT]
         try:
             yield proc.process(req, user)
         except PresentableError as ex:
@@ -177,13 +187,12 @@ def parseAndProcess(page: FabResource[ArgsT, PageProcessor[ArgsT]],
             proc.processTables()
     except AccessDenied as ex:
         forbiddenPage = ForbiddenPage(
-            req,
+            page, req, args, user,
             "You don't have permission to %s" % (
                 str(ex) or 'access this page'
                 )
             )
         proc = forbiddenPage
-        proc.user = user
         responder = UIResponder(forbiddenPage, proc) # type: Responder
     except ArgsCorrected as ex:
         subPath = req.getSubPath()
@@ -193,10 +202,9 @@ def parseAndProcess(page: FabResource[ArgsT, PageProcessor[ArgsT]],
         else:
             url = '%s/%s?%s' % (page.name, subPath, query.toURL())
         responder = proc = Redirector(req, url)
-        proc.user = user
     except ArgsInvalid as ex:
         badRequestPage = BadRequestPage(
-            req,
+            page, req, args, user,
             str(ex),
             (    xhtml.p[ 'Invalid arguments:' ],
                 xhtml.dl[(
@@ -206,11 +214,10 @@ def parseAndProcess(page: FabResource[ArgsT, PageProcessor[ArgsT]],
                 )
             )
         proc = badRequestPage
-        proc.user = user
         responder = UIResponder(badRequestPage, proc)
     except InvalidRequest as ex:
         badRequestPage = BadRequestPage(
-            req,
+            page, req, args, user,
             str(ex),
             xhtml.p[ 'Invalid request: ', str(ex) ]
             )
@@ -221,7 +228,7 @@ def parseAndProcess(page: FabResource[ArgsT, PageProcessor[ArgsT]],
         try:
             responder = page.getResponder(req.getSubPath(), proc)
         except KeyError:
-            responder = UIResponder(NotFoundPage(req), proc)
+            responder = UIResponder(NotFoundPage(page, req, args, user), proc)
 
     req.processEnd()
     return (responder, proc)
