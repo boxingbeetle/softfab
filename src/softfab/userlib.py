@@ -211,7 +211,7 @@ def authenticate(userName: str, password: str) -> Iterator[Deferred]:
     try:
         _checkPassword(password)
     except ValueError as ex:
-        raise UnauthorizedLogin(ex)
+        raise UnauthorizedLogin(ex) from ex
 
     # Have passlib check the password. When passed a None hash, it will
     # perform a dummy computation to keep the timing consistent.
@@ -268,7 +268,7 @@ def addUserAccount(userName: str, password: str, roles: Iterable[str]) -> None:
     try:
         userDB.checkId(userName)
     except KeyError as ex:
-        raise ValueError( str(ex) )
+        raise ValueError(str(ex)) from ex
     if userName in userDB:
         raise ValueError('User "%s" already exists' % userName)
 

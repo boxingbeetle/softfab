@@ -5,8 +5,8 @@ class _FormatMeta(type):
     def __call__(cls, ext):
         try:
             return getattr(cls, ext)
-        except AttributeError:
-            raise ValueError('No format named "%s"' % ext)
+        except AttributeError as ex:
+            raise ValueError('No format named "%s"' % ext) from ex
 
 class Format(metaclass=_FormatMeta):
     @classmethod

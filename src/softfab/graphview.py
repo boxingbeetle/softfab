@@ -342,13 +342,13 @@ class GraphPageMixin:
         name, formatStr = match.groups()
         try:
             graph = self.getGraph(proc, name)
-        except KeyError:
-            raise KeyError('Unknown graph "%s"' % name)
+        except KeyError as ex:
+            raise KeyError('Unknown graph "%s"' % name) from ex
         try:
             # https://github.com/PyCQA/pylint/issues/2159
             fmt = Format(formatStr) # pylint: disable=no-value-for-parameter
-        except ValueError:
-            raise KeyError('Unknown file format "%s"' % formatStr)
+        except ValueError as ex:
+            raise KeyError('Unknown file format "%s"' % formatStr) from ex
         return _GraphResponder(graph, name, fmt)
 
     def getGraph(self, proc, name):

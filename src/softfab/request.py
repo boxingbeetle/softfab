@@ -167,7 +167,7 @@ class Request(RequestBase, Generic[ArgsT]):
             except UnicodeDecodeError as ex:
                 raise InvalidRequest(
                     'Error decoding argument name %r: %s' % (keyBytes, ex)
-                    )
+                    ) from ex
             fields[key] = values
 
         return argsClass.parse(fields, self)

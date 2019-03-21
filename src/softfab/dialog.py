@@ -206,10 +206,10 @@ class ContinuedDialogProcessor(DialogProcessorBase):
         for name in self.args.path.split():
             try:
                 requestedPath.append(stepObjects[name])
-            except KeyError:
+            except KeyError as ex:
                 raise InvalidRequest(
                     'non-existing dialog step "%s" in navigation path' % name
-                    )
+                    ) from ex
         if not requestedPath:
             raise InvalidRequest('Dialog state was lost')
 

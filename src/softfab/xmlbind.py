@@ -243,10 +243,10 @@ class XMLProperty(Generic[Host, Value]):
                 try:
                      # pylint: disable=protected-access
                     return cast(Value, obj._properties[name])
-                except KeyError:
+                except KeyError as ex:
                     raise AttributeError(
                         'property "%s" not in dictionary' % name
-                        )
+                        ) from ex
             self.__fget = fget
         # Let get function retrieve the actual value.
         return self.__fget(obj)

@@ -351,8 +351,8 @@ class PageArgs:
                     except TypeError as ex:
                         raise TypeError(
                             'bad value type "%s" for argument "%s": %s'
-                            % ( type(value).__name__, name, ex )
-                            )
+                            % (type(value).__name__, name, ex)
+                            ) from ex
             else:
                 # No value in request: use default.
                 if default is mandatory:
