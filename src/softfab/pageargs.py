@@ -424,9 +424,17 @@ class PageArgs:
         '''
         for name, member in self._iterArguments():
             if isinstance(member, RefererArg):
-                query = self.__dict__[name]
+                values = self.__dict__
+                query = values[name]
                 if query is not None:
-                    return '%s?%s' % (member.getPage(), query.toURL())
+                    sharedValues = {
+                        sharedName: values[sharedName]
+                        for sharedName in member.shared
+                        }
+                    return '%s?%s' % (
+                        member.getPage(),
+                        query.override(**sharedValues).toURL()
+                        )
         return None
 
 class _MandatoryValue:
@@ -1063,6 +1071,10 @@ class QueryArg(SingularArgument[Optional[Query]]):
         else:
             sharedNames = shared
         self.__shared = frozenset(sharedNames)
+
+    @property
+    def shared(self) -> FrozenSet[str]:
+        return self.__shared
 
     def _sameArg(self, other: Argument) -> bool:
         # pylint: disable=protected-access

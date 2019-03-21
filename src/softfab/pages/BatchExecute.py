@@ -120,11 +120,6 @@ class BatchExecute_GET(FabPage['BatchExecute_GET.Processor',
 
     class Processor(SelectConfigsMixin, PageProcessor[ParentArgs]):
 
-        def getBackURL(self):
-            args = self.args
-            query = args.parentQuery.override(SelectArgs.subset(args))
-            return '%s?%s' % (parentPage, query.toURL())
-
         def initTaskSet(self):
             '''Initializes our `taskSet` attribute with a TaskSetWithInputs
             instance that contains all tasks from the given configurations.
@@ -185,7 +180,9 @@ class BatchExecute_GET(FabPage['BatchExecute_GET.Processor',
             yield xhtml.h2[ 'No configurations selected' ]
 
         yield xhtml.p[
-            xhtml.a(href = proc.getBackURL())[ 'Back to Configurations' ]
+            xhtml.a(href=proc.args.refererURL or parentPage)[
+                'Back to Configurations'
+                ]
             ]
 
 class BatchExecute_POST(BatchExecute_GET):
@@ -206,7 +203,7 @@ class BatchExecute_POST(BatchExecute_GET):
 
             if action is not Actions.EXECUTE:
                 assert action is Actions.CANCEL, action
-                raise Redirect(self.getBackURL())
+                raise Redirect(args.refererURL or parentPage)
 
             # pylint: disable=attribute-defined-outside-init
             self.notices = notices = []

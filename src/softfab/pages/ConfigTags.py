@@ -42,11 +42,6 @@ class ConfigTagsBase(FabPage['ConfigTagsBase.Processor', FabPage.Arguments]):
 
     class Processor(SelectConfigsMixin, PageProcessor[ParentArgs]):
 
-        def getBackURL(self):
-            args = self.args
-            query = args.parentQuery.override(SelectArgs.subset(args))
-            return '%s?%s' % (parentPage, query.toURL())
-
         def process(self, req, user):
             # pylint: disable=attribute-defined-outside-init
             self.notices = []
@@ -87,7 +82,7 @@ class ConfigTagsBase(FabPage['ConfigTagsBase.Processor', FabPage.Arguments]):
         else:
             yield (
                 xhtml.h2[ 'No configurations selected' ],
-                xhtml.p[ xhtml.a(href = proc.getBackURL())[
+                xhtml.p[ xhtml.a(href=proc.args.refererURL or parentPage)[
                     'Back to Configurations'
                     ] ]
                 )
@@ -108,10 +103,11 @@ class ConfigTags_POST(ConfigTagsBase):
     class Processor(ConfigTagsBase.Processor):
 
         def process(self, req, user):
-            action = req.args.action
+            args = req.args
+            action = args.action
             if action is not Actions.APPLY:
                 assert action is Actions.CANCEL, action
-                raise Redirect(self.getBackURL())
+                raise Redirect(args.refererURL or parentPage)
 
             # pylint: disable=attribute-defined-outside-init
             self.notices = []
@@ -126,9 +122,9 @@ class ConfigTags_POST(ConfigTagsBase):
                     'change configuration tags' )
                 )
 
-            tagkeys = req.args.tagkeys
-            tagvalues = req.args.tagvalues
-            commontags = req.args.commontags
+            tagkeys = args.tagkeys
+            tagvalues = args.tagvalues
+            commontags = args.commontags
 
             # Determine changes between the submitted tags and the stored
             # tags.
@@ -175,9 +171,11 @@ class ConfigTags_POST(ConfigTagsBase):
             yield super().presentContent(proc)
         else:
             yield xhtml.p[ 'The tags have been updated successfully.' ]
-            yield xhtml.p[ xhtml.a(href = proc.getBackURL())[
+            yield xhtml.p[
+                xhtml.a(href=proc.args.refererURL or parentPage)[
                     'Back to Configurations'
-                    ] ]
+                    ]
+                ]
 
 class ConfigTagValueEditTable(TagValueEditTable):
     valTitle = 'Common Tag Values'
