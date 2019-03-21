@@ -30,7 +30,7 @@ class TagConfigTable(SimpleConfigTable):
 parentPage = 'LoadExecute'
 
 class ParentArgs(SelectArgs):
-    parentQuery = RefererArg(parentPage, excludes = SelectArgs)
+    parentQuery = RefererArg(parentPage, shared=SelectArgs)
 
 Actions = Enum('Actions', 'APPLY CANCEL')
 

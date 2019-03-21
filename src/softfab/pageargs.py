@@ -1042,36 +1042,36 @@ class QueryArg(SingularArgument[Optional[Query]]):
     A query is a sequence of key-value pairs, where a value can be a single
     string or a sequence of strings.
 
-    The "excludes" constructor argument lists names of arguments that should
-    be omitted from the stored query. It can be a sequence of names or a
-    subclass of PageArgs; in the latter case all arguments in that class
-    will be excluded.
+    The `shared` constructor argument lists names of arguments that are
+    shared between the PageArgs containing this QueryArg and the query.
+    The shared arguments will be omitted from the stored query. They can
+    be specified by name or by PageArgs subclass.
     '''
 
     def __init__(self, *,
-            excludes: Union[None, Type[PageArgs], Iterable[str]] = None
+            shared: Union[None, Type[PageArgs], Iterable[str]] = None
             ):
         super().__init__(None)
-        if excludes is None:
-            excludedNames = () # type: Iterable[str]
-        elif isinstance(excludes, type):
-            if issubclass(excludes, PageArgs):
+        if shared is None:
+            sharedNames = () # type: Iterable[str]
+        elif isinstance(shared, type):
+            if issubclass(shared, PageArgs):
                 # https://github.com/python/mypy/issues/6099
-                excludedNames = cast(Type[PageArgs], excludes).keys()
+                sharedNames = cast(Type[PageArgs], shared).keys()
             else:
-                raise TypeError(type(excludes))
+                raise TypeError(type(shared))
         else:
-            excludedNames = excludes
-        self.__excludes = frozenset(excludedNames)
+            sharedNames = shared
+        self.__shared = frozenset(sharedNames)
 
     def _sameArg(self, other: Argument) -> bool:
         # pylint: disable=protected-access
-        return self.__excludes == cast(QueryArg, other).__excludes
+        return self.__shared == cast(QueryArg, other).__shared
 
     def parseValue(self, strValue: str) -> Query:
         data = parse_qs(strValue, keep_blank_values=True)
-        for exclude in self.__excludes:
-            data.pop(exclude, None)
+        for name in self.__shared:
+            data.pop(name, None)
         return Query(data)
 
     def externalize(self, value: Optional[Query]) -> str:
@@ -1092,9 +1092,9 @@ class RefererArg(QueryArg):
 
     def __init__(self,
             page: str, *,
-            excludes: Union[None, Type[PageArgs], Iterable[str]] = None
+            shared: Union[None, Type[PageArgs], Iterable[str]] = None
             ):
-        QueryArg.__init__(self, excludes=excludes)
+        QueryArg.__init__(self, shared=shared)
         self.__page = page
 
     def _sameArg(self, other: Argument) -> bool:
