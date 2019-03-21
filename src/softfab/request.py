@@ -11,7 +11,7 @@ from zope.interface import Attribute, Interface, implementer
 
 from softfab.Page import InvalidRequest
 from softfab.config import rootURL
-from softfab.pageargs import ArgsT
+from softfab.pageargs import ArgsT, Query
 from softfab.projectlib import project
 from softfab.useragent import UserAgent
 from softfab.userlib import User
@@ -70,7 +70,7 @@ class RequestBase:
         return urlparse(referer).path
 
     @cachedProperty
-    def refererQuery(self) -> Optional[Sequence[Tuple[str, Sequence[str]]]]:
+    def refererQuery(self) -> Optional[Query]:
         '''The query of the Control Center page that the user visited
         before the current page, or None if not applicable.
         '''
@@ -78,10 +78,7 @@ class RequestBase:
         if referer is None:
             return None
         query = urlparse(referer).query
-        return tuple(
-            (key, tuple(value))
-            for key, value in parse_qs(query, keep_blank_values=True).items()
-            )
+        return Query(parse_qs(query, keep_blank_values=True))
 
     @cachedProperty
     def contentType(self) -> Tuple[Optional[str], Optional[Mapping[str, str]]]:
