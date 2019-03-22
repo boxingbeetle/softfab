@@ -132,12 +132,12 @@ class XMLTag(ABC):
             if value is not None:
                 yield value
 
-    def __init__(self, attributes: Mapping[str, Optional[str]]):
+    def __init__(self, attributes: Mapping[str, XMLAttributeValue]):
         self._properties = {
             key: value
             for key, value in attributes.items()
             if value is not None
-            } # type: Dict[str, XMLAttributeValue]
+            }
 
         # Convert boolean values.
         for decl in self._findDeclarations('boolProperties'):
