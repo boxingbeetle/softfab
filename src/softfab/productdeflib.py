@@ -1,27 +1,28 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from enum import Enum
+from typing import Mapping, cast
 
 from softfab.config import dbDir
 from softfab.databaselib import (
     DatabaseElem, VersionedDatabase, checkWrapperVarName
 )
-from softfab.xmlbind import XMLTag
+from softfab.xmlbind import XMLAttributeValue, XMLTag
 
 
 class ProductFactory:
     @staticmethod
-    def createProduct(attributes):
+    def createProduct(attributes: Mapping[str, str]) -> 'ProductDef':
         return ProductDef(attributes)
 
-class ProductDefDB(VersionedDatabase):
+class ProductDefDB(VersionedDatabase['ProductDef']):
     baseDir = dbDir + '/productdefs'
     factory = ProductFactory()
     privilegeObject = 'pd'
     description = 'product definition'
     uniqueKeys = ( 'id', )
 
-    def _customCheckId(self, key):
+    def _customCheckId(self, key: str) -> None:
         checkWrapperVarName(key)
 
 productDefDB = ProductDefDB()
@@ -41,18 +42,20 @@ class ProductDef(XMLTag, DatabaseElem):
     enumProperties = {'type': ProductType}
 
     @classmethod
-    def create(
-        cls, name, prodType=ProductType.STRING, local=False, combined=False
-        ):
-        properties = dict(
+    def create(cls,
+               name: str,
+               prodType: ProductType = ProductType.STRING,
+               local: bool = False,
+               combined: bool = False
+               ) -> 'ProductDef':
+        return cls(dict(
             id = name,
             type = prodType.name.lower(),
             local = local,
             combined = combined,
-            )
-        return cls(properties)
+            ))
 
-    def __init__(self, properties):
+    def __init__(self, properties: Mapping[str, XMLAttributeValue]):
         # COMPAT 2.16: Product type "file" no longer exists, but it behaved
         #              as "string" during execution, so map it to that.
         if properties.get('type') == 'file':
@@ -61,11 +64,11 @@ class ProductDef(XMLTag, DatabaseElem):
         XMLTag.__init__(self, properties)
         DatabaseElem.__init__(self)
 
-    def getId(self):
-        return self['id']
+    def getId(self) -> str:
+        return cast(str, self['id'])
 
-    def isLocal(self):
-        return self['local']
+    def isLocal(self) -> bool:
+        return cast(bool, self['local'])
 
-    def isCombined(self):
-        return self['combined']
+    def isCombined(self) -> bool:
+        return cast(bool, self['combined'])
