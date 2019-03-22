@@ -129,8 +129,8 @@ class ChangePassword_POST(FabPage['ChangePassword_POST.Processor',
 
     class Arguments(ChangePassword_GET.Arguments, LoginPassArgs):
         action = EnumArg(Actions)
-        password = PasswordArg(None)
-        password2 = PasswordArg(None)
+        password = PasswordArg()
+        password2 = PasswordArg()
 
     class Processor(PageProcessor['ChangePassword_POST.Arguments']):
 
