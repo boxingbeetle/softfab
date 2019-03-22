@@ -5,7 +5,7 @@ Builds the execution graphs by using AGraph from the pygraphviz module.
 '''
 
 from enum import Enum
-from typing import Optional
+from typing import Iterable, Iterator, Optional, Set, Tuple, cast
 from xml.etree import ElementTree
 import logging
 import re
@@ -16,9 +16,10 @@ from softfab.pagelinks import (
     createFrameworkDetailsURL, createProductDetailsURL
 )
 from softfab.productdeflib import ProductDef, ProductType, productDefDB
+from softfab.response import Response
 from softfab.setcalc import UnionFind
 from softfab.svglib import SVGPanel, svgNSPrefix
-from softfab.xmlgen import txt, xhtml
+from softfab.xmlgen import XMLContent, txt, xhtml
 
 try:
     from pygraphviz import AGraph
@@ -61,12 +62,12 @@ _defaultGraphAttrib = dict(
     ranksep = '0.6 equally',
     )
 
-def iterConnectedExecutionGraphs():
+def iterConnectedExecutionGraphs() -> Iterator[Tuple[Set[str], Set[str]]]:
     '''Returns a collection of (weakly) connected execution graphs.
     For each execution graph, the collection contains a pair with the products
     and frameworks in that connected graph.
     '''
-    unionFind = UnionFind()
+    unionFind = UnionFind() # type: UnionFind[Tuple[str, str]]
 
     # Add all products.
     for productId in productDefDB.keys():
@@ -96,14 +97,14 @@ class Graph:
     Use a GraphBuilder subclass to construct graphs.
     '''
 
-    def __init__(self, name, graph):
+    def __init__(self, name: str, graph: Optional['AGraph']):
         self.__name = name
         self.__graph = graph
 
-    def getName(self):
+    def getName(self) -> str:
         return self.__name
 
-    def export(self, fmt):
+    def export(self, fmt: GraphFormat) -> Optional[str]:
         '''Renders this graph in the given format.
         Returns the rendered graph data, or None if rendering failed.
         '''
@@ -126,11 +127,9 @@ class Graph:
                 )
             return None
 
-    def toSVG(self):
+    def toSVG(self) -> Optional[ElementTree.Element]:
         '''Renders this graph as SVG image and cleans up the resulting SVG.
-        Returns an ElementTree instance, or None if graph rendering failed
-        (e.g. pygraphviz not installed; bug in pygraphviz; invalid arguments
-        passed by our code, etc.).
+        If rendering fails, the error is logged and None is returned.
         '''
         graph = self.__graph
         if graph is None:
@@ -138,7 +137,7 @@ class Graph:
 
         try:
             # Note: This catches exceptions from the rendering process
-            svgGraph = graph.draw(format='svg', prog='dot')
+            svgGraph = graph.draw(format='svg', prog='dot') # type: str
         except Exception:
             logging.exception(
                 'Execution graph rendering (pygraphviz) failed'
@@ -172,59 +171,55 @@ class GraphBuilder:
     '''Wrapper around GraphViz graphs that are under construction.
     '''
 
-    def __init__(self, export, links):
+    def __init__(self, graph: 'AGraph', export: bool, links: bool):
         '''Creates a graph.
         Iff "export" is True, the graph is optimized for use outside of the
         Control Center (mailing, printing).
         '''
+        self._graph = graph
         self._export = export
         self._links = links
-        self._graph = None
 
-    def __createGraph(self, name, **kwargs):
-        '''Creates an empty graph, passes it to the given populate() function
-        and returns the result, or returns None if graph generation fails.
+    def populate(self, **kwargs: object) -> None:
+        raise NotImplementedError
+
+    @classmethod
+    def build(cls,
+              name: str, export: bool, links: bool, **kwargs: object
+              ) -> Graph:
+        '''Creates an empty graph, wraps it in a builder and calls the
+        builder's populate() function with the keyword arguments.
         Any errors are logged and not propagated.
         '''
+
         if not canCreateGraphs:
-            return
+            return Graph(name, None)
+
         try:
-            graph = AGraph(directed = True, strict = True, id = name)
+            graph = AGraph(directed=True, strict=True, id=name)
             graph.node_attr.update(_defaultNodeAttrib)
             graph.edge_attr.update(_defaultEdgeAttrib)
             graph.graph_attr.update(_defaultGraphAttrib)
-
-            if self._export:
-                graph.graph_attr.update(bgcolor = 'white')
-            else:
-                graph.graph_attr.update(bgcolor = 'transparent')
-
-            self._graph = graph
-            self.populate(**kwargs)
+            graph.graph_attr.update(bgcolor=('white' if export
+                                                else 'transparent'))
+            builder = cls(graph, export, links)
+            builder.populate(**kwargs)
+            return Graph(name, graph)
         except Exception:
             logging.exception(
                 'Execution graph creation (pygraphviz) failed'
                 )
-
-    def populate(self, **kwargs):
-        raise NotImplementedError
-
-    @classmethod
-    def build(cls, name, export, links, **kwargs):
-        builder = cls(export, links)
-        GraphBuilder.__createGraph(builder, name, **kwargs)
-        # pylint: disable=protected-access
-        #print '***Graph %s *** ' % name # for debugging purposes
-        #print builder._graph.string() # for debugging purposes
-
-        return Graph(name, builder._graph)
+            return Graph(name, None)
 
 class ExecutionGraphBuilder(GraphBuilder):
 
-    def populate(self, **kwargs):
-        raise NotImplementedError
+    def populate(self, **kwargs: object) -> None:
+        for product in cast(Iterable[ProductDef], kwargs['products']):
+            self.addProduct(product)
+        for framework in cast(Iterable[Framework], kwargs['frameworks']):
+            self.addFramework(framework)
 
-    def addProduct(self, productDef):
+    def addProduct(self, productDef: ProductDef) -> None:
         '''Add a node for the given product to this graph.
            Specify node attribs if product is a token and/or combined product
         '''
@@ -240,10 +235,12 @@ class ExecutionGraphBuilder(GraphBuilder):
             nodeAttrib['URL'] = createProductDetailsURL(productId)
 
         productNodeId = 'prod.' + productId
-        if not self._graph.has_node(productNodeId):
-            self._graph.add_node(productNodeId, **nodeAttrib)
+        graph = self._graph
+        assert graph is not None
+        if not graph.has_node(productNodeId):
+            graph.add_node(productNodeId, **nodeAttrib)
 
-    def addFramework(self, framework):
+    def addFramework(self, framework: Framework) -> None:
         '''Add a node for the given framework to this graph.
         Also adds edges between the framework to all previously added products
         that are an input or output of this framework.
@@ -272,32 +269,29 @@ class ExecutionGraphBuilder(GraphBuilder):
             if self._graph.has_node(outputProductNodeId):
                 self._graph.add_edge(frameworkNodeId, outputProductNodeId)
 
-class _DBExecutionGraphBuilder(ExecutionGraphBuilder):
-
-    def populate(self, productIds, frameworkIds): # pylint: disable=arguments-differ
-        for productId in productIds:
-            self.addProduct(productDefDB[productId])
-        for frameworkId in frameworkIds:
-            self.addFramework(frameworkDB[frameworkId])
-
-def createExecutionGraph(name, productIds, frameworkIds, export):
-    return _DBExecutionGraphBuilder.build(
-        name, export, not export,
-        productIds = productIds, frameworkIds = frameworkIds
+def createExecutionGraph(name: str,
+                         productIds: Iterable[str],
+                         frameworkIds: Iterable[str],
+                         export: bool
+                         ) -> Graph:
+    products = [productDefDB[productId] for productId in productIds]
+    frameworks = [frameworkDB[frameworkId] for frameworkId in frameworkIds]
+    return ExecutionGraphBuilder.build(
+        name, export, not export, products=products, frameworks=frameworks
         )
 
-class _LegendBuilder(ExecutionGraphBuilder):
-
-    def populate(self): # pylint: disable=arguments-differ
-        self.addFramework(Framework.create('framework', (), ()))
-        self.addProduct(ProductDef.create('product'))
-        self.addProduct(ProductDef.create('combined-product', combined = True))
-        self.addProduct(
-            ProductDef.create('token-product', prodType = ProductType.TOKEN)
-            )
-
-def createLegend(export):
-    return _LegendBuilder.build('legend', export, False)
+def createLegend(export: bool) -> Graph:
+    products = (
+        ProductDef.create('product'),
+        ProductDef.create('combined-product', combined=True),
+        ProductDef.create('token-product', prodType=ProductType.TOKEN)
+        )
+    frameworks = (
+        Framework.create('framework', (), ()),
+        )
+    return ExecutionGraphBuilder.build(
+        'legend', export, False, products=products, frameworks=frameworks
+        )
 
 
 class GraphPanel(SVGPanel):
@@ -305,14 +299,13 @@ class GraphPanel(SVGPanel):
     tables. The graph should be passed to the present method as "graph".
     '''
 
-    def present(self, *, graph, **kwargs): # pylint: disable=arguments-differ
-        svgElement = graph.toSVG()
-        if svgElement is None:
-            return None
-        else:
-            return super().present(graph=graph, svgElement=svgElement, **kwargs)
+    def present(self, **kwargs: object) -> XMLContent:
+        graph = cast(Graph, kwargs['graph'])
+        return super().present(svgElement=graph.toSVG(), **kwargs)
 
-    def presentFooter(self, proc, graph, **kwargs): # pylint: disable=arguments-differ
+    def presentFooter(self, **kwargs) -> XMLContent:
+        proc = cast(PageProcessor, kwargs['proc'])
+        graph = cast(Graph, kwargs['graph'])
         return xhtml.div(class_ = 'export')[
             'export: ', txt(', ').join(
                 xhtml.a(
@@ -327,13 +320,13 @@ class GraphPanel(SVGPanel):
 
 class _GraphResponder(Responder):
 
-    def __init__(self, graph, fileName, fmt):
+    def __init__(self, graph: Graph, fileName: str, fmt: GraphFormat):
         Responder.__init__(self)
         self.__graph = graph
         self.__fileName = fileName
         self.__format = fmt
 
-    def respond(self, response):
+    def respond(self, response: Response) -> None:
         fmt = self.__format
         response.setHeader('Content-Type', fmt.mediaType)
         response.setFileName('%s.%s' % ( self.__fileName, fmt.ext ))
@@ -353,7 +346,7 @@ class GraphPageMixin:
             raise KeyError("Subitem path is not of the form 'file.ext'")
         name, formatStr = match.groups()
         try:
-            graph = self.getGraph(proc, name)
+            graph = self.__getGraph(proc, name)
         except KeyError as ex:
             raise KeyError('Unknown graph "%s"' % name) from ex
         try:
@@ -362,15 +355,14 @@ class GraphPageMixin:
             raise KeyError('Unknown file format "%s"' % formatStr) from ex
         return _GraphResponder(graph, name, fmt)
 
-    def getGraph(self, proc, name):
+    def __getGraph(self, proc: PageProcessor, name: str) -> Graph:
         if hasattr(proc, 'graphs'):
-            if proc.graphs is None:
-                return None
-            graphs = proc.graphs
+            graphs = getattr(proc, 'graphs') # type: Optional[Iterable[Graph]]
+            if graphs is None:
+                graphs = ()
         elif hasattr(proc, 'graph'):
-            if proc.graph is None:
-                return None
-            graphs = (proc.graph, )
+            graph = getattr(proc, 'graph') # type: Optional[Graph]
+            graphs = () if graph is None else (graph, )
         else:
             raise AttributeError('Unable to find graphs in Processor')
 
