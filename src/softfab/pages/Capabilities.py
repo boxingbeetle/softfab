@@ -136,8 +136,6 @@ class Capabilities_GET(FabPage['Capabilities_GET.Processor',
             args = req.args
 
             typeName = args.restype
-            if not typeName:
-                raise ArgsCorrected(args, restype=taskRunnerResourceTypeName)
 
             capMap = ResultKeeper(
                 lambda rcap: {

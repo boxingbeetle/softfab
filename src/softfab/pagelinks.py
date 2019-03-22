@@ -2,11 +2,11 @@
 
 from softfab.configlib import configDB
 from softfab.pageargs import BoolArg, PageArgs, SetArg, StrArg
-from softfab.restypelib import resTypeDB
+from softfab.restypelib import resTypeDB, taskRunnerResourceTypeName
 from softfab.shadowlib import shadowDB
 from softfab.taskrunnerlib import taskRunnerDB
 from softfab.webgui import pageLink, pageURL
-from softfab.xmlgen import txt, xhtml
+from softfab.xmlgen import XML, txt, xhtml
 
 
 class ProductDefIdArgs(PageArgs):
@@ -147,10 +147,10 @@ class TaskRunnerIdArgs(PageArgs):
     runnerId = StrArg()
 
 class CapFilterArgs(PageArgs):
-    restype = StrArg(None)
+    restype = StrArg(taskRunnerResourceTypeName)
     cap = StrArg('')
 
-def createCapabilityLink(typeName, cap=''):
+def createCapabilityLink(typeName: str, cap: str = '') -> XML:
     return pageLink('Capabilities', CapFilterArgs(restype=typeName, cap=cap))[
         cap or resTypeDB[typeName]['presentation']
         ]
