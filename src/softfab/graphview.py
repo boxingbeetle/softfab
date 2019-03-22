@@ -4,6 +4,7 @@
 Builds the execution graphs by using AGraph from the pygraphviz module.
 '''
 
+from enum import Enum
 from typing import Optional
 from xml.etree import ElementTree
 import logging
@@ -11,7 +12,6 @@ import re
 
 from softfab.Page import PageProcessor, Responder
 from softfab.frameworklib import Framework, frameworkDB
-from softfab.graphrefs import Format, iterGraphFormats
 from softfab.pagelinks import (
     createFrameworkDetailsURL, createProductDetailsURL
 )
@@ -26,6 +26,18 @@ except ImportError:
     canCreateGraphs = False
 else:
     canCreateGraphs = True
+
+
+class GraphFormat(Enum):
+
+    def __init__(self, ext: str, description: str, mediaType: str):
+        self.ext = ext
+        self.description = description
+        self.mediaType = mediaType
+
+    PNG = ('png', 'PNG image', 'image/png')
+    SVG = ('svg', 'SVG image', 'image/svg+xml; charset=UTF-8')
+    DOT = ('dot', 'GraphViz dot file', 'application/x-graphviz; charset=UTF-8')
 
 # Note: We have multiple instances of "except Exception:" in the
 #       code because pygraphviz does not document in its API what
@@ -99,15 +111,15 @@ class Graph:
         if graph is None:
             return None
         try:
-            if fmt is Format.dot:
+            if fmt is GraphFormat.DOT:
                 return graph.string()
-            elif fmt is Format.svg:
+            elif fmt is GraphFormat.SVG:
                 svgElement = self.toSVG()
                 if svgElement is None:
                     return None
                 return ElementTree.tostring(svgElement, 'utf-8')
             else:
-                return graph.draw(format = str(fmt), prog = 'dot')
+                return graph.draw(format=fmt.ext, prog='dot')
         except Exception:
             logging.exception(
                 'Execution graph export failed'
@@ -126,7 +138,7 @@ class Graph:
 
         try:
             # Note: This catches exceptions from the rendering process
-            svgGraph = graph.draw(format = 'svg', prog = 'dot')
+            svgGraph = graph.draw(format='svg', prog='dot')
         except Exception:
             logging.exception(
                 'Execution graph rendering (pygraphviz) failed'
@@ -309,7 +321,7 @@ class GraphPanel(SVGPanel):
                         ),
                     title = fmt.description,
                     )[ fmt.ext ]
-                for fmt in iterGraphFormats()
+                for fmt in GraphFormat
                 )
             ]
 
@@ -345,8 +357,7 @@ class GraphPageMixin:
         except KeyError as ex:
             raise KeyError('Unknown graph "%s"' % name) from ex
         try:
-            # https://github.com/PyCQA/pylint/issues/2159
-            fmt = Format(formatStr) # pylint: disable=no-value-for-parameter
+            fmt = GraphFormat[formatStr.upper()]
         except ValueError as ex:
             raise KeyError('Unknown file format "%s"' % formatStr) from ex
         return _GraphResponder(graph, name, fmt)
