@@ -230,7 +230,7 @@ class ExecutionGraphBuilder(GraphBuilder):
         '''
         productId = productDef.getId()
         nodeAttrib = dict(
-            label = str(productId),
+            label = productId,
             shape = 'box',
             peripheries = '2' if productDef.isCombined() else '1',
             )
@@ -239,7 +239,7 @@ class ExecutionGraphBuilder(GraphBuilder):
         if self._links:
             nodeAttrib['URL'] = createProductDetailsURL(productId)
 
-        productNodeId = str('prod.' + productId)
+        productNodeId = 'prod.' + productId
         if not self._graph.has_node(productNodeId):
             self._graph.add_node(productNodeId, **nodeAttrib)
 
@@ -251,24 +251,24 @@ class ExecutionGraphBuilder(GraphBuilder):
         '''
         frameworkId = framework.getId()
         nodeAttrib = dict(
-            label = str(frameworkId),
+            label = frameworkId,
             shape = 'oval',
             )
 
         if self._links:
             nodeAttrib['URL'] = createFrameworkDetailsURL(frameworkId)
 
-        frameworkNodeId = str('fw.' + frameworkId)
+        frameworkNodeId = 'fw.' + frameworkId
         if not self._graph.has_node(frameworkNodeId):
             self._graph.add_node(frameworkNodeId, **nodeAttrib)
 
         for inputDefId in framework.getInputs():
-            inputProductNodeId = str('prod.' + inputDefId)
+            inputProductNodeId = 'prod.' + inputDefId
             if self._graph.has_node(inputProductNodeId):
                 self._graph.add_edge(inputProductNodeId, frameworkNodeId)
 
         for outputDefId in framework.getOutputs():
-            outputProductNodeId = str('prod.' + outputDefId)
+            outputProductNodeId = 'prod.' + outputDefId
             if self._graph.has_node(outputProductNodeId):
                 self._graph.add_edge(frameworkNodeId, outputProductNodeId)
 
