@@ -3,10 +3,11 @@
 '''Presents SVG images.
 '''
 
+from typing import Optional, cast
 from xml.etree import ElementTree
 
 from softfab.webgui import Widget
-from softfab.xmlgen import adaptToXML, xhtml
+from softfab.xmlgen import XMLContent, adaptToXML, xhtml
 
 svgNamespace = 'http://www.w3.org/2000/svg'
 xlinkNamespace = 'http://www.w3.org/1999/xlink'
@@ -27,16 +28,19 @@ class SVGPanel(Widget):
     "svgElement", or it can be None, in which case the panel is not presented.
     '''
 
-    def present(self, *, svgElement, **kwargs): # pylint: disable=arguments-differ
-        if svgElement is None:
+    def present(self, **kwargs: object) -> XMLContent:
+        svg = cast(Optional[ElementTree.Element], kwargs.get('svgElement'))
+        if svg is None:
             return None
         else:
             return xhtml.div(class_ = 'graph')[
-                xhtml.div[ adaptToXML(svgElement) ],
-                self.presentFooter(svgElement=svgElement, **kwargs)
+                xhtml.div[ adaptToXML(svg) ],
+                self.presentFooter(**kwargs)
                 ]
 
-    def presentFooter(self, **kwargs): # pylint: disable=unused-argument
+    def presentFooter(self, # pylint: disable=unused-argument
+                      **kwargs: object
+                      ) -> XMLContent:
         '''Can be overridden to add a footer to the SVG panel.
         The default implementation does not show a footer.
         The footer should be an `xhtml.div`.
