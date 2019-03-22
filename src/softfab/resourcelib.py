@@ -25,7 +25,6 @@ class ResourceBase(XMLTag, DatabaseElem):
     def __init__(self, properties: Mapping[str, str]):
         XMLTag.__init__(self, properties)
         DatabaseElem.__init__(self)
-        self._properties.setdefault('changeduser', None)
         self._capabilities = set() # type: AbstractSet[str]
 
     def _addCapability(self, attributes: Mapping[str, str]) -> None:
@@ -125,7 +124,7 @@ class ResourceBase(XMLTag, DatabaseElem):
         '''Returns the name of the user that suspended/resumed the TR as
         the last person.
         '''
-        return cast(Optional[str], self._properties['changeduser'])
+        return cast(Optional[str], self._properties.get('changeduser'))
 
     def getChangedTime(self) -> int:
         '''Returns the time at which the suspend state last changed.
