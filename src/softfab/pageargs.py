@@ -13,6 +13,7 @@ from softfab.timelib import stringToTime
 from softfab.timeview import formatDate, formatTime
 from softfab.utils import cachedProperty, escapeURL, iterable
 
+# Avoid circular import.
 if TYPE_CHECKING:
     from softfab.request import Request
 else:
@@ -20,7 +21,7 @@ else:
 
 # Collection was introduced in Python 3.6.
 if TYPE_CHECKING:
-    from typing import Collection
+    from typing import Collection # pylint: disable=ungrouped-imports, useless-suppression
 else:
     Collection = Iterable
 
@@ -30,9 +31,9 @@ if TYPE_CHECKING:
 else:
     NoReturn = None
 
-ArgT = TypeVar('ArgT', bound='Argument')
 ArgsT = TypeVar('ArgsT', bound='PageArgs')
 ValueT = TypeVar('ValueT')
+DefaultT = TypeVar('DefaultT')
 EnumT = TypeVar('EnumT', bound='Enum')
 
 class ParseCorrected(Generic[ValueT], Exception):
@@ -459,15 +460,28 @@ class _DynamicValue:
 
 dynamic = _DynamicValue()
 
-class Argument(Generic[ValueT]):
+class Argument(Generic[ValueT, DefaultT]):
     '''Superclass for page arguments.
     A page argument is an input passed to a page when it is requested,
     similar to a function call argument.
     '''
 
-    def __init__(self,
-            default: Union[ValueT, _MandatoryValue, _DynamicValue] = mandatory
-            ):
+    @overload
+    def __init__(self, default: DefaultT
+                 ): # pylint: disable=unused-argument
+        ...
+
+    @overload
+    def __init__(self, default: _DynamicValue
+                 ): # pylint: disable=unused-argument
+        ...
+
+    @overload
+    def __init__(self, default: _MandatoryValue = mandatory
+                 ): # pylint: disable=unused-argument
+        ...
+
+    def __init__(self, default=mandatory):
         '''Creates a page argument with a given default value.
         '''
         self.__default = default
@@ -493,13 +507,13 @@ class Argument(Generic[ValueT]):
     @overload
     def __get__(self,
             instance: None, owner: Type[PageArgs]
-            ) -> 'Argument[ValueT]':
+            ) -> 'Argument[ValueT, DefaultT]':
         pass
 
     @overload
     def __get__(self,
             instance: PageArgs, owner: Type[PageArgs]
-            ) -> ValueT:
+            ) -> Union[ValueT, DefaultT]:
         pass
 
     def __get__(self, instance, owner):
@@ -509,10 +523,15 @@ class Argument(Generic[ValueT]):
         else:
             return instance.__dict__[self.__getName(instance)]
 
-    def __set__(self, instance: 'Argument[ValueT]', value: ValueT) -> NoReturn:
+    def __set__(self,
+            instance: 'Argument[ValueT, DefaultT]',
+            value: ValueT
+            ) -> NoReturn:
         raise AttributeError('Page arguments are read-only')
 
-    def __delete__(self, instance: 'Argument[ValueT]') -> NoReturn:
+    def __delete__(self,
+            instance: 'Argument[ValueT, DefaultT]'
+            ) -> NoReturn:
         raise AttributeError('Page arguments cannot be deleted')
 
     def __getName(self, obj: PageArgs) -> str:
@@ -530,7 +549,7 @@ class Argument(Generic[ValueT]):
         return self.__name
 
     @property
-    def default(self) -> Union[ValueT, _MandatoryValue, _DynamicValue]:
+    def default(self) -> DefaultT:
         return self.__default
 
     def parse(self, *strValues: str) -> ValueT:
@@ -550,7 +569,7 @@ class Argument(Generic[ValueT]):
         '''
         raise NotImplementedError
 
-class SingularArgument(Argument[Optional[ValueT]]):
+class SingularArgument(Argument[ValueT, DefaultT]):
     '''Argument which consists of a single value, as opposed to a sequence.
     '''
 
@@ -579,7 +598,7 @@ class SingularArgument(Argument[Optional[ValueT]]):
         '''
         raise NotImplementedError
 
-class StrArg(SingularArgument[str]):
+class _StrArg(SingularArgument[str, DefaultT]):
     '''Argument whose value is a string.
     Leading and trailing spaces are stripped.
     '''
@@ -604,9 +623,32 @@ class StrArg(SingularArgument[str]):
         else:
             raise TypeError('value is not a string')
 
-class PasswordArg(StrArg):
+if TYPE_CHECKING:
+    @overload
+    def StrArg() -> _StrArg[str]:
+        pass
+
+    @overload
+    def StrArg( # pylint: disable=function-redefined
+            default: DefaultT
+            # pylint: disable=unused-argument
+            ) -> _StrArg[DefaultT]:
+        pass
+
+    def StrArg( # pylint: disable=function-redefined
+            default=mandatory
+            # pylint: disable=unused-argument
+            ):
+        pass
+else:
+    StrArg = _StrArg
+
+class PasswordArg(_StrArg[str]):
     '''Argument whose value is a password string.
     '''
+
+    def __init__(self) -> None: # pylint: disable=useless-super-delegation
+        super().__init__()
 
     def parseValue(self, strValue: str) -> str:
         for ch in strValue:
@@ -614,7 +656,7 @@ class PasswordArg(StrArg):
                 raise ValueError('Control characters not allowed in passwords')
         return strValue
 
-class BoolArg(SingularArgument[bool]):
+class BoolArg(SingularArgument[bool, bool]):
     '''Argument whose value is a Boolean.
     '''
 
@@ -639,13 +681,13 @@ class BoolArg(SingularArgument[bool]):
         else:
             raise TypeError('value is not a boolean')
 
-class EnumArg(SingularArgument[Optional[EnumT]]):
+class _EnumArg(SingularArgument[EnumT, DefaultT]):
     '''Argument whose value is part of an enumeration.
     '''
 
     def __init__(self,
             enumType: Type[EnumT],
-            default: Union[None, EnumT, _MandatoryValue] = mandatory
+            default: Union[DefaultT, _MandatoryValue] = mandatory
             ):
         assert issubclass(enumType, Enum)
         assert default is None or default is mandatory \
@@ -655,9 +697,9 @@ class EnumArg(SingularArgument[Optional[EnumT]]):
 
     def _sameArg(self, other: Argument) -> bool:
         # pylint: disable=protected-access
-        return self.__enumType == cast(EnumArg, other).__enumType
+        return self.__enumType == cast(_EnumArg, other).__enumType
 
-    def parseValue(self, strValue: str) -> Optional[EnumT]:
+    def parseValue(self, strValue: str) -> EnumT:
         if strValue:
             try:
                 return self.__enumType.__members__[strValue.upper()]
@@ -669,13 +711,10 @@ class EnumArg(SingularArgument[Optional[EnumT]]):
                         for name in self.__enumType.__members__
                         ),
                     )) from ex
-        elif self.default is None:
-            return None
         else:
             raise ValueError('Empty value not allowed')
 
-    def externalize(self, value: Optional[EnumT]) -> str:
-        assert value is not None
+    def externalize(self, value: EnumT) -> str:
         return value.name.lower()
 
     def convert(self, value: EnumT) -> EnumT:
@@ -689,7 +728,31 @@ class EnumArg(SingularArgument[Optional[EnumT]]):
         else:
             raise TypeError('value is not an Enum')
 
-class IntArg(SingularArgument):
+if TYPE_CHECKING:
+    @overload
+    def EnumArg(
+            enumType: Type[EnumT],
+            # pylint: disable=unused-argument
+            ) -> _EnumArg[EnumT, EnumT]:
+        pass
+
+    @overload
+    def EnumArg( # pylint: disable=function-redefined
+            enumType: Type[EnumT],
+            default: DefaultT
+            # pylint: disable=unused-argument
+            ) -> _EnumArg[EnumT, DefaultT]:
+        pass
+
+    def EnumArg( # pylint: disable=function-redefined
+            default=mandatory
+            # pylint: disable=unused-argument
+            ):
+        pass
+else:
+    EnumArg = _EnumArg
+
+class _IntArg(SingularArgument[int, DefaultT]):
     '''Argument whose value is an integer.
     '''
 
@@ -705,7 +768,27 @@ class IntArg(SingularArgument):
         else:
             raise TypeError('value is not an integer')
 
-class DateArg(SingularArgument[Optional[int]]):
+if TYPE_CHECKING:
+    @overload
+    def IntArg() -> _IntArg[int]:
+        pass
+
+    @overload
+    def IntArg( # pylint: disable=function-redefined
+            default: DefaultT
+            # pylint: disable=unused-argument
+            ) -> _IntArg[DefaultT]:
+        pass
+
+    def IntArg( # pylint: disable=function-redefined
+            default=mandatory
+            # pylint: disable=unused-argument
+            ):
+        pass
+else:
+    IntArg = _IntArg
+
+class DateArg(SingularArgument[int, Optional[int]]):
     '''Argument whose value is a date.
     '''
 
@@ -720,13 +803,10 @@ class DateArg(SingularArgument[Optional[int]]):
         # pylint: disable=protected-access
         return self.__roundUp == cast(DateArg, other).__roundUp
 
-    def parseValue(self, strValue: str) -> Optional[int]:
-        if strValue:
-            # TODO: This will parse date + time strings as well.
-            #       When fixing this, make sure DateTimeArg is changed too.
-            return stringToTime(strValue, self.__roundUp)
-        else:
-            return None
+    def parseValue(self, strValue: str) -> int:
+        # TODO: This will parse date + time strings as well.
+        #       When fixing this, make sure DateTimeArg is changed too.
+        return stringToTime(strValue, self.__roundUp)
 
     def externalize(self, value: Optional[int]) -> str:
         return formatDate(value)
@@ -744,12 +824,12 @@ class DateTimeArg(DateArg):
     def externalize(self, value: Optional[int]) -> str:
         return formatTime(value)
 
-class SortArg(SingularArgument[Sequence[str]]):
+class SortArg(SingularArgument[Sequence[str], Sequence[str]]):
     '''Argument that determines the sort order of a DataTable.
     '''
 
     def __init__(self) -> None:
-        default = () # type: Sequence[str]
+        default = ()
         super().__init__(default)
 
     def parseValue(self, strValue: str) -> Sequence[str]:
@@ -764,13 +844,13 @@ class SortArg(SingularArgument[Sequence[str]]):
         else:
             raise TypeError('value is not iterable')
 
-class CollectionArg(Argument[Collection[ValueT]]):
+class CollectionArg(Argument[Collection[ValueT], Collection[ValueT]]):
     '''Abstract base class for an argument that keeps multiple values.
     '''
 
     def __init__(self,
-            prototype: SingularArgument[ValueT] =
-                cast(SingularArgument[ValueT], StrArg()),
+            prototype: SingularArgument[ValueT, ValueT] =
+                cast(SingularArgument[ValueT, ValueT], StrArg()),
             allowEmpty: bool = True
             ):
         self.__prototype = prototype
@@ -814,24 +894,23 @@ class _ListArg(CollectionArg[ValueT]):
         return tuple(items)
 
 if TYPE_CHECKING:
-    # pylint: disable=function-redefined
-    # pylint: disable=unused-argument
-
-    ListArgT = _ListArg
-
     @overload
     def ListArg(
-            prototype: StrArg = StrArg(), allowEmpty: bool = True
-            ) -> ListArgT[str]:
+            prototype: _StrArg[str] = StrArg(),
+            allowEmpty: bool = True
+            # pylint: disable=unused-argument
+            ) -> _ListArg[str]:
         pass
 
     @overload
-    def ListArg(
-            prototype: SingularArgument[ValueT], allowEmpty: bool = True
-            ) -> ListArgT[ValueT]:
+    def ListArg( # pylint: disable=function-redefined
+            prototype: SingularArgument[ValueT, DefaultT],
+            allowEmpty: bool = True
+            # pylint: disable=unused-argument
+            ) -> _ListArg[ValueT]:
         pass
 
-    def ListArg():
+    def ListArg(): # pylint: disable=function-redefined
         pass
 else:
     ListArg = _ListArg
@@ -860,33 +939,35 @@ class _SetArg(CollectionArg[ValueT]):
             raise ParseCorrected(values)
 
 if TYPE_CHECKING:
-    # pylint: disable=function-redefined
-    # pylint: disable=unused-argument
-
-    SetArgT = _SetArg
-
     @overload
     def SetArg(
-            prototype: StrArg = StrArg(), allowEmpty: bool = True
-            ) -> SetArgT[str]:
+            prototype: _StrArg[str] = StrArg(),
+            allowEmpty: bool = True
+            # pylint: disable=unused-argument
+            ) -> _SetArg[str]:
         pass
 
     @overload
-    def SetArg(
-            prototype: SingularArgument[ValueT], allowEmpty: bool = True
-            ) -> SetArgT[ValueT]:
+    def SetArg( # pylint: disable=function-redefined
+            prototype: SingularArgument[ValueT, DefaultT],
+            allowEmpty: bool = True
+            # pylint: disable=unused-argument
+            ) -> _SetArg[ValueT]:
         pass
 
-    def SetArg():
+    def SetArg(): # pylint: disable=function-redefined
         pass
 else:
     SetArg = _SetArg
 
 DictValue = Union[ValueT, 'DictArgInstance[ValueT]']
 
-class DictArg(Argument[DictValue[ValueT]]):
+class DictArg(Argument[DictValue[ValueT], DictValue[ValueT]]):
 
-    def __init__(self, element: Argument[ValueT], separators: str = '.'):
+    def __init__(self,
+            element: Argument[ValueT, ValueT],
+            separators: str = '.'
+            ):
         if isinstance(element, DictArg):
             raise TypeError('element type cannot be another dictionary')
         empty = {} # type: Mapping[str, DictValue[ValueT]]
@@ -1042,7 +1123,7 @@ class Query:
             for value in values
             )
 
-class QueryArg(SingularArgument[Optional[Query]]):
+class QueryArg(SingularArgument[Query, None]):
     '''Stores an arbitrary query as a single argument.
     This can be used for example to preserve navigation state when a page
     links or redirects back to its referer.
@@ -1138,19 +1219,22 @@ class RenameToArg:
         return self.__newName
 
 @overload
-def _externalizeArg(arg: SingularArgument[ValueT],
+def _externalizeArg(arg: SingularArgument[ValueT, DefaultT],
                     value: ValueT
+                    # pylint: disable=unused-argument
                     ) -> Sequence[str]:
     pass
 
 @overload
 def _externalizeArg(arg: CollectionArg[ValueT],
                     value: Collection[ValueT]
+                    # pylint: disable=unused-argument
                     ) -> Sequence[str]:
     pass
 
 @overload
-def _externalizeArg(arg: Any, value: Any) -> Sequence[str]:
+def _externalizeArg(arg: Any, value: Any # pylint: disable=unused-argument
+                    ) -> Sequence[str]:
     # Calling with this signature raises TypeError, but omitting this
     # signature means the calling code has to duplicate the runtime
     # type checks we do here just to please mypy.
