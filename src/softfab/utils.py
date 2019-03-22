@@ -322,7 +322,7 @@ class SharedInstance(Generic[T]):
             ...
     SomeClass.instance.method()
     '''
-    def __get__(self, obj: T, cls: Type[T]) -> T:
+    def __get__(self, obj: Optional[T], cls: Type[T]) -> T:
         # It may seem simpler to store the instance in the descriptor,
         # but that will fail for inheritance: "Subclass.instance" would
         # return "Superclass.instance" if that was already created.
