@@ -5,8 +5,8 @@ from codecs import getencoder
 from contextlib import contextmanager
 from itertools import islice
 from typing import (
-    IO, Any, Callable, Generic, Iterable, Iterator, List, Match, Optional,
-    Pattern, Sized, Tuple, Type, TypeVar, Union, cast
+    IO, Any, Callable, Generic, Iterable, Iterator, List, Mapping, Match,
+    Optional, Pattern, Sized, Tuple, Type, TypeVar, Union, cast
 )
 from urllib.parse import quote_plus
 import os
@@ -15,6 +15,8 @@ import re
 
 C = TypeVar('C')
 T = TypeVar('T')
+KT = TypeVar('KT')
+VT = TypeVar('VT')
 
 utf8encode = getencoder('utf-8')
 
@@ -285,7 +287,7 @@ def pluralize(word: str, amount: Union[int, Sized]) -> str:
     #       it.
     return word if amount == 1 else (word + 's')
 
-class ResultKeeper(dict):
+class ResultKeeper(dict, Mapping[KT, VT]):
     '''A dictionary that will get missing values from a factory function.
     The factory function takes a single argument, which is the key that was
     looked up but not found in the dictionary.
@@ -296,11 +298,11 @@ class ResultKeeper(dict):
     key to the factory function.
     '''
 
-    def __init__(self, factory, *args, **kwargs):
-        dict.__init__(self, *args, **kwargs)
+    def __init__(self, factory: Callable[[KT], VT]):
+        super().__init__()
         self.factory = factory
 
-    def __missing__(self, key):
+    def __missing__(self, key: KT) -> VT:
         value = self.factory(key)
         self[key] = value
         return value
