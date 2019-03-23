@@ -2,43 +2,46 @@
 
 from abc import ABC
 from collections import defaultdict
-from typing import ClassVar
+from typing import (
+    AbstractSet, Callable, ClassVar, Dict, ItemsView, Iterable, Mapping,
+    Optional, Sequence, Tuple, TypeVar
+)
 
-from softfab.databaselib import RecordObserver
+from softfab.databaselib import Database, DatabaseElem, RecordObserver
 from softfab.utils import abstract
-from softfab.xmlgen import xml
+from softfab.xmlgen import XMLContent, xml
 
 
 class Selectable(ABC):
     cache = abstract # type: ClassVar[TagCache]
 
-    def __init__(self):
-        self.__tags = {}
+    def __init__(self) -> None:
+        self.__tags = {} # type: Dict[str, Dict[str, str]]
 
-    def _addTag(self, attributes):
+    def _addTag(self, attributes: Mapping[str, str]) -> None:
         key = attributes['key']
         value = attributes['value']
         cvalue, dvalue = self.cache.toCanonical(key, value, True)
         self.__tags.setdefault(key, {})[cvalue] = dvalue
         #if value != dvalue: "Warning!"
 
-    def _tagsAsXML(self):
+    def _tagsAsXML(self) -> XMLContent:
         '''Serializes tags to XML to store them in the database.
         '''
         for key, values in self.__tags.items():
             for value in values.values():
                 yield xml.tag(key = key, value = value)
 
-    def _getTag(self, tag):
+    def _getTag(self, tag: str) -> Optional[Mapping[str, str]]:
         return self.__tags.get(tag)
 
-    def _tagItems(self):
+    def _tagItems(self) -> ItemsView[str, Mapping[str, str]]:
         return self.__tags.items()
 
-    def getTagKeys(self):
+    def getTagKeys(self) -> AbstractSet[str]:
         return set(self.__tags)
 
-    def getTagValues(self, key):
+    def getTagValues(self, key: str) -> AbstractSet[str]:
         '''Returns the set of display values for the given key.
         '''
         values = self.__tags.get(key)
@@ -47,14 +50,14 @@ class Selectable(ABC):
         else:
             return set(values.values())
 
-    def hasTagKey(self, key):
+    def hasTagKey(self, key: str) -> bool:
         return key in self.__tags
 
-    def hasTagValue(self, key, cvalue):
+    def hasTagValue(self, key: str, cvalue: str) -> bool:
         # Note: the value must be already in its canonical form
         return cvalue in self.__tags.get(key, ())
 
-    def setTag(self, key, values):
+    def setTag(self, key: str, values: Sequence[str]) -> None:
         '''Sets the value set for the given key.
         '''
         if values:
@@ -65,7 +68,9 @@ class Selectable(ABC):
         elif key in self.__tags:
             del self.__tags[key]
 
-    def updateTags(self, changes):
+    def updateTags(self,
+                   changes: Mapping[str, Mapping[str, Optional[str]]]
+                   ) -> None:
         '''Updates the tags of this object according to the given change spec.
         The change spec is a dictionary which contains the modifications to
         make for each tag key.
@@ -86,12 +91,15 @@ class Selectable(ABC):
 
 class TagCache:
 
-    def __init__(self, items, getKeys):
+    def __init__(self,
+                 items: Iterable[Selectable],
+                 getKeys: Callable[[], Iterable[str]]
+                 ):
         self.__getKeys = getKeys
         self.__items = items
-        self.__tags = defaultdict(dict)
+        self.__tags = defaultdict(dict) # type: Dict[str, Dict[str, str]]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return 'TagCache(%s)' % ', '.join(
             '%s: %s' % (
                 key, ', '.join(
@@ -102,36 +110,40 @@ class TagCache:
             for key in self.__getKeys()
             )
 
-    def __canonical(self, value):
+    def __canonical(self, value: str) -> str:
         return value.lower()
 
-    def _refreshCache(self):
+    def _refreshCache(self) -> None:
         self.__tags.clear()
         for item in self.__items:
             self._updateCache(item)
 
-    def _updateCache(self, item):
+    def _updateCache(self, item: Selectable) -> None:
         for key, values in item._tagItems(): # pylint: disable=protected-access
             if values:
                 self.__tags[key].update(values)
 
-    def getKeys(self):
+    def getKeys(self) -> Iterable[str]:
         return self.__getKeys()
 
-    def getValues(self, key):
+    def getValues(self, key: str) -> Sequence[str]:
         '''Returns the display values for the given tag key.
         '''
         # TODO: Cache the sorted value list?
         #       Or don't sort here at all?
         return sorted(self.__tags.get(key, {}).values())
 
-    def hasValue(self, key, value):
+    def hasValue(self, key: str, value: str) -> bool:
         '''Returns True iff the given value exists for the given key.
         '''
         values = self.__tags.get(key)
         return values is not None and self.__canonical(value) in values
 
-    def toCanonical(self, key, value, store = False):
+    def toCanonical(self,
+                    key: str,
+                    value: str,
+                    store: bool = False
+                    ) -> Tuple[str, str]:
         '''Returns a pair containing the canonical and display value of the
         given key-value pair.
         If the key-value pair did not exist, the given value is returned as
@@ -147,24 +159,42 @@ class TagCache:
             dvalue = self.__tags.get(key, {}).get(cvalue, value)
         return (cvalue, dvalue)
 
-class ObservingTagCache(TagCache, RecordObserver):
+class _SelectableRecordABC(Selectable, DatabaseElem):
+    """A database record that is can be tagged.
 
-    def __init__(self, db, getKeys):
+    This class only exists to define the type;
+    it's not intended to be inherited from.
+    """
+
+    # Mark this class as abstract for PyLint:
+    def __dummy(self) -> None:
+        raise NotImplementedError
+
+SelectableRecord = TypeVar('SelectableRecord', bound='_SelectableRecordABC')
+
+class ObservingTagCache(TagCache, RecordObserver[SelectableRecord]):
+
+    def __init__(self,
+                 db: Database[SelectableRecord],
+                 getKeys: Callable[[], Iterable[str]]
+                 ):
         TagCache.__init__(self, db, getKeys)
         RecordObserver.__init__(self)
         db.addObserver(self)
 
-    def added(self, record):
+    def added(self, record: SelectableRecord) -> None:
         self._updateCache(record)
 
-    def removed(self, record):
+    def removed(self, record: SelectableRecord) -> None:
         self._refreshCache()
 
-    def updated(self, record):
+    def updated(self, record: SelectableRecord) -> None:
         self._refreshCache()
 
-def getCommonTags(tagKeys, items):
-    commonTags = None
+def getCommonTags(tagKeys: AbstractSet[str],
+                  items: Sequence[Selectable]
+                  ) -> Mapping[str, Mapping[str, str]]:
+    commonTags = None # type: Optional[Dict[str, Dict[str, str]]]
     for item in items:
         if commonTags is None:
             commonTags = dict(
@@ -182,4 +212,7 @@ def getCommonTags(tagKeys, items):
                             del commonVals[value]
                 else:
                     commonTags[tagKey] = {} # pylint: disable=unsupported-assignment-operation
-    return commonTags
+    if commonTags is None:
+        return {}
+    else:
+        return commonTags
