@@ -1,15 +1,18 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from typing import Mapping, Optional, cast
+
 from softfab import frameworklib
 from softfab.config import dbDir
 from softfab.databaselib import VersionedDatabase
+from softfab.paramlib import GetParent
 from softfab.selectlib import ObservingTagCache, Selectable
-from softfab.xmlgen import xml
+from softfab.xmlgen import XMLAttributeValue, XMLContent, xml
 
 
 class TaskDefFactory:
     @staticmethod
-    def createTaskdef(attributes):
+    def createTaskdef(attributes: Mapping[str, str]) -> 'TaskDef':
         return TaskDef(attributes)
 
 class TaskDefDB(VersionedDatabase):
@@ -24,7 +27,11 @@ class TaskDef(frameworklib.TaskDefBase, Selectable):
     cache = ObservingTagCache(taskDefDB, lambda: ('sf.req',) )
 
     @staticmethod
-    def create(name, parent = None, title = '', description = ''):
+    def create(name: str,
+               parent: str = None,
+               title: str = '',
+               description: str = ''
+               ) -> TaskDef:
         properties = dict(
             id = name,
             parent = parent,
@@ -35,13 +42,13 @@ class TaskDef(frameworklib.TaskDefBase, Selectable):
         taskDef.__description = description
         return taskDef
 
-    def __init__(self, properties):
+    def __init__(self, properties: Mapping[str, XMLAttributeValue]):
         frameworklib.TaskDefBase.__init__(self, properties)
         Selectable.__init__(self)
         self.__title = ''
         self.__description = ''
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: str) -> object:
         if key == 'title':
             return self.__title or self.getId()
         elif key == 'description':
@@ -49,23 +56,26 @@ class TaskDef(frameworklib.TaskDefBase, Selectable):
         else:
             return super().__getitem__(key)
 
-    def _textTitle(self, text):
+    def _textTitle(self, text: str) -> None:
         self.__title = text
 
-    def _textDescription(self, text):
+    def _textDescription(self, text: str) -> None:
         self.__description = text
 
-    def getFramework(self, getParent = frameworklib.frameworkDB.__getitem__):
-        return getParent(self['parent'])
+    def getFramework(self,
+            getParent: GetParent = frameworklib.frameworkDB.__getitem__
+            ) -> frameworklib.Framework:
+        frameworkId = cast(str, self['parent'])
+        return cast(frameworklib.Framework, getParent(frameworkId))
 
-    def getTitle(self):
+    def getTitle(self) -> str:
         return self.__title
 
-    def getDescription(self):
+    def getDescription(self) -> str:
         return self.__description
 
     @property
-    def timeoutMins(self):
+    def timeoutMins(self) -> Optional[int]:
         '''Task execution timeout in minutes, or None for never.
         The timeout is stored in the special property "sf.timeout".
         This must not be called on frozen task definitions;
@@ -74,8 +84,8 @@ class TaskDef(frameworklib.TaskDefBase, Selectable):
         timeout = self.getParameter('sf.timeout')
         return None if timeout is None else int(timeout)
 
-    def _getContent(self):
-        yield from super()._getContent()
+    def _getContent(self) -> XMLContent:
+        yield super()._getContent()
         yield xml.title[ self.__title ]
         yield xml.description[ self.__description ]
         yield self._tagsAsXML()
