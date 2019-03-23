@@ -135,7 +135,7 @@ class Framework(TaskDefBase):
 
     def isFinal(self,
                 name: str,
-                getParent: GetParent = frameworkDB.__getitem__
+                getParent: Optional[GetParent] = frameworkDB.__getitem__
                 ) -> bool:
         return name in ('sf.wrapper', 'sf.extractor') \
             or super().isFinal(name, getParent)

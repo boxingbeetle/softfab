@@ -9,7 +9,7 @@ specialParameters = set([ 'sf.wrapper', 'sf.extractor', 'sf.timeout' ])
 '''specialParameters will not be listed in the Parameters section
 '''
 
-GetParent = Optional[Callable[[str], 'ParamMixin']]
+GetParent = Callable[[str], 'ParamMixin']
 
 class ParamMixin:
     '''Base class for objects that have inheritable parameters.
@@ -23,7 +23,7 @@ class ParamMixin:
         self.__parameters = {} # type: Dict[str, str]
         self.__finalParameters = set() # type: Set[str]
 
-    def __getParent(self, getFunc: GetParent) -> 'ParamMixin':
+    def __getParent(self, getFunc: Optional[GetParent]) -> 'ParamMixin':
         if getFunc is None:
             getFunc = self.getParent
         parentName = self.getParentName()
@@ -64,7 +64,7 @@ class ParamMixin:
 
     def getParameter(self,
                      name: str,
-                     getParent: GetParent = None
+                     getParent: Optional[GetParent] = None
                      ) -> Optional[str]:
         '''Returns the value of the parameter with the given name, or None if
         no such parameter exists.
@@ -76,7 +76,7 @@ class ParamMixin:
             return value
 
     def getParameters(self,
-                      getParent: GetParent = None
+                      getParent: Optional[GetParent] = None
                       ) -> Dict[str, str]:
         '''Returns a dictionary containing the parameters from this level
         and its parents.
@@ -95,7 +95,7 @@ class ParamMixin:
 
     def isFinal(self,
                 name: str,
-                getParent: GetParent = None
+                getParent: Optional[GetParent] = None
                 ) -> bool:
         '''Returns True if the parameter with the given name is final,
         False if it is not final (can be overridden).
@@ -137,16 +137,19 @@ class _ParamTop(ParamMixin, metaclass=SingletonMeta):
 
     def getParameter(self,
                      name: str,
-                     getParent: GetParent = None
+                     getParent: Optional[GetParent] = None
                      ) -> Optional[str]:
         return self.getParametersSelf().get(name)
 
     def getParameters(self,
-                      getParent: GetParent = None
+                      getParent: Optional[GetParent] = None
                       ) -> Dict[str, str]:
         return self.getParametersSelf()
 
-    def isFinal(self, name: str, getParent: GetParent = None) -> bool:
+    def isFinal(self,
+                name: str,
+                getParent: Optional[GetParent] = None
+                ) -> bool:
         return name in self.getFinalSelf()
 
 paramTop = _ParamTop.instance
