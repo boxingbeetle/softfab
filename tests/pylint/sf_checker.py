@@ -2,6 +2,7 @@
 
 from pylint.interfaces import IAstroidChecker
 from pylint.checkers import BaseChecker
+from pylint.checkers.utils import class_is_abstract
 
 class SoftFabChecker(BaseChecker):
     '''SoftFab specific checks for PyLint.
@@ -65,6 +66,8 @@ class SoftFabChecker(BaseChecker):
                     self.add_message('E9001', node = assignment)
 
     def visit_classdef(self, node):
+        if class_is_abstract(node):
+            return
         abstractAttrs = {}
         for ancestor in node.ancestors():
             for name, values in ancestor.locals.items():
