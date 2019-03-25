@@ -245,8 +245,6 @@ class Response:
 
     def write(self, *texts: Any) -> None:
         for text in texts:
-            if isinstance(text, type):
-                text = text.instance # type: ignore
             if isinstance(text, XMLPresentable):
                 text = text.present(proc=self.__proc)
             if iterable(text):
