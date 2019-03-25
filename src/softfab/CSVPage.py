@@ -10,6 +10,7 @@ from softfab.ControlPage import plainTextErrorResponder
 from softfab.Page import FabResource, PageProcessor, ProcT, Responder
 from softfab.authentication import LoginAuthPage
 from softfab.pageargs import EnumArg, PageArgs
+from softfab.response import Response
 from softfab.webgui import pageLink
 from softfab.xmlgen import xhtml
 
@@ -32,7 +33,7 @@ class CSVResponder(Responder, Generic[ProcT]):
         self.page = page
         self.proc = proc
 
-    def respond(self, response):
+    def respond(self, response: Response) -> None:
         page = self.page
         proc = self.proc
         response.setHeader('Content-Type', 'text/x-csv; charset=UTF-8')

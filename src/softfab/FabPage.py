@@ -14,6 +14,7 @@ from softfab.authentication import LoginAuthPage
 from softfab.pageargs import ArgsT
 from softfab.refresh import RefreshScript
 from softfab.request import Request
+from softfab.response import Response
 from softfab.utils import abstract
 from softfab.webgui import Widget, pageURL
 from softfab.xmlgen import XMLContent, XMLNode, xhtml
@@ -220,7 +221,7 @@ class _WidgetResponder(Responder):
         self.__widget = widget
         self.__proc = proc
 
-    def respond(self, response):
+    def respond(self, response: Response) -> None:
         self.__page.writeHTTPHeaders(response)
         response.write(self.__widget.present(proc=self.__proc))
 

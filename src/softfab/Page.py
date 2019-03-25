@@ -4,14 +4,16 @@ from abc import ABC
 from collections import defaultdict
 from typing import (
     TYPE_CHECKING, Any, ClassVar, DefaultDict, Dict, Generic, Iterator,
-    Optional, Set, Type, TypeVar
+    Optional, Set, Type, TypeVar, Union
 )
 import logging
 
 from twisted.internet.defer import Deferred
+from twisted.internet.interfaces import IProducer
 
 from softfab.datawidgets import DataTable
 from softfab.pageargs import ArgsT, PageArgs
+from softfab.response import Response
 from softfab.userlib import User
 from softfab.utils import SharedInstance, abstract
 from softfab.webgui import Widget, pageURL
@@ -160,7 +162,7 @@ class Responder:
     generating a response to an HTTP request.
     '''
 
-    def respond(self, response):
+    def respond(self, response: Response) -> Union[None, Deferred, IProducer]:
         '''Respond to a request.
         The output can either be written directly to the `response`
         object, or a delayed presenter can be returned as a Deferred
@@ -176,7 +178,7 @@ class Redirector(PageProcessor, Responder):
         Responder.__init__(self)
         self.__url = url
 
-    def respond(self, response):
+    def respond(self, response: Response) -> None:
         response.sendRedirect(self.__url)
 
 class HTTPAuthenticator(PageProcessor, Responder):
@@ -187,7 +189,7 @@ class HTTPAuthenticator(PageProcessor, Responder):
         Responder.__init__(self)
         self.__realm = realm
 
-    def respond(self, response):
+    def respond(self, response: Response) -> None:
         response.setStatus(401)
         response.setHeader(
             'WWW-Authenticate', 'Basic realm="%s"' % self.__realm

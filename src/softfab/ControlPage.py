@@ -1,12 +1,16 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import ClassVar, Generic, Optional, Type
+from typing import ClassVar, Generic, Optional, Type, Union
+
+from twisted.internet.defer import Deferred
+from twisted.internet.interfaces import IProducer
 
 from softfab.Page import (
     Authenticator, FabResource, PageProcessor, ProcT, Responder
 )
 from softfab.authentication import HTTPAuthPage
 from softfab.pageargs import ArgsT
+from softfab.response import Response
 
 
 class ControlResponder(Responder, Generic[ArgsT, ProcT]):
@@ -16,7 +20,7 @@ class ControlResponder(Responder, Generic[ArgsT, ProcT]):
         self.page = page
         self.proc = proc
 
-    def respond(self, response):
+    def respond(self, response: Response) -> Union[None, Deferred, IProducer]:
         page = self.page
         proc = self.proc
         response.setHeader('Content-Type', page.getContentType(proc))
@@ -24,7 +28,7 @@ class ControlResponder(Responder, Generic[ArgsT, ProcT]):
 
 class _ErrorResponder(Responder):
 
-    def respond(self, response):
+    def respond(self, response: Response) -> None:
         response.setStatus(500, 'Unexpected exception processing request')
         response.setHeader('Content-Type', 'text/plain')
         response.write(

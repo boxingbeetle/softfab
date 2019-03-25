@@ -35,7 +35,7 @@ class UIResponder(Responder, Generic[ProcT]):
         self.page = page
         self.proc = proc
 
-    def respond(self, response):
+    def respond(self, response: Response) -> None:
         page = self.page
         proc = self.proc
         page.writeHTTPHeaders(response)
