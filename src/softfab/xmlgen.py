@@ -41,7 +41,7 @@ from abc import ABC, abstractmethod
 from enum import Enum
 from itertools import chain
 from sys import intern
-from types import MappingProxyType
+from types import MappingProxyType, MethodType
 from typing import (
     TYPE_CHECKING, Callable, Dict, Iterable, Iterator, List, Mapping, Match,
     Optional, Sequence, Type, Union
@@ -335,7 +335,11 @@ class _PresentationWrapper(_XMLSerializable):
         self.__func = func
 
     def _toFragments(self, defaultNamespace: Optional[str]) -> NoReturn:
-        raise ValueError('Unresolved presenter in XML tree')
+        wrapped = self.__func
+        if isinstance(wrapped, MethodType):
+            if wrapped.__func__.__name__ == 'present':
+                wrapped = wrapped.__self__.__class__.__name__
+        raise ValueError('Unresolved presenter in XML tree: %s' % wrapped)
 
     def present(self, **kwargs: object) -> XML:
         return adaptToXML(self.__func(**kwargs))
