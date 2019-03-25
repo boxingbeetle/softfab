@@ -8,6 +8,7 @@ from typing import ClassVar, Iterator, Optional, Type, cast
 
 from twisted.internet.defer import Deferred, inlineCallbacks
 from twisted.internet.interfaces import IProducer, IPullProducer, IPushProducer
+from twisted.web.http import Request as TwistedRequest
 
 from softfab.FabPage import FabPage
 from softfab.Page import (
@@ -237,7 +238,7 @@ def parseAndProcess(page: FabResource[ArgsT, PageProcessor[ArgsT]],
     return (responder, proc)
 
 def present(
-        request: Request[ArgsT],
+        request: TwistedRequest,
         responder: Responder,
         proc: PageProcessor[ArgsT]
         ) -> Optional[Deferred]:
