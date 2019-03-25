@@ -52,11 +52,14 @@ class ControlPage(FabResource[ArgsT, ProcT]):
         else:
             raise KeyError('Resource does not contain subitems')
 
-    def getContentType(self, proc): # pylint: disable=unused-argument
+    def getContentType(self, proc: ProcT) -> str: # pylint: disable=unused-argument
         return self.contentType
 
     def errorResponder(self, ex: Exception, proc: PageProcessor) -> Responder:
         return plainTextErrorResponder
 
-    def writeReply(self, response, proc):
+    def writeReply(self,
+                   response: Response,
+                   proc: ProcT
+                   ) -> Union[None, Deferred, IProducer]:
         raise NotImplementedError
