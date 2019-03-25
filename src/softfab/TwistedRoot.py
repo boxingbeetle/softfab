@@ -34,6 +34,7 @@ from softfab.render import (
     InternalErrorPage, NotFoundPage, parseAndProcess, present
 )
 from softfab.request import Request
+from softfab.response import Response
 from softfab.schedulelib import ScheduleManager
 from softfab.shadowlib import startShadowRunCleanup
 from softfab.userlib import User
@@ -263,27 +264,30 @@ def renderAsync(
         page: FabResource, request: TwistedRequest
         ) -> Iterator[Deferred]:
     req = Request(request) # type: Request
+    streaming = False
     try:
         authenticator = page.authenticator.instance
         try:
             user = yield authenticator.authenticate(req)
         except LoginFailed as ex:
-            responder = proc = authenticator.askForAuthentication(req)
+            responder = authenticator.askForAuthentication(req)
         else:
-            responder, proc = yield parseAndProcess(page, req, user) # type: ignore
+            responder = yield parseAndProcess(page, req, user) # type: ignore
+            streaming = page.streaming
     except Redirect as ex:
-        responder = proc = Redirector(req, ex.url)
+        responder = Redirector(req, ex.url)
     except InternalError as ex:
         logging.error(
             'Internal error processing %s: %s', page.name, str(ex)
             )
         # TODO: Passing None for args is not type-safe.
-        responder = proc = InternalErrorPage(
+        responder = InternalErrorPage(
             page, req, None, cast(User, user), str(ex)
             )
 
+    response = Response(request, req.userAgent, streaming)
     try:
-        yield present(request, responder, proc)
+        yield present(responder, response)
     except ConnectionLost as ex:
         subPath = req.getSubPath()
         log.msg(

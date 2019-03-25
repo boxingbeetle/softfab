@@ -8,7 +8,6 @@ from typing import ClassVar, Iterator, Optional, Type, cast
 
 from twisted.internet.defer import Deferred, inlineCallbacks
 from twisted.internet.interfaces import IProducer, IPullProducer, IPushProducer
-from twisted.web.http import Request as TwistedRequest
 
 from softfab.FabPage import FabPage
 from softfab.Page import (
@@ -146,7 +145,7 @@ def parseAndProcess(page: FabResource[ArgsT, PageProcessor[ArgsT]],
                     ) -> Iterator[Deferred]:
     '''Parse step: determine values for page arguments.
     Processing step: database interaction.
-    Returns a Deferred which has a (responder, proc) pair as its result.
+    Returns a `Deferred` which has a `Responder` as its result.
     '''
     try:
         # Page-level authorization.
@@ -235,18 +234,12 @@ def parseAndProcess(page: FabResource[ArgsT, PageProcessor[ArgsT]],
             responder = UIResponder(NotFoundPage(page, req, args, user), proc)
 
     req.processEnd()
-    return (responder, proc)
+    return responder
 
-def present(
-        request: TwistedRequest,
-        responder: Responder,
-        proc: PageProcessor[ArgsT]
-        ) -> Optional[Deferred]:
+def present(responder: Responder, response: Response) -> Optional[Deferred]:
     '''Presentation step: write a response based on the processing results.
     Returns None or a Deferred that does the actual presentation.
     '''
-    streaming = getattr(proc, 'page', None) and proc.page.streaming
-    response = Response(request, proc.req.userAgent, streaming)
     if _timeRender:
         start = time()
     if _profileRender:
@@ -263,12 +256,10 @@ def present(
         # Producer which will write to the request object.
         d = response.registerProducer(presenter)
         if IPushProducer.providedBy(presenter):
-            assert streaming
             # Note: This only finishes the headers.
             response.finish()
             return d
         elif IPullProducer.providedBy(presenter):
-            assert not streaming
             # We don't actually have any pull producers at the moment.
             # TODO: Decide whether to use pull producers or remove support.
             raise NotImplemented
