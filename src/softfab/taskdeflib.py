@@ -31,7 +31,7 @@ class TaskDef(frameworklib.TaskDefBase, Selectable):
                parent: str = None,
                title: str = '',
                description: str = ''
-               ) -> TaskDef:
+               ) -> 'TaskDef':
         properties = dict(
             id = name,
             parent = parent,
