@@ -50,7 +50,7 @@ def fetchRecordForDeletion(recordId, page):
             pluralize(ex.refererName, ex.referers), ':'
             ] + unorderedList[(
                 ex.presenter(referer) for referer in sorted(ex.referers)
-                )]
+                )].present()
             )
 
     return record
