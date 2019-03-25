@@ -29,7 +29,7 @@ class LoginAuthPage(Authenticator):
             return fail(LoginFailed())
 
     def askForAuthentication(self, req: Request) -> Responder:
-        return Redirector(req, loginURL(req))
+        return Redirector(loginURL(req))
 
 class HTTPAuthPage(Authenticator):
     '''Authenticator that performs HTTP authentication.

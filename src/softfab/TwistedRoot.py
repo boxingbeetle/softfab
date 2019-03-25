@@ -275,7 +275,7 @@ def renderAsync(
             responder = yield parseAndProcess(page, req, user) # type: ignore
             streaming = page.streaming
     except Redirect as ex:
-        responder = Redirector(req, ex.url)
+        responder = Redirector(ex.url)
     except InternalError as ex:
         logging.error(
             'Internal error processing %s: %s', page.name, str(ex)

@@ -201,7 +201,7 @@ def parseAndProcess(page: FabResource[ArgsT, PageProcessor[ArgsT]],
             url = '%s?%s' % (page.name, query.toURL())
         else:
             url = '%s/%s?%s' % (page.name, subPath, query.toURL())
-        responder = proc = Redirector(req, url)
+        responder = Redirector(url)
     except ArgsInvalid as ex:
         # TODO: We don't have an arguments object because we're reporting
         #       that creating one failed.
