@@ -54,7 +54,7 @@ class HTTPAuthPage(Authenticator):
             return fail(LoginFailed())
 
     def askForAuthentication(self, req: Request) -> Responder:
-        return HTTPAuthenticator(req, 'SoftFab')
+        return HTTPAuthenticator('SoftFab')
 
 class NoAuthPage(Authenticator):
     '''Authenticator that performs no authentication and returns

@@ -179,11 +179,9 @@ class Redirector(Responder):
     def respond(self, response: Response) -> None:
         response.sendRedirect(self.__url)
 
-class HTTPAuthenticator(PageProcessor, Responder):
+class HTTPAuthenticator(Responder):
 
-    def __init__(self, req, realm):
-        # TODO: Passing None for page, args and user is not type-safe.
-        PageProcessor.__init__(self, None, req, None, None) # type: ignore
+    def __init__(self, realm: str):
         Responder.__init__(self)
         self.__realm = realm
 
