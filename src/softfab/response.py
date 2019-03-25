@@ -15,19 +15,19 @@ from twisted.web.http import CACHED
 from twisted.web.iweb import IRequest
 from twisted.web.server import NOT_DONE_YET
 
-from softfab.Page import PageProcessor
 from softfab.projectlib import project
-from softfab.useragent import AcceptedEncodings
+from softfab.useragent import AcceptedEncodings, UserAgent
 from softfab.utils import iterable
-from softfab.xmlgen import XMLPresentable
 
 
 class Response:
 
-    def __init__(self, request: IRequest, proc: PageProcessor, streaming: bool):
+    def __init__(self,
+                 request: IRequest,
+                 userAgent: UserAgent,
+                 streaming: bool):
         self.__request = request
-        self.__proc = proc
-        self.userAgent = proc.req.userAgent
+        self.userAgent = userAgent
 
         if streaming:
             # Streaming pages must not be buffered.
@@ -245,8 +245,6 @@ class Response:
 
     def write(self, *texts: Any) -> None:
         for text in texts:
-            if isinstance(text, XMLPresentable):
-                text = text.present(proc=self.__proc)
             if iterable(text):
                 self.write(*tuple(text))
                 continue

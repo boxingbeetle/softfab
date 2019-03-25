@@ -245,7 +245,7 @@ def present(
     Returns None or a Deferred that does the actual presentation.
     '''
     streaming = getattr(proc, 'page', None) and proc.page.streaming
-    response = Response(request, proc, streaming)
+    response = Response(request, proc.req.userAgent, streaming)
     if _timeRender:
         start = time()
     if _profileRender:
