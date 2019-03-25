@@ -11,8 +11,8 @@ from twisted.internet.interfaces import IProducer, IPullProducer, IPushProducer
 
 from softfab.FabPage import FabPage
 from softfab.Page import (
-    FabResource, InvalidRequest, PageProcessor, PresentableError, Redirect,
-    Redirector, Responder, logPageException
+    FabResource, InvalidRequest, PageProcessor, PresentableError, ProcT,
+    Redirect, Redirector, Responder, logPageException
 )
 from softfab.UIPage import UIPage, UIResponder
 from softfab.pageargs import ArgsCorrected, ArgsInvalid, ArgsT, Query, dynamic
@@ -38,68 +38,54 @@ if _timeRender:
 if _profileRender:
     from cProfile import Profile
 
-class ErrorPage(UIPage[PageProcessor[ArgsT]], PageProcessor[ArgsT]):
+class ErrorPage(UIPage[ProcT]):
     """Abstract base class for error pages.
     """
     status = abstract # type: ClassVar[int]
     title = abstract # type: ClassVar[str]
 
-    def __init__(self,
-                 page: 'FabResource[ArgsT, PageProcessor[ArgsT]]',
-                 req: Request[ArgsT],
-                 args: ArgsT,
-                 user: User,
-                 messageText: Optional[str] = None
-                 ):
-        PageProcessor.__init__(self, page, req, args, user)
+    def __init__(self, messageText: Optional[str] = None):
         UIPage.__init__(self)
 
         if messageText is None:
             messageText = self.title
         self.messageText = messageText
 
-    def pageTitle(self, proc: PageProcessor[ArgsT]) -> str:
+    def pageTitle(self, proc: ProcT) -> str:
         return self.title
 
     def writeHTTPHeaders(self, response: Response) -> None:
         response.setStatus(self.status, self.messageText)
         super().writeHTTPHeaders(response)
 
-    def presentContent(self, proc: PageProcessor[ArgsT]) -> XMLContent:
+    def presentContent(self, proc: ProcT) -> XMLContent:
         raise NotImplementedError
 
-class BadRequestPage(ErrorPage[ArgsT]):
+class BadRequestPage(ErrorPage[ProcT]):
     '''400 error page.
     '''
 
     status = 400
     title = 'Bad Request'
 
-    def __init__(self,
-                 page: 'FabResource[ArgsT, PageProcessor[ArgsT]]',
-                 req: Request[ArgsT],
-                 args: ArgsT,
-                 user: User,
-                 messageText: str,
-                 messageHTML: XMLContent
-                 ):
-        ErrorPage.__init__(self, page, req, args, user, messageText)
+    def __init__(self, messageText: str, messageHTML: XMLContent):
+        ErrorPage.__init__(self, messageText)
         self.messageHTML = messageHTML
 
-    def presentContent(self, proc: PageProcessor[ArgsT]) -> XMLContent:
+    def presentContent(self, proc: ProcT) -> XMLContent:
         return self.messageHTML
 
-class ForbiddenPage(ErrorPage[ArgsT]):
+class ForbiddenPage(ErrorPage[ProcT]):
     '''403 error page: shown when access is denied.
     '''
 
     status = 403
     title = 'Access Denied'
 
-    def presentContent(self, proc: PageProcessor[ArgsT]) -> XMLContent:
+    def presentContent(self, proc: ProcT) -> XMLContent:
         return xhtml.p[ 'Access denied: %s.' % self.messageText ]
 
-class NotFoundPage(ErrorPage[ArgsT]):
+class NotFoundPage(ErrorPage[ProcT]):
     '''404 error page.
     TODO: When there is a directory in the URL, the style sheets and images
           are not properly referenced.
@@ -108,20 +94,20 @@ class NotFoundPage(ErrorPage[ArgsT]):
     status = 404
     title = 'Page Not Found'
 
-    def presentContent(self, proc: PageProcessor[ArgsT]) -> XMLContent:
+    def presentContent(self, proc: ProcT) -> XMLContent:
         return (
             xhtml.p[ 'The page you requested was not found on this server.' ],
             xhtml.p[ xhtml.a(href = 'Home')[ 'Back to Home' ] ]
             )
 
-class InternalErrorPage(ErrorPage[ArgsT]):
+class InternalErrorPage(ErrorPage[ProcT]):
     '''500 error page: shown when an internal error occurred.
     '''
 
     status = 500
     title = 'Internal Error'
 
-    def presentContent(self, proc: PageProcessor[ArgsT]) -> XMLContent:
+    def presentContent(self, proc: ProcT) -> XMLContent:
         return (
             xhtml.p[ 'Internal error: %s.' % self.messageText ],
             xhtml.p[ 'Please ', docLink('/reference/contact/')[
@@ -187,12 +173,11 @@ def parseAndProcess(page: FabResource[ArgsT, PageProcessor[ArgsT]],
             proc.processTables()
     except AccessDenied as ex:
         forbiddenPage = ForbiddenPage(
-            page, req, args, user,
             "You don't have permission to %s" % (
                 str(ex) or 'access this page'
                 )
-            )
-        proc = forbiddenPage
+            ) # type: ErrorPage[PageProcessor[ArgsT]]
+        proc = PageProcessor(page, req, args, user)
         responder = UIResponder(forbiddenPage, proc) # type: Responder
     except ArgsCorrected as ex:
         subPath = req.getSubPath()
@@ -203,11 +188,7 @@ def parseAndProcess(page: FabResource[ArgsT, PageProcessor[ArgsT]],
             url = '%s/%s?%s' % (page.name, subPath, query.toURL())
         responder = Redirector(url)
     except ArgsInvalid as ex:
-        # TODO: We don't have an arguments object because we're reporting
-        #       that creating one failed.
-        args = cast(ArgsT, None)
         badRequestPage = BadRequestPage(
-            page, req, args, user,
             str(ex),
             (    xhtml.p[ 'Invalid arguments:' ],
                 xhtml.dl[(
@@ -215,15 +196,18 @@ def parseAndProcess(page: FabResource[ArgsT, PageProcessor[ArgsT]],
                     for name, message in ex.errors.items()
                     )]
                 )
-            )
-        proc = badRequestPage
+            ) # type: ErrorPage[PageProcessor[ArgsT]]
+        # TODO: We don't have an arguments object because we're reporting
+        #       that creating one failed.
+        args = cast(ArgsT, None)
+        proc = PageProcessor(page, req, args, user)
         responder = UIResponder(badRequestPage, proc)
     except InvalidRequest as ex:
         badRequestPage = BadRequestPage(
-            page, req, args, user,
             str(ex),
             xhtml.p[ 'Invalid request: ', str(ex) ]
             )
+        responder = UIResponder(badRequestPage, proc)
     except Exception as ex:
         logPageException(req, 'Unexpected exception processing request')
         responder = page.errorResponder(ex, proc)
@@ -231,7 +215,9 @@ def parseAndProcess(page: FabResource[ArgsT, PageProcessor[ArgsT]],
         try:
             responder = page.getResponder(req.getSubPath(), proc)
         except KeyError:
-            responder = UIResponder(NotFoundPage(page, req, args, user), proc)
+            notFoundPage = NotFoundPage(
+                    ) # type: ErrorPage[PageProcessor[ArgsT]]
+            responder = UIResponder(notFoundPage, proc)
 
     req.processEnd()
     return responder
