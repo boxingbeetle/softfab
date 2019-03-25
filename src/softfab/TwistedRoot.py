@@ -36,7 +36,7 @@ from softfab.render import (
 from softfab.request import Request
 from softfab.schedulelib import ScheduleManager
 from softfab.shadowlib import startShadowRunCleanup
-from softfab.userlib import UnknownUser, User
+from softfab.userlib import User
 
 startupLogger = logging.getLogger('ControlCenter.startup')
 

@@ -12,7 +12,6 @@ from zope.interface import Attribute, Interface, implementer
 from softfab.Page import InvalidRequest
 from softfab.config import rootURL
 from softfab.pageargs import ArgsT, Query
-from softfab.projectlib import project
 from softfab.useragent import UserAgent
 from softfab.userlib import User
 from softfab.utils import cachedProperty
