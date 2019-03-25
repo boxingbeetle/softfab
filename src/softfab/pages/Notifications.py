@@ -49,7 +49,7 @@ def presentEmailForm():
     yield xhtml.p[textInput(name='mailRecipient', size=60)]
     yield xhtml.p[ actionButtons(Actions.TEST) ]
 
-def presentForm(args):
+def presentForm(proc, args):
     yield xhtml.h2[ 'E-mail' ]
     if sendmail is None:
         yield xhtml.p(class_='notice')[
@@ -66,7 +66,7 @@ def presentForm(args):
                 'while this SoftFab is currently running on Twisted ',
                 twistedVersion.public(), '.'
                 ]
-    yield makeForm(args=args)[ presentEmailForm() ]
+    yield makeForm(args=args)[ presentEmailForm() ].present(proc=proc)
 
 class Notifications_GET(FabPage[FabPage.Processor, FabPage.Arguments]):
     icon = 'IconNotification'
@@ -76,11 +76,14 @@ class Notifications_GET(FabPage[FabPage.Processor, FabPage.Arguments]):
         pass
 
     def presentContent(self, proc: FabPage.Processor) -> XMLContent:
-        yield from presentForm(MailConfigArgs(
-            mailNotification=project['mailnotification'],
-            smtpRelay=project.smtpRelay,
-            mailSender=project.mailSender,
-            ))
+        yield from presentForm(
+            proc,
+            MailConfigArgs(
+                mailNotification=project['mailnotification'],
+                smtpRelay=project.smtpRelay,
+                mailSender=project.mailSender,
+                )
+            )
 
 # This is not an accurate check whether the address complies with the RFC,
 # but it should accept real addresses while rejecting most invalid ones.
@@ -166,7 +169,7 @@ class Notifications_POST(FabPage['Notifications_POST.Processor',
                     for address, result in proc.mailTestResult
                     )
                 ]
-            yield from presentForm(proc.args)
+            yield from presentForm(proc, proc.args)
         elif action is Actions.SAVE:
             yield xhtml.p[ 'Notification settings saved.' ]
             yield self.backToParent(proc.req)
@@ -175,4 +178,4 @@ class Notifications_POST(FabPage['Notifications_POST.Processor',
 
     def presentError(self, proc: Processor, message: XML) -> XMLContent:
         yield super().presentError(proc, message)
-        yield from presentForm(proc.args)
+        yield from presentForm(proc, proc.args)
