@@ -4,6 +4,7 @@ from softfab.ControlPage import ControlPage
 from softfab.Page import InvalidRequest, PageProcessor
 from softfab.joblib import jobDB
 from softfab.pageargs import BoolArg, PageArgs, SetArg
+from softfab.response import Response
 from softfab.userlib import User, checkPrivilege
 from softfab.xmlgen import xml
 
@@ -59,7 +60,7 @@ class Abort_POST(ControlPage['Abort_POST.Arguments', 'Abort_POST.Processor']):
             # pylint: disable=attribute-defined-outside-init
             self.abortedTasks = abortedTasks
 
-    def writeReply(self, response, proc):
+    def writeReply(self, response: Response, proc: Processor) -> None:
         response.write(xml.abortedtasks[(
             xml.taskref(jobid = jobId, taskname = taskName)
             for jobId, taskNames in proc.abortedTasks.items()

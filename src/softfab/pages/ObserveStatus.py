@@ -1,8 +1,11 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from twisted.internet.interfaces import IPushProducer
+
 from softfab.ControlPage import ControlPage
 from softfab.Page import PageProcessor
 from softfab.pageargs import PageArgs, StrArg
+from softfab.response import Response
 from softfab.statuslib import StatusModelRegistry, StatusViewClient
 from softfab.userlib import User
 
@@ -25,7 +28,7 @@ class ObserveStatus_GET(ControlPage['ObserveStatus_GET.Arguments',
         # here.
         pass
 
-    def writeReply(self, response, proc):
+    def writeReply(self, response: Response, proc: Processor) -> IPushProducer:
         # TODO: Is it possible / useful to do part of this in the Processor?
         #       Be careful for changes that might occur between processing
         #       and presentation.

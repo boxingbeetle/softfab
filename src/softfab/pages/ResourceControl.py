@@ -5,6 +5,7 @@ from enum import Enum
 from softfab.ControlPage import ControlPage
 from softfab.Page import InvalidRequest, PageProcessor
 from softfab.pageargs import EnumArg, PageArgs, SetArg
+from softfab.response import Response
 from softfab.taskrunnerlib import taskRunnerDB
 from softfab.userlib import User, checkPrivilege
 from softfab.xmlgen import xml
@@ -47,5 +48,5 @@ class ResourceControl_POST(ControlPage['ResourceControl_POST.Arguments',
             for res in resources:
                 res.setSuspend(suspend, userName)
 
-    def writeReply(self, response, proc):
+    def writeReply(self, response: Response, proc: Processor) -> None:
         response.write(xml.ok)

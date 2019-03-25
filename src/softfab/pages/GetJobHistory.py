@@ -1,12 +1,15 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from twisted.internet.defer import inlineCallbacks
+from typing import Iterator
+
+from twisted.internet.defer import Deferred, inlineCallbacks
 
 from softfab.ControlPage import ControlPage
 from softfab.ReportMixin import JobReportProcessor, ReportArgs
 from softfab.joblib import jobDB
 from softfab.pageargs import SetArg
 from softfab.querylib import SetFilter, runQuery
+from softfab.response import Response
 from softfab.userlib import User, checkPrivilege
 from softfab.utils import chop
 from softfab.xmlgen import adaptToXML, xml
@@ -38,7 +41,10 @@ class GetJobHistory_GET(ControlPage['GetJobHistory_GET.Arguments', 'GetJobHistor
                 yield SetFilter('configId', configId, jobDB)
 
     @inlineCallbacks
-    def writeReply(self, response, proc):
+    def writeReply(self,
+                   response: Response,
+                   proc: Processor
+                   ) -> Iterator[Deferred]:
         jobs = proc.jobs
         response.write('<jobrefs>')
         for chunk in chop(jobs, 1000):

@@ -3,6 +3,7 @@
 from softfab.ControlPage import ControlPage
 from softfab.Page import PageProcessor
 from softfab.pageargs import PageArgs, StrArg
+from softfab.response import Response
 from softfab.statuslib import StatusModelRegistry
 from softfab.userlib import User
 from softfab.xmlgen import xml
@@ -72,7 +73,7 @@ class ListModels_GET(ControlPage['ListModels_GET.Arguments',
         # Access will be checked for each model node.
         pass
 
-    def writeReply(self, response, proc):
+    def writeReply(self, response: Response, proc: Processor) -> None:
         try:
             root = StatusModelRegistry.instance.getExistingModel(
                 proc.args.model or ''

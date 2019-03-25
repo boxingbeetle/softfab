@@ -5,6 +5,7 @@ from softfab.Page import InvalidRequest, PageProcessor
 from softfab.joblib import jobDB
 from softfab.pageargs import DictArg, EnumArg, StrArg
 from softfab.pagelinks import TaskIdArgs
+from softfab.response import Response
 from softfab.resultcode import ResultCode
 from softfab.resultlib import putData
 from softfab.userlib import User, checkPrivilege, checkPrivilegeForOwned
@@ -66,5 +67,5 @@ class InspectDone_POST(ControlPage['InspectDone_POST.Arguments',
         checkPrivilege(user, 'j/l')
         checkPrivilege(user, 't/l')
 
-    def writeReply(self, response, proc):
+    def writeReply(self, response: Response, proc: Processor) -> None:
         response.write(xml.ok)

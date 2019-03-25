@@ -5,6 +5,7 @@ from softfab.Page import InvalidRequest, PageProcessor
 from softfab.pageargs import PageArgs, SetArg
 from softfab.querylib import SetFilter, runQuery
 from softfab.resourcelib import resourceDB
+from softfab.response import Response
 from softfab.restypelib import resTypeDB, taskRunnerResourceTypeName
 from softfab.taskrunnerlib import taskRunnerDB
 from softfab.timeview import formatTimeAttr
@@ -72,7 +73,7 @@ class GetResourceInfo_GET(ControlPage['GetResourceInfo_GET.Arguments',
             # pylint: disable=attribute-defined-outside-init
             self.resources = resources
 
-    def writeReply(self, response, proc):
+    def writeReply(self, response: Response, proc: Processor) -> None:
 
         def iterChangedBy(resource):
             user = resource['changeduser']

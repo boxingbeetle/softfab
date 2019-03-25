@@ -3,6 +3,7 @@
 from softfab.ControlPage import ControlPage
 from softfab.Page import InvalidRequest, PageProcessor
 from softfab.pageargs import PageArgs, StrArg
+from softfab.response import Response
 from softfab.schedulelib import scheduleDB
 from softfab.userlib import User, checkPrivilege, checkPrivilegeForOwned
 from softfab.xmlgen import xml
@@ -40,5 +41,5 @@ class TriggerSchedule_POST(ControlPage['TriggerSchedule_POST.Arguments',
         # The processor will do additional checks.
         checkPrivilege(user, 's/a')
 
-    def writeReply(self, response, proc):
+    def writeReply(self, response: Response, proc: Processor) -> None:
         response.write(xml.ok)

@@ -4,6 +4,7 @@ from softfab.ControlPage import ControlPage
 from softfab.Page import InvalidRequest, PageProcessor
 from softfab.configlib import configDB
 from softfab.pageargs import PageArgs, SetArg, StrArg
+from softfab.response import Response
 from softfab.schedulelib import scheduleDB
 from softfab.taskdeflib import taskDefDB
 from softfab.userlib import User, checkPrivilege
@@ -79,7 +80,7 @@ class GetTagged_GET(ControlPage['GetTagged_GET.Arguments',
             # pylint: disable=attribute-defined-outside-init
             self.matches = matches
 
-    def writeReply(self, response, proc):
+    def writeReply(self, response: Response, proc: Processor) -> None:
         matches = proc.matches
         subjectIdName = proc.args.subject + 'id'
 

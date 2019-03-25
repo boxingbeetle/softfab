@@ -20,6 +20,7 @@ from softfab.jobview import CommentPanel, JobsSubTable
 from softfab.pagelinks import createJobURL, createUserDetailsURL
 from softfab.projectlib import project
 from softfab.querylib import CustomFilter, KeySorter, runQuery
+from softfab.response import Response
 from softfab.timelib import getTime
 from softfab.timeview import formatDuration, formatTime
 from softfab.userlib import User, checkPrivilege
@@ -105,7 +106,7 @@ class Feed_GET(ControlPage[ControlPage.Arguments, 'Feed_GET.Processor']):
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield from proc.tables
 
-    def writeReply(self, response, proc):
+    def writeReply(self, response: Response, proc: Processor) -> None:
         response.write('<?xml version="1.0" encoding="utf-8"?>')
         # Note: Using an "xml:base" attribute here and relative URLs in the rest
         #       of the feed works fine in Akregator (KDE4 version), but fails in

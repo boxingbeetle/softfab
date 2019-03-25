@@ -7,6 +7,7 @@ from softfab.Page import InvalidRequest, PageProcessor
 from softfab.authentication import NoAuthPage
 from softfab.joblib import jobDB
 from softfab.pageargs import PageArgs, StrArg
+from softfab.response import Response
 from softfab.shadowlib import shadowDB
 from softfab.userlib import User
 from softfab.xmlgen import xml
@@ -63,5 +64,5 @@ class TaskReport_POST(ControlPage['TaskReport_POST.Arguments',
     def checkAccess(self, user: User) -> None:
         pass
 
-    def writeReply(self, response, proc):
+    def writeReply(self, response: Response, proc: Processor) -> None:
         response.write(xml.ok)

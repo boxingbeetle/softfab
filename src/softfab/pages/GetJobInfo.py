@@ -6,6 +6,7 @@ from softfab.joblib import jobDB
 from softfab.pagelinks import JobIdArgs
 from softfab.productdeflib import ProductType
 from softfab.projectlib import project
+from softfab.response import Response
 from softfab.taskrunnerlib import taskRunnerDB
 from softfab.timeview import formatTimeAttr
 from softfab.userlib import User, checkPrivilege
@@ -31,7 +32,7 @@ class GetJobInfo_GET(ControlPage['GetJobInfo_GET.Arguments',
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'j/a')
 
-    def writeReply(self, response, proc):
+    def writeReply(self, response: Response, proc: Processor) -> None:
         taskprio = project['taskprio']
 
         def taskToXML(task):

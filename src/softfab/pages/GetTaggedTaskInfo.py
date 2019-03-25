@@ -4,6 +4,7 @@ from softfab.ControlPage import ControlPage
 from softfab.Page import PageProcessor
 from softfab.joblib import getAllTasksWithId
 from softfab.pageargs import DictArg, PageArgs, SetArg, StrArg
+from softfab.response import Response
 from softfab.taskdeflib import TaskDef, taskDefDB
 from softfab.timeview import formatTimeAttr
 from softfab.userlib import User, checkPrivilege
@@ -70,7 +71,7 @@ class GetTaggedTaskInfo_GET(ControlPage['GetTaggedTaskInfo_GET.Arguments',
         checkPrivilege(user, 't/l', 'list tasks')
         checkPrivilege(user, 't/a', 'access tasks')
 
-    def writeReply(self, response, proc):
+    def writeReply(self, response: Response, proc: Processor) -> None:
         def taskToXML(task):
             if task is not None:
                 run = task.getLatestRun()

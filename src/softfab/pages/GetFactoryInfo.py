@@ -5,6 +5,7 @@ from softfab.Page import PageProcessor
 from softfab.config import rootURL
 from softfab.databases import iterDatabases
 from softfab.projectlib import getBootTime, project
+from softfab.response import Response
 from softfab.timeview import formatTimeAttr
 from softfab.userlib import User, checkPrivilege, privileges
 from softfab.version import version
@@ -27,7 +28,7 @@ class GetFactoryInfo_GET(ControlPage[ControlPage.Arguments,
         def process(self, req, user):
             pass
 
-    def writeReply(self, response, proc):
+    def writeReply(self, response: Response, proc: Processor) -> None:
         response.write(
             xml.factory(
                 name = project['name'],

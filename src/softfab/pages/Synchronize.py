@@ -4,6 +4,7 @@ from softfab.ControlPage import ControlPage
 from softfab.Page import PageProcessor
 from softfab.authentication import NoAuthPage
 from softfab.jobview import unfinishedJobs
+from softfab.response import Response
 from softfab.shadowlib import shadowDB
 from softfab.sortedqueue import SortedQueue
 from softfab.taskrunnerlib import RequestFactory, TaskRunner, taskRunnerDB
@@ -97,5 +98,5 @@ class Synchronize_POST(ControlPage[ControlPage.Arguments,
     def checkAccess(self, user: User) -> None:
         pass
 
-    def writeReply(self, response, proc):
+    def writeReply(self, response: Response, proc: Processor) -> None:
         response.write(xml.response[proc.createResponse()])
