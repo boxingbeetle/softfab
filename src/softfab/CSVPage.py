@@ -4,7 +4,7 @@
 '''
 
 from enum import Enum
-from typing import Generic, Optional
+from typing import Generic, Iterator, Optional, Sequence
 
 from softfab.ControlPage import plainTextErrorResponder
 from softfab.Page import FabResource, PageProcessor, ProcT, Responder
@@ -12,7 +12,7 @@ from softfab.authentication import LoginAuthPage
 from softfab.pageargs import EnumArg, PageArgs
 from softfab.response import Response
 from softfab.webgui import pageLink
-from softfab.xmlgen import xhtml
+from softfab.xmlgen import XML, xhtml
 
 
 class Separator(Enum):
@@ -57,13 +57,13 @@ class CSVPage(FabResource['CSVPage.Arguments', ProcT]):
     def errorResponder(self, ex: Exception, proc: PageProcessor) -> Responder:
         return plainTextErrorResponder
 
-    def getFileName(self, proc):
+    def getFileName(self, proc: ProcT) -> str:
         raise NotImplementedError
 
-    def iterRows(self, proc):
+    def iterRows(self, proc: ProcT) -> Iterator[Sequence[str]]:
         raise NotImplementedError
 
-def presentCSVLink(page, args):
+def presentCSVLink(page: str, args: CSVPage.Arguments) -> XML:
     return xhtml.p[
         'Export data in CSV format: ',
         pageLink(page, args.override(sep = Separator.COMMA))[ 'comma' ],

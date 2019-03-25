@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from typing import Iterator, Sequence, Set, cast
 import time
 
 from softfab.CSVPage import CSVPage
@@ -22,15 +23,15 @@ class TaskMatrixCSV_GET(CSVPage['TaskMatrixCSV_GET.Processor']):
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'j/a', 'view the task list')
 
-    def getFileName(self, proc):
+    def getFileName(self, proc: Processor) -> str:
         configFilter = proc.args.config
         return 'TaskMatrix_%d_%d%s.csv' % (
-            proc.args.year,
-            proc.args.week,
+            cast(int, proc.args.year),
+            cast(int, proc.args.week),
             '_' + configFilter if configFilter else ''
             )
 
-    def iterRows(self, proc):
+    def iterRows(self, proc: Processor) -> Iterator[Sequence[str]]:
         # Get info from page arguments.
         year = proc.args.year
         week = proc.args.week
@@ -46,7 +47,7 @@ class TaskMatrixCSV_GET(CSVPage['TaskMatrixCSV_GET.Processor']):
         yield ()
 
         if configFilter:
-            taskNames = set()
+            taskNames = set() # type: Set[str]
         else:
             # Get list of names of current task definitions.
             taskNames = set(taskDefDB.keys())
@@ -54,8 +55,6 @@ class TaskMatrixCSV_GET(CSVPage['TaskMatrixCSV_GET.Processor']):
         # week.
         for taskDict in taskData:
             taskNames.update(taskDict)
-        # Convert set to sorted list.
-        taskNames = sorted(taskNames)
 
         # Note: This would fail in the weeks in which daylight saving time
         #       starts or ends, except that we only print 1 week and the day
@@ -70,7 +69,7 @@ class TaskMatrixCSV_GET(CSVPage['TaskMatrixCSV_GET.Processor']):
         # Take the result of the most recent execution of each task, since that
         # is most likely to be representative.
         sorter = KeySorter([ '-starttime' ])
-        for taskName in taskNames:
+        for taskName in sorted(taskNames):
             resultCells = [ taskName ]
             for taskDict in taskData:
                 tasks = taskDict.get(taskName, ())

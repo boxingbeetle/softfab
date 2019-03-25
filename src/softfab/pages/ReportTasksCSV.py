@@ -1,5 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from typing import Iterator, Sequence
+
 from softfab.CSVPage import CSVPage
 from softfab.ReportMixin import ReportProcessor, ReportTaskCSVArgs
 from softfab.joblib import iterDoneTasks
@@ -33,10 +35,10 @@ class ReportTasksCSV_GET(CSVPage['ReportTasksCSV_GET.Processor']):
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'j/a', 'view the task list')
 
-    def getFileName(self, proc):
+    def getFileName(self, proc: Processor) -> str:
         return '_'.join(['export'] + sorted(proc.args.task)) + '.csv'
 
-    def iterRows(self, proc):
+    def iterRows(self, proc: Processor) -> Iterator[Sequence[str]]:
         tasks = proc.tasks
 
         # Determine all keys that exist for the given task names.
