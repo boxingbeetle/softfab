@@ -48,16 +48,11 @@ class _RunInfo(XMLTag):
     tagName = 'run'
 
     def __eq__(self, other):
-        return (
-            isinstance(other, _RunInfo) and
+        if isinstance(other, _RunInfo):
             # pylint: disable=protected-access
-            # "other" is an instance of _RunInfo, so it's OK to access
-            # protected fields.
-            self._properties == other._properties
-            )
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
+            return self._properties == other._properties
+        else:
+            return NotImplemented
 
     def getTaskRun(self):
         '''Returns the task run object corresponding to the ID strings.
@@ -102,19 +97,16 @@ class _TaskRunnerData(XMLTag):
         self.__shadowRunId = None
 
     def __eq__(self, other):
-        return (
-            isinstance(other, _TaskRunnerData) and
-            # pylint: disable=protected-access
-            # "other" is an instance of _TaskRunnerData, so it's OK to access
-            # protected and private fields.
-            self._properties == other._properties and
-            self.__target == other.__target and
-            self.__run == other.__run and
-            self.__shadowRunId == other.__shadowRunId
-            )
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
+        if isinstance(other, _TaskRunnerData):
+            return (
+                # pylint: disable=protected-access
+                self._properties == other._properties and
+                self.__target == other.__target and
+                self.__run == other.__run and
+                self.__shadowRunId == other.__shadowRunId
+                )
+        else:
+            return NotImplemented
 
     def __getitem__(self, key):
         if key == 'target':
