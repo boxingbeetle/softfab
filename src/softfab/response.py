@@ -4,7 +4,7 @@ from base64 import standard_b64encode
 from gzip import GzipFile
 from hashlib import md5
 from io import BytesIO
-from typing import Any, Callable, Optional, Union
+from typing import AnyStr, Callable, Optional, Union
 from urllib.parse import urljoin
 
 from twisted.internet import reactor
@@ -17,7 +17,6 @@ from twisted.web.server import NOT_DONE_YET
 
 from softfab.projectlib import project
 from softfab.useragent import AcceptedEncodings, UserAgent
-from softfab.utils import iterable
 from softfab.xmlgen import XMLContent, adaptToXML
 
 
@@ -244,23 +243,19 @@ class Response:
         self.setStatus(303 if self.__request.clientproto == 'HTTP/1.1' else 302)
         self.__request.setHeader('location', urlBytes)
 
-    def write(self, *texts: Any) -> None:
+    def write(self, *texts: Optional[AnyStr]) -> None:
+        writeBytes = self.__writeBytes
         for text in texts:
-            if iterable(text):
-                self.write(*tuple(text))
-                continue
-
             if isinstance(text, str):
-                text = text.encode('utf-8')
+                writeBytes(text.encode())
             elif isinstance(text, bytes):
-                pass
+                writeBytes(text)
             elif text is None:
                 continue
             else:
                 raise TypeError(
                     'Cannot handle document output of type "%s"' % type(text)
                     )
-            self.__writeBytes(text)
 
     def writeXML(self, xml: XMLContent) -> None:
         """Append the given XML content to this reponse.
