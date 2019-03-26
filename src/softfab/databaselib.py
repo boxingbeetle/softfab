@@ -814,7 +814,7 @@ class SingletonElem(DatabaseElem):
     the only record in their database.
     '''
 
-    def getId(self):
+    def getId(self) -> str:
         return 'singleton'
 
     def toXML(self) -> XML:
@@ -822,31 +822,31 @@ class SingletonElem(DatabaseElem):
         # that here to please PyLint.
         raise NotImplementedError
 
-class SingletonObserver(RecordObserver):
+class SingletonObserver(RecordObserver[Record]):
     '''Base class for observers of singleton tables.
     The subclass only has to implement the updated() method.
     '''
 
-    def added(self, record):
+    def added(self, record: Record) -> None:
         self.updated(record)
 
-    def removed(self, record):
+    def removed(self, record: Record) -> None:
         assert False, 'singleton instance removed'
 
-    def updated(self, record):
+    def updated(self, record: Record) -> None:
         raise NotImplementedError
 
-class SingletonWrapper:
+class SingletonWrapper(Generic[Record]):
     '''Wrapper for easy access to the singleton record for databases which
     always contain exactly one record: anything you call on the singleton
     object is forwarded to the record object.
     '''
 
-    def __init__(self, db):
+    def __init__(self, db: Database[Record]):
         '''Creates a singleton wrapper for the given database.
         The database must already contain its single record.
         '''
-        def updateInstance():
+        def updateInstance() -> None:
             assert len(db) == 1
             # pylint: disable=attribute-defined-outside-init
             # PyLint does not see that this is called first from the
@@ -856,7 +856,7 @@ class SingletonWrapper:
         updateInstance()
 
         class Observer(SingletonObserver):
-            def updated(self, record):
+            def updated(self, record: Record) -> None:
                 updateInstance()
 
         # TODO: For consistency, this observer must be the first one called
@@ -864,10 +864,10 @@ class SingletonWrapper:
         #       implementation, but not guaranteed by the interface.
         db.addObserver(Observer())
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> object:
         return getattr(self.__record, name)
 
-    def __getitem__(self, name):
+    def __getitem__(self, name: str) -> object:
         return self.__record[name]
 
 # Regular expression with defines all valid wrapper variable names.
