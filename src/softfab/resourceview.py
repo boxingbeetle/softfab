@@ -200,7 +200,7 @@ class ResourceRequirementsTable(Table):
                 if inherited or resType == taskRunnerResourceTypeName:
                     # Type and reference are fixed.
                     typeControl = (
-                        resTypeDB[resType]['presentation'],
+                        resTypeDB[resType].presentationName,
                         hiddenInput(name='type', value=resType)
                         )
                     refControl = (

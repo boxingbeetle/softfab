@@ -125,7 +125,7 @@ class ResourcesTable(DataTable):
             if resTypeName in recordsByType:
                 resType = resTypeDB[resTypeName]
                 yield row[header(colspan=numColumns, class_='section')[
-                    resType['presentation']
+                    resType.presentationName
                     ]]
                 for record in recordsByType[resTypeName]:
                     yield row(class_=getResourceStatus(record))[(

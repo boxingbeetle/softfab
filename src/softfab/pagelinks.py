@@ -152,7 +152,7 @@ class CapFilterArgs(PageArgs):
 
 def createCapabilityLink(typeName: str, cap: str = '') -> XML:
     return pageLink('Capabilities', CapFilterArgs(restype=typeName, cap=cap))[
-        cap or resTypeDB[typeName]['presentation']
+        cap or resTypeDB[typeName].presentationName
         ]
 
 def createTaskRunnerDetailsLink(taskRunnerId):

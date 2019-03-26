@@ -185,7 +185,7 @@ class Capabilities_GET(FabPage['Capabilities_GET.Processor',
             ResTypeTable.instance,
             xhtml.h2[
                 'Resources of type ',
-                xhtml.b[resType['presentation']], ':'
+                xhtml.b[resType.presentationName], ':'
                 ],
             ResourcesTable.instance,
             CapabilitiesTable.instance
