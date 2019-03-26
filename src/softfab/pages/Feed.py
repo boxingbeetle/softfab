@@ -118,7 +118,7 @@ class Feed_GET(ControlPage[ControlPage.Arguments, 'Feed_GET.Processor']):
             ])
 
     def presentFeed(self, proc):
-        projectName = project['name']
+        projectName = project.name
         yield atom.title[ '%s SoftFab - Recent Jobs' % projectName ]
         yield atom.subtitle[
             'The most recent jobs running in the %s SoftFab' % projectName
@@ -153,7 +153,7 @@ class Feed_GET(ControlPage[ControlPage.Arguments, 'Feed_GET.Processor']):
         jobId = job.getId()
         jobResult = job.getResult()
         owner = job.getOwner()
-        projectName = project['name']
+        projectName = project.name
         tasksTable = TasksTable.instance
         jobComment = CommentPanel(job.comment)
         proc.job = job

@@ -74,10 +74,10 @@ class ProjectEdit(EditPage):
                 return {}
             else:
                 return dict(
-                    name = project['name'],
+                    name = project.name,
                     targets = ' '.join(sorted(project.getTargets())),
                     tagkeys = ', '.join(project.getTagKeys()),
-                    timezone = project['timezone'],
+                    timezone = project.timezone,
                     maxjobs = project['maxjobs'],
                     taskprio = project['taskprio'],
                     trselect = project['trselect'],

@@ -80,7 +80,7 @@ class UIPage(Generic[ProcT]):
             name='viewport',
             content='width=device-width, initial-scale=1, minimum-scale=1'
             )
-        yield xhtml.title[ '%s - %s' % (project['name'], self.pageTitle(proc)) ]
+        yield xhtml.title[ '%s - %s' % (project.name, self.pageTitle(proc)) ]
         for sheet in iterStyleSheets(proc.req):
             yield sheet.present(proc=proc)
         customStyleDefs = '\n'.join(self.iterStyleDefs())
@@ -90,7 +90,7 @@ class UIPage(Generic[ProcT]):
 
     def __title(self, proc: ProcT) -> XMLContent:
         return (
-            xhtml.span(class_ = 'project')[ project['name'] ],
+            xhtml.span(class_ = 'project')[ project.name ],
             xhtml.span(class_ = 'softfab')[ ' SoftFab' ],
             xhtml.span(class_ = 'project')[ ' \u2013 ' ],
             self.pageTitle(proc)

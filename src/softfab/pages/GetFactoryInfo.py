@@ -31,11 +31,11 @@ class GetFactoryInfo_GET(ControlPage[ControlPage.Arguments,
     def writeReply(self, response: Response, proc: Processor) -> None:
         response.writeXML(
             xml.factory(
-                name = project['name'],
+                name = project.name,
                 url = rootURL,
                 version = version,
                 boottime = formatTimeAttr(getBootTime()),
-                timezone = project['timezone'],
+                timezone = project.timezone,
                 )[
                 ( xml.table(name = db.name, count = len(db))
                 for db in iterDatabases() ),

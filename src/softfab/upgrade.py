@@ -26,9 +26,10 @@ setConversionFlags()
 # upgrade.
 from softfab.projectlib import project
 from softfab.utils import parseVersion
+from typing import cast
 import sys
 try:
-    versionStr = project['version']
+    versionStr = cast(str, project['version'])
 except KeyError:
     dbVersion = 0, 0, 0
 else:

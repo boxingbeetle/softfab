@@ -3,7 +3,9 @@
 from enum import Enum
 from getpass import getuser
 from socket import getfqdn
-from typing import cast
+from typing import (
+    AbstractSet, Iterable, List, Mapping, MutableSet, Sequence, TextIO, cast
+)
 import logging
 import os
 import os.path
@@ -19,7 +21,7 @@ from softfab.userlib import AnonGuestUser, UnknownUser, User, userDB
 from softfab.utils import cachedProperty
 from softfab.version import version
 from softfab.xmlbind import XMLTag
-from softfab.xmlgen import xml
+from softfab.xmlgen import XMLAttributeValue, XMLContent, xml
 
 # Check for pytz (package python-tz in Debian).
 # Full SoftFab installations should have this, but by making it optional it
@@ -33,7 +35,7 @@ else:
 
 EmbeddingPolicy = Enum('EmbeddingPolicy', 'NONE SELF CUSTOM')
 
-def _guessSystemTimezone():
+def _guessSystemTimezone() -> str:
     '''Makes a best effort to determine the system timezone.
     Returns either a member of pytz.common_timezones or the empty string.
     '''
@@ -48,7 +50,7 @@ def _guessSystemTimezone():
 
     # Debian stores the timezone in /etc/timezone.
     try:
-        lines = open('/etc/timezone').readlines()
+        lines = cast(TextIO, open('/etc/timezone')).readlines()
     except IOError:
         pass
     else:
@@ -68,7 +70,7 @@ def _guessSystemTimezone():
             )
         for line in lines:
             match = reTimezone.match(line)
-            if reTimezone.match(line):
+            if match:
                 timezone = match.group(1)
                 if timezone in pytz.common_timezones:
                     return timezone
@@ -85,8 +87,8 @@ def _guessSystemTimezone():
     # Give up.
     return ''
 
-def _selectTimezone():
-    timezone = project['timezone']
+def _selectTimezone() -> None:
+    timezone = project.timezone
     if timezone:
         os.environ['TZ'] = timezone
         if hasattr(time, 'tzset'):
@@ -98,7 +100,7 @@ def _selectTimezone():
                 'provide time.tzset().'
                 )
 
-def getKnownTimezones():
+def getKnownTimezones() -> Sequence[str]:
     if HAVE_PYTZ:
         return pytz.common_timezones
     else:
@@ -107,7 +109,7 @@ def getKnownTimezones():
 defaultMaxJobs = 25
 
 class ProjectFactory:
-    def createProject(self, attributes):
+    def createProject(self, attributes: Mapping[str, str]) -> 'Project':
         return Project(attributes)
 
 class ProjectDB(Database):
@@ -128,7 +130,7 @@ class Project(XMLTag, SingletonElem):
     intProperties = ('maxjobs', )
     enumProperties = {'embed': EmbeddingPolicy}
 
-    def __init__(self, properties):
+    def __init__(self, properties: Mapping[str, XMLAttributeValue]):
         XMLTag.__init__(self, properties)
         SingletonElem.__init__(self)
         self._properties.setdefault('maxjobs', defaultMaxJobs)
@@ -141,34 +143,34 @@ class Project(XMLTag, SingletonElem):
         if 'mailsender' not in self._properties:
             self._properties['mailsender'] = '%s@%s' % (getuser(), getfqdn())
 
-        self.__targets = set()
+        self.__targets = set() # type: MutableSet[str]
         # Note: tag keys should be kept in a list rather than a set,
         # because the order of tag keys everywhere in the UI should be the
         # same as specified in the project configuration (rather than sorted
         # alphabetically). This allows the project to choose which tag they
         # have as the first one (and thus the default and the mostly used one).
-        self.__tagKeys = []
+        self.__tagKeys = [] # type: List[str]
 
-    def _addTarget(self, attributes):
+    def _addTarget(self, attributes: Mapping[str, str]) -> None:
         self.__targets.add(attributes['name'])
 
-    def _addTagkey(self, attributes):
+    def _addTagkey(self, attributes: Mapping[str, str]) -> None:
         self.__tagKeys.append(attributes['key'])
 
-    def getTargets(self):
+    def getTargets(self) -> AbstractSet[str]:
         return set(self.__targets or [ 'unknown' ])
 
-    def setTargets(self, targets):
+    def setTargets(self, targets: Iterable[str]) -> None:
         self.__targets = set(targets)
 
-    def getTagKeys(self):
+    def getTagKeys(self) -> Sequence[str]:
         return self.__tagKeys
 
-    def setTagKeys(self, tagKeys):
+    def setTagKeys(self, tagKeys: Iterable[str]) -> None:
         self.__tagKeys = list(tagKeys)
 
     @property
-    def showOwners(self):
+    def showOwners(self) -> bool:
         """Should owners be shown in the user interface?
 
         Returns True iff there are multiple active users.
@@ -176,12 +178,25 @@ class Project(XMLTag, SingletonElem):
         return userDB.numActiveUsers > 1
 
     @property
-    def showTargets(self):
+    def showTargets(self) -> bool:
         """Should targets be shown in the user interface?
 
         Returns True iff more than one target is defined.
         """
         return len(self.__targets) > 1
+
+    @property
+    def name(self) -> str:
+        """User-given name of this project.
+        """
+        return cast(str, self._properties['name'])
+
+    @property
+    def timezone(self) -> str:
+        """Name of the main time zone for this project,
+        or the empty string if the time zone is unknown.
+        """
+        return cast(str, self._properties['timezone'])
 
     @property
     def smtpRelay(self) -> str:
@@ -221,21 +236,21 @@ class Project(XMLTag, SingletonElem):
         self._properties['anonguest'] = bool(enabled)
         self._notify()
 
-    def updateVersion(self):
+    def updateVersion(self) -> None:
         '''Indicates that the database format is up-to-date.
         Used by "upgrade.py" to save version of the last upgrade.
         '''
         self._properties['version'] = version
         self._notify()
 
-    def _getContent(self):
+    def _getContent(self) -> XMLContent:
         for name in self.__targets:
             yield xml.target( name = name)
         for name in self.__tagKeys:
             yield xml.tagKey(key = name)
 
     @cachedProperty
-    def frameAncestors(self):
+    def frameAncestors(self) -> str:
         """Pattern that specifies which sites are allowed to embed this
         Control Center in a page.
         """
@@ -245,7 +260,7 @@ class Project(XMLTag, SingletonElem):
         elif embed is EmbeddingPolicy.SELF:
             return "'self'"
         elif embed is EmbeddingPolicy.CUSTOM:
-            return self._properties['embedcustom']
+            return cast(str, self._properties['embedcustom'])
         else:
             assert False, embed
             return "'none'"
@@ -257,16 +272,17 @@ if len(_projectDB) == 0:
     _projectDB.add(_project)
     del _project
 
-project = SingletonWrapper(_projectDB)
+# Note: SingletonWrapper is not a Project, but mimics it closely.
+project = cast(Project, SingletonWrapper(_projectDB))
 
 class _TimezoneUpdater(SingletonObserver):
 
-    def updated(self, record):
+    def updated(self, record: Project) -> None:
         _selectTimezone()
 
 _selectTimezone()
 _projectDB.addObserver(_TimezoneUpdater())
 
 _bootTime = getTime()
-def getBootTime():
+def getBootTime() -> int:
     return _bootTime
