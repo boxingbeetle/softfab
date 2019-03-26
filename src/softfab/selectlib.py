@@ -191,8 +191,8 @@ class ObservingTagCache(TagCache, RecordObserver[SelectableRecord]):
     def updated(self, record: SelectableRecord) -> None:
         self._refreshCache()
 
-def getCommonTags(tagKeys: AbstractSet[str],
-                  items: Sequence[Selectable]
+def getCommonTags(tagKeys: Iterable[str],
+                  items: Iterable[Selectable]
                   ) -> Mapping[str, Mapping[str, str]]:
     commonTags = None # type: Optional[Dict[str, Dict[str, str]]]
     for item in items:
