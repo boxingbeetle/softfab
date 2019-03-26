@@ -405,7 +405,7 @@ class StatusViewClient:
         self.__statusView = view
 
     def update(self, message):
-        self.__response.write(message)
+        self.__response.writeXML(message)
         #print 'written:', message
 
     def startProducing(self):

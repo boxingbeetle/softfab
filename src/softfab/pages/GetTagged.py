@@ -84,7 +84,7 @@ class GetTagged_GET(ControlPage['GetTagged_GET.Arguments',
         matches = proc.matches
         subjectIdName = proc.args.subject + 'id'
 
-        response.write(
+        response.writeXML(
             xml.matches[(
                 xml.tag(**{
                     subjectIdName: recordId,

@@ -30,6 +30,6 @@ class TaskRunnerExit_POST(ControlPage['TaskRunnerExit_POST.Arguments',
         checkPrivilege(user, 'tr/m', 'control Task Runners')
 
     def writeReply(self, response: Response, proc: Processor) -> None:
-        response.write(xml.ok)
+        response.writeXML(xml.ok)
         # TODO: Write error body in addition to result code.
-        #response.write(xml.error(message = error))
+        #response.writeXML(xml.error(message = error))

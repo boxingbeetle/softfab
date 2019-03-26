@@ -61,7 +61,7 @@ class Abort_POST(ControlPage['Abort_POST.Arguments', 'Abort_POST.Processor']):
             self.abortedTasks = abortedTasks
 
     def writeReply(self, response: Response, proc: Processor) -> None:
-        response.write(xml.abortedtasks[(
+        response.writeXML(xml.abortedtasks[(
             xml.taskref(jobid = jobId, taskname = taskName)
             for jobId, taskNames in proc.abortedTasks.items()
             for taskName in taskNames

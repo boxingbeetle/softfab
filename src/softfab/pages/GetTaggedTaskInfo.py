@@ -100,7 +100,7 @@ class GetTaggedTaskInfo_GET(ControlPage['GetTaggedTaskInfo_GET.Arguments',
                         ]
                     for taskDef, task in tasks
                     )]
-        response.write(
+        response.writeXML(
             xml.info[(
                 xml('tag-key')(name = tagKey)[ taggedToXML(tagKey, tagged) ]
                 for tagKey, tagged in proc.selected.items()

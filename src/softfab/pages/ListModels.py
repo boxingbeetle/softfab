@@ -82,4 +82,4 @@ class ListModels_GET(ControlPage['ListModels_GET.Arguments',
             modelXML = None
         else:
             modelXML = modelToXML(root, proc.args.format)
-        response.write(xml.modellist[ modelXML ])
+        response.writeXML(xml.modellist[ modelXML ])

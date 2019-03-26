@@ -65,4 +65,4 @@ class TaskReport_POST(ControlPage['TaskReport_POST.Arguments',
         pass
 
     def writeReply(self, response: Response, proc: Processor) -> None:
-        response.write(xml.ok)
+        response.writeXML(xml.ok)

@@ -30,7 +30,7 @@ class GetTaskDefParams_GET(ControlPage['GetTaskDefParams_GET.Arguments',
                 if value is not None:
                     yield xml.param(name = param, value = value)
 
-        response.write(
+        response.writeXML(
             xml.taskdefs[(
                 xml.taskdef(name = taskId)[
                     externalizeParams(taskDef.getParameters())

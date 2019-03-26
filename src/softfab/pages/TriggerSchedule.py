@@ -42,4 +42,4 @@ class TriggerSchedule_POST(ControlPage['TriggerSchedule_POST.Arguments',
         checkPrivilege(user, 's/a')
 
     def writeReply(self, response: Response, proc: Processor) -> None:
-        response.write(xml.ok)
+        response.writeXML(xml.ok)

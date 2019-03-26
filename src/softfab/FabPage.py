@@ -223,7 +223,7 @@ class _WidgetResponder(Responder):
 
     def respond(self, response: Response) -> None:
         self.__page.writeHTTPHeaders(response)
-        response.write(self.__widget.present(proc=self.__proc))
+        response.writeXML(self.__widget.present(proc=self.__proc))
 
 class LinkBar(Widget):
     '''A bar which contains links to other pages.

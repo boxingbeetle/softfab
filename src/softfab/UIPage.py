@@ -67,7 +67,7 @@ class UIPage(Generic[ProcT]):
 
     def writeHTML(self, response: Response, proc: ProcT) -> None:
         response.write('<!DOCTYPE html>\n')
-        response.write(
+        response.writeXML(
             xhtml.html(lang = 'en')[
                 xhtml.head[ self.presentHeadParts(proc) ],
                 xhtml.body[ self.__presentBodyParts(response, proc) ],

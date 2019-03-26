@@ -18,6 +18,7 @@ from twisted.web.server import NOT_DONE_YET
 from softfab.projectlib import project
 from softfab.useragent import AcceptedEncodings, UserAgent
 from softfab.utils import iterable
+from softfab.xmlgen import XMLContent, adaptToXML
 
 
 class Response:
@@ -145,7 +146,7 @@ class Response:
             @inlineCallbacks
             def writeReply(self, response, proc):
                 for chunk in chop(proc.records, 1000):
-                    response.write(record.format() for record in chunk)
+                    response.writeXML(record.format() for record in chunk)
                     yield response.returnToReactor()
         '''
         d = Deferred()
@@ -248,8 +249,6 @@ class Response:
             if iterable(text):
                 self.write(*tuple(text))
                 continue
-            if hasattr(text, 'flattenXML'):
-                text = text.flattenXML()
 
             if isinstance(text, str):
                 text = text.encode('utf-8')
@@ -262,3 +261,8 @@ class Response:
                     'Cannot handle document output of type "%s"' % type(text)
                     )
             self.__writeBytes(text)
+
+    def writeXML(self, xml: XMLContent) -> None:
+        """Append the given XML content to this reponse.
+        """
+        self.__writeBytes(adaptToXML(xml).flattenXML().encode())

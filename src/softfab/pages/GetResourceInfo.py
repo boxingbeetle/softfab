@@ -135,7 +135,7 @@ class GetResourceInfo_GET(ControlPage['GetResourceInfo_GET.Arguments',
                     description = resource['description']
                     )
 
-        response.write(xml.resources[(
+        response.writeXML(xml.resources[(
             xml.resource(
                 # Resource type independent information
                 type = resource['type'],

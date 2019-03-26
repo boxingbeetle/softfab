@@ -111,7 +111,7 @@ class Feed_GET(ControlPage[ControlPage.Arguments, 'Feed_GET.Processor']):
         # Note: Using an "xml:base" attribute here and relative URLs in the rest
         #       of the feed works fine in Akregator (KDE4 version), but fails in
         #       Outlook 2007. Therefore we should only use absolute URLs.
-        response.write(atom.feed(
+        response.writeXML(atom.feed(
             xmlns = 'http://www.w3.org/2005/Atom',
             )[
             self.presentFeed(proc)

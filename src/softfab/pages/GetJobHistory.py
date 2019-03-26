@@ -50,10 +50,10 @@ class GetJobHistory_GET(ControlPage['GetJobHistory_GET.Arguments', 'GetJobHistor
         for chunk in chop(jobs, 1000):
             # Measurements have shown that a single write with a big XML
             # sequence is much faster than many small writes.
-            response.write(adaptToXML(
+            response.writeXML(
                 xml.jobref(jobid = job.getId())
                 for job in chunk
-                ))
+                )
             # Return control to reactor.
             yield response.returnToReactor()
         response.write('</jobrefs>')

@@ -49,4 +49,4 @@ class ResourceControl_POST(ControlPage['ResourceControl_POST.Arguments',
                 res.setSuspend(suspend, userName)
 
     def writeReply(self, response: Response, proc: Processor) -> None:
-        response.write(xml.ok)
+        response.writeXML(xml.ok)

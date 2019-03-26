@@ -43,4 +43,4 @@ class LoadExecuteDefault_POST(ControlPage['LoadExecuteDefault_POST.Arguments',
         checkPrivilege(user, 'j/c', 'start jobs')
 
     def writeReply(self, response: Response, proc: Processor) -> None:
-        response.write(xml.ok)
+        response.writeXML(xml.ok)

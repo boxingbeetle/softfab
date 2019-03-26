@@ -77,7 +77,7 @@ class GetJobInfo_GET(ControlPage['GetJobInfo_GET.Arguments',
         job.updateSummaries(taskRunnerDB)
         comment = job.comment
         tasks = job.getTaskSequence()
-        response.write(
+        response.writeXML(
             xml.job(
                 jobid = job.getId(),
                 target = job['target'],

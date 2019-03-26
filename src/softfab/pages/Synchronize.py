@@ -99,4 +99,4 @@ class Synchronize_POST(ControlPage[ControlPage.Arguments,
         pass
 
     def writeReply(self, response: Response, proc: Processor) -> None:
-        response.write(xml.response[proc.createResponse()])
+        response.writeXML(xml.response[proc.createResponse()])

@@ -29,7 +29,7 @@ class GetFactoryInfo_GET(ControlPage[ControlPage.Arguments,
             pass
 
     def writeReply(self, response: Response, proc: Processor) -> None:
-        response.write(
+        response.writeXML(
             xml.factory(
                 name = project['name'],
                 url = rootURL,
