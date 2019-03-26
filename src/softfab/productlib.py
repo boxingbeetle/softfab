@@ -1,20 +1,21 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from functools import total_ordering
+from typing import Dict, Iterator, Mapping, Optional, Tuple, cast
 
 from softfab.config import dbDir
 from softfab.databaselib import Database, DatabaseElem, createInternalId
-from softfab.productdeflib import ProductType, productDefDB
+from softfab.productdeflib import ProductDef, ProductType, productDefDB
 from softfab.xmlbind import XMLTag
-from softfab.xmlgen import xml
+from softfab.xmlgen import XMLAttributeValue, XMLContent, xml
 
 
 class ProductFactory:
     @staticmethod
-    def createProduct(attributes):
+    def createProduct(attributes: Mapping[str, str]) -> 'Product':
         return Product(attributes)
 
-class ProductDB(Database):
+class ProductDB(Database['Product']):
     baseDir = dbDir + '/products'
     factory = ProductFactory()
     privilegeObject = 'j' # every product is a part of a job
@@ -28,7 +29,7 @@ class Product(XMLTag, DatabaseElem):
     tagName = 'product'
 
     @classmethod
-    def create(cls, name):
+    def create(cls, name: str) -> 'Product':
         product = cls(dict(
             id = createInternalId(),
             name = name,
@@ -38,78 +39,78 @@ class Product(XMLTag, DatabaseElem):
         productDB.add(product)
         return product
 
-    def __init__(self, attributes):
+    def __init__(self, attributes: Mapping[str, XMLAttributeValue]):
         XMLTag.__init__(self, attributes)
         DatabaseElem.__init__(self)
-        self.__producers = {}
+        self.__producers = {} # type: Dict[str, str]
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self.getName())
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if isinstance(other, Product):
             return self.getName() == other.getName()
         else:
             return NotImplemented
 
-    def __lt__(self, other):
+    def __lt__(self, other: object) -> bool:
         if isinstance(other, Product):
             return self.getName() < other.getName()
         else:
             return NotImplemented
 
-    def _addProducer(self, attributes):
+    def _addProducer(self, attributes: Mapping[str, str]) -> None:
         self.__producers[attributes['taskId']] = attributes['locator']
 
-    def _getContent(self):
+    def _getContent(self) -> XMLContent:
         for taskId, locator in self.__producers.items():
             yield xml.producer(taskId = taskId, locator = locator)
 
-    def getId(self):
-        return self._properties['id']
+    def getId(self) -> str:
+        return cast(str, self._properties['id'])
 
-    def getName(self):
-        return self._properties['name']
+    def getName(self) -> str:
+        return cast(str, self._properties['name'])
 
-    def getDef(self):
-        return productDefDB.getVersion(self._properties['pdKey'])
+    def getDef(self) -> ProductDef:
+        return productDefDB.getVersion(cast(str, self._properties['pdKey']))
 
-    def getType(self):
-        return self.getDef()['type']
+    def getType(self) -> ProductType:
+        return cast(ProductType, self.getDef()['type'])
 
-    def isLocal(self):
+    def isLocal(self) -> bool:
         return self.getDef().isLocal()
 
-    def isCombined(self):
+    def isCombined(self) -> bool:
         return self.getDef().isCombined()
 
-    def getLocalAt(self):
-        return self._properties.get('localAt')
+    def getLocalAt(self) -> Optional[str]:
+        return cast(Optional[str], self._properties.get('localAt'))
 
-    def getLocator(self, taskName = None):
+    def getLocator(self, taskName: Optional[str] = None) -> Optional[str]:
         '''Gets the locator for this product, or None if there isn't one.
         If a task name is provided, the locator produced by that particular
         task is returned, otherwise the first reported locator is returned.
         '''
         if taskName is None:
-            return self._properties.get('locator')
+            return cast(Optional[str], self._properties.get('locator'))
         else:
             return self.__producers.get(taskName)
 
-    def getProducers(self):
+    def getProducers(self) -> Iterator[Tuple[str, str]]:
         '''Returns an iterator which contains the producers of a product.
         Only the tasks that have reported a locator are included.
         The iterator contains pairs of task name and locator.
         '''
-        return self.__producers.items()
+        return iter(self.__producers.items())
 
-    def isAvailable(self):
+    def isAvailable(self) -> bool:
         return self._properties['state'] == 'done'
 
-    def isBlocked(self):
+    def isBlocked(self) -> bool:
         return self._properties['state'] == 'blocked'
 
-    def setLocalAt(self, taskRunnerId):
+    def setLocalAt(self, taskRunnerId: str) -> None:
         '''Binds this product to the given Task Runner.
         Only valid for local products.
         '''
@@ -122,7 +123,7 @@ class Product(XMLTag, DatabaseElem):
         else:
             assert prevRunnerId == taskRunnerId
 
-    def storeLocator(self, locator, taskName):
+    def storeLocator(self, locator: str, taskName: str) -> None:
         '''Remembers a locator and the task that produced it.
         If later another locator is given for the same task, it will be ignored.
         '''
@@ -141,12 +142,12 @@ class Product(XMLTag, DatabaseElem):
         if changed:
             self._notify()
 
-    def done(self):
+    def done(self) -> None:
         if self._properties['state'] == 'waiting':
             self._properties['state'] = 'done'
             self._notify()
 
-    def blocked(self):
+    def blocked(self) -> None:
         if self._properties['state'] == 'waiting':
             self._properties['state'] = 'blocked'
             self._notify()
