@@ -432,7 +432,7 @@ class _MissingValue:
         return self is other
 
     def __ne__(self, other: object) -> bool:
-        return True
+        return self is not other
 
     def __lt__(self, other: object) -> bool:
         return False
