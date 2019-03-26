@@ -2,6 +2,7 @@
 
 from collections import defaultdict
 from functools import total_ordering
+from typing import cast
 
 from softfab.config import dbDir
 from softfab.databaselib import Database, DatabaseElem, RecordObserver
@@ -115,8 +116,8 @@ class Task(PriorityMixin, ResourceRequirementsMixin, XMLTag, TaskRunnerSet):
     def isGroup(self):
         return False
 
-    def getName(self):
-        return self._properties['name']
+    def getName(self) -> str:
+        return cast(str, self._properties['name'])
 
     def getDef(self):
         return taskDefDB[self._properties['name']]
@@ -124,8 +125,8 @@ class Task(PriorityMixin, ResourceRequirementsMixin, XMLTag, TaskRunnerSet):
     def getFramework(self):
         return self.getDef().getFramework()
 
-    def getPriority(self):
-        return self._properties['priority']
+    def getPriority(self) -> int:
+        return cast(int, self._properties['priority'])
 
     def getParameter(self, name):
         param = self.__params.get(name)

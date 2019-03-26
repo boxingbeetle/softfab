@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from collections import defaultdict
+from typing import cast
 import logging
 
 from softfab import frameworklib, taskdeflib, taskrunlib
@@ -170,11 +171,11 @@ class _Task(
     def getFramework(self):
         return frameworklib.frameworkDB.getVersion(self._properties['fdKey'])
 
-    def getName(self):
-        return self._properties['name']
+    def getName(self) -> str:
+        return cast(str, self._properties['name'])
 
-    def getPriority(self):
-        return self._properties['priority']
+    def getPriority(self) -> int:
+        return cast(int, self._properties['priority'])
 
     def hasExtractionWrapper(self):
         # TODO: Getting the property from the task def would cause an

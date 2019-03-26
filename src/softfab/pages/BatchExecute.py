@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from enum import Enum
-from typing import Iterator
+from typing import Iterator, Mapping
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor, Redirect
@@ -28,14 +28,14 @@ class InputConflict(Exception):
 
 class FakeTask:
 
-    def __init__(self, name, inputs):
+    def __init__(self, name: str, inputs: Mapping):
         self.__inputs = inputs
         self.__name = name
 
     def isGroup(self):
         return False
 
-    def getName(self):
+    def getName(self) -> str:
         return self.__name
 
     def getInputs(self):
@@ -44,7 +44,7 @@ class FakeTask:
     def getOutputs(self):
         return set()
 
-    def getPriority(self):
+    def getPriority(self) -> int:
         return 0
 
 class FakeTaskSet(TaskSetWithInputs):

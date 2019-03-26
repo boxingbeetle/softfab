@@ -242,7 +242,7 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
             self.__task = task = self.getJob().getTask(self.__taskName)
         return task
 
-    def getName(self):
+    def getName(self) -> str:
         if self.__task is None:
             # During upgrade, task name is stored because task is not.
             return self.__taskName

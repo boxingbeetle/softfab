@@ -2,6 +2,7 @@
 
 from collections import defaultdict
 from functools import total_ordering
+from typing import TYPE_CHECKING
 
 from softfab.setcalc import UnionFind, categorizedLists, union
 from softfab.utils import Heap, ResultKeeper
@@ -144,16 +145,21 @@ class PriorityMixin:
     getPriority() and secondarily on the value returned by getName().
     '''
 
-    def __hash__(self):
+    if TYPE_CHECKING:
+        # pylint: disable=multiple-statements
+        def getName(self) -> str: ...
+        def getPriority(self) -> int: ...
+
+    def __hash__(self) -> int:
         return hash(self.getName())
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if isinstance(other, PriorityMixin):
             return self.getName() == other.getName()
         else:
             return NotImplemented
 
-    def __lt__(self, other):
+    def __lt__(self, other: object) -> bool:
         if isinstance(other, PriorityMixin):
             prioCmp = self.getPriority() - other.getPriority()
             if prioCmp == 0:
@@ -274,7 +280,7 @@ class _TaskGroup(PriorityMixin):
     def isGroup(self):
         return True
 
-    def getName(self):
+    def getName(self) -> str:
         raise NotImplementedError
 
     def getJob(self):
@@ -286,7 +292,7 @@ class _TaskGroup(PriorityMixin):
     def getChildren(self):
         return iter(self.__tasks.values())
 
-    def getPriority(self):
+    def getPriority(self) -> int:
         if self.__priority is None:
             self.__priority = min(
                 task.getPriority()
@@ -346,8 +352,8 @@ class _MainGroup(_TaskGroup):
     '''The main group: all tasks in a job.
     '''
 
-    def getName(self):
-        return None
+    def getName(self) -> str:
+        return '/'
 
     def assign(self, taskRunner):
         for task in self.getTaskGroupSequence():
@@ -392,7 +398,7 @@ class _LocalGroup(_TaskGroup):
                  % ( self.getName(), self.__runnerId, runnerId )
                 )
 
-    def getName(self):
+    def getName(self) -> str:
         if self.__name is None:
             # Name the task group after the alphabetically first task inside
             # it. Since each task has a unique name and belongs to at most one
