@@ -67,7 +67,7 @@ def unifyJobId(jobId):
     else:
         return jobId
 
-class _Task(
+class Task(
         PriorityMixin, ResourceRequirementsMixin, TaskStateMixin,
         XMLTag, TaskRunnerSet
         ):
@@ -87,7 +87,7 @@ class _Task(
             tdKey = tdKey,
             fdKey = fdKey,
             )
-        task = _Task(properties, job)
+        task = Task(properties, job)
         # pylint: disable=protected-access
         task._setRunners(runners)
         return task
@@ -480,7 +480,7 @@ class Job(TaskSet, TaskRunnerSet, XMLTag, DatabaseElem):
         self.__comment = text
 
     def _addTask(self, attributes):
-        return self.__addTask(_Task(attributes, self))
+        return self.__addTask(Task(attributes, self))
 
     def _addProduct(self, attributes):
         self.__products[attributes['name']] = attributes['key']
@@ -505,9 +505,7 @@ class Job(TaskSet, TaskRunnerSet, XMLTag, DatabaseElem):
         This method is only intended for Config.createJob(), which should
         add the tasks in the right order.
         '''
-        task = _Task.create(
-            job = self, name = name, priority = prio, runners = runners
-            )
+        task = Task.create(job=self, name=name, priority=prio, runners=runners)
         self.__addTask(task).newRun()
         productNames = task.getInputs() | task.getOutputs()
         for productName in productNames:
