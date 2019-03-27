@@ -4,9 +4,9 @@ from abc import ABC
 from collections.abc import ItemsView, ValuesView
 from operator import itemgetter
 from typing import (
-    Any, Callable, ClassVar, Dict, FrozenSet, Generic, ItemsView as ItemsViewT,
-    Iterator, KeysView as KeysViewT, List, Mapping, Optional, Sequence, Set,
-    TypeVar, ValuesView as ValuesViewT, cast
+    TYPE_CHECKING, Any, Callable, ClassVar, Dict, FrozenSet, Generic,
+    ItemsView as ItemsViewT, Iterator, KeysView as KeysViewT, List, Mapping,
+    Optional, Sequence, Set, TypeVar, ValuesView as ValuesViewT, cast
 )
 import logging
 import os
@@ -38,8 +38,22 @@ class ObsoleteRecordError(Exception):
     accessed. Used to purge obsolete records during database conversion.
     '''
 
+if TYPE_CHECKING:
+    from functools import total_ordering
+    from typing_extensions import Protocol
+
+    @total_ordering
+    class ComparableProto(Protocol):
+        def __eq__(self, other: Any) -> bool: ...
+        def __lt__(self, other: Any) -> bool: ...
+
+    Comparable = TypeVar('Comparable', bound=ComparableProto)
+else:
+    Comparable = TypeVar('Comparable')
+
 Record = TypeVar('Record', bound='DatabaseElem')
 R2 = TypeVar('R2', bound='DatabaseElem')
+Retriever = Callable[[Record], Comparable]
 
 class DatabaseElem:
     '''Abstract base class for database elements.
@@ -228,8 +242,9 @@ class Database(Generic[Record], RecordSubjectMixin[Record], ABC):
     # effort, but 1 could never be solved, so I decided against it.
     cachedUniqueValues = () # type: Sequence[str]
 
-    # Contains optimized value retriever functions for certain column keys.
-    keyRetrievers = {} # type: ClassVar[Mapping[str, Callable[[Any], Any]]]
+    keyRetrievers = {} # type: ClassVar[Mapping[str, Retriever]]
+    """Contains optimized value retriever functions for certain column keys.
+    """
 
     # Regular expression with defines all valid database keys.
     __reKey = re.compile('^[@A-Za-z0-9+_-][@A-Za-z0-9.+_ -]*$')
@@ -239,7 +254,7 @@ class Database(Generic[Record], RecordSubjectMixin[Record], ABC):
     __reSpaces = re.compile(' {2,}')
 
     @classmethod
-    def retrieverFor(cls, key: str) -> Callable[[Any], Any]:
+    def retrieverFor(cls, key: str) -> Retriever:
         return cls.keyRetrievers.get(key) or itemgetter(key)
 
     def __init__(self) -> None:

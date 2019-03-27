@@ -1,13 +1,18 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from abc import ABC
-from typing import ClassVar
+from typing import Callable, ClassVar, Iterator, Sequence, Tuple
 
-from softfab.databaselib import RecordObserver, RecordSubjectMixin
+from softfab.databaselib import (
+    Comparable, Database, Record, RecordObserver, RecordSubjectMixin, Retriever
+)
 from softfab.utils import abstract
 
 
-def binarySearch(lst, elem, key):
+def binarySearch(lst: Sequence[Record],
+                 elem: Record,
+                 key: Retriever[Record, Comparable]
+                 ) -> Tuple[bool, int]:
     high = len(lst)
     if high == 0:
         return False, 0
@@ -28,12 +33,12 @@ def binarySearch(lst, elem, key):
     else: # elemKey > lowKey
         return False, high
 
-class SortedQueue(RecordSubjectMixin, RecordObserver, ABC):
+class SortedQueue(RecordSubjectMixin[Record], RecordObserver[Record], ABC):
     '''Base class for sorted subsets of databases.
     '''
     compareField = abstract # type: ClassVar[str]
 
-    def __init__(self, db):
+    def __init__(self, db: Database[Record]):
         RecordSubjectMixin.__init__(self)
         RecordObserver.__init__(self)
         self.__db = db
@@ -48,29 +53,29 @@ class SortedQueue(RecordSubjectMixin, RecordObserver, ABC):
 
         db.addObserver(self)
 
-    def retire(self):
+    def retire(self) -> None:
         '''Disconnects this sorted queue from the database it observes,
         so it can be garbage collected.
         '''
         self.__db.removeObserver(self)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Record]:
         return iter(self._records)
 
-    def __getitem__(self, index):
+    def __getitem__(self, index: int) -> Record:
         return self._records[index]
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._records)
 
-    def _filter(self, record): # pylint: disable=unused-argument
+    def _filter(self, record: Record) -> bool: # pylint: disable=unused-argument
         '''By default every record is part of the queue.
         If you only want a subset, override this method to return True iff
         the record should be part of the queue.
         '''
         return True
 
-    def _getKeyFunc(self):
+    def _getKeyFunc(self) -> Retriever:
         '''Returns a key function that, when passed a record in this queue,
         returns the sort key for that record.
         The primary ordering is done using the "compareField" class-scope
@@ -87,24 +92,26 @@ class SortedQueue(RecordSubjectMixin, RecordObserver, ABC):
         if compareField in db.uniqueKeys:
             return retriever
         else:
-            return lambda record, retriever=retriever: (
-                retriever(record), record.getId()
-                )
+            def keyFunc(record: Record,
+                        retriever: Callable[[Record], Comparable] = retriever
+                        ) -> Tuple[Comparable, str]:
+                return retriever(record), record.getId()
+            return keyFunc
 
-    def added(self, record):
+    def added(self, record: Record) -> None:
         if self._filter(record):
             found, index = binarySearch(self._records, record, self.__keyFunc)
             assert not found
             self._records.insert(index, record)
             self._notifyAdded(record)
 
-    def removed(self, record):
+    def removed(self, record: Record) -> None:
         found, index = binarySearch(self._records, record, self.__keyFunc)
         if found:
             del self._records[index]
             self._notifyRemoved(record)
 
-    def updated(self, record):
+    def updated(self, record: Record) -> None:
         found, index = binarySearch(self._records, record, self.__keyFunc)
         if found == self._filter(record):
             if found:
