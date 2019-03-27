@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import ClassVar, cast
+from typing import (
+    TYPE_CHECKING, ClassVar, Dict, Mapping, Optional, Type, TypeVar, cast
+)
 import logging
 
 from softfab.config import dbDir
@@ -13,25 +15,34 @@ from softfab.storagelib import StorageURLMixin
 from softfab.timelib import getTime
 from softfab.utils import abstract, cachedProperty
 from softfab.xmlbind import XMLTag
-from softfab.xmlgen import xml
+from softfab.xmlgen import XML, XMLAttributeValue, xml
 
-# Note: To avoid cyclic imports, taskrunlib sets this.
-#       The weird construct is to avoid PyLint complaining about methods we
-#       call on it not existing for NoneType.
-taskRunDB = cast(Database, (lambda x: x if x else None)(0))
+if TYPE_CHECKING:
+    from softfab.taskrunlib import TaskRun, taskRunDB
+    from softfab.taskrunnerlib import TaskRunner
+else:
+    # Note: To avoid cyclic imports, taskrunlib sets this.
+    #       The weird construct is to avoid PyLint complaining about methods we
+    #       call on it not existing for NoneType.
+    taskRunDB = cast(Database, (lambda x: x if x else None)(0))
+    TaskRun = object
+    TaskRunner = object
+
 
 class ShadowFactory:
     @staticmethod
-    def createExtraction(attributes):
+    def createExtraction(attributes: Mapping[str, str]) -> 'ExtractionRun':
         return ExtractionRun(attributes)
 
-class ShadowDB(Database):
+class ShadowDB(Database['ShadowRun']):
     baseDir = dbDir + '/shadow'
     factory = ShadowFactory()
     privilegeObject = 'sh'
     description = 'shadow run'
     uniqueKeys = ( 'shadowId', )
 shadowDB = ShadowDB()
+
+ShadowRunT = TypeVar('ShadowRunT', bound='ShadowRun')
 
 # Note: Order of inheritance is important: XMLTag's (implemented) version of
 #       toXML should be called instead of DatabaseElem's (abstract) version.
@@ -49,26 +60,28 @@ class ShadowRun(XMLTag, DatabaseElem, StorageURLMixin):
     enumProperties = {'result': ResultCode}
 
     @classmethod
-    def _create(cls, **extraAttributes):
+    def _create(cls: Type[ShadowRunT],
+                **extraAttributes: XMLAttributeValue
+                ) -> ShadowRunT:
         attributes = {
             'shadowId': createUniqueId(),
             'createtime': getTime(),
             'state': 'waiting',
-            }
+            } # type: Dict[str, XMLAttributeValue]
         attributes.update(extraAttributes)
         return cls(attributes)
 
-    def __init__(self, attributes):
+    def __init__(self, attributes: Mapping[str, XMLAttributeValue]):
         XMLTag.__init__(self, attributes)
         DatabaseElem.__init__(self)
         StorageURLMixin.__init__(self)
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: str) -> object:
         if key == '-createtime':
-            return -self._properties['createtime']
+            return -cast(int, self._properties['createtime'])
         elif key == 'duration':
-            startTime = self._properties.get('starttime')
-            stopTime = self._properties.get('stoptime') or getTime()
+            startTime = cast(int, self._properties.get('starttime'))
+            stopTime = cast(int, self._properties.get('stoptime')) or getTime()
             if startTime is None:
                 return None
             else:
@@ -80,21 +93,21 @@ class ShadowRun(XMLTag, DatabaseElem, StorageURLMixin):
         else:
             return XMLTag.__getitem__(self, key)
 
-    def _canBeRunOn(self, taskRunner):
+    def _canBeRunOn(self, taskRunner: TaskRunner) -> bool:
         '''Returns true iff this shadow run can be executed on the given
         Task Runner.
         '''
         raise NotImplementedError
 
-    def getId(self):
-        return self._properties['shadowId']
+    def getId(self) -> str:
+        return cast(str, self._properties['shadowId'])
 
-    def getDescription(self):
+    def getDescription(self) -> str:
         '''Returns a human-readable desription of this shadow run.
         '''
         raise NotImplementedError
 
-    def getLocation(self):
+    def getLocation(self) -> str:
         '''Returns a human-readable description of where this shadow run
         will execute. This is related to _canBeRunOn.
         A location can be a Task Runner, but in the future it could also
@@ -102,39 +115,39 @@ class ShadowRun(XMLTag, DatabaseElem, StorageURLMixin):
         '''
         raise NotImplementedError
 
-    def hasExpired(self):
+    def hasExpired(self) -> bool:
         '''Returns True iff this record is either obsolete or pointing to
         other records that no longer exist.
         Expired records will be removed when the database is loaded.
         '''
         return False
 
-    def isWaiting(self):
+    def isWaiting(self) -> bool:
         return self._properties['state'] == 'waiting'
 
-    def isRunning(self):
+    def isRunning(self) -> bool:
         return self._properties['state'] == 'running'
 
-    def isDone(self):
+    def isDone(self) -> bool:
         return self._properties['state'] == 'done'
 
-    def isToBeAborted(self):
+    def isToBeAborted(self) -> bool:
         # TODO: Implement user abort for shadow tasks.
         return False
 
-    def getResult(self):
+    def getResult(self) -> Optional[ResultCode]:
         '''Gets the ResultCode (OK, WARNING, ERROR),
         or None if there is no result yet.
         '''
-        return self._properties.get('result')
+        return cast(ResultCode, self._properties.get('result'))
 
-    def getTaskRunnerId(self):
+    def getTaskRunnerId(self) -> Optional[str]:
         '''Returns the ID of the Task Runner that is or was running this shadow
         run, or None if this shadow run has not been assigned yet.
         '''
-        return self._properties.get('taskrunner')
+        return cast(Optional[str], self._properties.get('taskrunner'))
 
-    def assign(self, taskRunner):
+    def assign(self, taskRunner: TaskRunner) -> bool:
         '''Attempt to assign this shadow run for execution on the given
         Task Runner.
         @return True iff assignment succeeded.
@@ -153,7 +166,7 @@ class ShadowRun(XMLTag, DatabaseElem, StorageURLMixin):
         self._notify()
         return True
 
-    def done(self, result):
+    def done(self, result: ResultCode) -> None:
         # Input validation.
         if result not in (
             ResultCode.OK, ResultCode.WARNING, ResultCode.ERROR
@@ -172,7 +185,7 @@ class ShadowRun(XMLTag, DatabaseElem, StorageURLMixin):
         self._properties['result'] = result
         self._notify()
 
-    def failed(self, message): # pylint: disable=unused-argument
+    def failed(self, message: str) -> None: # pylint: disable=unused-argument
         '''Marks this run as failed.
         Used when a Task Runner is not behaving like it should, for example
         the Task Runner is lost.
@@ -186,7 +199,7 @@ class ExtractionRun(ShadowRun):
     tagName = 'extraction'
 
     @classmethod
-    def create(cls, taskRun):
+    def create(cls, taskRun: TaskRun) -> 'ExtractionRun':
         return cls._create(
             taskRun = taskRun.getId(),
             runner = taskRun['runner']
@@ -194,25 +207,25 @@ class ExtractionRun(ShadowRun):
 
     # Delayed initialisation is required because we have a circular dependency.
     @cachedProperty
-    def taskRun(self):
+    def taskRun(self) -> TaskRun:
         '''Gets the task run of which the data should be extracted.
         '''
-        return taskRunDB[self._properties['taskRun']]
+        return taskRunDB[cast(str, self._properties['taskRun'])]
 
-    def _canBeRunOn(self, taskRunner):
+    def _canBeRunOn(self, taskRunner: TaskRunner) -> bool:
         # Extraction runs are bound to a specific TR.
         return self._properties['runner'] == taskRunner.getId()
 
-    def hasExpired(self):
+    def hasExpired(self) -> bool:
         return self._properties['taskRun'] not in taskRunDB
 
-    def getDescription(self):
+    def getDescription(self) -> str:
         return 'Extract %s' % self.taskRun.getName()
 
-    def getLocation(self):
-        return self._properties['runner']
+    def getLocation(self) -> str:
+        return cast(str, self._properties['runner'])
 
-    def externalize(self):
+    def externalize(self) -> XML:
         '''Returns an XMLNode containing info the Task Runner needs to perform
         this extraction run.
         See the sync protocol documentation.
@@ -225,24 +238,24 @@ class ExtractionRun(ShadowRun):
             taskRun.createInputXML()
             ]
 
-class OKShadowRuns(SortedQueue):
+class OKShadowRuns(SortedQueue[ShadowRun]):
     compareField = '-createtime'
 
-    def _filter(self, record):
+    def _filter(self, record: ShadowRun) -> bool:
         return record.getResult() is ResultCode.OK
 
-class DoneShadowRuns(SortedQueue):
+class DoneShadowRuns(SortedQueue[ShadowRun]):
     compareField = '-createtime'
 
-    def _filter(self, record):
+    def _filter(self, record: ShadowRun) -> bool:
         return record.isDone()
 
 maxOKRecords = 10
 maxDoneRecords = 50
 
-class RecordTrimmer(RecordObserver):
+class RecordTrimmer(RecordObserver[ShadowRun]):
 
-    def __init__(self):
+    def __init__(self) -> None:
         RecordObserver.__init__(self)
         self.__okShadowRuns = OKShadowRuns(shadowDB)
         self.__doneShadowRuns = DoneShadowRuns(shadowDB)
@@ -252,17 +265,17 @@ class RecordTrimmer(RecordObserver):
 
         shadowDB.addObserver(self)
 
-    def added(self, record):
+    def added(self, record: ShadowRun) -> None:
         self.__trimRecords()
 
-    def removed(self, record):
+    def removed(self, record: ShadowRun) -> None:
         # Removed records only make the list shorter, so no need to trim.
         pass
 
-    def updated(self, record):
+    def updated(self, record: ShadowRun) -> None:
         self.__trimRecords()
 
-    def __trimRecords(self):
+    def __trimRecords(self) -> None:
         '''Remove old records: they are unlikely to be relevant anymore and
         keeping them takes up space in memory and in the visualisation.
         '''
@@ -273,7 +286,7 @@ class RecordTrimmer(RecordObserver):
             for record in list(self.__doneShadowRuns)[maxDoneRecords : ]:
                 shadowDB.remove(record)
 
-def _removeExpiredRecords():
+def _removeExpiredRecords() -> None:
     '''Removes expired records from the shadow queue.
     In normal operation records will not expire, but if the database got
     corrupted or records were manually deleted, it will help in getting back
@@ -284,7 +297,7 @@ def _removeExpiredRecords():
         logging.warning('Removing expired shadow run %s', shadowRun.getId())
         shadowDB.remove(shadowRun)
 
-def startShadowRunCleanup():
+def startShadowRunCleanup() -> None:
     """Starts automatic cleanup of shadow runs.
     Must be called after database preloading.
     """
