@@ -111,9 +111,10 @@ class ParamMixin:
         return set(self.__finalParameters)
 
     def _paramsToXML(self) -> XMLContent:
-        params = ResultKeeper[str, Dict[str, XMLAttributeValue]](
-            lambda key: { 'name': key }
-            ) # type: Dict[str, Dict[str, XMLAttributeValue]]
+        keyFunc = lambda key: {
+            'name': key
+            } # type: Callable[[str], Dict[str, XMLAttributeValue]]
+        params = ResultKeeper(keyFunc)
         for key, value in self.__parameters.items():
             params[key]['value'] = value
         for key in self.__finalParameters:
