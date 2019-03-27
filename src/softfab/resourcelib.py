@@ -12,7 +12,7 @@ from softfab.databaselib import Database, DatabaseElem
 from softfab.timelib import getTime
 from softfab.utils import abstract
 from softfab.xmlbind import XMLTag
-from softfab.xmlgen import xml
+from softfab.xmlgen import XMLAttributeValue, XMLContent, xml
 
 
 class ResourceBase(XMLTag, DatabaseElem):
@@ -22,7 +22,7 @@ class ResourceBase(XMLTag, DatabaseElem):
     boolProperties = ('suspended',)
     intProperties = ('changedtime',)
 
-    def __init__(self, properties: Mapping[str, str]):
+    def __init__(self, properties: Mapping[str, XMLAttributeValue]):
         XMLTag.__init__(self, properties)
         DatabaseElem.__init__(self)
         self._capabilities = set() # type: AbstractSet[str]
@@ -33,7 +33,7 @@ class ResourceBase(XMLTag, DatabaseElem):
     def _endParse(self) -> None:
         self._capabilities = frozenset(self._capabilities)
 
-    def _getContent(self) -> Iterator:
+    def _getContent(self) -> XMLContent:
         for cap in self._capabilities:
             yield xml.capability(name = cap)
 

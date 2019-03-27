@@ -1,7 +1,9 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from abc import ABC
-from typing import ClassVar
+from typing import (
+    Callable, ClassVar, Iterable, Mapping, Optional, Tuple, Type, TypeVar, cast
+)
 import logging
 
 from twisted.internet import reactor
@@ -12,28 +14,29 @@ from softfab.connection import ConnectionStatus
 from softfab.databaselib import Database, RecordObserver
 from softfab.resourcelib import ResourceBase
 from softfab.restypelib import taskRunnerResourceTypeName
-from softfab.shadowlib import shadowDB
+from softfab.shadowlib import ShadowRun, shadowDB
 from softfab.statuslib import (
     DBStatusModelGroup, StatusModel, StatusModelRegistry
 )
-from softfab.taskrunlib import taskRunDB
+from softfab.taskrunlib import TaskRun, taskRunDB
 from softfab.timelib import getTime
 from softfab.utils import abstract, cachedProperty, parseVersion
 from softfab.xmlbind import XMLTag
-from softfab.xmlgen import xml
+from softfab.xmlgen import XML, XMLAttributeValue, XMLContent, xml
 
+Task = joblib.Task
 
 class RequestFactory:
     @staticmethod
-    def createRequest(attributes):
+    def createRequest(attributes: Mapping[str, str]) -> '_TaskRunnerData':
         return _TaskRunnerData(attributes)
 
 class TaskRunnerFactory:
     @staticmethod
-    def createTaskrunner(attributes):
+    def createTaskrunner(attributes: Mapping[str, str]) -> 'TaskRunner':
         return TaskRunner(attributes)
 
-class TaskRunnerDB(Database):
+class TaskRunnerDB(Database['TaskRunner']):
     baseDir = dbDir + '/taskrunners'
     factory = TaskRunnerFactory()
     privilegeObject = 'tr'
@@ -47,24 +50,24 @@ class _RunInfo(XMLTag):
     '''
     tagName = 'run'
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if isinstance(other, _RunInfo):
             # pylint: disable=protected-access
             return self._properties == other._properties
         else:
             return NotImplemented
 
-    def getTaskRun(self):
+    def getTaskRun(self) -> TaskRun:
         '''Returns the task run object corresponding to the ID strings.
         If that task run does not exist, KeyError is raised.
         '''
-        task = joblib.jobDB[self['jobId']].getTask(self['taskId'])
+        jobId = cast(str, self['jobId'])
+        taskId = cast(str, self['taskId'])
+        runId = cast(str, self['runId'])
+        task = joblib.jobDB[jobId].getTask(taskId)
         if task is None:
-            raise KeyError(
-                'no task named "%s" in job %s'
-                 % ( self['taskId'], self['jobId'] )
-                 )
-        return task.getRun(self['runId'])
+            raise KeyError('no task named "%s" in job %s' % (taskId, jobId))
+        return task.getRun(runId)
 
 class _TaskRunnerData(XMLTag):
     '''This class represents a request of a Task Runner.
@@ -72,7 +75,7 @@ class _TaskRunnerData(XMLTag):
     '''
     tagName = 'data'
 
-    def __init__(self, properties):
+    def __init__(self, properties: Mapping[str, XMLAttributeValue]):
         XMLTag.__init__(self, properties)
 
         # COMPAT 2.16: Rename 'runnerId' to 'id'.
@@ -84,19 +87,19 @@ class _TaskRunnerData(XMLTag):
         # COMPAT 2.x.x: Backward compatibility hack to cut off the host from
         #               runnerId.
         #               We have to change the sync protocol to fix this.
-        if self._properties['runnerVersion'].startswith('2.'):
-            runnerId = self._properties['id']
+        if cast(str, self._properties['runnerVersion']).startswith('2.'):
+            runnerId = cast(str, self._properties['id'])
             dot = runnerId.rfind('.')
             if dot != -1:
                 self._properties['host'] = runnerId[ : dot]
                 self._properties['id'] = runnerId[dot + 1 : ]
 
         self._properties.setdefault('host', '?')
-        self.__target = None
-        self.__run = None
-        self.__shadowRunId = None
+        self.__target = cast(str, None)
+        self.__run = cast(_RunInfo, None)
+        self.__shadowRunId = None # type: Optional[str]
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if isinstance(other, _TaskRunnerData):
             return (
                 # pylint: disable=protected-access
@@ -108,44 +111,44 @@ class _TaskRunnerData(XMLTag):
         else:
             return NotImplemented
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: str) -> object:
         if key == 'target':
             return self.getTarget()
         else:
             return XMLTag.__getitem__(self, key)
 
     @cachedProperty
-    def version(self):
+    def version(self) -> Tuple[int, int, int]:
         '''Tuple of 3 integers representing the Task Runner version.
         '''
-        return parseVersion(self._properties['runnerVersion'])
+        return parseVersion(cast(str, self._properties['runnerVersion']))
 
-    def _setTarget(self, attributes):
+    def _setTarget(self, attributes: Mapping[str, str]) -> None:
         self.__target = attributes['name']
 
-    def _addCapability(self, attributes):
+    def _addCapability(self, attributes: Mapping[str, str]) -> None:
         # COMPAT 2.16: Ignore capabilities coming from TR.
         pass
 
-    def _setRun(self, attributes):
+    def _setRun(self, attributes: Mapping[str, str]) -> None:
         self.__run = _RunInfo(attributes)
 
-    def _setShadowrun(self, attributes):
+    def _setShadowrun(self, attributes: Mapping[str, str]) -> None:
         self.__shadowRunId = attributes['shadowId']
 
-    def getId(self):
-        return self._properties['id']
+    def getId(self) -> str:
+        return cast(str, self._properties['id'])
 
-    def getTarget(self):
+    def getTarget(self) -> str:
         return self.__target
 
-    def hasExecutionRun(self):
+    def hasExecutionRun(self) -> bool:
         '''Returns True if the Task Runner reported it is running an execution
         run, False if it reported it is not running anything.
         '''
         return self.__run is not None
 
-    def getExecutionRun(self):
+    def getExecutionRun(self) -> Optional[TaskRun]:
         '''Returns the execution run the Task Runner reported it is currently
         running, or None if it is not running an execution run.
         If the run it reports to be running does not exist, KeyError is raised.
@@ -156,7 +159,7 @@ class _TaskRunnerData(XMLTag):
         else:
             return self.__run.getTaskRun()
 
-    def getExecutionRunId(self):
+    def getExecutionRunId(self) -> Optional[str]:
         '''Returns ID corresponding to the execution run the Task Runner
         reported it is currently running, or None if it is not running an
         execution run.
@@ -168,7 +171,7 @@ class _TaskRunnerData(XMLTag):
         else:
             return taskRun.getId()
 
-    def getShadowRun(self):
+    def getShadowRun(self) -> Optional[ShadowRun]:
         '''Returns the shadow run the Task Runner reported it is currently
         running, or None if it is not running a shadow run.
         If the shadow run it reports to be running does not exist, KeyError
@@ -180,45 +183,50 @@ class _TaskRunnerData(XMLTag):
         else:
             return shadowDB[self.__shadowRunId]
 
-    def getShadowRunId(self):
+    def getShadowRunId(self) -> Optional[str]:
         '''Returns ID corresponding to the shadow run the Task Runner reported
         it is currently running, or None if it is not running a shadow run.
         '''
         return self.__shadowRunId
 
-    def _getContent(self):
+    def _getContent(self) -> XMLContent:
         yield xml.target(name = self.__target)
         yield self.__run
         if self.__shadowRunId is not None:
             yield xml.shadowrun(shadowId = self.__shadowRunId)
 
-class RunObserver(RecordObserver, ABC):
+RunT = TypeVar('RunT', TaskRun, ShadowRun)
+
+class RunObserver(RecordObserver[RunT], ABC):
     '''Base class for monitoring the task run or shadow DB to keep track of
     which run a particular Task Runner is expected to be working on.
     '''
     db = abstract # type: ClassVar[Database]
     runType = abstract # type: ClassVar[str]
 
-    def __init__(self, taskRunner, callback):
+    def __init__(self,
+                 taskRunner: 'TaskRunner',
+                 callback: Callable[[Optional[RunT]], None]
+                 ):
         RecordObserver.__init__(self)
         self.__taskRunner = taskRunner
-        self.__callback = callback
-        self._run = None
+        self.__callback = callback # type: Callable[[Optional[RunT]], None]
+        self._run = None # type: Optional[RunT]
         self.db.addObserver(self)
 
-    def retired(self):
+    def retired(self) -> None:
         self.db.removeObserver(self)
 
-    def reset(self):
+    def reset(self) -> None:
         self._run = None
 
-    def __shouldRun(self, run):
+    def __shouldRun(self, run: RunT) -> bool:
         return (
             run.isRunning() and
             run.getTaskRunnerId() == self.__taskRunner.getId()
             )
 
-    def _changeRun(self, newRun):
+    def _changeRun(self, newRun: Optional[RunT]) -> None:
         oldRun = self._run
         if oldRun is not None and newRun is not None:
             if oldRun.isRunning():
@@ -239,10 +247,10 @@ class RunObserver(RecordObserver, ABC):
                     )
         self._run = newRun
 
-    def getRun(self):
+    def getRun(self) -> Optional[RunT]:
         return self._run
 
-    def setRun(self, run):
+    def setRun(self, run: RunT) -> None:
         '''Called by the Task Runner when it parses its stored state.
         '''
         if self.__shouldRun(run):
@@ -256,14 +264,14 @@ class RunObserver(RecordObserver, ABC):
                 self.runType
                 )
 
-    def added(self, record):
+    def added(self, record: RunT) -> None:
         self.updated(record)
 
-    def removed(self, record):
+    def removed(self, record: RunT) -> None:
         if self._run is not None and record.getId() == self._run.getId():
             self._changeRun(None)
 
-    def updated(self, record):
+    def updated(self, record: RunT) -> None:
         if self.__shouldRun(record):
             if self._run is None or record.getId() != self._run.getId():
                 self._changeRun(record)
@@ -273,30 +281,27 @@ class RunObserver(RecordObserver, ABC):
                 self._changeRun(None)
                 self.__callback(None)
 
-    def _runToXML(self):
-        '''Serializes the reference to the task/shadow run to an XMLNode.
-        '''
-        raise NotImplementedError
-
-    def toXML(self):
-        if self._run is None:
-            return None
-        else:
-            return self._runToXML()
-
-class ExecutionObserver(RunObserver):
+class ExecutionObserver(RunObserver[TaskRun]):
     db = taskRunDB
     runType = 'execution'
 
-    def _runToXML(self):
-        return xml.executionrun(runId = self._run.getId())
+    def toXML(self) -> XMLContent:
+        run = self._run
+        if run is None:
+            return None
+        else:
+            return xml.executionrun(runId=run.getId())
 
-class ShadowObserver(RunObserver):
+class ShadowObserver(RunObserver[ShadowRun]):
     db = shadowDB
     runType = 'shadow'
 
-    def _runToXML(self):
-        return xml.shadowrun(shadowId = self._run.getId())
+    def toXML(self) -> XMLContent:
+        run = self._run
+        if run is None:
+            return None
+        else:
+            return xml.shadowrun(shadowId=run.getId())
 
 class TaskRunner(ResourceBase):
     '''This is a database record with information about a Task Runner.
@@ -323,7 +328,7 @@ class TaskRunner(ResourceBase):
     boolProperties = ('exit',)
 
     @classmethod
-    def create(cls, data):
+    def create(cls, data: _TaskRunnerData) -> 'TaskRunner':
         '''Creates a new Task Runner record.
         The new record is returned and not added to the database.
         The new record still requires a call to sync(), because it is possible
@@ -335,7 +340,7 @@ class TaskRunner(ResourceBase):
         instance.__applyData()
         return instance
 
-    def __init__(self, properties):
+    def __init__(self, properties: Mapping[str, XMLAttributeValue]):
         # COMPAT 2.16: Rename 'paused' to 'suspended'.
         if 'paused' in properties:
             properties = dict(properties, suspended=properties['paused'])
@@ -343,7 +348,7 @@ class TaskRunner(ResourceBase):
 
         ResourceBase.__init__(self, properties)
         self._properties.setdefault('description', '')
-        self.__data = None
+        self.__data = cast(_TaskRunnerData, None)
         self.__hasBeenInSync = False
         self.__executionObserver = ExecutionObserver(
             self, self.__shouldBeExecuting
@@ -356,7 +361,7 @@ class TaskRunner(ResourceBase):
             self.getLostTimeout(), self.markLost
             )
 
-    def __applyData(self):
+    def __applyData(self) -> None:
         """Copies properties of the data object to the main Task Runner record.
         This method exists to help in the transition from creating TR records
         on sync to having the user create them explicitly.
@@ -364,9 +369,9 @@ class TaskRunner(ResourceBase):
         data = self.__data
         properties = self._properties
         for name in ('id', ):
-            properties[name] = data[name]
+            properties[name] = cast(str, data[name])
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: str) -> object:
         if key == 'lastSync':
             return getTime() - self.__lastSyncTime
         elif key == 'version':
@@ -377,55 +382,55 @@ class TaskRunner(ResourceBase):
         elif key == 'user':
             if self.isSuspended():
                 return self.getChangedUser()
-            run = self.__executionObserver.getRun()
-            if run is not None:
-                return 'T-' + run.getId()
-            run = self.__shadowObserver.getRun()
-            if run is not None:
-                return 'S-' + run.getId()
+            taskRun = self.__executionObserver.getRun()
+            if taskRun is not None:
+                return 'T-' + taskRun.getId()
+            shadowRun = self.__shadowObserver.getRun()
+            if shadowRun is not None:
+                return 'S-' + shadowRun.getId()
             return ''
         elif key in ('target', 'host', 'runnerVersion'):
             return self.__data[key]
         else:
             return super().__getitem__(key)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.toXML().flattenIndented()
 
-    def _retired(self):
+    def _retired(self) -> None:
         if self.__markLostCall.active():
             self.__markLostCall.cancel()
         self.__markLostCall = None
 
         self.__executionObserver.retired()
-        self.__executionObserver = None
+        self.__executionObserver = cast(ExecutionObserver, None)
 
         self.__shadowObserver.retired()
-        self.__shadowObserver = None
+        self.__shadowObserver = cast(ShadowObserver, None)
 
     @property
-    def typeName(self):
+    def typeName(self) -> str:
         return taskRunnerResourceTypeName
 
     @property
-    def locator(self):
-        return self.__data['host']
+    def locator(self) -> str:
+        return cast(str, self.__data['host'])
 
     @ResourceBase.description.setter # type: ignore
-    def description(self, value):
+    def description(self, value: str) -> None:
         self._properties['description'] = value
         self._notify()
 
     @ResourceBase.capabilities.setter # type: ignore
-    def capabilities(self, value):
+    def capabilities(self, value: str) -> None:
         self._capabilities = frozenset(value)
         self._notify()
 
-    def _setData(self, attributes):
+    def _setData(self, attributes: Mapping[str, str]) -> _TaskRunnerData:
         self.__data = _TaskRunnerData(attributes)
         return self.__data
 
-    def _setExecutionrun(self, attributes):
+    def _setExecutionrun(self, attributes: Mapping[str, str]) -> None:
         runId = attributes['runId']
         run = taskRunDB.get(runId)
         if run is None:
@@ -433,7 +438,7 @@ class TaskRunner(ResourceBase):
         else:
             self.__executionObserver.setRun(run)
 
-    def _setShadowrun(self, attributes):
+    def _setShadowrun(self, attributes: Mapping[str, str]) -> None:
         shadowId = attributes['shadowId']
         shadowRun = shadowDB.get(shadowId)
         if shadowRun is None:
@@ -441,25 +446,29 @@ class TaskRunner(ResourceBase):
         else:
             self.__shadowObserver.setRun(shadowRun)
 
-    def __shouldBeExecuting(self, run):
+    def __shouldBeExecuting(self, run: Optional[TaskRun]) -> None:
         '''Callback from ExecutionObserver.
         '''
         assert run is self.__executionObserver.getRun()
         # Write reference to current execution run to DB.
         self._notify()
 
-    def __shouldBeRunningShadow(self, shadowRun):
+    def __shouldBeRunningShadow(self, shadowRun: Optional[ShadowRun]) -> None:
         '''Callback from ShadowObserver.
         '''
         assert shadowRun is self.__shadowObserver.getRun()
         # Write reference to current shadow run to DB.
         self._notify()
 
-    def markLost(self):
+    def markLost(self) -> None:
         '''Marks this Task Runner as lost and marks any task it was running as
         failed.
         '''
-        for observer in ( self.__executionObserver, self.__shadowObserver ):
+        observers = (
+            self.__executionObserver,
+            self.__shadowObserver
+            ) # type: Iterable[RunObserver]
+        for observer in observers:
             run = observer.getRun()
             if run is not None:
                 logging.warning(
@@ -469,7 +478,7 @@ class TaskRunner(ResourceBase):
                     )
                 run.failed('Task Runner is lost')
 
-    def getWarnTimeout(self):
+    def getWarnTimeout(self) -> int:
         """Returns the maximum time that may elapse until the
         TR gets the 'warning' status (=orange).
         This method is public so it can be overridden by the unittest.
@@ -477,7 +486,7 @@ class TaskRunner(ResourceBase):
         warnTimeout = max(7, self.getSyncWaitDelay() + 2)
         return warnTimeout
 
-    def getLostTimeout(self):
+    def getLostTimeout(self) -> int:
         """Returns the maximum time in seconds that may elapse until the
         TR gets the 'lost' status (=red).
         lostTimeout is at least 302 or more if syncDelay > 30
@@ -486,24 +495,24 @@ class TaskRunner(ResourceBase):
         lostTimeout = max(302, self.getSyncWaitDelay() * 10 + 2)
         return lostTimeout
 
-    def getId(self):
+    def getId(self) -> str:
         return self.__data.getId()
 
-    def getLastSyncTime(self):
+    def getLastSyncTime(self) -> int:
         return self.__lastSyncTime
 
-    def getSyncWaitDelay(self):
+    def getSyncWaitDelay(self) -> int:
         '''Returns the wait time in seconds before the Task Runner should
         synchronize with the Control Center again.
         '''
         return syncDelay
 
-    def getMinimalDelay(self):
+    def getMinimalDelay(self) -> int:
         '''Returns the minimum wait time in seconds the Task Runner can handle.
         '''
         return 1
 
-    def getConnectionStatus(self):
+    def getConnectionStatus(self) -> ConnectionStatus:
         sinceLastSync = getTime() - self.__lastSyncTime
         if sinceLastSync > self.getLostTimeout():
             return ConnectionStatus.LOST
@@ -514,35 +523,33 @@ class TaskRunner(ResourceBase):
         else:
             return ConnectionStatus.UNKNOWN
 
-    def getRun(self):
+    def getRun(self) -> Optional[TaskRun]:
         return self.__executionObserver.getRun()
 
-    def getShadowRunId(self):
+    def getShadowRunId(self) -> Optional[str]:
         shadowRun = self.__shadowObserver.getRun()
         if shadowRun is None:
             return None
         else:
             return shadowRun.getId()
 
-    def setExitFlag(self, flag):
-        if flag not in (True, False):
-            raise ValueError('"%s" is not a Boolean' % flag)
+    def setExitFlag(self, flag: bool) -> None:
         self._properties['exit'] = flag
         self._notify()
 
-    def shouldExit(self):
+    def shouldExit(self) -> bool:
         '''Returns True iff this Task Runner should exit as soon as it is
         not doing anything.
         '''
-        return self._properties['exit']
+        return cast(bool, self._properties['exit'])
 
-    def isReserved(self):
+    def isReserved(self) -> bool:
         '''Returns True iff something has been assigned to this Task Runner.
         '''
         return self.__executionObserver.getRun() is not None \
             or self.__shadowObserver.getRun() is not None
 
-    def deactivate(self, reason):
+    def deactivate(self, reason: str) -> None:
         '''Suspends this Task Runner because it is misbehaving.
         The given reason is logged so the operator can review it, correct
         the problem and then re-enable this Task Runner.
@@ -553,7 +560,7 @@ class TaskRunner(ResourceBase):
             )
         self.setSuspend(True, 'ControlCenter')
 
-    def sync(self, data):
+    def sync(self, data: _TaskRunnerData) -> bool:
         '''Synchronise database with data reported by the Task Runner.
         The sync time will be remembered, but not stored in the database.
         Returns True iff the run that the Task Runner reports should be aborted,
@@ -587,7 +594,10 @@ class TaskRunner(ResourceBase):
             )
         return abort
 
-    def __enforceSync(self, observer, getId):
+    def __enforceSync(self,
+                      observer: RunObserver[RunT],
+                      getId: Callable[[], Optional[str]]
+                      ) -> bool:
         '''Checks if the Control Center's and Task Runner's view of the
         current task are the same and resolves the Control Center side of
         any conflicts.
@@ -598,9 +608,8 @@ class TaskRunner(ResourceBase):
         try:
             trRunId = getId()
         except KeyError:
-            # Reported run does not exist.
-            # Use a dummy object that is not equal to anything.
-            trRunId = object()
+            # Reported run does not exist; use a dummy ID.
+            trRunId = '?'
         # Determine which run the Control Center thinks should be running.
         ccRun = observer.getRun()
         # Resolve conflicts.
@@ -618,32 +627,31 @@ class TaskRunner(ResourceBase):
                 ccRun.failed('Task Runner stopped executing this task')
                 return trRunId is not None
 
-    def _endParse(self):
+    def _endParse(self) -> None:
         super()._endParse()
         self.__applyData()
 
-    def _getContent(self):
-        yield from super()._getContent()
+    def _getContent(self) -> XMLContent:
+        yield super()._getContent()
         yield self.__data.toXML()
         yield self.__executionObserver.toXML()
         yield self.__shadowObserver.toXML()
 
     # Used by recomputeRunning:
 
-    def _resetRuns(self):
+    def _resetRuns(self) -> None:
         self.__executionObserver.reset()
         self.__shadowObserver.reset()
 
-    def _initExecutionRun(self, run):
+    def _initExecutionRun(self, run: TaskRun) -> None:
         self.__executionObserver.setRun(run)
 
-    def _initShadowRun(self, run):
+    def _initShadowRun(self, run: ShadowRun) -> None:
         self.__shadowObserver.setRun(run)
 
-def recomputeRunning():
+def recomputeRunning() -> None:
     '''Scan the task run and shadow databases for running tasks.
     This is useful when:
-    - upgrading from SoftFab 2.10.x or earlier
     - jobs have been deleted manually
     - the task/shadow and Task Runner databases have somehow gone out of sync
     '''
@@ -664,7 +672,9 @@ def recomputeRunning():
                     except KeyError:
                         run.fail('Task Runner no longer exists')
                     else:
-                        setter(runner, run)
+                        cast(Callable[[TaskRunner, RunT], None], setter)(
+                            runner, run
+                            )
     for runner in taskRunnerDB:
         runner._notify()
 
@@ -678,24 +688,24 @@ class TaskRunnerModel(StatusModel):
         }
 
     @classmethod
-    def getChildClass(cls):
+    def getChildClass(cls) -> Optional[Type[StatusModel]]:
         return None
 
-    def __init__(self, modelId, parent):
+    def __init__(self, modelId: str, parent: 'TaskRunnerModelGroup'):
         self.__taskRunner = taskRunnerDB[modelId]
         StatusModel.__init__(self, modelId, parent)
 
-    def __updated(self, record):
+    def __updated(self, record: TaskRunner) -> None:
         assert record is self.__taskRunner
         self._notify()
 
-    def _registerForUpdates(self):
+    def _registerForUpdates(self) -> None:
         self.__taskRunner.addObserver(self.__updated)
 
-    def _unregisterForUpdates(self):
+    def _unregisterForUpdates(self) -> None:
         self.__taskRunner.removeObserver(self.__updated)
 
-    def formatStatus(self):
+    def formatStatus(self) -> XML:
         taskRunner = self.__taskRunner
         connectionStatus = taskRunner.getConnectionStatus()
         health = self.__statusMap[connectionStatus]
