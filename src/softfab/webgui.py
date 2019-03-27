@@ -580,7 +580,7 @@ class PropertiesTable(Table):
         # that here to please PyLint.
         raise NotImplementedError
 
-def pngIcon(url: str, data: bytes) -> XMLNode:
+def pngIcon(url: str, data: Optional[bytes]) -> XMLNode:
     width, height = None, None
     if data is not None:
         with BytesIO(data) as inp:
@@ -591,7 +591,7 @@ def pngIcon(url: str, data: bytes) -> XMLNode:
                 logging.error('Invalid PNG file for icon "%s": %s', name, ex)
     return xhtml.img(src = url, alt = '', width = width, height = height)
 
-def svgIcon(url: str, data: bytes) -> XMLNode:
+def svgIcon(url: str, data: Optional[bytes]) -> XMLNode:
     width = height = None
     if data is not None:
         try:
