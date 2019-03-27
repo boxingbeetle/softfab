@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from typing import Optional
 from urllib.parse import urlparse
 
 from softfab.EditPage import AbstractPhase, EditPage, EditPagePrev
@@ -74,7 +75,7 @@ class MergePhase(AbstractPhase):
         idByName = getStorageIdByName(element['name'])
         idByURL = getStorageIdByURL(element['url'])
         if idByName is not None and idByName != element.getId():
-            mergeId = idByName
+            mergeId = idByName # type: Optional[str]
             if storageDB[idByName]['url'] == element['url']:
                 theSame = 'name and URL'
             else:
@@ -84,7 +85,7 @@ class MergePhase(AbstractPhase):
                 ] # type: XMLContent
         elif idByURL is not None and idByURL != element.getId():
             mergeId = idByURL
-            otherName = storageDB[idByURL]['name']
+            otherName = storageDB[idByURL].getName()
             message = [
                 'Storage ', xhtml.b[ otherName ], ' already has the same URL.'
                 ]

@@ -1,35 +1,41 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from enum import Enum
 from re import compile as re_compile, split as re_split
-from typing import Mapping
+from typing import (
+    TYPE_CHECKING, Dict, Mapping, MutableSet, Optional, Tuple, TypeVar, Union,
+    cast
+)
 from urllib.parse import quote, urljoin, urlsplit, urlunsplit
 import logging
 
 from softfab.config import dbDir
 from softfab.databaselib import (
-    Database, DatabaseElem, RecordObserver, createInternalId
+    Database, DatabaseElem, Record, RecordObserver, createInternalId
 )
 from softfab.xmlbind import XMLTag
-from softfab.xmlgen import xml
+from softfab.xmlgen import XMLAttributeValue, XMLContent, xml
 
-_storageNames = {} # type: Mapping[str, str]
-_storageURLMap = {} # type: Mapping[str, str]
-_storageAliases = {} # type: Mapping[str, str]
+_storageNames = {} # type: Dict[str, str]
+_storageURLMap = {} # type: Dict[str, str]
+_storageAliases = {} # type: Dict[str, str]
 
-class _StorageObserver(RecordObserver):
-    def added(self, record):
+StorageRecord = TypeVar('StorageRecord', bound='Storage')
+
+class _StorageObserver(RecordObserver[StorageRecord]):
+    def added(self, record: StorageRecord) -> None:
         record._initData() # pylint: disable=protected-access
-    def updated(self, record):
+    def updated(self, record: StorageRecord) -> None:
         record._initData() # pylint: disable=protected-access
-    def removed(self, record):
+    def removed(self, record: StorageRecord) -> None:
         pass
 
 class StorageFactory:
     @staticmethod
-    def createStorage(attributes):
+    def createStorage(attributes: Mapping[str, XMLAttributeValue]) -> 'Storage':
         return Storage(attributes)
 
-class StorageDB(Database):
+class StorageDB(Database['Storage']):
     baseDir = dbDir + '/storages'
     factory = StorageFactory()
     privilegeObject = 'sp'
@@ -42,38 +48,44 @@ class Storage(XMLTag, DatabaseElem):
     tagName = 'storage'
     boolProperties = ('export',)
 
-    def __init__(self, attributes, copyFrom = None):
+    def __init__(self,
+                 attributes: Mapping[str, XMLAttributeValue],
+                 copyFrom: Optional['Storage'] = None
+                 ):
         XMLTag.__init__(self, attributes)
         DatabaseElem.__init__(self)
         if copyFrom is None:
-            self.__aliases = set()
+            self.__aliases = set() # type: MutableSet[str]
         else:
             self.__aliases = set(copyFrom.__aliases) # pylint: disable=protected-access
 
-    def _addAlias(self, attributes):
-        alias = attributes['id']
+    def _addAlias(self, attributes: Mapping[str, XMLAttributeValue]) -> None:
+        alias = cast(str, attributes['id'])
         self.__aliases.add(alias)
 
-    def _endParse(self):
+    def _endParse(self) -> None:
         self._initData()
 
-    def getId(self):
-        return self._properties['id']
+    def getId(self) -> str:
+        return cast(str, self._properties['id'])
 
-    def getURL(self):
-        return self._properties['url']
+    def getName(self) -> str:
+        return cast(str, self._properties['name'])
 
-    def getExportURL(self):
-        url = self._properties['url']
+    def getURL(self) -> str:
+        return cast(str, self._properties['url'])
+
+    def getExportURL(self) -> str:
+        url = self.getURL()
         return urljoin(url, '../export/TaskExport.py' + urlsplit(url).path)
 
-    def hasExport(self):
-        return self._properties['export']
+    def hasExport(self) -> bool:
+        return cast(bool, self._properties['export'])
 
-    def joinURL(self, url):
-        return urljoin(self._properties['url'], url)
+    def joinURL(self, url: str) -> str:
+        return urljoin(self.getURL(), url)
 
-    def takeOver(self, other):
+    def takeOver(self, other: 'Storage') -> None:
         # TODO: Removing the old element and adding the aliases should happen
         #       in a transaction, if our DB had those.
         storageDB.remove(other)
@@ -85,13 +97,13 @@ class Storage(XMLTag, DatabaseElem):
         self.__aliases |= aliases
         self._notify()
 
-    def _getContent(self):
+    def _getContent(self) -> XMLContent:
         for alias in self.__aliases:
             yield xml.alias(id = alias)
 
-    def _initData(self):
+    def _initData(self) -> None:
         storageId = self.getId()
-        name = self._properties['name']
+        name = self.getName()
         if name not in _storageNames:
             _storageNames[name] = storageId
         else:
@@ -99,7 +111,7 @@ class Storage(XMLTag, DatabaseElem):
                 'Duplicate storage name: \'%s\' (storages: \'%s\', \'%s\')',
                 name, _storageNames[name], storageId
                 )
-        url = self._properties['url']
+        url = self.getURL()
         if url not in _storageURLMap:
             _storageURLMap[url] = storageId
         else:
@@ -110,15 +122,15 @@ class Storage(XMLTag, DatabaseElem):
         for alias in self.__aliases:
             _storageAliases[alias] = storageId
 
-    def _retired(self):
-        del _storageNames[self._properties['name']]
-        del _storageURLMap[self._properties['url']]
+    def _retired(self) -> None:
+        del _storageNames[self.getName()]
+        del _storageURLMap[self.getURL()]
         for alias in self.__aliases:
             del _storageAliases[alias]
 
 _reJobDate = re_compile(r'^\d{6}$')
 _reJobTimeSeq = re_compile(r'^\d{4}-[0-9A-Fa-f]{4}$')
-def _splitReportURL(url):
+def _splitReportURL(url: str) -> Tuple[str, str]:
     scheme, host, path, param, fragm = urlsplit(url, 'http')
     parts = re_split('/+', path)
     jobParts = parts[-4 : -2]
@@ -136,7 +148,9 @@ def _splitReportURL(url):
     rel = urlunsplit(('', '', '/'.join(parts[index:]), param, fragm))
     return base, rel
 
-def _convertToRelativeURL(url, runnerId = None):
+def _convertToRelativeURL(url: str,
+                          runnerId: Optional[str] = None
+                          ) -> Tuple[str, str]:
     # The 'url' must be a non-empty string
     base, rel = _splitReportURL(url)
     storageId = _storageURLMap.get(base)
@@ -162,7 +176,7 @@ def _convertToRelativeURL(url, runnerId = None):
             } ))
     return rel, storageId
 
-def _lookupStorage(storageId):
+def _lookupStorage(storageId: str) -> Optional[Storage]:
     '''Looks up a storage object by ID, where ID can be an ID that is still in
     use or an ID of a storage pool that has been merged into another one.
     '''
@@ -170,31 +184,38 @@ def _lookupStorage(storageId):
 
 class StorageURLMixin:
 
-    def __init__(self):
+    if TYPE_CHECKING:
+        def _notify(self) -> None: ...
+
+    def __init__(self) -> None:
+        if TYPE_CHECKING:
+            self._properties = {} # type: Dict[str, Union[str, int, Enum]]
+
         # TODO: This filters bad URL paths out of the database.
         #       We should also prevent them from going into the database.
-        url = self._properties.get('url')
+        url = cast(Optional[str], self._properties.get('url'))
         if url is not None:
             if '%' not in url:
                 newURL = quote(url)
                 if newURL != url:
                     self._properties['url'] = newURL
 
-    def __getStorage(self):
-        storageId = self._properties.get('storage')
+    def __getStorage(self) -> Optional[Storage]:
+        storageId = cast(Optional[str], self._properties.get('storage'))
         return None if storageId is None else _lookupStorage(storageId)
 
-    def __setURL(self, url):
+    def __setURL(self, url: str) -> None:
         assert 'storage' not in self._properties
         if url:
+            runner = cast(Optional[str], self._properties.get('runner'))
             self._properties['url'], self._properties['storage'] = \
-                _convertToRelativeURL(url, self._properties.get('runner'))
+                _convertToRelativeURL(url, runner)
         elif url == '':
             self._properties['url'] = ''
         else:
             self._properties.pop('url', None)
 
-    def setURL(self, url):
+    def setURL(self, url: str) -> None:
         if self._properties.get('url'):
             # TODO: Consider raising an exception instead of ignoring of the
             #       new URL silently.
@@ -203,8 +224,8 @@ class StorageURLMixin:
             self.__setURL(url)
             self._notify()
 
-    def getURL(self):
-        url = self._properties.get('url')
+    def getURL(self) -> Optional[str]:
+        url = cast(Optional[str], self._properties.get('url'))
         if not url:
             return url # '' or None
         storage = self.__getStorage()
@@ -212,8 +233,8 @@ class StorageURLMixin:
             return None
         return storage.joinURL(url)
 
-    def getExportURL(self):
-        url = self._properties.get('url')
+    def getExportURL(self) -> Optional[str]:
+        url = cast(Optional[str], self._properties.get('url'))
         if not url:
             return None
         storage = self.__getStorage()
@@ -221,15 +242,15 @@ class StorageURLMixin:
             return None
         return urljoin(storage.getExportURL(), url.rstrip('/'))
 
-    def hasExport(self):
+    def hasExport(self) -> bool:
         storage = self.__getStorage()
         return storage is not None and storage.hasExport()
 
-def getStorageIdByName(name):
+def getStorageIdByName(name: str) -> Optional[str]:
     return _storageNames.get(name)
 
-def getStorageIdByURL(name):
-    return _storageURLMap.get(name)
+def getStorageIdByURL(url: str) -> Optional[str]:
+    return _storageURLMap.get(url)
 
 # The database must be preloaded to fill in the '_storage*' dictionaries.
 # It is safe to do, because there are no dependencies on other databases.
