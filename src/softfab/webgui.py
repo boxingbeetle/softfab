@@ -464,13 +464,13 @@ class Table(Widget):
             )
         return xhtml.thead[ presentations ] if presentations else None
 
-    def presentHeadParts(self,
+    def presentHeadParts(self, *,
             columns: Sequence[Column],
             **kwargs: object
             ) -> XMLContent:
         yield self.presentColumnHeads(columns=columns, **kwargs)
 
-    def presentColumnHeads(self,
+    def presentColumnHeads(self, *,
             columns: Sequence[Column],
             **kwargs: object
             ) -> XMLContent:

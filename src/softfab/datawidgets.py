@@ -393,9 +393,9 @@ class DataTable(Table, ABC):
         data = proc.getTableData(self)
         return super().present(proc=proc, data=data, table=self, **kwargs)
 
-    def presentCaptionParts(self, data, **kwargs):
+    def presentCaptionParts(self, *, data, **kwargs):
         yield self.__presentNrRecords(data)
 
-    def presentHeadParts(self, proc, data, **kwargs):
+    def presentHeadParts(self, *, proc, data, **kwargs):
         yield self.__presentTabs(proc, data)
         yield super().presentHeadParts(proc=proc, data=data, **kwargs)

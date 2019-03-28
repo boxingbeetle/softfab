@@ -31,7 +31,7 @@ class TaskRunsTable(JobTaskRunsTable):
     widgetId = 'taskRunsTable'
     autoUpdate = True
 
-    def presentCaptionParts(self, proc, **kwargs):
+    def presentCaptionParts(self, *, proc, **kwargs):
         jobId = proc.args.jobId
         numTasks = len(proc.job.getTaskSequence())
         configId = proc.job.getConfigId()
@@ -175,7 +175,7 @@ class InputTable(ProductTable):
         # Create list of inputs in alphabetical order.
         return sorted(proc.job.getInputs())
 
-    def presentCaptionParts(self, proc, **kwargs):
+    def presentCaptionParts(self, *, proc, **kwargs):
         numInputs = len(proc.job.getInputs())
         yield 'Job consumes the following %s:' % (
             'input' if numInputs == 1 else '%d inputs' % numInputs
@@ -192,7 +192,7 @@ class OutputTable(ProductTable):
     def getProducts(self, proc):
         return proc.job.getProduced()
 
-    def presentCaptionParts(self, proc, **kwargs):
+    def presentCaptionParts(self, *, proc, **kwargs):
         numOutputs = len(proc.job.getProduced())
         yield 'Job produces the following %s:' % (
             'output' if numOutputs == 1 else '%d outputs' % numOutputs

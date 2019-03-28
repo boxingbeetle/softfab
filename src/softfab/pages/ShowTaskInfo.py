@@ -36,7 +36,7 @@ class SelfTaskRunsTable(JobTaskRunsTable):
 
 class DetailsTable(PropertiesTable):
 
-    def presentCaptionParts(self, proc, **kwargs):
+    def presentCaptionParts(self, *, proc, **kwargs):
         taskName = proc.args.taskName
         jobId = proc.args.jobId
         yield 'Task ', (xhtml.b[ taskName ], ' is part of Job: ',
@@ -113,7 +113,7 @@ class InputTable(ProductTable):
     widgetId = 'inputTable'
     autoUpdate = True
 
-    def presentCaptionParts(self, proc, **kwargs):
+    def presentCaptionParts(self, *, proc, **kwargs):
         taskName = proc.args.taskName
         yield 'Task ', xhtml.b[ taskName ], ' consumes the following inputs:'
 
@@ -135,7 +135,7 @@ class OutputTable(ProductTable):
     widgetId = 'outputTable'
     autoUpdate = True
 
-    def presentCaptionParts(self, proc, **kwargs):
+    def presentCaptionParts(self, *, proc, **kwargs):
         taskName = proc.args.taskName
         yield 'Task ', xhtml.b[ taskName ], ' produces the following outputs:'
 
