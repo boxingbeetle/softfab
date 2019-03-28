@@ -12,20 +12,6 @@ from softfab.webgui import Column, Table, cell, pageLink, pageURL, row
 from softfab.xmlgen import xhtml
 
 
-def listToStr(lst):
-    return ', '.join(lst)
-
-def boolToStr(value):
-    if value is True:
-        return 'yes'
-    elif value is False:
-        return '-'
-    else:
-        raise TypeError(
-            '"%s" is of type "%s"; expected bool'
-            % ( value, type(value).__name__ )
-            )
-
 class DataColumn(Column):
     label = None # type: Optional[str]
     keyName = None # type: Optional[str]
@@ -82,12 +68,21 @@ class DataColumn(Column):
 class BoolDataColumn(DataColumn):
 
     def presentCell(self, record, **kwargs):
-        return boolToStr(record[self.keyName])
+        value = record[self.keyName]
+        if value is True:
+            return 'yes'
+        elif value is False:
+            return '-'
+        else:
+            raise TypeError(
+                '"%s" is of type "%s"; expected bool'
+                % ( value, type(value).__name__ )
+                )
 
 class ListDataColumn(DataColumn):
 
     def presentCell(self, record, **kwargs):
-        return listToStr(record[self.keyName])
+        return ', '.join(record[self.keyName])
 
 class LinkColumn(DataColumn):
 
