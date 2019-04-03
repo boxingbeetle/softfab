@@ -552,7 +552,7 @@ class Argument(Generic[ValueT, DefaultT]):
     def default(self) -> DefaultT:
         return self.__default
 
-    def parse(self, *strValues: str) -> ValueT:
+    def parse(self, *strValues: str) -> Union[ValueT, DefaultT]:
         '''Converts string representation(s) of a value to the corresponding
         value in the proper type.
         The returned value must be immutable.
@@ -576,7 +576,7 @@ class SingularArgument(Argument[ValueT, DefaultT]):
     def _sameArg(self, other: Argument) -> bool:
         return True
 
-    def parse(self, *strValues: str) -> ValueT:
+    def parse(self, *strValues: str) -> Union[ValueT, DefaultT]:
         if len(strValues) == 1:
             return self.parseValue(*strValues)
         else:
@@ -585,7 +585,7 @@ class SingularArgument(Argument[ValueT, DefaultT]):
                 '1' if self.default is mandatory else '0 or 1'
                 ))
 
-    def parseValue(self, strValue: str) -> ValueT:
+    def parseValue(self, strValue: str) -> Union[ValueT, DefaultT]:
         '''Converts string representation of a value to the corresponding
         value in the proper type.
         The returned value must be immutable.
@@ -712,7 +712,7 @@ class _EnumArg(SingularArgument[EnumT, DefaultT]):
                         ),
                     )) from ex
         else:
-            raise ValueError('Empty value not allowed')
+            raise ValueError('empty value not allowed')
 
     def externalize(self, value: EnumT) -> str:
         return value.name.lower()
@@ -803,10 +803,15 @@ class DateArg(SingularArgument[int, Optional[int]]):
         # pylint: disable=protected-access
         return self.__roundUp == cast(DateArg, other).__roundUp
 
-    def parseValue(self, strValue: str) -> int:
-        # TODO: This will parse date + time strings as well.
-        #       When fixing this, make sure DateTimeArg is changed too.
-        return stringToTime(strValue, self.__roundUp)
+    def parseValue(self, strValue: str) -> Optional[int]:
+        if strValue:
+            # TODO: This will parse date + time strings as well.
+            #       When fixing this, make sure DateTimeArg is changed too.
+            return stringToTime(strValue, self.__roundUp)
+        elif self.default is mandatory:
+            raise ValueError('empty value not allowed')
+        else:
+            return None
 
     def externalize(self, value: Optional[int]) -> str:
         return formatDate(value)
