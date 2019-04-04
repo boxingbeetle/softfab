@@ -12,18 +12,8 @@ public class SUTConfig implements DataObject {
     */
     public String target;
 
-    /**
-    Identification of the system under test (SUT).
-    This identification string is target specific;
-    it is passed as-is to the target control scripts.
-    For generic wrappers this field is not used;
-    the dummy default was added to make this field optional.
-    */
-    public String sutId = "dummy";
-
     public void verify() {
         // TODO: Validate target name.
-        //       Do not validate sutId, since most fabs don't use it.
     }
 
 }
