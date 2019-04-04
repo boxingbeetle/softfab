@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from softfab.ControlPage import ControlPage
-from softfab.Page import PageProcessor
+from softfab.Page import InvalidRequest, PageProcessor
 from softfab.authentication import NoAuthPage
 from softfab.jobview import unfinishedJobs
 from softfab.resourcelib import (
@@ -71,8 +71,9 @@ class Synchronize_POST(ControlPage[ControlPage.Arguments,
             runnerId = request.getId()
             taskRunner = taskRunnerDB.get(runnerId)
             if taskRunner is None:
-                taskRunner = TaskRunner.create(runnerId, '', ())
-                taskRunnerDB.add(taskRunner)
+                raise InvalidRequest(
+                    'There is no Task Runner named "%s"' % runnerId
+                    )
             self.taskRunner = taskRunner
             self.abort = taskRunner.sync(request)
 
