@@ -36,16 +36,16 @@ public abstract class TaskRun {
      * @param separator Character to place inbetween the items.
      * @return The joined string.
      */
-    public static String join(Collection items, char separator) {
+    public static String join(Collection<?> items, char separator) {
         final StringBuffer buffer = new StringBuffer();
         boolean first = true;
-        for (final Iterator i = items.iterator(); i.hasNext(); ) {
+        for (final Object item : items) {
             if (first) {
                 first = false;
             } else {
                 buffer.append(separator);
             }
-            buffer.append(i.next().toString());
+            buffer.append(item.toString());
         }
         return buffer.toString();
     }
@@ -80,7 +80,7 @@ public abstract class TaskRun {
     /**
      * Keeps reference to the process being executed, used for aborting.
      */
-    private final Map processes;
+    private final Map<ExternalProcess, Void> processes;
 
     /**
      * The absolute path to the wrapper file
@@ -101,7 +101,7 @@ public abstract class TaskRun {
         this.outputDir = outputDir;
         this.runLogger = runLogger;
 
-        processes = new IdentityHashMap();
+        processes = new IdentityHashMap<>();
         aborted = false;
 
         scriptPath = wrapperFile.getAbsolutePath();
@@ -126,15 +126,15 @@ public abstract class TaskRun {
 
     protected static final class Context {
 
-        private final Stack nameStack;
+        private final Stack<Object> nameStack;
         private Object customData;
 
         public Context() {
-            nameStack = new Stack();
+            nameStack = new Stack<>();
             customData = null;
         }
 
-        public Collection getNames() {
+        public Collection<Object> getNames() {
             return Collections.unmodifiableCollection(nameStack);
         }
 
@@ -173,21 +173,20 @@ public abstract class TaskRun {
 
     private void encodeValue(StartupScriptGenerator gen, Context context, Object value) {
         if (value instanceof Collection) {
-            final Collection collection = (Collection)value;
+            final Collection<Object> collection = (Collection<Object>)value;
             if (gen.encodeCollectionOpen(context, collection)) {
                 int index = 0;
-                for (final Iterator iter = collection.iterator(); iter.hasNext(); index++) {
-                    context.pushName(index);
-                    encodeValue(gen, context, iter.next());
+                for (final Object object : collection) {
+                    context.pushName(index++);
+                    encodeValue(gen, context, object);
                     context.popName();
                 }
                 gen.encodeCollectionClose(context, collection);
             }
         } else if (value instanceof Map) {
-            final Map map = (Map)value;
+            final Map<Object, Object> map = (Map<Object, Object>)value;
             if (gen.encodeMapOpen(context, map)) {
-                for (final Iterator iter = map.entrySet().iterator(); iter.hasNext(); ) {
-                    final Map.Entry entry = (Map.Entry)iter.next();
+                for (final Map.Entry<Object, Object> entry : map.entrySet()) {
                     context.pushName(entry.getKey());
                     encodeValue(gen, context, entry.getValue());
                     context.popName();
@@ -202,12 +201,11 @@ public abstract class TaskRun {
     protected final void generateWrapperVariables(StartupScriptGenerator gen)
     throws TaskRunException {
         final Context context = new Context();
-        for (final Iterator iter = createTaskEnvironment().entrySet().iterator(); iter.hasNext(); ) {
-            final Map.Entry entry = (Map.Entry)iter.next();
+        for (final Map.Entry<String, Object> entry : createTaskEnvironment().entrySet()) {
             context.pushName(entry.getKey());
             encodeValue(gen, context, entry.getValue());
             context.popName();
-            }
+        }
     }
 
     interface StartupScriptGenerator {
@@ -339,10 +337,10 @@ public abstract class TaskRun {
         synchronized (this) {
             if (processes != null) {
                 runLogger.info("Aborting external processes");
-                for (final Iterator iter = processes.keySet().iterator();
+                for (final Iterator<ExternalProcess> iter = processes.keySet().iterator();
                     iter.hasNext();
                     ) {
-                    final ExternalProcess process = (ExternalProcess)iter.next();
+                    final ExternalProcess process = iter.next();
                     try {
                         process.abort();
                     } catch (RuntimeException e) {
@@ -371,10 +369,10 @@ public abstract class TaskRun {
      * except those starting with "sf." (which are used internally).
      * @return Map containing standard task environment.
      */
-    private final Map createTaskEnvironment() // NOPMD
+    private final Map<String, Object> createTaskEnvironment() // NOPMD
     throws TaskRunException {
         final TaskRunnerConfig config = ConfigFactory.getConfig();
-        final Map ret = new HashMap();
+        final Map<String, Object> ret = new HashMap<>();
         // TODO: In the future, storage pools will be used. Then instead of
         //       storing the URL, it will be queried from the CC using
         //       the task run identification (job, task, run).
@@ -398,24 +396,18 @@ public abstract class TaskRun {
         ret.put("SF_RUN_ID", runInfo.run.runId);
         ret.put("SF_TARGET", runInfo.task.target);
         ret.put("SF_INPUTS", runInfo.inputs.keySet());
-        final Map combined = new HashMap();
-        for (final Iterator i = runInfo.inputs.values().iterator();
-                i.hasNext();
-            ) {
-            final InputInfo input = (InputInfo)i.next();
+        final Map<String, Map<String, Map<String, String>>> combined = new HashMap<>();
+        for (final InputInfo input : runInfo.inputs.values()) {
             ret.put(input.name, input.locator);
             if (input.isCombined()) {
-                final Map producers = new HashMap();
-                for (final Iterator ii = input.producers.entrySet().iterator();
-                        ii.hasNext();
-                    ) {
-                    final Map.Entry entry = (Map.Entry)ii.next();
-                    final ProducerInfo info = (ProducerInfo)entry.getValue();
-                    final Map producer = new HashMap();
+                final Map<String, Map<String, String>> producers = new HashMap<>();
+                for (final Map.Entry<String, ProducerInfo> entry : input.producers.entrySet()) {
+                    final ProducerInfo info = entry.getValue();
+                    final Map<String, String> producer = new HashMap<>();
                     producer.put("TASK", info.taskId);
                     producer.put("RESULT", info.result);
                     producer.put("LOCATOR", info.locator);
-                    final String name = convertName((String)entry.getKey());
+                    final String name = convertName(entry.getKey());
                     if (producers.put(name, producer) != null) {
                         throw new TaskRunException(
                             "Duplicate converted task name: " + name
@@ -431,25 +423,19 @@ public abstract class TaskRun {
         // Conversion to TreeSet sorts the product names.
         // There are bound to be users who will expect the order to be the
         // same always even if our documentation does not promise that.
-        ret.put("SF_OUTPUTS", new TreeSet(runInfo.outputs));
+        ret.put("SF_OUTPUTS", new TreeSet<String>(runInfo.outputs));
         // TODO: There must be a better way of doing this.
         if (runInfo instanceof ExecuteRunInfo) {
             final ExecuteRunInfo execInfo = (ExecuteRunInfo)runInfo;
             ret.put("SF_RESOURCES", execInfo.resources.keySet());
-            for (final Iterator i = execInfo.resources.values().iterator();
-                    i.hasNext();
-                ) {
-                final ResourceInfo resource = (ResourceInfo)i.next();
+            for (final ResourceInfo resource : execInfo.resources.values()) {
                 ret.put(resource.ref, resource.locator);
             }
         }
-        for (final Iterator i = runInfo.task.parameters.entrySet().iterator();
-                i.hasNext();
-            ) {
-            final Map.Entry entry = (Map.Entry)i.next();
-            final String name = (String)entry.getKey();
+        for (final Map.Entry<String, String> entry : runInfo.task.parameters.entrySet()) {
+            final String name = entry.getKey();
             if (!name.startsWith("sf.")) {
-                final String value = (String)entry.getValue();
+                final String value = entry.getValue();
                 ret.put(name, value);
             }
         }
