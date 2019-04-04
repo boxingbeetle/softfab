@@ -11,14 +11,14 @@ class WrapperVariableFlattener
 implements TaskRun.StartupScriptGenerator {
 
     private final char separator;
-    private final Map variables;
+    private final Map<String, Object> variables;
 
     WrapperVariableFlattener(char separator) {
         this.separator = separator;
-        variables = new HashMap();
+        variables = new HashMap<>();
     }
 
-    public Iterator getVariables() {
+    public Iterator<Map.Entry<String, Object>> getVariables() {
         return variables.entrySet().iterator();
     }
 

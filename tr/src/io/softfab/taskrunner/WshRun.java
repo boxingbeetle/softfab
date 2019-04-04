@@ -23,9 +23,9 @@ import io.softfab.taskrunner.config.WrappersConfig;
  */
 public class WshRun extends TaskRun {
 
-    public static final Map LANGUAGES;
+    public static final Map<String, String> LANGUAGES;
     static {
-        final Map map = new LinkedHashMap();
+        final Map<String, String> map = new LinkedHashMap<>();
         map.put(".vbs", "VBScript");
         map.put(".js", "JScript");
         LANGUAGES = Collections.unmodifiableMap(map);
@@ -51,7 +51,7 @@ public class WshRun extends TaskRun {
     private static String getLanguage(String fileName)
     throws TaskRunException {
         final String ext = getExtension(fileName);
-        final String language = (String)LANGUAGES.get(ext);
+        final String language = LANGUAGES.get(ext);
         if (language == null) {
             throw new TaskRunException(
                 "Unsupported script extension \"" + ext + "\""
@@ -80,10 +80,8 @@ public class WshRun extends TaskRun {
         // Scan 'common' dir for scripts to include.
         final StringBuffer includeBuf = new StringBuffer(100);
         final TaskRunnerConfig config = ConfigFactory.getConfig();
-        final List wrappersBaseDirList = config.wrappers;
-        for (final Iterator w = wrappersBaseDirList.iterator(); w.hasNext(); ) {
-            final WrappersConfig wrappersConfig = (WrappersConfig)w.next();
-            final File commonDir = new File((File)wrappersConfig.dir, "common");
+        for (final WrappersConfig wrappersConfig : config.wrappers) {
+            final File commonDir = new File(wrappersConfig.dir, "common");
             if (commonDir.isDirectory()) {
                 final File[] commonScripts = commonDir.listFiles(
                     new FilenameFilter() {

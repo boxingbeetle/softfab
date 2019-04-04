@@ -47,7 +47,7 @@ public final class NavigationHTML {
      * The entries "Report Summary", "Wrapper Log" and "Wrapper Results" are always present
      * and not part of this list.
      */
-    private final List navigationEntries;
+    private final List<NavigationEntry> navigationEntries;
 
     /**
      * Directory where the navigation HTML will be written.
@@ -75,7 +75,7 @@ public final class NavigationHTML {
             throw new RuntimeException("Internal error", e); // NOPMD
         }
 
-        navigationEntries = new ArrayList();
+        navigationEntries = new ArrayList<>();
         if (!summaryFileName.equals("")) {
             addNavigation(summaryFileName, "Report Summary");
         }
@@ -203,8 +203,7 @@ public final class NavigationHTML {
                 "frameborder=\"0\" marginwidth=\"3\" marginheight=\"3\" " +
                 "scrolling=\"no\" noresize=\"noresize\" />"
                 );
-            final NavigationEntry firstTab =
-                (NavigationEntry)navigationEntries.get(0);
+            final NavigationEntry firstTab = navigationEntries.get(0);
             out.println(
                 "\t<frame name=\"" + CONTENT_FRAME + "\" " +
                 "src=\"" + firstTab.fileName + "\" frameborder=\"0\" " +
@@ -264,8 +263,7 @@ public final class NavigationHTML {
      * Write HTML for additional navigation buttons.
      */
     private void writeNavigationEntries(PrintWriter out) {
-        for (final Iterator i = navigationEntries.iterator(); i.hasNext(); ) {
-            final NavigationEntry entry = (NavigationEntry)i.next();
+        for (final NavigationEntry entry : navigationEntries) {
             out.println(
                 "<a href=\"" + entry.fileName + "\" " +
                 "target=\"" + CONTENT_FRAME + "\">" +

@@ -20,7 +20,7 @@ final class RunStatus {
 
     private final TaskRunnerConfig taskRunnerConfig;
     private final SUTConfig sutConfig;
-    private final List capabilities;
+    private final List<Capability> capabilities;
 
     /**
      * TODO: This is more than a trigger, it also guards runInfo.
@@ -134,9 +134,9 @@ final class RunStatus {
                 .append("\">\r\n");
             request.append("<target name=\"").append(sutConfig.target)
                 .append("\"/>\r\n");
-            for (final Iterator i = capabilities.iterator(); i.hasNext(); ) {
+            for (final Capability capability : capabilities) {
                 request.append("<capability name=\"").
-                    append(((Capability)i.next()).name).
+                    append(capability.name).
                     append("\"/>\r\n");
             }
             if (runInfo != null) {

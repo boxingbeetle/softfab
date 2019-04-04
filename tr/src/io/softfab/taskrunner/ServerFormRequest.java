@@ -10,21 +10,20 @@ import java.util.Map;
 
 public class ServerFormRequest extends ServerRequest {
 
-    private static String paramString(Map params) {
+    private static String paramString(Map<String, String> params) {
         final StringBuffer buf = new StringBuffer();
         try {
             boolean first = true;
-            for (final Iterator i = params.entrySet().iterator(); i.hasNext(); ) {
-                final Map.Entry entry = (Map.Entry)i.next();
+            for (final Map.Entry<String, String> entry : params.entrySet()) {
                 if (first) {
                     first = false;
                 } else {
                     buf.append('&');
                 }
                 buf.append(
-                        URLEncoder.encode((String)entry.getKey(), "UTF-8")).
+                        URLEncoder.encode(entry.getKey(), "UTF-8")).
                     append('=').append(
-                        URLEncoder.encode((String)entry.getValue(), "UTF-8"));
+                        URLEncoder.encode(entry.getValue(), "UTF-8"));
             }
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException( // NOPMD
@@ -34,13 +33,13 @@ public class ServerFormRequest extends ServerRequest {
         return buf.toString();
     }
 
-    private final Map queryParams;
-    private final Map bodyParams;
+    private final Map<String, String> queryParams;
+    private final Map<String, String> bodyParams;
 
     public ServerFormRequest(String page) {
         super(page);
-        queryParams = new HashMap();
-        bodyParams = new HashMap();
+        queryParams = new HashMap<>();
+        bodyParams = new HashMap<>();
     }
 
     /**
@@ -65,7 +64,7 @@ public class ServerFormRequest extends ServerRequest {
      * Adds multiple parameters that indicate how the resource should be modified.
      * @param map Parameters to add.
      */
-    public void addBodyParams(Map map) {
+    public void addBodyParams(Map<String, String> map) {
         bodyParams.putAll(map);
     }
 

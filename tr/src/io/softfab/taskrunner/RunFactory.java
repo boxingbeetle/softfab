@@ -22,7 +22,7 @@ abstract public class RunFactory {
     protected final TaskRunInfo runInfo;
 
     protected final OutputConfig outputConfig;
-    private final List wrappersBaseDirList;
+    private final List<WrappersConfig> wrappersBaseDirList;
 
     public RunFactory(Logger logger, TaskRunInfo info) {
         this.logger = logger;
@@ -73,16 +73,16 @@ abstract public class RunFactory {
     abstract protected String getWrapperFileNameBase();
 
     protected String getWrapperName() {
-        return (String)runInfo.task.parameters.get("sf.wrapper");
+        return runInfo.task.parameters.get("sf.wrapper");
     }
 
     private static class TaskRunFactory {
 
         private final String fileExtension;
 
-        private final Class wrapperClass;
+        private final Class<? extends TaskRun> wrapperClass;
 
-        public TaskRunFactory(String ext, Class cls) {
+        public TaskRunFactory(String ext, Class<? extends TaskRun> cls) {
             fileExtension = ext;
             wrapperClass = cls;
         }
@@ -90,17 +90,17 @@ abstract public class RunFactory {
         public TaskRun createTaskRun(String[] wrappers, File wrapperDir,
                 File outputDir, RunFactory factory, Logger runLogger)
         throws TaskRunException {
-            for (int i = 0; i < wrappers.length; i++) {
-                if (wrappers[i].endsWith(fileExtension)) {
+            for (final String wrapper : wrappers) {
+                if (wrapper.endsWith(fileExtension)) {
                     Throwable throwable = null;
                     try {
                         return (TaskRun)wrapperClass.getConstructor(
-                            new Class[] {
+                            new Class<?>[] {
                                 File.class, File.class,
                                 RunFactory.class, Logger.class
                             }
                         ).newInstance(new Object[] {
-                            new File(wrapperDir, wrappers[i]),
+                            new File(wrapperDir, wrapper),
                             outputDir, factory, runLogger
                         });
                     } catch (SecurityException e) {
@@ -126,9 +126,9 @@ abstract public class RunFactory {
         }
     }
 
-    private static final List factories;
+    private static final List<TaskRunFactory> factories;
     static {
-        factories = new ArrayList();
+        factories = new ArrayList<>();
         final boolean windows = File.separatorChar == '\\';
         if (windows) {
             factories.add(new TaskRunFactory(".bat", BatchRun.class));
@@ -141,8 +141,7 @@ abstract public class RunFactory {
         factories.add(new TaskRunFactory(".xml", AntRun.class));
         factories.add(new TaskRunFactory(".build", NAntRun.class));
         if (windows) {
-            for (final Iterator i = WshRun.LANGUAGES.keySet().iterator(); i.hasNext(); ) {
-                final String extension = (String)i.next();
+            for (final String extension : WshRun.LANGUAGES.keySet()) {
                 factories.add(new TaskRunFactory(extension, WshRun.class));
             }
         }
@@ -159,9 +158,8 @@ abstract public class RunFactory {
     public final TaskRun createWrapper(File outputDir, Logger runLogger)
     throws TaskRunException {
         final String wrapper = getWrapperName();
-        for (final Iterator w = wrappersBaseDirList.iterator(); w.hasNext(); ) {
-            final WrappersConfig wrappersConfig = (WrappersConfig)w.next();
-            File wrapperDir = new File((File)wrappersConfig.dir, wrapper);
+        for (final WrappersConfig wrappersConfig : wrappersBaseDirList) {
+            File wrapperDir = new File(wrappersConfig.dir, wrapper);
             if (wrapperDir.isDirectory()) {
                 try {
                     wrapperDir = wrapperDir.getCanonicalFile();
@@ -177,8 +175,7 @@ abstract public class RunFactory {
                             && name.startsWith(WRAPPER_BASE);
                     }
                 });
-                for (final Iterator i = factories.iterator(); i.hasNext(); ) {
-                    final TaskRunFactory factory = (TaskRunFactory)i.next();
+                for (final TaskRunFactory factory : factories) {
                     final TaskRun newRun = factory.createTaskRun(
                         wrappers, wrapperDir, outputDir, this, runLogger
                         );

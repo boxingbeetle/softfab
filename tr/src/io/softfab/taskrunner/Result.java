@@ -53,12 +53,12 @@ public class Result {
     /**
     @see #getOutputLocators
     */
-    private Map locators;
+    private Map<String, String> locators;
 
     /**
     @see #getExtractedData
     */
-    private Map extracted;
+    private Map<String, String> extracted;
 
     /**
     @see #getExtractCode
@@ -111,8 +111,8 @@ public class Result {
         checkResultCode(extractCode);
         this.code = code;
         this.summary = summary;
-        this.locators = new HashMap();
-        this.extracted = new HashMap();
+        this.locators = new HashMap<>();
+        this.extracted = new HashMap<>();
         this.extractCode = extractCode;
     }
 
@@ -132,7 +132,7 @@ public class Result {
         code = UNKNOWN;
         summary = null;
         // Load properties.
-        final Map resultProp = new HashMap();
+        final Map<String, String> resultProp = new HashMap<>();
         try {
             while (true) {
                 String line = in.readLine();
@@ -156,13 +156,10 @@ public class Result {
         }
 
         // Parse properties.
-        locators = new HashMap();
-        extracted = new HashMap();
-        for (final Iterator i = resultProp.entrySet().iterator(); i.hasNext(); ) {
-            final Map.Entry entry = (Map.Entry)i.next();
-            final String name = (String)entry.getKey();
-            final String value = (String)entry.getValue();
-            parseProperty(name, value);
+        locators = new HashMap<>();
+        extracted = new HashMap<>();
+        for (final Map.Entry<String, String> entry : resultProp.entrySet()) {
+            parseProperty(entry.getKey(), entry.getValue());
         }
     }
 
@@ -228,7 +225,7 @@ public class Result {
     @return A (possibly empty) set of key-value pairs containing the locators.
         Keys and values are both of type String.
     */
-    public Map getOutputLocators() {
+    public Map<String, String> getOutputLocators() {
         return locators;
     }
 
@@ -245,7 +242,7 @@ public class Result {
     @return A (possibly empty) set of key-value pairs containing the locators.
         Keys and values are both of type String.
     */
-    public Map getExtractedData() {
+    public Map<String, String> getExtractedData() {
         return extracted;
     }
 
