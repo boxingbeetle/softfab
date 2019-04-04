@@ -55,10 +55,10 @@ public class XMLUnpacker {
         throws ParseException;
     }
 
-    private final Map attributeUnpackers;
+    private final Map<Class<?>, AttributeUnpacker> attributeUnpackers;
 
     private XMLUnpacker() {
-        attributeUnpackers = new HashMap();
+        attributeUnpackers = new HashMap<>();
         registerUnpackers();
     }
 
@@ -98,7 +98,7 @@ public class XMLUnpacker {
     @throws IllegalArgumentException
         If dataClass does not implement DataObject.
     */
-    public DataObject unpackFile(File file, Class dataClass)
+    public DataObject unpackFile(File file, Class<?> dataClass)
     throws IOException, ParseException {
         // Read data from XML file into DOM tree.
         Document document;
@@ -123,7 +123,7 @@ public class XMLUnpacker {
     @throws IllegalArgumentException
         If dataClass does not implement DataObject.
     */
-    public DataObject unpackFromURL(URL url, Class dataClass)
+    public DataObject unpackFromURL(URL url, Class<?> dataClass)
     throws IOException, ParseException {
         // Read data from XML file into DOM tree.
         Document document;
@@ -147,7 +147,7 @@ public class XMLUnpacker {
     @throws IllegalArgumentException
         If dataClass does not implement DataObject.
     */
-    public DataObject unpack(Element element, Class dataClass)
+    public DataObject unpack(Element element, Class<?> dataClass)
     throws ParseException {
         // Wrapper which fills in the context on parse exceptions.
         try {
@@ -158,7 +158,7 @@ public class XMLUnpacker {
         }
     }
 
-    private DataObject unpackImpl(Element element, Class dataClass) // NOPMD
+    private DataObject unpackImpl(Element element, Class<?> dataClass) // NOPMD
     throws ParseException {
         // Verify that dataClass is a subclass of DataObject.
         if (!DataObject.class.isAssignableFrom(dataClass)) {
@@ -167,8 +167,8 @@ public class XMLUnpacker {
                 );
         }
 
-        final Set unspecifiedFields = findAttributeFields(dataClass);
-        final Map addMethods = findAddMethods(dataClass);
+        final Set<Field> unspecifiedFields = findAttributeFields(dataClass);
+        final Map<String, Method> addMethods = findAddMethods(dataClass);
 
         // Instantiate object.
         DataObject ret;
@@ -213,15 +213,14 @@ public class XMLUnpacker {
                 node = node.getNextSibling()
             ) {
             if (node instanceof Element) {
-                final Method addMethod =
-                    (Method)addMethods.get(node.getNodeName());
+                final Method addMethod = addMethods.get(node.getNodeName());
                 if (addMethod == null) {
                     // No method, so it must be a field.
 
                     // Get the field.
                     final Field field =
                         getField(ret.getClass(), node.getNodeName());
-                    final Class fieldType = field.getType();
+                    final Class<?> fieldType = field.getType();
 
                     // Unpack the field.
                     Object value;
@@ -230,7 +229,7 @@ public class XMLUnpacker {
                         node.normalize();
                         value = node.getNodeValue();
                     } else if (DataObject.class.isAssignableFrom(fieldType)) {
-                        value = unpack((Element)node, fieldType);
+                        value = unpack((Element)node, (Class<?>)fieldType);
                     } else {
                         throw new ParseException(
                             "Field corresponding to element " +
@@ -254,7 +253,7 @@ public class XMLUnpacker {
                     }
                 } else {
                     // Unpack the parameter.
-                    final Class paramType = addMethod.getParameterTypes()[0];
+                    final Class<?> paramType = addMethod.getParameterTypes()[0];
                     final Object value = unpack((Element)node, paramType);
 
                     // Invoke add method.
@@ -283,8 +282,8 @@ public class XMLUnpacker {
 
         // Check that all attribute fields were specified.
         // First, filter out fields that are not mandatory.
-        for (final Iterator i = unspecifiedFields.iterator(); i.hasNext(); ) {
-            final Field field = (Field)i.next();
+        for (final Iterator<Field> i = unspecifiedFields.iterator(); i.hasNext(); ) {
+            final Field field = i.next();
             if (DataObject.class.isAssignableFrom(field.getType())) {
                 // Filter out element fields (fields that implement DataObject).
                 i.remove();
@@ -308,8 +307,8 @@ public class XMLUnpacker {
         // Any remaining fields are illegal.
         if (!unspecifiedFields.isEmpty()) {
             final StringBuffer buf = new StringBuffer();
-            for (final Iterator i = unspecifiedFields.iterator(); i.hasNext(); ) {
-                final Field field = (Field)i.next();
+            for (final Iterator<Field> i = unspecifiedFields.iterator(); i.hasNext(); ) {
+                final Field field = i.next();
                 buf.append(field.getName());
                 if (i.hasNext()) {
                     buf.append(", ");
@@ -331,11 +330,9 @@ public class XMLUnpacker {
     @return a Set of Field objects.
     TODO: return a Map like findAddMethods?
     */
-    private Set findAttributeFields(Class dataClass) {
-        final Set ret = new HashSet();
-        final Field[] fields = dataClass.getFields();
-        for (int i = 0; i < fields.length; i++) {
-            final Field field = fields[i];
+    private Set<Field> findAttributeFields(Class<?> dataClass) {
+        final Set<Field> ret = new HashSet<>();
+        for (final Field field : dataClass.getFields()) {
             if ( (field.getModifiers() & Modifier.STATIC) == 0
             && !Collection.class.isAssignableFrom(field.getType())
             && !Map.class.isAssignableFrom(field.getType()) ) {
@@ -351,12 +348,10 @@ public class XMLUnpacker {
     @return a Map with as key the tag name (String)
         and as value the add method (Method).
     */
-    private Map findAddMethods(Class dataClass)
+    private Map<String, Method> findAddMethods(Class<?> dataClass)
     throws ParseException {
-        final Map ret = new HashMap();
-        final Method[] methods = dataClass.getMethods();
-        for (int i = 0; i < methods.length; i++) {
-            final Method method = methods[i];
+        final Map<String, Method> ret = new HashMap<>();
+        for (final Method method : dataClass.getMethods()) {
             if (method.getName().startsWith("add")) {
                 // Perform sanity checks.
                 if (method.getReturnType() != Void.TYPE) {
@@ -365,7 +360,7 @@ public class XMLUnpacker {
                         " has non-void return type"
                         );
                 }
-                final Class[] parameterTypes = method.getParameterTypes();
+                final Class<?>[] parameterTypes = method.getParameterTypes();
                 if (parameterTypes.length != 1) {
                     throw new ParseException(
                         "Add method " + dataClass.getName() + "." + method.getName() +
@@ -373,7 +368,7 @@ public class XMLUnpacker {
                         " instead of 1"
                         );
                 }
-                final Class parameterType = parameterTypes[0];
+                final Class<?> parameterType = parameterTypes[0];
                 if (!DataObject.class.isAssignableFrom(parameterType)) {
                     throw new IllegalArgumentException(
                         "Parameter of add method " +
@@ -381,9 +376,8 @@ public class XMLUnpacker {
                         " does not implement DataObject"
                         );
                 }
-                final Class canThrow[] = method.getExceptionTypes();
-                for (int j = 0; j < canThrow.length; j++) {
-                    if (!ParseException.class.isAssignableFrom(canThrow[j])) {
+                for (final Class<?> canThrow : method.getExceptionTypes()) {
+                    if (!ParseException.class.isAssignableFrom(canThrow)) {
                         throw new ParseException(
                             "Add method " + dataClass.getName() + "." + method.getName() +
                             " throws exceptions other than ParseException"
@@ -406,10 +400,9 @@ public class XMLUnpacker {
     @param valueString String to unpack.
     @param type Class of the object to unpack to.
     */
-    private Object unpackAttribute(String valueString, Class type)
+    private Object unpackAttribute(String valueString, Class<?> type)
     throws ParseException {
-        final AttributeUnpacker unpacker =
-            (AttributeUnpacker)attributeUnpackers.get(type);
+        final AttributeUnpacker unpacker = attributeUnpackers.get(type);
         if (unpacker == null) {
             throw new ParseException(
                 "Cannot unpack values of type " + type.getName()
@@ -418,7 +411,7 @@ public class XMLUnpacker {
         return unpacker.unpack(valueString);
     }
 
-    private static Field getField(Class clazz, String fieldName)
+    private static Field getField(Class<?> clazz, String fieldName)
     throws ParseException {
         try {
             return clazz.getField(fieldName);
