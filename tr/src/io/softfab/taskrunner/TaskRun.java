@@ -177,7 +177,7 @@ public abstract class TaskRun {
             if (gen.encodeCollectionOpen(context, collection)) {
                 int index = 0;
                 for (final Iterator iter = collection.iterator(); iter.hasNext(); index++) {
-                    context.pushName(new Integer(index));
+                    context.pushName(index);
                     encodeValue(gen, context, iter.next());
                     context.popName();
                 }
