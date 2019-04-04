@@ -22,7 +22,6 @@ The return type of an add method must be void.
 The fields used to store the data from these elements should either
 be non-public, or implement java.util.Collection or java.util.Map,
 so that XMLUnpacker can recognise them.
-TODO: With JDK 1.5, use a generic list instead of a method.
 
 Hint: Make sure that classes that implement DataObject are public,
 otherwise XMLUnpacker cannot access them when unpacking the data.
