@@ -14,7 +14,7 @@ public class ExecuteRunInfo extends TaskRunInfo {
     LinkedHashMap is used to preserve the order of the resources
     (which used to be important to handle MHP streamers/streams)
     */
-    public Map resources = new LinkedHashMap();
+    public Map<String, ResourceInfo> resources = new LinkedHashMap<>();
 
     public void addResource(ResourceInfo resource) {
         resources.put(resource.ref, resource);

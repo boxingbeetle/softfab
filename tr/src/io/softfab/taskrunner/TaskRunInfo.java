@@ -21,19 +21,17 @@ public abstract class TaskRunInfo implements DataObject {
 
     /**
      * Products that serve as input to the task.
-     * Keys are the product names (String), values are of type InputInfo.
      */
-    public Map inputs = new HashMap();
+    public Map<String, InputInfo> inputs = new HashMap<>();
 
     public final void addInput(InputInfo input) {
         inputs.put(input.name, input);
     }
 
     /**
-     * Products that serve as output to the task.
-     * Values are the product names (String).
+     * Names of products that serve as output to the task.
      */
-    public Set outputs = new HashSet();
+    public Set<String> outputs = new HashSet<>();
 
     public final void addOutput(OutputInfo output) {
         outputs.add(output.name);

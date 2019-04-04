@@ -27,7 +27,7 @@ public class InputInfo implements DataObject {
      * Information about the producers of this combined product.
      * For non-combined products this is always empty.
      */
-    public Map producers = new HashMap();
+    public Map<String, ProducerInfo> producers = new HashMap<>();
 
     public void addProducer(ProducerInfo producer)
     throws ParseException {

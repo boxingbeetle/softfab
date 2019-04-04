@@ -19,21 +19,18 @@ public class TaskRunnerConfig implements DataObject {
 
     /**
     List of Wrapper directories of this Factory PC.
-    Elements are of type WrappersConfig
     */
-    public List wrappers = new ArrayList();
+    public List<WrappersConfig> wrappers = new ArrayList<>();
 
     /**
     Capabilities of this Factory PC.
-    Elements are of type Capability.
     */
-    public List capabilities = new ArrayList();
+    public List<Capability> capabilities = new ArrayList<>();
 
     /**
     Local parameters of this Factory PC.
-    Keys and values are both strings.
     */
-    public Map parameters = new HashMap();
+    public Map<String, String> parameters = new HashMap<>();
 
     public void addWrappers(WrappersConfig wrapper) {
         wrappers.add(wrapper);

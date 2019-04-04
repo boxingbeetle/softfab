@@ -26,9 +26,8 @@ public class ResourceInfo implements DataObject {
 
     /**
     Additional parameters to the task.
-    Keys and values are both strings.
     */
-    public Map parameters = new HashMap();
+    public Map<String, String> parameters = new HashMap<>();
 
     public void addParam(TaskRunParameter parameter)
     throws ParseException {

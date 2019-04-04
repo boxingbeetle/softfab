@@ -19,9 +19,8 @@ public class TaskInfo implements DataObject {
 
     /**
     Additional parameters to the task.
-    Keys and values are both strings.
     */
-    public Map parameters = new HashMap();
+    public Map<String, String> parameters = new HashMap<>();
 
     public void addParam(TaskRunParameter parameter)
     throws ParseException {
@@ -39,7 +38,7 @@ public class TaskInfo implements DataObject {
      * Get file name of framework specific report file.
      */
     public final String getFrameworkSummary() {
-        String summary = (String)parameters.get("sf.summary");
+        String summary = parameters.get("sf.summary");
         if (summary == null) {
             // Control Center version 2.13.0 and later will always send
             // the "sf.summary" parameter, but older versions only send it
