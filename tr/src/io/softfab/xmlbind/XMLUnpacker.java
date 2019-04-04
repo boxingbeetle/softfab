@@ -50,12 +50,12 @@ public class XMLUnpacker {
     There should be one AttributeUnpacker for every type that is used as a field
     in a DataObject.
     */
-    public interface AttributeUnpacker {
-        Object unpack(String valueString)
+    public interface AttributeUnpacker<T> {
+        T unpack(String valueString)
         throws ParseException;
     }
 
-    private final Map<Class<?>, AttributeUnpacker> attributeUnpackers;
+    private final Map<Class<?>, AttributeUnpacker<?>> attributeUnpackers;
 
     private XMLUnpacker() {
         attributeUnpackers = new HashMap<>();
@@ -400,9 +400,9 @@ public class XMLUnpacker {
     @param valueString String to unpack.
     @param type Class of the object to unpack to.
     */
-    private Object unpackAttribute(String valueString, Class<?> type)
+    private <T> T unpackAttribute(String valueString, Class<T> type)
     throws ParseException {
-        final AttributeUnpacker unpacker = attributeUnpackers.get(type);
+        final AttributeUnpacker<T> unpacker = (AttributeUnpacker<T>)attributeUnpackers.get(type);
         if (unpacker == null) {
             throw new ParseException(
                 "Cannot unpack values of type " + type.getName()
@@ -443,15 +443,15 @@ public class XMLUnpacker {
     */
     private void registerUnpackers() {
         // String.
-        attributeUnpackers.put(String.class, new AttributeUnpacker() {
-                public Object unpack(String valueString) {
+        attributeUnpackers.put(String.class, new AttributeUnpacker<String>() {
+                public String unpack(String valueString) {
                     return valueString;
                 }
             } );
 
         // Boolean.
-        final AttributeUnpacker booleanUnpacker = new AttributeUnpacker() {
-                public Object unpack(String valueString)
+        final AttributeUnpacker<Boolean> booleanUnpacker = new AttributeUnpacker<Boolean>() {
+                public Boolean unpack(String valueString)
                 throws ParseException {
                     // Note: Boolean.valueOf maps any unknown string to false,
                     //       instead of performing proper error checking.
@@ -470,8 +470,8 @@ public class XMLUnpacker {
         attributeUnpackers.put(Boolean.TYPE, booleanUnpacker);
 
         // Integer.
-        final AttributeUnpacker integerUnpacker = new AttributeUnpacker() {
-                public Object unpack(String valueString)
+        final AttributeUnpacker<Integer> integerUnpacker = new AttributeUnpacker<Integer>() {
+                public Integer unpack(String valueString)
                 throws ParseException {
                     try {
                         return Integer.valueOf(valueString);
@@ -486,15 +486,15 @@ public class XMLUnpacker {
         attributeUnpackers.put(Integer.TYPE, integerUnpacker);
 
         // File.
-        attributeUnpackers.put(File.class, new AttributeUnpacker() {
-                public Object unpack(String valueString) {
+        attributeUnpackers.put(File.class, new AttributeUnpacker<File>() {
+                public File unpack(String valueString) {
                     return new File(valueString);
                 }
             } );
 
         // URL.
-        attributeUnpackers.put(URL.class, new AttributeUnpacker() {
-                public Object unpack(String valueString)
+        attributeUnpackers.put(URL.class, new AttributeUnpacker<URL>() {
+                public URL unpack(String valueString)
                 throws ParseException {
                     try {
                         return new URL(valueString);
@@ -508,8 +508,8 @@ public class XMLUnpacker {
             } );
 
         // Network host.
-        attributeUnpackers.put(InetAddress.class, new AttributeUnpacker() {
-                public Object unpack(String valueString)
+        attributeUnpackers.put(InetAddress.class, new AttributeUnpacker<InetAddress>() {
+                public InetAddress unpack(String valueString)
                 throws ParseException {
                     try {
                         return InetAddress.getByName(valueString);
@@ -523,8 +523,8 @@ public class XMLUnpacker {
             } );
 
         // Log level.
-        attributeUnpackers.put(Level.class, new AttributeUnpacker() {
-                public Object unpack(String valueString)
+        attributeUnpackers.put(Level.class, new AttributeUnpacker<Level>() {
+                public Level unpack(String valueString)
                 throws ParseException {
                     try {
                         return Level.parse(valueString);
