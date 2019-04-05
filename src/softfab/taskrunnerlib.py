@@ -2,8 +2,8 @@
 
 from abc import ABC
 from typing import (
-    AbstractSet, Callable, ClassVar, Iterable, Mapping, Optional, Tuple, Type,
-    TypeVar, cast
+    AbstractSet, Callable, ClassVar, Iterable, Mapping, Optional, Sequence,
+    Tuple, Type, TypeVar, cast
 )
 import logging
 
@@ -417,7 +417,7 @@ class TaskRunner(ResourceBase):
         self._notify()
 
     @ResourceBase.capabilities.setter # type: ignore
-    def capabilities(self, value: str) -> None:
+    def capabilities(self, value: Sequence[str]) -> None:
         self._capabilities = frozenset(value)
         self._notify()
 
