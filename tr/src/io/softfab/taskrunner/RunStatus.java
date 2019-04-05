@@ -4,13 +4,9 @@ package io.softfab.taskrunner;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.Iterator;
-import java.util.List;
 import java.util.logging.Logger;
 
-import io.softfab.taskrunner.config.Capability;
 import io.softfab.taskrunner.config.ConfigFactory;
-import io.softfab.taskrunner.config.SUTConfig;
 import io.softfab.taskrunner.config.TaskRunnerConfig;
 
 /**
@@ -19,8 +15,6 @@ import io.softfab.taskrunner.config.TaskRunnerConfig;
 final class RunStatus {
 
     private final TaskRunnerConfig taskRunnerConfig;
-    private final SUTConfig sutConfig;
-    private final List<Capability> capabilities;
 
     /**
      * TODO: This is more than a trigger, it also guards runInfo.
@@ -36,8 +30,6 @@ final class RunStatus {
 
         // Get relevant configuration sections.
         taskRunnerConfig = ConfigFactory.getConfig();
-        capabilities = taskRunnerConfig.capabilities;
-        sutConfig = taskRunnerConfig.sut;
     }
 
     /**
@@ -132,13 +124,6 @@ final class RunStatus {
                 .append("\" host=\"").append(hostName)
                 .append("\" runnerVersion=\"").append(Version.getVersion())
                 .append("\">\r\n");
-            request.append("<target name=\"").append(sutConfig.target)
-                .append("\"/>\r\n");
-            for (final Capability capability : capabilities) {
-                request.append("<capability name=\"").
-                    append(capability.name).
-                    append("\"/>\r\n");
-            }
             if (runInfo != null) {
                 request.append(runInfo.getRunIdAsXML()).append("\r\n");
             }
