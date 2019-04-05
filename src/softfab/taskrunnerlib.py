@@ -13,6 +13,7 @@ from softfab import joblib
 from softfab.config import dbDir, syncDelay
 from softfab.connection import ConnectionStatus
 from softfab.databaselib import Database, RecordObserver
+from softfab.projectlib import project
 from softfab.resourcelib import ResourceBase
 from softfab.restypelib import taskRunnerResourceTypeName
 from softfab.shadowlib import ShadowRun, shadowDB
@@ -96,7 +97,6 @@ class _TaskRunnerData(XMLTag):
                 self._properties['id'] = runnerId[dot + 1 : ]
 
         self._properties.setdefault('host', '?')
-        self.__target = cast(str, None)
         self.__run = cast(_RunInfo, None)
         self.__shadowRunId = None # type: Optional[str]
 
@@ -105,7 +105,6 @@ class _TaskRunnerData(XMLTag):
             return (
                 # pylint: disable=protected-access
                 self._properties == other._properties and
-                self.__target == other.__target and
                 self.__run == other.__run and
                 self.__shadowRunId == other.__shadowRunId
                 )
@@ -119,7 +118,8 @@ class _TaskRunnerData(XMLTag):
         return parseVersion(cast(str, self._properties['runnerVersion']))
 
     def _setTarget(self, attributes: Mapping[str, str]) -> None:
-        self.__target = attributes['name']
+        # COMPAT 2.16: Ignore target coming from TR.
+        pass
 
     def _addCapability(self, attributes: Mapping[str, str]) -> None:
         # COMPAT 2.16: Ignore capabilities coming from TR.
@@ -133,9 +133,6 @@ class _TaskRunnerData(XMLTag):
 
     def getId(self) -> str:
         return cast(str, self._properties['id'])
-
-    def getTarget(self) -> str:
-        return self.__target
 
     def hasExecutionRun(self) -> bool:
         '''Returns True if the Task Runner reported it is running an execution
@@ -185,7 +182,6 @@ class _TaskRunnerData(XMLTag):
         return self.__shadowRunId
 
     def _getContent(self) -> XMLContent:
-        yield xml.target(name = self.__target)
         yield self.__run
         if self.__shadowRunId is not None:
             yield xml.shadowrun(shadowId = self.__shadowRunId)
@@ -423,8 +419,7 @@ class TaskRunner(ResourceBase):
 
     @property
     def targets(self) -> AbstractSet[str]:
-        target = self.__data.getTarget()
-        return frozenset([target])
+        return self._capabilities & project.getTargets()
 
     def _setData(self, attributes: Mapping[str, str]) -> _TaskRunnerData:
         self.__data = _TaskRunnerData(attributes)

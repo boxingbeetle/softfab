@@ -77,9 +77,12 @@ class DetailsTable(Table):
         yield 'Description', runner.description
         yield 'Version', runner['runnerVersion']
         yield 'Host', runner['host']
-        yield 'Targets', ', '.join(runner.targets) or '-'
-        yield 'Capabilities', presentCapabilities(
-            runner.capabilities,
+        yield 'Targets', presentCapabilities(
+            runner.targets,
+            taskRunnerResourceTypeName
+            )
+        yield 'Other capabilities', presentCapabilities(
+            runner.capabilities - runner.targets,
             taskRunnerResourceTypeName
             )
         yield 'Time since last sync', formatDuration(runner['lastSync'])
