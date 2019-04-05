@@ -1,0 +1,54 @@
+<!-- Build configuration for Ant -->
+<project name="TaskRunner" default="all">
+
+    <target name="all" depends="jar"/>
+
+    <target name="clean">
+        <delete dir="derived" quiet="yes"/>
+    </target>
+
+    <target name="classes">
+        <mkdir dir="derived/classes"/>
+        <javac
+            srcdir="src"
+            destdir="derived/classes"
+            debug="true"
+            source="8"
+            deprecation="true"
+            includeantruntime="false"
+        />
+    </target>
+
+    <target name="jar" depends="classes">
+        <mkdir dir="derived/bin"/>
+        <jar jarfile="derived/bin/taskrunner.jar">
+            <manifest>
+                <attribute
+                    name="Main-Class"
+                    value="io.softfab.taskrunner.Main"
+                />
+            </manifest>
+            <fileset dir="derived/classes"/>
+        </jar>
+    </target>
+
+    <target name="run" depends="jar">
+        <java
+            jar="derived/bin/taskrunner.jar"
+            fork="true"
+        />
+    </target>
+
+    <target name="doc">
+        <javadoc
+            packagenames="*.*"
+            sourcepath="src"
+            destdir="derived/doc"
+            public="false"
+            private="true"
+            windowtitle="SoftFab Task Runner"
+            source="8"
+        />
+    </target>
+
+</project>
