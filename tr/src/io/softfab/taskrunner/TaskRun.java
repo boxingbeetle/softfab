@@ -454,7 +454,6 @@ public abstract class TaskRun {
         ret.put("SF_CC_URL",
             config.controlCenter.serverBaseURL.toExternalForm());
         ret.put("SF_TR_ID", config.generic.taskRunnerId);
-        ret.put("SF_TR_CAPABILITIES", config.capabilities);
         ret.putAll(config.parameters);
         return ret;
     }

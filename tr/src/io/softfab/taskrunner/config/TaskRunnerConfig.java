@@ -15,17 +15,11 @@ public class TaskRunnerConfig implements DataObject {
     public ControlCenterConfig controlCenter;
     public OutputConfig output;
     public GenericConfig generic;
-    public SUTConfig sut;
 
     /**
     List of Wrapper directories of this Factory PC.
     */
     public List<WrappersConfig> wrappers = new ArrayList<>();
-
-    /**
-    Capabilities of this Factory PC.
-    */
-    public List<Capability> capabilities = new ArrayList<>();
 
     /**
     Local parameters of this Factory PC.
@@ -34,10 +28,6 @@ public class TaskRunnerConfig implements DataObject {
 
     public void addWrappers(WrappersConfig wrapper) {
         wrappers.add(wrapper);
-    }
-
-    public void addCapability(Capability capability) {
-        capabilities.add(capability);
     }
 
     public void addParam(Parameter parameter)
