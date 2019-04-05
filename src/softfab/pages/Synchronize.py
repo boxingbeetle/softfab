@@ -36,11 +36,11 @@ class Synchronize_POST(ControlPage[ControlPage.Arguments,
         if taskRunner['version'][0] < 3:
             return None
         # Find oldest unassigned task.
-        target = taskRunner['target']
+        targets = taskRunner.targets
         # TODO: It would be more efficient to keep non-fixed tasks instead of
         #       jobs, but the code for that would be more complex.
         for job in unfinishedJobs:
-            if job['target'] == target:
+            if job['target'] in targets:
                 # Try to assign this job, might fail for various
                 # reasons, such as:
                 # - all tasks done

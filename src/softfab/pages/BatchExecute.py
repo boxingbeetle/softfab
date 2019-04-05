@@ -265,7 +265,7 @@ class BatchExecute_POST(BatchExecute_GET):
 class BatchInputTable(InputTable):
 
     def filterTaskRunner(self, taskRunner, taskSet, group, inp):
-        return taskRunner['target'] == taskSet.getTarget(inp)
+        return taskSet.getTarget(inp) in taskRunner.targets
 
     def present(self, *, taskSet, **kwargs):
         tablePresentation = super().present(taskSet=taskSet, **kwargs)

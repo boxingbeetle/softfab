@@ -140,7 +140,7 @@ class RunnerPerTaskStep(DialogStep):
         proc.config = proc.getConfig()
         proc.taskRunners = sorted(
             runner for runner in taskRunnerDB
-            if runner['target'] == proc.args.target
+            if proc.args.target in runner.targets
             )
 
         yield xhtml.p[ 'Select Task Runner(s) to use per task:' ]
@@ -672,7 +672,7 @@ class TaskRunnerSelectionTable(CheckBoxesTable):
 
         taskRunners = (
             runner for runner in taskRunnerDB
-            if runner['target'] == proc.args.target
+            if proc.args.target in runner.targets
             )
         # Are there tasks with non-empty required capability set?
         if len(taskCapsList[0]) > 0:
@@ -704,7 +704,7 @@ class TaskRunnersPerTaskTable(SingleCheckBoxTable):
 class ConfigInputTable(InputTable):
 
     def filterTaskRunner(self, taskRunner, taskSet, group, inp):
-        return taskRunner['target'] == taskSet['target'] and (
+        return taskSet['target'] in taskRunner.targets and (
             group is None or group.canRunOn(taskRunner.getId())
             )
 

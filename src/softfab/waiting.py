@@ -7,8 +7,8 @@ This informs the user of why a task isn't running yet.
 from abc import ABC
 from enum import IntEnum
 from typing import (
-    TYPE_CHECKING, Callable, ClassVar, Iterable, List, NewType, Optional,
-    Sequence, Set, Tuple, cast
+    TYPE_CHECKING, Callable, ClassVar, Iterable, List, Optional, Sequence, Set,
+    Tuple, cast
 )
 
 from softfab.connection import ConnectionStatus
@@ -17,13 +17,10 @@ from softfab.utils import abstract, pluralize
 
 if TYPE_CHECKING:
     from softfab.resourcelib import ResourceBase
+    from softfab.taskrunnerlib import TaskRunner
 else:
     ResourceBase = None
-
-# Note: Importing TaskRunner leads to circular imports.
-#       Since we don't actually depend on any TaskRunner-specific
-#       functionality, we can just treat it as a base resource.
-TaskRunner = NewType('TaskRunner', ResourceBase)
+    TaskRunner = None
 
 # Implementation of "Reason for waiting" feature:
 
@@ -333,7 +330,7 @@ def _checkTarget(
     runners = [
         runner
         for runner in runners
-        if runner['target'] == target
+        if target in runner.targets
         ]
     if not runners:
         # There are no Task Runners with the right target.

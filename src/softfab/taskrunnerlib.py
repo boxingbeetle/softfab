@@ -2,7 +2,8 @@
 
 from abc import ABC
 from typing import (
-    Callable, ClassVar, Iterable, Mapping, Optional, Tuple, Type, TypeVar, cast
+    AbstractSet, Callable, ClassVar, Iterable, Mapping, Optional, Tuple, Type,
+    TypeVar, cast
 )
 import logging
 
@@ -110,12 +111,6 @@ class _TaskRunnerData(XMLTag):
                 )
         else:
             return NotImplemented
-
-    def __getitem__(self, key: str) -> object:
-        if key == 'target':
-            return self.getTarget()
-        else:
-            return XMLTag.__getitem__(self, key)
 
     @cachedProperty
     def version(self) -> Tuple[int, int, int]:
@@ -389,7 +384,7 @@ class TaskRunner(ResourceBase):
             if shadowRun is not None:
                 return 'S-' + shadowRun.getId()
             return ''
-        elif key in ('target', 'host', 'runnerVersion'):
+        elif key in ('host', 'runnerVersion'):
             return self.__data[key]
         else:
             return super().__getitem__(key)
@@ -425,6 +420,11 @@ class TaskRunner(ResourceBase):
     def capabilities(self, value: str) -> None:
         self._capabilities = frozenset(value)
         self._notify()
+
+    @property
+    def targets(self) -> AbstractSet[str]:
+        target = self.__data.getTarget()
+        return frozenset([target])
 
     def _setData(self, attributes: Mapping[str, str]) -> _TaskRunnerData:
         self.__data = _TaskRunnerData(attributes)

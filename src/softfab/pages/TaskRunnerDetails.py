@@ -77,7 +77,7 @@ class DetailsTable(Table):
         yield 'Description', runner.description
         yield 'Version', runner['runnerVersion']
         yield 'Host', runner['host']
-        yield 'Target', runner['target']
+        yield 'Targets', ', '.join(runner.targets) or '-'
         yield 'Capabilities', presentCapabilities(
             runner.capabilities,
             taskRunnerResourceTypeName

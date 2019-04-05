@@ -125,7 +125,6 @@ class GetResourceInfo_GET(ControlPage['GetResourceInfo_GET.Arguments',
                 yield xml.taskrunner(
                     connectionstatus = runner.getConnectionStatus(),
                     version = runner['runnerVersion'],
-                    target = runner['target'],
                     exitonidle = str(runner.shouldExit()).lower(),
                     lastsync = runner['lastSync'],
                     )
