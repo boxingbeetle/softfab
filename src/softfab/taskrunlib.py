@@ -46,11 +46,6 @@ class TaskRunDB(Database):
 taskRunDB = TaskRunDB()
 shadowlib.taskRunDB = taskRunDB
 
-# This used by all tasks when a Task Runner resource is required.
-_trResource = resourcelib.Resource.create(
-    'tr', taskRunnerResourceTypeName, '', '', ()
-    )
-
 class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
     tagName = 'taskRun'
     intProperties = ('runId', )
@@ -138,10 +133,7 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
         '''Gets the reserved resource corresponding to the
         specified resource requirement object.
         '''
-        if spec.typeName == taskRunnerResourceTypeName:
-            return _trResource
-        else:
-            return resourcelib.resourceDB[self.__reserved[spec.reference]]
+        return resourcelib.resourceDB[self.__reserved[spec.reference]]
 
     def __getJobId(self):
         if self.__job is None:
@@ -630,6 +622,9 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
                     locator = self.__getReservedResource(spec).locator
                     )
                 for spec in self.getTask().resourceClaim
+                # TODO: When TRs are in the resource DB, they can be included
+                #       as well.
+                if spec.typeName != taskRunnerResourceTypeName
             )
             ]
 
