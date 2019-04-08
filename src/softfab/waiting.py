@@ -50,6 +50,9 @@ class ReasonForWaiting:
     """Describes a reason why a task isn't running.
     """
 
+    def __str__(self):
+        return '%s(%s)' % (self.__class__.__name__, self.description)
+
     @property
     def priority(self) -> Tuple[int]:
         """A tuple of integers that indicates the priority of this reason:
