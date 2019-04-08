@@ -3,7 +3,7 @@
 from abc import ABC
 from typing import (
     AbstractSet, Callable, ClassVar, Iterable, Mapping, Optional, Sequence,
-    Tuple, Type, TypeVar, cast
+    Tuple, TypeVar, cast
 )
 import logging
 
@@ -17,14 +17,11 @@ from softfab.projectlib import project
 from softfab.resourcelib import ResourceBase
 from softfab.restypelib import taskRunnerResourceTypeName
 from softfab.shadowlib import ShadowRun, shadowDB
-from softfab.statuslib import (
-    DBStatusModelGroup, StatusModel, StatusModelRegistry
-)
 from softfab.taskrunlib import TaskRun, taskRunDB
 from softfab.timelib import getTime
 from softfab.utils import abstract, cachedProperty, parseVersion
 from softfab.xmlbind import XMLTag
-from softfab.xmlgen import XML, XMLAttributeValue, XMLContent, xml
+from softfab.xmlgen import XMLAttributeValue, XMLContent, xml
 
 Task = joblib.Task
 
@@ -672,56 +669,3 @@ def recomputeRunning() -> None:
                             )
     for runner in taskRunnerDB:
         runner._notify()
-
-class TaskRunnerModel(StatusModel):
-
-    __statusMap = {
-        ConnectionStatus.LOST: 'error',
-        ConnectionStatus.WARNING: 'warning',
-        ConnectionStatus.CONNECTED: 'ok',
-        ConnectionStatus.UNKNOWN: 'unknown',
-        }
-
-    @classmethod
-    def getChildClass(cls) -> Optional[Type[StatusModel]]:
-        return None
-
-    def __init__(self, modelId: str, parent: 'TaskRunnerModelGroup'):
-        self.__taskRunner = taskRunnerDB[modelId]
-        StatusModel.__init__(self, modelId, parent)
-
-    def __updated(self, record: TaskRunner) -> None:
-        assert record is self.__taskRunner
-        self._notify()
-
-    def _registerForUpdates(self) -> None:
-        self.__taskRunner.addObserver(self.__updated)
-
-    def _unregisterForUpdates(self) -> None:
-        self.__taskRunner.removeObserver(self.__updated)
-
-    def formatStatus(self) -> XML:
-        taskRunner = self.__taskRunner
-        connectionStatus = taskRunner.getConnectionStatus()
-        health = self.__statusMap[connectionStatus]
-        if connectionStatus is ConnectionStatus.CONNECTED:
-            executionRun = taskRunner.getRun()
-            if executionRun is not None:
-                alert = executionRun.getAlert()
-                if alert:
-                    # TODO: Replace by "alert" or by separate attribute.
-                    health = 'inspect'
-        return xml.status(
-            health = health,
-            reserved = 'true' if taskRunner.isReserved() else 'false',
-            suspended = 'true' if taskRunner.isSuspended() else 'false'
-            )
-
-class TaskRunnerModelGroup(DBStatusModelGroup):
-    childClass = TaskRunnerModel
-    db = taskRunnerDB
-
-# Since the current code does not support Task Runner changes being observed
-# (see comment in TaskRunner docstring), I disabled the model registration.
-# pylint: disable=pointless-statement
-StatusModelRegistry#.addModelGroup(TaskRunnerModelGroup, 'taskrunner')
