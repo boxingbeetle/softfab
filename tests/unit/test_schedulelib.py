@@ -58,14 +58,14 @@ class ScheduleFixtureMixin(object):
         # Timed callbacks.
         while self.__timedCallbacks \
         and self.__timedCallbacks[0][0] <= self.__currentTime:
-            timestamp_, callback = heappop(self.__timedCallbacks)
+            callback = heappop(self.__timedCallbacks)[-1]
             callback()
 
     def __callAt(self, timestamp, handler):
         assert self.__currentTime <= timestamp, (
             'test code tries to register handler in the past'
             )
-        heappush(self.__timedCallbacks, ( timestamp, handler ))
+        heappush(self.__timedCallbacks, (timestamp, id(handler), handler))
 
     def __assignTask(self, job):
         task = job.assignTask(self.taskRunner)
