@@ -9,7 +9,6 @@ import logging
 
 from twisted.internet import reactor
 
-from softfab import joblib
 from softfab.config import dbDir, syncDelay
 from softfab.connection import ConnectionStatus
 from softfab.databaselib import Database, RecordObserver
@@ -17,13 +16,12 @@ from softfab.projectlib import project
 from softfab.resourcelib import ResourceBase
 from softfab.restypelib import taskRunnerResourceTypeName
 from softfab.shadowlib import ShadowRun, shadowDB
-from softfab.taskrunlib import TaskRun, taskRunDB
+from softfab.taskrunlib import RunInfo, TaskRun, taskRunDB
 from softfab.timelib import getTime
 from softfab.utils import abstract, cachedProperty, parseVersion
 from softfab.xmlbind import XMLTag
 from softfab.xmlgen import XMLAttributeValue, XMLContent, xml
 
-Task = joblib.Task
 
 class RequestFactory:
     @staticmethod
@@ -42,31 +40,6 @@ class TaskRunnerDB(Database['TaskRunner']):
     description = 'Task Runner'
     uniqueKeys = ( 'id', )
 taskRunnerDB = TaskRunnerDB()
-
-class _RunInfo(XMLTag):
-    '''Contains the ID strings required to uniquely identify a task run:
-    jobId, taskId and runId.
-    '''
-    tagName = 'run'
-
-    def __eq__(self, other: object) -> bool:
-        if isinstance(other, _RunInfo):
-            # pylint: disable=protected-access
-            return self._properties == other._properties
-        else:
-            return NotImplemented
-
-    def getTaskRun(self) -> TaskRun:
-        '''Returns the task run object corresponding to the ID strings.
-        If that task run does not exist, KeyError is raised.
-        '''
-        jobId = cast(str, self['jobId'])
-        taskId = cast(str, self['taskId'])
-        runId = cast(str, self['runId'])
-        task = joblib.jobDB[jobId].getTask(taskId)
-        if task is None:
-            raise KeyError('no task named "%s" in job %s' % (taskId, jobId))
-        return task.getRun(runId)
 
 class _TaskRunnerData(XMLTag):
     '''This class represents a request of a Task Runner.
@@ -94,7 +67,7 @@ class _TaskRunnerData(XMLTag):
                 self._properties['id'] = runnerId[dot + 1 : ]
 
         self._properties.setdefault('host', '?')
-        self.__run = cast(_RunInfo, None)
+        self.__run = cast(RunInfo, None)
         self.__shadowRunId = None # type: Optional[str]
 
     def __eq__(self, other: object) -> bool:
@@ -123,7 +96,7 @@ class _TaskRunnerData(XMLTag):
         pass
 
     def _setRun(self, attributes: Mapping[str, str]) -> None:
-        self.__run = _RunInfo(attributes)
+        self.__run = RunInfo(attributes)
 
     def _setShadowrun(self, attributes: Mapping[str, str]) -> None:
         self.__shadowRunId = attributes['shadowId']

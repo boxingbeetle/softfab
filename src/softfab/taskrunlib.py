@@ -632,3 +632,28 @@ def newTaskRun(task):
     taskRun = TaskRun({'id': createInternalId()}, task)
     taskRunDB.add(taskRun)
     return taskRun
+
+class RunInfo(XMLTag):
+    '''Contains the ID strings required to uniquely identify a task run:
+    jobId, taskId and runId.
+    '''
+    tagName = 'run'
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, RunInfo):
+            # pylint: disable=protected-access
+            return self._properties == other._properties
+        else:
+            return NotImplemented
+
+    def getTaskRun(self) -> TaskRun:
+        '''Returns the task run object corresponding to the ID strings.
+        If that task run does not exist, KeyError is raised.
+        '''
+        jobId = cast(str, self['jobId'])
+        taskId = cast(str, self['taskId'])
+        runId = cast(str, self['runId'])
+        task = jobDB[jobId].getTask(taskId)
+        if task is None:
+            raise KeyError('no task named "%s" in job %s' % (taskId, jobId))
+        return task.getRun(runId)
