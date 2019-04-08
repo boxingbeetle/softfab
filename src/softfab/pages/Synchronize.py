@@ -4,13 +4,14 @@ from softfab.ControlPage import ControlPage
 from softfab.Page import PageProcessor
 from softfab.authentication import NoAuthPage
 from softfab.jobview import unfinishedJobs
+from softfab.resourcelib import resourceDB
 from softfab.response import Response
 from softfab.shadowlib import shadowDB
 from softfab.sortedqueue import SortedQueue
 from softfab.taskrunnerlib import RequestFactory, TaskRunner, taskRunnerDB
 from softfab.userlib import User
 from softfab.xmlbind import parse
-from softfab.xmlgen import xml
+from softfab.xmlgen import XMLContent, xml
 
 
 class WaitingShadowRuns(SortedQueue):
@@ -81,7 +82,7 @@ class Synchronize_POST(ControlPage[ControlPage.Arguments,
                     self.newRun = self.page.assignShadowRun(taskRunner) \
                         or self.page.assignExecutionRun(taskRunner)
 
-        def createResponse(self):
+        def createResponse(self) -> XMLContent:
             taskRunner = self.taskRunner
             if self.abort:
                 yield xml.abort
@@ -89,7 +90,7 @@ class Synchronize_POST(ControlPage[ControlPage.Arguments,
                 yield xml.exit
             else:
                 if self.newRun:
-                    yield self.newRun.externalize()
+                    yield self.newRun.externalize(resourceDB)
                     waitSecs = taskRunner.getMinimalDelay()
                 else:
                     waitSecs = taskRunner.getSyncWaitDelay()

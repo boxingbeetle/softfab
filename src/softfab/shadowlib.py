@@ -18,6 +18,7 @@ from softfab.xmlbind import XMLTag
 from softfab.xmlgen import XML, XMLAttributeValue, xml
 
 if TYPE_CHECKING:
+    from softfab.resourcelib import ResourceDB
     from softfab.taskrunlib import TaskRun, taskRunDB
     from softfab.taskrunnerlib import TaskRunner
 else:
@@ -25,6 +26,7 @@ else:
     #       The weird construct is to avoid PyLint complaining about methods we
     #       call on it not existing for NoneType.
     taskRunDB = cast(Database, (lambda x: x if x else None)(0))
+    ResourceDB = object
     TaskRun = object
     TaskRunner = object
 
@@ -225,7 +227,7 @@ class ExtractionRun(ShadowRun):
     def getLocation(self) -> str:
         return cast(str, self._properties['runner'])
 
-    def externalize(self) -> XML:
+    def externalize(self, resourceDB: ResourceDB) -> XML:
         '''Returns an XMLNode containing info the Task Runner needs to perform
         this extraction run.
         See the sync protocol documentation.

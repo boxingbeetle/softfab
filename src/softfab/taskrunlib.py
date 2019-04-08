@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
-from softfab import resourcelib, shadowlib
+from softfab import shadowlib
 from softfab.config import dbDir
 from softfab.conversionflags import upgradeInProgress
 from softfab.databaselib import (
@@ -18,12 +18,18 @@ from softfab.timeview import formatTime
 from softfab.utils import IllegalStateError, cachedProperty, pluralize
 from softfab.waiting import topWhyNot
 from softfab.xmlbind import XMLTag
-from softfab.xmlgen import xhtml, xml
+from softfab.xmlgen import XML, xhtml, xml
 
-# Note: To avoid cyclic imports, joblib sets this.
-#       The weird construct is to avoid PyLint complaining about methods we
-#       call on it not existing for NoneType.
-jobDB = cast(Database, (lambda x: x if x else None)(0))
+if TYPE_CHECKING:
+    from softfab.joblib import jobDB
+    from softfab.resourcelib import ResourceDB
+else:
+    # Note: To avoid cyclic imports, joblib sets this.
+    #       The weird construct is to avoid PyLint complaining about methods we
+    #       call on it not existing for NoneType.
+    jobDB = cast(Database, (lambda x: x if x else None)(0))
+    ResourceDB = object
+
 
 defaultSummaries = {
     ResultCode.OK: 'executed successfully',
@@ -128,12 +134,6 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
                 self._notify()
             # No further updates will come, so no point in listening.
             extractionRun.removeObserver(self.__extractionRunChanged)
-
-    def __getReservedResource(self, spec):
-        '''Gets the reserved resource corresponding to the
-        specified resource requirement object.
-        '''
-        return resourcelib.resourceDB[self.__reserved[spec.reference]]
 
     def __getJobId(self):
         if self.__job is None:
@@ -607,7 +607,7 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
                 self._properties['newSummary'] = summary
         self._notify()
 
-    def externalize(self):
+    def externalize(self, resourceDB: ResourceDB) -> XML:
         '''Returns an XMLNode which contains the information which
         the Task Runner needs to perform this execution run.
         '''
@@ -618,8 +618,8 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
             self.createOutputXML(),
             (
                 xml.resource(
-                    ref = spec.reference,
-                    locator = self.__getReservedResource(spec).locator
+                    ref=spec.reference,
+                    locator=resourceDB[self.__reserved[spec.reference]].locator
                     )
                 for spec in self.getTask().resourceClaim
                 # TODO: When TRs are in the resource DB, they can be included
