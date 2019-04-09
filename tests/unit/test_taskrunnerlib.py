@@ -8,7 +8,7 @@ from initconfig import config
 
 from datageneratorlib import removeRec
 
-from softfab import taskrunnerlib, xmlbind
+from softfab import resourcelib, xmlbind
 from softfab.databases import reloadDatabases
 from softfab.resourceview import getResourceStatus
 from softfab.timelib import setTime
@@ -16,12 +16,12 @@ from softfab.timelib import setTime
 class DataFactory(object):
     "Factory for TaskRunnerData class."
     def createData(self, attributes):
-        return taskrunnerlib._TaskRunnerData(attributes)
+        return resourcelib._TaskRunnerData(attributes)
 
 class TestTRDatabase(unittest.TestCase):
     "Test basic Taskrunner database functionality."
 
-    dataRun = xmlbind.parse(taskrunnerlib.RequestFactory(), StringIO(
+    dataRun = xmlbind.parse(resourcelib.RequestFactory(), StringIO(
         '<request runnerId="mhplin02" runnerVersion="2.0.0">'
             '<target name="ibo"/>'
             '<capability name="ate"/>'
@@ -29,7 +29,7 @@ class TestTRDatabase(unittest.TestCase):
             '<run jobId="2004-05-06_12-34_567890" taskId="TC-6.1" runId="0"/>'
         '</request>'
         ))
-    dataNoRun = xmlbind.parse(taskrunnerlib.RequestFactory(), StringIO(
+    dataNoRun = xmlbind.parse(resourcelib.RequestFactory(), StringIO(
         '<request runnerId="mhplin02" runnerVersion="2.0.0">'
             '<target name="ibo"/>'
             '<capability name="ate"/>'
@@ -42,14 +42,14 @@ class TestTRDatabase(unittest.TestCase):
 
     def setUp(self):
         reloadDatabases()
-        assert len(taskrunnerlib.taskRunnerDB) == 0
+        assert len(resourcelib.taskRunnerDB) == 0
 
     def tearDown(self):
         removeRec(config.dbDir)
 
     def suspendTest(self, data):
         "Test suspend functionality"
-        record = taskrunnerlib.TaskRunner.create(data)
+        record = resourcelib.TaskRunner.create(data)
         record.sync(data)
 
         # Check if initially not suspended.
@@ -71,26 +71,26 @@ class TestTRDatabase(unittest.TestCase):
 
     def syncTest(self, data1, data2):
         "Test syncing of the TR database"
-        record1 = taskrunnerlib.TaskRunner.create(data1)
-        taskrunnerlib.taskRunnerDB.add(record1)
+        record1 = resourcelib.TaskRunner.create(data1)
+        resourcelib.taskRunnerDB.add(record1)
         record1.sync(data1)
 
         # Check if cache and database are in sync:
-        reload(taskrunnerlib)
-        record2 = taskrunnerlib.taskRunnerDB[record1.getId()]
+        reload(resourcelib)
+        record2 = resourcelib.taskRunnerDB[record1.getId()]
         self.assertEqual(record1._properties, record2._properties)
         # Change data in database.
         # Check if cache and database are still in sync:
         record1.sync(data2)
-        reload(taskrunnerlib)
-        record2 = taskrunnerlib.taskRunnerDB[record1.getId()]
+        reload(resourcelib)
+        record2 = resourcelib.taskRunnerDB[record1.getId()]
         self.assertEqual(record1._properties, record2._properties)
 
     def statusTest(self, data, busy):
         "Test if right status is returned"
         setTime(1000) # time at moment of record creation
-        record = taskrunnerlib.TaskRunner.create(data)
-        taskrunnerlib.taskRunnerDB.add(record)
+        record = resourcelib.TaskRunner.create(data)
+        resourcelib.taskRunnerDB.add(record)
         record.sync(data)
         #record.getSyncWaitDelay = lambda: 3
         record.getWarnTimeout = lambda: 8
@@ -141,8 +141,8 @@ class TestTRDatabase(unittest.TestCase):
         self.assertEqual(getResourceStatus(record), resultNotSuspended)
 
         # Check if status 'unknown' is returned after a cache flush:
-        reload(taskrunnerlib)
-        record = taskrunnerlib.taskRunnerDB[record.getId()]
+        reload(resourcelib)
+        record = resourcelib.taskRunnerDB[record.getId()]
         self.assertEqual(getResourceStatus(record), 'unknown')
         # Check that pausing the TR doesn't change this status:
         record.setSuspend(True, None)
@@ -162,10 +162,10 @@ class TestTRDatabase(unittest.TestCase):
             )
         self.assertEqual(data, data2)
         # TaskRunner class:
-        record1 = taskrunnerlib.TaskRunner.create(data)
+        record1 = resourcelib.TaskRunner.create(data)
         record1.sync(data)
         record2 = xmlbind.parse(
-            taskrunnerlib.TaskRunnerFactory(),
+            resourcelib.TaskRunnerFactory(),
             StringIO(record1.toXML().flattenXML())
             )
         self.assertEqual(record1._properties, record2._properties)
@@ -186,12 +186,12 @@ class TestTRDatabase(unittest.TestCase):
         "Test suspend functionality while TR is not busy"
         self.suspendTest(self.dataNoRun)
 
-# TODO: The old design of taskrunnerlib made the Task Runner the authority that
+# TODO: The old design of resourcelib made the Task Runner the authority that
 #       determines whether a task is running. In the new design, it is the
 #       Control Center who is authorative. Because of this, it is not possible
 #       to create a Task Runner record in busy state without filling all other
 #       databases with valid data as well. But if we do that, it's like creating
-#       a second joblib test. Instead, I kept the taskrunnerlib test simple
+#       a second joblib test. Instead, I kept the resourcelib test simple
 #       and disabled this test case. However, it means that parts of the
 #       functionality remain untested, which is not a good situation.
 #    def test0030status(self):

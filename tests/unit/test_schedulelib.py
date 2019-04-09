@@ -5,7 +5,7 @@ from initconfig import config as cfg
 from datageneratorlib import removeRec, DataGenerator
 
 from softfab import (
-    databases, configlib, joblib, schedulelib, scheduleview, taskrunnerlib
+    databases, configlib, joblib, resourcelib, schedulelib, scheduleview
     )
 from softfab.projectlib import project
 from softfab.resultcode import ResultCode
@@ -123,7 +123,7 @@ class ScheduleFixtureMixin(object):
         gen.createDefinitions()
 
         gen.createTaskRunners()
-        trRecord = taskrunnerlib.taskRunnerDB.get(gen.taskRunners[0])
+        trRecord = resourcelib.taskRunnerDB.get(gen.taskRunners[0])
         # Keep the TaskRunner alive for all runs we want to execute.
         trRecord.getWarnTimeout = lambda: endOfTime - 300
         trRecord.getLostTimeout = lambda: endOfTime - 60

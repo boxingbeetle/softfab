@@ -5,7 +5,7 @@ import unittest
 from initconfig import config
 
 from softfab import databases
-from softfab import configlib, resourcelib, restypelib, taskrunnerlib
+from softfab import configlib, resourcelib, restypelib
 from softfab.resreq import ResourceSpec, taskRunnerResourceRefName
 from softfab.restypelib import taskRunnerResourceTypeName
 from softfab.resultcode import ResultCode
@@ -201,7 +201,7 @@ class TestResourceRequirements(unittest.TestCase):
 
         def check(config):
             job = config.createJob(OWNER)
-            taskRunner = taskrunnerlib.taskRunnerDB[tr]
+            taskRunner = resourcelib.taskRunnerDB[tr]
 
             # Try to assign with both cap_a and cap_b unavailable.
             self.reserveResource(resA)
@@ -256,7 +256,7 @@ class TestResourceRequirements(unittest.TestCase):
 
         def check(config):
             job = config.createJob(OWNER)
-            taskRunner = taskrunnerlib.taskRunnerDB[tr]
+            taskRunner = resourcelib.taskRunnerDB[tr]
 
             # Try to assign with resource unavailable.
             self.reserveResource(res)

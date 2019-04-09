@@ -23,9 +23,9 @@ from softfab.pagelinks import createJobsURL
 from softfab.paramview import ParamCell, ParamOverrideTable
 from softfab.productdeflib import ProductType
 from softfab.projectlib import project
+from softfab.resourcelib import taskRunnerDB
 from softfab.selectview import TagValueEditTable, textToValues, valuesToText
 from softfab.taskdeflib import taskDefDB
-from softfab.taskrunnerlib import taskRunnerDB
 from softfab.userlib import (
     AccessDenied, User, checkPrivilege, checkPrivilegeForOwned
 )

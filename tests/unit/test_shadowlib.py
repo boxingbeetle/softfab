@@ -7,7 +7,7 @@ from softfab import config
 config.dbDir = 'testdb'
 assert not os.path.exists(config.dbDir)
 
-from softfab import databases, shadowlib, taskrunnerlib
+from softfab import databases, resourcelib, shadowlib
 from softfab.resultcode import ResultCode
 
 import shadowtestutils
@@ -38,7 +38,7 @@ class TestResults(unittest.TestCase):
         run = self.createRun()
         gen = DataGenerator()
         taskRunnerId = gen.createTaskRunner('capable', 'softfab', [])
-        taskRunner = taskrunnerlib.taskRunnerDB[taskRunnerId]
+        taskRunner = resourcelib.taskRunnerDB[taskRunnerId]
         assigned = run.assign(taskRunner)
         self.assertTrue(assigned)
         return run, taskRunner
@@ -78,7 +78,7 @@ class TestResults(unittest.TestCase):
         run = self.createRun()
         gen = DataGenerator()
         taskRunnerId = gen.createTaskRunner('incapable', 'softfab', [])
-        taskRunner = taskrunnerlib.taskRunnerDB[taskRunnerId]
+        taskRunner = resourcelib.taskRunnerDB[taskRunnerId]
         assigned = run.assign(taskRunner)
         self.assertTrue(not assigned)
         self.checkWaiting(run)

@@ -2,9 +2,9 @@
 
 from softfab.configlib import configDB
 from softfab.pageargs import BoolArg, PageArgs, SetArg, StrArg
+from softfab.resourcelib import taskRunnerDB
 from softfab.restypelib import resTypeDB, taskRunnerResourceTypeName
 from softfab.shadowlib import shadowDB
-from softfab.taskrunnerlib import taskRunnerDB
 from softfab.webgui import pageLink, pageURL
 from softfab.xmlgen import XML, txt, xhtml
 

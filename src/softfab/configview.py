@@ -10,10 +10,10 @@ from softfab.jobview import unfinishedJobs
 from softfab.pagelinks import createConfigDetailsLink, createJobURL
 from softfab.productdeflib import ProductType
 from softfab.projectlib import project
+from softfab.resourcelib import taskRunnerDB
 from softfab.schedulelib import scheduleDB
 from softfab.sortedqueue import SortedQueue
 from softfab.statuslib import StatusModel, StatusModelRegistry
-from softfab.taskrunnerlib import taskRunnerDB
 from softfab.userview import OwnerColumn
 from softfab.webgui import Table, cell
 from softfab.xmlgen import xml

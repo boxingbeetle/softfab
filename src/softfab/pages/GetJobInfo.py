@@ -6,8 +6,8 @@ from softfab.joblib import jobDB
 from softfab.pagelinks import JobIdArgs
 from softfab.productdeflib import ProductType
 from softfab.projectlib import project
+from softfab.resourcelib import taskRunnerDB
 from softfab.response import Response
-from softfab.taskrunnerlib import taskRunnerDB
 from softfab.timeview import formatTimeAttr
 from softfab.userlib import User, checkPrivilege
 from softfab.xmlgen import xml

@@ -4,11 +4,12 @@ from softfab.ControlPage import ControlPage
 from softfab.Page import PageProcessor
 from softfab.authentication import NoAuthPage
 from softfab.jobview import unfinishedJobs
-from softfab.resourcelib import resourceDB
+from softfab.resourcelib import (
+    RequestFactory, TaskRunner, resourceDB, taskRunnerDB
+)
 from softfab.response import Response
 from softfab.shadowlib import shadowDB
 from softfab.sortedqueue import SortedQueue
-from softfab.taskrunnerlib import RequestFactory, TaskRunner, taskRunnerDB
 from softfab.userlib import User
 from softfab.xmlbind import parse
 from softfab.xmlgen import XMLContent, xml

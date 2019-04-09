@@ -13,10 +13,9 @@ from softfab.datawidgets import (
 from softfab.formlib import makeForm, submitButton
 from softfab.pageargs import EnumArg, IntArg, PageArgs, SortArg, StrArg
 from softfab.pagelinks import createTaskLink, createTaskRunnerDetailsLink
-from softfab.resourcelib import resourceDB
+from softfab.resourcelib import resourceDB, taskRunnerDB
 from softfab.resourceview import getResourceStatus, presentCapabilities
 from softfab.restypelib import resTypeDB, taskRunnerResourceTypeName
-from softfab.taskrunnerlib import taskRunnerDB
 from softfab.userlib import User, checkPrivilege
 from softfab.webgui import Widget, docLink, header, pageLink, pageURL, row
 from softfab.xmlgen import XML, XMLContent, xhtml

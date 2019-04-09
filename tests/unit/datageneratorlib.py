@@ -5,7 +5,7 @@ import os, os.path, random
 
 from softfab import (
     configlib, frameworklib, productdeflib, resourcelib, restypelib,
-    taskdeflib, taskrunnerlib, userlib, xmlbind
+    taskdeflib, userlib, xmlbind
     )
 from softfab.resreq import ResourceSpec
 
@@ -135,7 +135,7 @@ class DataGenerator(object):
 
     def createTaskRunnerData(self, name, target, versionStr):
         return xmlbind.parse(
-            taskrunnerlib.RequestFactory(),
+            resourcelib.RequestFactory(),
             StringIO(
                 '<request runnerId="' + name + '" '
                 'runnerVersion="' + versionStr + '">'
@@ -147,9 +147,9 @@ class DataGenerator(object):
         self, name, target, capabilities, versionStr = '2.0.0'
         ):
         data = self.createTaskRunnerData(name, target, versionStr)
-        taskRunner = taskrunnerlib.TaskRunner.create(data)
+        taskRunner = resourcelib.TaskRunner.create(data)
         taskRunner.capabilities = capabilities
-        taskrunnerlib.taskRunnerDB.add(taskRunner)
+        resourcelib.taskRunnerDB.add(taskRunner)
         taskRunner.sync(data)
         self.taskRunners.append(name)
         return name
@@ -175,7 +175,7 @@ class DataGenerator(object):
             taskCaps = task.getNeededCaps()
             matches = []
             for trName in self.taskRunners:
-                runnerCaps = taskrunnerlib.taskRunnerDB[trName].capabilities
+                runnerCaps = resourcelib.taskRunnerDB[trName].capabilities
                 missingCaps = [
                     cap for cap in taskCaps
                     if cap not in runnerCaps
@@ -185,7 +185,7 @@ class DataGenerator(object):
                 matches.append( (len(missingCaps), missingCaps, trName) )
             else:
                 num, missingCaps, trName = min(matches)
-                taskRunner = taskrunnerlib.taskRunnerDB[trName]
+                taskRunner = resourcelib.taskRunnerDB[trName]
                 taskRunner.capabilities |= set(missingCaps)
 
     def createConfiguration(self, name = None, tasks = None):
@@ -237,7 +237,7 @@ class DataGenerator(object):
                     taskRunnerId
                     for taskRunnerId in self.taskRunners
                     if taskCaps.issubset(
-                        taskrunnerlib.taskRunnerDB[taskRunnerId].capabilities
+                        resourcelib.taskRunnerDB[taskRunnerId].capabilities
                         )
                     ]
                 taskRunner = self.rnd.choice(capableRunners)

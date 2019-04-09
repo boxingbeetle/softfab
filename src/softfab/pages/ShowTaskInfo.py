@@ -14,11 +14,11 @@ from softfab.pagelinks import (
 from softfab.paramview import ParametersTable
 from softfab.productview import ProductTable
 from softfab.projectlib import project
+from softfab.resourcelib import taskRunnerDB
 from softfab.resourceview import InlineResourcesTable
 from softfab.selectview import valuesToText
 from softfab.taskdeflib import taskDefDB
 from softfab.taskdefview import formatTimeout
-from softfab.taskrunnerlib import taskRunnerDB
 from softfab.tasktables import JobTaskRunsTable
 from softfab.userlib import User, checkPrivilege
 from softfab.webgui import PropertiesTable, Widget

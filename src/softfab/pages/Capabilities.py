@@ -10,12 +10,11 @@ from softfab.pagelinks import (
     CapFilterArgs, createTaskDetailsLink, createTaskRunnerDetailsLink
 )
 from softfab.querylib import CustomFilter
-from softfab.resourcelib import resourceDB
+from softfab.resourcelib import resourceDB, taskRunnerDB
 from softfab.resourceview import presentCapabilities
 from softfab.restypelib import resTypeDB, taskRunnerResourceTypeName
 from softfab.restypeview import ResTypeTableMixin
 from softfab.taskdeflib import taskDefDB
-from softfab.taskrunnerlib import taskRunnerDB
 from softfab.userlib import User, checkPrivilege
 from softfab.utils import ResultKeeper
 from softfab.webgui import Table, pageLink, row, vgroup

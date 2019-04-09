@@ -9,7 +9,7 @@ from softfab.joblib import jobDB
 from softfab.pageargs import IntArg, SortArg
 from softfab.pagelinks import TaskRunnerIdArgs
 from softfab.querylib import runQuery
-from softfab.taskrunnerlib import taskRunnerDB
+from softfab.resourcelib import taskRunnerDB
 from softfab.tasktables import TaskRunsTable
 from softfab.userlib import User, checkPrivilege
 from softfab.webgui import pageLink

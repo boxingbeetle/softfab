@@ -5,8 +5,8 @@ from enum import Enum
 from softfab.ControlPage import ControlPage
 from softfab.Page import InvalidRequest, PageProcessor
 from softfab.pageargs import EnumArg, PageArgs, SetArg
+from softfab.resourcelib import taskRunnerDB
 from softfab.response import Response
-from softfab.taskrunnerlib import taskRunnerDB
 from softfab.userlib import User, checkPrivilege
 from softfab.xmlgen import xml
 

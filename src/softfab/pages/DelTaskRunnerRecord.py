@@ -4,7 +4,7 @@ from softfab.Page import PageProcessor, PresentableError
 from softfab.RecordDelete import RecordDelete_GET, RecordDelete_POSTMixin
 from softfab.connection import ConnectionStatus
 from softfab.pageargs import RefererArg
-from softfab.taskrunnerlib import taskRunnerDB
+from softfab.resourcelib import taskRunnerDB
 from softfab.xmlgen import xhtml
 
 

@@ -8,9 +8,9 @@ from softfab.connection import ConnectionStatus
 from softfab.pagelinks import (
     ResourceIdArgs, TaskRunnerIdArgs, createJobLink, createTaskLink
 )
+from softfab.resourcelib import taskRunnerDB
 from softfab.resourceview import getResourceStatus, presentCapabilities
 from softfab.restypelib import taskRunnerResourceTypeName
-from softfab.taskrunnerlib import taskRunnerDB
 from softfab.timeview import formatDuration, formatTime
 from softfab.userlib import User, checkPrivilege
 from softfab.webgui import Column, Table, Widget, pageLink, row

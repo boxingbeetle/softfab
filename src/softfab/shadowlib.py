@@ -18,17 +18,16 @@ from softfab.xmlbind import XMLTag
 from softfab.xmlgen import XML, XMLAttributeValue, xml
 
 if TYPE_CHECKING:
-    from softfab.resourcelib import ResourceDB
+    from softfab.resourcelib import ResourceDB, TaskRunner
     from softfab.taskrunlib import TaskRun, taskRunDB
-    from softfab.taskrunnerlib import TaskRunner
 else:
+    ResourceDB = object
+    TaskRunner = object
+    TaskRun = object
     # Note: To avoid cyclic imports, taskrunlib sets this.
     #       The weird construct is to avoid PyLint complaining about methods we
     #       call on it not existing for NoneType.
     taskRunDB = cast(Database, (lambda x: x if x else None)(0))
-    ResourceDB = object
-    TaskRun = object
-    TaskRunner = object
 
 
 class ShadowFactory:

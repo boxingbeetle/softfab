@@ -6,8 +6,8 @@ from softfab.FabPage import FabPage
 from softfab.Page import InvalidRequest, PageProcessor, Redirect
 from softfab.formlib import actionButtons, makeForm
 from softfab.pageargs import EnumArg, PageArgs, StrArg
+from softfab.resourcelib import taskRunnerDB
 from softfab.resourceview import CapabilitiesPanel, CommentPanel
-from softfab.taskrunnerlib import taskRunnerDB
 from softfab.userlib import User, checkPrivilege
 from softfab.xmlgen import XML, XMLContent, xhtml
 

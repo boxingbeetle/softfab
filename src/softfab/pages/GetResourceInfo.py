@@ -4,10 +4,9 @@ from softfab.ControlPage import ControlPage
 from softfab.Page import InvalidRequest, PageProcessor
 from softfab.pageargs import PageArgs, SetArg
 from softfab.querylib import SetFilter, runQuery
-from softfab.resourcelib import resourceDB
+from softfab.resourcelib import resourceDB, taskRunnerDB
 from softfab.response import Response
 from softfab.restypelib import resTypeDB, taskRunnerResourceTypeName
-from softfab.taskrunnerlib import taskRunnerDB
 from softfab.timeview import formatTimeAttr
 from softfab.userlib import User, checkPrivilege
 from softfab.xmlgen import xml

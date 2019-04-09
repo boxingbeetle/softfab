@@ -5,7 +5,7 @@ from importlib import reload
 from softfab import (
     configlib, frameworklib, joblib, productdeflib, productlib, projectlib,
     resourcelib, restypelib, schedulelib, shadowlib, storagelib, taskdeflib,
-    taskrunlib, taskrunnerlib, userlib
+    taskrunlib, userlib
 )
 
 
@@ -22,7 +22,7 @@ def iterDatabases():
     yield taskdeflib.taskDefDB
     yield storagelib.storageDB
     yield shadowlib.shadowDB
-    yield taskrunnerlib.taskRunnerDB
+    yield resourcelib.taskRunnerDB
     yield productlib.productDB
     yield joblib.jobDB # joblib must go before taskrunlib despite dependencies
     yield taskrunlib.taskRunDB
@@ -41,7 +41,6 @@ def reloadDatabases():
     # TODO: Automate this.
     reload(userlib)
     reload(restypelib)
-    reload(resourcelib)
     reload(storagelib)
     reload(productdeflib)
     reload(frameworklib)
@@ -49,14 +48,10 @@ def reloadDatabases():
     reload(productlib)
     reload(shadowlib)
     reload(taskrunlib)
+    reload(resourcelib)
     reload(joblib)
     reload(configlib)
     reload(schedulelib)
-    # There are a circular dependencies between joblib, shadowlib, taskrunlib
-    # and taskrunnerlib.
-    # Reloading taskrunnerlib last is needed to make the RunObservers work,
-    # without this a Task Runner will not know it is busy.
-    reload(taskrunnerlib)
 
     for db in iterDatabasesToPreload():
         db.preload()

@@ -11,7 +11,7 @@ from softfab.pagelinks import (
     JobIdArgs, TaskIdArgs, createConfigDetailsLink, createTaskInfoLink
 )
 from softfab.productview import ProductTable
-from softfab.taskrunnerlib import taskRunnerDB
+from softfab.resourcelib import taskRunnerDB
 from softfab.tasktables import JobTaskRunsTable
 from softfab.userlib import User, checkPrivilege
 from softfab.utils import pluralize
