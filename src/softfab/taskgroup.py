@@ -2,13 +2,18 @@
 
 from collections import defaultdict
 from functools import total_ordering
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List, Sequence
 
 from softfab.setcalc import UnionFind, categorizedLists, union
 from softfab.utils import Heap, ResultKeeper
 from softfab.waiting import (
-    BoundReason, checkBoundGroupRunner, checkGroupRunners
+    BoundReason, ReasonForWaiting, checkBoundGroupRunner, checkGroupRunners
 )
+
+if TYPE_CHECKING:
+    from softfab.resourcelib import TaskRunner
+else:
+    TaskRunner = object
 
 
 class TaskSet:
@@ -340,12 +345,14 @@ class _TaskGroup(PriorityMixin):
         '''
         raise NotImplementedError
 
-    def checkRunners(self, taskRunners, whyNot):
-        '''Checks whether this task (group) can be assigned to one of the given
+    def checkRunners(self,
+                     taskRunners: Sequence[TaskRunner],
+                     whyNot: List[ReasonForWaiting]
+                     ) -> None:
+        """Checks whether this task (group) can be assigned to one of the given
         Task Runners. No actual assignment will occur.
-        "whyNot" is a list, to which reasons blocking the assignment will be
-        appended.
-        '''
+        Reasons blocking the assignment will be appended to `whyNot`.
+        """
         raise NotImplementedError
 
 class _MainGroup(_TaskGroup):
@@ -362,7 +369,10 @@ class _MainGroup(_TaskGroup):
                 return assigned
         return None
 
-    def checkRunners(self, taskRunners, whyNot):
+    def checkRunners(self,
+                     taskRunners: Sequence[TaskRunner],
+                     whyNot: List[ReasonForWaiting]
+                     ) -> None:
         mark = len(whyNot)
         for task in self.getTaskGroupSequence():
             task.checkRunners(taskRunners, whyNot)
@@ -452,7 +462,10 @@ class _LocalGroup(_TaskGroup):
                         return assigned
         return None
 
-    def checkRunners(self, taskRunners, whyNot):
+    def checkRunners(self,
+                     taskRunners: Sequence[TaskRunner],
+                     whyNot: List[ReasonForWaiting]
+                     ) -> None:
         boundRunnerId = self.__runnerId
         target = self._parent['target']
         if boundRunnerId is None:

@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from collections import defaultdict
-from typing import cast
+from typing import TYPE_CHECKING, List, Sequence, cast
 import logging
 
 from softfab import frameworklib, taskdeflib, taskrunlib
@@ -21,9 +21,16 @@ from softfab.tasklib import (
     ResourceRequirementsMixin, TaskRunnerSet, TaskStateMixin
 )
 from softfab.timelib import getTime
-from softfab.waiting import InputReason, ResourceMissingReason, checkRunners
+from softfab.waiting import (
+    InputReason, ReasonForWaiting, ResourceMissingReason, checkRunners
+)
 from softfab.xmlbind import XMLTag
 from softfab.xmlgen import xml
+
+if TYPE_CHECKING:
+    from softfab.resourcelib import TaskRunner
+else:
+    TaskRunner = object
 
 
 class JobFactory:
@@ -294,7 +301,10 @@ class Task(
         else:
             return taskRun.assign(taskRunner)
 
-    def checkRunners(self, taskRunners, whyNot):
+    def checkRunners(self,
+                     taskRunners: Sequence[TaskRunner],
+                     whyNot: List[ReasonForWaiting]
+                     ) -> None:
         taskRun = self.getLatestRun()
         if not taskRun.isWaiting():
             return
@@ -313,7 +323,7 @@ class Task(
             candidates = [
                 runner for runner in taskRunners
                 if runner.getId() in runners
-                ]
+                ] # type: Sequence[TaskRunner]
         else:
             candidates = taskRunners
         checkRunners(candidates, self.__job['target'], neededCaps, whyNot)
