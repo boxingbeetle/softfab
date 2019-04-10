@@ -2,7 +2,6 @@
 
 from softfab.configlib import configDB
 from softfab.pageargs import BoolArg, PageArgs, SetArg, StrArg
-from softfab.resourcelib import taskRunnerDB
 from softfab.restypelib import resTypeDB, taskRunnerResourceTypeName
 from softfab.shadowlib import shadowDB
 from softfab.webgui import pageLink, pageURL
@@ -160,12 +159,10 @@ def createTaskRunnerDetailsLink(taskRunnerId):
         return '-'
     elif taskRunnerId == '?':
         return '?'
-    elif taskRunnerId in taskRunnerDB:
+    else:
         return pageLink(
             'TaskRunnerDetails', TaskRunnerIdArgs(runnerId = taskRunnerId)
-            )[  taskRunnerId ]
-    else:
-        return txt(taskRunnerId)
+            )[ taskRunnerId ]
 
 class UserIdArgs(PageArgs):
     '''Identifies a particular user.

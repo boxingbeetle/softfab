@@ -9,7 +9,6 @@ from softfab.joblib import jobDB
 from softfab.pageargs import IntArg, SortArg
 from softfab.pagelinks import TaskRunnerIdArgs
 from softfab.querylib import runQuery
-from softfab.resourcelib import taskRunnerDB
 from softfab.tasktables import TaskRunsTable
 from softfab.userlib import User, checkPrivilege
 from softfab.webgui import pageLink
@@ -45,8 +44,6 @@ class TaskRunnerHistory_GET(FabPage['TaskRunnerHistory_GET.Processor',
         def process(self, req, user):
             runnerId = req.args.runnerId
 
-            taskRunner = taskRunnerDB.get(runnerId)
-
             jobs = list(jobDB.values())
             jobs.sort(key = jobDB.retrieverFor('recent'))
             reachedJobsLimit = len(jobs) > _jobsLimit
@@ -63,7 +60,6 @@ class TaskRunnerHistory_GET(FabPage['TaskRunnerHistory_GET.Processor',
             tasks = runQuery((recordFilter, ), jobs)
 
             # pylint: disable=attribute-defined-outside-init
-            self.taskRunner = taskRunner
             self.reachedJobsLimit = reachedJobsLimit
             self.tasks = tasks
 
@@ -77,19 +73,13 @@ class TaskRunnerHistory_GET(FabPage['TaskRunnerHistory_GET.Processor',
     def presentContent(self, proc: Processor) -> XMLContent:
         runnerId = proc.args.runnerId
 
-        if proc.taskRunner is None:
-            yield xhtml.p[
-                xhtml.b[ 'Note:' ], ' Task Runner ', xhtml.b[ runnerId ],
-                ' does not exist (anymore).'
-                ]
-        else:
-            yield xhtml.h2[
-                pageLink(
-                    'TaskRunnerDetails',
-                    TaskRunnerIdArgs.subset(proc.args)
-                    )[ 'Details' ],
-                ' / History of ', xhtml.b[ runnerId ], ':'
-                ]
+        yield xhtml.h2[
+            pageLink(
+                'TaskRunnerDetails',
+                TaskRunnerIdArgs.subset(proc.args)
+                )[ 'Details' ],
+            ' / History of ', xhtml.b[ runnerId ], ':'
+            ]
 
         if proc.reachedJobsLimit:
             yield xhtml.p[xhtml.i[

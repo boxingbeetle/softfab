@@ -39,14 +39,6 @@ class TaskRunnerDetails_GET(FabPage['TaskRunnerDetails_GET.Processor',
         yield DetailsTable.instance
 
     def presentContent(self, proc: Processor) -> XMLContent:
-        taskRunner = proc.taskRunner
-        if taskRunner is None:
-            yield xhtml.p[
-                'Task Runner ', xhtml.b[ proc.args.runnerId ],
-                ' does not exist.'
-                ]
-            return
-
         yield xhtml.h2[
             'Details / ',
             pageLink('TaskRunnerHistory', TaskRunnerIdArgs.subset(proc.args))[
@@ -55,17 +47,18 @@ class TaskRunnerDetails_GET(FabPage['TaskRunnerDetails_GET.Processor',
             ' of Task Runner ', xhtml.b[ proc.args.runnerId ], ':'
             ]
         yield DetailsTable.instance.present(proc=proc)
-        yield xhtml.p[xhtml.br.join(self.__presentLinks(taskRunner))]
+        yield xhtml.p[xhtml.br.join(self.__presentLinks(proc.taskRunner))]
 
     def __presentLinks(self, taskRunner):
-        args = ResourceIdArgs(id = taskRunner.getId())
-        yield pageLink('TaskRunnerEdit', args)[
-            'Edit properties of this Task Runner'
-            ]
-        if taskRunner.getConnectionStatus() is ConnectionStatus.LOST:
-            yield pageLink('DelTaskRunnerRecord', args)[
-                'Delete record of this Task Runner'
+        if taskRunner is not None:
+            args = ResourceIdArgs(id = taskRunner.getId())
+            yield pageLink('TaskRunnerEdit', args)[
+                'Edit properties of this Task Runner'
                 ]
+            if taskRunner.getConnectionStatus() is ConnectionStatus.LOST:
+                yield pageLink('ResourceDelete', args)[
+                    'Delete this Task Runner'
+                    ]
 
 class DetailsTable(Table):
     widgetId = 'detailsTable'
@@ -74,6 +67,15 @@ class DetailsTable(Table):
 
     def iterRows(self, *, proc, **kwargs):
         runner = proc.taskRunner
+        if runner is None:
+            # Note: This is also reachable through auto-refresh of older
+            #       renderings of the page.
+            yield '-', (
+                'Task Runner ', xhtml.b[ proc.args.runnerId ],
+                ' does not exist (anymore).'
+                )
+            return
+
         yield 'Description', runner.description
         yield 'Version', runner['runnerVersion']
         yield 'Host', runner['host']
