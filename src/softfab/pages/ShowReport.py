@@ -12,7 +12,7 @@ from softfab.pagelinks import (
     createTaskRunnerDetailsLink
 )
 from softfab.productview import ProductTable
-from softfab.resourcelib import taskRunnerDB
+from softfab.resourcelib import getTaskRunner, iterTaskRunners
 from softfab.resourceview import getResourceStatus
 from softfab.tasktables import JobTaskRunsTable
 from softfab.userlib import User, checkPrivilege
@@ -62,7 +62,7 @@ class ShowReport_GET(FabPage['ShowReport_GET.Processor',
                 job = jobDB[jobId]
             except KeyError:
                 raise InvalidRequest('No job exists with ID "%s"' % jobId)
-            job.updateSummaries(taskRunnerDB)
+            job.updateSummaries(tuple(iterTaskRunners()))
             # pylint: disable=attribute-defined-outside-init
             self.job = job
 
@@ -203,8 +203,9 @@ class OutputTable(ProductTable):
             )
 
 def presentTaskRunner(runnerId):
-    runner = taskRunnerDB.get(runnerId)
-    if runner is None:
+    try:
+        runner = getTaskRunner(runnerId)
+    except KeyError:
         status = 'lost'
         content = runnerId
     else:

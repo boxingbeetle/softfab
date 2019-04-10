@@ -36,7 +36,7 @@ class TestTRDatabase(unittest.TestCase):
 
     def setUp(self):
         reloadDatabases()
-        assert len(resourcelib.taskRunnerDB) == 0
+        assert len(resourcelib.resourceDB) == 0
 
     def tearDown(self):
         removeRec(config.dbDir)
@@ -66,25 +66,25 @@ class TestTRDatabase(unittest.TestCase):
     def syncTest(self, data1, data2):
         "Test syncing of the TR database"
         record1 = resourcelib.TaskRunner.create(data1.getId(), '', set())
-        resourcelib.taskRunnerDB.add(record1)
+        resourcelib.resourceDB.add(record1)
         record1.sync(data1)
 
         # Check if cache and database are in sync:
         reload(resourcelib)
-        record2 = resourcelib.taskRunnerDB[record1.getId()]
+        record2 = resourcelib.resourceDB[record1.getId()]
         self.assertEqual(record1._properties, record2._properties)
         # Change data in database.
         # Check if cache and database are still in sync:
         record1.sync(data2)
         reload(resourcelib)
-        record2 = resourcelib.taskRunnerDB[record1.getId()]
+        record2 = resourcelib.resourceDB[record1.getId()]
         self.assertEqual(record1._properties, record2._properties)
 
     def statusTest(self, data, busy):
         "Test if right status is returned"
         setTime(1000) # time at moment of record creation
         record = resourcelib.TaskRunner.create(data.getId(), '', set())
-        resourcelib.taskRunnerDB.add(record)
+        resourcelib.resourceDB.add(record)
         record.sync(data)
         #record.getSyncWaitDelay = lambda: 3
         record.getWarnTimeout = lambda: 8
@@ -136,7 +136,7 @@ class TestTRDatabase(unittest.TestCase):
 
         # Check if status 'unknown' is returned after a cache flush:
         reload(resourcelib)
-        record = resourcelib.taskRunnerDB[record.getId()]
+        record = resourcelib.resourceDB[record.getId()]
         self.assertEqual(getResourceStatus(record), 'unknown')
         # Check that (un)pausing the TR changes the status:
         record.setSuspend(True, None)
@@ -160,7 +160,7 @@ class TestTRDatabase(unittest.TestCase):
         record1 = resourcelib.TaskRunner.create(data.getId(), '', set())
         record1.sync(data)
         record2 = xmlbind.parse(
-            resourcelib.TaskRunnerFactory(),
+            resourcelib.ResourceFactory(),
             StringIO(record1.toXML().flattenXML())
             )
         self.assertEqual(record1._properties, record2._properties)

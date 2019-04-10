@@ -11,7 +11,7 @@ from softfab.pagelinks import (
 )
 from softfab.projectlib import project
 from softfab.querylib import CustomFilter
-from softfab.resourcelib import resourceDB, taskRunnerDB
+from softfab.resourcelib import resourceDB
 from softfab.resourceview import presentCapabilities
 from softfab.restypelib import resTypeDB, taskRunnerResourceTypeName
 from softfab.restypeview import ResTypeTableMixin
@@ -55,19 +55,13 @@ class CapabilitiesColumn(DataColumn):
             )
 
 class ResourcesTable(DataTable):
-    db = None
-    uniqueKeys = ('id',)
-    objectName = 'resources'
+    db = resourceDB
     columns = (
         NameColumn('Name', 'id'),
         CapabilitiesColumn('Capabilities', 'capabilities'),
         )
     tabOffsetField = 'first_tr'
     style = 'properties'
-
-    def getRecordsToQuery(self, proc):
-        yield from resourceDB
-        yield from taskRunnerDB
 
     def iterFilters(self, proc):
         yield CustomFilter(
@@ -158,12 +152,8 @@ class Capabilities_GET(FabPage['Capabilities_GET.Processor',
 
             # Determine which resources are necessary for each task.
             for resource in (
-                    taskRunnerDB
-                    if typeName == taskRunnerResourceTypeName
-                    else (
-                        resource for resource in resourceDB
-                        if resource.typeName == typeName
-                        )
+                    resource for resource in resourceDB
+                    if resource.typeName == typeName
                     ):
                 resourceId = resource.getId()
                 for cap in resource.capabilities:
@@ -181,7 +171,7 @@ class Capabilities_GET(FabPage['Capabilities_GET.Processor',
         yield CapabilitiesTable.instance
 
     def checkAccess(self, user: User) -> None:
-        checkPrivilege(user, 'tr/l')
+        checkPrivilege(user, 'r/l')
 
     def presentContent(self, proc: Processor) -> XMLContent:
         resType = resTypeDB[proc.args.restype]

@@ -6,7 +6,7 @@ from softfab.joblib import jobDB
 from softfab.pagelinks import JobIdArgs
 from softfab.productdeflib import ProductType
 from softfab.projectlib import project
-from softfab.resourcelib import taskRunnerDB
+from softfab.resourcelib import iterTaskRunners
 from softfab.response import Response
 from softfab.timeview import formatTimeAttr
 from softfab.userlib import User, checkPrivilege
@@ -74,7 +74,7 @@ class GetJobInfo_GET(ControlPage['GetJobInfo_GET.Arguments',
                 ]
 
         job = proc.job
-        job.updateSummaries(taskRunnerDB)
+        job.updateSummaries(tuple(iterTaskRunners()))
         comment = job.comment
         tasks = job.getTaskSequence()
         response.writeXML(

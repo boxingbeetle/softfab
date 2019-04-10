@@ -147,7 +147,7 @@ class DataGenerator:
         taskRunner = resourcelib.TaskRunner.create(
             name, '', list(capabilities) + [target]
             )
-        resourcelib.taskRunnerDB.add(taskRunner)
+        resourcelib.resourceDB.add(taskRunner)
         data = self.createTaskRunnerData(name, target, versionStr)
         taskRunner.sync(data)
         self.taskRunners.append(name)
@@ -174,7 +174,7 @@ class DataGenerator:
             taskCaps = task.getNeededCaps()
             matches = []
             for trName in self.taskRunners:
-                runnerCaps = resourcelib.taskRunnerDB[trName].capabilities
+                runnerCaps = resourcelib.resourceDB[trName].capabilities
                 missingCaps = [
                     cap for cap in taskCaps
                     if cap not in runnerCaps
@@ -184,7 +184,7 @@ class DataGenerator:
                 matches.append( (len(missingCaps), missingCaps, trName) )
             else:
                 num, missingCaps, trName = min(matches)
-                taskRunner = resourcelib.taskRunnerDB[trName]
+                taskRunner = resourcelib.resourceDB[trName]
                 taskRunner.capabilities |= set(missingCaps)
 
     def createConfiguration(self, name = None, tasks = None):
@@ -236,7 +236,7 @@ class DataGenerator:
                     taskRunnerId
                     for taskRunnerId in self.taskRunners
                     if taskCaps.issubset(
-                        resourcelib.taskRunnerDB[taskRunnerId].capabilities
+                        resourcelib.resourceDB[taskRunnerId].capabilities
                         )
                     ]
                 taskRunner = self.rnd.choice(capableRunners)

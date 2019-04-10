@@ -38,7 +38,7 @@ class TestResults(unittest.TestCase):
         run = self.createRun()
         gen = DataGenerator()
         taskRunnerId = gen.createTaskRunner('capable', 'softfab', [])
-        taskRunner = resourcelib.taskRunnerDB[taskRunnerId]
+        taskRunner = resourcelib.resourceDB[taskRunnerId]
         assigned = run.assign(taskRunner)
         self.assertTrue(assigned)
         return run, taskRunner
@@ -78,7 +78,7 @@ class TestResults(unittest.TestCase):
         run = self.createRun()
         gen = DataGenerator()
         taskRunnerId = gen.createTaskRunner('incapable', 'softfab', [])
-        taskRunner = resourcelib.taskRunnerDB[taskRunnerId]
+        taskRunner = resourcelib.resourceDB[taskRunnerId]
         assigned = run.assign(taskRunner)
         self.assertTrue(not assigned)
         self.checkWaiting(run)

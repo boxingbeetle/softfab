@@ -126,7 +126,7 @@ class TestJobs(unittest.TestCase):
         while True:
             newFreeTaskRunners = []
             for taskRunner in freeTaskRunners:
-                trRecord = resourcelib.taskRunnerDB[taskRunner]
+                trRecord = resourcelib.resourceDB[taskRunner]
                 taskRun = job.assignTask(trRecord)
                 if taskRun is None:
                     newFreeTaskRunners.append(taskRunner)
@@ -269,16 +269,16 @@ class TestJobs(unittest.TestCase):
 
             # Verify execution:
             # Successfully complete first build task.
-            task = job.assignTask(resourcelib.taskRunnerDB[buildTR])
+            task = job.assignTask(resourcelib.resourceDB[buildTR])
             self.assertIsNotNone(task)
             self.assertTrue(task.getName().startswith('build'))
             taskDone(job, task.getName())
             # Start test task.
-            task = job.assignTask(resourcelib.taskRunnerDB[testTR])
+            task = job.assignTask(resourcelib.resourceDB[testTR])
             self.assertIsNotNone(task)
             self.assertEqual(task.getName(), testTask)
             # Complete second build task, but make it fail.
-            task = job.assignTask(resourcelib.taskRunnerDB[buildTR])
+            task = job.assignTask(resourcelib.resourceDB[buildTR])
             self.assertIsNotNone(task)
             self.assertTrue(task.getName().startswith('build'))
             taskDone(job, task.getName(), ResultCode.ERROR)
@@ -323,11 +323,11 @@ class TestJobs(unittest.TestCase):
         def simulate(config):
             self.sanityCheck(gen, config)
             job, = config.createJobs(self.owner)
-            task = job.assignTask(resourcelib.taskRunnerDB[tr1Name])
+            task = job.assignTask(resourcelib.resourceDB[tr1Name])
             self.assertIsNone(task)
             self.assertFalse(job.isExecutionFinished())
             self.assertFalse(job.hasFinalResult())
-            task = job.assignTask(resourcelib.taskRunnerDB[tr2Name])
+            task = job.assignTask(resourcelib.resourceDB[tr2Name])
             self.assertIsNotNone(task)
             taskDone(job, task.getName())
             self.assertTrue(job.isExecutionFinished())
@@ -349,11 +349,11 @@ class TestJobs(unittest.TestCase):
         def simulate(config):
             self.sanityCheck(gen, config)
             job, = config.createJobs(self.owner)
-            task = job.assignTask(resourcelib.taskRunnerDB[tr1Name])
+            task = job.assignTask(resourcelib.resourceDB[tr1Name])
             self.assertIsNone(task)
             self.assertFalse(job.isExecutionFinished())
             self.assertFalse(job.hasFinalResult())
-            task = job.assignTask(resourcelib.taskRunnerDB[tr2Name])
+            task = job.assignTask(resourcelib.resourceDB[tr2Name])
             self.assertIsNotNone(task)
             taskDone(job, task.getName())
             self.assertTrue(job.isExecutionFinished())
@@ -377,11 +377,11 @@ class TestJobs(unittest.TestCase):
         def simulate(config):
             self.sanityCheck(gen, config)
             job, = config.createJobs(self.owner)
-            task = job.assignTask(resourcelib.taskRunnerDB[tr1Name])
+            task = job.assignTask(resourcelib.resourceDB[tr1Name])
             self.assertIsNone(task)
             self.assertFalse(job.isExecutionFinished())
             self.assertFalse(job.hasFinalResult())
-            task = job.assignTask(resourcelib.taskRunnerDB[tr2Name])
+            task = job.assignTask(resourcelib.resourceDB[tr2Name])
             self.assertIsNotNone(task)
             taskDone(job, task.getName())
             self.assertTrue(job.isExecutionFinished())
@@ -404,7 +404,7 @@ class TestJobs(unittest.TestCase):
         def simulate(config):
             self.sanityCheck(gen, config)
             job, = config.createJobs(self.owner)
-            task = job.assignTask(resourcelib.taskRunnerDB[tr1Name])
+            task = job.assignTask(resourcelib.resourceDB[tr1Name])
             self.assertIsNone(task)
             self.assertFalse(job.isExecutionFinished())
             self.assertFalse(job.hasFinalResult())
@@ -434,7 +434,7 @@ class TestJobs(unittest.TestCase):
         def simulate(config):
             self.sanityCheck(gen, config)
             job, = config.createJobs(self.owner)
-            task = job.assignTask(resourcelib.taskRunnerDB[tr1Name])
+            task = job.assignTask(resourcelib.resourceDB[tr1Name])
             self.assertIsNone(task)
             self.assertFalse(job.isExecutionFinished())
             self.assertFalse(job.hasFinalResult())
@@ -481,7 +481,7 @@ class TestJobs(unittest.TestCase):
                 runnerId = task['runner']
                 if taskRunners:
                     self.assertIn(runnerId, taskRunners)
-                trCaps = resourcelib.taskRunnerDB[runnerId].capabilities
+                trCaps = resourcelib.resourceDB[runnerId].capabilities
                 for cap in task.getNeededCaps():
                     self.assertIn(cap, trCaps)
 
@@ -500,7 +500,7 @@ class TestJobs(unittest.TestCase):
                     # Target is not checked here, because DataGenerator uses
                     # the same target for the job and all the task runners.
                     self.assertTrue(
-                        not resourcelib.taskRunnerDB[runnerId].capabilities
+                        not resourcelib.resourceDB[runnerId].capabilities
                             >= task.getNeededCaps()
                         )
 
@@ -589,20 +589,20 @@ class TestJobs(unittest.TestCase):
 
             # Verify execution:
             # Successfully complete first build task.
-            task = job.assignTask(resourcelib.taskRunnerDB[buildTR])
+            task = job.assignTask(resourcelib.resourceDB[buildTR])
             self.assertIsNotNone(task)
             self.assertTrue(task.getName().startswith('build'))
             taskDone(job, task.getName())
             # Try to start test task (should fail).
-            task = job.assignTask(resourcelib.taskRunnerDB[testTR])
+            task = job.assignTask(resourcelib.resourceDB[testTR])
             self.assertIsNone(task)
             # Complete second build task, but make it fail.
-            task = job.assignTask(resourcelib.taskRunnerDB[buildTR])
+            task = job.assignTask(resourcelib.resourceDB[buildTR])
             self.assertIsNotNone(task)
             self.assertTrue(task.getName().startswith('build'))
             taskDone(job, task.getName(), ResultCode.ERROR)
             # Try to start test task (should succeed).
-            task = job.assignTask(resourcelib.taskRunnerDB[testTR])
+            task = job.assignTask(resourcelib.resourceDB[testTR])
             self.assertIsNotNone(task)
             self.assertEqual(task.getName(), testTask)
             # Successfully complete test task.
@@ -645,14 +645,14 @@ class TestJobs(unittest.TestCase):
 
             # Verify execution:
             # Successfully complete first build task.
-            task = job.assignTask(resourcelib.taskRunnerDB[tr])
+            task = job.assignTask(resourcelib.resourceDB[tr])
             self.assertIsNotNone(task)
             self.assertEqual(task.getName(), buildTask)
             taskDone(job, buildTask)
             self.assertEqual(job.getResult(), ResultCode.OK)
             self.assertEqual(job.getFinalResult(), None)
             # Successfully complete first test task, without result.
-            task = job.assignTask(resourcelib.taskRunnerDB[tr])
+            task = job.assignTask(resourcelib.resourceDB[tr])
             self.assertIsNotNone(task is not None)
             self.assertEqual(task.getName(), testTask1)
             taskDone(job, testTask1, ResultCode.INSPECT)
@@ -661,7 +661,7 @@ class TestJobs(unittest.TestCase):
             self.assertEqual(job.getResult(), ResultCode.INSPECT)
             self.assertIsNone(job.getFinalResult())
             # Successfully complete second test task, with result.
-            task = job.assignTask(resourcelib.taskRunnerDB[tr])
+            task = job.assignTask(resourcelib.resourceDB[tr])
             self.assertIsNotNone(task)
             self.assertEqual(task.getName(), testTask2)
             taskDone(job, testTask2, ResultCode.OK)
@@ -670,7 +670,7 @@ class TestJobs(unittest.TestCase):
             self.assertEqual(job.getResult(), ResultCode.INSPECT)
             self.assertIsNone(job.getFinalResult())
             # Successfully complete third test task, without result.
-            task = job.assignTask(resourcelib.taskRunnerDB[tr])
+            task = job.assignTask(resourcelib.resourceDB[tr])
             self.assertIsNotNone(task)
             self.assertEqual(task.getName(), testTask3)
             taskDone(job, testTask3, ResultCode.INSPECT)

@@ -6,7 +6,7 @@ from softfab.FabPage import FabPage
 from softfab.Page import InvalidRequest, PageProcessor, Redirect
 from softfab.formlib import actionButtons, makeForm
 from softfab.pageargs import EnumArg, PageArgs, StrArg
-from softfab.resourcelib import taskRunnerDB
+from softfab.resourcelib import getTaskRunner
 from softfab.resourceview import CapabilitiesPanel, CommentPanel
 from softfab.userlib import User, checkPrivilege
 from softfab.xmlgen import XML, XMLContent, xhtml
@@ -31,17 +31,15 @@ class TaskRunnerEdit_GET(FabPage['TaskRunnerEdit_GET.Processor',
 
         def process(self, req, user):
             try:
-                runner = taskRunnerDB[req.args.id]
-            except KeyError:
-                raise InvalidRequest(
-                    'Task Runner "%s" does not exist' % req.args.id
-                    )
+                runner = getTaskRunner(req.args.id)
+            except KeyError as ex:
+                raise InvalidRequest(str(ex)) from ex
 
             # pylint: disable=attribute-defined-outside-init
             self.runner = runner
 
     def checkAccess(self, user: User) -> None:
-        checkPrivilege(user, 'tr/m')
+        checkPrivilege(user, 'r/m')
 
     def presentContent(self, proc: Processor) -> XMLContent:
         args = proc.args

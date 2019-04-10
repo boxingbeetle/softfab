@@ -5,7 +5,7 @@ from softfab.Page import InvalidRequest, PageProcessor
 from softfab.authentication import NoAuthPage
 from softfab.jobview import unfinishedJobs
 from softfab.resourcelib import (
-    RequestFactory, TaskRunner, resourceDB, taskRunnerDB
+    RequestFactory, TaskRunner, getTaskRunner, resourceDB
 )
 from softfab.response import Response
 from softfab.shadowlib import shadowDB
@@ -68,12 +68,10 @@ class Synchronize_POST(ControlPage[ControlPage.Arguments,
             request = parse(RequestFactory(), rawReq)
 
             # Sync Task Runner database.
-            runnerId = request.getId()
-            taskRunner = taskRunnerDB.get(runnerId)
-            if taskRunner is None:
-                raise InvalidRequest(
-                    'There is no Task Runner named "%s"' % runnerId
-                    )
+            try:
+                taskRunner = getTaskRunner(request.getId())
+            except KeyError as ex:
+                raise InvalidRequest(*ex.args) from ex
             self.taskRunner = taskRunner
             self.abort = taskRunner.sync(request)
 

@@ -201,7 +201,7 @@ class TestResourceRequirements(unittest.TestCase):
 
         def check(config):
             job, = config.createJobs(OWNER)
-            taskRunner = resourcelib.taskRunnerDB[tr]
+            taskRunner = resourcelib.resourceDB[tr]
 
             # Try to assign with both cap_a and cap_b unavailable.
             self.reserveResource(resA)
@@ -256,7 +256,7 @@ class TestResourceRequirements(unittest.TestCase):
 
         def check(config):
             job, = config.createJobs(OWNER)
-            taskRunner = resourcelib.taskRunnerDB[tr]
+            taskRunner = resourcelib.resourceDB[tr]
 
             # Try to assign with resource unavailable.
             self.reserveResource(res)

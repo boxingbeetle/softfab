@@ -13,7 +13,7 @@ from softfab.datawidgets import (
 from softfab.formlib import makeForm, submitButton
 from softfab.pageargs import EnumArg, IntArg, PageArgs, SortArg, StrArg
 from softfab.pagelinks import createTaskLink, createTaskRunnerDetailsLink
-from softfab.resourcelib import resourceDB, taskRunnerDB
+from softfab.resourcelib import resourceDB
 from softfab.resourceview import getResourceStatus, presentCapabilities
 from softfab.restypelib import resTypeDB, taskRunnerResourceTypeName
 from softfab.userlib import User, checkPrivilege
@@ -66,21 +66,10 @@ class EditColumn(DataColumn):
             )
         return pageLink(pageName, DeleteArgs(id=record.getId()))[ 'Edit' ]
 
-class DeleteColumn(DataColumn):
-    def presentCell(self, record, **kwargs):
-        pageName = (
-            'DelTaskRunnerRecord'
-            if record.typeName == taskRunnerResourceTypeName
-            else 'ResourceDelete'
-            )
-        return pageLink(pageName, DeleteArgs(id=record.getId()))[ 'Delete' ]
-
 class ResourcesTable(DataTable):
     widgetId = 'resourcesTable'
     autoUpdate = True
-    db = None
-    uniqueKeys = ('id',)
-    objectName = 'resources'
+    db = resourceDB
     fixedColumns = (
         NameColumn('Name', 'id'),
         DataColumn(keyName = 'locator'),
@@ -93,12 +82,7 @@ class ResourcesTable(DataTable):
     #       replaced.
     #editColumn = LinkColumn('Edit', 'ResourceEdit')
     editColumn = EditColumn('Edit')
-    #deleteColumn = LinkColumn('Delete', 'ResourceDelete')
-    deleteColumn = DeleteColumn('Delete')
-
-    def getRecordsToQuery(self, proc):
-        yield from resourceDB
-        yield from taskRunnerDB
+    deleteColumn = LinkColumn('Delete', 'ResourceDelete')
 
     def iterColumns(self, proc, **kwargs):
         yield from self.fixedColumns
@@ -138,8 +122,7 @@ class ResourceIndex_GET(FabPage['ResourceIndex_GET.Processor',
     description = 'Resources'
     children = [
         'ResourceEdit', 'ResourceDelete', 'StorageIndex', 'Capabilities',
-        'TaskRunnerDetails', 'TaskRunnerEdit', 'TaskRunnerHistory',
-        'DelTaskRunnerRecord'
+        'TaskRunnerDetails', 'TaskRunnerEdit', 'TaskRunnerHistory'
         ]
 
     class Arguments(PageArgs):
@@ -208,13 +191,10 @@ class ResourceIndex_POST(FabPage['ResourceIndex_POST.Processor',
             try:
                 return resourceDB[resourceId]
             except KeyError:
-                try:
-                    return taskRunnerDB[resourceId]
-                except KeyError:
-                    raise PresentableError(xhtml.p[
-                        'Resource ', xhtml.b[ resourceId ],
-                        ' does not exist (anymore).'
-                        ])
+                raise PresentableError(xhtml.p[
+                    'Resource ', xhtml.b[ resourceId ],
+                    ' does not exist (anymore).'
+                    ])
 
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'r/a', 'reserve resources')

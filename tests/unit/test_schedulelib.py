@@ -123,7 +123,7 @@ class ScheduleFixtureMixin:
         gen.createDefinitions()
 
         gen.createTaskRunners()
-        trRecord = resourcelib.taskRunnerDB.get(gen.taskRunners[0])
+        trRecord = resourcelib.resourceDB.get(gen.taskRunners[0])
         # Keep the TaskRunner alive for all runs we want to execute.
         trRecord.getWarnTimeout = lambda: endOfTime - 300
         trRecord.getLostTimeout = lambda: endOfTime - 60

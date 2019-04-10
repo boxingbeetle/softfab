@@ -16,13 +16,12 @@ from softfab import (
 def iterDatabases():
     yield projectlib._projectDB # pylint: disable=protected-access
     yield restypelib.resTypeDB
-    yield resourcelib.resourceDB
     yield productdeflib.productDefDB
     yield frameworklib.frameworkDB
     yield taskdeflib.taskDefDB
     yield storagelib.storageDB
     yield shadowlib.shadowDB
-    yield resourcelib.taskRunnerDB
+    yield resourcelib.resourceDB
     yield productlib.productDB
     yield joblib.jobDB # joblib must go before taskrunlib despite dependencies
     yield taskrunlib.taskRunDB

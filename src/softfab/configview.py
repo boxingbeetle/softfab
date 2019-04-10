@@ -16,7 +16,7 @@ from softfab.pagelinks import (
 )
 from softfab.productdeflib import ProductType
 from softfab.projectlib import project
-from softfab.resourcelib import TaskRunner, taskRunnerDB
+from softfab.resourcelib import TaskRunner, iterTaskRunners
 from softfab.schedulelib import scheduleDB
 from softfab.selectview import SelectArgs
 from softfab.sortedqueue import SortedQueue
@@ -92,8 +92,8 @@ class InputTable(Table):
                     if local:
                         if taskRunners is None:
                             taskRunners = sorted(
-                                runnerId
-                                for runnerId, runner in taskRunnerDB.items()
+                                runner.getId()
+                                for runner in iterTaskRunners()
                                 if self.filterTaskRunner(
                                     # TODO: Passing "inp" should not be needed,
                                     #       but this requires non-trivial

@@ -24,7 +24,7 @@ from softfab.pagelinks import createJobsURL
 from softfab.paramview import ParamCell, ParamOverrideTable
 from softfab.productdeflib import ProductType
 from softfab.projectlib import project
-from softfab.resourcelib import TaskRunner, taskRunnerDB
+from softfab.resourcelib import TaskRunner, getTaskRunner, iterTaskRunners
 from softfab.selectview import TagValueEditTable, textToValues, valuesToText
 from softfab.taskdeflib import taskDefDB
 from softfab.taskgroup import LocalGroup, TaskGroup
@@ -105,7 +105,7 @@ class RunnerStep(DialogStep):
         if not proc.args.trselect:
             return False
         elif project['trselect']:
-            return len(taskRunnerDB) > 0
+            return any(iterTaskRunners())
         elif proc.args.runners or proc.args.pertask:
             raise ArgsCorrected(proc.args, runners = set(), pertask = False)
         else:
@@ -122,14 +122,14 @@ class RunnerStep(DialogStep):
 
     def verify(self, proc: 'Execute_POST.Processor') -> Type[DialogStep]:
         if proc.args.runners:
-            taskRunnerCaps = [
-                runner.capabilities
-                for runner in (
-                    taskRunnerDB.get(runnerId)
-                    for runnerId in proc.args.runners
-                    )
-                if runner is not None
-                ]
+            taskRunnerCaps = []
+            for runnerId in proc.args.runners:
+                try:
+                    runner = getTaskRunner(runnerId)
+                except KeyError:
+                    pass
+                else:
+                    taskRunnerCaps.append(runner.capabilities)
             if not all(
                 any(caps <= trCaps for trCaps in taskRunnerCaps)
                 for caps in (task.getNeededCaps() for task in proc.iterTasks())
@@ -157,7 +157,7 @@ class RunnerPerTaskStep(DialogStep):
         yield TaskRunnersTable.instance.present(
             config=proc.getConfig(),
             taskRunners=sorted(
-                runner for runner in taskRunnerDB
+                runner for runner in iterTaskRunners()
                 if target in runner.targets
                 ),
             runnersPerTask=proc.args.runnerspt,
@@ -707,7 +707,7 @@ class TaskRunnerSelectionTable(CheckBoxesTable):
         taskCapsList.sort(key=len)
 
         taskRunners = (
-            runner for runner in taskRunnerDB
+            runner for runner in iterTaskRunners()
             if proc.args.target in runner.targets
             ) # type: Iterator[TaskRunner]
         # Are there tasks with non-empty required capability set?

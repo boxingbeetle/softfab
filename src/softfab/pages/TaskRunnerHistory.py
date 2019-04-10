@@ -64,7 +64,7 @@ class TaskRunnerHistory_GET(FabPage['TaskRunnerHistory_GET.Processor',
             self.tasks = tasks
 
     def checkAccess(self, user: User) -> None:
-        checkPrivilege(user, 'tr/a')
+        checkPrivilege(user, 'r/a')
         checkPrivilege(user, 't/l')
 
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:

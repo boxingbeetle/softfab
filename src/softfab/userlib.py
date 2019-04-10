@@ -95,12 +95,6 @@ privileges = {
     'tk/m': ('user', 'operator'),
     'tk/d': ('user', 'operator'),
 
-    'tr/l': ('guest', 'user', 'operator'),
-#    'tr/c': (),
-    'tr/a': ('guest', 'user', 'operator'),
-    'tr/m': ('operator', ),
-    'tr/d': ('operator', ),
-
     'rt/l': ('guest', 'user', 'operator'),
     'rt/c': ('operator', ),
     'rt/a': ('guest', 'user', 'operator'),

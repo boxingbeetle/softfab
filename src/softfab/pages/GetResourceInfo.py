@@ -4,7 +4,7 @@ from softfab.ControlPage import ControlPage
 from softfab.Page import InvalidRequest, PageProcessor
 from softfab.pageargs import PageArgs, SetArg
 from softfab.querylib import SetFilter, runQuery
-from softfab.resourcelib import resourceDB, taskRunnerDB
+from softfab.resourcelib import resourceDB
 from softfab.response import Response
 from softfab.restypelib import resTypeDB, taskRunnerResourceTypeName
 from softfab.timeview import formatTimeAttr
@@ -20,8 +20,8 @@ class GetResourceInfo_GET(ControlPage['GetResourceInfo_GET.Arguments',
         name = SetArg()
 
     def checkAccess(self, user: User) -> None:
-        checkPrivilege(user, 'tr/a')
-        checkPrivilege(user, 'tr/l')
+        checkPrivilege(user, 'r/a')
+        checkPrivilege(user, 'r/l')
 
     class Processor(PageProcessor['GetResourceInfo_GET.Arguments']):
 
@@ -43,7 +43,7 @@ class GetResourceInfo_GET(ControlPage['GetResourceInfo_GET.Arguments',
             invalidNames = [
                 name
                 for name in resNames
-                if name not in resourceDB and name not in taskRunnerDB
+                if name not in resourceDB
                 ]
             if invalidNames:
                 raise InvalidRequest(
@@ -52,16 +52,15 @@ class GetResourceInfo_GET(ControlPage['GetResourceInfo_GET.Arguments',
                     )
 
             # Determine set of resource types
+            query = []
             if resTypeNames:
-                query = [ SetFilter('type', resTypeNames, resourceDB) ]
-                resources = runQuery(query, resourceDB)
-                if taskRunnerResourceTypeName in resTypeNames:
-                    resources.extend(taskRunnerDB)
-            else:
-                resources = list(resourceDB) + list(taskRunnerDB)
+                # TODO: Use SetFilter.create().
+                query.append(SetFilter('type', resTypeNames, resourceDB))
+            resources = runQuery(query, resourceDB)
 
             # Filter out resources with id's other than in 'resNames' if
             # filter is present
+            # TODO: This could also be done using querylib.
             if resNames:
                 resources = [
                     res

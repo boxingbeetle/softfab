@@ -14,7 +14,7 @@ from softfab.pagelinks import (
 from softfab.paramview import ParametersTable
 from softfab.productview import ProductTable
 from softfab.projectlib import project
-from softfab.resourcelib import taskRunnerDB
+from softfab.resourcelib import iterTaskRunners
 from softfab.resourceview import InlineResourcesTable
 from softfab.selectview import valuesToText
 from softfab.taskdeflib import taskDefDB
@@ -175,7 +175,7 @@ class ShowTaskInfo_GET(FabPage['ShowTaskInfo_GET.Processor',
                 task = job.getTask(taskName)
                 if task is not None:
                     taskDef = task.getDef()
-                    job.updateSummaries(taskRunnerDB)
+                    job.updateSummaries(tuple(iterTaskRunners()))
 
             # pylint: disable=attribute-defined-outside-init
             self.job = job

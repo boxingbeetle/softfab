@@ -5,7 +5,7 @@ from enum import Enum
 from softfab.ControlPage import ControlPage
 from softfab.Page import InvalidRequest, PageProcessor
 from softfab.pageargs import EnumArg, PageArgs, SetArg
-from softfab.resourcelib import taskRunnerDB
+from softfab.resourcelib import resourceDB
 from softfab.response import Response
 from softfab.userlib import User, checkPrivilege
 from softfab.xmlgen import xml
@@ -20,7 +20,7 @@ class ResourceControl_POST(ControlPage['ResourceControl_POST.Arguments',
         action = EnumArg(Actions)
 
     def checkAccess(self, user: User) -> None:
-        checkPrivilege(user, 'tr/m')
+        checkPrivilege(user, 'r/m')
 
     class Processor(PageProcessor['ResourceControl_POST.Arguments']):
 
@@ -35,7 +35,7 @@ class ResourceControl_POST(ControlPage['ResourceControl_POST.Arguments',
             resources = []
             for name in resNames:
                 try:
-                    resources.append(taskRunnerDB[name])
+                    resources.append(resourceDB[name])
                 except KeyError:
                     invalidNames.append(name)
             if invalidNames:

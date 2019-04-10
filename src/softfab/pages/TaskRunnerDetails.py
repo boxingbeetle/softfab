@@ -4,11 +4,10 @@ from typing import Iterator
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
-from softfab.connection import ConnectionStatus
 from softfab.pagelinks import (
     ResourceIdArgs, TaskRunnerIdArgs, createJobLink, createTaskLink
 )
-from softfab.resourcelib import taskRunnerDB
+from softfab.resourcelib import getTaskRunner
 from softfab.resourceview import getResourceStatus, presentCapabilities
 from softfab.restypelib import taskRunnerResourceTypeName
 from softfab.timeview import formatDuration, formatTime
@@ -30,10 +29,13 @@ class TaskRunnerDetails_GET(FabPage['TaskRunnerDetails_GET.Processor',
         def process(self, req, user):
             runnerId = req.args.runnerId
             # pylint: disable=attribute-defined-outside-init
-            self.taskRunner = taskRunnerDB.get(runnerId)
+            try:
+                self.taskRunner = getTaskRunner(runnerId)
+            except KeyError:
+                self.taskRunner = None
 
     def checkAccess(self, user: User) -> None:
-        checkPrivilege(user, 'tr/a')
+        checkPrivilege(user, 'r/a')
 
     def iterWidgets(self, proc: Processor) -> Iterator[Widget]:
         yield DetailsTable.instance
@@ -55,10 +57,9 @@ class TaskRunnerDetails_GET(FabPage['TaskRunnerDetails_GET.Processor',
             yield pageLink('TaskRunnerEdit', args)[
                 'Edit properties of this Task Runner'
                 ]
-            if taskRunner.getConnectionStatus() is ConnectionStatus.LOST:
-                yield pageLink('ResourceDelete', args)[
-                    'Delete this Task Runner'
-                    ]
+            yield pageLink('ResourceDelete', args)[
+                'Delete this Task Runner'
+                ]
 
 class DetailsTable(Table):
     widgetId = 'detailsTable'

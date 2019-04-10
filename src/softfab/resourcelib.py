@@ -2,8 +2,8 @@
 
 from abc import ABC
 from typing import (
-    AbstractSet, Callable, ClassVar, Iterable, Mapping, Optional, Set, Tuple,
-    TypeVar, cast
+    AbstractSet, Callable, ClassVar, Iterable, Iterator, Mapping, Optional,
+    Set, Tuple, TypeVar, cast
 )
 import logging
 
@@ -228,24 +228,6 @@ class Resource(ResourceBase):
                 self.getId()
                 )
 
-class RequestFactory:
-    @staticmethod
-    def createRequest(attributes: Mapping[str, str]) -> '_TaskRunnerData':
-        return _TaskRunnerData(attributes)
-
-class TaskRunnerFactory:
-    @staticmethod
-    def createTaskrunner(attributes: Mapping[str, str]) -> 'TaskRunner':
-        return TaskRunner(attributes)
-
-class TaskRunnerDB(Database['TaskRunner']):
-    baseDir = dbDir + '/taskrunners'
-    factory = TaskRunnerFactory()
-    privilegeObject = 'tr'
-    description = 'Task Runner'
-    uniqueKeys = ( 'id', )
-taskRunnerDB = TaskRunnerDB()
-
 class _TaskRunnerData(XMLTag):
     '''This class represents a request of a Task Runner.
     It is also a part of a Task Runner database record.
@@ -360,6 +342,11 @@ class _TaskRunnerData(XMLTag):
         yield self.__run
         if self.__shadowRunId is not None:
             yield xml.shadowrun(shadowId = self.__shadowRunId)
+
+class RequestFactory:
+    @staticmethod
+    def createRequest(attributes: Mapping[str, str]) -> _TaskRunnerData:
+        return _TaskRunnerData(attributes)
 
 RunT = TypeVar('RunT', TaskRun, ShadowRun)
 
@@ -839,17 +826,45 @@ class TaskRunner(ResourceBase):
         self.__shadowObserver.setRun(run)
 
 class ResourceFactory:
+
     @staticmethod
     def createResource(attributes: Mapping[str, str]) -> Resource:
         return Resource(attributes)
 
-class ResourceDB(Database[Resource]):
+    @staticmethod
+    def createTaskrunner(attributes: Mapping[str, str]) -> TaskRunner:
+        return TaskRunner(attributes)
+
+class ResourceDB(Database[ResourceBase]):
     baseDir = dbDir + '/resources'
     factory = ResourceFactory()
     privilegeObject = 'r'
     description = 'resource'
     uniqueKeys = ( 'id', )
 resourceDB = ResourceDB()
+
+def iterTaskRunners() -> Iterator[TaskRunner]:
+    """Iterates through all Task Runner records.
+    """
+    for resource in resourceDB:
+        if resource.typeName == taskRunnerResourceTypeName:
+            yield cast(TaskRunner, resource)
+
+def getTaskRunner(runnerID: str) -> TaskRunner:
+    """Returns a Task Runner record for the given ID.
+    Raises KeyError if the ID does not exist or belongs to a resource
+    that is not a Task Runner.
+    """
+    try:
+        resource = resourceDB[runnerID]
+    except KeyError as ex:
+        raise KeyError(
+            'Task Runner "%s" does not exist (anymore?)' % runnerID
+            ) from ex
+    if isinstance(resource, TaskRunner):
+        return resource
+    else:
+        raise KeyError('resource "%s" is not a Task Runner' % runnerID)
 
 def recomputeRunning() -> None:
     '''Scan the task run and shadow databases for running tasks.
@@ -859,8 +874,8 @@ def recomputeRunning() -> None:
     '''
     # pylint: disable=protected-access
     # The methods are protected on purpose, because no-one else should use them.
-    taskRunnerDB.preload()
-    for runner in taskRunnerDB:
+    resourceDB.preload()
+    for runner in iterTaskRunners():
         runner._resetRuns()
     def checkRunners(db: Database[RunT],
                      setter: Callable[[TaskRunner, RunT], None]
@@ -871,12 +886,12 @@ def recomputeRunning() -> None:
                 runnerId = run.getTaskRunnerId()
                 if runnerId is not None:
                     try:
-                        runner = taskRunnerDB[runnerId]
-                    except KeyError:
-                        run.failed('Task Runner no longer exists')
+                        runner = getTaskRunner(runnerId)
+                    except KeyError as ex:
+                        run.failed(ex.args[0])
                     else:
                         setter(runner, run)
     checkRunners(taskRunDB, TaskRunner._initExecutionRun)
     checkRunners(shadowDB, TaskRunner._initShadowRun)
-    for runner in taskRunnerDB:
+    for runner in iterTaskRunners():
         runner._notify()
