@@ -7,8 +7,8 @@ This informs the user of why a task isn't running yet.
 from abc import ABC
 from enum import IntEnum
 from typing import (
-    TYPE_CHECKING, Callable, ClassVar, Iterable, List, Optional, Sequence, Set,
-    Tuple, cast
+    TYPE_CHECKING, AbstractSet, Callable, ClassVar, Iterable, List, Optional,
+    Sequence, Set, Tuple
 )
 
 from softfab.connection import ConnectionStatus
@@ -178,7 +178,10 @@ class BoundReason(ReasonForWaiting):
 class _CapabilitiesReason(ReasonForWaiting, ABC):
     selectorMajor = abstract # type: ClassVar[int]
 
-    def __init__(self, missingOnAll: Set[str], missingOnAny: Set[str]):
+    def __init__(self,
+                 missingOnAll: AbstractSet[str],
+                 missingOnAny: AbstractSet[str]
+                 ):
         ReasonForWaiting.__init__(self)
         self._missingOnAll = missingOnAll
         self._missingOnAny = missingOnAny
@@ -346,13 +349,12 @@ def _checkTarget(
 def _checkCapabilities(
         runners: Sequence[TaskRunner],
         whyNot: List[ReasonForWaiting],
-        reasonFactory: Callable[[Set[str], Set[str]], ReasonForWaiting],
-        neededCaps: Set[str]
+        reasonFactory: Callable[[AbstractSet[str], AbstractSet[str]],
+                                ReasonForWaiting],
+        neededCaps: AbstractSet[str]
         ) -> Sequence[TaskRunner]:
     '''Filter out Task Runners without the required capabilities.
     '''
-    if not runners:
-        return runners
     foundRunners = []
     missingOnAny = set() # type: Set[str]
     missingOnAll = None # type: Optional[Set[str]]
@@ -368,7 +370,9 @@ def _checkCapabilities(
             foundRunners.append(runner)
     if not foundRunners:
         # There are no Task Runners with the right capabilities.
-        whyNot.append(reasonFactory(cast(Set[str], missingOnAll), missingOnAny))
+        if runners:
+            assert missingOnAll is not None
+            whyNot.append(reasonFactory(missingOnAll, missingOnAny))
     return foundRunners
 
 def _checkState(
@@ -388,7 +392,7 @@ def _checkState(
 def checkRunners(
         runners: Sequence[TaskRunner],
         target: str,
-        neededCaps: Set[str],
+        neededCaps: AbstractSet[str],
         whyNot: List[ReasonForWaiting]
         ) -> Sequence[TaskRunner]:
     runners = _checkTarget(runners, whyNot, TRTargetReason, target)
@@ -399,7 +403,7 @@ def checkRunners(
 def checkGroupRunners(
         runners: Sequence[TaskRunner],
         target: str,
-        neededCaps: Set[str],
+        neededCaps: AbstractSet[str],
         whyNot: List[ReasonForWaiting]
         ) -> Sequence[TaskRunner]:
     runners = _checkTarget(runners, whyNot, TRTargetReason, target)
@@ -412,7 +416,7 @@ def checkGroupRunners(
 def checkBoundGroupRunner(
         boundRunner: TaskRunner,
         target: str,
-        neededCaps: Set[str],
+        neededCaps: AbstractSet[str],
         whyNot: List[ReasonForWaiting]
         ) -> Sequence[TaskRunner]:
     boundRunnerId = boundRunner.getId()
