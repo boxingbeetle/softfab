@@ -1,79 +1,61 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from enum import Enum
-
-from softfab.FabPage import FabPage
-from softfab.Page import InvalidRequest, PageProcessor, Redirect
-from softfab.formlib import actionButtons, makeForm
-from softfab.pageargs import EnumArg, PageArgs, StrArg
-from softfab.resourcelib import getTaskRunner
+from softfab.EditPage import EditPage
+from softfab.pageargs import StrArg
+from softfab.resourcelib import TaskRunner, resourceDB
 from softfab.resourceview import CapabilitiesPanel, CommentPanel
-from softfab.userlib import User, checkPrivilege
-from softfab.xmlgen import XML, XMLContent, xhtml
+from softfab.webgui import vgroup
+from softfab.xmlgen import XMLContent, xhtml
 
-Actions = Enum('Actions', 'SAVE CANCEL')
-
-class PostArgs(PageArgs):
-    id = StrArg()
-    capabilities = StrArg()
-    description = StrArg()
-
-class TaskRunnerEdit_GET(FabPage['TaskRunnerEdit_GET.Processor',
-                                 'TaskRunnerEdit_GET.Arguments']):
+class TaskRunnerEdit(EditPage):
+    # FabPage constants:
     icon = 'IconResources'
     description = 'Edit Task Runner'
     linkDescription = False
 
-    class Arguments(PageArgs):
-        id = StrArg()
+    # EditPage constants:
+    elemTitle = 'Task Runner'
+    elemName = 'Task Runner'
+    db = resourceDB
+    privDenyText = 'Task Runners'
+    useScript = False
+    formId = 'runner'
+    autoName = None
 
-    class Processor(PageProcessor['TaskRunnerEdit_GET.Arguments']):
+    class Arguments(EditPage.Arguments):
+        capabilities = StrArg('')
+        description = StrArg('')
 
-        def process(self, req, user):
-            try:
-                runner = getTaskRunner(req.args.id)
-            except KeyError as ex:
-                raise InvalidRequest(str(ex)) from ex
+    class Processor(EditPage.Processor):
 
-            # pylint: disable=attribute-defined-outside-init
-            self.runner = runner
-
-    def checkAccess(self, user: User) -> None:
-        checkPrivilege(user, 'r/m')
-
-    def presentContent(self, proc: Processor) -> XMLContent:
-        args = proc.args
-        runner = proc.runner
-        yield xhtml.h2[ 'Task Runner: ', xhtml.b[ args.id ]]
-        yield makeForm(
-            args=PostArgs(
-                args,
-                capabilities=' '.join(sorted(runner.capabilities)),
-                description=runner.description
+        def createElement(self, req, recordId, args, oldElement):
+            element = TaskRunner.create(
+                recordId,
+                args.description,
+                args.capabilities.split()
                 )
-            )[
+            if oldElement is not None and oldElement.getId() == recordId:
+                # Preserve resource state.
+                # Do this only when a resource is overwritten by itself, not
+                # if one resource overwrites another or if a new resource is
+                # created using Save As.
+                element.copyState(oldElement)
+            return element
+
+        def _initArgs(self, element):
+            if element is None:
+                return {}
+            else:
+                return dict(
+                    capabilities = ' '.join(element['capabilities']),
+                    description = element['description']
+                    )
+
+    def getFormContent(self, proc: Processor) -> XMLContent:
+        args = proc.args
+        if args.id != '':
+            yield xhtml.h2[ 'Task Runner: ', xhtml.b[ args.id ]]
+        yield vgroup[
             CapabilitiesPanel.instance,
-            CommentPanel.instance,
-            xhtml.p[ actionButtons(Actions) ]
-            ].present(proc=proc)
-
-    def presentError(self, proc: Processor, message: XML) -> XMLContent:
-        yield message
-        yield self.backToParent(proc.req)
-
-class TaskRunnerEdit_POST(TaskRunnerEdit_GET):
-
-    class Arguments(PostArgs):
-        action = EnumArg(Actions)
-
-    class Processor(TaskRunnerEdit_GET.Processor):
-
-        def process(self, req, user):
-            if req.args.action is Actions.SAVE:
-                super().process(req, user)
-                args = req.args
-                runner = self.runner
-                runner.capabilities = args.capabilities.split()
-                runner.description = args.description
-
-            raise Redirect(self.page.getParentURL(req))
+            CommentPanel.instance
+            ]

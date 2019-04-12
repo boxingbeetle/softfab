@@ -520,6 +520,13 @@ class TaskRunner(ResourceBase):
         if self._properties['status'] is ConnectionStatus.CONNECTED:
             self.__startLostCallback()
 
+    def copyState(self, runner: 'TaskRunner') -> None:
+        # pylint: disable=protected-access
+        self.__data = runner.__data
+        self.__hasBeenInSync = runner.__hasBeenInSync
+        self.__lastSyncTime = runner.__lastSyncTime
+        self._notify()
+
     def __getitem__(self, key: str) -> object:
         if key == 'lastSync':
             return getTime() - self.__lastSyncTime
