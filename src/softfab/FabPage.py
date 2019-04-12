@@ -19,7 +19,7 @@ from softfab.utils import abstract
 from softfab.webgui import Widget, pageURL
 from softfab.xmlgen import XMLContent, XMLNode, xhtml
 
-IconModifier = Enum('IconModifier', 'NONE EDIT DELETE')
+IconModifier = Enum('IconModifier', 'NONE NEW EDIT DELETE')
 
 class FabPage(UIPage[ProcT], FabResource[ArgsT, ProcT], ABC):
     authenticator = LoginAuthPage
@@ -251,7 +251,9 @@ class LinkBar(Widget):
 
         iconModifier = pageInfo['iconModifier']
         iconStyle = ['navicon']
-        if iconModifier is IconModifier.EDIT:
+        if iconModifier is IconModifier.NEW:
+            iconStyle.append('newicon')
+        elif iconModifier is IconModifier.EDIT:
             iconStyle.append('editicon' if pageName == page.name else 'newicon')
         elif iconModifier is IconModifier.DELETE:
             iconStyle.append('delicon')
