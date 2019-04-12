@@ -64,9 +64,10 @@ class Synchronize_POST(ControlPage[ControlPage.Arguments,
             request = parse(RequestFactory(), rawReq)
 
             # Sync Task Runner database.
-            taskRunner = taskRunnerDB.get(request.getId())
+            runnerId = request.getId()
+            taskRunner = taskRunnerDB.get(runnerId)
             if taskRunner is None:
-                taskRunner = TaskRunner.create(request)
+                taskRunner = TaskRunner.create(runnerId, '', ())
                 taskRunnerDB.add(taskRunner)
             self.taskRunner = taskRunner
             self.abort = taskRunner.sync(request)

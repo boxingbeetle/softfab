@@ -497,15 +497,21 @@ class TaskRunner(ResourceBase):
     boolProperties = ('exit',)
 
     @classmethod
-    def create(cls, data: _TaskRunnerData) -> 'TaskRunner':
+    def create(cls,
+               runnerId: str,
+               description: str,
+               capabilities: Iterable[str]
+               ) -> 'TaskRunner':
         '''Creates a new Task Runner record.
         The new record is returned and not added to the database.
-        The new record still requires a call to sync(), because it is possible
-        that the run it claims to be running is invalid.
         '''
-        instance = cls({'id': cast(str, data['id'])})
-        instance.__data = data # pylint: disable=protected-access
-        return instance
+        # pylint: disable=protected-access
+        runner = cls({
+            'id': runnerId,
+            'description': description,
+            })
+        runner._capabilities = frozenset(capabilities)
+        return runner
 
     def __init__(self, properties: Mapping[str, XMLAttributeValue]):
         # COMPAT 2.16: Rename 'paused' to 'suspended'.
@@ -515,7 +521,7 @@ class TaskRunner(ResourceBase):
 
         ResourceBase.__init__(self, properties)
         self._properties.setdefault('description', '')
-        self.__data = cast(_TaskRunnerData, None)
+        self.__data = None # type: Optional[_TaskRunnerData]
         self.__hasBeenInSync = False
         self.__executionObserver = ExecutionObserver(
             self, self.__shouldBeExecuting
@@ -535,7 +541,11 @@ class TaskRunner(ResourceBase):
             # Note: This field is intended to sort Task Runners by version.
             #       Use the supportsFeature() methods for checking what a
             #       particular Task Runner can do.
-            return self.__data.version
+            data = self.__data
+            if data is None:
+                return (0, 0, 0)
+            else:
+                return data.version
         elif key == 'user':
             if self.isSuspended():
                 return self.getChangedUser()
@@ -547,7 +557,11 @@ class TaskRunner(ResourceBase):
                 return 'S-' + shadowRun.getId()
             return ''
         elif key in ('host', 'runnerVersion'):
-            return self.__data[key]
+            data = self.__data
+            if data is None:
+                return '?'
+            else:
+                return data[key]
         else:
             return super().__getitem__(key)
 
@@ -571,7 +585,11 @@ class TaskRunner(ResourceBase):
 
     @property
     def locator(self) -> str:
-        return cast(str, self.__data['host'])
+        data = self.__data
+        if data is None:
+            return '?'
+        else:
+            return cast(str, data['host'])
 
     @ResourceBase.description.setter # type: ignore
     def description(self, value: str) -> None:
@@ -787,7 +805,8 @@ class TaskRunner(ResourceBase):
 
     def _getContent(self) -> XMLContent:
         yield super()._getContent()
-        yield self.__data.toXML()
+        if self.__data is not None:
+            yield self.__data.toXML()
         yield self.__executionObserver.toXML()
         yield self.__shadowObserver.toXML()
 
