@@ -41,8 +41,7 @@ class ReportIndex_GET(FabPage['ReportIndex_GET.Processor', 'ReportIndex_GET.Argu
     icon = 'IconReport'
     description = 'History'
     children = [
-        'ShowReport', 'ShowJobs', 'ReportTasks', 'TaskMatrix', 'StorageIndex',
-        'ShadowQueue'
+        'ShowReport', 'ShowJobs', 'ReportTasks', 'TaskMatrix', 'ShadowQueue'
         ]
 
     class Arguments(ReportArgs):

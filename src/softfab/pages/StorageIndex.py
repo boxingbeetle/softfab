@@ -14,7 +14,7 @@ from softfab.xmlgen import XMLContent
 class StorageIndex_GET(FabPage['StorageIndex_GET.Processor',
                                'StorageIndex_GET.Arguments']):
     icon = 'IconReport'
-    description = 'Report Storages'
+    description = 'Storages'
     children = [ 'StorageEdit' ]
 
     class Arguments(PageArgs):
