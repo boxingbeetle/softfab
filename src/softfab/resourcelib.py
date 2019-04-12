@@ -503,10 +503,8 @@ class TaskRunner(ResourceBase):
         The new record still requires a call to sync(), because it is possible
         that the run it claims to be running is invalid.
         '''
-        # pylint: disable=protected-access
-        instance = cls({})
-        instance.__data = data
-        instance.__applyData()
+        instance = cls({'id': cast(str, data['id'])})
+        instance.__data = data # pylint: disable=protected-access
         return instance
 
     def __init__(self, properties: Mapping[str, XMLAttributeValue]):
@@ -529,16 +527,6 @@ class TaskRunner(ResourceBase):
         self.__markLostCall = reactor.callLater(
             self.getLostTimeout(), self.markLost
             )
-
-    def __applyData(self) -> None:
-        """Copies properties of the data object to the main Task Runner record.
-        This method exists to help in the transition from creating TR records
-        on sync to having the user create them explicitly.
-        """
-        data = self.__data
-        properties = self._properties
-        for name in ('id', ):
-            properties[name] = cast(str, data[name])
 
     def __getitem__(self, key: str) -> object:
         if key == 'lastSync':
@@ -668,9 +656,6 @@ class TaskRunner(ResourceBase):
         lostTimeout = max(302, self.getSyncWaitDelay() * 10 + 2)
         return lostTimeout
 
-    def getId(self) -> str:
-        return self.__data.getId()
-
     def getLastSyncTime(self) -> int:
         return self.__lastSyncTime
 
@@ -799,10 +784,6 @@ class TaskRunner(ResourceBase):
                     )
                 ccRun.failed('Task Runner stopped executing this task')
                 return trRunId is not None
-
-    def _endParse(self) -> None:
-        super()._endParse()
-        self.__applyData()
 
     def _getContent(self) -> XMLContent:
         yield super()._getContent()
