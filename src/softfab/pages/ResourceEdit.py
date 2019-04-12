@@ -19,7 +19,7 @@ class ResourceEdit(EditPage):
     # FabPage constants:
     icon = 'IconResources'
     description = 'Edit Resource'
-    linkDescription = 'New Resource'
+    linkDescription = False
 
     # EditPage constants:
     elemTitle = 'Resource'
