@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from softfab.EditPage import EditPage
+from softfab.Page import InvalidRequest
 from softfab.pageargs import StrArg
 from softfab.resourcelib import TaskRunner, resourceDB
 from softfab.resourceview import CapabilitiesPanel, CommentPanel
@@ -34,7 +35,8 @@ class TaskRunnerEdit(EditPage):
                 args.description,
                 args.capabilities.split()
                 )
-            if oldElement is not None and oldElement.getId() == recordId:
+            if isinstance(oldElement, TaskRunner) \
+                    and oldElement.getId() == recordId:
                 # Preserve resource state.
                 # Do this only when a resource is overwritten by itself, not
                 # if one resource overwrites another or if a new resource is
@@ -45,10 +47,14 @@ class TaskRunnerEdit(EditPage):
         def _initArgs(self, element):
             if element is None:
                 return {}
-            else:
+            elif isinstance(element, TaskRunner):
                 return dict(
                     capabilities = ' '.join(element['capabilities']),
                     description = element['description']
+                    )
+            else:
+                raise InvalidRequest(
+                    'Resource "%s" is not a Task Runner' % element.getId()
                     )
 
     def getFormContent(self, proc: Processor) -> XMLContent:

@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from softfab.EditPage import EditPage
-from softfab.Page import PresentableError
+from softfab.Page import InvalidRequest, PresentableError
 from softfab.formlib import RadioTable, textInput
 from softfab.pageargs import StrArg
 from softfab.resourcelib import Resource, resourceDB
@@ -46,7 +46,8 @@ class ResourceEdit(EditPage):
                 args.description,
                 args.capabilities.split()
                 )
-            if oldElement is not None and oldElement.getId() == recordId:
+            if isinstance(oldElement, Resource) \
+                    and oldElement.getId() == recordId:
                 # Preserve resource state.
                 # Do this only when a resource is overwritten by itself, not
                 # if one resource overwrites another or if a new resource is
@@ -57,12 +58,16 @@ class ResourceEdit(EditPage):
         def _initArgs(self, element):
             if element is None:
                 return {}
-            else:
+            elif isinstance(element, Resource):
                 return dict(
                     restype = element['type'],
                     capabilities = ' '.join(element['capabilities']),
                     description = element['description'],
                     locator = element['locator']
+                    )
+            else:
+                raise InvalidRequest(
+                    'Resource "%s" is of a pre-defined type' % element.getId()
                     )
 
         def _checkState(self):
