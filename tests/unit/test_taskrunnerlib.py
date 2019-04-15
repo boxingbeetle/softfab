@@ -23,17 +23,11 @@ class TestTRDatabase(unittest.TestCase):
 
     dataRun = xmlbind.parse(resourcelib.RequestFactory(), StringIO(
         '<request runnerId="mhplin02" runnerVersion="2.0.0">'
-            '<target name="ibo"/>'
-            '<capability name="ate"/>'
-            '<capability name="capture"/>'
             '<run jobId="2004-05-06_12-34_567890" taskId="TC-6.1" runId="0"/>'
         '</request>'
         ))
     dataNoRun = xmlbind.parse(resourcelib.RequestFactory(), StringIO(
         '<request runnerId="mhplin02" runnerVersion="2.0.0">'
-            '<target name="ibo"/>'
-            '<capability name="ate"/>'
-            '<capability name="capture"/>'
         '</request>'
         ))
 
