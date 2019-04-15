@@ -199,20 +199,6 @@ class _CapabilitiesReason(ReasonForWaiting, ABC):
     def description(self):
         raise NotImplementedError
 
-class TRTargetReason(ReasonForWaiting):
-
-    def __init__(self, target: str):
-        ReasonForWaiting.__init__(self)
-        self.__target = target
-
-    @property
-    def priority(self):
-        return (2, 2)
-
-    @property
-    def description(self):
-        return 'no Task Runner for target: %s' % self.__target
-
 class TRCapsReason(_CapabilitiesReason):
     selectorMajor = 2
 
@@ -322,26 +308,6 @@ def topWhyNot(whyNot: Iterable[ReasonForWaiting]) -> ReasonForWaiting:
     """
     return max(whyNot, key=lambda reason: reason.priority)
 
-def _checkTarget(
-        runners: Sequence[TaskRunner],
-        whyNot: List[ReasonForWaiting],
-        reasonFactory: Callable[[str], ReasonForWaiting],
-        target: str
-        ) -> Sequence[TaskRunner]:
-    '''Filter out Task Runners with the wrong target.
-    '''
-    if not runners:
-        return runners
-    runners = [
-        runner
-        for runner in runners
-        if target in runner.targets
-        ]
-    if not runners:
-        # There are no Task Runners with the right target.
-        whyNot.append(reasonFactory(target))
-    return runners
-
 # TODO: This algorithm is similar to the one in
 #       resourcelib.reserveResources(), maybe they can be combined?
 #       (Another clue that a Task Runner is a special kind of resource.)
@@ -395,7 +361,6 @@ def checkRunners(
         neededCaps: AbstractSet[str],
         whyNot: List[ReasonForWaiting]
         ) -> Sequence[TaskRunner]:
-    runners = _checkTarget(runners, whyNot, TRTargetReason, target)
     runners = _checkCapabilities(runners, whyNot, TRCapsReason, neededCaps)
     _checkState(runners, whyNot, TRStateReason)
     return runners
@@ -406,7 +371,6 @@ def checkGroupRunners(
         neededCaps: AbstractSet[str],
         whyNot: List[ReasonForWaiting]
         ) -> Sequence[TaskRunner]:
-    runners = _checkTarget(runners, whyNot, TRTargetReason, target)
     runners = _checkCapabilities(
         runners, whyNot, UnboundGroupCapsReason, neededCaps
         )
@@ -421,11 +385,6 @@ def checkBoundGroupRunner(
         ) -> Sequence[TaskRunner]:
     boundRunnerId = boundRunner.getId()
     runners = [ boundRunner ] # type: Sequence[TaskRunner]
-    runners = _checkTarget(
-        runners, whyNot,
-        lambda target: BoundGroupTargetReason(boundRunnerId, target),
-        target
-        )
     runners = _checkCapabilities(
         runners, whyNot,
         lambda *args: BoundGroupCapsReason(boundRunnerId, *args),

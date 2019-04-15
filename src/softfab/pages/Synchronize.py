@@ -38,11 +38,14 @@ class Synchronize_POST(ControlPage[ControlPage.Arguments,
         if taskRunner['version'][0] < 3:
             return None
         # Find oldest unassigned task.
-        targets = taskRunner.targets
+        capabilities = taskRunner.capabilities
         # TODO: It would be more efficient to keep non-fixed tasks instead of
         #       jobs, but the code for that would be more complex.
         for job in unfinishedJobs:
-            if job['target'] in targets:
+            # Note that we will accept capabilities that were targets earlier
+            # but are no longer marked as targets. This is deliberate, to match
+            # the "reason for waiting" logic.
+            if job['target'] in capabilities:
                 # Try to assign this job, might fail for various
                 # reasons, such as:
                 # - all tasks done
