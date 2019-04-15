@@ -137,17 +137,20 @@ class RunnerPerTaskStep(DialogStep):
         return proc.args.pertask and len(proc.args.tasks) > 0
 
     def presentFormBody(self, proc, **kwargs):
-        proc.config = proc.getConfig()
-        proc.taskRunners = sorted(
-            runner for runner in taskRunnerDB
-            if proc.args.target in runner.targets
-            )
-
         yield xhtml.p[ 'Select Task Runner(s) to use per task:' ]
         yield xhtml.p(class_ = 'hint')[
             '(Nothing selected means default settings for the job are used)'
             ]
-        yield TaskRunnersTable.instance.present(proc=proc, **kwargs)
+        target = proc.args.target
+        yield TaskRunnersTable.instance.present(
+            config=proc.getConfig(),
+            taskRunners=sorted(
+                runner for runner in taskRunnerDB
+                if target in runner.targets
+                ),
+            runnersPerTask=proc.args.runnerspt,
+            **kwargs
+            )
 
     def verify(self, proc):
         return ParamStep
@@ -718,10 +721,7 @@ class ParamTable(ParamOverrideTable):
 class TaskRunnersTable(Table):
     columns = 'Task', 'Task Runners'
 
-    def iterRows(self, *, proc, **kwargs):
-        runnerspt = proc.args.runnerspt
-        config = proc.config
-        taskRunners = proc.taskRunners
+    def iterRows(self, *, config, taskRunners, runnersPerTask, **kwargs):
         for item in config.getTaskGroupSequence():
             caps = item.getNeededCaps()
             tasks = item.getTaskSequence() if item.isGroup() else ( item, )
@@ -732,7 +732,7 @@ class TaskRunnersTable(Table):
             taskName = tasks[0].getName()
             listBox = selectionList(
                 name='runnerspt.' + taskName,
-                selected=runnerspt.get(taskName, frozenset()),
+                selected=runnersPerTask.get(taskName, frozenset()),
                 size=max(min(len(runners), 4), len(tasks)),
                 style='width:100%;'
                 )[ runners ]
