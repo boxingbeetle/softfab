@@ -495,6 +495,7 @@ class TaskRunner(ResourceBase):
     '''
     tagName = 'taskrunner'
     boolProperties = ('exit',)
+    enumProperties = {'status': ConnectionStatus}
 
     @classmethod
     def create(cls,
@@ -521,6 +522,7 @@ class TaskRunner(ResourceBase):
 
         ResourceBase.__init__(self, properties)
         self._properties.setdefault('description', '')
+        self._properties.setdefault('status', ConnectionStatus.NEW)
         self.__data = None # type: Optional[_TaskRunnerData]
         self.__hasBeenInSync = False
         self.__executionObserver = ExecutionObserver(
@@ -531,7 +533,8 @@ class TaskRunner(ResourceBase):
             )
         self.__lastSyncTime = getTime()
         self.__markLostCall = None
-        self.__startLostCallback()
+        if self._properties['status'] is ConnectionStatus.CONNECTED:
+            self.__startLostCallback()
 
     def __getitem__(self, key: str) -> object:
         if key == 'lastSync':
@@ -655,6 +658,8 @@ class TaskRunner(ResourceBase):
         '''Marks this Task Runner as lost and marks any task it was running as
         failed.
         '''
+        self._properties['status'] = ConnectionStatus.LOST
+        self._notify()
         observers = (
             self.__executionObserver,
             self.__shadowObserver
@@ -701,6 +706,9 @@ class TaskRunner(ResourceBase):
         return 1
 
     def getConnectionStatus(self) -> ConnectionStatus:
+        savedStatus = self._properties['status']
+        if savedStatus is not ConnectionStatus.CONNECTED:
+            return savedStatus
         sinceLastSync = getTime() - self.__lastSyncTime
         if sinceLastSync > self.getLostTimeout():
             return ConnectionStatus.LOST
@@ -755,8 +763,10 @@ class TaskRunner(ResourceBase):
         for example because the user requested it or because it is not running
         the run the Control Center thinks it should be running.
         '''
-        if data != self.__data:
+        if data != self.__data or \
+                self._properties['status'] is not ConnectionStatus.CONNECTED:
             self.__data = data
+            self._properties['status'] = ConnectionStatus.CONNECTED
             self._notify()
         self.__lastSyncTime = getTime()
         self.__hasBeenInSync = True
