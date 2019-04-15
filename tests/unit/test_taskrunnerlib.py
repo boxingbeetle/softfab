@@ -49,7 +49,7 @@ class TestTRDatabase(unittest.TestCase):
 
     def suspendTest(self, data):
         "Test suspend functionality"
-        record = resourcelib.TaskRunner.create(data)
+        record = resourcelib.TaskRunner.create(data.getId(), '', set())
         record.sync(data)
 
         # Check if initially not suspended.
@@ -71,7 +71,7 @@ class TestTRDatabase(unittest.TestCase):
 
     def syncTest(self, data1, data2):
         "Test syncing of the TR database"
-        record1 = resourcelib.TaskRunner.create(data1)
+        record1 = resourcelib.TaskRunner.create(data1.getId(), '', set())
         resourcelib.taskRunnerDB.add(record1)
         record1.sync(data1)
 
@@ -89,7 +89,7 @@ class TestTRDatabase(unittest.TestCase):
     def statusTest(self, data, busy):
         "Test if right status is returned"
         setTime(1000) # time at moment of record creation
-        record = resourcelib.TaskRunner.create(data)
+        record = resourcelib.TaskRunner.create(data.getId(), '', set())
         resourcelib.taskRunnerDB.add(record)
         record.sync(data)
         #record.getSyncWaitDelay = lambda: 3
@@ -162,7 +162,7 @@ class TestTRDatabase(unittest.TestCase):
             )
         self.assertEqual(data, data2)
         # TaskRunner class:
-        record1 = resourcelib.TaskRunner.create(data)
+        record1 = resourcelib.TaskRunner.create(data.getId(), '', set())
         record1.sync(data)
         record2 = xmlbind.parse(
             resourcelib.TaskRunnerFactory(),
