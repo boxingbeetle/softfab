@@ -530,9 +530,8 @@ class TaskRunner(ResourceBase):
             self, self.__shouldBeRunningShadow
             )
         self.__lastSyncTime = getTime()
-        self.__markLostCall = reactor.callLater(
-            self.getLostTimeout(), self.markLost
-            )
+        self.__markLostCall = None
+        self.__startLostCallback()
 
     def __getitem__(self, key: str) -> object:
         if key == 'lastSync':
@@ -569,9 +568,7 @@ class TaskRunner(ResourceBase):
         return self.toXML().flattenIndented()
 
     def _retired(self) -> None:
-        if self.__markLostCall.active():
-            self.__markLostCall.cancel()
-        self.__markLostCall = None
+        self.__cancelLostCallback()
 
         self.__executionObserver.retired()
         self.__executionObserver = cast(ExecutionObserver, None)
@@ -638,6 +635,21 @@ class TaskRunner(ResourceBase):
         assert shadowRun is self.__shadowObserver.getRun()
         # Write reference to current shadow run to DB.
         self._notify()
+
+    def __startLostCallback(self) -> None:
+        """Start mark-as-lost timer."""
+        assert self.__markLostCall is None
+        self.__markLostCall = reactor.callLater(
+            self.getLostTimeout(), self.markLost
+            )
+
+    def __cancelLostCallback(self) -> None:
+        """Stops mark-as-lost timer if it's active."""
+        call = self.__markLostCall
+        if call is not None:
+            if call.active():
+                call.cancel()
+            self.__markLostCall = None
 
     def markLost(self) -> None:
         '''Marks this Task Runner as lost and marks any task it was running as
@@ -748,11 +760,8 @@ class TaskRunner(ResourceBase):
             self._notify()
         self.__lastSyncTime = getTime()
         self.__hasBeenInSync = True
-        if self.__markLostCall.active():
-            self.__markLostCall.cancel()
-        self.__markLostCall = reactor.callLater(
-            self.getLostTimeout(), self.markLost
-            )
+        self.__cancelLostCallback()
+        self.__startLostCallback()
 
         if data.hasExecutionRun() and data.getShadowRunId() is not None:
             self.deactivate(
