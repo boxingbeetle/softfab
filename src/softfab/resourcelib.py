@@ -846,7 +846,7 @@ class ResourceFactory:
     def createResource(attributes: Mapping[str, str]) -> Resource:
         return Resource(attributes)
 
-class ResourceDB(Database):
+class ResourceDB(Database[Resource]):
     baseDir = dbDir + '/resources'
     factory = ResourceFactory()
     privilegeObject = 'r'
@@ -864,10 +864,9 @@ def recomputeRunning() -> None:
     # The methods are protected on purpose, because no-one else should use them.
     for runner in taskRunnerDB:
         runner._resetRuns()
-    for runs, setter in (
-        ( taskRunDB, TaskRunner._initExecutionRun ),
-        ( shadowDB, TaskRunner._initShadowRun ),
-        ):
+    def checkRunners(runs: Database[RunT],
+                     setter: Callable[[TaskRunner, RunT], None]
+                     ) -> None:
         for run in runs:
             if run.isRunning():
                 runnerId = run.getTaskRunnerId()
@@ -877,8 +876,8 @@ def recomputeRunning() -> None:
                     except KeyError:
                         run.failed('Task Runner no longer exists')
                     else:
-                        cast(Callable[[TaskRunner, RunT], None], setter)(
-                            runner, run
-                            )
+                        setter(runner, run)
+    checkRunners(taskRunDB, TaskRunner._initExecutionRun)
+    checkRunners(shadowDB, TaskRunner._initShadowRun)
     for runner in taskRunnerDB:
         runner._notify()

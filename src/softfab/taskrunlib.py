@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Dict, List, Mapping, Optional, Tuple, cast
 import logging
 
 from softfab import shadowlib
@@ -17,19 +17,29 @@ from softfab.tasklib import TaskStateMixin
 from softfab.timelib import getTime
 from softfab.timeview import formatTime
 from softfab.utils import IllegalStateError, cachedProperty, pluralize
-from softfab.waiting import topWhyNot
+from softfab.waiting import ReasonForWaiting, topWhyNot
 from softfab.xmlbind import XMLTag
-from softfab.xmlgen import XML, xhtml, xml
+from softfab.xmlgen import XML, XMLAttributeValue, XMLContent, xhtml, xml
 
 if TYPE_CHECKING:
-    from softfab.joblib import jobDB
-    from softfab.resourcelib import ResourceDB
+    from softfab.joblib import Job, Task, jobDB
+    from softfab.productlib import Product
+    from softfab.resourcelib import Resource, ResourceDB, TaskRunner
+    from softfab.shadowrun import ExtractionRun
+    from softfab.userlib import User
 else:
+    Job = object
+    Task = object
     # Note: To avoid cyclic imports, joblib sets this.
     #       The weird construct is to avoid PyLint complaining about methods we
     #       call on it not existing for NoneType.
     jobDB = cast(Database, (lambda x: x if x else None)(0))
+    Product = object
+    Resource = object
     ResourceDB = object
+    TaskRunner = object
+    ExtractionRun = object
+    User = object
 
 
 defaultSummaries = {
@@ -39,38 +49,29 @@ defaultSummaries = {
     ResultCode.INSPECT: None,
     }
 
-class TaskRunFactory:
-    @staticmethod
-    def createTaskrun(attributes):
-        return TaskRun(attributes)
-
-class TaskRunDB(Database):
-    baseDir = dbDir + '/taskruns'
-    factory = TaskRunFactory()
-    privilegeObject = 't'
-    description = 'task run'
-    uniqueKeys = ( 'id', )
-taskRunDB = TaskRunDB()
-shadowlib.taskRunDB = taskRunDB
-
 class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
     tagName = 'taskRun'
     intProperties = ('runId', )
 
-    def __init__(self, attributes, task = None):
+    def __init__(self,
+                 attributes: Mapping[str, XMLAttributeValue],
+                 task: Optional[Task] = None
+                 ):
         XMLTag.__init__(self, attributes)
         DatabaseElem.__init__(self)
         TaskStateMixin.__init__(self)
         self.__task = task
-        if task is not None:
-            self.__job = task.getJob()
+        if task is None:
+            self.__job = None # type: Optional[Job]
         else:
-            self.__job = None
+            self.__job = task.getJob()
+        # This will be set during XML parsing.
+        self.__jobId = cast(str, None)
         if 'state' not in self._properties:
             # Initial state.
             self._properties['state'] = 'waiting'
-        self.__reserved = {}
-        self.__reasonForWaiting = None
+        self.__reserved = {} # type: Dict[str, str]
+        self.__reasonForWaiting = None # type: Optional[ReasonForWaiting]
 
         self._properties.setdefault('runId', 0)
         # 'abort' is either 'true' or doesn't exist
@@ -82,9 +83,9 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
         self._properties['state'] != 'running':
             del self._properties['alert']
 
-        self.__extractionRun = None
+        self.__extractionRun = None # type: Optional[ExtractionRun]
         if 'extractionRun' in self._properties:
-            extractionRunId = self._properties['extractionRun']
+            extractionRunId = cast(str, self._properties['extractionRun'])
             extractionRun = shadowlib.shadowDB.get(extractionRunId)
             self.__setExtractionRun(extractionRun)
             # Even if the extraction run has been deleted already, keep the ID
@@ -93,7 +94,7 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
             # "view data" link.
         StorageURLMixin.__init__(self)
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: str) -> object:
         if key == 'state':
             return self._getState()
         elif key == 'result':
@@ -118,14 +119,14 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
             else:
                 return value
 
-    def __setExtractionRun(self, extractionRun):
+    def __setExtractionRun(self, extractionRun: ExtractionRun) -> None:
         if self.__extractionRun is not None:
             self.__extractionRun.removeObserver(self.__extractionRunChanged)
         self.__extractionRun = extractionRun
         if extractionRun is not None and not extractionRun.isDone():
             extractionRun.addObserver(self.__extractionRunChanged)
 
-    def __extractionRunChanged(self, extractionRun):
+    def __extractionRunChanged(self, extractionRun: ExtractionRun) -> None:
         if extractionRun.isDone():
             if 'result' not in self._properties:
                 # Extraction is finished and we still don't have a result.
@@ -136,17 +137,17 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
             # No further updates will come, so no point in listening.
             extractionRun.removeObserver(self.__extractionRunChanged)
 
-    def __getJobId(self):
+    def __getJobId(self) -> str:
         if self.__job is None:
             # During upgrade, job ID is stored because job is not.
             return self.__jobId
         else:
             return self.__job.getId()
 
-    def _addResource(self, attributes):
+    def _addResource(self, attributes: Mapping[str, str]) -> None:
         self.__reserved[attributes['ref']] = attributes['id']
 
-    def _setTask(self, attributes):
+    def _setTask(self, attributes: Mapping[str, str]) -> None:
         if upgradeInProgress:
             if attributes['job'] not in jobDB:
                 raise ObsoleteRecordError()
@@ -160,17 +161,17 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
             #self.__job = jobDB[attributes['job']]
             #self.__task = self.__job.getTask(attributes['name'])
 
-    def createRunXML(self):
+    def createRunXML(self) -> XML:
         return xml.run(
             jobId = self.__getJobId(),
             taskId = self.getName(),
             runId = self.getRunId()
             )
 
-    def createTaskXML(self):
+    def createTaskXML(self) -> XML:
         task = self.getTask()
         return xml.task(
-            target = self['target'],
+            target = cast(str, self['target']),
             # COMPAT 2.x.x: The TR doesn't use this value anymore, but if we
             #               omit it, the XML unpacking will fail.
             framework = 'for backwards compatibility only',
@@ -180,7 +181,7 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
                 for name, value in task.getParameters().items()
             )]
 
-    def createInputXML(self):
+    def createInputXML(self) -> XMLContent:
         for inp in self.getTask().getDependencies():
             yield xml.input(
                 name = inp.getName(),
@@ -192,11 +193,11 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
                 locator = inp.getLocator() or ''
                 )[self.createProducerXML(inp)]
 
-    def createOutputXML(self):
+    def createOutputXML(self) -> XMLContent:
         for outputName in self.getTask().getOutputs():
             yield xml.output(name = outputName)
 
-    def createProducerXML(self, product):
+    def createProducerXML(self, product: Product) -> XMLContent:
         job = self.getJob()
         # Provide an empty locator for every task that has the given
         # product as an output.
@@ -228,10 +229,10 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
                 result=result or 'notyet'
                 )
 
-    def getId(self):
-        return self._properties['id']
+    def getId(self) -> str:
+        return cast(str, self._properties['id'])
 
-    def getTask(self):
+    def getTask(self) -> Task:
         task = self.__task
         if task is None:
             # During upgrade, task name is stored because task is not.
@@ -246,14 +247,14 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
         else:
             return self.__task['name']
 
-    def _getContent(self):
+    def _getContent(self) -> XMLContent:
         for ref, resId in self.__reserved.items():
             yield xml.resource(ref = ref, id = resId)
         yield xml.task(name = self.getName(), job = self.__getJobId())
 
     # TODO: Should this remain public?
     #       It is used by ExtractedData at least, but will it stay that way?
-    def getJob(self):
+    def getJob(self) -> Job:
         job = self.__job
         if job is None:
             # During upgrade, job ID is stored because job is not.
@@ -261,23 +262,23 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
             self.__job = job = jobDB[self.__jobId]
         return job
 
-    def _getState(self):
-        return self._properties['state']
+    def _getState(self) -> str:
+        return cast(str, self._properties['state'])
 
-    def getAlert(self):
-        return self._properties.get('alert')
+    def getAlert(self) -> Optional[str]:
+        return cast(Optional[str], self._properties.get('alert'))
 
-    def getRunId(self):
+    def getRunId(self) -> str:
         return str(self._properties['runId'])
 
-    def getTaskRunnerId(self):
+    def getTaskRunnerId(self) -> Optional[str]:
         '''Returns the ID of the Task Runner that is currently executing this
         task run or has executed it.
         If execution has not yet started, None is returned.
         '''
-        return self._properties.get('runner')
+        return cast(Optional[str], self._properties.get('runner'))
 
-    def getSummary(self):
+    def getSummary(self) -> str:
         if self.isRunning():
             if 'abort' in self._properties:
                 return 'abort in progress'
@@ -286,7 +287,7 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
         # When aborting a running task, the "who aborted" text is stored
         # as the summary, but should not be displayed until the task has
         # actually stopped executing.
-        storedSummary = self._properties.get('summary')
+        storedSummary = cast(Optional[str], self._properties.get('summary'))
         if storedSummary is not None:
             return storedSummary
         elif self.isWaiting():
@@ -306,11 +307,13 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
                 else:
                     return 'waiting for extraction'
             elif result in defaultSummaries:
-                return defaultSummaries[result]
+                summary = defaultSummaries[result]
+                assert summary is not None
+                return summary
             else:
                 return 'no summary available'
 
-    def getSummaryHTML(self):
+    def getSummaryHTML(self) -> XMLContent:
         # TODO: This presentation method does not belong here.
         summary = self.getSummary()
         url = self.getURL()
@@ -320,14 +323,14 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
             return summary
 
     @cachedProperty
-    def timeoutMins(self):
+    def timeoutMins(self) -> Optional[int]:
         '''Task execution timeout in minutes, or None for never.
         The timeout is stored in the special property "sf.timeout".
         '''
         timeout = self.getTask().getParameter('sf.timeout')
         return None if timeout is None else int(timeout)
 
-    def isTimedOut(self):
+    def isTimedOut(self) -> bool:
         """Returns True if the task timed out according to the setting of
         Time Out in the Task Definition
         """
@@ -343,7 +346,7 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
             else:
                 return duration >= timeoutMins * 60
 
-    def isToBeAborted(self):
+    def isToBeAborted(self) -> bool:
         """Returns True if the task timed out or when the user aborted the
         task or when the execution of the task is finished
         """
@@ -351,7 +354,7 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
             or self.isExecutionFinished()
         return tobeAborted
 
-    def getProduced(self):
+    def getProduced(self) -> List[Product]:
         """Gets list of all products that can be produced by this task.
         This is a static property of this task.
         """
@@ -360,22 +363,22 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
             for output in self.getTask().getOutputs()
             ]
 
-    def getStartTime(self):
-        return self._properties.get('starttime', 0)
+    def getStartTime(self) -> int:
+        return cast(int, self._properties.get('starttime', 0))
 
-    def getStopTime(self):
-        return self._properties.get('stoptime', 0)
+    def getStopTime(self) -> int:
+        return cast(int, self._properties.get('stoptime', 0))
 
-    def getDuration(self):
-        startTime = self._properties.get('starttime')
+    def getDuration(self) -> Optional[int]:
+        startTime = cast(Optional[int], self._properties.get('starttime'))
         if startTime is None:
             return None
-        stopTime = self._properties.get('stoptime')
+        stopTime = cast(Optional[int], self._properties.get('stoptime'))
         if stopTime is None:
             return getTime() - startTime
         return stopTime - startTime
 
-    def assign(self, taskRunner):
+    def assign(self, taskRunner: TaskRunner) -> Optional['TaskRun']:
         assert self.isWaiting()
 
         resources = self.__reserveResources(None)
@@ -392,12 +395,14 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
         self._notify()
         return self
 
-    def checkResources(self, whyNot):
+    def checkResources(self, whyNot: List[ReasonForWaiting]) -> None:
         assert self.isWaiting()
         self.__reserveResources(whyNot)
         self.__reasonForWaiting = topWhyNot(whyNot) if whyNot else None
 
-    def __reserveResources(self, whyNot):
+    def __reserveResources(self,
+                           whyNot: Optional[List[ReasonForWaiting]]
+                           ) -> Optional[Mapping[str, Resource]]:
         # TODO: Treat Task Runners the same as other resources.
         nonTRClaim = ResourceClaim.create(
             spec
@@ -410,7 +415,7 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
             nonTRClaim, 'T-' + self.getId(), whyNot
             )
 
-    def abort(self, user = None):
+    def abort(self, user: Optional[User] = None) -> Tuple[bool, str]:
         '''Attempts to abort this task.
         Returns a pair of a boolean and a message string.
         The boolean is True if this task was cancelled or marked for abortion
@@ -442,7 +447,7 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
         else:
             return False, 'was not waiting or running'
 
-    def setAlert(self, alert):
+    def setAlert(self, alert: str) -> None:
         if alert and self.isRunning():
             self._properties['alert'] = alert
             self._notify()
@@ -450,7 +455,12 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
             del self._properties['alert']
             self._notify()
 
-    def __setState(self, result, newState, summary, outputs = None):
+    def __setState(self,
+                   result: Optional[ResultCode],
+                   newState: str,
+                   summary: Optional[str],
+                   outputs: Optional[Mapping[str, str]] = None
+                   ) -> None:
         if result is not None and not isinstance(result, ResultCode):
             raise TypeError('result must be a ResultCode or None')
 
@@ -513,7 +523,11 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
         if self.hasResult():
             self.getTask().initCached(resultOnly = False)
 
-    def done(self, result, summary, outputs):
+    def done(self,
+             result: Optional[ResultCode],
+             summary: Optional[str],
+             outputs: Mapping[str, str]
+             ) -> None:
         task = self.getTask()
 
         # Input validation.
@@ -555,7 +569,7 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
 
         self._notify()
 
-    def inspectDone(self, result, summary):
+    def inspectDone(self, result: ResultCode, summary: Optional[str]) -> None:
         # Input validation.
         if result not in (
             ResultCode.OK, ResultCode.WARNING, ResultCode.ERROR
@@ -575,20 +589,23 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
         # Trigger property cache for task objects in joblib
         self.getTask().initCached(resultOnly = True)
 
-    def cancelled(self, summary):
+    def cancelled(self, summary: str) -> None:
         assert self.isWaiting()
         self.__setState(ResultCode.CANCELLED, 'cancelled', summary)
         self.getJob().releaseResources(self.getTask(), None)
         self._notify()
 
-    def failed(self, message):
+    def failed(self, message: str) -> None:
         '''Marks this run as failed.
         Used when a Task Runner is not behaving like it should, for example
         the Task Runner is lost.
         '''
         self.getJob().taskDone(self.getName(), ResultCode.ERROR, message, {})
 
-    def setResult(self, result, summary):
+    def setResult(self,
+                  result: Optional[ResultCode],
+                  summary: Optional[str]
+                  ) -> None:
         if isinstance(result, ResultCode):
             if result not in defaultSummaries:
                 raise ValueError(result)
@@ -636,7 +653,21 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
             )
             ]
 
-def newTaskRun(task):
+class TaskRunFactory:
+    @staticmethod
+    def createTaskrun(attributes: Mapping[str, str]) -> TaskRun:
+        return TaskRun(attributes)
+
+class TaskRunDB(Database[TaskRun]):
+    baseDir = dbDir + '/taskruns'
+    factory = TaskRunFactory()
+    privilegeObject = 't'
+    description = 'task run'
+    uniqueKeys = ( 'id', )
+taskRunDB = TaskRunDB()
+shadowlib.taskRunDB = taskRunDB
+
+def newTaskRun(task: Task) -> TaskRun:
     taskRun = TaskRun({'id': createInternalId()}, task)
     taskRunDB.add(taskRun)
     return taskRun

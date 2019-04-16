@@ -78,7 +78,7 @@ class TaskStateMixin:
         return result is not None and result is not ResultCode.INSPECT
 
     def getResult(self) -> Optional[ResultCode]:
-        return cast(ResultCode, self._properties.get('result'))
+        return cast(Optional[ResultCode], self._properties.get('result'))
 
 class ResourceRequirementsMixin:
 

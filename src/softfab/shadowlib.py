@@ -203,7 +203,7 @@ class ExtractionRun(ShadowRun):
     def create(cls, taskRun: TaskRun) -> 'ExtractionRun':
         return cls._create(
             taskRun = taskRun.getId(),
-            runner = taskRun['runner']
+            runner = taskRun.getTaskRunnerId()
             )
 
     # Delayed initialisation is required because we have a circular dependency.
@@ -218,7 +218,7 @@ class ExtractionRun(ShadowRun):
         return self._properties['runner'] == taskRunner.getId()
 
     def hasExpired(self) -> bool:
-        return self._properties['taskRun'] not in taskRunDB
+        return cast(str, self._properties['taskRun']) not in taskRunDB
 
     def getDescription(self) -> str:
         return 'Extract %s' % self.taskRun.getName()
