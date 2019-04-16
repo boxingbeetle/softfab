@@ -706,7 +706,7 @@ class TaskRunner(ResourceBase):
         return 1
 
     def getConnectionStatus(self) -> ConnectionStatus:
-        savedStatus = self._properties['status']
+        savedStatus = cast(ConnectionStatus, self._properties['status'])
         if savedStatus is not ConnectionStatus.CONNECTED:
             return savedStatus
         sinceLastSync = getTime() - self.__lastSyncTime
