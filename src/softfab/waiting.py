@@ -23,11 +23,13 @@ else:
 
 # Implementation of "Reason for waiting" feature:
 
-StatusLevel = IntEnum('StatusLevel', 'FREE RESERVED SUSPENDED LOST')
+StatusLevel = IntEnum('StatusLevel', 'FREE RESERVED SUSPENDED MISSING')
 
 def statusLevelForResource(resource: ResourceBase) -> StatusLevel:
-    if resource.getConnectionStatus() is ConnectionStatus.LOST:
-        return StatusLevel.LOST
+    if resource.getConnectionStatus() in (
+            ConnectionStatus.LOST, ConnectionStatus.NEW
+            ):
+        return StatusLevel.MISSING
     elif resource.isReserved():
         return StatusLevel.RESERVED
     elif resource.isSuspended():
@@ -40,7 +42,7 @@ def _describeLevel(level: StatusLevel) -> str:
         return 'in use'
     elif level == StatusLevel.SUSPENDED:
         return 'suspended'
-    elif level == StatusLevel.LOST:
+    elif level == StatusLevel.MISSING:
         return 'unavailable'
     else:
         return 'not defined'
