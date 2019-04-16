@@ -875,7 +875,7 @@ def recomputeRunning() -> None:
                     try:
                         runner = taskRunnerDB[runnerId]
                     except KeyError:
-                        run.fail('Task Runner no longer exists')
+                        run.failed('Task Runner no longer exists')
                     else:
                         cast(Callable[[TaskRunner, RunT], None], setter)(
                             runner, run
