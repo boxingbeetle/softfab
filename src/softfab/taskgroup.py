@@ -46,7 +46,7 @@ class TaskSet:
             outputs |= framework.getOutputs()
         return inputs - outputs
 
-    def _getMainGroup(self) -> '_MainGroup':
+    def _getMainGroup(self) -> 'TaskGroup':
         unionFind = UnionFind() # type: UnionFind[Tuple[str, str]]
         local = ResultKeeper(
             lambda prodName: self.getProductDef(prodName).isLocal()
@@ -140,7 +140,7 @@ class TaskSet:
     def getDescription(self) -> str:
         """Create a user-readable description of what was done in this job.
         """
-        descrList = [ task.getDef()['id'] for task in self.getTaskSequence() ]
+        descrList = [task.getDef().getId() for task in self.getTaskSequence()]
         maxLen = 130
         length = 0
         itemCount = 0
@@ -485,7 +485,7 @@ class _LocalGroup(TaskGroup[Job]):
                      whyNot: List[ReasonForWaiting]
                      ) -> None:
         boundRunnerId = self.__runnerId
-        target = self._parent['target']
+        target = self._parent.getTarget()
         if boundRunnerId is None:
             candidates = taskRunners
             # Limit the candidates to those TRs with sufficient capabilities

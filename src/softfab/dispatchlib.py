@@ -168,12 +168,12 @@ def pickResources(
         claim: ResourceClaim,
         resources: Mapping[str, Resource],
         whyNot: Optional[List[ReasonForWaiting]] = None
-        ) -> Optional[Mapping[str, Resource]]:
+        ) -> Optional[Dict[str, Resource]]:
     """Find a resource reservation that satisfies `claim`.
     Resources are picked from the `resources` mapping that must have resource
     IDs as keys and resources as values.
-    Returns a mapping from resource reference to resource, or None if the
-    claim cannot be satisfied.
+    Returns a dictionary mapping resource reference to resource, or None if
+    the claim cannot be satisfied.
     If `whyNot` was provided, reasons for not being able to find a resource
     assignment are appended to `whyNot`.
     """

@@ -1,7 +1,11 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from collections import defaultdict
-from typing import TYPE_CHECKING, List, Sequence, cast
+from itertools import chain
+from typing import (
+    TYPE_CHECKING, AbstractSet, Callable, DefaultDict, Dict, Iterable,
+    Iterator, List, Mapping, MutableSet, Optional, Sequence, Tuple, Union, cast
+)
 import logging
 
 from softfab import frameworklib, taskdeflib, taskrunlib
@@ -25,20 +29,35 @@ from softfab.waiting import (
     InputReason, ReasonForWaiting, ResourceMissingReason, checkRunners
 )
 from softfab.xmlbind import XMLTag
-from softfab.xmlgen import xml
+from softfab.xmlgen import XMLAttributeValue, XMLContent, xml
 
 if TYPE_CHECKING:
-    from softfab.resourcelib import TaskRunner
+    from softfab.frameworklib import Framework
+    from softfab.productdeflib import ProductDef
+    from softfab.resourcelib import Resource, TaskRunner
+    from softfab.resultcode import ResultCode
+    from softfab.taskdeflib import TaskDef
+    from softfab.taskgroup import TaskGroup
+    from softfab.taskrunlib import TaskRun
+    from softfab.userlib import User
 else:
+    Framework = object
+    ProductDef = object
+    Resource = object
     TaskRunner = object
+    ResultCode = object
+    TaskDef = object
+    TaskGroup = object
+    TaskRun = object
+    User = object
 
 
 class JobFactory:
     @staticmethod
-    def createJob(attributes):
+    def createJob(attributes: Mapping[str, str]) -> 'Job':
         return Job(attributes)
 
-class JobDB(Database):
+class JobDB(Database['Job']):
     baseDir = dbDir + '/jobs'
     factory = JobFactory()
     privilegeObject = 'j'
@@ -46,13 +65,13 @@ class JobDB(Database):
     cachedUniqueValues = ( 'owner', 'target' )
     uniqueKeys = ( 'recent', 'jobId' )
 
-    def convert(self, visitor=None):
+    def convert(self, visitor: Callable[['Job'], None] = None) -> None:
         # Find orphaned products.
         orphanedProductIDs = set(productDB.keys())
-        def checkJob(job):
+        def checkJob(job: 'Job') -> None:
             if visitor:
                 visitor(job)
-            for product in job.getInputs() + job.getProduced():
+            for product in chain(job.getInputs(), job.getProduced()):
                 orphanedProductIDs.discard(product.getId())
 
         super().convert(checkJob)
@@ -67,7 +86,7 @@ class JobDB(Database):
 jobDB = JobDB()
 taskrunlib.jobDB = jobDB
 
-def unifyJobId(jobId):
+def unifyJobId(jobId: str) -> str:
     if jobId[4] == '-':
         return jobId[2 : 4] + jobId[5 : 7] + jobId[8 : 10] + '-' + \
             jobId[11 : 13] + jobId[14 : 16] + '-' + jobId[17 : ]
@@ -82,10 +101,15 @@ class Task(
     intProperties = ('priority', )
 
     @staticmethod
-    def create(job, name, priority, runners):
+    def create(job: 'Job',
+               name: str,
+               priority: int,
+               runners: Iterable[str]
+               ) -> 'Task':
         tdKey = taskdeflib.taskDefDB.latestVersion(name)
+        assert tdKey is not None
         fdKey = frameworklib.frameworkDB.latestVersion(
-                taskdeflib.taskDefDB.getVersion(tdKey)['parent']
+                cast(str, taskdeflib.taskDefDB.getVersion(tdKey)['parent'])
                 )
 
         properties = dict(
@@ -93,22 +117,25 @@ class Task(
             priority = priority,
             tdKey = tdKey,
             fdKey = fdKey,
-            )
+            ) # type: Mapping[str, XMLAttributeValue]
         task = Task(properties, job)
         # pylint: disable=protected-access
         task._setRunners(runners)
         return task
 
-    def __init__(self, attributes, job):
+    def __init__(self,
+                 attributes: Mapping[str, XMLAttributeValue],
+                 job: 'Job'
+                 ):
         XMLTag.__init__(self, attributes)
         TaskRunnerSet.__init__(self)
         TaskStateMixin.__init__(self)
         self._properties.setdefault('priority', 0)
-        self._parameters = {}
-        self.__taskRun = None
+        self._parameters = {} # type: Dict[str, str]
+        self.__taskRun = None # type: Optional[TaskRun]
         self.__job = job
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: str) -> object:
         if key in self._properties:
             return self._properties[key]
         elif key in ['target', 'owner', 'timestamp', 'jobId']:
@@ -123,17 +150,17 @@ class Task(
         else:
             return self.getLatestRun()[key]
 
-    def _addParam(self, attributes):
+    def _addParam(self, attributes: Mapping[str, str]) -> None:
         self.addParameter(attributes['name'], attributes['value'])
 
-    def addParameter(self, key, value):
+    def addParameter(self, key: str, value: str) -> None:
         # Only store non-default values.
         framework = self.getFramework()
         getParent = lambda key: framework
         if self.getDef().getParameter(key, getParent) != value:
             self._parameters[key] = value
 
-    def initCached(self, resultOnly):
+    def initCached(self, resultOnly: bool) -> None:
         '''Store selected data items from TaskRun in Task, so we do not have
         to load TaskRun objects for the most common queries.
         TODO: Well, that was the original idea, but we are preloading the
@@ -144,24 +171,26 @@ class Task(
         taskRun = self.getLatestRun()
         if not resultOnly:
             for key in ['state', 'starttime', 'stoptime']:
-                self._properties[key] = taskRun[key]
+                self._properties[key] = cast(Union[str, int], taskRun[key])
         result = taskRun['result']
         if result is not None:
-            self._properties['result'] = result
+            self._properties['result'] = cast(ResultCode, result)
         self.__job._notify()
 
-    def getJob(self):
+    def getJob(self) -> 'Job':
         return self.__job
 
-    def getLatestRun(self):
+    def getLatestRun(self) -> TaskRun:
         # Note: Because of caching __taskRun there is a reference loop, which
         #       has to be broken if the objects are to be removed from memory.
-        if self.__taskRun is None:
-            taskRun = taskrunlib.taskRunDB[self._properties['run']]
+        taskRun = self.__taskRun
+        if taskRun is None:
+            runId = cast(str, self._properties['run'])
+            taskRun = taskrunlib.taskRunDB[runId]
             self.__taskRun = taskRun
-        return self.__taskRun #taskRun
+        return taskRun
 
-    def getRun(self, runId):
+    def getRun(self, runId: str) -> TaskRun:
         # This is a temporary implementation until we add support for multiple
         # runs of the same task.
         if runId == '0':
@@ -169,11 +198,15 @@ class Task(
         else:
             raise KeyError(runId)
 
-    def getDef(self):
-        return taskdeflib.taskDefDB.getVersion(self._properties['tdKey'])
+    def getDef(self) -> TaskDef:
+        return taskdeflib.taskDefDB.getVersion(
+            cast(str, self._properties['tdKey'])
+            )
 
-    def getFramework(self):
-        return frameworklib.frameworkDB.getVersion(self._properties['fdKey'])
+    def getFramework(self) -> Framework:
+        return frameworklib.frameworkDB.getVersion(
+            cast(str, self._properties['fdKey'])
+            )
 
     def getName(self) -> str:
         return cast(str, self._properties['name'])
@@ -181,33 +214,33 @@ class Task(
     def getPriority(self) -> int:
         return cast(int, self._properties['priority'])
 
-    def hasExtractionWrapper(self):
+    def hasExtractionWrapper(self) -> bool:
         # TODO: Getting the property from the task def would cause an
         #       unversioned lookup of the framework, which is wrong in the
         #       context of a job. As a workaround, we get the property directly
         #       from the framework.
-        return self.getFramework()['extract']
+        return cast(bool, self.getFramework()['extract'])
 
-    def newRun(self):
+    def newRun(self) -> None:
         self.__taskRun = taskrunlib.newTaskRun(self)
         self._properties['run'] = self.__taskRun.getId()
 
-    def _getContent(self):
+    def _getContent(self) -> XMLContent:
         for name, value in self._parameters.items():
             yield xml.param(name = name, value = value)
         yield self.runnersAsXML()
 
-    def getInputs(self):
+    def getInputs(self) -> AbstractSet[str]:
         return self.getFramework().getInputs()
 
-    def getOutputs(self):
+    def getOutputs(self) -> AbstractSet[str]:
         return self.getFramework().getOutputs()
 
-    def getDependencies(self):
+    def getDependencies(self) -> Sequence[Product]:
         # TODO: Different terminology: input/dependency and output/produced.
         return [ self.__job.getProduct(inp) for inp in self.getInputs() ]
 
-    def getParameter(self, name):
+    def getParameter(self, name: str) -> Optional[str]:
         '''Gets the value of the parameter with the given name in this task run.
         Returns None in case no parameter with that name exists.
         A parameter is a key-value pair that is interpreted by the wrapper.
@@ -220,15 +253,15 @@ class Task(
         else:
             return value
 
-    def isFinal(self, name):
+    def isFinal(self, name: str) -> bool:
         '''Returns True iff the given parameter is final.
         '''
         framework = self.getFramework()
         getParent = lambda key: framework
         return self.getDef().isFinal(name, getParent)
 
-    def getParameters(self):
-        '''Returns a new dictionary containing the parameters of this task.
+    def getParameters(self) -> Mapping[str, str]:
+        '''Returns the parameters of this task.
         '''
         framework = self.getFramework()
         getParent = lambda key: framework
@@ -236,8 +269,8 @@ class Task(
         parameters.update(self._parameters)
         return parameters
 
-    def getVisibleParameters(self):
-        '''Returns a new dictionary of parameters to be shown to the user:
+    def getVisibleParameters(self) -> Mapping[str, str]:
+        '''Returns the parameters to be shown to the user:
         final and reserved parameters are not included.
         '''
         taskDef = self.getDef()
@@ -251,21 +284,22 @@ class Task(
             if not key.startswith('sf.') and not taskDef.isFinal(key, getParent)
             )
 
-    def canRunOn(self, runner):
+    def canRunOn(self, runner: str) -> bool:
         if self._runners:
             return runner in self._runners
         else:
             return self.__job.canRunOn(runner)
 
-    def _getState(self):
-        return self['state']
+    def _getState(self) -> str:
+        return cast(str, self['state'])
 
-    def getResult(self):
-        return self._properties.get('result') or self.getLatestRun().getResult()
+    def getResult(self) -> Optional[ResultCode]:
+        return cast(Optional[ResultCode], self._properties.get('result')) \
+            or self.getLatestRun().getResult()
 
-    def getDuration(self):
-        startTime = self._properties.get('starttime')
-        stopTime = self._properties.get('stoptime')
+    def getDuration(self) -> Optional[int]:
+        startTime = cast(Optional[int], self._properties.get('starttime'))
+        stopTime = cast(Optional[int], self._properties.get('stoptime'))
         if startTime is not None and stopTime is not None:
             return stopTime - startTime
         else:
@@ -275,13 +309,13 @@ class Task(
     # TaskRun. This may not be appropriate when having multiple task runs.
     # Thus run ID should be passed as a parameter where appropriate.
 
-    def getProduced(self):
+    def getProduced(self) -> List[Product]:
         return self.getLatestRun().getProduced()
 
-    def getSummaryHTML(self):
+    def getSummaryHTML(self) -> XMLContent:
         return self.getLatestRun().getSummaryHTML()
 
-    def assign(self, taskRunner):
+    def assign(self, taskRunner: TaskRunner) -> Optional[TaskRun]:
         taskRun = self.getLatestRun()
         if not taskRun.isWaiting():
             return None
@@ -293,7 +327,7 @@ class Task(
         runners = self.getRunners() or self.__job.getRunners()
         if runners and taskRunner.getId() not in runners:
             return None
-        elif not neededCaps.issubset(taskRunner.capabilities):
+        elif not neededCaps <= taskRunner.capabilities:
             return None
         else:
             return taskRun.assign(taskRunner)
@@ -323,41 +357,45 @@ class Task(
                 ] # type: Sequence[TaskRunner]
         else:
             candidates = taskRunners
-        checkRunners(candidates, self.__job['target'], neededCaps, whyNot)
+        checkRunners(candidates, self.__job.getTarget(), neededCaps, whyNot)
 
         taskRun.checkResources(whyNot)
 
-    def abort(self, user = None):
+    def abort(self, user: Optional[User] = None) -> Tuple[bool, str]:
         return self.getLatestRun().abort(user)
 
-    def done(self, result, summary, outputs):
-        return self.getLatestRun().done(result, summary, outputs)
+    def done(self,
+             result: Optional[ResultCode],
+             summary: Optional[str],
+             outputs: Mapping[str, str]
+             ) -> None:
+        self.getLatestRun().done(result, summary, outputs)
 
-    def inspectDone(self, result, summary):
-        return self.getLatestRun().inspectDone(result, summary)
+    def inspectDone(self, result: ResultCode, summary: Optional[str]) -> None:
+        self.getLatestRun().inspectDone(result, summary)
 
-    def cancelled(self, summary):
-        return self.getLatestRun().cancelled(summary)
+    def cancelled(self, summary: str) -> None:
+        self.getLatestRun().cancelled(summary)
 
-    def setURL(self, url):
-        return self.getLatestRun().setURL(url)
+    def setURL(self, url: str) -> None:
+        self.getLatestRun().setURL(url)
 
-    def getURL(self):
+    def getURL(self) -> Optional[str]:
         return self.getLatestRun().getURL()
 
-    def getExportURL(self):
+    def getExportURL(self) -> Optional[str]:
         return self.getLatestRun().getExportURL()
 
-    def hasExport(self):
+    def hasExport(self) -> bool:
         return self.getLatestRun().hasExport()
 
-    def getRunId(self):
+    def getRunId(self) -> str:
         return self.getLatestRun().getRunId()
 
-    def setAlert(self, alert):
-        return self.getLatestRun().setAlert(alert)
+    def setAlert(self, alert: str) -> None:
+        self.getLatestRun().setAlert(alert)
 
-    def getAlert(self):
+    def getAlert(self) -> Optional[str]:
         return self.getLatestRun().getAlert()
 
 class Job(TaskSet, TaskRunnerSet, XMLTag, DatabaseElem):
@@ -369,13 +407,19 @@ class Job(TaskSet, TaskRunnerSet, XMLTag, DatabaseElem):
     intProperties = ('timestamp', )
 
     @staticmethod
-    def create(configId, target, owner, comment, jobParams, runners):
+    def create(configId: Optional[str],
+               target: str,
+               owner: Optional[str],
+               comment: str,
+               jobParams: Mapping[str, str],
+               runners: Iterable[str]
+               ) -> 'Job':
         # TODO: Is validation needed?
         properties = dict(
             jobId = createUniqueId(),
             timestamp = getTime(),
             target = target,
-            )
+            ) # type: Dict[str, XMLAttributeValue]
         if owner is not None:
             properties['owner'] = owner
         if configId is not None:
@@ -388,7 +432,7 @@ class Job(TaskSet, TaskRunnerSet, XMLTag, DatabaseElem):
         job._setRunners(runners)
         return job
 
-    def __init__(self, properties):
+    def __init__(self, properties: Mapping[str, XMLAttributeValue]):
         # Note: if the "comment" tag is empty, the XML parser does not call the
         #       <text> handler, so we have to use '' rather than None here.
         TaskSet.__init__(self)
@@ -396,22 +440,24 @@ class Job(TaskSet, TaskRunnerSet, XMLTag, DatabaseElem):
         XMLTag.__init__(self, properties)
         DatabaseElem.__init__(self)
         self.__comment = ''
-        self.__inputSet = None
-        self.__products = {}
-        self.__params = {}
-        self.__mainGroup = None
-        self.__description = None
-        self.__result = None
-        self.__leadTime = None
-        self.__stopTime = None
+        self.__inputSet = None # type: Optional[AbstractSet[str]]
+        self.__products = {} # type: Dict[str, str]
+        self.__params = {} # type: Dict[str, str]
+        self.__mainGroup = None # type: Optional[TaskGroup]
+        self.__description = None # type: Optional[str]
+        self.__result = None # type: Optional[ResultCode]
+        self.__leadTime = None # type: Optional[int]
+        self.__stopTime = None # type: Optional[int]
         self.__executionFinished = False
         self.__resultFinal = False
-        self.__inputs = None # Cached value of getInputs.
-        self.__produced = None # Cached value of getProduced.
-        self.__notifyFlag = None
-        self.__taskSequence = []
+        self.__inputs = None # type: Optional[Sequence[Product]]
+        self.__produced = None # type: Optional[List[Product]]
+        self.__notifyFlag = None # type: Optional[bool]
+        self.__taskSequence = [] # type: List[str]
         # __resources: { ref: [set(tasks), set(caps), id], ... }
-        self.__resources = defaultdict(lambda: [ set(), set(), None ])
+        self.__resources = defaultdict(
+            lambda: [ set(), set(), None ]
+            ) # type: DefaultDict[str, List]
 
         # Create a sort key which places the most recent jobs first.
         # This code ignores the fact that the job IDs converted from the old
@@ -424,10 +470,10 @@ class Job(TaskSet, TaskRunnerSet, XMLTag, DatabaseElem):
             if char != '-'
             ), 16)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return 'job[' + self.getId() + ']'
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: str) -> object:
         if key == 'recent':
             return self.__recent
         elif key == 'leadtime':
@@ -443,7 +489,7 @@ class Job(TaskSet, TaskRunnerSet, XMLTag, DatabaseElem):
         else:
             return XMLTag.__getitem__(self, key)
 
-    def __addTask(self, task):
+    def __addTask(self, task: Task) -> Task:
         name = task.getName()
         self._tasks[name] = task
         self.__taskSequence.append(name)
@@ -468,44 +514,44 @@ class Job(TaskSet, TaskRunnerSet, XMLTag, DatabaseElem):
                 caps.update(spec.capabilities)
         return task
 
-    def __lockNotify(self):
+    def __lockNotify(self) -> None:
         assert self.__notifyFlag is None
         self.__notifyFlag = False
 
-    def __unlockNotify(self):
+    def __unlockNotify(self) -> None:
         if self.__notifyFlag:
             DatabaseElem._notify(self)
         self.__notifyFlag = None
 
-    def _notify(self):
+    def _notify(self) -> None:
         if self.__notifyFlag is None:
             DatabaseElem._notify(self)
         else:
             self.__notifyFlag = True
 
-    def _textComment(self, text):
+    def _textComment(self, text: str) -> None:
         self.__comment = text
 
-    def _addTask(self, attributes):
+    def _addTask(self, attributes: Mapping[str, str]) -> Task:
         return self.__addTask(Task(attributes, self))
 
-    def _addProduct(self, attributes):
+    def _addProduct(self, attributes: Mapping[str, str]) -> None:
         self.__products[attributes['name']] = attributes['key']
 
-    def _addResource(self, attributes):
+    def _addResource(self, attributes: Mapping[str, str]) -> None:
         self.__resources[attributes['ref']][2] = attributes.get('id') or None
 
-    def getId(self):
-        return self._properties['jobId']
+    def getId(self) -> str:
+        return cast(str, self._properties['jobId'])
 
-    def __checkProduct(self, name):
+    def __checkProduct(self, name: str) -> None:
         if not name in self.__products:
             self.__products[name] = Product.create(name).getId()
 
-    def _addParam(self, attributes):
+    def _addParam(self, attributes: Mapping[str, str]) -> None:
         self.__params[attributes['name']] = attributes['value']
 
-    def addTask(self, name, prio, runners):
+    def addTask(self, name: str, prio: int, runners: Iterable[str]) -> Task:
         '''Adds a run of the task by the given name to this job.
         Also adds all input and output products of that task, in state
         "waiting".
@@ -520,7 +566,7 @@ class Job(TaskSet, TaskRunnerSet, XMLTag, DatabaseElem):
         return task
 
     @property
-    def comment(self):
+    def comment(self) -> str:
         """User-specified comment string for this job.
         Comment string may contain newlines.
         Setting the comment will strip leading and trailing whitespace.
@@ -528,36 +574,35 @@ class Job(TaskSet, TaskRunnerSet, XMLTag, DatabaseElem):
         return self.__comment
 
     @comment.setter
-    def comment(self, comment):
+    def comment(self, comment: str) -> None:
         self.__comment = comment.strip()
 
-    def getParams(self):
+    def getParams(self) -> Mapping[str, str]:
         return self.__params
 
-    def getTarget(self):
+    def getTarget(self) -> str:
         '''Gets the target of this job.
         '''
-        return self._properties['target']
+        return cast(str, self._properties['target'])
 
-    def getOwner(self):
+    def getOwner(self) -> Optional[User]:
         """Gets the owner of this job,
         or None if this job does not have an owner.
         """
-        return self._properties.get('owner')
+        return cast(Optional[User], self._properties.get('owner'))
 
-    def getScheduledBy(self):
-        """Gets the way of starting of this job,
-        or None if this job is started manually
+    def getScheduledBy(self) -> Optional[str]:
+        """Gets the ID of the schedule that started of this job,
+        or None if this job was not started from a schedule.
         """
-        return self._properties.get('scheduledby')
+        return cast(Optional[str], self._properties.get('scheduledby'))
 
-    def setScheduledBy(self, job):
-        """ Sets the way of starting this job,
-        or None if this job is started manually
+    def setScheduledBy(self, scheduleId: str) -> None:
+        """Store the ID of the schedule that started this job.
         """
-        self._properties['scheduledby'] = job
+        self._properties['scheduledby'] = scheduleId
 
-    def _isProductFixed(self, product):
+    def _isProductFixed(self, product: Product) -> bool:
         '''Returns True iff all tasks that produce the given product are fixed.
         Used to determine when a combined product is available, or when to
         give up on a non-combined product.
@@ -567,14 +612,14 @@ class Job(TaskSet, TaskRunnerSet, XMLTag, DatabaseElem):
             for task in self.getProducers(product.getName())
             )
 
-    def _blockProduct(self, product):
+    def _blockProduct(self, product: Product) -> None:
         product.blocked()
         productName = product.getName()
         for task in self.getConsumers(productName):
             if task.isWaiting():
                 task.cancelled(productName + ' is not available')
 
-    def _getContent(self):
+    def _getContent(self) -> XMLContent:
         if self.__comment:
             yield xml.comment[ self.__comment ]
         for key, value in self.__params.items():
@@ -587,7 +632,7 @@ class Job(TaskSet, TaskRunnerSet, XMLTag, DatabaseElem):
         for ref, (_, _, resId) in self.__resources.items():
             yield xml.resource(ref = ref, id = resId)
 
-    def isCompleted(self):
+    def isCompleted(self) -> bool:
         '''Returns True iff all tasks in this job have run and have a result.
         '''
         return all(
@@ -595,7 +640,7 @@ class Job(TaskSet, TaskRunnerSet, XMLTag, DatabaseElem):
             for task in self._tasks.values()
             )
 
-    def isExecutionFinished(self):
+    def isExecutionFinished(self) -> bool:
         '''Returns True iff execution of all tasks in this job is finished.
         Note that a job that has finished execution might not have its result
         available yet if it is waiting for extraction or inspection.
@@ -607,7 +652,7 @@ class Job(TaskSet, TaskRunnerSet, XMLTag, DatabaseElem):
                 )
         return self.__executionFinished
 
-    def hasFinalResult(self):
+    def hasFinalResult(self) -> bool:
         '''Returns True iff the final result of this job is available.
         '''
         if not self.__resultFinal:
@@ -617,45 +662,48 @@ class Job(TaskSet, TaskRunnerSet, XMLTag, DatabaseElem):
                 )
         return self.__resultFinal
 
-    def _getMainGroup(self):
-        if self.__mainGroup is None:
-            self.__mainGroup = super()._getMainGroup()
-        return self.__mainGroup
+    def _getMainGroup(self) -> TaskGroup:
+        mainGroup = self.__mainGroup
+        if mainGroup is None:
+            mainGroup = super()._getMainGroup()
+            self.__mainGroup = mainGroup
+        return mainGroup
 
-    def getTaskSequence(self):
+    def getTaskSequence(self) -> Sequence[Task]:
         return [ self._tasks[task] for task in self.__taskSequence ]
 
-    def iterTasks(self):
+    def iterTasks(self) -> Iterator[Task]:
         '''Yields the tasks in this job, in arbitrary order.
         '''
         return iter(self._tasks.values())
 
-    def getConfigId(self):
+    def getConfigId(self) -> Optional[str]:
         """Return the ID of the configuration this job was once created from,
         or None if this job was created from scratch.
         """
-        return self._properties.get('configId')
+        return cast(Optional[str], self._properties.get('configId'))
 
-    def getDescription(self):
+    def getDescription(self) -> str:
         # Since task definition is fixed, caching is possible.
-        if self.__description is None:
-            self.__description = self._properties.get('configId') or \
-                                 super().getDescription()
-        return self.__description
+        description = self.__description
+        if description is None:
+            description = self.getConfigId() or super().getDescription()
+            self.__description = description
+        return description
 
-    def canRunOn(self, runner):
+    def canRunOn(self, runner: str) -> bool:
         if self._runners:
             return runner in self._runners
         else:
             return True
 
-    def getFinalResult(self):
+    def getFinalResult(self) -> Optional[ResultCode]:
         '''Returns the ResultCode of the final result of this job, or None if
         this job does not have a final result yet.
         '''
         return self.getResult() if self.hasFinalResult() else None
 
-    def getResult(self):
+    def getResult(self) -> Optional[ResultCode]:
         '''Summarizes the current result of this job by combining the task
         results into a single value.
         The result returned by this method applies to the current situation
@@ -669,13 +717,13 @@ class Job(TaskSet, TaskRunnerSet, XMLTag, DatabaseElem):
             self.__result = result
         return result
 
-    def getRecent(self):
+    def getRecent(self) -> int:
         return self.__recent
 
-    def getCreateTime(self):
-        return self._properties['timestamp']
+    def getCreateTime(self) -> int:
+        return cast(int, self._properties['timestamp'])
 
-    def getLeadTime(self):
+    def getLeadTime(self) -> int:
         '''Gets the number of seconds elapsed between the creation of this job
         and its stop time. If the job is not stopped yet, the number of seconds
         elapsed until now is returned.
@@ -690,40 +738,42 @@ class Job(TaskSet, TaskRunnerSet, XMLTag, DatabaseElem):
         if stopTime is None:
             return getTime() - queueTime
         else:
-            self.__leadTime = stopTime - queueTime
-            return self.__leadTime
+            leadTime = stopTime - queueTime
+            self.__leadTime = leadTime
+            return leadTime
 
-    def getStopTime(self):
+    def getStopTime(self) -> Optional[int]:
         '''Gets this job's stop time, or None if it has not stopped yet.
         '''
         if self.__stopTime is None and self.isExecutionFinished():
             self.__stopTime = max(
-                task['stoptime'] for task in self._tasks.values()
+                cast(int, task['stoptime'])
+                for task in self._tasks.values()
                 )
         return self.__stopTime
 
-    def getInputSet(self):
+    def getInputSet(self) -> AbstractSet[str]:
         if self.__inputSet is None:
             self.__inputSet = super().getInputSet()
         return self.__inputSet
 
-    def getInputs(self):
-        """Returns the list of input products of this job.
+    def getInputs(self) -> Sequence[Product]:
+        """Returns the input products of this job.
         """
         if self.__inputs is None:
-            self.__inputs = [
+            self.__inputs = tuple(
                 self.getProduct(inputName)
                 for inputName in self.getInputSet()
-                ]
+                )
         return self.__inputs
 
-    def getProduced(self):
-        '''Returns the list of products produced by this job, in the most
+    def getProduced(self) -> Sequence[Product]:
+        '''Returns the products produced by this job, in the most
         likely creation order.
         '''
         if self.__produced is None:
-            self.__produced = produced = []
-            producedNames = set()
+            produced = [] # type: List[Product]
+            producedNames = set() # type: MutableSet[str]
             for task in self.getTaskSequence():
                 taskProduced = {}
                 for product in task.getProduced():
@@ -733,27 +783,35 @@ class Job(TaskSet, TaskRunnerSet, XMLTag, DatabaseElem):
                 for name, product in sorted(taskProduced.items()):
                     producedNames.add(name)
                     produced.append(product)
+            self.__produced = produced
         return self.__produced
 
-    def setInputLocator(self, name, locator, taskRunner, taskName):
+    def setInputLocator(self,
+                        name: str,
+                        locator: str,
+                        taskRunnerId: Optional[str],
+                        taskName: str
+                        ) -> None:
         '''Mark an input as available and provide its locator.
         The taskName parameter provides a fake task name for the producer.
-        Raises ValueError if `taskRunner` is None for a local product.
+        Raises ValueError if `taskRunnerId` is None for a local product.
         '''
         assert name in self.getInputSet(), \
             '%s not in %s' % ( name, self.getInputSet() )
         assert locator is not None
         product = self.getProduct(name)
-        if taskRunner is None and product.isLocal():
+        localProduct = product.isLocal()
+        if taskRunnerId is None and localProduct:
             raise ValueError(
                 'No Task Runner specified for local product "%s"' % name
                 )
         product.done()
         product.storeLocator(locator, taskName)
-        if product.isLocal():
-            product.setLocalAt(taskRunner)
+        if localProduct:
+            assert taskRunnerId is not None
+            product.setLocalAt(taskRunnerId)
 
-    def assignTask(self, taskRunner):
+    def assignTask(self, taskRunner: TaskRunner) -> Optional[TaskRun]:
         '''Tries to assign a task in this job to the given Task Runner.
         Returns the task assigned, or None if no task could be assigned.
         '''
@@ -764,15 +822,20 @@ class Job(TaskSet, TaskRunnerSet, XMLTag, DatabaseElem):
             self._notify()
         return assigned
 
-    def updateSummaries(self, taskRunners):
+    def updateSummaries(self, taskRunners: Sequence[TaskRunner]) -> None:
         """Updates the summaries for the waiting tasks in this job.
         You can get the new summaries using the TaskRun.getSummary().
         """
         if not self.isExecutionFinished():
-            whyNot = []
+            whyNot = [] # type: List[ReasonForWaiting]
             self._getMainGroup().checkRunners(taskRunners, whyNot)
 
-    def taskDone(self, name, result, summary, outputs):
+    def taskDone(self,
+                 name: str,
+                 result: Optional[ResultCode],
+                 summary: Optional[str],
+                 outputs: Mapping[str, str]
+                 ) -> None:
         """Marks a task as done and stores the result.
         """
         if not self.isExecutionFinished():
@@ -782,12 +845,16 @@ class Job(TaskSet, TaskRunnerSet, XMLTag, DatabaseElem):
             finally:
                 self.__unlockNotify()
 
-    def inspectDone(self, name, result, summary):
+    def inspectDone(self,
+                    name: str,
+                    result: ResultCode,
+                    summary: Optional[str]
+                    ) -> None:
         '''Stores result of a postponed inspection.
         '''
         self._tasks[name].inspectDone(result, summary)
 
-    def abortTask(self, name, user = None):
+    def abortTask(self, name: str, user: Optional[User] = None) -> str:
         """Abort the task with the given name.
         Returns a message intended for the user that describes the result.
         """
@@ -799,7 +866,10 @@ class Job(TaskSet, TaskRunnerSet, XMLTag, DatabaseElem):
             self.__unlockNotify()
         return message
 
-    def abortAll(self, taskFilter = lambda t: True, user = None):
+    def abortAll(self,
+                 taskFilter: Callable[[Task], bool] = lambda t: True,
+                 user: Optional[User] = None
+                 ) -> Iterable[str]:
         """Abort multiple tasks in this job.
         The given filter function is called with each task object;
         if the function returns True, that task is aborted.
@@ -822,20 +892,24 @@ class Job(TaskSet, TaskRunnerSet, XMLTag, DatabaseElem):
             self.__unlockNotify()
         return abortedTaskNames
 
-    def getProduct(self, name):
+    def getProduct(self, name: str) -> Product:
         '''Returns the product with the given name.
         Raises KeyError if there is no product with the given name in this job.
         '''
         return productDB[self.__products[name]]
 
-    def getProductDef(self, name):
+    def getProductDef(self, name: str) -> ProductDef:
         # Go through the Product object to get the correct version.
         return self.getProduct(name).getDef()
 
-    def getProductLocation(self, name):
+    def getProductLocation(self, name: str) -> Optional[str]:
         return self.getProduct(name).getLocalAt()
 
-    def reserveResources(self, claim, user, whyNot):
+    def reserveResources(self,
+                         claim: ResourceClaim,
+                         user: str,
+                         whyNot: Optional[List[ReasonForWaiting]]
+                         ) -> Optional[Dict[str, Resource]]:
         if self.__resources:
             reserved = {}
             toReserve = []
@@ -879,9 +953,12 @@ class Job(TaskSet, TaskRunnerSet, XMLTag, DatabaseElem):
         else:
             return _reserveResources(claim, user, whyNot)
 
-    def releaseResources(self, task, reserved):
+    def releaseResources(self,
+                         task: Task,
+                         reserved: Optional[Mapping[str, str]]
+                         ) -> None:
         if self.__resources:
-            toRelease = dict(reserved or ())
+            toRelease = dict(reserved or ()) # type: Dict[str, str]
             for spec in task.resourceClaim:
                 ref = spec.reference
                 info = self.__resources.get(ref)
@@ -900,14 +977,20 @@ class Job(TaskSet, TaskRunnerSet, XMLTag, DatabaseElem):
         elif reserved is not None:
             _releaseResources(reserved.values())
 
-def _reserveResources(claim, user, whyNot=None):
-    assignment = pickResources(claim, resourceDB, whyNot)
+def _reserveResources(claim: ResourceClaim,
+                      user: str,
+                      whyNot: Optional[List[ReasonForWaiting]] = None
+                      ) -> Optional[Dict[str, Resource]]:
+    # TODO: Database is not actually a Mapping.
+    #       It's close enough, but I'd rather not cheat the type system.
+    resources = cast(Mapping[str, Resource], resourceDB)
+    assignment = pickResources(claim, resources, whyNot)
     if assignment is not None:
         for resource in assignment.values():
             resource.reserve(user)
     return assignment
 
-def _releaseResources(reserved):
+def _releaseResources(reserved: Iterable[str]) -> None:
     for resId in reserved:
         res = resourceDB.get(resId)
         if res is not None:
@@ -923,14 +1006,14 @@ JobDB.keyRetrievers = {
     'configId': Job.getConfigId,
     }
 
-class _TaskToJobs(RecordObserver):
+class _TaskToJobs(RecordObserver[Job]):
     '''For each task ID, keep track of the IDs of all jobs containing that task.
     '''
-    def __init__(self):
+    def __init__(self) -> None:
         RecordObserver.__init__(self)
-        self.__taskToJobs = None
+        self.__taskToJobs = None # type: Optional[DefaultDict[str, List[str]]]
 
-    def __call__(self, taskId):
+    def __call__(self, taskId: str) -> Iterator[Task]:
         '''Iterates through all task objects with the given task ID.
         '''
         # Delayed initialization
@@ -947,52 +1030,55 @@ class _TaskToJobs(RecordObserver):
         # use objects only at the last stage, only a selected few jobs are
         # loaded.
         return (
-            jobDB[jobId].getTask(taskId)
+            # Cast because we only store IDs of jobs that do have the task.
+            cast(Task, jobDB[jobId].getTask(taskId))
             for jobId in self.get(taskId)
             )
 
-    def get(self, taskId):
+    def get(self, taskId: str) -> List[str]:
         # TODO: It would be nice to be able to raise KeyError if the definition
         #       of the task ID never existed (as opposed to no existing run).
+        assert self.__taskToJobs is not None
         return self.__taskToJobs.get(taskId, [])
 
-    def added(self, record):
+    def added(self, record: Job) -> None:
         taskToJobs = self.__taskToJobs
+        assert taskToJobs is not None
         jobId = record.getId()
         for taskName in record.iterTaskNames():
             taskToJobs[taskName].append(jobId)
 
-    def removed(self, record):
+    def removed(self, record: Job) -> None:
         assert False, 'jobs should not be removed'
 
-    def updated(self, record):
+    def updated(self, record: Job) -> None:
         # We don't care, since the set of tasks will not be different.
         pass
 
 getAllTasksWithId = _TaskToJobs()
 
-def iterAllTasks(taskFilter):
+def iterAllTasks(taskFilter: Iterable[str]) -> Iterator[Task]:
     return (
         task
         for taskId in taskFilter
         for task in getAllTasksWithId(taskId)
         )
 
-def iterDoneTasks(taskFilter):
+def iterDoneTasks(taskFilter: Iterable[str]) -> Iterator[Task]:
     return (
         task
         for task in iterAllTasks(taskFilter)
         if task.isDone()
         )
 
-def iterFinishedTasks(taskFilter):
+def iterFinishedTasks(taskFilter: Iterable[str]) -> Iterator[Task]:
     return (
         task
         for task in iterAllTasks(taskFilter)
         if task.hasResult()
         )
 
-def iterUnfinishedTasks(taskFilter):
+def iterUnfinishedTasks(taskFilter: Iterable[str]) -> Iterator[Task]:
     return (
         task
         for task in iterAllTasks(taskFilter)

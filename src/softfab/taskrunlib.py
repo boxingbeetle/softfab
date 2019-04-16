@@ -212,13 +212,13 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
         # Create XML.
         for taskName, locator in locators.items():
             task = job.getTask(taskName)
-            if task is None:
-                # No task produced this product, so it's a user input.
-                result = ResultCode.OK
-            else:
+            if task is not None:
                 # If a task can produce this product, get the result from
                 # the task.
                 result = task.getResult()
+            else:
+                # No task produced this product, so it's a user input.
+                result = ResultCode.OK
             # It is possible for the result to be None if for example
             # the task didn't finish yet or is awaiting extraction.
             # The parser in the Task Runner will not accept a producer
@@ -246,7 +246,7 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
             # During upgrade, task name is stored because task is not.
             return self.__taskName
         else:
-            return self.__task['name']
+            return self.__task.getName()
 
     def _getContent(self) -> XMLContent:
         for ref, resId in self.__reserved.items():
