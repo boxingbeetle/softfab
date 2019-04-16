@@ -3,7 +3,7 @@
 from typing import Iterator
 
 from softfab.FabPage import FabPage
-from softfab.Page import PageProcessor
+from softfab.Page import InvalidRequest, PageProcessor
 from softfab.datawidgets import DataTable
 from softfab.joblib import jobDB
 from softfab.jobview import CommentPanel, JobsSubTable
@@ -56,9 +56,11 @@ class ShowReport_GET(FabPage['ShowReport_GET.Processor',
 
         def process(self, req, user):
             jobId = req.args.jobId
-            job = jobDB.get(jobId)
-            if job is not None:
-                job.updateSummaries(taskRunnerDB)
+            try:
+                job = jobDB[jobId]
+            except KeyError:
+                raise InvalidRequest('No job exists with ID "%s"' % jobId)
+            job.updateSummaries(taskRunnerDB)
             # pylint: disable=attribute-defined-outside-init
             self.job = job
 
@@ -77,12 +79,6 @@ class ShowReport_GET(FabPage['ShowReport_GET.Processor',
     def presentContent(self, proc: Processor) -> XMLContent:
         jobId = proc.args.jobId
         job = proc.job
-        if job is None:
-            yield (
-                xhtml.h2[ 'Invalid job ID' ],
-                xhtml.p[ 'There is no job with ID ', xhtml.b[ jobId ], '.' ]
-                )
-            return
         tasks = job.getTaskSequence()
 
         yield SelfJobsTable.instance.present(proc=proc)
