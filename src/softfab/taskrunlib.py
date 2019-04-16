@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from typing import TYPE_CHECKING, cast
+import logging
 
 from softfab import shadowlib
 from softfab.config import dbDir
@@ -602,9 +603,12 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
                 self._properties['summary'] = summary
         else:
             # Conflicting result.
-            self._properties['newResult'] = result
-            if summary is not None:
-                self._properties['newSummary'] = summary
+            logging.warning(
+                'ignoring conflicting new result %s (summary "%s") '
+                'for run %s of task %s of job %s with old result %s',
+                result, summary,
+                self.getRunId(), self.getName(), self.__getJobId(), oldResult
+                )
         self._notify()
 
     def externalize(self, resourceDB: ResourceDB) -> XML:
