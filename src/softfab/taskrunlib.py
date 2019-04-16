@@ -595,7 +595,7 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
         oldResult = self.getResult()
         if oldResult is None or oldResult is result:
             # Compatible result.
-            if oldResult is None:
+            if oldResult is None and result is not None:
                 self._properties['result'] = result
                 self.getTask().initCached(resultOnly = True)
             if summary is not None:
