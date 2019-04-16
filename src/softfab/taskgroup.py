@@ -426,22 +426,24 @@ class _LocalGroup(_TaskGroup):
         return self.__runnerId
 
     def canRunOn(self, runner):
-        if self.__runners:
-            return runner in self.__runners
-        if self.__runners is None:
+        allowed = self.__runners
+        if allowed is None:
             jobRunners = self._parent.getRunners()
             for task in self.getChildren():
                 runners = task.getRunners() or jobRunners
                 if runners:
-                    if self.__runners is None:
-                        self.__runners = runners
+                    if allowed is None:
+                        allowed = runners
                     else:
-                        self.__runners &= runners
-                    if runner not in runners:
-                        return False
-            if self.__runners is None:
-                self.__runners = set()
-        return True
+                        allowed &= runners
+            if allowed is None:
+                allowed = set()
+            self.__runners = allowed
+        if allowed:
+            return runner in allowed
+        else:
+            # No restrictions.
+            return True
 
     def assign(self, taskRunner):
         boundRunnerId = self.__runnerId
