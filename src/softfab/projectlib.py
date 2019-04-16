@@ -112,7 +112,7 @@ class ProjectFactory:
     def createProject(self, attributes: Mapping[str, str]) -> 'Project':
         return Project(attributes)
 
-class ProjectDB(Database[Project]):
+class ProjectDB(Database['Project']):
     baseDir = dbDir + '/project'
     factory = ProjectFactory()
     privilegeObject = 'p'
