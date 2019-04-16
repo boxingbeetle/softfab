@@ -13,7 +13,7 @@ from softfab.projectlib import project
 from softfab.restypelib import resTypeDB
 from softfab.selectlib import ObservingTagCache, Selectable
 from softfab.taskdeflib import taskDefDB
-from softfab.taskgroup import PriorityMixin, TaskSet
+from softfab.taskgroup import PriorityMixin, TaskGroup, TaskSet
 from softfab.tasklib import ResourceRequirementsMixin, TaskRunnerSet
 from softfab.xmlbind import XMLTag
 from softfab.xmlgen import xml
@@ -112,9 +112,6 @@ class Task(PriorityMixin, ResourceRequirementsMixin, XMLTag, TaskRunnerSet):
     def _addParam(self, attributes):
         param = _Param(attributes)
         self.__params[param['name']] = param
-
-    def isGroup(self):
-        return False
 
     def getName(self) -> str:
         return cast(str, self._properties['name'])
@@ -269,7 +266,10 @@ class TaskSetWithInputs(TaskSet):
         ungrouped = set()
         inputSet = self.getInputSet()
         for task in self._getMainGroup().getChildren():
-            group = set() if task.isGroup() else None
+            if isinstance(task, TaskGroup):
+                group = set()
+            else:
+                group = None
             for inpName in task.getInputs():
                 if inpName in inputSet:
                     inpObj = self._inputs.get(inpName)

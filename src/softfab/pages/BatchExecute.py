@@ -32,9 +32,6 @@ class FakeTask:
         self.__inputs = inputs
         self.__name = name
 
-    def isGroup(self):
-        return False
-
     def getName(self) -> str:
         return self.__name
 

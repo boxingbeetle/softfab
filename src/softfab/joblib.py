@@ -150,9 +150,6 @@ class Task(
             self._properties['result'] = result
         self.__job._notify()
 
-    def isGroup(self):
-        return False
-
     def getJob(self):
         return self.__job
 

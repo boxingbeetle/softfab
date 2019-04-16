@@ -174,7 +174,7 @@ class PriorityMixin:
         else:
             return NotImplemented
 
-class _TaskGroup(PriorityMixin):
+class TaskGroup(PriorityMixin):
     '''Abstract base class for task groups.
     TODO: TaskGroup is only subclassed by MainGroup and LocalGroup. The
           original idea was probably to introduce other subclasses later, but
@@ -237,8 +237,10 @@ class _TaskGroup(PriorityMixin):
                 for task in readyTasks:
                     if not flattened:
                         mainSequence.append(task)
-                    flatTasks = task.getTaskSequence() if task.isGroup() \
-                        else ( task, )
+                    if isinstance(task, TaskGroup):
+                        flatTasks = task.getTaskSequence()
+                    else:
+                        flatTasks = (task,)
                     flatSequence.extend(flatTasks)
                     newProducts = task.getOutputs()
                     if newProducts:
@@ -265,7 +267,7 @@ class _TaskGroup(PriorityMixin):
                 flattened = True
             innerTasks = {}
             for task in unreachable:
-                if task.isGroup():
+                if isinstance(task, TaskGroup):
                     for inner in task.getTaskGroupSequence():
                         innerTasks[inner.getName()] = inner
                 else:
@@ -281,9 +283,6 @@ class _TaskGroup(PriorityMixin):
 
         self.__taskGroupSequence = tuple(mainSequence)
         self.__taskSequence = tuple(flatSequence)
-
-    def isGroup(self):
-        return True
 
     def getName(self) -> str:
         raise NotImplementedError
@@ -355,7 +354,7 @@ class _TaskGroup(PriorityMixin):
         """
         raise NotImplementedError
 
-class _MainGroup(_TaskGroup):
+class _MainGroup(TaskGroup):
     '''The main group: all tasks in a job.
     '''
 
@@ -378,13 +377,13 @@ class _MainGroup(_TaskGroup):
             task.checkRunners(taskRunners, whyNot)
             del whyNot[mark:]
 
-class _LocalGroup(_TaskGroup):
+class _LocalGroup(TaskGroup):
     '''A group of tasks bound to the same Task Runner by their use of local
     products.
     '''
 
     def __init__(self, job, tasks, localAt):
-        _TaskGroup.__init__(self, job, tasks)
+        TaskGroup.__init__(self, job, tasks)
         self.__name = None
         self.__runnerId = None
         self.__runners = None

@@ -26,6 +26,7 @@ from softfab.projectlib import project
 from softfab.resourcelib import taskRunnerDB
 from softfab.selectview import TagValueEditTable, textToValues, valuesToText
 from softfab.taskdeflib import taskDefDB
+from softfab.taskgroup import TaskGroup
 from softfab.userlib import (
     AccessDenied, User, checkPrivilege, checkPrivilegeForOwned
 )
@@ -438,8 +439,10 @@ class ExecuteProcessorMixin:
 
             if args.pertask:
                 for item in config.getTaskGroupSequence():
-                    tasks = item.getTaskSequence() if item.isGroup() \
-                        else ( item, )
+                    if isinstance(item, TaskGroup):
+                        tasks = item.getTaskSequence()
+                    else:
+                        tasks = (item,)
                     runners = args.runnerspt.get(
                         tasks[0].getName(), frozenset()
                         )
@@ -724,7 +727,10 @@ class TaskRunnersTable(Table):
     def iterRows(self, *, config, taskRunners, runnersPerTask, **kwargs):
         for item in config.getTaskGroupSequence():
             caps = item.getNeededCaps()
-            tasks = item.getTaskSequence() if item.isGroup() else ( item, )
+            if isinstance(item, TaskGroup):
+                tasks = item.getTaskSequence()
+            else:
+                tasks = (item,)
             runners = [
                 runner.getId() for runner in taskRunners
                 if caps.issubset(runner.capabilities)
