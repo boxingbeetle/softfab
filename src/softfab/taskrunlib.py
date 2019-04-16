@@ -238,6 +238,7 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
             # During upgrade, task name is stored because task is not.
             # However, in special cases a particular job is needed, so load it.
             self.__task = task = self.getJob().getTask(self.__taskName)
+            assert task is not None
         return task
 
     def getName(self) -> str:

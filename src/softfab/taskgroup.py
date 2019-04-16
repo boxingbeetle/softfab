@@ -2,7 +2,11 @@
 
 from collections import defaultdict
 from functools import total_ordering
-from typing import TYPE_CHECKING, List, Sequence
+from typing import (
+    TYPE_CHECKING, AbstractSet, DefaultDict, Dict, FrozenSet, Generic,
+    Iterable, Iterator, List, MutableSet, Optional, Sequence, Tuple, TypeVar,
+    Union, cast
+)
 
 from softfab.setcalc import UnionFind, categorizedLists, union
 from softfab.utils import Heap, ResultKeeper
@@ -11,35 +15,42 @@ from softfab.waiting import (
 )
 
 if TYPE_CHECKING:
+    from softfab.joblib import Job, Task
+    from softfab.productdeflib import ProductDef
     from softfab.resourcelib import TaskRunner
+    from softfab.taskrunlib import TaskRun
 else:
+    Job = object
+    Task = object
+    ProductDef = object
     TaskRunner = object
+    TaskRun = object
 
 
 class TaskSet:
 
-    def __init__(self):
-        self._tasks = {}
+    def __init__(self) -> None:
+        self._tasks = {} # type: Dict[str, Task]
 
-    def isEmpty(self):
+    def isEmpty(self) -> bool:
         return not self._tasks
 
-    def getInputSet(self):
+    def getInputSet(self) -> AbstractSet[str]:
         # TODO: This is equivalent to TaskGroup.getInputs.
         #       Any chances for generalizing?
-        inputs = set()
-        outputs = set()
+        inputs = set() # type: MutableSet[str]
+        outputs = set() # type: MutableSet[str]
         for task in self._tasks.values():
             framework = task.getFramework()
             inputs |= framework.getInputs()
             outputs |= framework.getOutputs()
         return inputs - outputs
 
-    def _getMainGroup(self):
-        unionFind = UnionFind()
+    def _getMainGroup(self) -> '_MainGroup':
+        unionFind = UnionFind() # type: UnionFind[Tuple[str, str]]
         local = ResultKeeper(
             lambda prodName: self.getProductDef(prodName).isLocal()
-            )
+            ) # type: ResultKeeper[str, bool]
         for taskName, task in self._tasks.items():
             taskNode = ( 'task', taskName )
             unionFind.add(taskNode)
@@ -49,7 +60,7 @@ class TaskSet:
                     unionFind.add(prodNode)
                     unionFind.unite(prodNode, taskNode)
 
-        def iterGroupedTasks():
+        def iterGroupedTasks() -> Iterator[Union[Task, TaskGroup]]:
             for group in unionFind.iterSets():
                 nodesByType = categorizedLists(group)
                 tasks = [ self._tasks[name] for name in nodesByType['task'] ]
@@ -62,13 +73,14 @@ class TaskSet:
                     locations.discard(None)
                     assert len(locations) <= 1
                     localAt = locations.pop() if locations else None
-                    yield _LocalGroup(self, tasks, localAt)
+                    # TODO: Is this cast correct? Can it be avoided?
+                    yield _LocalGroup(cast(Job, self), tasks, localAt)
                 else:
                     assert len(tasks) == 1
                     yield tasks[0]
         return _MainGroup(self, iterGroupedTasks())
 
-    def getProducers(self, productName):
+    def getProducers(self, productName: str) -> Iterator[Task]:
         '''Returns an iterator which contains all task objects which have
         the given product as an output.
         '''
@@ -76,7 +88,7 @@ class TaskSet:
             if productName in task.getOutputs():
                 yield task
 
-    def getConsumers(self, productName):
+    def getConsumers(self, productName: str) -> Iterator[Task]:
         '''Returns an iterator which contains all task objects which have
         the given product as an input.
         '''
@@ -84,13 +96,13 @@ class TaskSet:
             if productName in task.getInputs():
                 yield task
 
-    def getProductDef(self, name):
+    def getProductDef(self, name: str) -> ProductDef:
         '''Returns the definition of the product with the given name.
         Raises KeyError if there is no product with the given name.
         '''
         raise NotImplementedError
 
-    def getProductLocation(self, name):
+    def getProductLocation(self, name: str) -> Optional[str]:
         '''Returns 'localAt' value for a local product, or None if the local
         product does not have a location yet.
         The "name" argument must be a name of a local product.
@@ -98,16 +110,16 @@ class TaskSet:
         '''
         raise NotImplementedError
 
-    def iterTaskNames(self):
+    def iterTaskNames(self) -> Iterator[str]:
         return iter(self._tasks.keys())
 
-    def getTask(self, name):
+    def getTask(self, name: str) -> Optional[Task]:
         return self._tasks.get(name)
 
-    def getTasks(self):
+    def getTasks(self) -> Iterable[Task]:
         return self._tasks.values()
 
-    def getTaskGroupSequence(self):
+    def getTaskGroupSequence(self) -> Sequence[Union[Task, 'TaskGroup']]:
         '''Gets a sequence containing the tasks and subgroups in this task set,
         as much as possible in the order they will be executed.
         This sequence remains the same throughout the life cycle of a job, even
@@ -116,7 +128,7 @@ class TaskSet:
         '''
         return self._getMainGroup().getTaskGroupSequence()
 
-    def getTaskSequence(self):
+    def getTaskSequence(self) -> Sequence[Task]:
         '''Gets a sequence containing the tasks in this task set, as much as
         possible in the order they will be executed.
         This sequence remains the same throughout the life cycle of a job, even
@@ -125,7 +137,7 @@ class TaskSet:
         '''
         return self._getMainGroup().getTaskSequence()
 
-    def getDescription(self):
+    def getDescription(self) -> str:
         """Create a user-readable description of what was done in this job.
         """
         descrList = [ task.getDef()['id'] for task in self.getTaskSequence() ]
@@ -174,7 +186,9 @@ class PriorityMixin:
         else:
             return NotImplemented
 
-class TaskGroup(PriorityMixin):
+ParentT = TypeVar('ParentT', bound=TaskSet)
+
+class TaskGroup(PriorityMixin, Generic[ParentT]):
     '''Abstract base class for task groups.
     TODO: TaskGroup is only subclassed by MainGroup and LocalGroup. The
           original idea was probably to introduce other subclasses later, but
@@ -202,36 +216,41 @@ class TaskGroup(PriorityMixin):
           dropped.
     '''
 
-    def __init__(self, taskSet, tasks):
-        self._parent = taskSet
-        self.__tasks = dict( ( task.getName(), task ) for task in tasks )
-        self.__inputs = None
-        self.__outputs = None
-        self.__priority = None
-        self.__taskGroupSequence = None
-        self.__taskSequence = None
-        self.__neededCaps = None
+    def __init__(self,
+                 parent: ParentT,
+                 tasks: Iterable[Union[Task, 'TaskGroup']]
+                 ):
+        self._parent = parent
+        self.__tasks = {task.getName(): task for task in tasks}
+        self.__inputs = None # type: Optional[FrozenSet[str]]
+        self.__outputs = None # type: Optional[FrozenSet[str]]
+        self.__priority = None # type: Optional[int]
+        self.__taskGroupSequence = \
+                None # type: Optional[Sequence[Union[Task, TaskGroup]]]
+        self.__taskSequence = None # type: Optional[Sequence[Task]]
+        self.__neededCaps = None # type: Optional[AbstractSet[str]]
 
-    def __computeSequences(self):
+    def __computeSequences(self) -> None:
         # Precalculate which tasks produce which products.
         # Note: The tasks from _parent are flattened (no TaskGroups).
-        remainingProducers = defaultdict(set)
-        for task in self._parent.getTasks():
-            for productName in task.getOutputs():
-                remainingProducers[productName].add(task.getName())
+        remainingProducers = \
+                defaultdict(set) # type: DefaultDict[str, MutableSet[str]]
+        for parentTask in self._parent.getTasks():
+            for productName in parentTask.getOutputs():
+                remainingProducers[productName].add(parentTask.getName())
 
-        tasksLeft = dict(self.__tasks)
+        tasksLeft = dict(self.__tasks) # type: Dict[str, Union[Task, TaskGroup]]
         availableProducts = set(self.getInputs())
-        readyTasks = Heap()
+        readyTasks = Heap() # type: Heap[Union[Task, TaskGroup]]
         mainSequence = []
-        flatSequence = []
+        flatSequence = [] # type: List[Task]
         flattened = False
         while True:
             while True:
                 # Note: taskLeft is modified inside the loop, so it is
                 #       essential to make a copy.
                 for name, task in list(tasksLeft.items()):
-                    if task.getInputs().issubset(availableProducts):
+                    if task.getInputs() <= availableProducts:
                         readyTasks.add(tasksLeft.pop(name))
                 # Note: The heap iterator is destructive.
                 for task in readyTasks:
@@ -261,24 +280,24 @@ class TaskGroup(PriorityMixin):
                     break
             if not tasksLeft:
                 break
-            unreachable = sorted(tasksLeft.values())
+            unreachableTasks = sorted(tasksLeft.values())
             if not flattened:
-                mainSequence.extend(unreachable)
+                mainSequence.extend(unreachableTasks)
                 flattened = True
-            innerTasks = {}
-            for task in unreachable:
-                if isinstance(task, TaskGroup):
-                    for inner in task.getTaskGroupSequence():
+            innerTasks = {} # type: Dict[str, Task]
+            for unreachable in unreachableTasks:
+                if isinstance(unreachable, TaskGroup):
+                    for inner in unreachable.getTaskSequence():
                         innerTasks[inner.getName()] = inner
                 else:
-                    innerTasks[task.getName()] = task
+                    innerTasks[unreachable.getName()] = unreachable
             if len(innerTasks) > len(tasksLeft):
                 # At least one of the unreachable tasks is a task group.
-                tasksLeft = innerTasks
+                tasksLeft = cast(Dict[str, Union[Task, TaskGroup]], innerTasks)
             else:
                 # All unreachable tasks are singular tasks, since our task
                 # groups always contain 2 or more tasks.
-                flatSequence.extend(unreachable)
+                flatSequence.extend(cast(Sequence[Task], unreachableTasks))
                 break
 
         self.__taskGroupSequence = tuple(mainSequence)
@@ -287,13 +306,10 @@ class TaskGroup(PriorityMixin):
     def getName(self) -> str:
         raise NotImplementedError
 
-    def getJob(self):
-        return self._parent
-
-    def getChild(self, name):
+    def getChild(self, name: str) -> Union[Task, 'TaskGroup']:
         return self.__tasks[name]
 
-    def getChildren(self):
+    def getChildren(self) -> Iterable[Union[Task, 'TaskGroup']]:
         return iter(self.__tasks.values())
 
     def getPriority(self) -> int:
@@ -304,17 +320,19 @@ class TaskGroup(PriorityMixin):
                 )
         return self.__priority
 
-    def getTaskGroupSequence(self):
+    def getTaskGroupSequence(self) -> Sequence[Union[Task, 'TaskGroup']]:
         if self.__taskGroupSequence is None:
             self.__computeSequences()
+            assert self.__taskGroupSequence is not None
         return self.__taskGroupSequence
 
-    def getTaskSequence(self):
+    def getTaskSequence(self) -> Sequence[Task]:
         if self.__taskSequence is None:
             self.__computeSequences()
+            assert self.__taskSequence is not None
         return self.__taskSequence
 
-    def getInputs(self):
+    def getInputs(self) -> AbstractSet[str]:
         if self.__inputs is None:
             inputs = union(
                 task.getInputs() for task in self.__tasks.values()
@@ -322,7 +340,7 @@ class TaskGroup(PriorityMixin):
             self.__inputs = frozenset(inputs)
         return self.__inputs
 
-    def getOutputs(self):
+    def getOutputs(self) -> AbstractSet[str]:
         if self.__outputs is None:
             outputs = union(
                 task.getOutputs() for task in self.__tasks.values()
@@ -330,7 +348,7 @@ class TaskGroup(PriorityMixin):
             self.__outputs = frozenset(outputs)
         return self.__outputs
 
-    def getNeededCaps(self):
+    def getNeededCaps(self) -> AbstractSet[str]:
         if self.__neededCaps is None:
             neededCaps = union(
                 task.getNeededCaps() for task in self.__tasks.values()
@@ -338,7 +356,7 @@ class TaskGroup(PriorityMixin):
             self.__neededCaps = frozenset(neededCaps)
         return self.__neededCaps
 
-    def assign(self, taskRunner):
+    def assign(self, taskRunner: TaskRunner) -> Optional[TaskRun]:
         '''Tries to assign this task (group).
         Returns the assigned task, or None if no assignment was possible.
         '''
@@ -354,14 +372,14 @@ class TaskGroup(PriorityMixin):
         """
         raise NotImplementedError
 
-class _MainGroup(TaskGroup):
+class _MainGroup(TaskGroup[TaskSet]):
     '''The main group: all tasks in a job.
     '''
 
     def getName(self) -> str:
         return '/'
 
-    def assign(self, taskRunner):
+    def assign(self, taskRunner: TaskRunner) -> Optional[TaskRun]:
         for task in self.getTaskGroupSequence():
             assigned = task.assign(taskRunner)
             if assigned is not None:
@@ -377,20 +395,24 @@ class _MainGroup(TaskGroup):
             task.checkRunners(taskRunners, whyNot)
             del whyNot[mark:]
 
-class _LocalGroup(TaskGroup):
+class _LocalGroup(TaskGroup[Job]):
     '''A group of tasks bound to the same Task Runner by their use of local
     products.
     '''
 
-    def __init__(self, job, tasks, localAt):
+    def __init__(self,
+                 job: Job,
+                 tasks: Iterable[Task],
+                 localAt: Optional[str]
+                 ):
         TaskGroup.__init__(self, job, tasks)
-        self.__name = None
-        self.__runnerId = None
-        self.__runners = None
+        self.__name = None # type: Optional[str]
+        self.__runnerId = None # type: Optional[str]
+        self.__runners = None # type: Optional[AbstractSet[str]]
         if localAt is not None:
             self.__setRunnerId(localAt)
 
-    def __setRunnerId(self, runnerId):
+    def __setRunnerId(self, runnerId: str) -> None:
         if self.__runnerId is None:
             # Bind this task group to the given Task Runner.
             self.__runnerId = runnerId
@@ -405,6 +427,9 @@ class _LocalGroup(TaskGroup):
                 'Conflicting local inputs in group "%s": "%s" and "%s"'
                  % ( self.getName(), self.__runnerId, runnerId )
                 )
+
+    def getJob(self) -> Job:
+        return self._parent
 
     def getName(self) -> str:
         if self.__name is None:
@@ -421,15 +446,15 @@ class _LocalGroup(TaskGroup):
                 ) + '/'
         return self.__name
 
-    def getRunnerId(self):
+    def getRunnerId(self) -> Optional[str]:
         return self.__runnerId
 
-    def canRunOn(self, runner):
+    def canRunOn(self, runner: str) -> bool:
         allowed = self.__runners
         if allowed is None:
             jobRunners = self._parent.getRunners()
             for task in self.getChildren():
-                runners = task.getRunners() or jobRunners
+                runners = cast(Task, task).getRunners() or jobRunners
                 if runners:
                     if allowed is None:
                         allowed = set(runners)
@@ -444,10 +469,10 @@ class _LocalGroup(TaskGroup):
             # No restrictions.
             return True
 
-    def assign(self, taskRunner):
+    def assign(self, taskRunner: TaskRunner) -> Optional[TaskRun]:
         boundRunnerId = self.__runnerId
         if boundRunnerId is None or boundRunnerId == taskRunner.getId():
-            if self.getNeededCaps().issubset(taskRunner.capabilities):
+            if self.getNeededCaps() <= taskRunner.capabilities:
                 for task in self.getTaskGroupSequence():
                     assigned = task.assign(taskRunner)
                     if assigned is not None:
