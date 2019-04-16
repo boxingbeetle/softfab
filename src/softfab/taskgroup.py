@@ -433,7 +433,7 @@ class _LocalGroup(_TaskGroup):
                 runners = task.getRunners() or jobRunners
                 if runners:
                     if allowed is None:
-                        allowed = runners
+                        allowed = set(runners)
                     else:
                         allowed &= runners
             if allowed is None:
