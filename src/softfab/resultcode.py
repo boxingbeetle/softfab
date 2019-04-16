@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from enum import Enum
+from typing import Iterable, Optional
 
 
 class ResultCode(Enum):
@@ -22,7 +23,7 @@ class ResultCode(Enum):
     INSPECT = 5
     """Waiting for postponed inspection."""
 
-def combineResults(items):
+def combineResults(items: Iterable) -> Optional[ResultCode]:
     '''Computes the result over a series of items.
     Returns the ResultCode of the worst item result, or None if none of the
     items has a result.
