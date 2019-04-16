@@ -266,7 +266,7 @@ class Task(
     def getDuration(self):
         startTime = self._properties.get('starttime')
         stopTime = self._properties.get('stoptime')
-        if startTime is not None and stopTime is None:
+        if startTime is not None and stopTime is not None:
             return stopTime - startTime
         else:
             return self.getLatestRun().getDuration()
