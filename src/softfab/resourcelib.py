@@ -862,12 +862,14 @@ def recomputeRunning() -> None:
     '''
     # pylint: disable=protected-access
     # The methods are protected on purpose, because no-one else should use them.
+    taskRunnerDB.preload()
     for runner in taskRunnerDB:
         runner._resetRuns()
-    def checkRunners(runs: Database[RunT],
+    def checkRunners(db: Database[RunT],
                      setter: Callable[[TaskRunner, RunT], None]
                      ) -> None:
-        for run in runs:
+        db.preload()
+        for run in db:
             if run.isRunning():
                 runnerId = run.getTaskRunnerId()
                 if runnerId is not None:
