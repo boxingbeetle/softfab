@@ -215,13 +215,17 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
                 # No task produced this product, so it's a user input.
                 result = ResultCode.OK
             else:
-                # If a task in the configuration produced this product,
-                # set the task result. If the task did not start yet, the
-                # stored result will be None and we return the string
-                # 'notyet'. See ticket #427.
-                result = task['result'] or 'notyet'
+                # If a task can produce this product, get the result from
+                # the task.
+                result = task.getResult()
+            # It is possible for the result to be None if for example
+            # the task didn't finish yet or is awaiting extraction.
+            # The parser in the Task Runner will not accept a producer
+            # without a result though, so use "notyet" instead.
             yield xml.producer(
-                taskId = taskName, locator = locator, result = result
+                taskId=taskName,
+                locator=locator,
+                result=result or 'notyet'
                 )
 
     def getId(self):
