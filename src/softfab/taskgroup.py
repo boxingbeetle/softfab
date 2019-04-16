@@ -387,7 +387,6 @@ class _LocalGroup(_TaskGroup):
         _TaskGroup.__init__(self, job, tasks)
         self.__name = None
         self.__runnerId = None
-        self.__taskIter = None
         self.__runners = None
         if localAt is not None:
             self.__setRunnerId(localAt)
@@ -427,17 +426,11 @@ class _LocalGroup(_TaskGroup):
         return self.__runnerId
 
     def canRunOn(self, runner):
-        # To improve performance we iterate over tasks only as long as
-        # it is necessary, thus getChildren() is better to return a generator.
+        if self.__runners:
+            return runner in self.__runners
         if self.__runners is None:
-            if self.__taskIter is None:
-                self.__taskIter = (task for task in self.getChildren())
-        elif self.__runners:
-            if runner not in self.__runners:
-                return False
-        if self.__taskIter is not None:
             jobRunners = self._parent.getRunners()
-            for task in self.__taskIter:
+            for task in self.getChildren():
                 runners = task.getRunners() or jobRunners
                 if runners:
                     if self.__runners is None:
@@ -448,7 +441,6 @@ class _LocalGroup(_TaskGroup):
                         return False
             if self.__runners is None:
                 self.__runners = set()
-            self.__taskIter = None
         return True
 
     def assign(self, taskRunner):
