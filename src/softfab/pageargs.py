@@ -11,6 +11,7 @@ from urllib.parse import parse_qs
 
 from softfab.timelib import stringToTime
 from softfab.timeview import formatDate, formatTime
+from softfab.typing import Collection, NoReturn
 from softfab.utils import cachedProperty, escapeURL, iterable
 
 # Avoid circular import.
@@ -18,18 +19,6 @@ if TYPE_CHECKING:
     from softfab.request import Request
 else:
     Request = None
-
-# Collection was introduced in Python 3.6.
-if TYPE_CHECKING:
-    from typing import Collection # pylint: disable=ungrouped-imports, useless-suppression
-else:
-    Collection = Iterable
-
-# NoReturn was introduced in Python 3.6.5.
-if TYPE_CHECKING:
-    from typing_extensions import NoReturn
-else:
-    NoReturn = None
 
 ArgsT = TypeVar('ArgsT', bound='PageArgs')
 ValueT = TypeVar('ValueT')

@@ -18,6 +18,7 @@ import logging
 from softfab.config import docPage
 from softfab.pageargs import PageArgs, Query
 from softfab.pnglib import getPNGDimensions
+from softfab.typing import NoReturn
 from softfab.utils import SharedInstance, iterable
 from softfab.xmlgen import (
     XML, XMLAttributeValue, XMLContent, XMLNode, XMLPresentable,
@@ -26,12 +27,6 @@ from softfab.xmlgen import (
 
 if TYPE_CHECKING:
     from softfab.datawidgets import _TableData
-
-# NoReturn was introduced in Python 3.6.5.
-if TYPE_CHECKING:
-    from typing_extensions import NoReturn
-else:
-    NoReturn = None
 
 def pageURL(
         page: str,

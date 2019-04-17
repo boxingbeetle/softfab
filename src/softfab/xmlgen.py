@@ -42,50 +42,38 @@ from itertools import chain
 from sys import intern
 from types import MappingProxyType, MethodType
 from typing import (
-    TYPE_CHECKING, Callable, Dict, Iterable, Iterator, List, Mapping, Match,
-    Optional, Sequence, Type, Union, cast
+    Callable, Dict, Iterable, Iterator, List, Mapping, Match, Optional,
+    Sequence, Type, Union, cast
 )
 from xml.etree import ElementTree
 from xml.sax.saxutils import escape
 import re
 
+from softfab.typing import NoReturn, Protocol
 from softfab.utils import cachedProperty
 
-# NoReturn was introduced in Python 3.6.5.
-if TYPE_CHECKING:
-    from typing_extensions import NoReturn
-else:
-    NoReturn = None
 
-if TYPE_CHECKING:
-    from typing_extensions import Protocol
+class XMLConvertible(Protocol):
+    """Classes can define a `toXML` method to be automatically converted
+    to XML when used as XML content.
+    """
 
-    class XMLConvertible(Protocol):
-        """Classes can define a `toXML` method to be automatically converted
-        to XML when used as XML content.
-        """
+    def toXML(self) -> 'XMLContent':
+        raise NotImplementedError
 
-        def toXML(self) -> 'XMLContent':
-            raise NotImplementedError
+class XMLPresentable(Protocol):
+    """Classes can define a `present` method to generate an XML
+    presentation on request. Presentables can be embedded in XML
+    content, but an XML tree cannot be flattened until all embedded
+    presentations have been resolved.
+    """
 
-    class XMLPresentable(Protocol):
-        """Classes can define a `present` method to generate an XML
-        presentation on request. Presentables can be embedded in XML
-        content, but an XML tree cannot be flattened until all embedded
-        presentations have been resolved.
-        """
+    def present(self, **kwargs: object) -> 'XMLContent':
+        raise NotImplementedError
 
-        def present(self, **kwargs: object) -> 'XMLContent':
-            raise NotImplementedError
-
-    class XMLSubscriptable(Protocol):
-        def __getitem__(self, obj: XMLContent) -> XML:
-            raise NotImplementedError
-
-else:
-    XMLConvertible = object
-    XMLPresentable = object
-    XMLSubscriptable = object
+class XMLSubscriptable(Protocol):
+    def __getitem__(self, obj: 'XMLContent') -> 'XML':
+        raise NotImplementedError
 
 _reAttributeValueEscapeChars = re.compile('[^ !#$%\'-;=?-~]')
 _xmlBuiltinEntities = {

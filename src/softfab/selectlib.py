@@ -3,19 +3,15 @@
 from abc import ABC
 from collections import defaultdict
 from typing import (
-    TYPE_CHECKING, AbstractSet, Callable, ClassVar, Dict, ItemsView, Iterable,
-    Mapping, Optional, Sequence, Tuple, TypeVar
+    AbstractSet, Callable, ClassVar, Dict, ItemsView, Iterable, Mapping,
+    Optional, Sequence, Tuple, TypeVar
 )
 
 from softfab.databaselib import Database, DatabaseElem, RecordObserver
+from softfab.typing import Protocol
 from softfab.utils import abstract
 from softfab.xmlgen import XMLContent, xml
 
-
-if TYPE_CHECKING:
-    from typing_extensions import Protocol
-else:
-    Protocol = object
 
 class Selectable(Protocol):
     def _getTag(self, tag: str) -> Optional[Mapping[str, str]]:

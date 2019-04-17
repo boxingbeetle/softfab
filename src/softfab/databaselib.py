@@ -2,11 +2,12 @@
 
 from abc import ABC
 from collections.abc import ItemsView, ValuesView
+from functools import total_ordering
 from operator import itemgetter
 from typing import (
-    TYPE_CHECKING, Any, Callable, ClassVar, Dict, FrozenSet, Generic,
-    ItemsView as ItemsViewT, Iterator, KeysView as KeysViewT, List, Mapping,
-    Optional, Sequence, Set, TypeVar, ValuesView as ValuesViewT, cast
+    Any, Callable, ClassVar, Dict, FrozenSet, Generic, ItemsView as ItemsViewT,
+    Iterator, KeysView as KeysViewT, List, Mapping, Optional, Sequence, Set,
+    TypeVar, ValuesView as ValuesViewT, cast
 )
 import logging
 import os
@@ -15,6 +16,7 @@ import re
 import time
 
 from softfab.config import dbAtomicWrites, logChanges
+from softfab.typing import Protocol
 from softfab.utils import abstract, atomicWrite, cachedProperty
 from softfab.xmlbind import parse
 from softfab.xmlgen import XML
@@ -38,19 +40,12 @@ class ObsoleteRecordError(Exception):
     accessed. Used to purge obsolete records during database conversion.
     '''
 
-if TYPE_CHECKING:
-    from functools import total_ordering
-    from typing_extensions import Protocol
+@total_ordering
+class ComparableProto(Protocol):
+    def __eq__(self, other: Any) -> bool: ...
+    def __lt__(self, other: Any) -> bool: ...
 
-    @total_ordering
-    class ComparableProto(Protocol):
-        def __eq__(self, other: Any) -> bool: ...
-        def __lt__(self, other: Any) -> bool: ...
-
-    Comparable = TypeVar('Comparable', bound=ComparableProto)
-else:
-    Comparable = TypeVar('Comparable')
-
+Comparable = TypeVar('Comparable', bound=ComparableProto)
 Record = TypeVar('Record', bound='DatabaseElem')
 R2 = TypeVar('R2', bound='DatabaseElem')
 Retriever = Callable[[Record], Comparable]
