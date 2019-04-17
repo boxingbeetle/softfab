@@ -6,7 +6,7 @@ from softfab import frameworklib
 from softfab.config import dbDir
 from softfab.databaselib import VersionedDatabase
 from softfab.paramlib import GetParent
-from softfab.selectlib import ObservingTagCache, Selectable
+from softfab.selectlib import ObservingTagCache, SelectableABC
 from softfab.xmlgen import XMLAttributeValue, XMLContent, xml
 
 
@@ -23,7 +23,7 @@ class TaskDefDB(VersionedDatabase):
     uniqueKeys = ( 'id', )
 taskDefDB = TaskDefDB()
 
-class TaskDef(frameworklib.TaskDefBase, Selectable):
+class TaskDef(frameworklib.TaskDefBase, SelectableABC):
     cache = ObservingTagCache(taskDefDB, lambda: ('sf.req',) )
 
     @staticmethod
@@ -44,7 +44,7 @@ class TaskDef(frameworklib.TaskDefBase, Selectable):
 
     def __init__(self, properties: Mapping[str, XMLAttributeValue]):
         frameworklib.TaskDefBase.__init__(self, properties)
-        Selectable.__init__(self)
+        SelectableABC.__init__(self)
         self.__title = ''
         self.__description = ''
 

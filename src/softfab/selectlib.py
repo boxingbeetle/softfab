@@ -3,8 +3,8 @@
 from abc import ABC
 from collections import defaultdict
 from typing import (
-    AbstractSet, Callable, ClassVar, Dict, ItemsView, Iterable, Mapping,
-    Optional, Sequence, Tuple, TypeVar
+    TYPE_CHECKING, AbstractSet, Callable, ClassVar, Dict, ItemsView, Iterable,
+    Mapping, Optional, Sequence, Tuple, TypeVar
 )
 
 from softfab.databaselib import Database, DatabaseElem, RecordObserver
@@ -12,7 +12,18 @@ from softfab.utils import abstract
 from softfab.xmlgen import XMLContent, xml
 
 
-class Selectable(ABC):
+if TYPE_CHECKING:
+    from typing_extensions import Protocol
+else:
+    Protocol = object
+
+class Selectable(Protocol):
+    def _getTag(self, tag: str) -> Optional[Mapping[str, str]]:
+        raise NotImplementedError
+    def _tagItems(self) -> ItemsView[str, Mapping[str, str]]:
+        raise NotImplementedError
+
+class SelectableABC(Selectable, ABC):
     cache = abstract # type: ClassVar[TagCache]
 
     def __init__(self) -> None:

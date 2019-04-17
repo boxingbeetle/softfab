@@ -11,7 +11,7 @@ from softfab.joblib import Job
 from softfab.productdeflib import ProductType, productDefDB
 from softfab.projectlib import project
 from softfab.restypelib import resTypeDB
-from softfab.selectlib import ObservingTagCache, Selectable
+from softfab.selectlib import ObservingTagCache, SelectableABC
 from softfab.taskdeflib import taskDefDB
 from softfab.taskgroup import PriorityMixin, TaskGroup, TaskSet
 from softfab.tasklib import ResourceRequirementsMixin, TaskRunnerSet
@@ -288,7 +288,7 @@ class TaskSetWithInputs(TaskSet):
         return any(inp.isLocal() for inp in self._inputs.values())
 
 class Config(
-    TaskSetWithInputs, TaskRunnerSet, XMLTag, Selectable, DatabaseElem
+    TaskSetWithInputs, TaskRunnerSet, XMLTag, SelectableABC, DatabaseElem
     ):
     tagName = 'config'
     boolProperties = ('trselect',)
@@ -327,7 +327,7 @@ class Config(
         TaskSetWithInputs.__init__(self)
         TaskRunnerSet.__init__(self)
         XMLTag.__init__(self, attributes)
-        Selectable.__init__(self)
+        SelectableABC.__init__(self)
         DatabaseElem.__init__(self)
         self.__comment = ''
         self.__params = {}

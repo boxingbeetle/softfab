@@ -64,7 +64,7 @@ from softfab.config import dbDir
 from softfab.configlib import Config, configDB, iterConfigsByTag
 from softfab.databaselib import Database, DatabaseElem, RecordObserver
 from softfab.joblib import jobDB
-from softfab.selectlib import ObservingTagCache, Selectable
+from softfab.selectlib import ObservingTagCache, SelectableABC
 from softfab.timelib import endOfTime, getTime
 from softfab.utils import Heap, SharedInstance
 from softfab.xmlbind import XMLTag
@@ -203,7 +203,7 @@ class ScheduleManager(RecordObserver):
                 minute + 1
                 )
 
-class Scheduled(XMLTag, DatabaseElem, Selectable):
+class Scheduled(XMLTag, DatabaseElem, SelectableABC):
     '''A configuration that is scheduled for (repeated) execution.
     '''
     tagName = 'scheduled'
@@ -221,7 +221,7 @@ class Scheduled(XMLTag, DatabaseElem, Selectable):
 
         XMLTag.__init__(self, properties)
         DatabaseElem.__init__(self)
-        Selectable.__init__(self)
+        SelectableABC.__init__(self)
         self.__lastJobIds = []
         # Cached value: True means "might be running", False means "certainly
         # not running", since jobs can go from not fixed to fixed but not
