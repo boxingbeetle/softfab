@@ -288,7 +288,7 @@ class TaskSetWithInputs(TaskSet):
         return any(inp.isLocal() for inp in self._inputs.values())
 
 class Config(
-    TaskSetWithInputs, TaskRunnerSet, XMLTag, SelectableABC, DatabaseElem
+    TaskRunnerSet, TaskSetWithInputs, XMLTag, SelectableABC, DatabaseElem
     ):
     tagName = 'config'
     boolProperties = ('trselect',)

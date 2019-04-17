@@ -17,15 +17,12 @@ from softfab.waiting import (
 
 if TYPE_CHECKING:
     from softfab.frameworklib import Framework
-    from softfab.joblib import Job, Task as JobTask
     from softfab.productdeflib import ProductDef
     from softfab.resourcelib import TaskRunner
     from softfab.taskdeflib import TaskDef
     from softfab.taskrunlib import TaskRun
 else:
     Framework = object
-    Job = object
-    JobTask = object
     ProductDef = object
     TaskRunner = object
     TaskDef = object
@@ -38,9 +35,14 @@ class TaskProto(Protocol):
     def getDef(self) -> TaskDef: ...
     def getInputs(self) -> AbstractSet[str]: ...
     def getOutputs(self) -> AbstractSet[str]: ...
+    def getRunners(self) -> AbstractSet[str]: ...
+
+class ProductProto(Protocol):
+    def isLocal(self) -> bool: ...
+    def setLocalAt(self, runnerId: str) -> None: ...
 
 TaskT = TypeVar('TaskT', bound=TaskProto)
-TaskElem = Union[TaskT, 'TaskGroup']
+TaskElem = Union[TaskT, 'TaskGroup[TaskT]']
 
 class TaskSet(Generic[TaskT]):
 
@@ -49,6 +51,9 @@ class TaskSet(Generic[TaskT]):
 
     def isEmpty(self) -> bool:
         return not self._tasks
+
+    def getTarget(self) -> str:
+        raise NotImplementedError
 
     def getInputSet(self) -> AbstractSet[str]:
         # TODO: This is equivalent to TaskGroup.getInputs.
@@ -61,7 +66,7 @@ class TaskSet(Generic[TaskT]):
             outputs |= framework.getOutputs()
         return inputs - outputs
 
-    def _getMainGroup(self) -> 'TaskGroup':
+    def _getMainGroup(self) -> 'TaskGroup[TaskT]':
         unionFind = UnionFind() # type: UnionFind[Tuple[str, str]]
         local = ResultKeeper(
             lambda prodName: self.getProductDef(prodName).isLocal()
@@ -88,8 +93,7 @@ class TaskSet(Generic[TaskT]):
                     locations.discard(None)
                     assert len(locations) <= 1
                     localAt = locations.pop() if locations else None
-                    # TODO: Is this cast correct? Can it be avoided?
-                    yield _LocalGroup(cast(Job, self), tasks, localAt)
+                    yield _LocalGroup(self, tasks, localAt)
                 else:
                     assert len(tasks) == 1
                     yield tasks[0]
@@ -117,12 +121,18 @@ class TaskSet(Generic[TaskT]):
         '''
         raise NotImplementedError
 
+    def getProduct(self, name: str) -> ProductProto:
+        raise NotImplementedError
+
     def getProductLocation(self, name: str) -> Optional[str]:
         '''Returns 'localAt' value for a local product, or None if the local
         product does not have a location yet.
         The "name" argument must be a name of a local product.
         Used in TaskSet._getMainGroup() only.
         '''
+        raise NotImplementedError
+
+    def getRunners(self) -> AbstractSet[str]:
         raise NotImplementedError
 
     def iterTaskNames(self) -> Iterator[str]:
@@ -201,9 +211,7 @@ class PriorityMixin:
         else:
             return NotImplemented
 
-ParentT = TypeVar('ParentT', bound=TaskSet)
-
-class TaskGroup(PriorityMixin, Generic[ParentT, TaskT]):
+class TaskGroup(PriorityMixin, Generic[TaskT]):
     '''Abstract base class for task groups.
     TODO: TaskGroup is only subclassed by MainGroup and LocalGroup. The
           original idea was probably to introduce other subclasses later, but
@@ -231,10 +239,7 @@ class TaskGroup(PriorityMixin, Generic[ParentT, TaskT]):
           dropped.
     '''
 
-    def __init__(self,
-                 parent: ParentT,
-                 tasks: Iterable[TaskElem]
-                 ):
+    def __init__(self, parent: TaskSet[TaskT], tasks: Iterable[TaskElem]):
         self._parent = parent
         self.__tasks = {task.getName(): task for task in tasks}
         self.__inputs = None # type: Optional[FrozenSet[str]]
@@ -386,7 +391,7 @@ class TaskGroup(PriorityMixin, Generic[ParentT, TaskT]):
         """
         raise NotImplementedError
 
-class _MainGroup(TaskGroup[TaskSet, TaskT]):
+class _MainGroup(TaskGroup[TaskT]):
     '''The main group: all tasks in a job.
     '''
 
@@ -409,17 +414,17 @@ class _MainGroup(TaskGroup[TaskSet, TaskT]):
             task.checkRunners(taskRunners, whyNot)
             del whyNot[mark:]
 
-class _LocalGroup(TaskGroup[Job, JobTask]):
+class _LocalGroup(TaskGroup[TaskT]):
     '''A group of tasks bound to the same Task Runner by their use of local
     products.
     '''
 
     def __init__(self,
-                 job: Job,
+                 parent: TaskSet[TaskT],
                  tasks: Iterable[TaskT],
                  localAt: Optional[str]
                  ):
-        TaskGroup.__init__(self, job, tasks)
+        TaskGroup.__init__(self, parent, tasks)
         self.__name = None # type: Optional[str]
         self.__runnerId = None # type: Optional[str]
         self.__runners = None # type: Optional[AbstractSet[str]]
@@ -441,9 +446,6 @@ class _LocalGroup(TaskGroup[Job, JobTask]):
                 'Conflicting local inputs in group "%s": "%s" and "%s"'
                  % ( self.getName(), self.__runnerId, runnerId )
                 )
-
-    def getJob(self) -> Job:
-        return self._parent
 
     def getName(self) -> str:
         if self.__name is None:
@@ -468,7 +470,7 @@ class _LocalGroup(TaskGroup[Job, JobTask]):
         if allowed is None:
             jobRunners = self._parent.getRunners()
             for task in self.getChildren():
-                runners = cast(JobTask, task).getRunners() or jobRunners
+                runners = cast(TaskT, task).getRunners() or jobRunners
                 if runners:
                     if allowed is None:
                         allowed = set(runners)

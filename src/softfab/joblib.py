@@ -401,7 +401,7 @@ class Task(
     def getAlert(self) -> Optional[str]:
         return self.getLatestRun().getAlert()
 
-class Job(TaskSet[Task], TaskRunnerSet, XMLTag, DatabaseElem):
+class Job(TaskRunnerSet, TaskSet[Task], XMLTag, DatabaseElem):
     '''A collection of tasks and their input and output products.
     Contains information about what should be executed,
     what has been executed and what the result was.
