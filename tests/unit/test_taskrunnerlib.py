@@ -138,10 +138,11 @@ class TestTRDatabase(unittest.TestCase):
         reload(resourcelib)
         record = resourcelib.taskRunnerDB[record.getId()]
         self.assertEqual(getResourceStatus(record), 'unknown')
-        # Check that pausing the TR doesn't change this status:
+        # Check that (un)pausing the TR changes the status:
         record.setSuspend(True, None)
-        self.assertEqual(getResourceStatus(record), 'unknown')
+        self.assertEqual(getResourceStatus(record), 'suspended')
         record.setSuspend(False, None)
+        self.assertEqual(getResourceStatus(record), 'unknown')
 
     def toXMLTest(self, data):
         '''Test toXML functionality.
