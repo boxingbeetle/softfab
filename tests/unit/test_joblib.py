@@ -5,7 +5,7 @@ import random, unittest
 from initconfig import config
 
 from softfab import databases
-from softfab import configlib, resourcelib
+from softfab import configlib, resourcelib, taskgroup
 from softfab.resultcode import ResultCode
 from softfab.timelib import setTime
 from softfab.utils import IllegalStateError
@@ -518,7 +518,7 @@ class TestJobs(unittest.TestCase):
                                 )
 
             for item in job.getTaskGroupSequence():
-                if item.isGroup():
+                if isinstance(item, taskgroup.TaskGroup):
                     runnerId = item.getRunnerId()
                     neededCaps = item.getNeededCaps()
                     noTasksDone = True
