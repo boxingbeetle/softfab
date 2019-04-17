@@ -1,16 +1,18 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from typing import (
-    AbstractSet, Dict, Iterable, List, Mapping, Optional, Set, cast
+    AbstractSet, ClassVar, Dict, Iterable, List, Mapping, Optional, Set, cast
 )
 
 from softfab.config import dbDir
-from softfab.databaselib import DatabaseElem, VersionedDatabase
+from softfab.databaselib import VersionedDatabase
 from softfab.paramlib import GetParent, ParamMixin
 from softfab.resreq import (
     ResourceClaim, ResourceSpec, taskRunnerResourceRefName
 )
 from softfab.restypelib import taskRunnerResourceTypeName
+from softfab.selectlib import ObservingTagCache, SelectableRecordABC, TagCache
+from softfab.utils import abstract
 from softfab.xmlbind import XMLTag
 from softfab.xmlgen import XMLAttributeValue, XMLContent, xml
 
@@ -28,8 +30,9 @@ class FrameworkDB(VersionedDatabase['Framework']):
     uniqueKeys = ( 'id', )
 frameworkDB = FrameworkDB()
 
-class TaskDefBase(ParamMixin, XMLTag, DatabaseElem):
+class TaskDefBase(ParamMixin, XMLTag, SelectableRecordABC):
     tagName = 'taskdef'
+    cache = abstract # type: ClassVar[TagCache]
 
     @staticmethod
     def getParent(key: str) -> 'Framework':
@@ -38,7 +41,7 @@ class TaskDefBase(ParamMixin, XMLTag, DatabaseElem):
     def __init__(self, properties: Mapping[str, XMLAttributeValue]):
         ParamMixin.__init__(self)
         XMLTag.__init__(self, properties)
-        DatabaseElem.__init__(self)
+        SelectableRecordABC.__init__(self)
         self.__resources = [] # type: List[ResourceSpec]
         self.__resourceClaim = None # type: Optional[ResourceClaim]
 
@@ -86,6 +89,7 @@ class TaskDefBase(ParamMixin, XMLTag, DatabaseElem):
         yield self.__resources
 
 class Framework(TaskDefBase):
+    cache = ObservingTagCache(frameworkDB, lambda: ('sf.req',) )
 
     @staticmethod
     def create(name: str,

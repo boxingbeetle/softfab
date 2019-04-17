@@ -166,18 +166,20 @@ class TagCache:
             dvalue = self.__tags.get(key, {}).get(cvalue, value)
         return (cvalue, dvalue)
 
-class _SelectableRecordABC(Selectable, DatabaseElem):
-    """A database record that is can be tagged.
+class SelectableRecordABC(DatabaseElem, SelectableABC):
+    """Abstract base class for database records that support tagging."""
 
-    This class only exists to define the type;
-    it's not intended to be inherited from.
-    """
+    cache = abstract # type: ClassVar[TagCache]
 
-    # Mark this class as abstract for PyLint:
-    def __dummy(self) -> None:
+    def __init__(self) -> None:
+        DatabaseElem.__init__(self)
+        SelectableABC.__init__(self)
+
+    # Mark this class as abstract:
+    def getId(self) -> str:
         raise NotImplementedError
 
-SelectableRecord = TypeVar('SelectableRecord', bound='_SelectableRecordABC')
+SelectableRecord = TypeVar('SelectableRecord', bound=SelectableRecordABC)
 
 class ObservingTagCache(TagCache, RecordObserver[SelectableRecord]):
 

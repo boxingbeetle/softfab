@@ -15,7 +15,7 @@ class TaskDefFactory:
     def createTaskdef(attributes: Mapping[str, str]) -> 'TaskDef':
         return TaskDef(attributes)
 
-class TaskDefDB(VersionedDatabase):
+class TaskDefDB(VersionedDatabase['TaskDef']):
     baseDir = dbDir + '/taskdefs'
     factory = TaskDefFactory()
     privilegeObject = 'td'
@@ -23,7 +23,7 @@ class TaskDefDB(VersionedDatabase):
     uniqueKeys = ( 'id', )
 taskDefDB = TaskDefDB()
 
-class TaskDef(frameworklib.TaskDefBase, SelectableABC):
+class TaskDef(frameworklib.TaskDefBase):
     cache = ObservingTagCache(taskDefDB, lambda: ('sf.req',) )
 
     @staticmethod
@@ -44,7 +44,6 @@ class TaskDef(frameworklib.TaskDefBase, SelectableABC):
 
     def __init__(self, properties: Mapping[str, XMLAttributeValue]):
         frameworklib.TaskDefBase.__init__(self, properties)
-        SelectableABC.__init__(self)
         self.__title = ''
         self.__description = ''
 
