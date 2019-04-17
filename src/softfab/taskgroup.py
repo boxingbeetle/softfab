@@ -9,28 +9,43 @@ from typing import (
 )
 
 from softfab.setcalc import UnionFind, categorizedLists, union
+from softfab.typing import Protocol
 from softfab.utils import Heap, ResultKeeper
 from softfab.waiting import (
     BoundReason, ReasonForWaiting, checkBoundGroupRunner, checkGroupRunners
 )
 
 if TYPE_CHECKING:
-    from softfab.joblib import Job, Task
+    from softfab.frameworklib import Framework
+    from softfab.joblib import Job, Task as JobTask
     from softfab.productdeflib import ProductDef
     from softfab.resourcelib import TaskRunner
+    from softfab.taskdeflib import TaskDef
     from softfab.taskrunlib import TaskRun
 else:
+    Framework = object
     Job = object
-    Task = object
+    JobTask = object
     ProductDef = object
     TaskRunner = object
+    TaskDef = object
     TaskRun = object
 
 
-class TaskSet:
+class TaskProto(Protocol):
+    def getName(self) -> str: ...
+    def getFramework(self) -> Framework: ...
+    def getDef(self) -> TaskDef: ...
+    def getInputs(self) -> AbstractSet[str]: ...
+    def getOutputs(self) -> AbstractSet[str]: ...
+
+TaskT = TypeVar('TaskT', bound=TaskProto)
+TaskElem = Union[TaskT, 'TaskGroup']
+
+class TaskSet(Generic[TaskT]):
 
     def __init__(self) -> None:
-        self._tasks = {} # type: Dict[str, Task]
+        self._tasks = {} # type: Dict[str, TaskT]
 
     def isEmpty(self) -> bool:
         return not self._tasks
@@ -60,7 +75,7 @@ class TaskSet:
                     unionFind.add(prodNode)
                     unionFind.unite(prodNode, taskNode)
 
-        def iterGroupedTasks() -> Iterator[Union[Task, TaskGroup]]:
+        def iterGroupedTasks() -> Iterator[TaskElem]:
             for group in unionFind.iterSets():
                 nodesByType = categorizedLists(group)
                 tasks = [ self._tasks[name] for name in nodesByType['task'] ]
@@ -80,7 +95,7 @@ class TaskSet:
                     yield tasks[0]
         return _MainGroup(self, iterGroupedTasks())
 
-    def getProducers(self, productName: str) -> Iterator[Task]:
+    def getProducers(self, productName: str) -> Iterator[TaskT]:
         '''Returns an iterator which contains all task objects which have
         the given product as an output.
         '''
@@ -88,7 +103,7 @@ class TaskSet:
             if productName in task.getOutputs():
                 yield task
 
-    def getConsumers(self, productName: str) -> Iterator[Task]:
+    def getConsumers(self, productName: str) -> Iterator[TaskT]:
         '''Returns an iterator which contains all task objects which have
         the given product as an input.
         '''
@@ -113,13 +128,13 @@ class TaskSet:
     def iterTaskNames(self) -> Iterator[str]:
         return iter(self._tasks.keys())
 
-    def getTask(self, name: str) -> Optional[Task]:
+    def getTask(self, name: str) -> Optional[TaskT]:
         return self._tasks.get(name)
 
-    def getTasks(self) -> Iterable[Task]:
+    def getTasks(self) -> Iterable[TaskT]:
         return self._tasks.values()
 
-    def getTaskGroupSequence(self) -> Sequence[Union[Task, 'TaskGroup']]:
+    def getTaskGroupSequence(self) -> Sequence[TaskElem]:
         '''Gets a sequence containing the tasks and subgroups in this task set,
         as much as possible in the order they will be executed.
         This sequence remains the same throughout the life cycle of a job, even
@@ -128,7 +143,7 @@ class TaskSet:
         '''
         return self._getMainGroup().getTaskGroupSequence()
 
-    def getTaskSequence(self) -> Sequence[Task]:
+    def getTaskSequence(self) -> Sequence[TaskT]:
         '''Gets a sequence containing the tasks in this task set, as much as
         possible in the order they will be executed.
         This sequence remains the same throughout the life cycle of a job, even
@@ -188,7 +203,7 @@ class PriorityMixin:
 
 ParentT = TypeVar('ParentT', bound=TaskSet)
 
-class TaskGroup(PriorityMixin, Generic[ParentT]):
+class TaskGroup(PriorityMixin, Generic[ParentT, TaskT]):
     '''Abstract base class for task groups.
     TODO: TaskGroup is only subclassed by MainGroup and LocalGroup. The
           original idea was probably to introduce other subclasses later, but
@@ -218,16 +233,15 @@ class TaskGroup(PriorityMixin, Generic[ParentT]):
 
     def __init__(self,
                  parent: ParentT,
-                 tasks: Iterable[Union[Task, 'TaskGroup']]
+                 tasks: Iterable[TaskElem]
                  ):
         self._parent = parent
         self.__tasks = {task.getName(): task for task in tasks}
         self.__inputs = None # type: Optional[FrozenSet[str]]
         self.__outputs = None # type: Optional[FrozenSet[str]]
         self.__priority = None # type: Optional[int]
-        self.__taskGroupSequence = \
-                None # type: Optional[Sequence[Union[Task, TaskGroup]]]
-        self.__taskSequence = None # type: Optional[Sequence[Task]]
+        self.__taskGroupSequence = None # type: Optional[Sequence[TaskElem]]
+        self.__taskSequence = None # type: Optional[Sequence[TaskT]]
         self.__neededCaps = None # type: Optional[AbstractSet[str]]
 
     def __computeSequences(self) -> None:
@@ -239,11 +253,11 @@ class TaskGroup(PriorityMixin, Generic[ParentT]):
             for productName in parentTask.getOutputs():
                 remainingProducers[productName].add(parentTask.getName())
 
-        tasksLeft = dict(self.__tasks) # type: Dict[str, Union[Task, TaskGroup]]
+        tasksLeft = dict(self.__tasks) # type: Dict[str, TaskElem]
         availableProducts = set(self.getInputs())
-        readyTasks = Heap() # type: Heap[Union[Task, TaskGroup]]
+        readyTasks = Heap() # type: Heap[TaskElem]
         mainSequence = []
-        flatSequence = [] # type: List[Task]
+        flatSequence = [] # type: List[TaskT]
         flattened = False
         while True:
             while True:
@@ -284,7 +298,7 @@ class TaskGroup(PriorityMixin, Generic[ParentT]):
             if not flattened:
                 mainSequence.extend(unreachableTasks)
                 flattened = True
-            innerTasks = {} # type: Dict[str, Task]
+            innerTasks = {} # type: Dict[str, TaskT]
             for unreachable in unreachableTasks:
                 if isinstance(unreachable, TaskGroup):
                     for inner in unreachable.getTaskSequence():
@@ -293,11 +307,11 @@ class TaskGroup(PriorityMixin, Generic[ParentT]):
                     innerTasks[unreachable.getName()] = unreachable
             if len(innerTasks) > len(tasksLeft):
                 # At least one of the unreachable tasks is a task group.
-                tasksLeft = cast(Dict[str, Union[Task, TaskGroup]], innerTasks)
+                tasksLeft = cast(Dict[str, TaskElem], innerTasks)
             else:
                 # All unreachable tasks are singular tasks, since our task
                 # groups always contain 2 or more tasks.
-                flatSequence.extend(cast(Sequence[Task], unreachableTasks))
+                flatSequence.extend(cast(Sequence[TaskT], unreachableTasks))
                 break
 
         self.__taskGroupSequence = tuple(mainSequence)
@@ -306,10 +320,10 @@ class TaskGroup(PriorityMixin, Generic[ParentT]):
     def getName(self) -> str:
         raise NotImplementedError
 
-    def getChild(self, name: str) -> Union[Task, 'TaskGroup']:
+    def getChild(self, name: str) -> TaskElem:
         return self.__tasks[name]
 
-    def getChildren(self) -> Iterable[Union[Task, 'TaskGroup']]:
+    def getChildren(self) -> Iterable[TaskElem]:
         return iter(self.__tasks.values())
 
     def getPriority(self) -> int:
@@ -320,13 +334,13 @@ class TaskGroup(PriorityMixin, Generic[ParentT]):
                 )
         return self.__priority
 
-    def getTaskGroupSequence(self) -> Sequence[Union[Task, 'TaskGroup']]:
+    def getTaskGroupSequence(self) -> Sequence[TaskElem]:
         if self.__taskGroupSequence is None:
             self.__computeSequences()
             assert self.__taskGroupSequence is not None
         return self.__taskGroupSequence
 
-    def getTaskSequence(self) -> Sequence[Task]:
+    def getTaskSequence(self) -> Sequence[TaskT]:
         if self.__taskSequence is None:
             self.__computeSequences()
             assert self.__taskSequence is not None
@@ -372,7 +386,7 @@ class TaskGroup(PriorityMixin, Generic[ParentT]):
         """
         raise NotImplementedError
 
-class _MainGroup(TaskGroup[TaskSet]):
+class _MainGroup(TaskGroup[TaskSet, TaskT]):
     '''The main group: all tasks in a job.
     '''
 
@@ -395,14 +409,14 @@ class _MainGroup(TaskGroup[TaskSet]):
             task.checkRunners(taskRunners, whyNot)
             del whyNot[mark:]
 
-class _LocalGroup(TaskGroup[Job]):
+class _LocalGroup(TaskGroup[Job, JobTask]):
     '''A group of tasks bound to the same Task Runner by their use of local
     products.
     '''
 
     def __init__(self,
                  job: Job,
-                 tasks: Iterable[Task],
+                 tasks: Iterable[TaskT],
                  localAt: Optional[str]
                  ):
         TaskGroup.__init__(self, job, tasks)
@@ -454,7 +468,7 @@ class _LocalGroup(TaskGroup[Job]):
         if allowed is None:
             jobRunners = self._parent.getRunners()
             for task in self.getChildren():
-                runners = cast(Task, task).getRunners() or jobRunners
+                runners = cast(JobTask, task).getRunners() or jobRunners
                 if runners:
                     if allowed is None:
                         allowed = set(runners)
