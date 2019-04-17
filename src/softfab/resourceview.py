@@ -8,7 +8,9 @@ from softfab.databaselib import checkWrapperVarName
 from softfab.formlib import dropDownList, emptyOption, hiddenInput, textInput
 from softfab.pageargs import ListArg
 from softfab.pagelinks import createCapabilityLink
-from softfab.resreq import ResourceSpec, taskRunnerResourceRefName
+from softfab.resreq import (
+    ResourceClaim, ResourceSpec, taskRunnerResourceRefName
+)
 from softfab.restypelib import resTypeDB, taskRunnerResourceTypeName
 from softfab.webgui import Panel, Table, rowManagerInstanceScript
 from softfab.xmlgen import txt, xhtml
@@ -58,9 +60,11 @@ class CommentPanel(Panel):
     label = 'Description'
     content = textInput(name = 'description', size = 80, style='width:100%')
 
-initialTaskRunnerResourceSpec = ResourceSpec.create(
-    taskRunnerResourceRefName, taskRunnerResourceTypeName, ()
-    )
+initialResourceClaim = ResourceClaim.create((
+    ResourceSpec.create(
+        taskRunnerResourceRefName, taskRunnerResourceTypeName, ()
+        ),
+    ))
 
 class ResourceRequirementsArgsMixin:
     '''Adds resource requirement editing arguments to a page.'''
@@ -76,13 +80,13 @@ def addResourceRequirementsToElement(element, args):
 
 def initResourceRequirementsArgs(element):
     if element is None:
-        specs = (initialTaskRunnerResourceSpec,)
+        claim = initialResourceClaim
     else:
-        specs = tuple(element.resourceClaim)
+        claim = element.resourceClaim
     return dict(
-        ref=[spec.reference for spec in specs],
-        type=[spec.typeName for spec in specs],
-        caps=[' '.join(sorted(spec.capabilities)) for spec in specs]
+        ref=[spec.reference for spec in claim],
+        type=[spec.typeName for spec in claim],
+        caps=[' '.join(sorted(spec.capabilities)) for spec in claim]
         )
 
 def checkResourceRequirementsState(args):
