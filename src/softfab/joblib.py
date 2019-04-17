@@ -26,7 +26,8 @@ from softfab.tasklib import (
 )
 from softfab.timelib import getTime
 from softfab.waiting import (
-    InputReason, ReasonForWaiting, ResourceMissingReason, checkRunners
+    InputReason, ReasonForWaiting, ResourceMissingReason, StatusLevel,
+    TRStateReason, checkRunners
 )
 from softfab.xmlbind import XMLTag
 from softfab.xmlgen import XMLAttributeValue, XMLContent, xml
@@ -355,6 +356,8 @@ class Task(
                 runner for runner in taskRunners
                 if runner.getId() in runners
                 ] # type: Sequence[TaskRunner]
+            if not candidates:
+                whyNot.append(TRStateReason(StatusLevel.MISSING))
         else:
             candidates = taskRunners
         checkRunners(candidates, self.__job.getTarget(), neededCaps, whyNot)
