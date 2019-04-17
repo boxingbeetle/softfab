@@ -155,11 +155,12 @@ tr.free > td, table.nostrong > tbody > tr > td.free {
 tr.warning > td, table.nostrong > tbody > tr > td.warning {
 	background: #FFD070;
 }
-tr.error > td, table.nostrong > tbody > tr > td.error, tr.lost > td {
+tr.error > td, table.nostrong > tbody > tr > td.error,
+tr.lost > td, table.nostrong > tbody > tr > td.lost {
 	background: #FF9090;
 }
 tr.busy > td, table.nostrong > tbody > tr > td.busy, tr.running > td,
-tr.reserved > td {
+tr.reserved > td, table.nostrong > tbody > tr > td.reserved {
 	background: #C0E0FF;
 }
 tr.suspended > td, table.nostrong > tbody > tr > td.suspended,

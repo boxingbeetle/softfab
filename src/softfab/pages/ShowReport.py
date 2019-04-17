@@ -8,15 +8,17 @@ from softfab.datawidgets import DataTable
 from softfab.joblib import jobDB
 from softfab.jobview import CommentPanel, JobsSubTable
 from softfab.pagelinks import (
-    JobIdArgs, TaskIdArgs, createConfigDetailsLink, createTaskInfoLink
+    JobIdArgs, TaskIdArgs, createConfigDetailsLink, createTaskInfoLink,
+    createTaskRunnerDetailsLink
 )
 from softfab.productview import ProductTable
 from softfab.resourcelib import taskRunnerDB
+from softfab.resourceview import getResourceStatus
 from softfab.tasktables import JobTaskRunsTable
 from softfab.userlib import User, checkPrivilege
 from softfab.utils import pluralize
 from softfab.webgui import Table, Widget, cell, pageLink
-from softfab.xmlgen import XMLContent, txt, xhtml
+from softfab.xmlgen import XMLContent, xhtml
 
 
 class SelfJobsTable(JobsSubTable):
@@ -72,9 +74,15 @@ class ShowReport_GET(FabPage['ShowReport_GET.Processor',
         yield TaskRunsTable.instance
 
     def iterWidgets(self, proc: Processor) -> Iterator[Widget]:
+        job = proc.job
         yield SelfJobsTable.instance
         yield TaskRunsTable.instance
         yield OutputTable.instance
+        if not job.hasFinalResult() and (
+                job.getRunners() or
+                any(task.getRunners() for task in job.iterTasks())
+                ):
+            yield TaskRunnerTable.instance
 
     def presentContent(self, proc: Processor) -> XMLContent:
         jobId = proc.args.jobId
@@ -194,30 +202,50 @@ class OutputTable(ProductTable):
             'output' if numOutputs == 1 else '%d outputs' % numOutputs
             )
 
+def presentTaskRunner(runnerId):
+    runner = taskRunnerDB.get(runnerId)
+    if runner is None:
+        status = 'lost'
+        content = runnerId
+    else:
+        status = getResourceStatus(runner)
+        content = createTaskRunnerDetailsLink(runnerId)
+    return cell(class_=status)[ content ]
+
+def presentTaskRunners(taskLabel, runnerIds):
+    first = True
+    for runner in sorted(runnerIds):
+        if first:
+            yield (
+                cell(rowspan = len(runnerIds))[ taskLabel ],
+                presentTaskRunner(runner)
+                )
+            first = False
+        else:
+            yield presentTaskRunner(runner),
+
 class TaskRunnerTable(Table):
-    columns = 'Task', 'TaskRunners'
+    columns = 'Task', 'Task Runners'
     hideWhenEmpty = True
+    style = 'nostrong'
+    widgetId = 'trSelTable'
+    autoUpdate = True
 
     def presentCaptionParts(self, **kwargs):
         yield 'The following Task Runners may be used:'
 
     def iterRows(self, *, proc, **kwargs):
         tasks = proc.job.getTaskSequence()
-        trsPerTask = []
+        trsPerTask = 0
         for task in tasks:
             trSet = task.getRunners()
             if trSet:
-                trsPerTask.append(
-                    ( task.getName(), xhtml.br.join(sorted(trSet)) )
-                    )
-        defaultTRs = proc.job.getRunners()
-        if defaultTRs or len(trsPerTask) > 0:
-            for taskName, trList in trsPerTask:
-                yield taskName, trList
-            if len(trsPerTask) < len(tasks):
-                yield (
-                    txt('all tasks' if len(trsPerTask) == 0
-                        else 'other tasks'),
-                    xhtml.br.join(sorted(defaultTRs)) if defaultTRs
-                        else txt('any')
-                    )
+                trsPerTask += 1
+                yield from presentTaskRunners(task.getName(), trSet)
+        if trsPerTask < len(tasks):
+            taskLabel = 'all tasks' if trsPerTask == 0 else 'other tasks'
+            defaultTRs = proc.job.getRunners()
+            if defaultTRs:
+                yield from presentTaskRunners(taskLabel, defaultTRs)
+            elif trsPerTask != 0:
+                yield taskLabel, 'any'
