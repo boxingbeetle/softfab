@@ -2,45 +2,55 @@
 
 from collections import defaultdict
 from functools import total_ordering
-from typing import cast
+from typing import (
+    TYPE_CHECKING, AbstractSet, DefaultDict, Dict, Iterable, Iterator, List,
+    Mapping, MutableSet, Optional, Tuple, Union, cast
+)
 
 from softfab.config import dbDir
-from softfab.databaselib import Database, DatabaseElem, RecordObserver
-from softfab.frameworklib import frameworkDB
+from softfab.databaselib import Database, Record, RecordObserver
+from softfab.frameworklib import Framework, frameworkDB
 from softfab.joblib import Job
-from softfab.productdeflib import ProductType, productDefDB
+from softfab.productdeflib import ProductDef, ProductType, productDefDB
 from softfab.projectlib import project
 from softfab.restypelib import resTypeDB
-from softfab.selectlib import ObservingTagCache, SelectableABC
+from softfab.selectlib import ObservingTagCache, SelectableRecordABC
 from softfab.taskdeflib import taskDefDB
 from softfab.taskgroup import PriorityMixin, TaskGroup, TaskSet
 from softfab.tasklib import ResourceRequirementsMixin, TaskRunnerSet
 from softfab.xmlbind import XMLTag
-from softfab.xmlgen import xml
+from softfab.xmlgen import XMLAttributeValue, XMLContent, xml
+
+if TYPE_CHECKING:
+    from softfab.taskdeflib import TaskDef
+else:
+    TaskDef = object
 
 
-class _ObserverProxy(RecordObserver):
+class _ObserverProxy(RecordObserver[Record]):
 
-    def __init__(self, subjectDb):
+    def __init__(self, subjectDb: Database[Record]):
         RecordObserver.__init__(self)
         # Mapping from configId to set of keys observed by that config.
-        self.__subjects = defaultdict(set)
+        self.__subjects = \
+            defaultdict(set) # type: DefaultDict[str, MutableSet[str]]
         # Mapping from key to dictionary of configs that observe that key.
-        self.__observers = defaultdict(dict)
+        self.__observers = \
+            defaultdict(dict) # type: DefaultDict[str, Dict[str, Config]]
         # Listen to all modifications on the given database.
         subjectDb.addObserver(self)
 
-    def addObserver(self, key, cfg):
+    def addObserver(self, key: str, cfg: 'Config') -> None:
         configId = cfg.getId()
         self.__subjects[configId].add(key)
         self.__observers[key][configId] = cfg
 
-    def delObserver(self, key, cfg):
+    def delObserver(self, key: str, cfg: 'Config') -> None:
         configId = cfg.getId()
         self.__subjects[configId].remove(key)
         del self.__observers[key][configId]
 
-    def delAllObservers(self, cfg):
+    def delAllObservers(self, cfg: 'Config') -> None:
         configId = cfg.getId()
         keys = self.__subjects.get(configId)
         if keys is None:
@@ -54,13 +64,13 @@ class _ObserverProxy(RecordObserver):
         assert len(self.__subjects[configId]) == 0
         del self.__subjects[configId]
 
-    def added(self, record):
+    def added(self, record: Record) -> None:
         pass
 
-    def removed(self, record):
+    def removed(self, record: Record) -> None:
         self.updated(record)
 
-    def updated(self, record):
+    def updated(self, record: Record) -> None:
         configs = self.__observers.get(record.getId())
         if configs is not None:
             for cfg in list(configs.values()):
@@ -72,10 +82,10 @@ _tdObserver = _ObserverProxy(taskDefDB)
 
 class _ConfigFactory:
     @staticmethod
-    def createConfig(attributes):
+    def createConfig(attributes: Mapping[str, str]) -> 'Config':
         return Config(attributes)
 
-class _ConfigDB(Database):
+class _ConfigDB(Database['Config']):
     baseDir = dbDir + '/configs'
     factory = _ConfigFactory()
     privilegeObject = 'c'
@@ -91,11 +101,14 @@ class Task(PriorityMixin, ResourceRequirementsMixin, XMLTag, TaskRunnerSet):
     intProperties = ('priority', )
 
     @staticmethod
-    def create(name, priority, parameters):
+    def create(name: str,
+               priority: int,
+               parameters: Mapping[str, str]
+               ) -> 'Task':
         properties = dict(
             name = name,
             priority = priority,
-            )
+            ) # type: Dict[str, XMLAttributeValue]
 
         task = Task(properties)
         # pylint: disable=protected-access
@@ -103,41 +116,41 @@ class Task(PriorityMixin, ResourceRequirementsMixin, XMLTag, TaskRunnerSet):
             task._addParam(dict(name = paramName, value = value))
         return task
 
-    def __init__(self, attributes):
+    def __init__(self, attributes: Mapping[str, XMLAttributeValue]):
         XMLTag.__init__(self, attributes)
         TaskRunnerSet.__init__(self)
         self._properties.setdefault('priority', 0)
-        self.__params = {}
+        self.__params = {} # type: Dict[str, _Param]
 
-    def _addParam(self, attributes):
+    def _addParam(self, attributes: Mapping[str, str]) -> None:
         param = _Param(attributes)
-        self.__params[param['name']] = param
+        self.__params[cast(str, param['name'])] = param
 
     def getName(self) -> str:
         return cast(str, self._properties['name'])
 
-    def getDef(self):
-        return taskDefDB[self._properties['name']]
+    def getDef(self) -> TaskDef:
+        return taskDefDB[self.getName()]
 
-    def getFramework(self):
+    def getFramework(self) -> Framework:
         return self.getDef().getFramework()
 
     def getPriority(self) -> int:
         return cast(int, self._properties['priority'])
 
-    def getParameter(self, name):
+    def getParameter(self, name: str) -> Optional[str]:
         param = self.__params.get(name)
-        return None if param is None else param.get('value')
+        return None if param is None else cast(str, param.get('value'))
 
-    def getParameters(self):
+    def getParameters(self) -> Dict[str, str]:
         '''Returns a new dictionary containing the parameters of this task.
         '''
         return dict(
-            ( name, param.get('value') )
+            ( name, cast(str, param.get('value')) )
             for name, param in self.__params.items()
             )
 
-    def getVisibleParameters(self):
+    def getVisibleParameters(self) -> Dict[str, str]:
         '''Returns a new dictionary of parameters to be shown to the user:
         final and reserved parameters are not included.
         '''
@@ -150,13 +163,13 @@ class Task(PriorityMixin, ResourceRequirementsMixin, XMLTag, TaskRunnerSet):
             if not key.startswith('sf.') and not taskDef.isFinal(key)
             )
 
-    def getInputs(self):
+    def getInputs(self) -> AbstractSet[str]:
         return self.getFramework().getInputs()
 
-    def getOutputs(self):
+    def getOutputs(self) -> AbstractSet[str]:
         return self.getFramework().getOutputs()
 
-    def _getContent(self):
+    def _getContent(self) -> XMLContent:
         yield from self.__params.values()
         yield self.runnersAsXML()
 
@@ -175,47 +188,57 @@ class _Input(XMLTag):
 
     tagName = 'input'
 
-    def __hash__(self):
-        return hash(self._properties['name'])
+    def __hash__(self) -> int:
+        return hash(self.getName())
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if isinstance(other, _Input):
-            return self._properties['name'] == other['name']
+            return self.getName() == self.getName()
         else:
             return NotImplemented
 
-    def __lt__(self, other):
+    def __lt__(self, other: object) -> bool:
         if isinstance(other, _Input):
-            return self._properties['name'] < other['name']
+            return self.getName() < self.getName()
         else:
             return NotImplemented
 
-    def isLocal(self):
-        productDef = productDefDB.get(self._properties['name'])
-        return False if productDef is None else productDef.isLocal()
+    def getName(self) -> str:
+        return cast(str, self._properties['name'])
 
-    def getType(self):
-        productDef = productDefDB.get(self._properties['name'])
-        return ProductType.TOKEN if productDef is None else productDef['type']
+    def isLocal(self) -> bool:
+        try:
+            return productDefDB[self.getName()].isLocal()
+        except KeyError:
+            return False
 
-    def setLocator(self, locator, localAt = None):
+    def getType(self) -> ProductType:
+        try:
+            return productDefDB[self.getName()].getType()
+        except KeyError:
+            return ProductType.TOKEN
+
+    def getLocator(self) -> Optional[str]:
+        return cast(str, self._properties.get('locator'))
+
+    def setLocator(self, locator: str, localAt: Optional[str] = None) -> None:
         self._properties['locator'] = locator
         if localAt is not None:
             self._properties['localAt'] = localAt
         elif 'localAt' in self._properties:
             del self._properties['localAt']
 
-    def storeLocator(self, locator, taskName): # pylint: disable=unused-argument
+    def storeLocator(self, locator: str, taskName: str) -> None: # pylint: disable=unused-argument
         self._properties['locator'] = locator
 
-    def getLocalAt(self):
-        return self._properties.get('localAt')
+    def getLocalAt(self) -> Optional[str]:
+        return cast(Optional[str], self._properties.get('localAt'))
 
-    def setLocalAt(self, runnerId):
+    def setLocalAt(self, runnerId: str) -> None:
         assert runnerId is not None
         self._properties['localAt'] = runnerId
 
-    def clone(self):
+    def clone(self) -> '_Input':
         return _Input(self._properties)
 
 class _Output:
@@ -225,36 +248,42 @@ class _Output:
     one of the inputs.
     '''
 
-    def __init__(self, name):
+    def __init__(self, name: str):
         self.__productDef = productDefDB[name]
 
-    def isLocal(self):
+    def isLocal(self) -> bool:
         return self.__productDef.isLocal()
 
-    def setLocalAt(self, runnerId):
+    def setLocalAt(self, runnerId: str) -> None:
         assert runnerId is not None
 
-class TaskSetWithInputs(TaskSet):
+class TaskSetWithInputs(TaskSet[Task]):
 
-    def __init__(self):
+    def __init__(self) -> None:
         TaskSet.__init__(self)
-        self._inputs = {}
+        self._inputs = {} # type: Dict[str, _Input]
 
-    def getInput(self, name):
+    # Mark class as abstract:
+    def getTarget(self) -> str:
+        raise NotImplementedError
+
+    def getInput(self, name: str) -> Optional[_Input]:
         return self._inputs.get(name)
 
-    def getInputs(self):
+    def getInputs(self) -> Iterable[_Input]:
         return self._inputs.values()
 
-    def getProductDef(self, name):
+    def getProductDef(self, name: str) -> ProductDef:
         # Get the latest version.
         return productDefDB[name]
 
-    def getProductLocation(self, name):
+    def getProductLocation(self, name: str) -> Optional[str]:
         product = self.getInput(name)
-        return None if product is None else product.get('localAt')
+        return None if product is None else product.getLocalAt()
 
-    def getInputsGrouped(self):
+    def getInputsGrouped(
+            self
+            ) -> List[Tuple[Optional[TaskGroup[Task]], List[_Input]]]:
         '''Returns inputs grouped by "locality". The return value is a list
         of 2-element tuples, which contain local group or None as the first
         element and list of Product objects as the second one. Each inner list
@@ -265,9 +294,10 @@ class TaskSetWithInputs(TaskSet):
         grouped = []
         ungrouped = set()
         inputSet = self.getInputSet()
-        for task in self._getMainGroup().getChildren():
+        for task in self._getMainGroup().getChildren(): \
+                # type: Union[TaskGroup[Task], Task]
             if isinstance(task, TaskGroup):
-                group = set()
+                group = set() # type: Optional[MutableSet[_Input]]
             else:
                 group = None
             for inpName in task.getInputs():
@@ -280,16 +310,17 @@ class TaskSetWithInputs(TaskSet):
                     else:
                         ungrouped.add(inpObj)
             if group:
+                assert isinstance(task, TaskGroup)
                 grouped.append(( task, sorted(group) ))
-        return [ ( None, [ item ] ) for item in sorted(ungrouped) ] + \
-            sorted(grouped)
+        return cast(
+            List[Tuple[Optional[TaskGroup[Task]], List[_Input]]],
+            [ ( None, [ item ] ) for item in sorted(ungrouped) ]
+            ) + sorted(grouped)
 
-    def hasLocalInputs(self):
+    def hasLocalInputs(self) -> bool:
         return any(inp.isLocal() for inp in self._inputs.values())
 
-class Config(
-    TaskRunnerSet, TaskSetWithInputs, XMLTag, SelectableABC, DatabaseElem
-    ):
+class Config(TaskRunnerSet, TaskSetWithInputs, XMLTag, SelectableRecordABC):
     tagName = 'config'
     boolProperties = ('trselect',)
     cache = ObservingTagCache(
@@ -301,9 +332,15 @@ class Config(
         )
 
     @staticmethod
-    def create(
-        name, target, owner, trselect, comment, jobParams, tasks, runners
-        ):
+    def create(name: str,
+               target: str,
+               owner: Optional[str],
+               trselect: bool,
+               comment: str,
+               jobParams: Mapping[str, str],
+               tasks: Iterable[Task],
+               runners: Iterable[str]
+               ) -> 'Config':
         properties = dict(
             name = name,
             target = target,
@@ -317,23 +354,22 @@ class Config(
         config.__params = dict(jobParams)
         config._setRunners(runners)
         for task in tasks:
-            config._tasks[task['name']] = task
+            config._tasks[task.getName()] = task
         config.__updateInputs()
         return config
 
-    def __init__(self, attributes):
+    def __init__(self, attributes: Mapping[str, XMLAttributeValue]):
         # Note: if the "comment" tag is empty, the XML parser does not call the
         #       <text> handler, so we have to use '' rather than None here.
         TaskSetWithInputs.__init__(self)
         TaskRunnerSet.__init__(self)
         XMLTag.__init__(self, attributes)
-        SelectableABC.__init__(self)
-        DatabaseElem.__init__(self)
+        SelectableRecordABC.__init__(self)
         self.__comment = ''
-        self.__params = {}
-        self.__description = None
+        self.__params = {} # type: Dict[str, str]
+        self.__description = None # type: Optional[str]
 
-    def __updateInputs(self):
+    def __updateInputs(self) -> None:
         '''This should be called after tasks are added, to recompute which
         inputs this configuration has.
         '''
@@ -342,20 +378,23 @@ class Config(
             for item in self.getInputSet()
             )
 
-    def getId(self):
-        return self._properties['name']
+    def getId(self) -> str:
+        return cast(str, self._properties['name'])
 
-    def getOwner(self):
-        return self._properties.get('owner')
+    def getTarget(self) -> str:
+        return cast(str, self._properties['target'])
+
+    def getOwner(self) -> Optional[str]:
+        return cast(Optional[str], self._properties.get('owner'))
 
     @property
-    def comment(self):
+    def comment(self) -> str:
         """Gets user-specified comment string for this job configuration.
         Comment string may contain newlines.
         """
         return self.__comment
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: str) -> object:
         if key == 'owner':
             return self.getOwner()
         elif key == 'comment':
@@ -367,22 +406,22 @@ class Config(
         else:
             return XMLTag.__getitem__(self, key)
 
-    def _addTask(self, attributes):
+    def _addTask(self, attributes: Mapping[str, str]) -> Task:
         task = Task(attributes)
-        self._tasks[task['name']] = task
+        self._tasks[task.getName()] = task
         return task
 
-    def _addInput(self, attributes):
+    def _addInput(self, attributes: Mapping[str, str]) -> None:
         inp = _Input(attributes)
-        self._inputs[inp['name']] = inp
+        self._inputs[inp.getName()] = inp
 
-    def _addParam(self, attributes):
+    def _addParam(self, attributes: Mapping[str, str]) -> None:
         self.__params[attributes['name']] = attributes['value']
 
-    def _textComment(self, text):
+    def _textComment(self, text: str) -> None:
         self.__comment = text
 
-    def getProduct(self, name):
+    def getProduct(self, name: str) -> Union[_Input, _Output]:
         inp = self._inputs.get(name)
         if inp is None:
             return _Output(name)
@@ -390,19 +429,19 @@ class Config(
             return inp
 
     # So far used for testing only
-    def getParams(self):
+    def getParams(self) -> Dict[str, str]:
         return dict(self.__params)
 
-    def getParameter(self, name):
+    def getParameter(self, name: str) -> Optional[str]:
         return self.__params.get(name)
 
-    def isConsistent(self):
+    def isConsistent(self) -> bool:
         """Returns True iff this configuration can be instantiated.
         It is possible for a configuration to consistent when it is created
         but become inconsistent due to definitions changing, for example
         due to conflicting resource requirements.
         """
-        refToType = {}
+        refToType = {} # type: Dict[str, str]
         for task in self._tasks.values():
             for spec in task.resourceClaim:
                 typeName = spec.typeName
@@ -413,7 +452,7 @@ class Config(
                             return False
         return True
 
-    def iterInputConflicts(self):
+    def iterInputConflicts(self) -> Iterator[str]:
         for inputName in self.getInputSet():
             pd = self.getProductDef(inputName)
             inp = self._inputs.get(inputName)
@@ -422,27 +461,30 @@ class Config(
             if pd.isLocal() and (inp is None or inp.get('localAt') is None):
                 yield 'missing \'local at\' for input "%s"' % inputName
 
-    def hasValidInputs(self):
+    def hasValidInputs(self) -> bool:
         """Returns True iff this configuration can be instantiated without
         overriding inputs.
         """
         return not any(self.iterInputConflicts())
 
-    def createJob(
-        # pylint: disable=dangerous-default-value
-        # We only read the default dictionaries.
-        self, owner, comment = None,
-        locators = {}, params = {}, localAt = {},
-        taskParameters = None
-        ):
+    def createJob( # pylint: disable=dangerous-default-value
+            # We only read the default dictionaries.
+            self,
+            owner: Optional[str],
+            comment: Optional[str] = None,
+            locators: Mapping[str, str] = {},
+            params: Mapping[str, str] = {},
+            localAt: Mapping[str, str] = {},
+            taskParameters: Optional[Mapping[str, Mapping[str, str]]] = None
+            ) -> Job:
         jobParams = dict(self.__params)
         jobParams.update(params)
 
         job = Job.create(
             # configId is empty string when executing from scratch
             configId = self.getId() or None,
-            target = self._properties['target'],
-            owner = self._properties.get('owner') if owner is None else owner,
+            target = self.getTarget(),
+            owner = self.getOwner() if owner is None else owner,
             comment = comment or self.__comment,
             jobParams = jobParams,
             runners = self._runners,
@@ -450,11 +492,11 @@ class Config(
 
         for task in self.getTaskSequence():
             if taskParameters:
-                taskParams = taskParameters.get(task['name'])
+                taskParams = taskParameters.get(task.getName())
             else:
                 taskParams = None
             newTask = job.addTask(
-                task['name'], task['priority'], task.getRunners()
+                task.getName(), task.getPriority(), task.getRunners()
                 )
             for key, defValue in task.getDef().getParameters().items():
                 if taskParams:
@@ -471,14 +513,16 @@ class Config(
             inp = self._inputs.get(item)
             job.setInputLocator(
                 item,
-                locators.get(item, inp and inp.get('locator') or ''),
-                localAt.get(item) or inp and inp.get('localAt'),
+                locators.get(item, inp and inp.getLocator() or ''),
+                localAt.get(item) or (
+                    None if inp is None else inp.getLocalAt()
+                    ),
                 'SF_USER_INPUT_%d' % index
                 )
 
         return job
 
-    def _getContent(self):
+    def _getContent(self) -> XMLContent:
         if self.__comment:
             yield xml.comment[ self.__comment ]
         yield from self._tasks.values()
@@ -488,37 +532,38 @@ class Config(
         yield self.runnersAsXML()
         yield self._tagsAsXML()
 
-    def getDescription(self):
+    def getDescription(self) -> str:
         if self.__description is None:
             self.__description = super().getDescription()
             self.__registerNotify()
         return self.__description
 
-    def _invalidate(self):
+    def _invalidate(self) -> None:
         self.__unregisterNotify()
         self.__description = None
 
-    def _unload(self):
+    def _unload(self) -> None:
         self.__unregisterNotify()
 
-    def __registerNotify(self):
+    def __registerNotify(self) -> None:
         frameworks = {}
         for task in self.getTasks():
             _tdObserver.addObserver(task.getName(), self)
             framework = task.getDef().getFramework()
             frameworks[framework.getId()] = framework
-        products = set()
+        products = set() # type: MutableSet[str]
         for frameworkId, framework in frameworks.items():
             _fdObserver.addObserver(frameworkId, self)
             products |= framework.getInputs() | framework.getOutputs()
         for product in products:
             _pdObserver.addObserver(product, self)
 
-    def __unregisterNotify(self):
-        for proxy in (_tdObserver, _fdObserver, _pdObserver):
-            proxy.delAllObservers(self)
+    def __unregisterNotify(self) -> None:
+        _tdObserver.delAllObservers(self)
+        _fdObserver.delAllObservers(self)
+        _pdObserver.delAllObservers(self)
 
-def iterConfigsByTag(key, value):
+def iterConfigsByTag(key: str, value: str) -> Iterator[Config]:
     cvalue, dvalue_ = Config.cache.toCanonical(key, value)
     for config in configDB:
         if config.hasTagValue(key, cvalue):

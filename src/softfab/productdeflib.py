@@ -67,6 +67,9 @@ class ProductDef(XMLTag, DatabaseElem):
     def getId(self) -> str:
         return cast(str, self['id'])
 
+    def getType(self) -> ProductType:
+        return cast(ProductType, self['type'])
+
     def isLocal(self) -> bool:
         return cast(bool, self['local'])
 
