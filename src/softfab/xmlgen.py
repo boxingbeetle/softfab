@@ -37,14 +37,13 @@ If you are creating a long sequence, returning an iterable will perform better
 than repeated addition.
 '''
 
-from abc import ABC, abstractmethod
 from enum import Enum
 from itertools import chain
 from sys import intern
 from types import MappingProxyType, MethodType
 from typing import (
     TYPE_CHECKING, Callable, Dict, Iterable, Iterator, List, Mapping, Match,
-    Optional, Sequence, Type, Union
+    Optional, Sequence, Type, Union, cast
 )
 from xml.etree import ElementTree
 from xml.sax.saxutils import escape
@@ -58,50 +57,24 @@ if TYPE_CHECKING:
 else:
     NoReturn = None
 
-class XMLConvertibleABC(ABC):
-    '''Classes can define a `toXML` method to be automatically converted
-    to XML when used as XML content.
-    '''
-
-    @abstractmethod
-    def toXML(self) -> 'XMLContent':
-        raise NotImplementedError
-
-    @classmethod
-    def __subclasshook__(cls, C: Type[object]) -> bool:
-        if cls is XMLConvertible:
-            if any('toXML' in B.__dict__ for B in C.__mro__):
-                return True
-        return NotImplemented
-
-class XMLPresentableABC(ABC):
-    '''Classes can define a `present` method to generate an XML
-    presentation on request. Presentables can be embedded in XML
-    content, but an XML tree cannot be flattened until all embedded
-    presentations have been resolved.
-    '''
-
-    @abstractmethod
-    def present(self, **kwargs: object) -> 'XMLContent':
-        raise NotImplementedError
-
-    @classmethod
-    def __subclasshook__(cls, C: Type[object]) -> bool:
-        if cls is XMLPresentable:
-            if any('present' in B.__dict__ for B in C.__mro__):
-                return True
-        return NotImplemented
-
 if TYPE_CHECKING:
-    from typing_extensions import Protocol, runtime
+    from typing_extensions import Protocol
 
-    @runtime
     class XMLConvertible(Protocol):
+        """Classes can define a `toXML` method to be automatically converted
+        to XML when used as XML content.
+        """
+
         def toXML(self) -> 'XMLContent':
             raise NotImplementedError
 
-    @runtime
     class XMLPresentable(Protocol):
+        """Classes can define a `present` method to generate an XML
+        presentation on request. Presentables can be embedded in XML
+        content, but an XML tree cannot be flattened until all embedded
+        presentations have been resolved.
+        """
+
         def present(self, **kwargs: object) -> 'XMLContent':
             raise NotImplementedError
 
@@ -110,9 +83,9 @@ if TYPE_CHECKING:
             raise NotImplementedError
 
 else:
-    XMLConvertible = XMLConvertibleABC
-    XMLPresentable = XMLPresentableABC
-    XMLSubscriptable = None
+    XMLConvertible = object
+    XMLPresentable = object
+    XMLSubscriptable = object
 
 _reAttributeValueEscapeChars = re.compile('[^ !#$%\'-;=?-~]')
 _xmlBuiltinEntities = {
@@ -305,10 +278,10 @@ def _adaptSequence(obj: XMLContent) -> Iterator[XML]:
         yield _Text(obj.name.lower())
     elif obj is None:
         pass
-    elif isinstance(obj, XMLConvertible):
-        yield from _adaptSequence(obj.toXML())
-    elif isinstance(obj, XMLPresentable):
-        yield _PresentationWrapper(obj.present)
+    elif hasattr(obj, 'toXML'):
+        yield from _adaptSequence(cast(XMLConvertible, obj).toXML())
+    elif hasattr(obj, 'present'):
+        yield _PresentationWrapper(cast(XMLPresentable, obj).present)
     elif isinstance(obj, Iterable):
         if isinstance(obj, bytes):
             # While 'bytes' are iterable, for example b'abc' would be
