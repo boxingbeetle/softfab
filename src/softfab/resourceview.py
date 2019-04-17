@@ -17,7 +17,7 @@ from softfab.xmlgen import txt, xhtml
 def getResourceStatus(resource):
     """Returns a status summary string for `resource`."""
     connectionStatus = resource.getConnectionStatus()
-    if connectionStatus is not ConnectionStatus.CONNECTED:
+    if connectionStatus in (ConnectionStatus.LOST, ConnectionStatus.WARNING):
         return connectionStatus.name.lower()
     elif resource.isReserved():
         executionRun = resource.getRun()
@@ -28,8 +28,10 @@ def getResourceStatus(resource):
         return 'reserved'
     elif resource.isSuspended():
         return 'suspended'
-    else:
+    elif connectionStatus is ConnectionStatus.CONNECTED:
         return 'free'
+    else:
+        return connectionStatus.name.lower()
 
 def presentCapabilities(capabilities, resType, capFilter = None):
     if not capabilities:
