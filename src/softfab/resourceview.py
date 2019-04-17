@@ -82,7 +82,7 @@ def initResourceRequirementsArgs(element):
     if element is None:
         claim = initialResourceClaim
     else:
-        claim = element.resourceClaim
+        claim = element.resourceClaim.merge(initialResourceClaim)
     return dict(
         ref=[spec.reference for spec in claim],
         type=[spec.typeName for spec in claim],
