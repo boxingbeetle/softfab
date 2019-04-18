@@ -264,7 +264,7 @@ class TaskSetWithInputs(TaskSet[Task]):
         self._inputs = {} # type: Dict[str, _Input]
 
     # Mark class as abstract:
-    def getTarget(self) -> str:
+    def getRunners(self) -> AbstractSet[str]:
         raise NotImplementedError
 
     def getInput(self, name: str) -> Optional[_Input]:

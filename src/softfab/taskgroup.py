@@ -52,9 +52,6 @@ class TaskSet(Generic[TaskT]):
     def isEmpty(self) -> bool:
         return not self._tasks
 
-    def getTarget(self) -> str:
-        raise NotImplementedError
-
     def getInputSet(self) -> AbstractSet[str]:
         # TODO: This is equivalent to TaskGroup.getInputs.
         #       Any chances for generalizing?
