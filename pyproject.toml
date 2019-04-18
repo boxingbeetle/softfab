@@ -49,7 +49,7 @@ pytest = '^4.0'
 pylint = '^2.0'
 isort = {version = "^4.3", extras = ["pyproject"]}
 invoke = '^1.2'
-mypy = '^0.670.0'
+mypy = '>=0.670'
 mypy-zope = '^0.1.1'
 typing_extensions = '^3.7'
 lxml = "^4.3"
