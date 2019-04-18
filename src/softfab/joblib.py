@@ -285,6 +285,9 @@ class Task(
             if not key.startswith('sf.') and not taskDef.isFinal(key, getParent)
             )
 
+    def getNeededCaps(self) -> AbstractSet[str]:
+        return super().getNeededCaps() | set([self.__job.getTarget()])
+
     def canRunOn(self, runner: str) -> bool:
         if self._runners:
             return runner in self._runners
