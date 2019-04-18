@@ -2,8 +2,8 @@
 
 from abc import ABC
 from typing import (
-    AbstractSet, Callable, ClassVar, FrozenSet, Iterable, Mapping, Optional,
-    Sequence, Set, Tuple, TypeVar, cast
+    AbstractSet, Callable, ClassVar, Iterable, Mapping, Optional, Set, Tuple,
+    TypeVar, cast
 )
 import logging
 
@@ -36,9 +36,6 @@ class ResourceBase(XMLTag, DatabaseElem):
 
     def _addCapability(self, attributes: Mapping[str, str]) -> None:
         cast(Set[str], self._capabilities).add(attributes['name'])
-
-    def _endParse(self) -> None:
-        self._capabilities = frozenset(self._capabilities)
 
     def _getContent(self) -> XMLContent:
         for cap in self._capabilities:
@@ -81,8 +78,8 @@ class ResourceBase(XMLTag, DatabaseElem):
         return cast(str, self._properties['description'])
 
     @property
-    def capabilities(self) -> FrozenSet[str]:
-        return cast(FrozenSet[str], self._capabilities)
+    def capabilities(self) -> AbstractSet[str]:
+        return self._capabilities
 
     @property
     def cost(self) -> int:
@@ -597,7 +594,7 @@ class TaskRunner(ResourceBase):
         self._notify()
 
     @ResourceBase.capabilities.setter # type: ignore
-    def capabilities(self, value: Sequence[str]) -> None:
+    def capabilities(self, value: Iterable[str]) -> None:
         self._capabilities = frozenset(value)
         self._notify()
 
