@@ -501,13 +501,12 @@ class _LocalGroup(TaskGroup[TaskT]):
                      whyNot: List[ReasonForWaiting]
                      ) -> None:
         boundRunnerId = self.__runnerId
-        target = self._parent.getTarget()
         if boundRunnerId is None:
             candidates = taskRunners
             # Limit the candidates to those TRs with sufficient capabilities
             # to run all tasks in this group.
             candidates = checkGroupRunners(
-                candidates, target, self.getNeededCaps(), whyNot
+                candidates, self.getNeededCaps(), whyNot
                 )
         else:
             # Is the bound Task Runner in the list?
@@ -515,7 +514,7 @@ class _LocalGroup(TaskGroup[TaskT]):
                 if runner.getId() == boundRunnerId:
                     # Check whether this single candidate is suitable.
                     candidates = checkBoundGroupRunner(
-                        runner, target, self.getNeededCaps(), whyNot
+                        runner, self.getNeededCaps(), whyNot
                         )
                     break
             else:

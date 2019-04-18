@@ -360,7 +360,7 @@ class Task(
                 whyNot.append(TRStateReason(StatusLevel.MISSING))
         else:
             candidates = taskRunners
-        checkRunners(candidates, self.__job.getTarget(), neededCaps, whyNot)
+        checkRunners(candidates, neededCaps, whyNot)
 
         taskRun.checkResources(whyNot)
 

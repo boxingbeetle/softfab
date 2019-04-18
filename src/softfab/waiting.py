@@ -362,7 +362,6 @@ def _checkState(
 
 def checkRunners(
         runners: Sequence[TaskRunner],
-        target: str,
         neededCaps: AbstractSet[str],
         whyNot: List[ReasonForWaiting]
         ) -> Sequence[TaskRunner]:
@@ -372,7 +371,6 @@ def checkRunners(
 
 def checkGroupRunners(
         runners: Sequence[TaskRunner],
-        target: str,
         neededCaps: AbstractSet[str],
         whyNot: List[ReasonForWaiting]
         ) -> Sequence[TaskRunner]:
@@ -384,7 +382,6 @@ def checkGroupRunners(
 
 def checkBoundGroupRunner(
         boundRunner: TaskRunner,
-        target: str,
         neededCaps: AbstractSet[str],
         whyNot: List[ReasonForWaiting]
         ) -> Sequence[TaskRunner]:
