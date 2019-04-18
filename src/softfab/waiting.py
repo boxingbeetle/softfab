@@ -8,7 +8,7 @@ from abc import ABC
 from enum import IntEnum
 from typing import (
     TYPE_CHECKING, AbstractSet, Callable, ClassVar, Iterable, List, Optional,
-    Sequence, Set, Tuple
+    Sequence, Union, cast
 )
 
 from softfab.connection import ConnectionStatus
@@ -37,7 +37,7 @@ def statusLevelForResource(resource: ResourceBase) -> StatusLevel:
     else:
         return StatusLevel.FREE
 
-def _describeLevel(level: StatusLevel) -> str:
+def _describeLevel(level: Union[StatusLevel, int]) -> str:
     if level == StatusLevel.RESERVED:
         return 'in use'
     elif level == StatusLevel.SUSPENDED:
@@ -51,11 +51,11 @@ class ReasonForWaiting:
     """Describes a reason why a task isn't running.
     """
 
-    def __str__(self):
+    def __str__(self) -> str:
         return '%s(%s)' % (self.__class__.__name__, self.description)
 
     @property
-    def priority(self) -> Tuple[int]:
+    def priority(self) -> Sequence[int]:
         """A tuple of integers that indicates the priority of this reason:
         the reason with highest the tuple value will be presented to the user.
         """
@@ -74,11 +74,11 @@ class InputReason(ReasonForWaiting):
         self.__inputs = inputs
 
     @property
-    def priority(self):
+    def priority(self) -> Sequence[int]:
         return (6,)
 
     @property
-    def description(self):
+    def description(self) -> str:
         inputs = self.__inputs
         return 'waiting for %s: %s' % (
             pluralize('input', len(inputs)),
@@ -92,11 +92,11 @@ class ResourceMissingReason(ReasonForWaiting):
         self.__resourceId = resourceId
 
     @property
-    def priority(self):
+    def priority(self) -> Sequence[int]:
         return (0, 2)
 
     @property
-    def description(self):
+    def description(self) -> str:
         return 'resource was deleted: %s' % self.__resourceId
 
 class ResourceReason(ReasonForWaiting, ABC):
@@ -107,11 +107,11 @@ class ResourceReason(ReasonForWaiting, ABC):
         self._level = level
 
     @property
-    def priority(self):
+    def priority(self) -> Sequence[int]:
         return (5, self._level, self.prioMinor)
 
     @property
-    def description(self):
+    def description(self) -> str:
         raise NotImplementedError
 
 class ResourceCapsReason(ResourceReason):
@@ -122,7 +122,7 @@ class ResourceCapsReason(ResourceReason):
         self.__type = typeName
 
     @property
-    def description(self):
+    def description(self) -> str:
         return 'resources of type "%s" with required capabilities are %s' % (
             self.__type, _describeLevel(self._level + 1)
             )
@@ -135,7 +135,7 @@ class ResourceSpecReason(ResourceReason):
         self.__spec = spec
 
     @property
-    def description(self):
+    def description(self) -> str:
         return 'resources matching reference "%s" are %s' % (
             self.__spec.reference, _describeLevel(self._level + 1)
             )
@@ -149,7 +149,7 @@ class ResourceTypeReason(ResourceReason):
         self.__shortage = shortage
 
     @property
-    def description(self):
+    def description(self) -> str:
         level = self._level
         if level == StatusLevel.FREE:
             return 'waiting for %s: %s' % (
@@ -170,11 +170,11 @@ class BoundReason(ReasonForWaiting):
         self.__boundRunnerId = boundRunnerId
 
     @property
-    def priority(self):
+    def priority(self) -> Sequence[int]:
         return (4,)
 
     @property
-    def description(self):
+    def description(self) -> str:
         return 'waiting for bound Task Runner: %s' % self.__boundRunnerId
 
 class _CapabilitiesReason(ReasonForWaiting, ABC):
@@ -189,7 +189,7 @@ class _CapabilitiesReason(ReasonForWaiting, ABC):
         self._missingOnAny = missingOnAny
 
     @property
-    def priority(self):
+    def priority(self) -> Sequence[int]:
         return (
             self.selectorMajor,
             1,
@@ -198,14 +198,14 @@ class _CapabilitiesReason(ReasonForWaiting, ABC):
             )
 
     @property
-    def description(self):
+    def description(self) -> str:
         raise NotImplementedError
 
 class TRCapsReason(_CapabilitiesReason):
     selectorMajor = 2
 
     @property
-    def description(self):
+    def description(self) -> str:
         if self._missingOnAll:
             return 'no Task Runner has any of these capabilities: ' + \
                 ', '.join(self._missingOnAll)
@@ -220,18 +220,18 @@ class TRStateReason(ReasonForWaiting):
         self.__level = level
 
     @property
-    def priority(self):
+    def priority(self) -> Sequence[int]:
         return (2, 0, self.__level.value)
 
     @property
-    def description(self):
+    def description(self) -> str:
         return 'all suitable Task Runners are %s' % _describeLevel(self.__level)
 
 class UnboundGroupCapsReason(_CapabilitiesReason):
     selectorMajor = 1
 
     @property
-    def description(self):
+    def description(self) -> str:
         if self._missingOnAll:
             return 'no Task Runner has any of these group capabilities: ' + \
                 ', '.join(self._missingOnAll)
@@ -246,11 +246,11 @@ class UnboundGroupStateReason(ReasonForWaiting):
         self.__level = level
 
     @property
-    def priority(self):
+    def priority(self) -> Sequence[int]:
         return (1, 0, self.__level.value)
 
     @property
-    def description(self):
+    def description(self) -> str:
         return 'all Task Runners suitable for the task group are %s' % \
             _describeLevel(self.__level)
 
@@ -262,11 +262,11 @@ class BoundGroupTargetReason(ReasonForWaiting):
         self.__target = target
 
     @property
-    def priority(self):
+    def priority(self) -> Sequence[int]:
         return (3, 2)
 
     @property
-    def description(self):
+    def description(self) -> str:
         return "bound Task Runner '%s' does not support target '%s'" % (
             self.__boundRunnerId, self.__target
             )
@@ -275,12 +275,12 @@ class BoundGroupCapsReason(_CapabilitiesReason):
     selectorMajor = 3
     severity = 7
 
-    def __init__(self, boundRunnerId: str, *args):
+    def __init__(self, boundRunnerId: str, *args: AbstractSet[str]):
         self.__boundRunnerId = boundRunnerId
         _CapabilitiesReason.__init__(self, *args)
 
     @property
-    def description(self):
+    def description(self) -> str:
         assert self._missingOnAll == self._missingOnAny
         return "bound Task Runner '%s' does not have group capabilities: %s" % (
             self.__boundRunnerId,
@@ -295,11 +295,11 @@ class BoundGroupStateReason(ReasonForWaiting):
         self.__level = level
 
     @property
-    def priority(self):
+    def priority(self) -> Sequence[int]:
         return (3, 0, self.__level.value)
 
     @property
-    def description(self):
+    def description(self) -> str:
         return "bound Task Runner '%s' is %s" % (
             self.__boundRunnerId,
             _describeLevel(self.__level)
@@ -324,10 +324,13 @@ def _checkCapabilities(
     '''Filter out Task Runners without the required capabilities.
     '''
     foundRunners = []
-    missingOnAny = set() # type: Set[str]
-    missingOnAll = None # type: Optional[Set[str]]
+    missingOnAny = set() # type: AbstractSet[str]
+    missingOnAll = None # type: Optional[AbstractSet[str]]
     for runner in runners:
-        missingCaps = neededCaps - runner.capabilities
+        # TODO: Mypy marks this line as an error in the report, but doesn't
+        #       log any issue for it.
+        #       Without the cast, several more lines are marked as errors.
+        missingCaps = cast(AbstractSet[str], neededCaps - runner.capabilities)
         if missingCaps:
             missingOnAny |= missingCaps
             if missingOnAll is None:
