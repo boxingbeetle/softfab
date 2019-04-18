@@ -561,7 +561,7 @@ class Execute_POST(ExecuteBase):
 
             return cls(
                 config = config.getId(),
-                target = config['target'],
+                target = config.getTarget(),
                 tasks = frozenset(
                     task['name']
                     for task in tasks
@@ -710,7 +710,7 @@ class TaskRunnersPerTaskTable(SingleCheckBoxTable):
 class ConfigInputTable(InputTable):
 
     def filterTaskRunner(self, taskRunner, taskSet, group, inp):
-        return taskSet['target'] in taskRunner.targets and (
+        return taskSet.getTarget() in taskRunner.targets and (
             group is None or group.canRunOn(taskRunner.getId())
             )
 

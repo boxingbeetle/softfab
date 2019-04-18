@@ -45,7 +45,7 @@ class Synchronize_POST(ControlPage[ControlPage.Arguments,
             # Note that we will accept capabilities that were targets earlier
             # but are no longer marked as targets. This is deliberate, to match
             # the "reason for waiting" logic.
-            if job['target'] in capabilities:
+            if job.getTarget() in capabilities:
                 # Try to assign this job, might fail for various
                 # reasons, such as:
                 # - all tasks done

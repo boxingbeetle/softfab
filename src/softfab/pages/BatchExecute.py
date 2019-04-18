@@ -61,7 +61,7 @@ class FakeTaskSet(TaskSetWithInputs):
                     locator = ownInput.get('locator')
                     if ownInput.isLocal():
                         # Assume: only one target per Task Runner is allowed.
-                        if self.__targets[inputName] != config['target']:
+                        if self.__targets[inputName] != config.getTarget():
                             raise InputConflict(
                                 'The configurations can not be executed '
                                 'because of conflicting local inputs'
@@ -77,7 +77,7 @@ class FakeTaskSet(TaskSetWithInputs):
                 else:
                     ownInput = cfgInput.clone()
                     self._inputs[inputName] = ownInput
-                    self.__targets[inputName] = config['target']
+                    self.__targets[inputName] = config.getTarget()
                 inputs[inputName] = ownInput
             self.__index += 1
             fakeName = str(self.__index)

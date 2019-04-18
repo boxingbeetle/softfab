@@ -80,7 +80,7 @@ class GetJobInfo_GET(ControlPage['GetJobInfo_GET.Arguments',
         response.writeXML(
             xml.job(
                 jobid = job.getId(),
-                target = job['target'],
+                target = job.getTarget(),
                 createtime = formatTimeAttr(job['timestamp']),
                 configid = job['configId'],
                 owner = job['owner'],
