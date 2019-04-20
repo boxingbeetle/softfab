@@ -158,7 +158,7 @@ class Project(XMLTag, SingletonElem):
         self.__tagKeys.append(attributes['key'])
 
     def getTargets(self) -> AbstractSet[str]:
-        return set(self.__targets or [ 'unknown' ])
+        return self.__targets
 
     def setTargets(self, targets: Iterable[str]) -> None:
         self.__targets = set(targets)
@@ -181,9 +181,9 @@ class Project(XMLTag, SingletonElem):
     def showTargets(self) -> bool:
         """Should targets be shown in the user interface?
 
-        Returns True iff more than one target is defined.
+        Returns True iff at least one target is defined.
         """
-        return len(self.__targets) > 1
+        return bool(self.__targets)
 
     @property
     def name(self) -> str:

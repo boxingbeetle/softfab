@@ -39,9 +39,12 @@ class TargetStep(DialogStep):
     title = 'Targets'
 
     def process(self, proc):
-        if proc.args.target not in project.getTargets():
-            raise ArgsCorrected(proc.args, target = min(project.getTargets()))
-        return project.showTargets
+        projectTargets = project.getTargets()
+        if not projectTargets:
+            projectTargets = set(['unknown'])
+        if proc.args.target not in projectTargets:
+            raise ArgsCorrected(proc.args, target=min(projectTargets))
+        return len(projectTargets) > 1
 
     def presentFormBody(self, **kwargs):
         yield xhtml.p[ 'Select target to test:' ]
