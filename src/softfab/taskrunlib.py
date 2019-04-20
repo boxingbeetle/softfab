@@ -104,7 +104,8 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
         elif key == 'starttime':
             return self.getStartTime()
         elif key == '-starttime':
-            return -self.getStartTime()
+            startTime = self.getStartTime()
+            return None if startTime is None else -startTime
         elif key == 'stoptime':
             return self.getStopTime()
         elif key == 'summary':
@@ -364,17 +365,17 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
             for output in self.getTask().getOutputs()
             ]
 
-    def getStartTime(self) -> int:
-        return cast(int, self._properties.get('starttime', 0))
+    def getStartTime(self) -> Optional[int]:
+        return cast(Optional[int], self._properties.get('starttime'))
 
-    def getStopTime(self) -> int:
-        return cast(int, self._properties.get('stoptime', 0))
+    def getStopTime(self) -> Optional[int]:
+        return cast(Optional[int], self._properties.get('stoptime'))
 
     def getDuration(self) -> Optional[int]:
-        startTime = cast(Optional[int], self._properties.get('starttime'))
+        startTime = self.getStartTime()
         if startTime is None:
             return None
-        stopTime = cast(Optional[int], self._properties.get('stoptime'))
+        stopTime = self.getStopTime()
         if stopTime is None:
             return getTime() - startTime
         return stopTime - startTime

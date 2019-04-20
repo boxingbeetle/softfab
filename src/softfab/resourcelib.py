@@ -130,10 +130,10 @@ class ResourceBase(XMLTag, DatabaseElem):
         '''
         return cast(Optional[str], self._properties.get('changeduser'))
 
-    def getChangedTime(self) -> int:
+    def getChangedTime(self) -> Optional[int]:
         '''Returns the time at which the suspend state last changed.
         '''
-        return cast(int, self._properties.get('changedtime', 0))
+        return cast(Optional[int], self._properties.get('changedtime'))
 
     def getConnectionStatus(self) -> ConnectionStatus:
         '''Gets a classification of the connection between this resource and

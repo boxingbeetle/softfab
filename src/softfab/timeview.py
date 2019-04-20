@@ -10,7 +10,7 @@ def formatDuration(sec: Optional[int]) -> str:
     '''Formats the given duration in seconds as a string: DD - HH:MM:SS,
     with leading zero parts are dropped.
     '''
-    if sec is None or sec < 0:
+    if sec is None:
         return '-'
     else:
         ret = ''
@@ -28,16 +28,12 @@ def formatDuration(sec: Optional[int]) -> str:
 
 def formatDate(sec: Optional[int]) -> str:
     if sec is None:
-        return ''
-    elif sec <= 0:
         return '-'
     else:
         return time.strftime(_dateFormat, time.localtime(sec))
 
 def formatTime(sec: Optional[int]) -> str:
     if sec is None:
-        return ''
-    elif sec <= 0:
         return '-'
     else:
         return time.strftime(_timeFormat, time.localtime(sec))
@@ -46,8 +42,6 @@ def formatTimeAttr(sec: Optional[int]) -> Optional[str]:
     '''Formats a timestamp for use as an XML attribute value.
     '''
     if sec is None:
-        return None
-    elif sec <= 0:
         return None
     else:
         return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(sec))

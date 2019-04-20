@@ -54,7 +54,7 @@ A: For repeating schedules, advance to next time.
 '''
 
 from enum import Enum
-from typing import ClassVar
+from typing import ClassVar, Optional
 import logging
 import time
 
@@ -373,15 +373,15 @@ class Scheduled(XMLTag, DatabaseElem, SelectableABC):
             self._properties['trigger'] = True
             self._notify()
 
-    def getLastStartTime(self):
+    def getLastStartTime(self) -> Optional[int]:
         '''Returns the create time of the most recently created jobs,
-        or 0 if the schedule never created any jobs.
+        or None if the schedule never created any jobs.
         '''
-        createTime = 0
-        for jobId in self.__lastJobIds:
-            # Typically all jobs will have the same create time.
-            createTime = max(createTime, jobDB[jobId].getCreateTime())
-        return createTime
+        # Typically all jobs will have the same create time.
+        return max(
+            (jobDB[jobId].getCreateTime() for jobId in self.__lastJobIds),
+            default=None
+            )
 
     def __adjustStartTime(self, skipToNext, currentTime = None):
         '''Calculate time of next scheduled job.

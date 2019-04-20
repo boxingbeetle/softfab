@@ -101,11 +101,11 @@ class DetailsTable(Table):
 
         label = 'Last suspended' if runner.isSuspended() else 'Last resumed'
         changedTime = runner.getChangedTime()
-        if changedTime == 0:
-            changeDesc = 'never'
-        else:
+        if changedTime:
             changeDesc = 'by %s at %s' % (
                 runner.getChangedUser() or 'unknown',
                 formatTime(changedTime)
                 )
+        else:
+            changeDesc = 'never'
         yield label, changeDesc

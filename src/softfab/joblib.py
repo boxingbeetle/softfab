@@ -136,6 +136,10 @@ class Task(
         self.__taskRun = None # type: Optional[TaskRun]
         self.__job = job
 
+        # COMPAT 2.x.x: Remove invalid time stamps cancelled tasks.
+        if self._properties.get('starttime') == 0:
+            del self._properties['starttime']
+
     def __getitem__(self, key: str) -> object:
         if key in self._properties:
             return self._properties[key]
@@ -172,7 +176,9 @@ class Task(
         taskRun = self.getLatestRun()
         if not resultOnly:
             for key in ['state', 'starttime', 'stoptime']:
-                self._properties[key] = cast(Union[str, int], taskRun[key])
+                value = cast(Union[None, str, int], taskRun[key])
+                if value is not None:
+                    self._properties[key] = value
         result = taskRun['result']
         if result is not None:
             self._properties['result'] = cast(ResultCode, result)
@@ -762,6 +768,7 @@ class Job(TaskRunnerSet, TaskSet[Task], XMLTag, DatabaseElem):
         '''Gets this job's stop time, or None if it has not stopped yet.
         '''
         if self.__stopTime is None and self.isExecutionFinished():
+            # Note: Execution is finished, so every task will have a stop time.
             self.__stopTime = max(
                 cast(int, task['stoptime'])
                 for task in self._tasks.values()
