@@ -171,7 +171,7 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
     def createTaskXML(self) -> XML:
         task = self.getTask()
         return xml.task(
-            target = self.getJob().getTarget(),
+            target = self.getJob().getTarget() or '',
             # COMPAT 2.x.x: The TR doesn't use this value anymore, but if we
             #               omit it, the XML unpacking will fail.
             framework = 'for backwards compatibility only',

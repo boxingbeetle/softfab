@@ -26,8 +26,7 @@ from softfab.xmlgen import XMLContent, xhtml
 class FilteredTaskRunsTable(TaskRunsTable):
 
     def showTargetColumn(self):
-        return super().showTargetColumn() \
-            or len(jobDB.uniqueValues('target')) > 1
+        return super().showTargetColumn() or bool(jobDB.uniqueValues('target'))
 
     def getRecordsToQuery(self, proc):
         # Note: iterAllTasks() etc can efficiently handle an empty (nothing

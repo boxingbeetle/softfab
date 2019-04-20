@@ -152,10 +152,17 @@ class _StatusColumn(DataColumn):
             createStatusBar(record.getTaskSequence())
             ]
 
+class TargetColumn(DataColumn):
+    keyName = 'target'
+
+    def presentCell(self, record, **kwargs):
+        target = record.getTarget()
+        return '-' if target is None else target
+
 createTimeColumn = TimeColumn(
     label = 'Create Time', keyName = 'recent', keyDisplay = 'timestamp'
     )
-targetColumn = DataColumn(keyName = 'target')
+targetColumn = TargetColumn.instance
 
 class JobsTable(DataTable):
     bodyId = 'jobs'

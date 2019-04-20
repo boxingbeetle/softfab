@@ -52,7 +52,7 @@ class ReportProcessor(PageProcessor):
 
     def process(self, req, user):
         # Set of targets for which jobs have run.
-        targets = jobDB.uniqueValues('target')
+        targets = jobDB.uniqueValues('target') - set([None])
         # Add targets that are available now.
         targets |= project.getTargets()
         # Make a set of targets that should be shown, valid targets only.
@@ -142,7 +142,7 @@ class ReportFilterForm:
             yield xhtml.td(colspan = 4)[
                 'Select %s to display reports for:' % objectName
                 ]
-            if len(targetList) > 1:
+            if targetList:
                 yield xhtml.td[ 'Targets:' ]
             if len(owners) > 1 and project.showOwners:
                 yield xhtml.td[ 'Owners:' ]
@@ -152,7 +152,7 @@ class ReportFilterForm:
             yield self.presentCustomBox(
                 proc=proc, numListItems=numListItems, **kwargs
                 )
-            if len(targetList) > 1:
+            if targetList:
                 yield xhtml.td(rowspan = 4, style = 'vertical-align:top')[
                     selectionList(
                         name='target', size=numListItems, style='width: 18ex',

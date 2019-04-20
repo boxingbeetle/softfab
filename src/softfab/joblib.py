@@ -181,6 +181,9 @@ class Task(
     def getJob(self) -> 'Job':
         return self.__job
 
+    def getTarget(self) -> Optional[str]:
+        return self.__job.getTarget()
+
     def getLatestRun(self) -> TaskRun:
         # Note: Because of caching __taskRun there is a reference loop, which
         #       has to be broken if the objects are to be removed from memory.
@@ -286,7 +289,11 @@ class Task(
             )
 
     def getNeededCaps(self) -> AbstractSet[str]:
-        return super().getNeededCaps() | set([self.__job.getTarget()])
+        caps = super().getNeededCaps()
+        target = self.__job.getTarget()
+        if target is not None:
+            caps |= set([target])
+        return caps
 
     def canRunOn(self, runner: str) -> bool:
         if self._runners:
@@ -414,7 +421,7 @@ class Job(TaskRunnerSet, TaskSet[Task], XMLTag, DatabaseElem):
 
     @staticmethod
     def create(configId: Optional[str],
-               target: str,
+               target: Optional[str],
                owner: Optional[str],
                comment: str,
                jobParams: Mapping[str, str],
@@ -424,12 +431,13 @@ class Job(TaskRunnerSet, TaskSet[Task], XMLTag, DatabaseElem):
         properties = dict(
             jobId = createUniqueId(),
             timestamp = getTime(),
-            target = target,
             ) # type: Dict[str, XMLAttributeValue]
-        if owner is not None:
-            properties['owner'] = owner
         if configId is not None:
             properties['configId'] = configId
+        if target is not None:
+            properties['target'] = target
+        if owner is not None:
+            properties['owner'] = owner
 
         job = Job(properties)
         job.comment = comment
@@ -486,6 +494,8 @@ class Job(TaskRunnerSet, TaskSet[Task], XMLTag, DatabaseElem):
             return self.getLeadTime()
         elif key == 'description':
             return self.getDescription()
+        elif key == 'target':
+            return self.getTarget()
         elif key == 'owner':
             return self.getOwner()
         elif key == 'scheduledby':
@@ -586,10 +596,10 @@ class Job(TaskRunnerSet, TaskSet[Task], XMLTag, DatabaseElem):
     def getParams(self) -> Mapping[str, str]:
         return self.__params
 
-    def getTarget(self) -> str:
+    def getTarget(self) -> Optional[str]:
         '''Gets the target of this job.
         '''
-        return cast(str, self._properties['target'])
+        return cast(Optional[str], self._properties.get('target'))
 
     def getOwner(self) -> Optional[User]:
         """Gets the owner of this job,
