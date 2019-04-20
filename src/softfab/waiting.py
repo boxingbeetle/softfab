@@ -208,10 +208,10 @@ class TRCapsReason(_CapabilitiesReason):
     def description(self) -> str:
         if self._missingOnAll:
             return 'no Task Runner has any of these capabilities: ' + \
-                ', '.join(self._missingOnAll)
+                ', '.join(sorted(self._missingOnAll))
         else:
             return 'no Task Runner has all of these capabilities: ' + \
-                ', '.join(self._missingOnAny)
+                ', '.join(sorted(self._missingOnAny))
 
 class TRStateReason(ReasonForWaiting):
 
@@ -234,10 +234,10 @@ class UnboundGroupCapsReason(_CapabilitiesReason):
     def description(self) -> str:
         if self._missingOnAll:
             return 'no Task Runner has any of these group capabilities: ' + \
-                ', '.join(self._missingOnAll)
+                ', '.join(sorted(self._missingOnAll))
         else:
             return 'no Task Runner has all of these group capabilities: ' + \
-                ', '.join(self._missingOnAny)
+                ', '.join(sorted(self._missingOnAny))
 
 class UnboundGroupStateReason(ReasonForWaiting):
 
@@ -284,7 +284,7 @@ class BoundGroupCapsReason(_CapabilitiesReason):
         assert self._missingOnAll == self._missingOnAny
         return "bound Task Runner '%s' does not have group capabilities: %s" % (
             self.__boundRunnerId,
-            ', '.join(self._missingOnAll or self._missingOnAny)
+            ', '.join(sorted(self._missingOnAll or self._missingOnAny))
             )
 
 class BoundGroupStateReason(ReasonForWaiting):
