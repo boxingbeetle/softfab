@@ -475,7 +475,7 @@ class Config(TaskRunnerSet, TaskSetWithInputs, XMLTag, SelectableRecordABC):
             locators: Mapping[str, str] = {},
             params: Mapping[str, str] = {},
             localAt: Mapping[str, str] = {},
-            taskParameters: Optional[Mapping[str, Mapping[str, str]]] = None
+            taskParameters: Mapping[str, Mapping[str, str]] = {}
             ) -> Job:
         jobParams = dict(self.__params)
         jobParams.update(params)
@@ -491,18 +491,12 @@ class Config(TaskRunnerSet, TaskSetWithInputs, XMLTag, SelectableRecordABC):
             )
 
         for task in self.getTaskSequence():
-            if taskParameters:
-                taskParams = taskParameters.get(task.getName())
-            else:
-                taskParams = None
+            taskParams = taskParameters.get(task.getName(), {})
             newTask = job.addTask(
                 task.getName(), task.getPriority(), task.getRunners()
                 )
             for key, defValue in task.getDef().getParameters().items():
-                if taskParams:
-                    value = taskParams.get(key)
-                else:
-                    value = None
+                value = taskParams.get(key)
                 if value is None:
                     value = task.getParameter(key)
                 if value is None:
