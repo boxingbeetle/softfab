@@ -131,13 +131,9 @@ class SimpleConfigTable(DataTable):
         DataColumn('#', 'nrtasks', cellStyle = 'rightalign'),
         DataColumn(keyName = 'description')
         )
-    targetColumn = DataColumn(keyName = 'target')
 
     def iterColumns(self, **kwargs):
         yield from self.fixedColumns
-        # TODO: Look at both project and config targets?
-        if project.showTargets:
-            yield self.targetColumn
         if project.showOwners:
             yield OwnerColumn.instance
 
