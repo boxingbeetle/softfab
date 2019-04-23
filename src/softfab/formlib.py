@@ -565,8 +565,11 @@ class CheckBoxesTable(Table):
 
     def getActive(self, **kwargs):
         '''Returns the active options.
+        The default implementation returns the value of the argument that
+        matches the submission name of this check boxes table.
         '''
-        raise NotImplementedError
+        formArgs = getattr(kwargs, 'formArgs')
+        return getattr(formArgs, self.name)
 
     def iterOptions(self, **kwargs):
         '''Iterates through the multiple choice options.
