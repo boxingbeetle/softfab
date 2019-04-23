@@ -174,7 +174,7 @@ class Task(PriorityMixin, ResourceRequirementsMixin, XMLTag, TaskRunnerSet):
         yield self.runnersAsXML()
 
 @total_ordering
-class _Input(XMLTag):
+class Input(XMLTag):
     '''
     TODO: Refactor this code, see bug 261 for details.
           The root of the problem is that this class should offer the same
@@ -192,13 +192,13 @@ class _Input(XMLTag):
         return hash(self.getName())
 
     def __eq__(self, other: object) -> bool:
-        if isinstance(other, _Input):
+        if isinstance(other, Input):
             return self.getName() == self.getName()
         else:
             return NotImplemented
 
     def __lt__(self, other: object) -> bool:
-        if isinstance(other, _Input):
+        if isinstance(other, Input):
             return self.getName() < self.getName()
         else:
             return NotImplemented
@@ -238,10 +238,10 @@ class _Input(XMLTag):
         assert runnerId is not None
         self._properties['localAt'] = runnerId
 
-    def clone(self) -> '_Input':
-        return _Input(self._properties)
+    def clone(self) -> 'Input':
+        return Input(self._properties)
 
-class _Output:
+class Output:
     '''Dummy class for output products.
     In a configuration we do not care about outputs, but it is possible their
     locality will be initialised if they belong to the same local group as
@@ -261,16 +261,16 @@ class TaskSetWithInputs(TaskSet[Task]):
 
     def __init__(self) -> None:
         TaskSet.__init__(self)
-        self._inputs = {} # type: Dict[str, _Input]
+        self._inputs = {} # type: Dict[str, Input]
 
     # Mark class as abstract:
     def getRunners(self) -> AbstractSet[str]:
         raise NotImplementedError
 
-    def getInput(self, name: str) -> Optional[_Input]:
+    def getInput(self, name: str) -> Optional[Input]:
         return self._inputs.get(name)
 
-    def getInputs(self) -> Iterable[_Input]:
+    def getInputs(self) -> Iterable[Input]:
         return self._inputs.values()
 
     def getProductDef(self, name: str) -> ProductDef:
@@ -283,7 +283,7 @@ class TaskSetWithInputs(TaskSet[Task]):
 
     def getInputsGrouped(
             self
-            ) -> List[Tuple[Optional[TaskGroup[Task]], List[_Input]]]:
+            ) -> List[Tuple[Optional[TaskGroup[Task]], List[Input]]]:
         '''Returns inputs grouped by "locality". The return value is a list
         of 2-element tuples, which contain local group or None as the first
         element and list of Product objects as the second one. Each inner list
@@ -297,14 +297,14 @@ class TaskSetWithInputs(TaskSet[Task]):
         for task in self._getMainGroup().getChildren(): \
                 # type: Union[TaskGroup[Task], Task]
             if isinstance(task, TaskGroup):
-                group = set() # type: Optional[MutableSet[_Input]]
+                group = set() # type: Optional[MutableSet[Input]]
             else:
                 group = None
             for inpName in task.getInputs():
                 if inpName in inputSet:
                     inpObj = self._inputs.get(inpName)
                     if inpObj is None:
-                        inpObj = _Input({ 'name': inpName })
+                        inpObj = Input({ 'name': inpName })
                     if group is not None and inpObj.isLocal():
                         group.add(inpObj)
                     else:
@@ -313,7 +313,7 @@ class TaskSetWithInputs(TaskSet[Task]):
                 assert isinstance(task, TaskGroup)
                 grouped.append(( task, sorted(group) ))
         return cast(
-            List[Tuple[Optional[TaskGroup[Task]], List[_Input]]],
+            List[Tuple[Optional[TaskGroup[Task]], List[Input]]],
             [ ( None, [ item ] ) for item in sorted(ungrouped) ]
             ) + sorted(grouped)
 
@@ -375,7 +375,7 @@ class Config(TaskRunnerSet, TaskSetWithInputs, XMLTag, SelectableRecordABC):
         inputs this configuration has.
         '''
         self._inputs = dict(
-            ( item, self._inputs.get(item, _Input({ 'name': item })) )
+            ( item, self._inputs.get(item, Input({ 'name': item })) )
             for item in self.getInputSet()
             )
 
@@ -422,7 +422,7 @@ class Config(TaskRunnerSet, TaskSetWithInputs, XMLTag, SelectableRecordABC):
         return task
 
     def _addInput(self, attributes: Mapping[str, str]) -> None:
-        inp = _Input(attributes)
+        inp = Input(attributes)
         self._inputs[inp.getName()] = inp
 
     def _addParam(self, attributes: Mapping[str, str]) -> None:
@@ -431,10 +431,10 @@ class Config(TaskRunnerSet, TaskSetWithInputs, XMLTag, SelectableRecordABC):
     def _textComment(self, text: str) -> None:
         self.__comment = text
 
-    def getProduct(self, name: str) -> Union[_Input, _Output]:
+    def getProduct(self, name: str) -> Union[Input, Output]:
         inp = self._inputs.get(name)
         if inp is None:
-            return _Output(name)
+            return Output(name)
         else:
             return inp
 
