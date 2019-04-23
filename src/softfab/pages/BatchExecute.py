@@ -1,11 +1,11 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from enum import Enum
-from typing import Iterator, Mapping
+from typing import AbstractSet, Dict, Iterator, Mapping, Optional
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor, Redirect
-from softfab.configlib import TaskSetWithInputs, configDB
+from softfab.configlib import Config, Input, TaskSetWithInputs, configDB
 from softfab.configview import (
     InputTable, SelectConfigsMixin, SimpleConfigTable, presentMissingConfigs
 )
@@ -35,30 +35,36 @@ class FakeTask:
     def getName(self) -> str:
         return self.__name
 
-    def getInputs(self):
+    def getInputs(self) -> AbstractSet[str]:
         return set(self.__inputs.keys())
 
-    def getOutputs(self):
+    def getOutputs(self) -> AbstractSet[str]:
         return set()
 
     def getPriority(self) -> int:
         return 0
 
-class FakeTaskSet(TaskSetWithInputs):
+    def getRunners(self) -> AbstractSet[str]:
+        # This is only called from canRunOn(), which is not used by any code
+        # in BatchExecute.
+        # TODO: Find a type-safe way of handling this.
+        assert False
 
-    def __init__(self):
+class FakeTaskSet(TaskSetWithInputs[FakeTask]):
+
+    def __init__(self) -> None:
         TaskSetWithInputs.__init__(self)
-        self.__targets = {}
+        self.__targets = {} # type: Dict[str, str]
         self.__index = 0
 
-    def addConfig(self, config):
+    def addConfig(self, config: Config) -> None:
         for group_, inputList in config.getInputsGrouped():
             inputs = {}
             for cfgInput in inputList:
-                inputName = cfgInput['name']
+                inputName = cfgInput.getName()
                 ownInput = self._inputs.get(inputName)
                 if ownInput is not None:
-                    locator = ownInput.get('locator')
+                    locator = ownInput.getLocator()
                     if ownInput.isLocal():
                         # Assume: only one target per Task Runner is allowed.
                         if self.__targets[inputName] != config.getTarget():
@@ -66,13 +72,13 @@ class FakeTaskSet(TaskSetWithInputs):
                                 'The configurations can not be executed '
                                 'because of conflicting local inputs'
                                 )
-                        localAt = ownInput.get('localAt')
-                        if localAt != cfgInput.get('localAt'):
+                        localAt = ownInput.getLocalAt()
+                        if localAt != cfgInput.getLocalAt():
                             localAt = None
-                        if locator != cfgInput.get('locator'):
+                        if locator != cfgInput.getLocator() or locator is None:
                             locator = ''
                         ownInput.setLocator(locator, localAt)
-                    elif locator != cfgInput.get('locator'):
+                    elif locator != cfgInput.getLocator():
                         ownInput.setLocator('')
                 else:
                     ownInput = cfgInput.clone()
@@ -83,11 +89,11 @@ class FakeTaskSet(TaskSetWithInputs):
             fakeName = str(self.__index)
             self._tasks[fakeName] = FakeTask(fakeName, inputs)
 
-    def getInputSet(self):
+    def getInputSet(self) -> AbstractSet[str]:
         return set(self._inputs)
 
-    def getTarget(self, inp):
-        return self.__targets.get(inp['name'])
+    def getTarget(self, inp: Input) -> Optional[str]:
+        return self.__targets.get(inp.getName())
 
 class BatchConfigTable(SimpleConfigTable):
     # Disable tabs and sorting because it would clear the forms.

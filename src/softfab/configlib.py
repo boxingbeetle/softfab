@@ -16,7 +16,7 @@ from softfab.projectlib import project
 from softfab.restypelib import resTypeDB
 from softfab.selectlib import ObservingTagCache, SelectableRecordABC
 from softfab.taskdeflib import taskDefDB
-from softfab.taskgroup import PriorityMixin, TaskGroup, TaskSet
+from softfab.taskgroup import PriorityMixin, TaskGroup, TaskSet, TaskT
 from softfab.tasklib import ResourceRequirementsMixin, TaskRunnerSet
 from softfab.xmlbind import XMLTag
 from softfab.xmlgen import XMLAttributeValue, XMLContent, xml
@@ -257,7 +257,7 @@ class Output:
     def setLocalAt(self, runnerId: str) -> None:
         assert runnerId is not None
 
-class TaskSetWithInputs(TaskSet[Task]):
+class TaskSetWithInputs(TaskSet[TaskT]):
 
     def __init__(self) -> None:
         TaskSet.__init__(self)
@@ -283,7 +283,7 @@ class TaskSetWithInputs(TaskSet[Task]):
 
     def getInputsGrouped(
             self
-            ) -> List[Tuple[Optional[TaskGroup[Task]], List[Input]]]:
+            ) -> List[Tuple[Optional[TaskGroup[TaskT]], List[Input]]]:
         '''Returns inputs grouped by "locality". The return value is a list
         of 2-element tuples, which contain local group or None as the first
         element and list of Product objects as the second one. Each inner list
@@ -295,7 +295,7 @@ class TaskSetWithInputs(TaskSet[Task]):
         ungrouped = set()
         inputSet = self.getInputSet()
         for task in self._getMainGroup().getChildren(): \
-                # type: Union[TaskGroup[Task], Task]
+                # type: Union[TaskGroup[TaskT], TaskT]
             if isinstance(task, TaskGroup):
                 group = set() # type: Optional[MutableSet[Input]]
             else:
@@ -313,14 +313,15 @@ class TaskSetWithInputs(TaskSet[Task]):
                 assert isinstance(task, TaskGroup)
                 grouped.append(( task, sorted(group) ))
         return cast(
-            List[Tuple[Optional[TaskGroup[Task]], List[Input]]],
+            List[Tuple[Optional[TaskGroup[TaskT]], List[Input]]],
             [ ( None, [ item ] ) for item in sorted(ungrouped) ]
             ) + sorted(grouped)
 
     def hasLocalInputs(self) -> bool:
         return any(inp.isLocal() for inp in self._inputs.values())
 
-class Config(TaskRunnerSet, TaskSetWithInputs, XMLTag, SelectableRecordABC):
+class Config(TaskRunnerSet, TaskSetWithInputs[Task], XMLTag,
+             SelectableRecordABC):
     tagName = 'config'
     boolProperties = ('trselect',)
     cache = ObservingTagCache(
