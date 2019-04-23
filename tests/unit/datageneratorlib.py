@@ -143,11 +143,10 @@ class DataGenerator(object):
                 '</request>'
             ))
 
-    def createTaskRunner(
-        self, name, target, capabilities, versionStr = '2.0.0'
-        ):
-        taskRunner = resourcelib.TaskRunner.create(name, '', set([target]))
-        taskRunner.capabilities = capabilities
+    def createTaskRunner(self, name, target, capabilities, versionStr='2.0.0'):
+        taskRunner = resourcelib.TaskRunner.create(
+            name, '', list(capabilities) + [target]
+            )
         resourcelib.taskRunnerDB.add(taskRunner)
         data = self.createTaskRunnerData(name, target, versionStr)
         taskRunner.sync(data)
