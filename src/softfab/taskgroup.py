@@ -16,23 +16,17 @@ from softfab.waiting import (
 )
 
 if TYPE_CHECKING:
-    from softfab.frameworklib import Framework
     from softfab.productdeflib import ProductDef
     from softfab.resourcelib import TaskRunner
-    from softfab.taskdeflib import TaskDef
     from softfab.taskrunlib import TaskRun
 else:
-    Framework = object
     ProductDef = object
     TaskRunner = object
-    TaskDef = object
     TaskRun = object
 
 
 class TaskProto(Protocol):
     def getName(self) -> str: ...
-    def getFramework(self) -> Framework: ...
-    def getDef(self) -> TaskDef: ...
     def getInputs(self) -> AbstractSet[str]: ...
     def getOutputs(self) -> AbstractSet[str]: ...
     def getRunners(self) -> AbstractSet[str]: ...
@@ -58,9 +52,8 @@ class TaskSet(Generic[TaskT]):
         inputs = set() # type: MutableSet[str]
         outputs = set() # type: MutableSet[str]
         for task in self._tasks.values():
-            framework = task.getFramework()
-            inputs |= framework.getInputs()
-            outputs |= framework.getOutputs()
+            inputs |= task.getInputs()
+            outputs |= task.getOutputs()
         return inputs - outputs
 
     def _getMainGroup(self) -> 'TaskGroup[TaskT]':
@@ -162,7 +155,7 @@ class TaskSet(Generic[TaskT]):
     def getDescription(self) -> str:
         """Create a user-readable description of what was done in this job.
         """
-        descrList = [task.getDef().getId() for task in self.getTaskSequence()]
+        descrList = [task.getName() for task in self.getTaskSequence()]
         maxLen = 130
         length = 0
         itemCount = 0
