@@ -33,11 +33,11 @@ class LoadExecuteDefault_POST(ControlPage['LoadExecuteDefault_POST.Arguments',
                     'Configuration "%s" does not exist' % args.config
                     )
             else:
-                job = jobConfig.createJob(
-                    user.name, None, args.prod, args.param, args.local
-                    )
-                job.comment += '\n' + args.comment
-                jobDB.add(job)
+                for job in jobConfig.createJobs(
+                        user.name, None, args.prod, args.param, args.local
+                        ):
+                    job.comment += '\n' + args.comment
+                    jobDB.add(job)
 
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'j/c', 'start jobs')

@@ -4,7 +4,7 @@ from collections import defaultdict
 from functools import total_ordering
 from typing import (
     TYPE_CHECKING, AbstractSet, DefaultDict, Dict, Iterable, Iterator, List,
-    Mapping, MutableSet, Optional, Tuple, Union, cast
+    Mapping, MutableSet, Optional, Sequence, Tuple, Union, cast
 )
 
 from softfab.config import dbDir
@@ -333,7 +333,7 @@ class Config(TaskRunnerSet, TaskSetWithInputs, XMLTag, SelectableRecordABC):
 
     @staticmethod
     def create(name: str,
-               target: str,
+               targets: Iterable[str],
                owner: Optional[str],
                trselect: bool,
                comment: str,
@@ -343,13 +343,13 @@ class Config(TaskRunnerSet, TaskSetWithInputs, XMLTag, SelectableRecordABC):
                ) -> 'Config':
         properties = dict(
             name = name,
-            target = target,
             owner = owner,
             trselect = trselect,
             )
 
         config = Config(properties)
         # pylint: disable=protected-access
+        config.__targets = set(targets)
         config.__comment = comment
         config.__params = dict(jobParams)
         config._setRunners(runners)
@@ -365,6 +365,7 @@ class Config(TaskRunnerSet, TaskSetWithInputs, XMLTag, SelectableRecordABC):
         TaskRunnerSet.__init__(self)
         XMLTag.__init__(self, attributes)
         SelectableRecordABC.__init__(self)
+        self.__targets = set() # type: MutableSet[str]
         self.__comment = ''
         self.__params = {} # type: Dict[str, str]
         self.__description = None # type: Optional[str]
@@ -381,8 +382,14 @@ class Config(TaskRunnerSet, TaskSetWithInputs, XMLTag, SelectableRecordABC):
     def getId(self) -> str:
         return cast(str, self._properties['name'])
 
-    def getTarget(self) -> str:
-        return cast(str, self._properties['target'])
+    @property
+    def targets(self) -> AbstractSet[str]:
+        """Targets for which jobs should be created.
+
+        This can include old targets that were active when this configuration
+        was created but are no longer active.
+        """
+        return self.__targets
 
     def getOwner(self) -> Optional[str]:
         return cast(Optional[str], self._properties.get('owner'))
@@ -405,6 +412,9 @@ class Config(TaskRunnerSet, TaskSetWithInputs, XMLTag, SelectableRecordABC):
             return len(self._tasks)
         else:
             return XMLTag.__getitem__(self, key)
+
+    def _addTarget(self, attributes: Mapping[str, str]) -> None:
+        self.__targets.add(attributes['name'])
 
     def _addTask(self, attributes: Mapping[str, str]) -> Task:
         task = Task(attributes)
@@ -467,7 +477,7 @@ class Config(TaskRunnerSet, TaskSetWithInputs, XMLTag, SelectableRecordABC):
         """
         return not any(self.iterInputConflicts())
 
-    def createJob( # pylint: disable=dangerous-default-value
+    def createJobs( # pylint: disable=dangerous-default-value
             # We only read the default dictionaries.
             self,
             owner: Optional[str],
@@ -476,7 +486,7 @@ class Config(TaskRunnerSet, TaskSetWithInputs, XMLTag, SelectableRecordABC):
             params: Mapping[str, str] = {},
             localAt: Mapping[str, str] = {},
             taskParameters: Mapping[str, Mapping[str, str]] = {}
-            ) -> Job:
+            ) -> Iterator[Job]:
         if owner is None:
             owner = self.getOwner()
         if comment is None:
@@ -484,43 +494,46 @@ class Config(TaskRunnerSet, TaskSetWithInputs, XMLTag, SelectableRecordABC):
         jobParams = dict(self.__params)
         jobParams.update(params)
 
-        job = Job.create(
-            # configId is empty string when executing from scratch
-            configId = self.getId() or None,
-            target = self.getTarget(),
-            owner = owner,
-            comment = comment,
-            jobParams = jobParams,
-            runners = self._runners,
-            )
-
-        for task in self.getTaskSequence():
-            taskParams = taskParameters.get(task.getName(), {})
-            newTask = job.addTask(
-                task.getName(), task.getPriority(), task.getRunners()
-                )
-            for key, defValue in task.getDef().getParameters().items():
-                value = taskParams.get(key)
-                if value is None:
-                    value = task.getParameter(key)
-                if value is None:
-                    value = defValue
-                newTask.addParameter(key, value)
-
-        for index, item in enumerate(self.getInputSet()):
-            inp = self._inputs.get(item)
-            job.setInputLocator(
-                item,
-                locators.get(item, inp and inp.getLocator() or ''),
-                localAt.get(item) or (
-                    None if inp is None else inp.getLocalAt()
-                    ),
-                'SF_USER_INPUT_%d' % index
+        for target in cast(Sequence[Optional[str]], self.targets) or [None]:
+            job = Job.create(
+                # configId is empty string when executing from scratch
+                configId = self.getId() or None,
+                target = target,
+                owner = owner,
+                comment = comment,
+                jobParams = jobParams,
+                runners = self._runners,
                 )
 
-        return job
+            for task in self.getTaskSequence():
+                taskParams = taskParameters.get(task.getName(), {})
+                newTask = job.addTask(
+                    task.getName(), task.getPriority(), task.getRunners()
+                    )
+                for key, defValue in task.getDef().getParameters().items():
+                    value = taskParams.get(key)
+                    if value is None:
+                        value = task.getParameter(key)
+                    if value is None:
+                        value = defValue
+                    newTask.addParameter(key, value)
+
+            for index, item in enumerate(self.getInputSet()):
+                inp = self._inputs.get(item)
+                job.setInputLocator(
+                    item,
+                    locators.get(item, inp and inp.getLocator() or ''),
+                    localAt.get(item) or (
+                        None if inp is None else inp.getLocalAt()
+                        ),
+                    'SF_USER_INPUT_%d' % index
+                    )
+
+            yield job
 
     def _getContent(self) -> XMLContent:
+        for target in self.__targets:
+            yield xml.target(name=target)
         if self.__comment:
             yield xml.comment[ self.__comment ]
         yield from self._tasks.values()

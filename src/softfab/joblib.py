@@ -577,7 +577,7 @@ class Job(TaskRunnerSet, TaskSet[Task], XMLTag, DatabaseElem):
         '''Adds a run of the task by the given name to this job.
         Also adds all input and output products of that task, in state
         "waiting".
-        This method is only intended for Config.createJob(), which should
+        This method is only intended for Config.createJobs(), which should
         add the tasks in the right order.
         '''
         task = Task.create(job=self, name=name, priority=prio, runners=runners)

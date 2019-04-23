@@ -166,9 +166,9 @@ class FastExecute_POST(FabPage['FastExecute_POST.Processor',
                         pass
                     else:
                         if config.hasValidInputs():
-                            job = config.createJob(user)
-                            jobDB.add(job)
-                            jobIds.append(job.getId())
+                            for job in config.createJobs(user):
+                                jobDB.add(job)
+                                jobIds.append(job.getId())
                 raise Redirect(createJobsURL(jobIds))
 
             assert False, action

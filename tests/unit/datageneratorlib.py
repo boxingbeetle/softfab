@@ -203,7 +203,7 @@ class DataGenerator(object):
 
         config = configlib.Config.create(
             name = name,
-            target = self.target,
+            targets = {self.target},
             owner = self.owner,
             trselect = False,
             comment = self.comment,

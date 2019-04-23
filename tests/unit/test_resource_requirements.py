@@ -93,7 +93,7 @@ class TestResourceRequirements(unittest.TestCase):
         is applied to a task."""
 
         def check(config):
-            job = config.createJob(OWNER)
+            job, = config.createJobs(OWNER)
 
             task = job.getTask('task')
             self.checkResourceClaim(specs, task.resourceClaim)
@@ -114,7 +114,7 @@ class TestResourceRequirements(unittest.TestCase):
         definition is applied to a task."""
 
         def check(config):
-            job = config.createJob(OWNER)
+            job, = config.createJobs(OWNER)
 
             task = job.getTask('task')
             self.checkResourceClaim(specs, task.resourceClaim)
@@ -135,7 +135,7 @@ class TestResourceRequirements(unittest.TestCase):
         and task definitions are applied to a task."""
 
         def check(config):
-            job = config.createJob(OWNER)
+            job, = config.createJobs(OWNER)
 
             task = job.getTask('task')
             self.checkResourceClaim(specs, task.resourceClaim)
@@ -171,7 +171,7 @@ class TestResourceRequirements(unittest.TestCase):
         """
 
         def check(config):
-            job = config.createJob(OWNER)
+            job, = config.createJobs(OWNER)
 
             task = job.getTask('task')
             self.checkResourceClaim(specs, task.resourceClaim)
@@ -200,7 +200,7 @@ class TestResourceRequirements(unittest.TestCase):
         and task definition are used in task assignment."""
 
         def check(config):
-            job = config.createJob(OWNER)
+            job, = config.createJobs(OWNER)
             taskRunner = resourcelib.taskRunnerDB[tr]
 
             # Try to assign with both cap_a and cap_b unavailable.
@@ -255,7 +255,7 @@ class TestResourceRequirements(unittest.TestCase):
         """Test assigning task using a non-exclusive resource."""
 
         def check(config):
-            job = config.createJob(OWNER)
+            job, = config.createJobs(OWNER)
             taskRunner = resourcelib.taskRunnerDB[tr]
 
             # Try to assign with resource unavailable.

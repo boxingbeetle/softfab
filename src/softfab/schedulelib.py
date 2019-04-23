@@ -500,11 +500,11 @@ class Scheduled(XMLTag, DatabaseElem, SelectableABC):
             try:
                 config = configDB[configId]
                 if config.hasValidInputs():
-                    job = config.createJob(self['owner'])
-                    job.comment += '\n' + self.comment
-                    job.setScheduledBy(self.getId())
-                    jobDB.add(job)
-                    jobIds.append(job.getId())
+                    for job in config.createJobs(self['owner']):
+                        job.comment += '\n' + self.comment
+                        job.setScheduledBy(self.getId())
+                        jobDB.add(job)
+                        jobIds.append(job.getId())
                 else:
                     logging.warning(
                         'Schedule "%s" could not instantiate '

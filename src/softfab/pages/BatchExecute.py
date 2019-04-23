@@ -242,14 +242,12 @@ class BatchExecute_POST(BatchExecute_GET):
                 jobs = []
                 for config in configs:
                     try:
-                        job = config.createJob(userName,
+                        jobs += config.createJobs(userName,
                             locators = inputs, localAt = locations,
                             taskParameters = params.get(config.getId())
                             )
                     except ValueError as ex:
                         notices.append('%s: %s' % (config.getId(), ex))
-                    else:
-                        jobs.append(job)
 
                 if not notices:
                     # Commit created jobs to database and show them to user.

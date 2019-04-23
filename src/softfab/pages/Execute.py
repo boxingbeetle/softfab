@@ -284,9 +284,9 @@ class StartStep(DialogStep):
         config = proc.getConfig()
         jobIds = []
         for _ in range(proc.args.multi):
-            job = config.createJob(proc.user.name)
-            jobDB.add(job)
-            jobIds.append(job.getId())
+            for job in config.createJobs(proc.user.name):
+                jobDB.add(job)
+                jobIds.append(job.getId())
         raise Redirect(createJobsURL(jobIds))
 
     def verify(self, proc):
