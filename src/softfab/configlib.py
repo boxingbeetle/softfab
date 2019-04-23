@@ -477,6 +477,10 @@ class Config(TaskRunnerSet, TaskSetWithInputs, XMLTag, SelectableRecordABC):
             localAt: Mapping[str, str] = {},
             taskParameters: Mapping[str, Mapping[str, str]] = {}
             ) -> Job:
+        if owner is None:
+            owner = self.getOwner()
+        if comment is None:
+            comment = self.__comment
         jobParams = dict(self.__params)
         jobParams.update(params)
 
@@ -484,8 +488,8 @@ class Config(TaskRunnerSet, TaskSetWithInputs, XMLTag, SelectableRecordABC):
             # configId is empty string when executing from scratch
             configId = self.getId() or None,
             target = self.getTarget(),
-            owner = self.getOwner() if owner is None else owner,
-            comment = comment or self.__comment,
+            owner = owner,
+            comment = comment,
             jobParams = jobParams,
             runners = self._runners,
             )
