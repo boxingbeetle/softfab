@@ -625,7 +625,7 @@ class Test0600Tagged(ScheduleFixtureMixin, unittest.TestCase):
         self.wait(startOffset)
         self.expectScheduleDone()
         self.wait(60)
-        self.assertEqual(self.scheduled['lastStartTime'], 0)
+        self.assertIsNone(self.scheduled['lastStartTime'])
 
     def prepareTaggedStart(self, sequence, numConfigs, configFactory = None):
         if configFactory is None:
