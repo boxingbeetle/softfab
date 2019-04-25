@@ -265,9 +265,6 @@ class DaysTable(CheckBoxesTable):
         for day in weekDays:
             yield day, ( day, )
 
-    def getActive(self, proc, **kwargs):
-        return proc.args.days
-
 class DelayPanel(Panel):
     widgetId = 'delayPanel'
     label = 'Minimal Delay'

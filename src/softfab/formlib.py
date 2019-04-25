@@ -568,8 +568,7 @@ class CheckBoxesTable(Table):
         The default implementation returns the value of the argument that
         matches the submission name of this check boxes table.
         '''
-        formArgs = getattr(kwargs, 'formArgs')
-        return getattr(formArgs, self.name)
+        return getattr(kwargs['formArgs'], self.name)
 
     def iterOptions(self, **kwargs):
         '''Iterates through the multiple choice options.

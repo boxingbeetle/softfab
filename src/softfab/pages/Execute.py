@@ -656,9 +656,6 @@ class TaskTable(CheckBoxesTable):
                         )
                 yield taskId, cells
 
-    def getActive(self, proc, **kwargs):
-        return proc.args.tasks
-
 class ShowTaskRunnerSelectionTable(SingleCheckBoxTable):
     name = 'trselect'
     label = 'Show Task Runner selection page'
@@ -702,9 +699,6 @@ class TaskRunnerSelectionTable(CheckBoxesTable):
 
         for runnerId in sorted(runner.getId() for runner in taskRunners):
             yield runnerId, ( runnerId, )
-
-    def getActive(self, proc, **kwargs):
-        return proc.args.runners
 
 class TaskRunnersPerTaskTable(SingleCheckBoxTable):
     name = 'pertask'
