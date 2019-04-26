@@ -7,7 +7,7 @@ from typing import (
 )
 
 from softfab.FabPage import FabPage
-from softfab.Page import InvalidRequest, PageProcessor, PresentableError
+from softfab.Page import InvalidRequest, PageProcessor
 from softfab.formlib import backButton, makeForm, submitButton
 from softfab.pageargs import ArgsCorrected, PageArgs, StrArg
 from softfab.request import Request
@@ -37,6 +37,15 @@ def _backAndNextButton(backName: Optional[str],
             xhtml.span[ '\u00A0' ],
             back
             ]
+
+class VerificationError(Exception):
+    '''Raised by `DialogStep.verify` if the data that can be entered in that
+    dialog step is incorrect.
+    '''
+
+    def __init__(self, message: XMLContent): # pylint: disable=useless-super-delegation
+        # https://github.com/PyCQA/pylint/issues/2270
+        super().__init__(message)
 
 class DialogStep(ABC, Generic[DialogProcT]):
     name = abstract # type: ClassVar[str]
@@ -79,9 +88,9 @@ class DialogStep(ABC, Generic[DialogProcT]):
     def verify(self, proc: DialogProcT) -> 'Type[DialogStep]':
         '''Verifies the data the user provided for this step.
         If invalid input is encountered that the user must correct,
-        PresentableError is raised.
+        `VerificationError` is raised.
         If invalid input is encountered that has been auto-corrected,
-        ArgsCorrected is raised.
+        `ArgsCorrected` is raised.
         Returns the next step in the dialog.
         '''
         raise NotImplementedError
@@ -174,8 +183,8 @@ class DialogProcessorBase(PageProcessor[DialogArgsT]):
                 # Validate input and determine next step.
                 try:
                     nextClass = self.__retryStep(step.verify)
-                except PresentableError as ex:
-                    errorMessage = str(ex)
+                except VerificationError as ex:
+                    errorMessage, = ex.args
                     break
                 else:
                     nextStep = stepObjects[nextClass.name]

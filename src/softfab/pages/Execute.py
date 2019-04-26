@@ -3,13 +3,12 @@
 from enum import Enum
 
 from softfab.FabPage import IconModifier
-from softfab.Page import (
-    InternalError, InvalidRequest, PageProcessor, PresentableError, Redirect
-)
+from softfab.Page import InternalError, InvalidRequest, PageProcessor, Redirect
 from softfab.configlib import Config, Task, configDB
 from softfab.configview import InputTable
 from softfab.dialog import (
-    ContinuedDialogProcessor, DialogPage, DialogStep, InitialDialogProcessor
+    ContinuedDialogProcessor, DialogPage, DialogStep, InitialDialogProcessor,
+    VerificationError
 )
 from softfab.formlib import (
     CheckBoxesTable, RadioTable, SingleCheckBoxTable, selectionList, textArea,
@@ -72,7 +71,7 @@ class TaskStep(DialogStep):
     def verify(self, proc):
         tasks = proc.args.tasks
         if len(tasks) == 0:
-            raise PresentableError(
+            raise VerificationError(
                 'Please select one or more tasks.'
                 )
 
@@ -127,7 +126,7 @@ class RunnerStep(DialogStep):
                 any(caps.issubset(trCaps) for trCaps in taskRunnerCaps)
                 for caps in (task.getNeededCaps() for task in proc.iterTasks())
                 ):
-                raise PresentableError(
+                raise VerificationError(
                     'The selected Task Runners are not sufficient '
                     'to execute this job.'
                     )
@@ -241,16 +240,16 @@ class ActionStep(DialogStep):
         action = proc.args.action
         if action is Actions.START:
             if not proc.getConfig().hasValidInputs():
-                raise PresentableError(
+                raise VerificationError(
                     'Please specify "Local at" for all local inputs.'
                     )
             multiMax = project['maxjobs']
             if proc.args.multi < 0:
-                raise PresentableError(
+                raise VerificationError(
                     'A negative multiple jobs count is not possible.'
                     )
             if proc.args.multi > multiMax:
-                raise PresentableError((
+                raise VerificationError((
                     'Multiple jobs limit (%d) exceeded.' % multiMax,
                     xhtml.br,
                     'If you want to have a higher multiple jobs limit, '
@@ -262,7 +261,7 @@ class ActionStep(DialogStep):
             try:
                 configDB.checkId(proc.args.config)
             except KeyError as ex:
-                raise PresentableError(ex.args[0])
+                raise VerificationError(ex.args[0])
             return TagsStep
         else:
             raise InternalError('Unknown action "%s"' % action)
