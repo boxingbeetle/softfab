@@ -387,7 +387,7 @@ class PageArgs:
             elif value != member.default:
                 yield name, _externalizeArg(member, value)
 
-    def override(self, **kwargs: object) -> 'PageArgs':
+    def override(self: ArgsT, **kwargs: object) -> ArgsT:
         '''Creates a copy of this PageArgs object, with given values
         replacing the original values.
         '''

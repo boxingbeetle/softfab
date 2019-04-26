@@ -1,19 +1,25 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from abc import ABC
-from typing import ClassVar, Sequence, Type
+from typing import (
+    TYPE_CHECKING, Callable, ClassVar, List, Optional, Sequence, Tuple, Type,
+    TypeVar, cast
+)
 
 from softfab.FabPage import FabPage
 from softfab.Page import InvalidRequest, PageProcessor, PresentableError
 from softfab.formlib import backButton, makeForm, submitButton
 from softfab.pageargs import ArgsCorrected, ArgsT, PageArgs, StrArg
+from softfab.request import Request
 from softfab.userlib import User
 from softfab.utils import abstract
 from softfab.webgui import PresenterFunction
-from softfab.xmlgen import XMLContent, xhtml
+from softfab.xmlgen import XML, XMLContent, XMLNode, xhtml
 
 
-def _backAndNextButton(backName, nextLabel):
+def _backAndNextButton(backName: Optional[str],
+                       nextLabel: Optional[str]
+                       ) -> XML:
     back = backButton(name=backName)
     if nextLabel is None:
         return xhtml.p[ back ]
@@ -34,14 +40,14 @@ class DialogStep(ABC):
     name = abstract # type: ClassVar[str]
     title = abstract # type: ClassVar[str]
 
-    def __init__(self, page):
+    def __init__(self, page: 'DialogPage'):
         self._page = page
         self._formBodyPresenter = PresenterFunction(self.presentFormBody)
 
-    def backToParent(self, req):
+    def backToParent(self, req: Request) -> XMLNode:
         return self._page.backToParent(req)
 
-    def process(self, proc): # pylint: disable=unused-argument
+    def process(self, proc: 'DialogProcessorBase'): # pylint: disable=unused-argument
         '''Process request. This method is allowed to use the same exceptions
         as Processor.process().
         Page arguments should be used from `proc.args`, not from the request
@@ -65,10 +71,10 @@ class DialogStep(ABC):
             buttons
             ].present(proc=proc)
 
-    def presentFormBody(self, **kwargs): # pylint: disable=unused-argument
+    def presentFormBody(self, **kwargs: object) -> XMLContent: # pylint: disable=unused-argument
         return None
 
-    def verify(self, proc):
+    def verify(self, proc: 'DialogProcessorBase') -> 'DialogStep':
         '''Verifies the data the user provided for this step.
         If invalid input is encountered that the user must correct,
         PresentableError is raised.
@@ -78,12 +84,28 @@ class DialogStep(ABC):
         '''
         raise NotImplementedError
 
-class DialogProcessorBase(PageProcessor[ArgsT]):
+T = TypeVar('T')
+
+class DialogProcessorBase(PageProcessor['DialogPage.Arguments']):
     """Abstract base class for Processors designed to be used with
     `DialogPage`.
     """
 
-    def __retryStep(self, func):
+    if TYPE_CHECKING:
+        # Tell mypy that our 'page' member is a DialogPage.
+        # In theory we should pass the page type as a type argument to
+        # PageProcessor, but I can't figure out a way to do that and
+        # also keep the knowledge of the argument and processor types.
+        # I tried an override without a property first, but that triggered
+        # an internal error:
+        #   https://github.com/python/mypy/issues/5846
+        @property
+        def page(self) -> DialogPage: # type: ignore
+            return self.page
+
+    def __retryStep(self,
+                    func: Callable[['DialogProcessorBase'], T]
+                    ) -> T:
         # Call function with corrected arguments until it accepts them.
         for _ in range(100):
             try:
@@ -94,19 +116,27 @@ class DialogProcessorBase(PageProcessor[ArgsT]):
                 # redirect them, it would not be useful since the POST body
                 # is not accessible for the user, unlike the GET query in
                 # the URL.
-                self.args = ex.correctedArgs
+                self.args = cast(DialogPage.Arguments, ex.correctedArgs)
                 self.argsChanged()
         # The function keeps correcting its arguments; by now it is
         # safe to assume it has entered an infinite loop.
+        boundObj = getattr(func, '__self__', None)
+        if isinstance(boundObj, DialogStep):
+            funcDesc = '"%s" method' % boundObj.__class__.name
+        else:
+            funcDesc = 'function'
         raise RuntimeError(
-            'dialog step "%s" method "%s" keeps raising ArgsCorrected'
-            % ( func.__self__.__class__.name, func.__name__ )
+            'dialog step %s "%s" keeps raising ArgsCorrected'
+            % (funcDesc, func.__name__)
             )
 
-    def process(self, req, user):
+    def process(self, req: Request, user: User) -> None:
         raise NotImplementedError
 
-    def walkSteps(self, requestedPath, limitStep=None):
+    def walkSteps(self,
+                  requestedPath: List[DialogStep],
+                  limitStep: Optional[DialogStep] = None
+                  ) -> None:
         """Walk as far as possible through the steps in `requestedPath`.
         The walk is stopped if a step doesn't pass verification, the walk
         takes us off the requested path, or `limitStep` is reached.
@@ -166,12 +196,14 @@ class DialogProcessorBase(PageProcessor[ArgsT]):
             # pylint: disable=attribute-defined-outside-init
             self.step = step
             self.errorMessage = errorMessage
-            self.backName = 'back' if len(visibleSteps) > 1 else None
+            self.backName = (
+                'back' if len(visibleSteps) > 1 else None
+                ) # type: Optional[str]
             self.args = self.args.override(
                 path = ' '.join(actualPath), back = None, error = None
                 )
 
-    def argsChanged(self):
+    def argsChanged(self) -> None:
         '''Called when the "args" field has been changed.
         Interested subclasses can override this, for example to discard
         cached objects that were created based on information from "args".
@@ -182,7 +214,7 @@ class InitialDialogProcessor(DialogProcessorBase):
     """Processor that loads the initial state for `DialogPage`.
     """
 
-    def getInitial(self, args, user):
+    def getInitial(self, args: ArgsT, user: User) -> Tuple[DialogStep, ArgsT]:
         '''Called when the dialog is entered, to determine the first step
         and the initial argument values.
         Returns a pair consisting of the DialogStep object for the initial
@@ -190,7 +222,7 @@ class InitialDialogProcessor(DialogProcessorBase):
         '''
         raise NotImplementedError
 
-    def process(self, req, user):
+    def process(self, req: Request, user: User) -> None:
         initialClass, self.args = self.getInitial(self.args, user)
         initialStep = self.page.stepObjects[initialClass.name]
         self.walkSteps([initialStep])
@@ -199,7 +231,7 @@ class ContinuedDialogProcessor(DialogProcessorBase):
     """Processor handles the state for subsequent steps of `DialogPage`.
     """
 
-    def process(self, req, user):
+    def process(self, req: Request, user: User) -> None:
         # Determine navigation path.
         stepObjects = self.page.stepObjects
         requestedPath = []
@@ -237,7 +269,7 @@ class DialogPage(FabPage[DialogProcessorBase, 'DialogPage.Arguments'], ABC):
         back = StrArg(None) # back button on normal page
         error = StrArg(None) # back button on error page
 
-    def __init__(self):
+    def __init__(self) -> None:
         FabPage.__init__(self)
         self.stepObjects = {
             stepClass.name: stepClass(self)
