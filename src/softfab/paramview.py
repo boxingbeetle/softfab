@@ -84,9 +84,9 @@ class ParamOverrideTable(Table):
     hideWhenEmpty = True
     suppressedParams = 'sf.summary',
 
-    def iterRows(self, *, proc, **kwargs):
+    def iterRows(self, *, tasks, **kwargs):
         # Sort tasks by name (first element in tuple).
-        sortedTasks = sorted(proc.tasks)
+        sortedTasks = sorted(tasks)
 
         for taskId, taskDef, taskParams in sortedTasks:
             tableRows = []
@@ -101,14 +101,15 @@ class ParamOverrideTable(Table):
                     tableRows.append([
                         name,
                         self.getParamCell(
-                            proc, taskId, name, curValue, defValue
+                            taskId, name, curValue, defValue,
+                            tasks=tasks, **kwargs
                             )
                         ])
             if len(tableRows) > 0:
                 tableRows[0].insert(0, cell(rowspan = len(tableRows))[taskId])
                 yield from tableRows
 
-    def getParamCell(self, proc, taskId, name, curValue, defValue):
+    def getParamCell(self, taskId, name, curValue, defValue, **kwargs):
         raise NotImplementedError
 
 class SummaryParamCell(RadioTable):

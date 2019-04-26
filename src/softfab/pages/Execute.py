@@ -195,12 +195,12 @@ class ParamStep(DialogStep):
             proc=proc, taskSet=config, **kwargs
             )
         # Task parameters:
-        proc.tasks = [
+        tasks = [
             ( taskId, taskDefDB[taskId],
               config.getTask(taskId).getParameters() )
             for taskId in proc.args.tasks
             ]
-        yield ParamTable.instance.present(proc=proc, **kwargs)
+        yield ParamTable.instance.present(proc=proc, tasks=tasks, **kwargs)
 
     def verify(self, proc):
         return ActionStep
@@ -713,7 +713,7 @@ class ConfigInputTable(InputTable):
 
 class ParamTable(ParamOverrideTable):
 
-    def getParamCell(self, proc, taskId, name, curValue, defValue):
+    def getParamCell(self, taskId, name, curValue, defValue, **kwargs):
         return ParamCell(
             taskId + '/' + name, curValue or '', defValue
             )

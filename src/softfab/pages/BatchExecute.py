@@ -280,9 +280,12 @@ class BatchInputTable(InputTable):
 
 class ParamTable(ParamOverrideTable):
 
-    def getParamCell(self, proc, taskId, name, curValue, defValue):
+    def getParamCell(self,
+                     taskId, name, curValue, defValue,
+                     *, indexStr, **kwargs
+                     ):
         return textInput(
-            name='param/' + proc.indexStr + '/' + taskId + '/' + name,
+            name='param/' + indexStr + '/' + taskId + '/' + name,
             value=defValue if curValue is None else curValue,
             size=72
             )
@@ -294,10 +297,7 @@ class ParamTable(ParamOverrideTable):
         for index, config in enumerate(proc.configs):
             configId = config.getId()
             taskParameters = proc.params.get(configId)
-            assert not hasattr(proc, 'indexStr')
-            proc.indexStr = str(index)
-            assert not hasattr(proc, 'tasks')
-            proc.tasks = tasks = []
+            tasks = []
             for task in config.getTasks():
                 taskName = task.getName()
                 taskParams = None
@@ -306,12 +306,12 @@ class ParamTable(ParamOverrideTable):
                 if taskParams is None:
                     taskParams = task.getParameters()
                 tasks.append(( taskName, task.getDef(), taskParams ))
-            table = super().present(proc=proc, **kwargs)
+            table = super().present(
+                proc=proc, indexStr=str(index), tasks=tasks, **kwargs
+                )
             if table:
                 presentation += (
                     xhtml.h2[ 'Parameters for "%s":' % configId ],
                     table
                     )
-            del proc.indexStr
-            del proc.tasks
         return presentation
