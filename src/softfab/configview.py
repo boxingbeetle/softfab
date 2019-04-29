@@ -1,22 +1,26 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from typing import TYPE_CHECKING, Iterator, List, Optional, Sequence, cast
+
 from softfab.config import rootURL
-from softfab.configlib import configDB
+from softfab.configlib import Config, Input, TaskSetWithInputs, configDB
 from softfab.databaselib import RecordObserver
 from softfab.datawidgets import DataColumn, DataTable, LinkColumn
 from softfab.formlib import dropDownList, emptyOption, hiddenInput, textInput
-from softfab.joblib import jobDB
+from softfab.joblib import Job, jobDB
 from softfab.jobview import unfinishedJobs
 from softfab.pagelinks import createConfigDetailsLink, createJobURL
 from softfab.productdeflib import ProductType
 from softfab.projectlib import project
-from softfab.resourcelib import taskRunnerDB
+from softfab.resourcelib import TaskRunner, taskRunnerDB
 from softfab.schedulelib import scheduleDB
+from softfab.selectview import SelectArgs
 from softfab.sortedqueue import SortedQueue
 from softfab.statuslib import StatusModel, StatusModelRegistry
+from softfab.taskgroup import LocalGroup
 from softfab.userview import OwnerColumn
-from softfab.webgui import Table, cell
-from softfab.xmlgen import xml
+from softfab.webgui import Column, Table, cell
+from softfab.xmlgen import XMLContent, xml
 
 
 class SelectConfigsMixin:
@@ -24,8 +28,13 @@ class SelectConfigsMixin:
     select configurations.
     '''
 
-    def findConfigs(self):
-        self.configs = configs = []
+    if TYPE_CHECKING:
+        def __init__(self) -> None:
+            self.args = SelectArgs()
+            self.notices = [] # type: List[str]
+
+    def findConfigs(self) -> None:
+        self.configs = configs = [] # type: List[Config]
         missingIds = []
         for configId in sorted(self.args.sel):
             try:
@@ -35,7 +44,7 @@ class SelectConfigsMixin:
         if missingIds:
             self.notices.append(presentMissingConfigs(missingIds))
 
-def presentMissingConfigs(missingIds):
+def presentMissingConfigs(missingIds: Sequence[str]) -> str:
     return '%s not exist (anymore): %s' % (
         'Configuration does' if len(missingIds) == 1 else 'Configurations do',
         ', '.join(sorted(missingIds))
@@ -44,24 +53,26 @@ def presentMissingConfigs(missingIds):
 class InputTable(Table):
     hideWhenEmpty = True
 
-    def iterColumns(self, taskSet, **kwargs):
+    def iterColumns(self, **kwargs: object) -> Iterator[str]:
+        taskSet = cast(TaskSetWithInputs, kwargs['taskSet'])
         yield 'Input'
         yield 'Locator'
         if taskSet.hasLocalInputs():
             yield 'Local at'
 
-    def iterRows(self, *, taskSet, **kwargs):
+    def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
+        taskSet = cast(TaskSetWithInputs, kwargs['taskSet'])
         grouped = taskSet.getInputsGrouped()
         localInputs = taskSet.hasLocalInputs()
         taskRunners = None
         for group, groupInputs in grouped:
-            first = None
+            first = None # type: Optional[str]
             for inp in groupInputs:
-                inputName = inp['name']
-                cells = [ inputName ]
+                inputName = inp.getName()
+                cells = [ inputName ] # type: List[XMLContent]
                 prodType = inp.getType()
                 local = inp.isLocal()
-                locator = inp.get('locator') or ''
+                locator = inp.getLocator() or ''
                 if prodType is ProductType.TOKEN:
                     if local:
                         cells.append('token')
@@ -87,14 +98,14 @@ class InputTable(Table):
                                 )
                         cellData = dropDownList(
                             name='local.' + inputName,
-                            selected=inp.get('localAt', ''),
+                            selected=inp.getLocalAt() or '',
                             required=True
                             )[
                             emptyOption(disabled=True)[
                                 '(select Task Runner)'
                                 ],
                             taskRunners
-                            ]
+                            ] # type: XMLContent
                     else:
                         cellData = '-'
                     cells.append(cell(rowspan = len(groupInputs))[cellData])
@@ -107,7 +118,12 @@ class InputTable(Table):
                         )
                 yield cells
 
-    def filterTaskRunner(self, taskRunner, taskSet, group, inp):
+    def filterTaskRunner(self,
+                         taskRunner: TaskRunner,
+                         taskSet: TaskSetWithInputs,
+                         group: Optional[LocalGroup],
+                         inp: Input
+                         ) -> bool:
         raise NotImplementedError
 
 class _NameColumn(DataColumn):
@@ -127,9 +143,10 @@ class SimpleConfigTable(DataTable):
         _NameColumn(),
         DataColumn('#', 'nrtasks', cellStyle = 'rightalign'),
         DataColumn(keyName = 'description')
-        )
+        ) # type: Sequence[Column]
+          # Workaround for https://github.com/python/mypy/issues/4444
 
-    def iterColumns(self, **kwargs):
+    def iterColumns(self, **kwargs: object) -> Iterator[Column]:
         yield from self.fixedColumns
         if project.showOwners:
             yield OwnerColumn.instance
@@ -140,7 +157,7 @@ class SimpleConfigTable(DataTable):
 
 class ConfigTable(SimpleConfigTable):
 
-    def iterColumns(self, **kwargs):
+    def iterColumns(self, **kwargs: object) -> Iterator[Column]:
         yield LinkColumn('Load', 'Execute', idArg = 'config')
         yield from super().iterColumns(**kwargs)
         yield LinkColumn(
@@ -149,7 +166,7 @@ class ConfigTable(SimpleConfigTable):
             )
         yield LinkColumn('Delete', 'DelJobConfig')
 
-def schedulesUsingConfig(configId):
+def schedulesUsingConfig(configId: str) -> Iterator[str]:
     '''Iterates through the IDs of those schedules that explicitly refer to the
     configuration with the given ID. Tagged schedules are never included, no
     matter whether the configuration matches the tag or not.
@@ -161,11 +178,11 @@ def schedulesUsingConfig(configId):
 class SortedJobsByConfig(SortedQueue):
     compareField = 'recent'
 
-    def __init__(self, configId):
+    def __init__(self, configId: str):
         self.__configId = configId
         SortedQueue.__init__(self, jobDB)
 
-    def _filter(self, record):
+    def _filter(self, record: Job) -> bool:
         return record['configId'] == self.__configId
 
 class ConfigJobModel(StatusModel):

@@ -16,7 +16,9 @@ from softfab.projectlib import project
 from softfab.restypelib import resTypeDB
 from softfab.selectlib import ObservingTagCache, SelectableRecordABC
 from softfab.taskdeflib import taskDefDB
-from softfab.taskgroup import PriorityMixin, TaskGroup, TaskSet, TaskT
+from softfab.taskgroup import (
+    LocalGroup, PriorityMixin, TaskGroup, TaskSet, TaskT
+)
 from softfab.tasklib import ResourceRequirementsMixin, TaskRunnerSet
 from softfab.xmlbind import XMLTag
 from softfab.xmlgen import XMLAttributeValue, XMLContent, xml
@@ -283,7 +285,7 @@ class TaskSetWithInputs(TaskSet[TaskT]):
 
     def getInputsGrouped(
             self
-            ) -> List[Tuple[Optional[TaskGroup[TaskT]], List[Input]]]:
+            ) -> List[Tuple[Optional[LocalGroup[TaskT]], List[Input]]]:
         '''Returns inputs grouped by "locality". The return value is a list
         of 2-element tuples, which contain local group or None as the first
         element and list of Product objects as the second one. Each inner list
@@ -310,10 +312,10 @@ class TaskSetWithInputs(TaskSet[TaskT]):
                     else:
                         ungrouped.add(inpObj)
             if group:
-                assert isinstance(task, TaskGroup)
+                assert isinstance(task, LocalGroup)
                 grouped.append(( task, sorted(group) ))
         return cast(
-            List[Tuple[Optional[TaskGroup[TaskT]], List[Input]]],
+            List[Tuple[Optional[LocalGroup[TaskT]], List[Input]]],
             [ ( None, [ item ] ) for item in sorted(ungrouped) ]
             ) + sorted(grouped)
 

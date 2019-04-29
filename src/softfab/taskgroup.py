@@ -83,7 +83,7 @@ class TaskSet(Generic[TaskT]):
                     locations.discard(None)
                     assert len(locations) <= 1
                     localAt = locations.pop() if locations else None
-                    yield _LocalGroup(self, tasks, localAt)
+                    yield LocalGroup(self, tasks, localAt)
                 else:
                     assert len(tasks) == 1
                     yield tasks[0]
@@ -404,7 +404,7 @@ class _MainGroup(TaskGroup[TaskT]):
             task.checkRunners(taskRunners, whyNot)
             del whyNot[mark:]
 
-class _LocalGroup(TaskGroup[TaskT]):
+class LocalGroup(TaskGroup[TaskT]):
     '''A group of tasks bound to the same Task Runner by their use of local
     products.
     '''
