@@ -488,11 +488,15 @@ class Execute_GET(ExecuteBase, DialogPage):
 
         def getInitial(self, args, user):
             if args.step is EntranceSteps.EDIT:
-                return TargetStep, Execute_POST.Arguments.load(args, user)
+                return Execute_POST.Arguments.load(args, user).override(
+                    path=self.page.steps[0].name
+                    )
             elif args.config != '':
-                return RunnerStep, Execute_POST.Arguments.load(args, user)
+                return Execute_POST.Arguments.load(args, user).override(
+                    path=RunnerStep.name
+                    )
             else:
-                return TargetStep, Execute_POST.Arguments()
+                return Execute_POST.Arguments(path=self.page.steps[0].name)
 
 class Execute_POST(ExecuteBase):
 

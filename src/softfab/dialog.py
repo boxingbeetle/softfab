@@ -2,8 +2,8 @@
 
 from abc import ABC
 from typing import (
-    TYPE_CHECKING, Callable, ClassVar, Generic, List, Optional, Sequence,
-    Tuple, Type, TypeVar
+    TYPE_CHECKING, Callable, ClassVar, Generic, List, Optional, Sequence, Type,
+    TypeVar
 )
 
 from softfab.FabPage import FabPage
@@ -228,21 +228,17 @@ class InitialDialogProcessor(DialogProcessorBase[DialogArgsT]):
           arguments, via an internal redirect to the POST page.
     """
 
-    def getInitial(self,
-                   args: PageArgs,
-                   user: User
-                   ) -> Tuple[DialogStep, DialogArgsT]:
+    def getInitial(self, args: PageArgs, user: User) -> DialogArgsT:
         '''Called when the dialog is entered, to determine the first step
         and the initial argument values.
-        Returns a pair consisting of the DialogStep object for the initial
-        step and a PageArgs instance.
         '''
         raise NotImplementedError
 
     def process(self, req: Request, user: User) -> None:
-        initialClass, self.args = self.getInitial(self.args, user)
-        initialStep = self.page.stepObjects[initialClass.name]
-        self.walkSteps([initialStep])
+        initialArgs = self.getInitial(self.args, user)
+        self.args = initialArgs # pylint: disable=attribute-defined-outside-init
+        stepObjects = self.page.stepObjects
+        self.walkSteps([stepObjects[name] for name in initialArgs.path.split()])
 
 class ContinuedDialogProcessor(DialogProcessorBase[DialogArgsT]):
     """Processor handles the state for subsequent steps of `DialogPage`.
