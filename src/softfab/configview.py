@@ -69,9 +69,6 @@ class InputTable(Table):
                         # Global token: do not include this.
                         continue
                 else:
-                    # Note: This also acts as the fallback for file products
-                    #       when the browser might not be able to handle a
-                    #       more fancy presentation.
                     cells.append(textInput(
                         name='prod.' + inputName, value=locator, size=80
                         ))
