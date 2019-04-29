@@ -954,7 +954,10 @@ if TYPE_CHECKING:
 else:
     SetArg = _SetArg
 
-DictValue = Union[ValueT, 'DictArgInstance[ValueT]']
+# Work around mypy bug by omitting type argument:
+#   https://github.com/python/mypy/issues/6730
+DictValue = Union[ValueT, 'DictArgInstance']
+#DictValue = Union[ValueT, 'DictArgInstance[ValueT]']
 
 class DictArg(Argument[DictValue[ValueT], DictValue[ValueT]]):
 
