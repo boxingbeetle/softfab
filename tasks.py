@@ -3,7 +3,7 @@ from os import makedirs, remove
 from os.path import exists
 from shutil import rmtree
 
-from invoke import task
+from invoke import UnexpectedExit, task
 
 TOP_DIR = Path(__file__).parent
 SRC_ENV = {'PYTHONPATH': '{}/src'.format(TOP_DIR)}
@@ -55,7 +55,11 @@ def types(c, src=None, clean=False, report=False):
         args.append('--html-report ' + mypy_report)
     args.append(source_arg(src))
     with c.cd(str(TOP_DIR)):
-        c.run('mypy %s' % ' '.join(args), env=SRC_ENV, pty=True)
+        try:
+            c.run('mypy %s' % ' '.join(args), env=SRC_ENV, pty=True)
+        except UnexpectedExit as ex:
+            if ex.result.exited < 0:
+                print(ex)
 
 @task
 def isort(c, src=None):
