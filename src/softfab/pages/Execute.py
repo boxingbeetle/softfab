@@ -1,10 +1,11 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from enum import Enum
+from typing import TYPE_CHECKING, Iterator, Optional, Tuple, Type, cast
 
 from softfab.FabPage import IconModifier
 from softfab.Page import InternalError, InvalidRequest, PageProcessor, Redirect
-from softfab.configlib import Config, Task, configDB
+from softfab.configlib import Config, Input, Task, TaskSetWithInputs, configDB
 from softfab.configview import InputTable
 from softfab.dialog import (
     ContinuedDialogProcessor, DialogPage, DialogStep, InitialDialogProcessor,
@@ -16,16 +17,18 @@ from softfab.formlib import (
 )
 from softfab.joblib import jobDB
 from softfab.pageargs import (
-    ArgsCorrected, BoolArg, DictArg, EnumArg, IntArg, SetArg, StrArg
+    ArgsCorrected, BoolArg, DictArg, DictArgInstance, EnumArg, IntArg,
+    PageArgs, SetArg, StrArg
 )
 from softfab.pagelinks import createJobsURL
 from softfab.paramview import ParamCell, ParamOverrideTable
 from softfab.productdeflib import ProductType
 from softfab.projectlib import project
-from softfab.resourcelib import taskRunnerDB
+from softfab.resourcelib import TaskRunner, taskRunnerDB
 from softfab.selectview import TagValueEditTable, textToValues, valuesToText
 from softfab.taskdeflib import taskDefDB
-from softfab.taskgroup import TaskGroup
+from softfab.taskgroup import LocalGroup, TaskGroup
+from softfab.typing import NoReturn
 from softfab.userlib import (
     AccessDenied, User, checkPrivilege, checkPrivilegeForOwned
 )
@@ -37,7 +40,7 @@ class TargetStep(DialogStep):
     name = 'target'
     title = 'Targets'
 
-    def process(self, proc):
+    def process(self, proc: 'Execute_POST.Processor') -> bool:
         projectTargets = project.getTargets()
         if not projectTargets:
             projectTargets = set(['unknown'])
@@ -45,30 +48,30 @@ class TargetStep(DialogStep):
             raise ArgsCorrected(proc.args, target=min(projectTargets))
         return len(projectTargets) > 1
 
-    def presentFormBody(self, **kwargs):
+    def presentFormBody(self, **kwargs: object) -> XMLContent:
         yield xhtml.p[ 'Select target to test:' ]
         yield TargetTable.instance.present(**kwargs)
 
-    def verify(self, proc):
+    def verify(self, proc: 'Execute_POST.Processor') -> Type[DialogStep]:
         return TaskStep
 
 class TaskStep(DialogStep):
     name = 'task'
     title = 'Tasks'
 
-    def process(self, proc):
+    def process(self, proc: 'Execute_POST.Processor') -> bool:
         # TODO: Maybe check privileges for individual steps at the page level?
         #       It would be a bit strange to be stopped halfway a wizard.
         checkPrivilege(proc.user, 'td/l', 'access task list')
         return True
 
-    def presentFormBody(self, **kwargs):
+    def presentFormBody(self, **kwargs: object) -> XMLContent:
         yield xhtml.p[ 'Select task(s) to execute:' ]
         yield TaskTable.instance.present(**kwargs)
         if project['trselect']:
             yield ShowTaskRunnerSelectionTable.instance.present(**kwargs)
 
-    def verify(self, proc):
+    def verify(self, proc: 'Execute_POST.Processor') -> Type[DialogStep]:
         tasks = proc.args.tasks
         if len(tasks) == 0:
             raise VerificationError(
@@ -78,7 +81,7 @@ class TaskStep(DialogStep):
         # Keep the priorities dictionary small.
         # This is essential to get decent performance on projects with
         # a large number of task definitions.
-        priorities = proc.args.prio
+        priorities = cast(DictArgInstance[int], proc.args.prio)
         filteredPrio = {}
         for task in tasks:
             prio = priorities.get(task, 0)
@@ -93,7 +96,7 @@ class RunnerStep(DialogStep):
     name = 'runner'
     title = 'Task Runners'
 
-    def process(self, proc):
+    def process(self, proc: 'Execute_POST.Processor') -> bool:
         if not proc.args.trselect:
             return False
         elif project['trselect']:
@@ -103,7 +106,7 @@ class RunnerStep(DialogStep):
         else:
             return False
 
-    def presentFormBody(self, **kwargs):
+    def presentFormBody(self, **kwargs: object) -> XMLContent:
         yield xhtml.p[ 'Select Task Runner(s) to use:' ]
         yield xhtml.p(class_ = 'hint')[
             '(Nothing selected means any Task Runners can'
@@ -112,7 +115,7 @@ class RunnerStep(DialogStep):
         yield TaskRunnerSelectionTable.instance.present(**kwargs)
         yield TaskRunnersPerTaskTable.instance.present(**kwargs)
 
-    def verify(self, proc):
+    def verify(self, proc: 'Execute_POST.Processor') -> Type[DialogStep]:
         if proc.args.runners:
             taskRunnerCaps = [
                 runner.capabilities
@@ -123,7 +126,7 @@ class RunnerStep(DialogStep):
                 if runner is not None
                 ]
             if not all(
-                any(caps.issubset(trCaps) for trCaps in taskRunnerCaps)
+                any(caps <= trCaps for trCaps in taskRunnerCaps)
                 for caps in (task.getNeededCaps() for task in proc.iterTasks())
                 ):
                 raise VerificationError(
@@ -136,10 +139,11 @@ class RunnerPerTaskStep(DialogStep):
     name = 'runnerpt'
     title = 'Task Runners'
 
-    def process(self, proc):
+    def process(self, proc: 'Execute_POST.Processor') -> bool:
         return proc.args.pertask and len(proc.args.tasks) > 0
 
-    def presentFormBody(self, proc, **kwargs):
+    def presentFormBody(self, **kwargs: object) -> XMLContent:
+        proc = cast(Execute_POST.Processor, kwargs['proc'])
         yield xhtml.p[ 'Select Task Runner(s) to use per task:' ]
         yield xhtml.p(class_ = 'hint')[
             '(Nothing selected means default settings for the job are used)'
@@ -155,14 +159,14 @@ class RunnerPerTaskStep(DialogStep):
             **kwargs
             )
 
-    def verify(self, proc):
+    def verify(self, proc: 'Execute_POST.Processor') -> Type[DialogStep]:
         return ParamStep
 
 class ParamStep(DialogStep):
     name = 'param'
     title = 'Parameters'
 
-    def process(self, proc):
+    def process(self, proc: 'Execute_POST.Processor') -> bool:
         return (
                 # Task Runner should be selected per task.
                 proc.args.pertask and len(proc.args.tasks) > 0
@@ -181,7 +185,9 @@ class ParamStep(DialogStep):
                     )
             )
 
-    def presentFormBody(self, proc, **kwargs):
+    def presentFormBody(self, **kwargs: object) -> XMLContent:
+        proc = cast(Execute_POST.Processor, kwargs['proc'])
+
         # No need to check for tasks here, because if there were no tasks
         # then process() would have skipped this step right to 'action'.
 
@@ -190,18 +196,16 @@ class ParamStep(DialogStep):
         # Construct Config object, because it has useful query methods.
         config = proc.getConfig()
         # Input products:
-        yield ConfigInputTable.instance.present(
-            proc=proc, taskSet=config, **kwargs
-            )
+        yield ConfigInputTable.instance.present(taskSet=config, **kwargs)
         # Task parameters:
         tasks = [
             ( taskId, taskDefDB[taskId],
-              config.getTask(taskId).getParameters() )
+              cast(Task, config.getTask(taskId)).getParameters() )
             for taskId in proc.args.tasks
             ]
-        yield ParamTable.instance.present(proc=proc, tasks=tasks, **kwargs)
+        yield ParamTable.instance.present(tasks=tasks, **kwargs)
 
-    def verify(self, proc):
+    def verify(self, proc: 'Execute_POST.Processor') -> Type[DialogStep]:
         return ActionStep
 
 Actions = Enum('Actions', 'START TAGS')
@@ -210,7 +214,7 @@ class ActionStep(DialogStep):
     name = 'action'
     title = 'Action'
 
-    def presentFormBody(self, **kwargs):
+    def presentFormBody(self, **kwargs: object) -> XMLContent:
         # TODO: Early instantiation has to be forced to make sure the controls
         #       in the table are first in line for receiving focus. This is not
         #       intuitive at all.
@@ -236,14 +240,14 @@ class ActionStep(DialogStep):
             'separated by commas, semicolons and/or whitespace.'
             ]
 
-    def verify(self, proc):
+    def verify(self, proc: 'Execute_POST.Processor') -> Type[DialogStep]:
         action = proc.args.action
         if action is Actions.START:
             if not proc.getConfig().hasValidInputs():
                 raise VerificationError(
                     'Please specify "Local at" for all local inputs.'
                     )
-            multiMax = project['maxjobs']
+            multiMax = cast(int, project['maxjobs'])
             if proc.args.multi < 0:
                 raise VerificationError(
                     'A negative multiple jobs count is not possible.'
@@ -270,7 +274,7 @@ class StartStep(DialogStep):
     name = 'start'
     title = 'Started'
 
-    def process(self, proc):
+    def process(self, proc: 'Execute_POST.Processor') -> bool:
         checkPrivilege(proc.user, 'j/c', 'create jobs')
         if len(proc.args.tasks) == 0:
             # Normally this will be stopped by TaskStep.verify(), but it is
@@ -288,7 +292,7 @@ class StartStep(DialogStep):
                 jobIds.append(job.getId())
         raise Redirect(createJobsURL(jobIds))
 
-    def verify(self, proc):
+    def verify(self, proc: 'Execute_POST.Processor') -> NoReturn:
         # Unreachable because process() never returns normally.
         assert False
 
@@ -300,22 +304,24 @@ class TagsStep(DialogStep):
     name = 'tags'
     title = 'Tags'
 
-    def process(self, proc):
+    def process(self, proc: 'Execute_POST.Processor') -> bool:
         return bool(project.getTagKeys())
 
-    def presentFormBody(self, proc, **kwargs):
+    def presentFormBody(self, **kwargs: object) -> XMLContent:
+        proc = cast(Execute_POST.Processor, kwargs['proc'])
+        tagkeys = cast(DictArgInstance[str], proc.args.tagkeys)
+        tagvalues = cast(DictArgInstance[str], proc.args.tagvalues)
         yield xhtml.p[ 'Selection tags:' ]
         tags = dict(
-            ( key, proc.args.tagvalues.get(index, '') )
-            for index, key in proc.args.tagkeys.items()
+            ( key, tagvalues.get(index, '') )
+            for index, key in tagkeys.items()
             )
         yield ConfigTagValueEditTable.instance.present(
-            proc=proc,
             getValues=lambda key: tags.get(key, ''),
             **kwargs
             )
 
-    def verify(self, proc):
+    def verify(self, proc: 'Execute_POST.Processor') -> Type[DialogStep]:
         return ConfirmStep
 
 class ConfigTagValueEditTable(TagValueEditTable):
@@ -325,25 +331,26 @@ class ConfirmStep(DialogStep):
     name = 'confirm'
     title = 'Save'
 
-    def process(self, proc):
+    def process(self, proc: 'Execute_POST.Processor') -> bool:
         show = proc.args.config in configDB
         if show:
             proc.nextLabel = 'OK'
         return show
 
-    def presentFormBody(self, proc, **kwargs):
+    def presentFormBody(self, **kwargs: object) -> XMLContent:
+        proc = cast(Execute_POST.Processor, kwargs['proc'])
         yield xhtml.p[ 'A configuration named ', xhtml.b[ proc.args.config ],
             ' already exists.' ]
         yield xhtml.p[ 'Do you want to ', xhtml.b[ 'overwrite' ], ' it?' ]
 
-    def verify(self, proc):
+    def verify(self, proc: 'Execute_POST.Processor') -> Type[DialogStep]:
         return SaveStep
 
 class SaveStep(DialogStep):
     name = 'save'
     title = 'Saved'
 
-    def process(self, proc):
+    def process(self, proc: 'Execute_POST.Processor') -> bool:
         config = proc.getConfig()
         oldConfig = configDB.get(config.getId())
         if oldConfig is None:
@@ -365,7 +372,7 @@ class SaveStep(DialogStep):
             )
         # TODO: Having a direct way to execute the saved config would be useful.
 
-    def verify(self, proc):
+    def verify(self, proc: 'Execute_POST.Processor') -> Type[DialogStep]:
         # Unreachable with valid input because process() always returns True
         # and presentContent() does not render the form.
         raise InvalidRequest('Attempt to skip the "save" step')
@@ -377,8 +384,12 @@ EntranceSteps = Enum('EntranceSteps', 'EDIT')
 class ExecuteProcessorMixin:
     __config = None
 
-    def iterTasks(self):
-        args = self.args
+    if TYPE_CHECKING:
+        def __init__(self) -> None:
+            self.user = cast(User, None)
+
+    def iterTasks(self) -> Iterator[Task]:
+        args = cast(Execute_POST.Arguments, self.args) # type: ignore
         for taskId in args.tasks:
             taskDef = taskDefDB[taskId]
             taskParams = {}
@@ -396,9 +407,9 @@ class ExecuteProcessorMixin:
                 parameters = taskParams,
                 )
 
-    def getConfig(self):
+    def getConfig(self) -> Config:
         if self.__config is None:
-            args = self.args
+            args = cast(Execute_POST.Arguments, self.args) # type: ignore
 
             jobParams = {}
             if args.notify:
@@ -460,7 +471,7 @@ class ExecuteProcessorMixin:
             self.__config = config
         return self.__config
 
-    def argsChanged(self):
+    def argsChanged(self) -> None:
         self.__config = None
 
 class ExecuteBase(DialogPage):
@@ -484,15 +495,20 @@ class Execute_GET(ExecuteBase, DialogPage):
         config = StrArg('')
         step = EnumArg(EntranceSteps, None)
 
-    class Processor(ExecuteProcessorMixin, InitialDialogProcessor):
+    class Processor(ExecuteProcessorMixin,
+                    InitialDialogProcessor['Execute_POST.Arguments']):
 
-        def getInitial(self, args, user):
-            if args.step is EntranceSteps.EDIT:
-                return Execute_POST.Arguments.load(args, user).override(
+        def getInitial(self,
+                       args: PageArgs,
+                       user: User
+                       ) -> 'Execute_POST.Arguments':
+            argsGET = cast('Execute_GET.Arguments', args)
+            if argsGET.step is EntranceSteps.EDIT:
+                return Execute_POST.Arguments.load(argsGET, user).override(
                     path=self.page.steps[0].name
                     )
-            elif args.config != '':
-                return Execute_POST.Arguments.load(args, user).override(
+            elif argsGET.config != '':
+                return Execute_POST.Arguments.load(argsGET, user).override(
                     path=RunnerStep.name
                     )
             else:
@@ -523,7 +539,10 @@ class Execute_POST(ExecuteBase):
         action = EnumArg(Actions, Actions.START)
 
         @classmethod
-        def load(cls, args, user):
+        def load(cls,
+                 args: Execute_GET.Arguments,
+                 user: User
+                 ) -> 'Execute_POST.Arguments':
             try:
                 config = configDB[args.config]
             except KeyError:
@@ -538,15 +557,16 @@ class Execute_POST(ExecuteBase):
             poverride = {}
             runnerspt = {}
             for task in tasks:
-                taskDef = taskDefDB[task['name']]
+                taskName = task.getName()
+                taskDef = taskDefDB[taskName]
                 for param in taskDef.getParameters().keys():
-                    paramKey = task['name'] + '/' + param
+                    paramKey = taskName + '/' + param
                     value = task.getParameter(param)
                     values[paramKey] = value or ''
                     poverride[paramKey] = value is not None
                 runners = task.getRunners()
                 if runners:
-                    runnerspt[task['name']] = set(runners)
+                    runnerspt[taskName] = set(runners)
 
             onfail = 'always'    # default setting
             notify = config.getParameter('notify') or ''
@@ -605,7 +625,7 @@ class TargetTable(RadioTable):
     name = 'target'
     columns = ('Target', )
 
-    def iterOptions(self, **kwargs):
+    def iterOptions(self, **kwargs: object) -> Iterator[Tuple[str, XMLContent]]:
         for target in sorted(project.getTargets()):
             yield target, ( target, '\u00A0' )
 
@@ -614,7 +634,7 @@ class NotifyTable(RadioTable):
     name = 'onfail'
     columns = ('Notify by email when job has finished', )
 
-    def iterOptions(self, **kwargs):
+    def iterOptions(self, **kwargs: object) -> Iterator[Tuple[str, XMLContent]]:
         yield 'always', ( 'always', '\u00A0' )
         yield 'onfail', ( 'only if a task result is a warning or an error',
             '\u00A0' )
@@ -624,13 +644,16 @@ class NotifyTable(RadioTable):
 class TaskTable(CheckBoxesTable):
     name = 'tasks'
 
-    def iterColumns(self, **kwargs):
+    def iterColumns(self, **kwargs: object) -> Iterator[str]:
         yield 'Task ID'
         yield 'Title'
         if project['taskprio']:
             yield 'Priority'
 
-    def iterOptions(self, proc, **kwargs):
+    def iterOptions(self, **kwargs: object) -> Iterator[Tuple[str, XMLContent]]:
+        proc = cast(Execute_POST.Processor, kwargs['proc'])
+        prio = cast(DictArgInstance[int], proc.args.prio)
+
         # Create separate lists for selected and unselected tasks.
         selectedTaskIds = []
         unselectedTaskIds = []
@@ -652,10 +675,10 @@ class TaskTable(CheckBoxesTable):
                     cells.append(
                         textInput(
                             name = 'prio.' + taskId,
-                            value = str(proc.args.prio.get(taskId, 0)),
+                            value = str(prio.get(taskId, 0)),
                             size = 5, maxlength = 6,
                             disabled = disabled,
-                            ).present(proc=proc, **kwargs)
+                            ).present(**kwargs)
                         )
                 yield taskId, cells
 
@@ -667,7 +690,9 @@ class TaskRunnerSelectionTable(CheckBoxesTable):
     name = 'runners'
     columns = 'Task Runner',
 
-    def iterOptions(self, proc, **kwargs):
+    def iterOptions(self, **kwargs: object) -> Iterator[Tuple[str, XMLContent]]:
+        proc = cast(Execute_POST.Processor, kwargs['proc'])
+
         taskCapsList = []
         requiredCaps = None
         for task in proc.iterTasks():
@@ -682,7 +707,7 @@ class TaskRunnerSelectionTable(CheckBoxesTable):
         taskRunners = (
             runner for runner in taskRunnerDB
             if proc.args.target in runner.targets
-            )
+            ) # type: Iterator[TaskRunner]
         # Are there tasks with non-empty required capability set?
         if len(taskCapsList[0]) > 0:
             def capsMatch(runner):
@@ -696,7 +721,7 @@ class TaskRunnerSelectionTable(CheckBoxesTable):
                     elif caps.issubset(trCaps):
                         return True
                 return False
-            taskRunners = tuple(
+            taskRunners = (
                 runner for runner in taskRunners if capsMatch(runner)
                 )
 
@@ -709,14 +734,25 @@ class TaskRunnersPerTaskTable(SingleCheckBoxTable):
 
 class ConfigInputTable(InputTable):
 
-    def filterTaskRunner(self, taskRunner, taskSet, group, inp):
+    def filterTaskRunner(self,
+                         taskRunner: TaskRunner,
+                         taskSet: TaskSetWithInputs,
+                         group: Optional[LocalGroup],
+                         inp: Input
+                         ) -> bool:
         return taskSet.getTarget() in taskRunner.targets and (
             group is None or group.canRunOn(taskRunner.getId())
             )
 
 class ParamTable(ParamOverrideTable):
 
-    def getParamCell(self, taskId, name, curValue, defValue, **kwargs):
+    def getParamCell(self,
+                     taskId: str,
+                     name: str,
+                     curValue: str,
+                     defValue: str,
+                     **kwargs: object
+                     ) -> ParamCell:
         return ParamCell(
             taskId + '/' + name, curValue or '', defValue
             )
