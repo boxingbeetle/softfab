@@ -419,7 +419,7 @@ class ExecuteProcessorMixin:
 
             config = Config.create(
                 name = args.config,
-                target = args.target,
+                targets = [args.target],
                 owner = self.user.name,
                 trselect = args.trselect,
                 comment = args.comment,
@@ -585,9 +585,17 @@ class Execute_POST(ExecuteBase):
                 tagkeys[indexStr] = key
                 tagvalues[indexStr] = valuesToText(config.getTagValues(key))
 
+            targets = config.targets
+            # TODO: Support configs with 2 or more targets.
+            assert len(targets) < 2, targets
+            if targets:
+                target, = targets
+            else:
+                target = ''
+
             return cls(
                 config = config.getId(),
-                target = config.getTarget(),
+                target = target,
                 tasks = frozenset(
                     task['name']
                     for task in tasks
@@ -740,7 +748,8 @@ class ConfigInputTable(InputTable):
                          group: Optional[LocalGroup],
                          inp: Input
                          ) -> bool:
-        return taskSet.getTarget() in taskRunner.targets and (
+        targets = cast(Config, taskSet).targets
+        return (not targets or not targets.isdisjoint(taskRunner.targets)) and (
             group is None or group.canRunOn(taskRunner.getId())
             )
 
