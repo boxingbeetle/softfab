@@ -295,7 +295,15 @@ class DialogPage(FabPage[DialogProcessorBase, 'DialogPage.Arguments'], ABC):
         raise NotImplementedError
 
     def pageTitle(self, proc: DialogProcessorBase) -> str:
-        return self.description + ' - ' + proc.step.title
+        # TODO: When presenting an error page, 'proc' is of a different type
+        #       that does not have the 'step' attribute.
+        #       We should probably split the title from the subtitle and
+        #       pass 'proc' only to the subtitle method.
+        step = getattr(proc, 'step', None)
+        if step is None:
+            return self.description
+        else:
+            return self.description + ' - ' + proc.step.title
 
     def presentContent(self, proc: DialogProcessorBase) -> XMLContent:
         if proc.errorMessage is not None:
