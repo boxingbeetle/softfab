@@ -1,7 +1,10 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from collections import defaultdict
 from enum import Enum
-from typing import AbstractSet, Dict, Iterator, Mapping, Optional
+from typing import (
+    AbstractSet, DefaultDict, Iterator, Mapping, Optional, Set, cast
+)
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor, Redirect
@@ -15,7 +18,9 @@ from softfab.joblib import jobDB
 from softfab.pageargs import DictArg, EnumArg, RefererArg, StrArg
 from softfab.pagelinks import createJobsURL
 from softfab.paramview import ParamOverrideTable
+from softfab.resourcelib import TaskRunner
 from softfab.selectview import SelectArgs
+from softfab.taskgroup import LocalGroup
 from softfab.userlib import User, checkPrivilege
 from softfab.webgui import decoration
 from softfab.xmlgen import XMLContent, xhtml
@@ -54,10 +59,11 @@ class FakeTaskSet(TaskSetWithInputs[FakeTask]):
 
     def __init__(self) -> None:
         TaskSetWithInputs.__init__(self)
-        self.__targets = {} # type: Dict[str, str]
+        self.__targets = defaultdict(set) # type: DefaultDict[str, Set[str]]
         self.__index = 0
 
     def addConfig(self, config: Config) -> None:
+        targets = config.targets
         for group_, inputList in config.getInputsGrouped():
             inputs = {}
             for cfgInput in inputList:
@@ -66,12 +72,7 @@ class FakeTaskSet(TaskSetWithInputs[FakeTask]):
                 if ownInput is not None:
                     locator = ownInput.getLocator()
                     if ownInput.isLocal():
-                        # Assume: only one target per Task Runner is allowed.
-                        if self.__targets[inputName] != config.getTarget():
-                            raise InputConflict(
-                                'The configurations can not be executed '
-                                'because of conflicting local inputs'
-                                )
+                        self.__targets[inputName].update(targets)
                         localAt = ownInput.getLocalAt()
                         if localAt != cfgInput.getLocalAt():
                             localAt = None
@@ -83,7 +84,7 @@ class FakeTaskSet(TaskSetWithInputs[FakeTask]):
                 else:
                     ownInput = cfgInput.clone()
                     self._inputs[inputName] = ownInput
-                    self.__targets[inputName] = config.getTarget()
+                    self.__targets[inputName] = set(targets)
                 inputs[inputName] = ownInput
             self.__index += 1
             fakeName = str(self.__index)
@@ -92,8 +93,8 @@ class FakeTaskSet(TaskSetWithInputs[FakeTask]):
     def getInputSet(self) -> AbstractSet[str]:
         return set(self._inputs)
 
-    def getTarget(self, inp: Input) -> Optional[str]:
-        return self.__targets.get(inp.getName())
+    def getTargets(self, inp: Input) -> AbstractSet[str]:
+        return self.__targets[inp.getName()]
 
 class BatchConfigTable(SimpleConfigTable):
     # Disable tabs and sorting because it would clear the forms.
@@ -265,8 +266,14 @@ class BatchExecute_POST(BatchExecute_GET):
 
 class BatchInputTable(InputTable):
 
-    def filterTaskRunner(self, taskRunner, taskSet, group, inp):
-        return taskSet.getTarget(inp) in taskRunner.targets
+    def filterTaskRunner(self,
+                         taskRunner: TaskRunner,
+                         taskSet: TaskSetWithInputs,
+                         group: Optional[LocalGroup],
+                         inp: Input
+                         ) -> bool:
+        targets = cast(FakeTaskSet, taskSet).getTargets(inp)
+        return not targets or targets <= taskRunner.capabilities
 
     def present(self, *, taskSet, **kwargs):
         tablePresentation = super().present(taskSet=taskSet, **kwargs)
