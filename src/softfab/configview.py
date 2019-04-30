@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import TYPE_CHECKING, Iterator, List, Optional, Sequence, cast
+from typing import (
+    TYPE_CHECKING, Generic, Iterator, List, Optional, Sequence, TypeVar, cast
+)
 
 from softfab.config import rootURL
 from softfab.configlib import Config, Input, TaskSetWithInputs, configDB
@@ -22,15 +24,16 @@ from softfab.userview import OwnerColumn
 from softfab.webgui import Column, Table, cell
 from softfab.xmlgen import XMLContent, xml
 
+SelectArgsT = TypeVar('SelectArgsT', bound=SelectArgs)
 
-class SelectConfigsMixin:
+class SelectConfigsMixin(Generic[SelectArgsT]):
     '''Mixin for PageProcessors that want to use the `sel` argument to
     select configurations.
     '''
 
     if TYPE_CHECKING:
         def __init__(self) -> None:
-            self.args = SelectArgs()
+            self.args = cast(SelectArgsT, None)
             self.notices = [] # type: List[str]
 
     def findConfigs(self) -> None:
