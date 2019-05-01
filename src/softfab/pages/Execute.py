@@ -504,15 +504,13 @@ class Execute_GET(ExecuteBase, DialogPage):
                        ) -> 'Execute_POST.Arguments':
             argsGET = cast('Execute_GET.Arguments', args)
             if argsGET.step is EntranceSteps.EDIT:
+                return Execute_POST.Arguments.load(argsGET, user)
+            elif argsGET.config:
                 return Execute_POST.Arguments.load(argsGET, user).override(
-                    path=self.page.steps[0].name
-                    )
-            elif argsGET.config != '':
-                return Execute_POST.Arguments.load(argsGET, user).override(
-                    path=RunnerStep.name
+                    path=' '.join(step.name for step in self.page.steps[:2])
                     )
             else:
-                return Execute_POST.Arguments(path=self.page.steps[0].name)
+                return Execute_POST.Arguments()
 
 class Execute_POST(ExecuteBase):
 

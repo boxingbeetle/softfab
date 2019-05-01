@@ -157,7 +157,7 @@ class DialogProcessorBase(PageProcessor[DialogArgsT]):
         actualPath = []
         visibleSteps = []
         errorMessage = None
-        step = requestedPath[0]
+        step = stepObjects[self.page.steps[0].name]
         try:
             while True:
                 # Replay the path the user has followed.
