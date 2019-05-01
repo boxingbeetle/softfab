@@ -303,7 +303,7 @@ class DialogPage(FabPage[DialogProcessorBase, 'DialogPage.Arguments'], ABC):
         if step is None:
             return self.description
         else:
-            return self.description + ' - ' + proc.step.title
+            return self.description + ' \u2013 ' + proc.step.title
 
     def presentContent(self, proc: DialogProcessorBase) -> XMLContent:
         if proc.errorMessage is not None:
