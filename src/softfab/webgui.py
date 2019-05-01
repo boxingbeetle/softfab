@@ -387,18 +387,29 @@ class _Row(AttrContainer):
         yield adaptToXML(cell.adapt(element))
 
     def present(self, **kwargs: object) -> XMLContent:
-        colStyles = iter(cast(Iterable[str], kwargs.pop('colStyles')))
+        colStyles = cast(Sequence[str], kwargs.pop('colStyles'))
 
         cells = []
+        index = 0
         for presented in self._presentContents(**kwargs):
             if presented:
                 cellPresentation = cast(XMLNode, presented)
                 colspan = int(cellPresentation.attrs.get('colspan', '1'))
                 for _ in range(colspan):
-                    cellPresentation = cellPresentation.addClass(
-                        next(colStyles)
-                        )
+                    try:
+                        style = colStyles[index] # type: Optional[str]
+                    except IndexError:
+                        style = None
+                    cellPresentation = cellPresentation.addClass(style)
+                    index += 1
                 cells.append(cellPresentation)
+
+        if index != len(colStyles):
+            raise ValueError(
+                'Table with %d columns contains row with %d cells'% (
+                    len(colStyles), index
+                    )
+                )
 
         return xhtml.tr(**self._attributes)[cells]
 
