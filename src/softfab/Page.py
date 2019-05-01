@@ -194,7 +194,7 @@ class HTTPAuthenticator(Responder):
 class FabResource(ABC, Generic[ArgsT, ProcT]):
     '''Abstract base class for Control Center pages.
     '''
-    authenticator = abstract # type: ClassVar[Type[Authenticator]]
+    authenticator = abstract # type: Type[Authenticator]
     streaming = False
 
     debugSupport = False
