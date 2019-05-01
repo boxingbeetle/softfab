@@ -42,15 +42,20 @@ class TargetStep(DialogStep):
 
     def process(self, proc: 'Execute_POST.Processor') -> bool:
         projectTargets = project.getTargets()
-        if not projectTargets:
-            projectTargets = set(['unknown'])
-        if proc.args.target not in projectTargets:
-            raise ArgsCorrected(proc.args, target=min(projectTargets))
-        return len(projectTargets) > 1
+        if projectTargets:
+            return True
+        else:
+            if proc.args.target:
+                raise ArgsCorrected(proc.args, target=())
+            else:
+                return False
 
     def presentFormBody(self, **kwargs: object) -> XMLContent:
         yield xhtml.p[ 'Select target to test:' ]
         yield TargetTable.instance.present(**kwargs)
+        yield xhtml.p[
+            'Selecting no targets will produce a single target-less job.'
+            ]
 
     def verify(self, proc: 'Execute_POST.Processor') -> Type[DialogStep]:
         return TaskStep
@@ -419,7 +424,7 @@ class ExecuteProcessorMixin:
 
             config = Config.create(
                 name = args.config,
-                targets = [args.target],
+                targets = args.target,
                 owner = self.user.name,
                 trselect = args.trselect,
                 comment = args.comment,
@@ -515,7 +520,7 @@ class Execute_GET(ExecuteBase, DialogPage):
 class Execute_POST(ExecuteBase):
 
     class Arguments(DialogPage.Arguments):
-        target = StrArg('')
+        target = SetArg()
         tasks = SetArg()
         prio = DictArg(IntArg())
         prod = DictArg(StrArg())
@@ -583,17 +588,9 @@ class Execute_POST(ExecuteBase):
                 tagkeys[indexStr] = key
                 tagvalues[indexStr] = valuesToText(config.getTagValues(key))
 
-            targets = config.targets
-            # TODO: Support configs with 2 or more targets.
-            assert len(targets) < 2, targets
-            if targets:
-                target, = targets
-            else:
-                target = ''
-
             return cls(
                 config = config.getId(),
-                target = target,
+                target = config.targets,
                 tasks = frozenset(
                     task['name']
                     for task in tasks
@@ -627,14 +624,13 @@ class Execute_POST(ExecuteBase):
     class Processor(ExecuteProcessorMixin, ContinuedDialogProcessor):
         pass
 
-class TargetTable(RadioTable):
+class TargetTable(CheckBoxesTable):
     name = 'target'
     columns = ('Target', )
 
     def iterOptions(self, **kwargs: object) -> Iterator[Tuple[str, XMLContent]]:
         for target in sorted(project.getTargets()):
-            yield target, ( target, '\u00A0' )
-
+            yield target, ( target, )
 
 class NotifyTable(RadioTable):
     name = 'onfail'
