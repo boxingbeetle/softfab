@@ -126,15 +126,16 @@ class _StyleRoot(Resource):
     def addStyleSheet(self, name: str) -> StyleSheet:
         fileName = name + '.css'
         data = self.__addFile(fileName, 'text/css')
-        text = data.decode('utf-8')
-        index = 0
-        while True:
-            match = _reStyleImage.search(text, index)
-            if match is None:
-                break
-            imageFile = match.group(1)
-            self.__addFile(imageFile, 'image/png')
-            index = match.end()
+        if data is not None:
+            text = data.decode('utf-8')
+            index = 0
+            while True:
+                match = _reStyleImage.search(text, index)
+                if match is None:
+                    break
+                imageFile = match.group(1)
+                self.__addFile(imageFile, 'image/png')
+                index = match.end()
         return StyleSheet(self.relativeURL + '/' + fileName)
 
 styleRoot = _StyleRoot()
