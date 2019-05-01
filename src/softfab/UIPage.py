@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from traceback import TracebackException
-from typing import Generic, Iterator, Optional, cast
+from typing import TYPE_CHECKING, Generic, Iterator, Optional, cast
 
 from softfab.Page import PageProcessor, ProcT, Responder, logPageException
 from softfab.StyleResources import StyleSheet, styleRoot
@@ -53,6 +53,9 @@ class _ErrorResponder(UIResponder):
         super().respond(response)
 
 class UIPage(Generic[ProcT]):
+
+    if TYPE_CHECKING:
+        debugSupport = False
 
     def writeHTTPHeaders(self, response: Response) -> None:
         if response.userAgent.acceptsXHTML:
