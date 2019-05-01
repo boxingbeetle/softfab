@@ -154,6 +154,9 @@ def createCapabilityLink(typeName: str, cap: str = '') -> XML:
         cap or resTypeDB[typeName].presentationName
         ]
 
+def createTargetLink(target: str) -> XML:
+    return createCapabilityLink(taskRunnerResourceTypeName, target)
+
 def createTaskRunnerDetailsLink(taskRunnerId):
     if not taskRunnerId:
         return '-'

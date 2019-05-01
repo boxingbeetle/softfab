@@ -9,7 +9,8 @@ from softfab.configlib import configDB
 from softfab.graphview import GraphPageMixin, GraphPanel, createExecutionGraph
 from softfab.jobview import CommentPanel
 from softfab.pagelinks import (
-    ConfigIdArgs, createTaskDetailsLink, createTaskRunnerDetailsLink
+    ConfigIdArgs, createTargetLink, createTaskDetailsLink,
+    createTaskRunnerDetailsLink
 )
 from softfab.productview import formatLocator
 from softfab.projectlib import project
@@ -27,7 +28,6 @@ from softfab.xmlgen import XMLContent, txt, xhtml
 # The following pieces of information are not included in this page:
 # - Task Runner selection
 # - task priorities
-# - target
 # - owner
 # This was done both to keep the page simple and to save implementation effort.
 # However, if some of that info is missed by the users, maybe we will have to
@@ -101,6 +101,21 @@ class InputTable(Table):
                         )
                     )
             yield cells
+
+def presentTargets(*, proc) -> XMLContent:
+    targets = proc.config.targets
+    if targets:
+        yield xhtml.p[
+            'Configuration will create jobs for the following targets:'
+            ]
+        yield unorderedList[(
+            createTargetLink(target) for target in sorted(targets)
+            )].present()
+    elif project.getTargets():
+        yield xhtml.p[
+            'Configuration will create jobs with ', xhtml.b['no target'],
+            ' requirements.'
+            ]
 
 decoratedInputTable = decoration[
     xhtml.p[ 'Configuration consumes the following inputs:' ],
@@ -195,6 +210,7 @@ class ConfigDetails_GET(
         yield GraphPanel.instance.present(proc=proc, graph=proc.graph)
         yield decoratedTagsTable.present(proc=proc)
         yield CommentPanel(config.comment).present(proc=proc)
+        yield presentTargets(proc=proc)
         yield decoratedInputTable.present(proc=proc)
         yield decoratedConflictsList.present(proc=proc)
         yield xhtml.p[ 'Configuration contains the following tasks:' ]
