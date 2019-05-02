@@ -141,6 +141,10 @@ class SimpleConfigTable(DataTable):
     showConflictAsError = False
     '''If True, rows containing a configuration that is in conflict will be
     given the CSS class "error".'''
+    showOwner = True
+    """If False, the owner column will not be shown;
+    if True, its visibility depends on project settings.
+    """
 
     fixedColumns = (
         _NameColumn(),
@@ -151,7 +155,7 @@ class SimpleConfigTable(DataTable):
 
     def iterColumns(self, **kwargs: object) -> Iterator[Column]:
         yield from self.fixedColumns
-        if project.showOwners:
+        if self.showOwner and project.showOwners:
             yield OwnerColumn.instance
 
     def iterRowStyles(self, rowNr, record, **kwargs):
