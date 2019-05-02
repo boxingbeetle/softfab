@@ -93,11 +93,11 @@ class FastExecute_GET(FabPage['FastExecute_GET.Processor',
         configs = proc.configs
         tagged = proc.args.configId is None
         if configs:
-            numConfigs = len(configs)
+            numJobs = sum(len(config.targets) or 1 for config in configs)
             yield xhtml.p[
                 'Create ',
-                xhtml.b[ str(numConfigs), ' ', pluralize('job', numConfigs) ],
-                ' from the ', pluralize('configuration', numConfigs),
+                xhtml.b[ str(numJobs), ' ', pluralize('job', numJobs) ],
+                ' from the ', pluralize('configuration', len(configs)),
                 ' listed below?'
                 ]
             yield makeForm(
