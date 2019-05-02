@@ -9,6 +9,7 @@ from softfab.pageargs import ArgsCorrected, IntArg
 from softfab.pagelinks import (
     CapFilterArgs, createTaskDetailsLink, createTaskRunnerDetailsLink
 )
+from softfab.projectlib import project
 from softfab.querylib import CustomFilter
 from softfab.resourcelib import resourceDB, taskRunnerDB
 from softfab.resourceview import presentCapabilities
@@ -143,6 +144,10 @@ class Capabilities_GET(FabPage['Capabilities_GET.Processor',
                     'resourceIds': set(),
                     }
                 )
+
+            # Always include targets, even if there are no TRs for them.
+            for target in project.getTargets():
+                capMap[target]
 
             # Determine capabilities required for each task.
             for taskDefId, taskDef in taskDefDB.items():
