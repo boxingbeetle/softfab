@@ -9,8 +9,8 @@ TODO: Currently the "css" Python argument sets the XHTML "style" attribute and
 from io import BytesIO
 from itertools import chain
 from typing import (
-    TYPE_CHECKING, Callable, ClassVar, Iterable, Iterator, Mapping, Optional,
-    Sequence, Tuple, Type, TypeVar, Union, cast
+    TYPE_CHECKING, Callable, ClassVar, Iterable, Iterator, List, Mapping,
+    Optional, Sequence, Tuple, Type, TypeVar, Union, cast
 )
 from xml.etree import ElementTree
 import logging
@@ -388,26 +388,62 @@ class _Row(AttrContainer):
 
     def present(self, **kwargs: object) -> XMLContent:
         colStyles = cast(Sequence[str], kwargs.pop('colStyles'))
+        rowSpans = cast(List[int], kwargs.pop('rowSpans'))
+        numCols = len(colStyles)
+        assert len(rowSpans) == numCols
+
+        def applyRowSpans(index):
+            while index < numCols:
+                rowspan = rowSpans[index]
+                if rowspan == 1:
+                    break
+                elif rowspan > 1:
+                    rowSpans[index] -= 1
+                else:
+                    # A rowspan of 0 means "until end of table" in HTML.
+                    assert rowspan == 0
+                index += 1
+            return index
 
         cells = []
         index = 0
         for presented in self._presentContents(**kwargs):
+            index = applyRowSpans(index)
             if presented:
                 cellPresentation = cast(XMLNode, presented)
-                colspan = int(cellPresentation.attrs.get('colspan', '1'))
-                for _ in range(colspan):
-                    try:
-                        style = colStyles[index] # type: Optional[str]
-                    except IndexError:
-                        style = None
-                    cellPresentation = cellPresentation.addClass(style)
-                    index += 1
+                attrs = cellPresentation.attrs
+                rowspan = int(attrs.get('rowspan', '1'))
+                if rowspan < 0:
+                    raise ValueError(
+                        'Illegal value %d for "rowspan" in column %d'
+                        % (rowspan, index)
+                        )
+                colspan = int(attrs.get('colspan', '1'))
+                if colspan < 1:
+                    raise ValueError(
+                        'Illegal value %d for "colspan" in column %d'
+                        % (colspan, index)
+                        )
+                try:
+                    for _ in range(colspan):
+                        style = colStyles[index]
+                        cellPresentation = cellPresentation.addClass(style)
+                        if rowSpans[index] != 1:
+                            raise ValueError(
+                                'Overlapping row and column span in column %d'
+                                % index
+                                )
+                        rowSpans[index] = rowspan
+                        index += 1
+                except IndexError:
+                    break
                 cells.append(cellPresentation)
+            index = applyRowSpans(index)
 
-        if index != len(colStyles):
+        if index != numCols:
             raise ValueError(
                 'Table with %d columns contains row with %d cells'% (
-                    len(colStyles), index
+                    numCols, index
                     )
                 )
 
@@ -506,10 +542,22 @@ class Table(Widget):
             for _ in range(column.colSpan):
                 colStyles.append(colStyle)
 
+        rowSpans = [1] * len(colStyles)
         rowPresentations = [
-            row.adapt(r).present(colStyles=colStyles, columns=columns, **kwargs)
+            row.adapt(r).present(
+                colStyles=colStyles, rowSpans=rowSpans, columns=columns,
+                **kwargs
+                )
             for r in self.iterRows(columns=columns, **kwargs)
             ] # type: XMLContent
+        if max(rowSpans) > 1:
+            raise ValueError(
+                'Row span beyond last row: %s' % ', '.join(
+                    '%s row(s) left in column %d' % (span - 1, index)
+                    for index, span in enumerate(rowSpans)
+                    if span > 1
+                    )
+                )
         if not rowPresentations:
             if self.hideWhenEmpty:
                 return None
