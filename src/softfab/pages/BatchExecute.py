@@ -100,6 +100,7 @@ class BatchConfigTable(SimpleConfigTable):
     # Disable tabs and sorting because it would clear the forms.
     tabOffsetField = None
     sortField = None
+    showTargets = True
     showOwner = False
 
     def getRecordsToQuery(self, proc):

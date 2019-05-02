@@ -413,6 +413,8 @@ class Config(TaskRunnerSet, TaskSetWithInputs[Task], XMLTag,
             return self.getDescription()
         elif key == 'nrtasks':
             return len(self._tasks)
+        elif key == 'targets':
+            return sorted(self.__targets)
         else:
             return XMLTag.__getitem__(self, key)
 

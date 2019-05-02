@@ -23,6 +23,7 @@ class FastConfigTable(SimpleConfigTable):
     tabOffsetField = None
     sortField = None
     showConflictAsError = True
+    showTargets = True
     showOwner = False
 
     def getRecordsToQuery(self, proc):

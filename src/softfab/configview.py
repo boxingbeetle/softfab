@@ -11,7 +11,9 @@ from softfab.datawidgets import DataColumn, DataTable, LinkColumn
 from softfab.formlib import dropDownList, emptyOption, hiddenInput, textInput
 from softfab.joblib import Job, jobDB
 from softfab.jobview import unfinishedJobs
-from softfab.pagelinks import createConfigDetailsLink, createJobURL
+from softfab.pagelinks import (
+    createConfigDetailsLink, createJobURL, createTargetLink
+)
 from softfab.productdeflib import ProductType
 from softfab.projectlib import project
 from softfab.resourcelib import TaskRunner, taskRunnerDB
@@ -22,7 +24,7 @@ from softfab.statuslib import StatusModel, StatusModelRegistry
 from softfab.taskgroup import LocalGroup
 from softfab.userview import OwnerColumn
 from softfab.webgui import Column, Table, cell
-from softfab.xmlgen import XMLContent, xml
+from softfab.xmlgen import XMLContent, txt, xml
 
 SelectArgsT = TypeVar('SelectArgsT', bound=SelectArgs)
 
@@ -135,12 +137,29 @@ class _NameColumn(DataColumn):
     def presentCell(self, record, **kwargs):
         return createConfigDetailsLink(record.getId())
 
+class TargetsColumn(DataColumn):
+    keyName = 'targets'
+
+    def presentCell(self, record, **kwargs):
+        targets = record.targets
+        if targets:
+            return txt(', ').join(
+                createTargetLink(target)
+                for target in sorted(targets)
+                )
+        else:
+            return '-'
+
 class SimpleConfigTable(DataTable):
     db = configDB
     printRecordCount = False
     showConflictAsError = False
     '''If True, rows containing a configuration that is in conflict will be
     given the CSS class "error".'''
+    showTargets = False
+    """If False, the targets column will not be shown;
+    if True, its visibility depends on project settings.
+    """
     showOwner = True
     """If False, the owner column will not be shown;
     if True, its visibility depends on project settings.
@@ -155,6 +174,8 @@ class SimpleConfigTable(DataTable):
 
     def iterColumns(self, **kwargs: object) -> Iterator[Column]:
         yield from self.fixedColumns
+        if self.showTargets and project.showTargets:
+            yield TargetsColumn.instance
         if self.showOwner and project.showOwners:
             yield OwnerColumn.instance
 
