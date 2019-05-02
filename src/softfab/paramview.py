@@ -237,7 +237,7 @@ function initRowIndices(node, index) {
 
 class ParametersTable(Table):
     hideWhenEmpty = True
-    columns = None, None, None, None, None
+    columns = None, None, None, None
     style = 'hollow'
 
     def __init__(self, fieldName):
