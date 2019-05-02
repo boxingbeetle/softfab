@@ -497,7 +497,8 @@ class Config(TaskRunnerSet, TaskSetWithInputs[Task], XMLTag,
         jobParams = dict(self.__params)
         jobParams.update(params)
 
-        for target in cast(Sequence[Optional[str]], self.targets) or [None]:
+        for target in cast(Sequence[Optional[str]],
+                           sorted(self.targets)) or [None]:
             job = Job.create(
                 # configId is empty string when executing from scratch
                 configId = self.getId() or None,
