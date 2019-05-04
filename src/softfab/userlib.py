@@ -41,7 +41,7 @@ assert set(elem.name.lower() for elem in list(UIRoleNames)[1 : ]) == roleNames
 
 # Privileges are designated as '<object>/<action>' where object can be:
 #   j(job), t(task), c(config), td(task definition),
-#   fd(framework definition), pd(product definition),
+#   fd(framework definition), pd(product definition), tk(token),
 #   tr(Task Runner), rt (resource type), r(resource), p(project), s(schedule),
 #   sh(shadow), sp(storage pool), u(user)
 # and action can be:
@@ -88,6 +88,12 @@ privileges = {
     'pd/a': ('guest', 'user', 'operator'),
     'pd/m': ('operator', ),
     'pd/d': ('operator', ),
+
+    'tk/l': ('user', 'operator'),
+    'tk/c': ('user', 'operator'),
+    'tk/a': ('user', 'operator'),
+    'tk/m': ('user', 'operator'),
+    'tk/d': ('user', 'operator'),
 
     'tr/l': ('guest', 'user', 'operator'),
 #    'tr/c': (),
