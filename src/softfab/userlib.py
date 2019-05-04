@@ -152,7 +152,7 @@ PasswordMessage = Enum('PasswordMessage', 'SUCCESS POOR SHORT EMPTY MISMATCH')
 
 minimumPasswordLength = 8
 
-def _initPasswordFile(path: str) -> HtpasswdFile:
+def initPasswordFile(path: str) -> HtpasswdFile:
     passwordFile = HtpasswdFile(path, default_scheme='portable', new=True)
 
     # Marking schemes as deprecated tells passlib to re-hash when a password
@@ -180,13 +180,13 @@ def _initPasswordFile(path: str) -> HtpasswdFile:
 
     return passwordFile
 
-def _writePasswordFile() -> None:
+def writePasswordFile(passwordFile: HtpasswdFile) -> None:
     # Note: Despite the name, to_string() returns bytes.
-    data = _passwordFile.to_string()
-    with atomicWrite(_passwordFile.path, 'wb') as out:
+    data = passwordFile.to_string()
+    with atomicWrite(passwordFile.path, 'wb') as out:
         out.write(data)
 
-_passwordFile = _initPasswordFile(dbDir + '/passwords')
+_passwordFile = initPasswordFile(dbDir + '/passwords')
 
 @inlineCallbacks
 def authenticate(userName: str, password: str) -> Iterator[Deferred]:
@@ -225,7 +225,7 @@ def authenticate(userName: str, password: str) -> Iterator[Deferred]:
     if newHash is not None:
         # Replace hash with better algorithm or config.
         _passwordFile.set_hash(userName, newHash)
-        _writePasswordFile()
+        writePasswordFile(_passwordFile)
 
     try:
         return userDB[userName]
@@ -283,7 +283,7 @@ def addUserAccount(userName: str, password: str, roles: Iterable[str]) -> None:
     # Commit the password.
     _passwordFile.load_if_changed()
     updated = _passwordFile.set_password(userName, password)
-    _writePasswordFile()
+    writePasswordFile(_passwordFile)
     if updated:
         logging.warning(
             'Password entry for "%s" was overwritten; '
@@ -310,7 +310,7 @@ def changePassword(userInfo: 'UserInfo', password: str) -> None:
     # Commit the new password.
     _passwordFile.load_if_changed()
     updated = _passwordFile.set_password(userName, password)
-    _writePasswordFile()
+    writePasswordFile(_passwordFile)
     if not updated:
         logging.warning(
             'Password entry for "%s" was created; '
