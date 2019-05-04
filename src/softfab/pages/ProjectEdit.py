@@ -154,7 +154,6 @@ class ProjectEdit(EditPage):
                     'Custom embedding policy cannot be empty'
                     ])
             siteFilterStr = ' '.join(siteFilters)
-            print('final filter: [%s]' % siteFilterStr)
             if siteFilterStr != args.embedcustom:
                 raise ArgsCorrected(args, embedcustom=siteFilterStr)
 
