@@ -960,6 +960,7 @@ class Job(TaskRunnerSet, TaskSet[Task], XMLTag, DatabaseElem):
             for ref, resId in reserved.items():
                 resource = resourceDB.get(resId)
                 if resource is not None:
+                    assert isinstance(resource, Resource), resId
                     reservedPerJob[ref] = resource
                 else:
                     if whyNot is not None:
@@ -1019,6 +1020,7 @@ def _releaseResources(reserved: Iterable[str]) -> None:
     for resId in reserved:
         res = resourceDB.get(resId)
         if res is not None:
+            assert isinstance(res, Resource), resId
             res.free()
 
 JobDB.keyRetrievers = {
