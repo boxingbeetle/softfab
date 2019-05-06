@@ -49,7 +49,7 @@ def types(c, src=None, clean=False, report=False):
         print('Clearing mypy cache...')
         remove_dir(TOP_DIR / '.mypy_cache')
     print('Checking sources with mypy...')
-    args = ['--ignore-missing-imports', '--disallow-incomplete-defs']
+    args = []
     if report:
         remove_dir(TOP_DIR / mypy_report)
         args.append('--html-report ' + mypy_report)
