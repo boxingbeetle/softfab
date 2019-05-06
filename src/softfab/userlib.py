@@ -210,24 +210,7 @@ def authenticateUser(userName: str, password: str) -> Iterator[Deferred]:
     if not userName:
         raise UnauthorizedLogin('No user name specified')
 
-    try:
-        _checkPassword(password)
-    except ValueError as ex:
-        raise UnauthorizedLogin(ex) from ex
-
-    # Have passlib check the password. When passed a None hash, it will
-    # perform a dummy computation to keep the timing consistent.
-    _passwordFile.load_if_changed()
-    correct, newHash = _passwordFile.context.verify_and_update(
-        password.encode(), _passwordFile.get_hash(userName)
-        )
-    if not correct:
-        raise UnauthorizedLogin('Authentication failed')
-
-    if newHash is not None:
-        # Replace hash with better algorithm or config.
-        _passwordFile.set_hash(userName, newHash)
-        writePasswordFile(_passwordFile)
+    authenticate(_passwordFile, userName, password)
 
     try:
         return userDB[userName]
@@ -240,6 +223,36 @@ def authenticateUser(userName: str, password: str) -> Iterator[Deferred]:
         #       reluctant to provide helpful messages to potential attackers.
         #       If you ever encounter it, look in the log for the real info.
         raise LoginFailed('Internal error')
+
+def authenticate(passwordFile: HtpasswdFile, name: str, password: str) -> None:
+    """Checks a name and password combination against a password file.
+
+    Returns if authentication succeeds.
+    Raises `UnauthorizedLogin` if the given user name and password
+    combination is not accepted.
+
+    The hashed version of the password will be updated with a new
+    hash function if the current one is depricated.
+    """
+
+    try:
+        _checkPassword(password)
+    except ValueError as ex:
+        raise UnauthorizedLogin(ex) from ex
+
+    # Have passlib check the password. When passed a None hash, it will
+    # perform a dummy computation to keep the timing consistent.
+    passwordFile.load_if_changed()
+    correct, newHash = passwordFile.context.verify_and_update(
+        password.encode(), passwordFile.get_hash(name)
+        )
+    if not correct:
+        raise UnauthorizedLogin('Authentication failed')
+
+    if newHash is not None:
+        # Replace hash with better algorithm or config.
+        passwordFile.set_hash(name, newHash)
+        writePasswordFile(passwordFile)
 
 def _checkPassword(password: str) -> None:
     '''Checks whether the given password is valid.
