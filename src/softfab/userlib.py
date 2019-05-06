@@ -210,12 +210,6 @@ def authenticateUser(userName: str, password: str) -> Iterator[Deferred]:
     if not userName:
         raise UnauthorizedLogin('No user name specified')
 
-    # Handle None password, for example a missing password field in a form.
-    # Note that when the password is the empty string, authentication occurs
-    # as normal: if empty passwords are not allowed, it is the responsibility
-    # of the password set routine to refuse them.
-    if password is None:
-        raise UnauthorizedLogin('No password provided')
     try:
         _checkPassword(password)
     except ValueError as ex:
