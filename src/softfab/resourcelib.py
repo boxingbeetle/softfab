@@ -17,10 +17,13 @@ from softfab.restypelib import taskRunnerResourceTypeName
 from softfab.shadowlib import ShadowRun, shadowDB
 from softfab.taskrunlib import RunInfo, TaskRun, taskRunDB
 from softfab.timelib import getTime
+from softfab.tokens import Token, TokenRole, tokenDB
 from softfab.utils import abstract, cachedProperty, parseVersion
 from softfab.xmlbind import XMLTag
 from softfab.xmlgen import XMLAttributeValue, XMLContent, xml
 
+
+ResourceT = TypeVar('ResourceT', bound='ResourceBase')
 
 class ResourceBase(XMLTag, DatabaseElem):
     """Base class for Resource and TaskRunner.
@@ -33,6 +36,7 @@ class ResourceBase(XMLTag, DatabaseElem):
         XMLTag.__init__(self, properties)
         DatabaseElem.__init__(self)
         self._capabilities = set() # type: AbstractSet[str]
+        self.__token = None # type: Optional[Token]
 
     def _addCapability(self, attributes: Mapping[str, str]) -> None:
         cast(Set[str], self._capabilities).add(attributes['name'])
@@ -54,6 +58,21 @@ class ResourceBase(XMLTag, DatabaseElem):
             return self.getChangedUser()
         else:
             return super().__getitem__(key)
+
+    def _propertiesToCopy(self) -> Iterator[str]:
+        yield 'tokenId'
+        yield 'suspended'
+        yield 'changedtime'
+        yield 'changeduser'
+
+    def copyState(self: ResourceT, resource: ResourceT) -> None:
+        myProps = self._properties
+        otherProps = resource._properties # pylint: disable=protected-access
+        for propName in self._propertiesToCopy():
+            value = otherProps.get(propName)
+            if value is not None:
+                myProps[propName] = value
+        self._notify()
 
     def getId(self) -> str:
         return cast(str, self._properties['id'])
@@ -80,6 +99,23 @@ class ResourceBase(XMLTag, DatabaseElem):
     @property
     def capabilities(self) -> AbstractSet[str]:
         return self._capabilities
+
+    @property
+    def token(self) -> Token:
+        token = self.__token
+        if token is None:
+            try:
+                token = tokenDB[cast(str, self._properties['tokenId'])]
+            except KeyError:
+                token = Token.create(TokenRole.RESOURCE, {
+                    'resourceId': self.getId()
+                    })
+                self._properties['tokenId'] = token.getId()
+                self._notify()
+            assert token.role is TokenRole.RESOURCE, token
+            assert token.getParam('resourceId') == self.getId(), token
+            self.__token = token
+        return token
 
     @property
     def cost(self) -> int:
@@ -155,6 +191,10 @@ class Resource(ResourceBase):
     """
     tagName = 'resource'
 
+    def _propertiesToCopy(self) -> Iterator[str]:
+        yield from super()._propertiesToCopy()
+        yield 'reserved'
+
     @classmethod
     def create(
             cls, resourceId: str, resType: str, locator: str, description: str,
@@ -169,15 +209,6 @@ class Resource(ResourceBase):
             })
         resource._capabilities = frozenset(capabilities)
         return resource
-
-    def copyState(self, resource: 'Resource') -> None:
-        myProps = self._properties
-        otherProps = resource._properties # pylint: disable=protected-access
-        for propName in 'reserved', 'suspended', 'changedtime', 'changeduser':
-            value = otherProps.get(propName)
-            if value is not None:
-                myProps[propName] = value
-        self._notify()
 
     def __getitem__(self, key: str) -> object:
         if key == 'user':
@@ -520,12 +551,13 @@ class TaskRunner(ResourceBase):
         if self._properties['status'] is ConnectionStatus.CONNECTED:
             self.__startLostCallback()
 
-    def copyState(self, runner: 'TaskRunner') -> None:
+    def copyState(self, runner: 'TaskRunner') -> None: # pylint: disable=arguments-differ
         # pylint: disable=protected-access
         self.__data = runner.__data
         self.__hasBeenInSync = runner.__hasBeenInSync
         self.__lastSyncTime = runner.__lastSyncTime
-        self._notify()
+        # Do this last, since it includes the call to _notify().
+        super().copyState(runner)
 
     def __getitem__(self, key: str) -> object:
         if key == 'lastSync':
@@ -851,6 +883,12 @@ class ResourceDB(Database[ResourceBase]):
     privilegeObject = 'r'
     description = 'resource'
     uniqueKeys = ( 'id', )
+
+    def remove(self, value: ResourceBase) -> None:
+        super().remove(value)
+        if 'tokenId' in value._properties: # pylint: disable=protected-access
+            tokenDB.remove(value.token)
+
 resourceDB = ResourceDB()
 
 def iterTaskRunners() -> Iterator[TaskRunner]:
