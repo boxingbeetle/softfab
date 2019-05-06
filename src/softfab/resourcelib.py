@@ -529,7 +529,10 @@ class TaskRunner(ResourceBase):
 
     def __getitem__(self, key: str) -> object:
         if key == 'lastSync':
-            return getTime() - self.__lastSyncTime
+            if self.__hasBeenInSync:
+                return getTime() - self.__lastSyncTime
+            else:
+                return None
         elif key == 'version':
             # Note: This field is intended to sort Task Runners by version.
             #       Use the supportsFeature() methods for checking what a
