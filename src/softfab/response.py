@@ -81,7 +81,7 @@ class Response:
         body = self.__buffer.getvalue()
         self.__buffer.close()
         # Any write attempt after this is an error.
-        self.__buffer = None # type: ignore
+        self.__buffer = None
         self.__writeBytes = None # type: ignore
 
         # Determine whether or not we will gzip the body.

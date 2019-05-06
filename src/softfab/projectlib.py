@@ -4,7 +4,7 @@ from enum import Enum
 from getpass import getuser
 from socket import getfqdn
 from typing import (
-    AbstractSet, Iterable, List, Mapping, MutableSet, Sequence, TextIO, cast
+    AbstractSet, Iterable, List, Mapping, MutableSet, Sequence, cast
 )
 import logging
 import os
@@ -50,7 +50,7 @@ def _guessSystemTimezone() -> str:
 
     # Debian stores the timezone in /etc/timezone.
     try:
-        lines = cast(TextIO, open('/etc/timezone')).readlines()
+        lines = open('/etc/timezone').readlines()
     except IOError:
         pass
     else:

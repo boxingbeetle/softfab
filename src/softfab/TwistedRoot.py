@@ -272,7 +272,7 @@ def renderAsync(
         except LoginFailed as ex:
             responder = authenticator.askForAuthentication(req)
         else:
-            responder = yield parseAndProcess(page, req, user) # type: ignore
+            responder = yield parseAndProcess(page, req, user)
             streaming = page.streaming
     except Redirect as ex:
         responder = Redirector(ex.url)

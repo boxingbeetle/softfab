@@ -44,9 +44,7 @@ class ArgsCorrected(Generic[ArgsT], Exception):
         Exception.__init__(self)
         # Note: The Exception base class has an attribute named "args", so we
         #       should use a different name.
-        self.correctedArgs = (
-            cast(ArgsT, args.override(**kwargs)) if kwargs else args
-            )
+        self.correctedArgs = args.override(**kwargs) if kwargs else args
 
 class ArgsInvalid(Exception):
     '''Raised when one or more page arguments are invalid and cannot be
@@ -1142,8 +1140,7 @@ class QueryArg(SingularArgument[Query, None]):
             sharedNames = () # type: Iterable[str]
         elif isinstance(shared, type):
             if issubclass(shared, PageArgs):
-                # https://github.com/python/mypy/issues/6099
-                sharedNames = cast(Type[PageArgs], shared).keys()
+                sharedNames = shared.keys()
             else:
                 raise TypeError(type(shared))
         else:
