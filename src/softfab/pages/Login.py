@@ -14,7 +14,7 @@ from softfab.formlib import (
 from softfab.pageargs import ArgsCorrected, ArgsT, StrArg
 from softfab.pagelinks import URLArgs
 from softfab.userlib import (
-    PasswordMessage, User, authenticate, passwordQuality
+    PasswordMessage, User, authenticateUser, passwordQuality
 )
 from softfab.userview import LoginPassArgs, PasswordMsgArgs
 from softfab.webgui import pageURL
@@ -116,7 +116,7 @@ class Login_POST(LoginBase['Login_POST.Processor', 'Login_POST.Arguments']):
             password = req.args.loginpass
 
             try:
-                user = yield authenticate(username, password)
+                user = yield authenticateUser(username, password)
             except LoginFailed:
                 raise PresentableError('Login failed')
             else:

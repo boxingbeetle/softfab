@@ -9,7 +9,9 @@ from softfab.Page import (
 from softfab.pagelinks import loginURL
 from softfab.projectlib import project
 from softfab.request import Request
-from softfab.userlib import AnonGuestUser, SuperUser, UnknownUser, authenticate
+from softfab.userlib import (
+    AnonGuestUser, SuperUser, UnknownUser, authenticateUser
+)
 
 
 class LoginAuthPage(Authenticator):
@@ -47,7 +49,7 @@ class HTTPAuthPage(Authenticator):
             return fail(LoginFailed(ex))
 
         if userName:
-            return authenticate(userName, password)
+            return authenticateUser(userName, password)
         elif project['anonguest']:
             return succeed(AnonGuestUser())
         else:

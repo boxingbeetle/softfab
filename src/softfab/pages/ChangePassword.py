@@ -12,7 +12,7 @@ from softfab.formlib import (
 )
 from softfab.pageargs import EnumArg, PasswordArg, RefererArg
 from softfab.userlib import (
-    PasswordMessage, User, authenticate, changePassword, checkPrivilege,
+    PasswordMessage, User, authenticateUser, changePassword, checkPrivilege,
     passwordQuality, userDB
 )
 from softfab.userview import LoginPassArgs, PasswordMsgArgs, passwordStr
@@ -170,7 +170,7 @@ class ChangePassword_POST(FabPage['ChangePassword_POST.Processor',
 
                 if reqUserName is not None:
                     try:
-                        user_ = yield authenticate(
+                        user_ = yield authenticateUser(
                             reqUserName, req.args.loginpass
                             )
                     except LoginFailed as ex:

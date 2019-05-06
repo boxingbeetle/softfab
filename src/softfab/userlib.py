@@ -195,12 +195,14 @@ def writePasswordFile(passwordFile: HtpasswdFile) -> None:
 _passwordFile = initPasswordFile(dbDir + '/passwords')
 
 @inlineCallbacks
-def authenticate(userName: str, password: str) -> Iterator[Deferred]:
-    '''Authenticates a user with the given password.
-    Returns a deferred.
+def authenticateUser(userName: str, password: str) -> Iterator[Deferred]:
+    """Authenticates a user with the given password.
+
     Callback arguments: user object for the authenticated user.
-    Errback: one of the cred.error classes.
-    '''
+    Errback: `UnauthorizedLogin` if the given user name and password
+             combination is not accepted.
+             `LoginFailed` if there was an internal error.
+    """
     yield # Force this to be a generator.
 
     # Twisted returns empty string if there is no "authorization" header,

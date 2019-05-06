@@ -15,7 +15,7 @@ from softfab.formlib import (
 from softfab.pageargs import ArgsT, EnumArg, PageArgs, RefererArg, StrArg
 from softfab.request import Request
 from softfab.userlib import (
-    PasswordMessage, User, addUserAccount, authenticate, checkPrivilege,
+    PasswordMessage, User, addUserAccount, authenticateUser, checkPrivilege,
     passwordQuality
 )
 from softfab.userview import (
@@ -112,7 +112,7 @@ class AddUser_POST(AddUserBase['AddUser_POST.Processor',
                 reqUserName = user.name
                 if reqUserName is not None:
                     try:
-                        user_ = yield authenticate(
+                        user_ = yield authenticateUser(
                             reqUserName, req.args.loginpass
                             )
                     except LoginFailed as ex:
