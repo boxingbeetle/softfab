@@ -1,12 +1,41 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from softfab.EditPage import EditPage
+from typing import Optional
+
+from softfab.EditPage import EditPage, SavePhase
 from softfab.Page import InvalidRequest
-from softfab.pageargs import StrArg
+from softfab.formlib import SingleCheckBoxTable
+from softfab.pageargs import BoolArg, StrArg
 from softfab.resourcelib import TaskRunner, resourceDB
 from softfab.resourceview import CapabilitiesPanel, CommentPanel
 from softfab.webgui import vgroup
 from softfab.xmlgen import XMLContent, xhtml
+
+class ResetPassPanel(SingleCheckBoxTable):
+    name = 'resetpass'
+    label = 'Set new password for access token'
+
+class TaskRunnerSavePhase(SavePhase):
+
+    def addRecord(self, proc, element):
+        super().addRecord(proc, element)
+        self.resetTokenPassword(proc, element)
+
+    def updateRecord(self, proc, element):
+        super().updateRecord(proc, element)
+        self.resetTokenPassword(proc, element)
+
+    def resetTokenPassword(self, proc, element):
+        if proc.args.resetpass:
+            proc.password = element.token.resetPassword()
+        else:
+            proc.password = None
+
+    def presentContent(self, proc: 'EditPage.Processor') -> XMLContent:
+        password = getattr(proc, 'password') # type: Optional[str]
+        if password is not None:
+            yield xhtml.p['Access token password: ', xhtml.code[password]]
+        yield super().presentContent(proc)
 
 class TaskRunnerEdit(EditPage):
     # FabPage constants:
@@ -26,6 +55,7 @@ class TaskRunnerEdit(EditPage):
     class Arguments(EditPage.Arguments):
         capabilities = StrArg('')
         description = StrArg('')
+        resetpass = BoolArg()
 
     class Processor(EditPage.Processor):
 
@@ -57,11 +87,16 @@ class TaskRunnerEdit(EditPage):
                     'Resource "%s" is not a Task Runner' % element.getId()
                     )
 
+    def __init__(self):
+        super().__init__()
+        self.savePhase = TaskRunnerSavePhase(self)
+
     def getFormContent(self, proc: Processor) -> XMLContent:
         args = proc.args
         if args.id != '':
             yield xhtml.h2[ 'Task Runner: ', xhtml.b[ args.id ]]
         yield vgroup[
             CapabilitiesPanel.instance,
-            CommentPanel.instance
+            CommentPanel.instance,
+            ResetPassPanel.instance
             ]

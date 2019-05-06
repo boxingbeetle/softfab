@@ -18,7 +18,7 @@ class ResourceNew_GET(FabPage[FabPage.Processor, FabPage.Arguments]):
 
     def presentContent(self, proc: FabPage.Processor) -> XMLContent:
         descriptions = (
-            ( pageLink('TaskRunnerEdit')['Task Runner'],
+            ( pageLink('TaskRunnerEdit', resetpass='true')['Task Runner'],
                 'SoftFab task execution agent.'
                 ),
             ( pageLink('ResourceEdit')['Custom'],

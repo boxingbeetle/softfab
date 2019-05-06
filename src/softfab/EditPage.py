@@ -86,7 +86,7 @@ class SavePhase(AbstractPhase):
                 proc.user,
                 page.db.privilegeObject + '/c', 'create ' + page.privDenyText
                 )
-            page.db.add(element)
+            self.addRecord(proc, element)
         else:
             checkPrivilegeForOwned(
                 proc.user,
@@ -96,6 +96,9 @@ class SavePhase(AbstractPhase):
                   'modify ' + page.privDenyText )
                 )
             self.updateRecord(proc, element)
+
+    def addRecord(self, proc, element): # pylint: disable=unused-argument
+        self.page.db.add(element)
 
     def updateRecord(self, proc, element): # pylint: disable=unused-argument
         self.page.db.update(element)
