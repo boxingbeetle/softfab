@@ -21,8 +21,12 @@ from softfab.xmlgen import XML
 
 if TYPE_CHECKING:
     from softfab.datawidgets import _TableData
+    from softfab.request import Request
+else:
+    Request = object
 
-def logPageException(req, message: str) -> None:
+
+def logPageException(req: Request, message: str) -> None:
     """Logs an exception that occurred while handling a page request.
     """
     logging.exception(
@@ -38,7 +42,7 @@ class Authenticator:
 
     instance = SharedInstance() # type: ClassVar[SharedInstance]
 
-    def authenticate(self, req) -> Deferred:
+    def authenticate(self, req: Request) -> Deferred:
         '''Authentication step: selects an authentication method depending on
         the page and the request.
         Returns a Deferred that has the user as a result, or LoginFailed
@@ -46,7 +50,7 @@ class Authenticator:
         '''
         raise NotImplementedError
 
-    def askForAuthentication(self, req) -> 'Responder':
+    def askForAuthentication(self, req: Request) -> 'Responder':
         '''Returns a Responder that asks the user to authenticate.
         Raises InternalError if there is something wrong with the
         authentication system.

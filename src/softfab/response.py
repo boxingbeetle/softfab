@@ -116,7 +116,7 @@ class Response:
     def __connectionLost(self, reason: Failure) -> None:
         self.__connectionLostFailure = reason
 
-    def registerProducer(self, producer) -> Deferred:
+    def registerProducer(self, producer: object) -> Deferred:
         if IPushProducer.providedBy(producer):
             streaming = True
         elif IPullProducer.providedBy(producer):

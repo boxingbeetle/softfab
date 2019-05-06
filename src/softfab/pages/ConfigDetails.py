@@ -102,7 +102,7 @@ class InputTable(Table):
                     )
             yield cells
 
-def presentTargets(*, proc) -> XMLContent:
+def presentTargets(*, proc: 'ConfigDetails_GET.Processor') -> XMLContent:
     targets = proc.config.targets
     if targets:
         yield xhtml.p[

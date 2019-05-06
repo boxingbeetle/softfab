@@ -303,7 +303,7 @@ class GraphPanel(SVGPanel):
         graph = cast(Graph, kwargs['graph'])
         return super().present(svgElement=graph.toSVG(), **kwargs)
 
-    def presentFooter(self, **kwargs) -> XMLContent:
+    def presentFooter(self, **kwargs: object) -> XMLContent:
         proc = cast(PageProcessor, kwargs['proc'])
         graph = cast(Graph, kwargs['graph'])
         return xhtml.div(class_ = 'export')[

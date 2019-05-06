@@ -22,7 +22,7 @@ class DelFinishedSchedulesBase(FabPage[ProcT, ArgsT]):
     def checkAccess(self, user: User) -> None:
         pass
 
-    def presentContent(self, proc: ProcT):
+    def presentContent(self, proc: ProcT) -> XMLContent:
         raise NotImplementedError
 
 class DelFinishedSchedules_GET(
