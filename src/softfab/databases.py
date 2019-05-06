@@ -5,7 +5,7 @@ from importlib import reload
 from softfab import (
     configlib, frameworklib, joblib, productdeflib, productlib, projectlib,
     resourcelib, restypelib, schedulelib, shadowlib, storagelib, taskdeflib,
-    taskrunlib, userlib
+    taskrunlib, tokens, userlib
 )
 
 
@@ -29,6 +29,7 @@ def iterDatabases():
     yield configlib.configDB
     yield schedulelib.scheduleDB
     yield userlib.userDB
+    yield tokens.tokenDB
 
 def iterDatabasesToPreload():
     for db in iterDatabases():
@@ -39,6 +40,7 @@ def reloadDatabases():
     # !!! NOTE: The order of reloading is very important:
     # dependent modules must be reloaded AFTER their dependencies
     # TODO: Automate this.
+    reload(tokens)
     reload(userlib)
     reload(restypelib)
     reload(storagelib)
