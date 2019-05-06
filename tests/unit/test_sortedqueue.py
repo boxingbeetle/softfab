@@ -26,7 +26,7 @@ class Record(DatabaseElem):
         assert not self.retired
         self.retired = True
 
-class RecordFactory(object):
+class RecordFactory:
     "Factory for Record class."
     def createRecord(self, attributes):
         return Record(attributes)
@@ -37,7 +37,7 @@ class DB(Database):
     factory = RecordFactory()
     privilegeObject = 'x' # dummy
 
-class Observer(object):
+class Observer:
     "Counts observer notifications from DB."
     def __init__(self):
         self.addedRecords = []

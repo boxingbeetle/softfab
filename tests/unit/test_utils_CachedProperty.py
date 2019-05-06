@@ -7,7 +7,7 @@ import unittest
 
 # Classes under test:
 
-class Base(object):
+class Base:
     '''Most basic use case.
     '''
 
@@ -18,7 +18,7 @@ class Base(object):
     def description(self):
         return self._valueFunc()
 
-class Dual(object):
+class Dual:
     '''Basic use case with two cached properties.
     '''
 
@@ -79,7 +79,7 @@ class SuperDual(Base):
 
 # Classes that perform the tests:
 
-class CallCounter(object):
+class CallCounter:
     '''Helper class that counts how often the value is retrieved.
     This can be used to verify that the value is actually cached.
     '''

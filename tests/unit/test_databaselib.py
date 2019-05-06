@@ -27,12 +27,12 @@ class FaultyRecord(Record):
     def toXML(self):
         raise IntentionalError('broken on purpose')
 
-class RecordFactory(object):
+class RecordFactory:
     "Factory for Record class."
     def createRecord(self, attributes):
         return Record(attributes)
 
-class Observer(object):
+class Observer:
     "Counts observer notifications from DB."
     def __init__(self):
         self.addedRecords = []
@@ -45,7 +45,7 @@ class Observer(object):
     def updated(self, record):
         self.updatedRecords.append(record)
 
-class TestBasic(object):
+class TestBasic:
     """Test basic Database functionality.
     Contains reusable implementation for TestDatabase and
     TestVersionedDatabase, but should not be run in itself,

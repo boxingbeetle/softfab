@@ -147,7 +147,7 @@ class TestHeapExternalComparator(TestHeap):
     def keyFunc(elem):
         return elem.x
 
-    class Uncomparable(object):
+    class Uncomparable:
         def __init__(self, x):
             self.x = x
         def __lt__(self, other):

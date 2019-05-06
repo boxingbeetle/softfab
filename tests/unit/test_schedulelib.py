@@ -16,7 +16,7 @@ from softfab.timeview import formatTime
 import time, unittest
 from heapq import heappush, heappop
 
-class DummyReactor(object):
+class DummyReactor:
     '''Dummy replacement for Twisted's reactor.
     '''
     def callLater(self, delay, func, *args, **kw):
@@ -31,7 +31,7 @@ def sharedConfigFactory(configId):
     '''
     return lambda: { 'configId': configId }
 
-class ScheduleFixtureMixin(object):
+class ScheduleFixtureMixin:
     '''Base class which defines an environment for the test cases to use.
     Runs a simulation of schedules in action.
 
@@ -582,7 +582,7 @@ class Test0400StartTime(ScheduleFixtureMixin, unittest.TestCase):
                         )
                 prevCreationTime = creationTime
 
-class TaggedConfigFactory(object):
+class TaggedConfigFactory:
 
     tagKey = 'keymaster'
     tagValue = 'gatekeeper'

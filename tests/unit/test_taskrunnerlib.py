@@ -13,7 +13,7 @@ from softfab.databases import reloadDatabases
 from softfab.resourceview import getResourceStatus
 from softfab.timelib import setTime
 
-class DataFactory(object):
+class DataFactory:
     "Factory for TaskRunnerData class."
     def createData(self, attributes):
         return resourcelib._TaskRunnerData(attributes)

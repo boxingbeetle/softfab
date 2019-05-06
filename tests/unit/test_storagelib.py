@@ -14,7 +14,7 @@ def convertToAbsoluteURL(url, storageId):
     else:
         return storage.joinURL(url)
 
-class TestStorageLib(object):
+class TestStorageLib:
     "Test storagelib API."
     storageId1 = 'storage1'
     storageId2 = 'storage2'

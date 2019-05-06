@@ -27,7 +27,7 @@ def _addResources(record, resources):
             spec = ResourceSpec.create(*args)
             record.addResourceSpec(spec)
 
-class DataGenerator(object):
+class DataGenerator:
     # Default parameters; you can override these in a subclass.
     numTasks = 100
     numInputs = [ 0, 1, 1, 1, 2, 2, 3, 4 ]
