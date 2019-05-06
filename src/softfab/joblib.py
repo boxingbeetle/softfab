@@ -66,7 +66,9 @@ class JobDB(Database['Job']):
     cachedUniqueValues = ( 'owner', 'target' )
     uniqueKeys = ( 'recent', 'jobId' )
 
-    def convert(self, visitor: Callable[['Job'], None] = None) -> None:
+    def convert(self,
+                visitor: Optional[Callable[['Job'], None]] = None
+                ) -> None:
         # Find orphaned products.
         orphanedProductIDs = set(productDB.keys())
         def checkJob(job: 'Job') -> None:

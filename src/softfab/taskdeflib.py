@@ -28,7 +28,7 @@ class TaskDef(frameworklib.TaskDefBase):
 
     @staticmethod
     def create(name: str,
-               parent: str = None,
+               parent: Optional[str] = None,
                title: str = '',
                description: str = ''
                ) -> 'TaskDef':

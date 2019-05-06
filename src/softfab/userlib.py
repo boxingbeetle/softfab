@@ -472,7 +472,7 @@ class UserInfo(XMLTag, DatabaseElem, User):
 class AccessDenied(Exception):
     pass
 
-def checkPrivilege(user: User, priv: str, text: str = None) -> None:
+def checkPrivilege(user: User, priv: str, text: Optional[str] = None) -> None:
     if not user.hasPrivilege(priv):
         if text is None:
             raise AccessDenied()
