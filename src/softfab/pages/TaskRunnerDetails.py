@@ -80,6 +80,7 @@ class DetailsTable(Table):
         yield 'Description', runner.description
         yield 'Version', runner['runnerVersion']
         yield 'Host', runner['host']
+        yield 'Token ID', runner.token.getId()
         yield 'Targets', presentCapabilities(
             runner.targets,
             taskRunnerResourceTypeName

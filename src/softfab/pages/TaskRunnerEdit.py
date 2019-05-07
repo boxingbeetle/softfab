@@ -27,13 +27,17 @@ class TaskRunnerSavePhase(SavePhase):
         self.resetTokenPassword(proc, element)
 
     def resetTokenPassword(self, proc, element):
+        token = element.token
+        proc.tokenId = token.getId()
         if proc.args.resetpass:
-            proc.password = element.token.resetPassword()
+            proc.password = token.resetPassword()
         else:
             proc.password = None
 
     def presentContent(self, proc: 'EditPage.Processor') -> XMLContent:
+        tokenId = getattr(proc, 'tokenId') # type: str
         password = getattr(proc, 'password') # type: Optional[str]
+        yield xhtml.p['Access token ID: ', xhtml.code[tokenId]]
         if password is not None:
             yield xhtml.p['Access token password: ', xhtml.code[password]]
         yield super().presentContent(proc)
