@@ -141,6 +141,11 @@ privileges = {
     'p/a': ('guest', 'user', 'operator'),
     'p/m': ('operator', ),
 #    'p/d': (),
+
+    # Non-standard privilege used by Task Runners.
+    # This is necessary to prevent anyone from messing with running tasks
+    # when anonymous guest access is enabled.
+    'tr/*': ('user', 'operator'),
 } # type: Mapping[str, Sequence[str]]
 
 def rolesGrantPrivilege(roles: Iterable[str], priv: str) -> bool:

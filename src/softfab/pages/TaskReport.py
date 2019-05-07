@@ -4,18 +4,20 @@ from urllib.parse import urlsplit
 
 from softfab.ControlPage import ControlPage
 from softfab.Page import InvalidRequest, PageProcessor
-from softfab.authentication import NoAuthPage
+from softfab.authentication import TokenAuthPage
 from softfab.joblib import jobDB
 from softfab.pageargs import PageArgs, StrArg
+from softfab.resourcelib import runnerFromToken
 from softfab.response import Response
 from softfab.shadowlib import shadowDB
-from softfab.userlib import User
+from softfab.tokens import TokenRole, TokenUser
+from softfab.userlib import User, checkPrivilege
 from softfab.xmlgen import xml
 
 
 class TaskReport_POST(ControlPage['TaskReport_POST.Arguments',
                                   'TaskReport_POST.Processor']):
-    authenticator = NoAuthPage.instance
+    authenticator = TokenAuthPage(TokenRole.RESOURCE)
 
     class Arguments(PageArgs):
         id = StrArg(None)
@@ -31,11 +33,24 @@ class TaskReport_POST(ControlPage['TaskReport_POST.Arguments',
             shadowId = req.args.shadowId
             url = req.args.url
 
+            # Find Task Runner.
+            assert isinstance(user, TokenUser), user
+            try:
+                taskRunner = runnerFromToken(user)
+            except KeyError as ex:
+                raise InvalidRequest(*ex.args) from ex
+
             if jobId is None and shadowId is None:
                 raise InvalidRequest('Neither "id" nor "shadowId" was supplied')
             if jobId is not None and shadowId is not None:
                 raise InvalidRequest('Both "id" and "shadowId" were supplied')
             if shadowId is None:
+                runningTask = taskRunner.getRun()
+                if runningTask is None:
+                    raise InvalidRequest(
+                        'Task Runner "%s" is not running a task'
+                        % taskRunner.getId()
+                        )
                 try:
                     job = jobDB[jobId]
                 except KeyError:
@@ -46,7 +61,26 @@ class TaskReport_POST(ControlPage['TaskReport_POST.Arguments',
                         'Job "%s" does not contain task "%s"'
                         % ( jobId, taskName )
                         )
+                runId = run['run']
+                if runningTask.getId() != runId:
+                    raise InvalidRequest(
+                        'Task Runner "%s" is running task %s '
+                        'but wants to set report for %s'
+                        % (taskRunner.getId(), runningTask.getId(), runId)
+                        )
             else:
+                runningShadowId = taskRunner.getShadowRunId()
+                if runningShadowId is None:
+                    raise InvalidRequest(
+                        'Task Runner "%s" is not running a shadow task'
+                        % taskRunner.getId()
+                        )
+                elif runningShadowId != shadowId:
+                    raise InvalidRequest(
+                        'Task Runner "%s" is running shadow task %s '
+                        'but wants to set report for %s'
+                        % (taskRunner.getId(), runningShadowId, shadowId)
+                        )
                 try:
                     run = shadowDB[shadowId]
                 except KeyError:
@@ -62,7 +96,7 @@ class TaskReport_POST(ControlPage['TaskReport_POST.Arguments',
             run.setURL(url)
 
     def checkAccess(self, user: User) -> None:
-        pass
+        checkPrivilege(user, 'tr/*', 'set tasks reports')
 
     def writeReply(self, response: Response, proc: Processor) -> None:
         response.writeXML(xml.ok)

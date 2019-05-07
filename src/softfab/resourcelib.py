@@ -17,7 +17,7 @@ from softfab.restypelib import taskRunnerResourceTypeName
 from softfab.shadowlib import ShadowRun, shadowDB
 from softfab.taskrunlib import RunInfo, TaskRun, taskRunDB
 from softfab.timelib import getTime
-from softfab.tokens import Token, TokenRole, tokenDB
+from softfab.tokens import Token, TokenRole, TokenUser, tokenDB
 from softfab.utils import abstract, cachedProperty, parseVersion
 from softfab.xmlbind import XMLTag
 from softfab.xmlgen import XMLAttributeValue, XMLContent, xml
@@ -912,6 +912,17 @@ def getTaskRunner(runnerID: str) -> TaskRunner:
         return resource
     else:
         raise KeyError('resource "%s" is not a Task Runner' % runnerID)
+
+def runnerFromToken(user: TokenUser) -> TaskRunner:
+    """Returns the Task Runner associated with a token user.
+
+    Raises `KeyError` if the token user does not represent
+    a Task Runner, for example because it represents a different
+    type of resource.
+    """
+    token = user.token
+    runnerId = token.getParam('runnerId')
+    return getTaskRunner(runnerId)
 
 def recomputeRunning() -> None:
     '''Scan the task run and shadow databases for running tasks.

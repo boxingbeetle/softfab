@@ -2,15 +2,14 @@
 
 from softfab.ControlPage import ControlPage
 from softfab.Page import InvalidRequest, PageProcessor
-from softfab.authentication import NoAuthPage
+from softfab.authentication import TokenAuthPage
 from softfab.jobview import unfinishedJobs
-from softfab.resourcelib import (
-    RequestFactory, TaskRunner, getTaskRunner, resourceDB
-)
+from softfab.resourcelib import RequestFactory, resourceDB, runnerFromToken
 from softfab.response import Response
 from softfab.shadowlib import shadowDB
 from softfab.sortedqueue import SortedQueue
-from softfab.userlib import User
+from softfab.tokens import TokenRole, TokenUser
+from softfab.userlib import User, checkPrivilege
 from softfab.xmlbind import parse
 from softfab.xmlgen import XMLContent, xml
 
@@ -23,7 +22,7 @@ class WaitingShadowRuns(SortedQueue):
 
 class Synchronize_POST(ControlPage[ControlPage.Arguments,
                                    'Synchronize_POST.Processor']):
-    authenticator = NoAuthPage.instance
+    authenticator = TokenAuthPage(TokenRole.RESOURCE)
 
     waitingShadowRuns = WaitingShadowRuns(shadowDB)
 
@@ -68,8 +67,9 @@ class Synchronize_POST(ControlPage[ControlPage.Arguments,
             request = parse(RequestFactory(), rawReq)
 
             # Sync Task Runner database.
+            assert isinstance(user, TokenUser), user
             try:
-                taskRunner = getTaskRunner(request.getId())
+                taskRunner = runnerFromToken(user)
             except KeyError as ex:
                 raise InvalidRequest(*ex.args) from ex
             self.taskRunner = taskRunner
@@ -102,7 +102,7 @@ class Synchronize_POST(ControlPage[ControlPage.Arguments,
                 yield xml.wait(seconds = waitSecs)
 
     def checkAccess(self, user: User) -> None:
-        pass
+        checkPrivilege(user, 'tr/*', 'sync a Task Runner')
 
     def writeReply(self, response: Response, proc: Processor) -> None:
         response.writeXML(xml.response[proc.createResponse()])
