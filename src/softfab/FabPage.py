@@ -22,7 +22,7 @@ from softfab.xmlgen import XMLContent, XMLNode, xhtml
 IconModifier = Enum('IconModifier', 'NONE NEW EDIT DELETE')
 
 class FabPage(UIPage[ProcT], FabResource[ArgsT, ProcT], ABC):
-    authenticator = LoginAuthPage
+    authenticator = LoginAuthPage.instance
 
     __pageInfo = {} # type: ClassVar[Dict[str, Mapping[str, Any]]]
 

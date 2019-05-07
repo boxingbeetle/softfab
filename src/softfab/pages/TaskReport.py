@@ -15,7 +15,7 @@ from softfab.xmlgen import xml
 
 class TaskReport_POST(ControlPage['TaskReport_POST.Arguments',
                                   'TaskReport_POST.Processor']):
-    authenticator = NoAuthPage
+    authenticator = NoAuthPage.instance
 
     class Arguments(PageArgs):
         id = StrArg(None)

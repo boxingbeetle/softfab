@@ -23,7 +23,7 @@ class WaitingShadowRuns(SortedQueue):
 
 class Synchronize_POST(ControlPage[ControlPage.Arguments,
                                    'Synchronize_POST.Processor']):
-    authenticator = NoAuthPage
+    authenticator = NoAuthPage.instance
 
     waitingShadowRuns = WaitingShadowRuns(shadowDB)
 

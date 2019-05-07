@@ -28,7 +28,7 @@ class LoginTable(FormTable):
         yield 'Password', passwordInput(name = 'loginpass')
 
 class LoginBase(UIPage[ProcT], FabResource[ArgsT, ProcT]):
-    authenticator = NoAuthPage
+    authenticator = NoAuthPage.instance
     secureCookie = True
 
     def checkAccess(self, user: User) -> None:

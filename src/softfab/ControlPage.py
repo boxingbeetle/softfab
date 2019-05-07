@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Generic, Optional, Type, Union
+from typing import Generic, Optional, Union
 
 from twisted.internet.defer import Deferred
 from twisted.internet.interfaces import IProducer
@@ -44,7 +44,7 @@ class ControlPage(FabResource[ArgsT, ProcT]):
     third party processes (through API calls).
     '''
     contentType = 'text/xml; charset=UTF-8'
-    authenticator = HTTPAuthPage # type: Type[Authenticator]
+    authenticator = HTTPAuthPage.instance # type: Authenticator
 
     def getResponder(self, path: Optional[str], proc: ProcT) -> Responder:
         if path is None:

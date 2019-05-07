@@ -15,7 +15,7 @@ class Logout_GET(UIPage['Logout_GET.Processor'],
                  FabResource['Logout_GET.Arguments', 'Logout_GET.Processor']):
     '''Page that logs out the user that requests it.
     '''
-    authenticator = NoAuthPage
+    authenticator = NoAuthPage.instance
 
     class Arguments(URLArgs):
         pass

@@ -46,7 +46,7 @@ class ExecutionGraphExamples_GET(
         FabResource['FabResource.Arguments',
                     'ExecutionGraphExamples_GET.Processor']
         ):
-    authenticator = NoAuthPage
+    authenticator = NoAuthPage.instance
 
     class Processor(PageProcessor['FabResource.Arguments']):
 

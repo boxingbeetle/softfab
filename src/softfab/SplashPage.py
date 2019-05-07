@@ -31,7 +31,7 @@ startupMessages = _StartupMessages()
 #       be making database requests.
 class SplashPage(UIPage[PageProcessor],
                  FabResource[FabResource.Arguments, PageProcessor]):
-    authenticator = NoAuthPage
+    authenticator = NoAuthPage.instance
 
     def checkAccess(self, user: User) -> None:
         pass

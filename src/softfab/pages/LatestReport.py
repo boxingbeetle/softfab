@@ -14,7 +14,7 @@ class LatestReport_GET(
         UIPage['LatestReport_GET.Processor'],
         FabResource['LatestReport_GET.Arguments', 'LatestReport_GET.Processor']
         ):
-    authenticator = LoginAuthPage
+    authenticator = LoginAuthPage.instance
 
     class Arguments(TaskDefIdArgs):
         pass

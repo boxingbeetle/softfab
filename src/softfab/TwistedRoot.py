@@ -170,7 +170,7 @@ class PageLoader:
             page = pageClass()
             page.debugSupport = root.debugSupport
             if root.anonOperator:
-                page.authenticator = DisabledAuthPage
+                page.authenticator = DisabledAuthPage.instance
 
             if not issubclass(page.Arguments, PageArgs):
                 startupLogger.error(
@@ -266,13 +266,13 @@ def renderAsync(
     req = Request(request) # type: Request
     streaming = False
     try:
-        authenticator = page.authenticator.instance
+        authenticator = page.authenticator
         try:
             user = yield authenticator.authenticate(req)
         except LoginFailed as ex:
             responder = authenticator.askForAuthentication(req)
         else:
-            responder = yield parseAndProcess(page, req, user)
+            responder = yield parseAndProcess(page, req, user) # type: ignore
             streaming = page.streaming
     except Redirect as ex:
         responder = Redirector(ex.url)
@@ -281,7 +281,7 @@ def renderAsync(
             'Internal error processing %s: %s', page.name, str(ex)
             )
         responder = UIResponder(
-            InternalErrorPage(str(ex)),
+            InternalErrorPage[PageProcessor](str(ex)),
             PageProcessor(page, req, FabResource.Arguments(), UnknownUser())
             )
 
@@ -299,7 +299,7 @@ def renderAsync(
             )
 
 class ResourceNotFound(FabResource[FabResource.Arguments, PageProcessor]):
-    authenticator = NoAuthPage
+    authenticator = NoAuthPage.instance
 
     def checkAccess(self, user: User) -> None:
         pass

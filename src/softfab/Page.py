@@ -3,8 +3,8 @@
 from abc import ABC
 from collections import defaultdict
 from typing import (
-    TYPE_CHECKING, Any, ClassVar, DefaultDict, Dict, Generic, Iterator,
-    Optional, Set, Type, TypeVar, Union
+    TYPE_CHECKING, Any, DefaultDict, Dict, Generic, Iterator, Optional, Set,
+    TypeVar, Union
 )
 import logging
 
@@ -15,7 +15,7 @@ from softfab.datawidgets import DataTable
 from softfab.pageargs import ArgsT, PageArgs
 from softfab.response import Response
 from softfab.userlib import User
-from softfab.utils import SharedInstance, abstract
+from softfab.utils import abstract
 from softfab.webgui import Widget, pageURL
 from softfab.xmlgen import XML
 
@@ -39,8 +39,6 @@ def logPageException(req: Request, message: str) -> None:
 class Authenticator:
     '''Abstract base class of authenticators.
     '''
-
-    instance = SharedInstance() # type: ClassVar[SharedInstance]
 
     def authenticate(self, req: Request) -> Deferred:
         '''Authentication step: selects an authentication method depending on
@@ -198,7 +196,7 @@ class HTTPAuthenticator(Responder):
 class FabResource(ABC, Generic[ArgsT, ProcT]):
     '''Abstract base class for Control Center pages.
     '''
-    authenticator = abstract # type: Type[Authenticator]
+    authenticator = abstract # type: Authenticator
     streaming = False
 
     debugSupport = False

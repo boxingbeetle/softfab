@@ -43,7 +43,7 @@ class CSVResponder(Responder, Generic[ProcT]):
             response.write(sepChar.join(row), '\r\n')
 
 class CSVPage(FabResource['CSVPage.Arguments', ProcT]):
-    authenticator = LoginAuthPage
+    authenticator = LoginAuthPage.instance
 
     class Arguments(PageArgs):
         sep = EnumArg(Separator, Separator.COMMA)

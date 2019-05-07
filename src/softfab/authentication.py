@@ -1,5 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from typing import ClassVar
+
 from twisted.cred.error import LoginFailed
 from twisted.internet.defer import Deferred, fail, succeed
 
@@ -12,12 +14,15 @@ from softfab.request import Request
 from softfab.userlib import (
     AnonGuestUser, SuperUser, UnknownUser, authenticateUser
 )
+from softfab.utils import SharedInstance
 
 
 class LoginAuthPage(Authenticator):
     '''Authenticator that performs authentication using a login page and
     a session cookie.
     '''
+
+    instance = SharedInstance() # type: ClassVar[SharedInstance]
 
     def authenticate(self, req: Request) -> Deferred:
         user = req.loggedInUser()
@@ -36,6 +41,8 @@ class LoginAuthPage(Authenticator):
 class HTTPAuthPage(Authenticator):
     '''Authenticator that performs HTTP authentication.
     '''
+
+    instance = SharedInstance() # type: ClassVar[SharedInstance]
 
     def authenticate(self, req: Request) -> Deferred:
         # To avoid cross-site request forgery, we must authenticate every API
@@ -63,6 +70,8 @@ class NoAuthPage(Authenticator):
     a non-privileged user.
     '''
 
+    instance = SharedInstance() # type: ClassVar[SharedInstance]
+
     def authenticate(self, req: Request) -> Deferred:
         return succeed(UnknownUser())
 
@@ -76,6 +85,8 @@ class DisabledAuthPage(Authenticator):
     a user with all privileges when not logged in.
     This is for ease of development, not recommended for production.
     '''
+
+    instance = SharedInstance() # type: ClassVar[SharedInstance]
 
     def authenticate(self, req: Request) -> Deferred:
         user = req.loggedInUser()

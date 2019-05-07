@@ -18,7 +18,7 @@ from softfab.xmlgen import xml
 
 class TaskDone_POST(ControlPage['TaskDone_POST.Arguments',
                                 'TaskDone_POST.Processor']):
-    authenticator = NoAuthPage
+    authenticator = NoAuthPage.instance
 
     class Arguments(PageArgs):
         result = EnumArg(ResultCode, None)
