@@ -9,7 +9,7 @@ from typing import (
 )
 import logging
 
-from twisted.cred.error import LoginFailed
+from twisted.cred.error import LoginFailed, Unauthorized
 from twisted.internet import reactor
 from twisted.internet.defer import Deferred, inlineCallbacks
 from twisted.internet.error import ConnectionLost
@@ -259,6 +259,17 @@ def renderAuthenticated(page: FabResource, request: TwistedRequest) -> object:
     d.addCallback(done).addErrback(failed) # pylint: disable=no-member
     return NOT_DONE_YET
 
+class _PlainTextResponder(Responder):
+
+    def __init__(self, status: int, message: str):
+        self.__status = status
+        self.__message = message
+
+    def respond(self, response: Response) -> None:
+        response.setStatus(self.__status, self.__message)
+        response.setHeader('Content-Type', 'text/plain')
+        response.write(self.__message + '\n')
+
 @inlineCallbacks
 def renderAsync(
         page: FabResource, request: TwistedRequest
@@ -271,6 +282,11 @@ def renderAsync(
             user = yield authenticator.authenticate(req)
         except LoginFailed as ex:
             responder = authenticator.askForAuthentication(req)
+        except Unauthorized as ex:
+            responder = _PlainTextResponder(
+                403, ex.args[0] if ex.args else
+                        'You are not authorized to perform this operation'
+                )
         else:
             responder = yield parseAndProcess(page, req, user) # type: ignore
             streaming = page.streaming

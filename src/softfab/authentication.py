@@ -2,7 +2,7 @@
 
 from typing import ClassVar
 
-from twisted.cred.error import LoginFailed
+from twisted.cred.error import LoginFailed, Unauthorized
 from twisted.internet.defer import Deferred, fail, succeed
 
 from softfab.Page import (
@@ -11,6 +11,7 @@ from softfab.Page import (
 from softfab.pagelinks import loginURL
 from softfab.projectlib import project
 from softfab.request import Request
+from softfab.tokens import TokenRole, TokenUser, authenticateToken
 from softfab.userlib import (
     AnonGuestUser, SuperUser, UnknownUser, authenticateUser
 )
@@ -57,6 +58,40 @@ class HTTPAuthPage(Authenticator):
 
         if userName:
             return authenticateUser(userName, password)
+        elif project['anonguest']:
+            return succeed(AnonGuestUser())
+        else:
+            return fail(LoginFailed())
+
+    def askForAuthentication(self, req: Request) -> Responder:
+        return HTTPAuthenticator('SoftFab')
+
+class TokenAuthPage(Authenticator):
+    '''Authenticator that performs HTTP authentication using an access token.
+    '''
+
+    def __init__(self, role: TokenRole):
+        self.__role = role
+
+    def authenticate(self, req: Request) -> Deferred:
+        try:
+            tokenId, password = req.getCredentials()
+        except UnicodeDecodeError as ex:
+            return fail(LoginFailed(ex))
+
+        if tokenId:
+            try:
+                token = authenticateToken(tokenId, password)
+            except KeyError:
+                return fail(LoginFailed(
+                    'Token "%s" does not exist' % tokenId
+                    ))
+            if token.role is not self.__role:
+                return fail(Unauthorized(
+                    'Token "%s" is of the wrong type for this operation'
+                    % tokenId
+                    ))
+            return succeed(TokenUser(token))
         elif project['anonguest']:
             return succeed(AnonGuestUser())
         else:

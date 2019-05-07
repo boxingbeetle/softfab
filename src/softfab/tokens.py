@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from enum import Enum
-from typing import Dict, Iterator, Mapping, cast
+from typing import Dict, Iterator, Mapping, Optional, cast
 
 from passlib.pwd import genword
 
@@ -133,6 +133,24 @@ class TokenDB(Database[Token]):
             writePasswordFile(_passwordFile)
 
 tokenDB = TokenDB()
+
+class TokenUser(User):
+    """User represented by an access token.
+    """
+
+    def __init__(self, token: Token):
+        self.__token = token
+
+    @property
+    def token(self) -> Token:
+        return self.__token
+
+    @property
+    def name(self) -> Optional[str]:
+        return self.__token.owner.name
+
+    def hasPrivilege(self, priv: str) -> bool:
+        return self.__token.owner.hasPrivilege(priv)
 
 def authenticateToken(tokenId: str, password: str) -> Token:
     """Looks up a token with the give ID and password.
