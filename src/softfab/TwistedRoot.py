@@ -27,7 +27,7 @@ from softfab.SplashPage import SplashPage, startupMessages
 from softfab.StyleResources import styleRoot
 from softfab.TwistedUtil import PageRedirect
 from softfab.UIPage import UIResponder
-from softfab.authentication import DisabledAuthPage, NoAuthPage
+from softfab.authentication import DisabledAuthPage, NoAuthPage, TokenAuthPage
 from softfab.databases import iterDatabasesToPreload
 from softfab.pageargs import PageArgs
 from softfab.render import (
@@ -170,7 +170,8 @@ class PageLoader:
             page = pageClass()
             page.debugSupport = root.debugSupport
             if root.anonOperator:
-                page.authenticator = DisabledAuthPage.instance
+                if not isinstance(page.authenticator, TokenAuthPage):
+                    page.authenticator = DisabledAuthPage.instance
 
             if not issubclass(page.Arguments, PageArgs):
                 startupLogger.error(

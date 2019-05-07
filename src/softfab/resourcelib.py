@@ -921,8 +921,8 @@ def runnerFromToken(user: TokenUser) -> TaskRunner:
     type of resource.
     """
     token = user.token
-    runnerId = token.getParam('runnerId')
-    return getTaskRunner(runnerId)
+    resId = token.getParam('resourceId')
+    return getTaskRunner(resId)
 
 def recomputeRunning() -> None:
     '''Scan the task run and shadow databases for running tasks.
