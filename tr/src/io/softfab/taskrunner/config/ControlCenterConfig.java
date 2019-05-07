@@ -12,6 +12,16 @@ public class ControlCenterConfig implements DataObject {
     */
     public URL serverBaseURL;
 
+    /**
+    ID of the access token to authenticate this Task Runner with.
+    */
+    public String tokenId;
+
+    /**
+    Password of the access token to authenticate this Task Runner with.
+    */
+    public String tokenPass;
+
     public void verify() {
         // Nothing to check.
     }

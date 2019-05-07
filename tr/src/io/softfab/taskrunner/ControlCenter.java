@@ -8,12 +8,15 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import io.softfab.taskrunner.config.ConfigFactory;
+import io.softfab.taskrunner.config.ControlCenterConfig;
 
 /**
  * Communicates with the Control Center (server).
@@ -47,6 +50,7 @@ implements Runnable {
     private static final int RETRY_DELAY = 10000;
 
     private final URL serverBaseURL;
+    private final String authorization;
 
     private final List queue = new ArrayList();
 
@@ -63,7 +67,14 @@ implements Runnable {
 
     private ControlCenter() {
         // Get relevant configuration sections.
-        serverBaseURL = ConfigFactory.getConfig().controlCenter.serverBaseURL;
+        ControlCenterConfig config = ConfigFactory.getConfig().controlCenter;
+        serverBaseURL = config.serverBaseURL;
+        authorization = "Basic " + Base64.getEncoder().encodeToString(
+            (config.tokenId + ":" + config.tokenPass).getBytes(
+                StandardCharsets.US_ASCII
+                )
+            );
+
         // Start worker thread.
         thread = new Thread(this, "Control Center communication");
         thread.start();
@@ -212,6 +223,8 @@ implements Runnable {
         // All calls we currently do change state on the server and should
         // therefore made as POST.
         connection.setRequestMethod("POST");
+        // Pass token credentials using HTTP Basic authentication.
+        connection.setRequestProperty("Authorization", authorization);
         if (bodyType != null) {
             assert body != null;
             connection.setRequestProperty("Content-Type", bodyType);
