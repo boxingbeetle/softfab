@@ -266,23 +266,6 @@ class _TaskRunnerData(XMLTag):
 
     def __init__(self, properties: Mapping[str, XMLAttributeValue]):
         XMLTag.__init__(self, properties)
-
-        # COMPAT 2.16: Rename 'runnerId' to 'id'.
-        runnerId = self._properties.get('runnerId')
-        if runnerId is not None:
-            self._properties['id'] = runnerId
-            del self._properties['runnerId']
-
-        # COMPAT 2.x.x: Backward compatibility hack to cut off the host from
-        #               runnerId.
-        #               We have to change the sync protocol to fix this.
-        if cast(str, self._properties['runnerVersion']).startswith('2.'):
-            runnerId = cast(str, self._properties['id'])
-            dot = runnerId.rfind('.')
-            if dot != -1:
-                self._properties['host'] = runnerId[ : dot]
-                self._properties['id'] = runnerId[dot + 1 : ]
-
         self._properties.setdefault('host', '?')
         self.__run = cast(RunInfo, None)
         self.__shadowRunId = None # type: Optional[str]
@@ -317,9 +300,6 @@ class _TaskRunnerData(XMLTag):
 
     def _setShadowrun(self, attributes: Mapping[str, str]) -> None:
         self.__shadowRunId = attributes['shadowId']
-
-    def getId(self) -> str:
-        return cast(str, self._properties['id'])
 
     def hasExecutionRun(self) -> bool:
         '''Returns True if the Task Runner reported it is running an execution
