@@ -8,13 +8,23 @@ from softfab.formlib import SingleCheckBoxTable
 from softfab.pageargs import BoolArg, StrArg
 from softfab.resourcelib import TaskRunner, resourceDB
 from softfab.resourceview import CapabilitiesPanel, CommentPanel
-from softfab.webgui import vgroup
+from softfab.webgui import Table, vgroup
 from softfab.xmlgen import XMLContent, xhtml
 
 
 class ResetPassPanel(SingleCheckBoxTable):
     name = 'resetpass'
     label = 'Set new password for access token'
+
+class TokenTable(Table):
+    columns = None, None
+
+    def iterRows(self, *, proc, **kwargs):
+        tokenId = getattr(proc, 'tokenId') # type: str
+        password = getattr(proc, 'password') # type: Optional[str]
+        yield 'Access token ID: ', xhtml.code[tokenId]
+        if password is not None:
+            yield 'Access token password: ', xhtml.code[password]
 
 class TaskRunnerSavePhase(SavePhase):
 
@@ -35,11 +45,7 @@ class TaskRunnerSavePhase(SavePhase):
             proc.password = None
 
     def presentContent(self, proc: 'EditPage.Processor') -> XMLContent:
-        tokenId = getattr(proc, 'tokenId') # type: str
-        password = getattr(proc, 'password') # type: Optional[str]
-        yield xhtml.p['Access token ID: ', xhtml.code[tokenId]]
-        if password is not None:
-            yield xhtml.p['Access token password: ', xhtml.code[password]]
+        yield TokenTable.instance.present(proc=proc)
         yield super().presentContent(proc)
 
 class TaskRunnerEdit(EditPage):
