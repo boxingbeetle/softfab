@@ -11,6 +11,7 @@ from softfab.resourceview import CapabilitiesPanel, CommentPanel
 from softfab.webgui import vgroup
 from softfab.xmlgen import XMLContent, xhtml
 
+
 class ResetPassPanel(SingleCheckBoxTable):
     name = 'resetpass'
     label = 'Set new password for access token'

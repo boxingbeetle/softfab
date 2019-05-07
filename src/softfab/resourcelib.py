@@ -22,7 +22,6 @@ from softfab.utils import abstract, cachedProperty, parseVersion
 from softfab.xmlbind import XMLTag
 from softfab.xmlgen import XMLAttributeValue, XMLContent, xml
 
-
 ResourceT = TypeVar('ResourceT', bound='ResourceBase')
 
 class ResourceBase(XMLTag, DatabaseElem):
