@@ -282,7 +282,9 @@ def renderAsync(
         try:
             user = yield authenticator.authenticate(req)
         except LoginFailed as ex:
-            responder = authenticator.askForAuthentication(req)
+            responder = authenticator.askForAuthentication(
+                req, ex.args[0] if ex.args else None
+                )
         except Unauthorized as ex:
             responder = _PlainTextResponder(
                 403, ex.args[0] if ex.args else

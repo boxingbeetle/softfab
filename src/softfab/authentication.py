@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import ClassVar
+from typing import ClassVar, Optional
 
 from twisted.cred.error import LoginFailed, Unauthorized
 from twisted.internet.defer import Deferred, fail, succeed
@@ -36,7 +36,10 @@ class LoginAuthPage(Authenticator):
             # User must log in.
             return fail(LoginFailed())
 
-    def askForAuthentication(self, req: Request) -> Responder:
+    def askForAuthentication(self,
+                             req: Request,
+                             message: Optional[str] = None
+                             ) -> Responder:
         return Redirector(loginURL(req))
 
 class HTTPAuthPage(Authenticator):
@@ -63,8 +66,11 @@ class HTTPAuthPage(Authenticator):
         else:
             return fail(LoginFailed())
 
-    def askForAuthentication(self, req: Request) -> Responder:
-        return HTTPAuthenticator('SoftFab')
+    def askForAuthentication(self,
+                             req: Request,
+                             message: Optional[str] = None
+                             ) -> Responder:
+        return HTTPAuthenticator('SoftFab', message)
 
 class TokenAuthPage(Authenticator):
     '''Authenticator that performs HTTP authentication using an access token.
@@ -97,8 +103,11 @@ class TokenAuthPage(Authenticator):
         else:
             return fail(LoginFailed())
 
-    def askForAuthentication(self, req: Request) -> Responder:
-        return HTTPAuthenticator('SoftFab')
+    def askForAuthentication(self,
+                             req: Request,
+                             message: Optional[str] = None
+                             ) -> Responder:
+        return HTTPAuthenticator('SoftFab', message)
 
 class NoAuthPage(Authenticator):
     '''Authenticator that performs no authentication and returns
@@ -110,7 +119,10 @@ class NoAuthPage(Authenticator):
     def authenticate(self, req: Request) -> Deferred:
         return succeed(UnknownUser())
 
-    def askForAuthentication(self, req: Request) -> Responder:
+    def askForAuthentication(self,
+                             req: Request,
+                             message: Optional[str] = None
+                             ) -> Responder:
         raise InternalError(
             'Authentication requested for page that does not require it.'
             )
@@ -131,7 +143,10 @@ class DisabledAuthPage(Authenticator):
             # Use logged-in user.
             return succeed(user)
 
-    def askForAuthentication(self, req: Request) -> Responder:
+    def askForAuthentication(self,
+                             req: Request,
+                             message: Optional[str] = None
+                             ) -> Responder:
         raise InternalError(
             'Authentication requested while authentication is disabled.'
             )

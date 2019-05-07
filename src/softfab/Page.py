@@ -48,7 +48,10 @@ class Authenticator:
         '''
         raise NotImplementedError
 
-    def askForAuthentication(self, req: Request) -> 'Responder':
+    def askForAuthentication(self,
+                             req: Request,
+                             message: Optional[str] = None
+                             ) -> 'Responder':
         '''Returns a Responder that asks the user to authenticate.
         Raises InternalError if there is something wrong with the
         authentication system.
@@ -183,12 +186,13 @@ class Redirector(Responder):
 
 class HTTPAuthenticator(Responder):
 
-    def __init__(self, realm: str):
+    def __init__(self, realm: str, message: Optional[str] = None):
         Responder.__init__(self)
         self.__realm = realm
+        self.__message = message
 
     def respond(self, response: Response) -> None:
-        response.setStatus(401)
+        response.setStatus(401, self.__message)
         response.setHeader(
             'WWW-Authenticate', 'Basic realm="%s"' % self.__realm
             )
