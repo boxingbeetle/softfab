@@ -84,7 +84,6 @@ public final class Main {
         // Set user-defined log level.
         logger.setLevel(config.generic.logLevel);
 
-        logger.info("Task Runner ID: " + config.generic.taskRunnerId);
         logger.info("Connecting to " + config.controlCenter.serverBaseURL);
 
         // Run main loop.

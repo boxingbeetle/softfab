@@ -119,9 +119,7 @@ final class RunStatus {
         // run is still running.
         synchronized (trigger) {
             final StringBuffer request = new StringBuffer(200);
-            request.append("<request runnerId=\"")
-                .append(taskRunnerConfig.generic.taskRunnerId)
-                .append("\" host=\"").append(hostName)
+            request.append("<request host=\"").append(hostName)
                 .append("\" runnerVersion=\"").append(Version.getVersion())
                 .append("\">\r\n");
             if (runInfo != null) {
