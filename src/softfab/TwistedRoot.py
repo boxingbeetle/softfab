@@ -37,7 +37,7 @@ from softfab.request import Request
 from softfab.response import Response
 from softfab.schedulelib import ScheduleManager
 from softfab.shadowlib import startShadowRunCleanup
-from softfab.userlib import User
+from softfab.userlib import UnknownUser, User
 
 startupLogger = logging.getLogger('ControlCenter.startup')
 
@@ -280,7 +280,10 @@ def renderAsync(
         logging.error(
             'Internal error processing %s: %s', page.name, str(ex)
             )
-        responder = InternalErrorPage(str(ex))
+        responder = UIResponder(
+            InternalErrorPage(str(ex)),
+            PageProcessor(page, req, FabResource.Arguments(), UnknownUser())
+            )
 
     response = Response(request, req.userAgent, streaming)
     try:
