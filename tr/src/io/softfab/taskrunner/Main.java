@@ -85,6 +85,7 @@ public final class Main {
         logger.setLevel(config.generic.logLevel);
 
         logger.info("Connecting to " + config.controlCenter.serverBaseURL);
+        logger.info("Token ID: " + config.controlCenter.tokenId);
 
         // Run main loop.
         final SyncLoop syncLoop = new SyncLoop();
