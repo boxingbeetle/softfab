@@ -2,7 +2,9 @@
 
 from abc import ABC
 from enum import Enum
-from typing import TYPE_CHECKING, ClassVar, Mapping, Union, cast
+from typing import (
+    TYPE_CHECKING, ClassVar, Generic, Mapping, Optional, TypeVar, Union, cast
+)
 
 from softfab.FabPage import FabPage, IconModifier
 from softfab.Page import (
@@ -17,8 +19,9 @@ from softfab.utils import abstract
 from softfab.webgui import preserveSpaces, rowManagerScript
 from softfab.xmlgen import XML, XMLContent, xhtml
 
+EditProcT = TypeVar('EditProcT', bound='EditProcessorBase')
 
-class AbstractPhase:
+class AbstractPhase(Generic[EditProcT]):
     '''Note: This class is similar to DialogStep, but I don't know yet if/how
     that similarity can be exploited.
     '''
@@ -26,13 +29,13 @@ class AbstractPhase:
     def __init__(self, page: 'EditPage'):
         self.page = page
 
-    def process(self, proc: 'EditProcessor') -> None:
+    def process(self, proc: EditProcT) -> None:
         '''Process request. This method is allowed to use the same exceptions
         as Processor.process().
         The default implementation does nothing.
         '''
 
-    def presentContent(self, proc: 'EditProcessor') -> XMLContent:
+    def presentContent(self, proc: EditProcT) -> XMLContent:
         '''Presents this phase.
         '''
         raise NotImplementedError
@@ -41,7 +44,7 @@ class EditPhase(AbstractPhase):
     '''First and main phase: actual editing of the record.
     '''
 
-    def presentContent(self, proc: 'EditProcessor') -> XMLContent:
+    def presentContent(self, proc: EditProcT) -> XMLContent:
         page = self.page
 
         buttons = ['save']
@@ -59,7 +62,7 @@ class EditPhase(AbstractPhase):
             xhtml.p[ actionButtons(*buttons) ]
             ].present(proc=proc)
 
-class SavePhase(AbstractPhase):
+class SavePhase(AbstractPhase['EditProcessor']):
     '''Commit edited element to the database.
     '''
 
@@ -99,13 +102,13 @@ class SavePhase(AbstractPhase):
             self.updateRecord(proc, element)
 
     def addRecord(self,
-            proc: 'EditProcessor', # pylint: disable=unused-argument
+            proc: EditProcT, # pylint: disable=unused-argument
             element: Record
             ) -> None:
         self.page.db.add(element)
 
     def updateRecord(self,
-            proc: 'EditProcessor', # pylint: disable=unused-argument
+            proc: EditProcT, # pylint: disable=unused-argument
             element: Record
             ) -> None:
         self.page.db.update(element)
@@ -127,7 +130,7 @@ class SaveAsPhase(AbstractPhase):
     '''Ask for a name for the record.
     '''
 
-    def presentContent(self, proc: 'EditProcessor') -> XMLContent:
+    def presentContent(self, proc: EditProcT) -> XMLContent:
         page = self.page
         args = proc.args
         yield xhtml.h2[ 'Save As' ]
@@ -141,7 +144,7 @@ class ConfirmOverwritePhase(AbstractPhase):
     '''Asks the user for confirmation before overwriting an existing record.
     '''
 
-    def presentContent(self, proc: 'EditProcessor') -> XMLContent:
+    def presentContent(self, proc: EditProcT) -> XMLContent:
         page = self.page
         args = proc.args
         yield xhtml.p[
@@ -162,7 +165,7 @@ class ConfirmOverwritePhase(AbstractPhase):
 EditPagePrev = Enum('EditPagePrev', 'CONFIRM SAVE_AS EDIT')
 """Names for the previous dialog step."""
 
-class EditProcessor(PageProcessor['EditPage.Arguments']):
+class EditProcessorBase(PageProcessor['EditPage.Arguments']):
 
     if TYPE_CHECKING:
         page = cast('EditPage', None) # type: ignore
@@ -170,8 +173,6 @@ class EditProcessor(PageProcessor['EditPage.Arguments']):
     def process(self, req: Request, user: User) -> None:
         # pylint: disable=attribute-defined-outside-init
         checkPrivilege(user, self.page.db.privilegeObject + '/a')
-
-        args = self.args
 
         # Process "id" argument.
         # This is not editable, so if we reject it, there is nothing
@@ -182,41 +183,20 @@ class EditProcessor(PageProcessor['EditPage.Arguments']):
         autoName = self.page.autoName
         if autoName:
             recordId = autoName
-            if args.id:
+            if self.args.id:
                 raise InvalidRequest('Value provided for fixed ID')
         else:
-            recordId = args.id
+            recordId = self.args.id
             if autoName is False and not recordId:
                 raise InvalidRequest('Missing ID')
 
         # Try to find existing record.
-        element = self.page.db.get(recordId) if recordId else None
-        self.oldElement = element
+        oldElement = self.page.db.get(recordId) if recordId else None
+        self.oldElement = oldElement
 
         # State-dependent processing.
         self.showBackButton = True
-
-        # Initialize args on first arrival to the edit page.
-        # TODO: It would be cleaner if we could separate the data
-        #       being edited from the control flow fields that EditPage
-        #       needs. For example, we could avoid calls to _initArgs
-        #       when the user selects 'Cancel'. Currently ProjectEdit
-        #       has to be able to deal with element == None in its
-        #       _initArgs, even though project is a singleton.
-        #       -> maybe this is fixed now?
-        if args.action is None:
-            self.args = args = args.override(
-                action = 'edit',
-                **self._initArgs(element)
-                )
-
-        if args.action not in ('edit', 'cancel'):
-            try:
-                self._checkState()
-            except PresentableError:
-                self.args = args.override(action = 'edit')
-                raise
-
+        self.processState(oldElement)
         # TODO: Redesign state checking and validation?
         # There seem to be two uses of validateState currently:
         # - converting from user friendly values like NONE_TEXT to
@@ -229,6 +209,43 @@ class EditProcessor(PageProcessor['EditPage.Arguments']):
 
         self.phase = self.determinePhase(req)
         self.phase.process(self)
+
+    def processState(self, oldElement: Optional[Record]) -> None:
+        """Load or verify the element's state.
+        """
+        raise NotImplementedError
+
+    def determinePhase(self, req: Request) -> AbstractPhase:
+        raise NotImplementedError
+
+    def _validateState(self) -> None:
+        '''Perform minor changes on arguments to make them valid,
+        such as inserting default values for empty entries.
+        '''
+
+class EditProcessor(EditProcessorBase):
+
+    def processState(self, oldElement: Optional[Record]) -> None:
+        # Initialize args on first arrival to the edit page.
+        # TODO: It would be cleaner if we could separate the data
+        #       being edited from the control flow fields that EditPage
+        #       needs. For example, we could avoid calls to _initArgs
+        #       when the user selects 'Cancel'. Currently ProjectEdit
+        #       has to be able to deal with element == None in its
+        #       _initArgs, even though project is a singleton.
+        #       -> maybe this is fixed now?
+        if self.args.action is None:
+            self.args = self.args.override(
+                action = 'edit',
+                **self._initArgs(oldElement)
+                )
+
+        if self.args.action not in ('edit', 'cancel'):
+            try:
+                self._checkState()
+            except PresentableError:
+                self.args = self.args.override(action = 'edit')
+                raise
 
     def determinePhase(self, req: Request) -> AbstractPhase:
         # pylint: disable=attribute-defined-outside-init
@@ -326,7 +343,7 @@ class EditProcessor(PageProcessor['EditPage.Arguments']):
                       ) -> Record:
         raise NotImplementedError
 
-    def _initArgs(self, element: Record) -> Mapping[str, object]:
+    def _initArgs(self, element: Optional[Record]) -> Mapping[str, object]:
         '''Get initial argument values for editing the given record.
         If the user is creating a new record, None is passed.
         Returns a dictionary containing argument names and values
@@ -341,11 +358,6 @@ class EditProcessor(PageProcessor['EditPage.Arguments']):
         database. For example, all references to other records should
         be checked.
         Raises PresentableError if there is a problem.
-        '''
-
-    def _validateState(self) -> None:
-        '''Perform minor changes on arguments to make them valid,
-        such as inserting default values for empty entries.
         '''
 
 class EditPage(FabPage['EditProcessor', 'EditPage.Arguments'], ABC):
@@ -381,7 +393,7 @@ class EditPage(FabPage['EditProcessor', 'EditPage.Arguments'], ABC):
         # Access will be checked later by Processor.
         pass
 
-    def getFormContent(self, proc: EditProcessor) -> XMLContent:
+    def getFormContent(self, proc: EditProcessorBase) -> XMLContent:
         """Returns the text and controls contained in the form.
         It will be presented later as part of the form presentation.
         """
@@ -402,7 +414,7 @@ class EditPage(FabPage['EditProcessor', 'EditPage.Arguments'], ABC):
         if self.useScript:
             yield rowManagerScript.present(proc=proc)
 
-    def presentContent(self, proc: EditProcessor) -> XMLContent:
+    def presentContent(self, proc: EditProcessorBase) -> XMLContent:
         return proc.phase.presentContent(proc)
 
     def presentError(self, proc: EditProcessor, message: XML) -> XMLContent:

@@ -2,7 +2,9 @@
 
 from typing import Optional
 
-from softfab.EditPage import EditPage, EditProcessor, SavePhase
+from softfab.EditPage import (
+    EditPage, EditProcessor, EditProcessorBase, SavePhase
+)
 from softfab.Page import InvalidRequest
 from softfab.formlib import SingleCheckBoxTable
 from softfab.pageargs import BoolArg, StrArg
@@ -102,7 +104,7 @@ class TaskRunnerEdit(EditPage):
         super().__init__()
         self.savePhase = TaskRunnerSavePhase(self)
 
-    def getFormContent(self, proc: EditProcessor) -> XMLContent:
+    def getFormContent(self, proc: EditProcessorBase) -> XMLContent:
         args = proc.args
         if args.id != '':
             yield xhtml.h2[ 'Task Runner: ', xhtml.b[ args.id ]]
