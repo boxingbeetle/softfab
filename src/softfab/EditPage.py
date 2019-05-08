@@ -2,15 +2,16 @@
 
 from abc import ABC
 from enum import Enum
-from typing import ClassVar, Union
+from typing import TYPE_CHECKING, ClassVar, Mapping, Union, cast
 
 from softfab.FabPage import FabPage, IconModifier
 from softfab.Page import (
     InternalError, InvalidRequest, PageProcessor, PresentableError, Redirect
 )
-from softfab.databaselib import Database
+from softfab.databaselib import Database, Record
 from softfab.formlib import actionButtons, backButton, makeForm, textInput
 from softfab.pageargs import EnumArg, PageArgs, StrArg
+from softfab.request import Request
 from softfab.userlib import User, checkPrivilege, checkPrivilegeForOwned
 from softfab.utils import abstract
 from softfab.webgui import preserveSpaces, rowManagerScript
@@ -22,10 +23,10 @@ class AbstractPhase:
     that similarity can be exploited.
     '''
 
-    def __init__(self, page):
+    def __init__(self, page: 'EditPage'):
         self.page = page
 
-    def process(self, proc):
+    def process(self, proc: 'EditPage.Processor') -> None:
         '''Process request. This method is allowed to use the same exceptions
         as Processor.process().
         The default implementation does nothing.
@@ -62,7 +63,7 @@ class SavePhase(AbstractPhase):
     '''Commit edited element to the database.
     '''
 
-    def process(self, proc):
+    def process(self, proc: 'EditPage.Processor') -> None:
         req = proc.req
         page = self.page
         args = proc.args
@@ -97,10 +98,16 @@ class SavePhase(AbstractPhase):
                 )
             self.updateRecord(proc, element)
 
-    def addRecord(self, proc, element): # pylint: disable=unused-argument
+    def addRecord(self,
+            proc: 'EditPage.Processor', # pylint: disable=unused-argument
+            element: Record
+            ) -> None:
         self.page.db.add(element)
 
-    def updateRecord(self, proc, element): # pylint: disable=unused-argument
+    def updateRecord(self,
+            proc: 'EditPage.Processor', # pylint: disable=unused-argument
+            element: Record
+            ) -> None:
         self.page.db.update(element)
 
     def presentContent(self, proc: 'EditPage.Processor') -> XMLContent:
@@ -188,7 +195,7 @@ class EditPage(FabPage['EditPage.Processor', 'EditPage.Arguments'], ABC):
         # Access will be checked later by Processor.
         pass
 
-    def getFormContent(self, proc):
+    def getFormContent(self, proc: 'EditPage.Processor') -> XMLContent:
         """Returns the text and controls contained in the form.
         It will be presented later as part of the form presentation.
         """
@@ -196,7 +203,10 @@ class EditPage(FabPage['EditPage.Processor', 'EditPage.Arguments'], ABC):
 
     class Processor(PageProcessor['EditPage.Arguments']):
 
-        def process(self, req, user):
+        if TYPE_CHECKING:
+            page = cast(EditPage, None) # type: ignore
+
+        def process(self, req: Request, user: User) -> None:
             # pylint: disable=attribute-defined-outside-init
             checkPrivilege(user, self.page.db.privilegeObject + '/a')
 
@@ -259,7 +269,7 @@ class EditPage(FabPage['EditPage.Processor', 'EditPage.Arguments'], ABC):
             self.phase = self.determinePhase(req)
             self.phase.process(self)
 
-        def determinePhase(self, req):
+        def determinePhase(self, req: Request) -> AbstractPhase:
             # pylint: disable=attribute-defined-outside-init
             page = self.page
             args = self.args
@@ -323,7 +333,7 @@ class EditPage(FabPage['EditPage.Processor', 'EditPage.Arguments'], ABC):
             else:
                 raise ValueError(action)
 
-        def __checkId(self):
+        def __checkId(self) -> None:
             args = self.args
             try:
                 self.checkId(args.newId)
@@ -331,26 +341,31 @@ class EditPage(FabPage['EditPage.Processor', 'EditPage.Arguments'], ABC):
                 self.args = args.override(
                     prev = EditPagePrev.EDIT, action = 'save_as'
                     )
-                raise PresentableError((
+                raise PresentableError(xhtml[
                     xhtml.p[
                         'The ', self.page.elemName, ' name "',
                         preserveSpaces(args.newId),
                         '" is invalid: ', xhtml.b[ str(ex.args[0]) ], '.'
                         ],
                     xhtml.p[ 'Please correct the name.' ]
-                    ))
+                    ])
 
-        def checkId(self, recordId):
+        def checkId(self, recordId: str) -> None:
             '''Check whether the name is valid for saving a record under.
             Raises KeyError with a descriptive message if the name is invalid.
             The default implementation defers to `page.db`.
             '''
             self.page.db.checkId(recordId)
 
-        def createElement(self, req, recordId, args, oldElement):
+        def createElement(self,
+                          req: Request,
+                          recordId: str,
+                          args: 'EditPage.Arguments',
+                          oldElement: Record
+                          ) -> Record:
             raise NotImplementedError
 
-        def _initArgs(self, element):
+        def _initArgs(self, element: Record) -> Mapping[str, object]:
             '''Get initial argument values for editing the given record.
             If the user is creating a new record, None is passed.
             Returns a dictionary containing argument names and values
@@ -359,7 +374,7 @@ class EditPage(FabPage['EditPage.Processor', 'EditPage.Arguments'], ABC):
             '''
             raise NotImplementedError
 
-        def _checkState(self):
+        def _checkState(self) -> None:
             '''Checks whether the arguments contain only valid values and
             whether they are consistent with the current contents of the
             database. For example, all references to other records should
@@ -367,12 +382,12 @@ class EditPage(FabPage['EditPage.Processor', 'EditPage.Arguments'], ABC):
             Raises PresentableError if there is a problem.
             '''
 
-        def _validateState(self):
+        def _validateState(self) -> None:
             '''Perform minor changes on arguments to make them valid,
             such as inserting default values for empty entries.
             '''
 
-    def __init__(self):
+    def __init__(self) -> None:
         FabPage.__init__(self)
         self.editPhase = EditPhase(self)
         self.savePhase = SavePhase(self)
