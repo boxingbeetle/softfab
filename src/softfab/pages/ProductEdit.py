@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from softfab.EditPage import EditPage, EditProcessor
+from softfab.EditPage import EditArgs, EditPage, EditProcessor
 from softfab.formlib import checkBox, dropDownList
 from softfab.pageargs import BoolArg, EnumArg
 from softfab.productdeflib import ProductDef, ProductType, productDefDB
@@ -22,7 +22,7 @@ class ProductEdit(EditPage):
     formId = 'product'
     autoName = None
 
-    class Arguments(EditPage.Arguments):
+    class Arguments(EditArgs):
         type = EnumArg(ProductType, ProductType.STRING)
         local = BoolArg()
         combined = BoolArg()

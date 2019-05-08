@@ -3,7 +3,7 @@
 from urllib.parse import urlparse
 import time
 
-from softfab.EditPage import EditPage, EditProcessor
+from softfab.EditPage import EditArgs, EditPage, EditProcessor
 from softfab.FabPage import IconModifier
 from softfab.Page import PresentableError
 from softfab.formlib import DropDownList, RadioTable, checkBox, textInput
@@ -32,7 +32,7 @@ class ProjectEdit(EditPage):
     formId = 'project'
     autoName = 'singleton'
 
-    class Arguments(EditPage.Arguments):
+    class Arguments(EditArgs):
         name = StrArg('')
         targets = StrArg('')
         tagkeys = StrArg('')

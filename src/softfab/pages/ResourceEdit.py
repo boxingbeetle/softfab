@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from softfab.EditPage import EditPage, EditProcessor
+from softfab.EditPage import EditArgs, EditPage, EditProcessor
 from softfab.Page import InvalidRequest, PresentableError
 from softfab.formlib import RadioTable, textInput
 from softfab.pageargs import StrArg
@@ -30,7 +30,7 @@ class ResourceEdit(EditPage):
     formId = 'resource'
     autoName = None
 
-    class Arguments(EditPage.Arguments):
+    class Arguments(EditArgs):
         restype = StrArg('')
         capabilities = StrArg('')
         locator = StrArg('')

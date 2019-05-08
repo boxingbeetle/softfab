@@ -3,7 +3,7 @@
 from typing import Optional
 
 from softfab.EditPage import (
-    EditPage, EditProcessor, EditProcessorBase, SavePhase
+    EditArgs, EditPage, EditProcessor, EditProcessorBase, SavePhase
 )
 from softfab.Page import InvalidRequest
 from softfab.formlib import SingleCheckBoxTable
@@ -65,7 +65,7 @@ class TaskRunnerEdit(EditPage):
     formId = 'runner'
     autoName = None
 
-    class Arguments(EditPage.Arguments):
+    class Arguments(EditArgs):
         capabilities = StrArg('')
         description = StrArg('')
         resetpass = BoolArg()

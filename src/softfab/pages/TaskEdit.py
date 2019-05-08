@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from softfab.EditPage import EditPage, EditProcessor
+from softfab.EditPage import EditArgs, EditPage, EditProcessor
 from softfab.Page import PresentableError
 from softfab.formlib import dropDownList, emptyOption, textArea, textInput
 from softfab.frameworklib import frameworkDB
@@ -38,7 +38,7 @@ class TaskEdit(EditPage):
     autoName = None
 
     class Arguments(
-            EditPage.Arguments, ParamArgsMixin, ResourceRequirementsArgsMixin
+            EditArgs, ParamArgsMixin, ResourceRequirementsArgsMixin
             ):
         title = StrArg('')
         descr = StrArg('')

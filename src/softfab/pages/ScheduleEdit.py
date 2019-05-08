@@ -3,7 +3,7 @@
 from enum import Enum
 from time import localtime
 
-from softfab.EditPage import EditPage, EditProcessor
+from softfab.EditPage import EditArgs, EditPage, EditProcessor
 from softfab.Page import PresentableError
 from softfab.configlib import Config, configDB
 from softfab.formlib import (
@@ -53,7 +53,7 @@ class ScheduleEdit(EditPage):
     formId = 'schedule'
     autoName = None
 
-    class Arguments(EditPage.Arguments):
+    class Arguments(EditArgs):
         selectBy = EnumArg(SelectBy, SelectBy.NAME)
         configId = StrArg('')
         tag = StrArg('')

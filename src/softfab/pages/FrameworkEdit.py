@@ -3,7 +3,7 @@
 from abc import ABC
 from typing import ClassVar
 
-from softfab.EditPage import EditPage, EditProcessor
+from softfab.EditPage import EditArgs, EditPage, EditProcessor
 from softfab.Page import PresentableError
 from softfab.formlib import checkBox, dropDownList, emptyOption, textInput
 from softfab.frameworklib import Framework, frameworkDB
@@ -43,7 +43,7 @@ class FrameworkEdit(EditPage):
     autoName = None
 
     class Arguments(
-            EditPage.Arguments, ParamArgsMixin, ResourceRequirementsArgsMixin
+            EditArgs, ParamArgsMixin, ResourceRequirementsArgsMixin
             ):
         wrapper = StrArg('')
         extractor = BoolArg()

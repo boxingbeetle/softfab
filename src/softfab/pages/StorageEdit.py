@@ -4,7 +4,7 @@ from typing import Optional
 from urllib.parse import urlparse
 
 from softfab.EditPage import (
-    AbstractPhase, EditPage, EditPagePrev, EditProcessor
+    AbstractPhase, EditArgs, EditPage, EditPagePrev, EditProcessor
 )
 from softfab.Page import PresentableError
 from softfab.formlib import checkBox, makeForm, submitButton, textInput
@@ -141,7 +141,7 @@ class StorageEdit(EditPage):
     formId = 'storage'
     autoName = False
 
-    class Arguments(EditPage.Arguments):
+    class Arguments(EditArgs):
         id = StrArg()
         name = StrArg('')
         url = StrArg('')

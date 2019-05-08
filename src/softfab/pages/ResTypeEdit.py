@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from softfab.EditPage import EditPage, EditProcessor
+from softfab.EditPage import EditArgs, EditPage, EditProcessor
 from softfab.formlib import CheckBoxesTable, textInput
 from softfab.pageargs import SetArg, StrArg
 from softfab.restypelib import ResType, resTypeDB
@@ -22,7 +22,7 @@ class ResTypeEdit(EditPage):
     formId = 'restype'
     autoName = None
 
-    class Arguments(EditPage.Arguments):
+    class Arguments(EditArgs):
         type = SetArg()
         description = StrArg('')
 

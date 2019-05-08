@@ -19,6 +19,23 @@ from softfab.utils import abstract
 from softfab.webgui import preserveSpaces, rowManagerScript
 from softfab.xmlgen import XML, XMLContent, xhtml
 
+# TODO: Is having this as an enum really an advantage?
+#       It makes it harder for subclasses to add actions;
+#       is that something we want to encourage or discourage?
+#EditPageActions = Enum('EditPageActions', 'EDIT SAVE SAVE_AS CANCEL')
+#"""Values used on submit buttons."""
+
+EditPagePrev = Enum('EditPagePrev', 'CONFIRM SAVE_AS EDIT')
+"""Names for the previous dialog step."""
+
+class EditArgs(PageArgs):
+    id = StrArg('')
+    newId = StrArg('')
+    prev = EnumArg(EditPagePrev, None)
+    #action = EnumArg(EditPageActions, None)
+    action = StrArg(None)
+    back = StrArg(None)
+
 EditProcT = TypeVar('EditProcT', bound='EditProcessorBase')
 
 class AbstractPhase(Generic[EditProcT]):
@@ -156,16 +173,7 @@ class ConfirmOverwritePhase(AbstractPhase):
             xhtml.p[ actionButtons('save', 'cancel') ]
             ].present(proc=proc)
 
-# TODO: Is having this as an enum really an advantage?
-#       It makes it harder for subclasses to add actions;
-#       is that something we want to encourage or discourage?
-#EditPageActions = Enum('EditPageActions', 'EDIT SAVE SAVE_AS CANCEL')
-#"""Values used on submit buttons."""
-
-EditPagePrev = Enum('EditPagePrev', 'CONFIRM SAVE_AS EDIT')
-"""Names for the previous dialog step."""
-
-class EditProcessorBase(PageProcessor['EditPage.Arguments']):
+class EditProcessorBase(PageProcessor[EditArgs]):
 
     if TYPE_CHECKING:
         page = cast('EditPage', None) # type: ignore
@@ -338,7 +346,7 @@ class EditProcessor(EditProcessorBase):
     def createElement(self,
                       req: Request,
                       recordId: str,
-                      args: 'EditPage.Arguments',
+                      args: EditArgs,
                       oldElement: Record
                       ) -> Record:
         raise NotImplementedError
@@ -360,7 +368,7 @@ class EditProcessor(EditProcessorBase):
         Raises PresentableError if there is a problem.
         '''
 
-class EditPage(FabPage['EditProcessor', 'EditPage.Arguments'], ABC):
+class EditPage(FabPage['EditProcessor', EditArgs], ABC):
     description = abstract # type: ClassVar[str]
     icon = abstract # type: ClassVar[str]
     iconModifier = IconModifier.EDIT
@@ -380,14 +388,6 @@ class EditPage(FabPage['EditProcessor', 'EditPage.Arguments'], ABC):
     # False: record already has been named, this name cannot be changed
     # non-empty string: record has a fixed name, which is this string
     autoName = abstract # type: ClassVar[Union[None, bool, str]]
-
-    class Arguments(PageArgs):
-        id = StrArg('')
-        newId = StrArg('')
-        prev = EnumArg(EditPagePrev, None)
-        #action = EnumArg(EditPageActions, None)
-        action = StrArg(None)
-        back = StrArg(None)
 
     def checkAccess(self, user: User) -> None:
         # Access will be checked later by Processor.
