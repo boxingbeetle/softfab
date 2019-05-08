@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from typing import Mapping, Optional, cast
 from urllib.parse import urlparse
 import time
 
@@ -12,6 +13,7 @@ from softfab.projectlib import (
     EmbeddingPolicy, Project, _projectDB, defaultMaxJobs, getKnownTimezones,
     project
 )
+from softfab.request import Request
 from softfab.setcalc import categorizedLists
 from softfab.webgui import PropertiesTable, Widget, docLink
 from softfab.xmlgen import xhtml
@@ -44,9 +46,14 @@ class ProjectEdit(EditPage):
         embed = EnumArg(EmbeddingPolicy, None)
         embedcustom = StrArg('')
 
-    class Processor(EditProcessor):
+    class Processor(EditProcessor['ProjectEdit.Arguments', Project]):
 
-        def createElement(self, req, recordId, args, oldElement):
+        def createElement(self,
+                          req: Request,
+                          recordId: str,
+                          args: 'ProjectEdit.Arguments',
+                          oldElement: Optional[Project]
+                          ) -> Project:
             assert args is not None
             assert oldElement is not None
             element = Project( {
@@ -59,7 +66,7 @@ class ProjectEdit(EditPage):
                 'reqtag': args.reqtag,
                 'embed': args.embed,
                 'embedcustom': args.embedcustom,
-                'version': oldElement['version'],
+                'version': cast(str, oldElement['version']),
                 } )
             element.setTargets(args.targets.split())
             element.setTagKeys(
@@ -69,7 +76,7 @@ class ProjectEdit(EditPage):
                 )
             return element
 
-        def _initArgs(self, element):
+        def _initArgs(self, element: Optional[Project]) -> Mapping[str, object]:
             if element is None:
                 return {}
             else:
@@ -86,7 +93,7 @@ class ProjectEdit(EditPage):
                     embedcustom = project['embedcustom'],
                     )
 
-        def _checkState(self):
+        def _checkState(self) -> None:
             args = self.args
 
             # Check max job count.

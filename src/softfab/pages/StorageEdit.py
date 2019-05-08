@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Optional
+from typing import Mapping, Optional
 from urllib.parse import urlparse
 
 from softfab.EditPage import (
@@ -9,6 +9,7 @@ from softfab.EditPage import (
 from softfab.Page import PresentableError
 from softfab.formlib import checkBox, makeForm, submitButton, textInput
 from softfab.pageargs import BoolArg, StrArg
+from softfab.request import Request
 from softfab.storagelib import (
     Storage, getStorageIdByName, getStorageIdByURL, storageDB
 )
@@ -147,9 +148,14 @@ class StorageEdit(EditPage):
         url = StrArg('')
         export = BoolArg()
 
-    class Processor(EditProcessor):
+    class Processor(EditProcessor['StorageEdit.Arguments', Storage]):
 
-        def createElement(self, req, recordId, args, oldElement):
+        def createElement(self,
+                          req: Request,
+                          recordId: str,
+                          args: 'StorageEdit.Arguments',
+                          oldElement: Optional[Storage]
+                          ) -> Storage:
             assert oldElement is not None
             return Storage({
                 'id': recordId,
@@ -158,7 +164,7 @@ class StorageEdit(EditPage):
                 'export': args.export
                 }, oldElement)
 
-        def _initArgs(self, element):
+        def _initArgs(self, element: Optional[Storage]) -> Mapping[str, object]:
             if element is None:
                 return {}
             else:
@@ -168,7 +174,7 @@ class StorageEdit(EditPage):
                     export = element.hasExport()
                     )
 
-        def _checkState(self):
+        def _checkState(self) -> None:
             args = self.args
             if args.name == '':
                 raise PresentableError(xhtml.p[
@@ -184,7 +190,7 @@ class StorageEdit(EditPage):
                     'Base URL cannot include a fragment ("#%s").' % url.fragment
                     ])
 
-        def _validateState(self):
+        def _validateState(self) -> None:
             args = self.args
 
             url = args.url

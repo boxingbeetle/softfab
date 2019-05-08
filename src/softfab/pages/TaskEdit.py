@@ -1,16 +1,19 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from typing import Dict, Mapping, Optional
+
 from softfab.EditPage import EditArgs, EditPage, EditProcessor
 from softfab.Page import PresentableError
 from softfab.formlib import dropDownList, emptyOption, textArea, textInput
 from softfab.frameworklib import frameworkDB
 from softfab.pageargs import IntArg, StrArg
-from softfab.paramlib import paramTop
+from softfab.paramlib import ParamMixin, paramTop
 from softfab.paramview import (
     ParamArgsMixin, ParamDefTable, addParamsToElement, checkParamState,
     initParamArgs, validateParamState
 )
 from softfab.projectlib import project
+from softfab.request import Request
 from softfab.resourceview import (
     ResourceRequirementsArgsMixin, addResourceRequirementsToElement,
     checkResourceRequirementsState, initResourceRequirementsArgs,
@@ -46,9 +49,14 @@ class TaskEdit(EditPage):
         timeout = IntArg(0)
         requirements = StrArg('')
 
-    class Processor(EditProcessor):
+    class Processor(EditProcessor['TaskEdit.Arguments', TaskDef]):
 
-        def createElement(self, req, recordId, args, oldElement):
+        def createElement(self,
+                          req: Request,
+                          recordId: str,
+                          args: 'TaskEdit.Arguments',
+                          oldElement: Optional[TaskDef]
+                          ) -> TaskDef:
             element = TaskDef.create(
                 name = recordId,
                 parent = args.framework or None,
@@ -62,14 +70,14 @@ class TaskEdit(EditPage):
             addResourceRequirementsToElement(element, args)
             return element
 
-        def _initArgs(self, element):
+        def _initArgs(self, element: Optional[TaskDef]) -> Mapping[str, object]:
             if self.args.framework != '':
                 # This is a scripted form submission from the framework
                 # drop-down list; don't reload arguments.
                 return {}
 
             if element is None:
-                overrides = {}
+                overrides = {} # type: Dict[str, object]
             else:
                 overrides = dict(
                     title = element.getTitle(),
@@ -82,7 +90,7 @@ class TaskEdit(EditPage):
             overrides.update(initResourceRequirementsArgs(element))
             return overrides
 
-        def _checkState(self):
+        def _checkState(self) -> None:
             args = self.args
 
             framework = args.framework
@@ -102,7 +110,7 @@ class TaskEdit(EditPage):
             checkParamState(args, parent)
             checkResourceRequirementsState(args)
 
-        def _validateState(self):
+        def _validateState(self) -> None:
             args = self.args
 
             # TODO: It would be better to do things like this in the
@@ -110,7 +118,7 @@ class TaskEdit(EditPage):
             # pylint: disable=attribute-defined-outside-init
             framework = args.framework
             if framework == '':
-                self.parent = paramTop
+                self.parent = paramTop # type: ParamMixin
             else:
                 try:
                     self.parent = frameworkDB[framework]

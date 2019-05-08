@@ -1,8 +1,11 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from typing import Mapping, Optional
+
 from softfab.EditPage import EditArgs, EditPage, EditProcessor
 from softfab.formlib import CheckBoxesTable, textInput
 from softfab.pageargs import SetArg, StrArg
+from softfab.request import Request
 from softfab.restypelib import ResType, resTypeDB
 from softfab.webgui import Column, PropertiesTable, cell
 
@@ -26,13 +29,18 @@ class ResTypeEdit(EditPage):
         type = SetArg()
         description = StrArg('')
 
-    class Processor(EditProcessor):
+    class Processor(EditProcessor['ResTypeEdit.Arguments', ResType]):
 
-        def checkId(self, recordId):
+        def checkId(self, recordId: str) -> None:
             if recordId.startswith('sf.'):
                 raise KeyError('names starting with "sf." are reserved')
 
-        def createElement(self, req, recordId, args, oldElement):
+        def createElement(self,
+                          req: Request,
+                          recordId: str,
+                          args: 'ResTypeEdit.Arguments',
+                          oldElement: Optional[ResType]
+                          ) -> ResType:
             return ResType.create(
                 name = recordId,
                 pertask = 'pertask' in args.type,
@@ -40,7 +48,7 @@ class ResTypeEdit(EditPage):
                 description = args.description
                 )
 
-        def _initArgs(self, element):
+        def _initArgs(self, element: Optional[ResType]) -> Mapping[str, object]:
             if element is None:
                 return { 'type': ('pertask',) }
             else:

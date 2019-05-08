@@ -1,19 +1,20 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from abc import ABC
-from typing import ClassVar
+from typing import AbstractSet, ClassVar, Dict, Mapping, Optional, cast
 
 from softfab.EditPage import EditArgs, EditPage, EditProcessor
 from softfab.Page import PresentableError
 from softfab.formlib import checkBox, dropDownList, emptyOption, textInput
 from softfab.frameworklib import Framework, frameworkDB
-from softfab.pageargs import BoolArg, SetArg, StrArg
+from softfab.pageargs import BoolArg, DictArgInstance, SetArg, StrArg
 from softfab.paramlib import paramTop
 from softfab.paramview import (
     ParamArgsMixin, ParamDefTable, addParamsToElement, checkParamState,
     initParamArgs, validateParamState
 )
 from softfab.productdeflib import productDefDB
+from softfab.request import Request
 from softfab.resourceview import (
     ResourceRequirementsArgsMixin, addResourceRequirementsToElement,
     checkResourceRequirementsState, initResourceRequirementsArgs,
@@ -50,9 +51,14 @@ class FrameworkEdit(EditPage):
         input = SetArg()
         output = SetArg()
 
-    class Processor(EditProcessor):
+    class Processor(EditProcessor['FrameworkEdit.Arguments', Framework]):
 
-        def createElement(self, req, recordId, args, oldElement):
+        def createElement(self,
+                          req: Request,
+                          recordId: str,
+                          args: 'FrameworkEdit.Arguments',
+                          oldElement: Optional[Framework]
+                          ) -> Framework:
             inputs = set(args.input)
             inputs.discard('')
             outputs = set(args.output)
@@ -64,9 +70,11 @@ class FrameworkEdit(EditPage):
             addResourceRequirementsToElement(element, args)
             return element
 
-        def _initArgs(self, element):
+        def _initArgs(self,
+                      element: Optional[Framework]
+                      ) -> Mapping[str, object]:
             if element is None:
-                overrides = {}
+                overrides = {} # type: Dict[str, object]
             else:
                 params = element.getParametersSelf()
                 overrides = dict(
@@ -79,17 +87,17 @@ class FrameworkEdit(EditPage):
             overrides.update(initResourceRequirementsArgs(element))
             return overrides
 
-        def _checkState(self):
+        def _checkState(self) -> None:
             """Check against making parameters final which are overridden in
             existing task defs.
             """
             args = self.args
 
             # TODO: Generalize this when we support a variable number of levels.
-            for index, name in args.params.items():
+            for index, name in cast(DictArgInstance[str], args.params).items():
                 if name == '':
                     continue
-                final = index in args.final
+                final = index in cast(DictArgInstance[bool], args.final)
                 if final:
                     for task in taskDefDB:
                         if task['parent'] == args.id and \
@@ -110,11 +118,16 @@ class FrameworkEdit(EditPage):
             checkParamState(args, paramTop)
             checkResourceRequirementsState(args)
 
-        def _validateState(self):
+        def _validateState(self) -> None:
             args = self.args
+            # TODO: Improve type annotations in pageargs so we don't have
+            #       to typecast here.
+            #       Problem is that CollectionArg sets the value type as
+            #       Collection[ValueT], while for SetArg we want to know
+            #       that we have sets specifically.
             self.args = args = args.override(
-                input = args.input - { '' },
-                output = args.output - { '' },
+                input = cast(AbstractSet[str], args.input) - { '' },
+                output = cast(AbstractSet[str], args.output) - { '' },
                 )
             validateParamState(self, paramTop)
             validateResourceRequirementsState(self)

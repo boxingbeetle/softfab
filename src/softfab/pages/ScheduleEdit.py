@@ -2,6 +2,7 @@
 
 from enum import Enum
 from time import localtime
+from typing import Dict, Mapping, Optional
 
 from softfab.EditPage import EditArgs, EditPage, EditProcessor
 from softfab.Page import PresentableError
@@ -12,6 +13,7 @@ from softfab.formlib import (
 )
 from softfab.pageargs import BoolArg, EnumArg, IntArg, SetArg, StrArg
 from softfab.projectlib import project
+from softfab.request import Request
 from softfab.schedulelib import (
     ScheduleRepeat, Scheduled, asap, endOfTime, scheduleDB
 )
@@ -66,9 +68,9 @@ class ScheduleEdit(EditPage):
         cmtrigger = StrArg('')
         comment = StrArg('')
 
-    class Processor(EditProcessor):
+    class Processor(EditProcessor['ScheduleEdit.Arguments', Scheduled]):
 
-        def _checkState(self):
+        def _checkState(self) -> None:
             args = self.args
 
             if args.selectBy is SelectBy.NAME:
@@ -88,7 +90,12 @@ class ScheduleEdit(EditPage):
                     % args.minDelay
                     ])
 
-        def createElement(self, req, recordId, args, oldElement):
+        def createElement(self,
+                          req: Request,
+                          recordId: str,
+                          args: 'ScheduleEdit.Arguments',
+                          oldElement: Optional[Scheduled]
+                          ) -> Scheduled:
             try:
                 startTime = stringToTime(args.startTime)
             except ValueError:
@@ -133,11 +140,13 @@ class ScheduleEdit(EditPage):
                         element.setTrigger()
             return element
 
-        def _initArgs(self, element):
+        def _initArgs(self,
+                      element: Optional[Scheduled]
+                      ) -> Mapping[str, object]:
             if element is None:
                 return {}
             else:
-                overrides = {}
+                overrides = {} # type: Dict[str, object]
                 configId = element['configId']
                 if configId is None:
                     overrides['selectBy'] = SelectBy.TAG

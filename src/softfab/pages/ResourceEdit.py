@@ -1,9 +1,12 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from typing import Mapping, Optional
+
 from softfab.EditPage import EditArgs, EditPage, EditProcessor
 from softfab.Page import InvalidRequest, PresentableError
 from softfab.formlib import RadioTable, textInput
 from softfab.pageargs import StrArg
+from softfab.request import Request
 from softfab.resourcelib import Resource, resourceDB
 from softfab.resourceview import CapabilitiesPanel, CommentPanel
 from softfab.restypelib import resTypeDB, taskRunnerResourceTypeName
@@ -36,9 +39,14 @@ class ResourceEdit(EditPage):
         locator = StrArg('')
         description = StrArg('')
 
-    class Processor(EditProcessor):
+    class Processor(EditProcessor['ResourceEdit.Arguments', Resource]):
 
-        def createElement(self, req, recordId, args, oldElement):
+        def createElement(self,
+                          req: Request,
+                          recordId: str,
+                          args: 'ResourceEdit.Arguments',
+                          oldElement: Optional[Resource]
+                          ) -> Resource:
             element = Resource.create(
                 recordId,
                 args.restype,
@@ -55,13 +63,15 @@ class ResourceEdit(EditPage):
                 element.copyState(oldElement)
             return element
 
-        def _initArgs(self, element):
+        def _initArgs(self,
+                      element: Optional[Resource]
+                      ) -> Mapping[str, object]:
             if element is None:
                 return {}
             elif isinstance(element, Resource):
                 return dict(
                     restype = element['type'],
-                    capabilities = ' '.join(element['capabilities']),
+                    capabilities = ' '.join(element.capabilities),
                     description = element['description'],
                     locator = element['locator']
                     )
@@ -70,7 +80,7 @@ class ResourceEdit(EditPage):
                     'Resource "%s" is of a pre-defined type' % element.getId()
                     )
 
-        def _checkState(self):
+        def _checkState(self) -> None:
             if not self.args.restype:
                 raise PresentableError(xhtml.p[
                     'No resource type was selected.'

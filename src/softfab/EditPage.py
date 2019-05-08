@@ -36,6 +36,7 @@ class EditArgs(PageArgs):
     action = StrArg(None)
     back = StrArg(None)
 
+EditArgsT = TypeVar('EditArgsT', bound='EditArgs')
 EditProcT = TypeVar('EditProcT', bound='EditProcessorBase')
 
 class AbstractPhase(Generic[EditProcT]):
@@ -79,11 +80,11 @@ class EditPhase(AbstractPhase):
             xhtml.p[ actionButtons(*buttons) ]
             ].present(proc=proc)
 
-class SavePhase(AbstractPhase['EditProcessor']):
+class SavePhase(AbstractPhase['EditProcessor[EditArgsT, Record]']):
     '''Commit edited element to the database.
     '''
 
-    def process(self, proc: 'EditProcessor') -> None:
+    def process(self, proc: 'EditProcessor[EditArgsT, Record]') -> None:
         req = proc.req
         page = self.page
         args = proc.args
@@ -130,7 +131,9 @@ class SavePhase(AbstractPhase['EditProcessor']):
             ) -> None:
         self.page.db.update(element)
 
-    def presentContent(self, proc: 'EditProcessor') -> XMLContent:
+    def presentContent(self,
+                       proc: 'EditProcessor[EditArgsT, Record]'
+                       ) -> XMLContent:
         page = self.page
         if page.autoName:
             elementId = None
@@ -173,7 +176,7 @@ class ConfirmOverwritePhase(AbstractPhase):
             xhtml.p[ actionButtons('save', 'cancel') ]
             ].present(proc=proc)
 
-class EditProcessorBase(PageProcessor[EditArgs]):
+class EditProcessorBase(PageProcessor[EditArgsT], Generic[EditArgsT, Record]):
 
     if TYPE_CHECKING:
         page = cast('EditPage', None) # type: ignore
@@ -231,7 +234,7 @@ class EditProcessorBase(PageProcessor[EditArgs]):
         such as inserting default values for empty entries.
         '''
 
-class EditProcessor(EditProcessorBase):
+class EditProcessor(EditProcessorBase[EditArgsT, Record]):
 
     def processState(self, oldElement: Optional[Record]) -> None:
         # Initialize args on first arrival to the edit page.
@@ -346,8 +349,8 @@ class EditProcessor(EditProcessorBase):
     def createElement(self,
                       req: Request,
                       recordId: str,
-                      args: EditArgs,
-                      oldElement: Record
+                      args: EditArgsT,
+                      oldElement: Optional[Record]
                       ) -> Record:
         raise NotImplementedError
 
@@ -368,7 +371,7 @@ class EditProcessor(EditProcessorBase):
         Raises PresentableError if there is a problem.
         '''
 
-class EditPage(FabPage['EditProcessor', EditArgs], ABC):
+class EditPage(FabPage[EditProcessor[EditArgsT, Record], EditArgsT], ABC):
     description = abstract # type: ClassVar[str]
     icon = abstract # type: ClassVar[str]
     iconModifier = IconModifier.EDIT
@@ -393,7 +396,9 @@ class EditPage(FabPage['EditProcessor', EditArgs], ABC):
         # Access will be checked later by Processor.
         pass
 
-    def getFormContent(self, proc: EditProcessorBase) -> XMLContent:
+    def getFormContent(self,
+                       proc: EditProcessorBase[EditArgsT, Record]
+                       ) -> XMLContent:
         """Returns the text and controls contained in the form.
         It will be presented later as part of the form presentation.
         """
@@ -402,22 +407,29 @@ class EditPage(FabPage['EditProcessor', EditArgs], ABC):
     def __init__(self) -> None:
         FabPage.__init__(self)
         self.editPhase = EditPhase(self)
-        self.savePhase = SavePhase(self)
+        self.savePhase = SavePhase[EditArgsT, Record](self)
         self.saveAsPhase = SaveAsPhase(self)
         self.confirmOverwritePhase = ConfirmOverwritePhase(self)
 
-    def pageTitle(self, proc: EditProcessor) -> str:
+    def pageTitle(self, proc: EditProcessor[EditArgsT, Record]) -> str:
         return 'Edit ' + self.elemTitle
 
-    def presentHeadParts(self, proc: EditProcessor) -> XMLContent:
+    def presentHeadParts(self,
+                         proc: EditProcessor[EditArgsT, Record]
+                         ) -> XMLContent:
         yield super().presentHeadParts(proc)
         if self.useScript:
             yield rowManagerScript.present(proc=proc)
 
-    def presentContent(self, proc: EditProcessorBase) -> XMLContent:
+    def presentContent(self,
+                       proc: EditProcessorBase[EditArgsT, Record]
+                       ) -> XMLContent:
         return proc.phase.presentContent(proc)
 
-    def presentError(self, proc: EditProcessor, message: XML) -> XMLContent:
+    def presentError(self,
+                     proc: EditProcessor[EditArgsT, Record],
+                     message: XML
+                     ) -> XMLContent:
         yield message
         if proc.showBackButton:
             yield makeForm(args = proc.args)[

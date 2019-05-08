@@ -1,9 +1,12 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from typing import Mapping, Optional
+
 from softfab.EditPage import EditArgs, EditPage, EditProcessor
 from softfab.formlib import checkBox, dropDownList
 from softfab.pageargs import BoolArg, EnumArg
 from softfab.productdeflib import ProductDef, ProductType, productDefDB
+from softfab.request import Request
 from softfab.webgui import PropertiesTable, docLink
 
 
@@ -27,14 +30,21 @@ class ProductEdit(EditPage):
         local = BoolArg()
         combined = BoolArg()
 
-    class Processor(EditProcessor):
+    class Processor(EditProcessor['ProductEdit.Arguments', ProductDef]):
 
-        def createElement(self, req, recordId, args, oldElement):
+        def createElement(self,
+                          req: Request,
+                          recordId: str,
+                          args: 'ProductEdit.Arguments',
+                          oldElement: Optional[ProductDef]
+                          ) -> ProductDef:
             return ProductDef.create(
                 recordId, args.type, args.local, args.combined
                 )
 
-        def _initArgs(self, element):
+        def _initArgs(self,
+                      element: Optional[ProductDef]
+                      ) -> Mapping[str, object]:
             if element is None:
                 return {}
             else:

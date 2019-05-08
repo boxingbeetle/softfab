@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Optional
+from typing import Mapping, Optional
 
 from softfab.EditPage import (
     EditArgs, EditPage, EditProcessor, EditProcessorBase, SavePhase
@@ -8,6 +8,7 @@ from softfab.EditPage import (
 from softfab.Page import InvalidRequest
 from softfab.formlib import SingleCheckBoxTable
 from softfab.pageargs import BoolArg, StrArg
+from softfab.request import Request
 from softfab.resourcelib import TaskRunner, resourceDB
 from softfab.resourceview import CapabilitiesPanel, CommentPanel
 from softfab.webgui import Table, vgroup
@@ -70,9 +71,14 @@ class TaskRunnerEdit(EditPage):
         description = StrArg('')
         resetpass = BoolArg()
 
-    class Processor(EditProcessor):
+    class Processor(EditProcessor['TaskRunnerEdit.Arguments', TaskRunner]):
 
-        def createElement(self, req, recordId, args, oldElement):
+        def createElement(self,
+                          req: Request,
+                          recordId: str,
+                          args: 'TaskRunnerEdit.Arguments',
+                          oldElement: Optional[TaskRunner]
+                          ) -> TaskRunner:
             element = TaskRunner.create(
                 recordId,
                 args.description,
@@ -87,12 +93,14 @@ class TaskRunnerEdit(EditPage):
                 element.copyState(oldElement)
             return element
 
-        def _initArgs(self, element):
+        def _initArgs(self,
+                      element: Optional[TaskRunner]
+                      ) -> Mapping[str, object]:
             if element is None:
                 return {}
             elif isinstance(element, TaskRunner):
                 return dict(
-                    capabilities = ' '.join(element['capabilities']),
+                    capabilities = ' '.join(element.capabilities),
                     description = element['description']
                     )
             else:
