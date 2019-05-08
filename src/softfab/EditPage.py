@@ -3,7 +3,7 @@
 from abc import ABC
 from enum import Enum
 from typing import (
-    TYPE_CHECKING, ClassVar, Generic, Mapping, Optional, TypeVar, Union, cast
+    TYPE_CHECKING, ClassVar, Generic, Mapping, Optional, TypeVar, Union
 )
 
 from softfab.FabPage import FabPage, IconModifier
@@ -58,7 +58,7 @@ class AbstractPhase(Generic[EditProcT]):
         '''
         raise NotImplementedError
 
-class EditPhase(AbstractPhase['EditProcessorBase[EditArgsT, Record]'],
+class EditPhase(AbstractPhase['EditProcessor[EditArgsT, Record]'],
                 Generic[EditArgsT, Record]):
     '''First and main phase: actual editing of the record.
     '''
@@ -188,9 +188,11 @@ class ConfirmOverwritePhase(AbstractPhase['EditProcessor[EditArgsT, Record]'],
 class EditProcessorBase(PageProcessor[EditArgsT], Generic[EditArgsT, Record]):
 
     if TYPE_CHECKING:
-        page = cast('EditPage', None) # type: ignore
+        @property
+        def page(self) -> 'EditPage[EditArgsT, Record]': # type: ignore
+            ...
 
-    def process(self, req: Request, user: User) -> None:
+    def process(self, req: Request[EditArgsT], user: User) -> None:
         # pylint: disable=attribute-defined-outside-init
         checkPrivilege(user, self.page.db.privilegeObject + '/a')
 
@@ -202,6 +204,7 @@ class EditProcessorBase(PageProcessor[EditArgsT], Generic[EditArgsT, Record]):
         # Determine record ID.
         autoName = self.page.autoName
         if autoName:
+            assert isinstance(autoName, str), autoName
             recordId = autoName
             if self.args.id:
                 raise InvalidRequest('Value provided for fixed ID')
@@ -236,7 +239,7 @@ class EditProcessorBase(PageProcessor[EditArgsT], Generic[EditArgsT, Record]):
         raise NotImplementedError
 
     def determinePhase(self: EditProcT,
-                       req: Request
+                       req: Request[EditArgsT]
                        ) -> AbstractPhase[EditProcT]:
         raise NotImplementedError
 
@@ -246,6 +249,9 @@ class EditProcessorBase(PageProcessor[EditArgsT], Generic[EditArgsT, Record]):
         '''
 
 class EditProcessor(EditProcessorBase[EditArgsT, Record]):
+
+    if TYPE_CHECKING:
+        replace = True
 
     def processState(self, oldElement: Optional[Record]) -> None:
         # Initialize args on first arrival to the edit page.
@@ -270,7 +276,7 @@ class EditProcessor(EditProcessorBase[EditArgsT, Record]):
                 raise
 
     def determinePhase(self,
-                       req: Request
+                       req: Request[EditArgsT]
                        ) -> AbstractPhase['EditProcessor[EditArgsT, Record]']:
         # pylint: disable=attribute-defined-outside-init
         page = self.page
@@ -392,7 +398,7 @@ class EditPage(FabPage[EditProcessor[EditArgsT, Record], EditArgsT], ABC):
     #       Pick one term and stick with it.
     elemTitle = abstract # type: ClassVar[str]
     elemName = abstract # type: ClassVar[str]
-    db = abstract # type: ClassVar[Database]
+    db = abstract # type: Database[Record]
     privDenyText = abstract # type: ClassVar[str]
     useScript = abstract # type: ClassVar[bool]
     formId = abstract # type: ClassVar[str]
