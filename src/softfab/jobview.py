@@ -19,7 +19,7 @@ from softfab.sortedqueue import SortedQueue
 from softfab.taskview import getTaskStatus
 from softfab.userview import OwnerColumn
 from softfab.webgui import Panel, cell
-from softfab.xmlgen import xhtml
+from softfab.xmlgen import XMLContent, xhtml
 
 # High priority status codes are at the end of the list.
 _resultList = (
@@ -212,7 +212,7 @@ class CommentPanel(Panel):
                 presentation
                 )
 
-    def presentContent(self, **kwargs):
+    def presentContent(self, **kwargs: object) -> XMLContent:
         return xhtml.br.join(self.lines)
 
 class _JobOverviewPresenter:

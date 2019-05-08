@@ -24,7 +24,7 @@ from softfab.webgui import (
     Column, Panel, Script, Table, addRemoveStyleScript, docLink, groupItem,
     vgroup
 )
-from softfab.xmlgen import txt, xhtml
+from softfab.xmlgen import XMLContent, txt, xhtml
 
 SelectBy = Enum('SelectBy', 'NAME TAG')
 '''Mechanism by which a schedule selects the configurations it will start.
@@ -284,7 +284,7 @@ class CMTriggerPanel(Panel):
     widgetId = 'cmTriggerPanel'
     label = 'CM Trigger Filters'
 
-    def presentContent(self, **kwargs):
+    def presentContent(self, **kwargs: object) -> XMLContent:
         yield textArea(
             name = 'cmtrigger', cols = 40, rows = 3,
             style = 'width:100%', spellcheck = 'false'
