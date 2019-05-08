@@ -3,7 +3,7 @@
 from abc import ABC
 from typing import ClassVar
 
-from softfab.EditPage import EditPage
+from softfab.EditPage import EditPage, EditProcessor
 from softfab.Page import PresentableError
 from softfab.formlib import checkBox, dropDownList, emptyOption, textInput
 from softfab.frameworklib import Framework, frameworkDB
@@ -50,7 +50,7 @@ class FrameworkEdit(EditPage):
         input = SetArg()
         output = SetArg()
 
-    class Processor(EditPage.Processor):
+    class Processor(EditProcessor):
 
         def createElement(self, req, recordId, args, oldElement):
             inputs = set(args.input)

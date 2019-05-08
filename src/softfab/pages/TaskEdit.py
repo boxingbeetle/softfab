@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from softfab.EditPage import EditPage
+from softfab.EditPage import EditPage, EditProcessor
 from softfab.Page import PresentableError
 from softfab.formlib import dropDownList, emptyOption, textArea, textInput
 from softfab.frameworklib import frameworkDB
@@ -46,7 +46,7 @@ class TaskEdit(EditPage):
         timeout = IntArg(0)
         requirements = StrArg('')
 
-    class Processor(EditPage.Processor):
+    class Processor(EditProcessor):
 
         def createElement(self, req, recordId, args, oldElement):
             element = TaskDef.create(

@@ -3,7 +3,7 @@
 from enum import Enum
 from time import localtime
 
-from softfab.EditPage import EditPage
+from softfab.EditPage import EditPage, EditProcessor
 from softfab.Page import PresentableError
 from softfab.configlib import Config, configDB
 from softfab.formlib import (
@@ -66,7 +66,7 @@ class ScheduleEdit(EditPage):
         cmtrigger = StrArg('')
         comment = StrArg('')
 
-    class Processor(EditPage.Processor):
+    class Processor(EditProcessor):
 
         def _checkState(self):
             args = self.args

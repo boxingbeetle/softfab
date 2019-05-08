@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from softfab.EditPage import EditPage
+from softfab.EditPage import EditPage, EditProcessor
 from softfab.formlib import CheckBoxesTable, textInput
 from softfab.pageargs import SetArg, StrArg
 from softfab.restypelib import ResType, resTypeDB
@@ -26,7 +26,7 @@ class ResTypeEdit(EditPage):
         type = SetArg()
         description = StrArg('')
 
-    class Processor(EditPage.Processor):
+    class Processor(EditProcessor):
 
         def checkId(self, recordId):
             if recordId.startswith('sf.'):

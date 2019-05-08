@@ -3,7 +3,9 @@
 from typing import Optional
 from urllib.parse import urlparse
 
-from softfab.EditPage import AbstractPhase, EditPage, EditPagePrev
+from softfab.EditPage import (
+    AbstractPhase, EditPage, EditPagePrev, EditProcessor
+)
 from softfab.Page import PresentableError
 from softfab.formlib import checkBox, makeForm, submitButton, textInput
 from softfab.pageargs import BoolArg, StrArg
@@ -63,7 +65,7 @@ class MergePhase(AbstractPhase):
                     ])
             newElement.takeOver(oldElement)
 
-    def presentContent(self, proc: EditPage.Processor) -> XMLContent:
+    def presentContent(self, proc: EditProcessor) -> XMLContent:
         if proc.args.newId != proc.args.id:
             return (
                 xhtml.p[ 'The storages have been merged.' ],
@@ -145,7 +147,7 @@ class StorageEdit(EditPage):
         url = StrArg('')
         export = BoolArg()
 
-    class Processor(EditPage.Processor):
+    class Processor(EditProcessor):
 
         def createElement(self, req, recordId, args, oldElement):
             assert oldElement is not None

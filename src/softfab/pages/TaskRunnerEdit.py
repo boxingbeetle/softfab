@@ -2,7 +2,7 @@
 
 from typing import Optional
 
-from softfab.EditPage import EditPage, SavePhase
+from softfab.EditPage import EditPage, EditProcessor, SavePhase
 from softfab.Page import InvalidRequest
 from softfab.formlib import SingleCheckBoxTable
 from softfab.pageargs import BoolArg, StrArg
@@ -44,7 +44,7 @@ class TaskRunnerSavePhase(SavePhase):
         else:
             proc.password = None
 
-    def presentContent(self, proc: 'EditPage.Processor') -> XMLContent:
+    def presentContent(self, proc: 'EditProcessor') -> XMLContent:
         yield TokenTable.instance.present(proc=proc)
         yield super().presentContent(proc)
 
@@ -68,7 +68,7 @@ class TaskRunnerEdit(EditPage):
         description = StrArg('')
         resetpass = BoolArg()
 
-    class Processor(EditPage.Processor):
+    class Processor(EditProcessor):
 
         def createElement(self, req, recordId, args, oldElement):
             element = TaskRunner.create(
@@ -102,7 +102,7 @@ class TaskRunnerEdit(EditPage):
         super().__init__()
         self.savePhase = TaskRunnerSavePhase(self)
 
-    def getFormContent(self, proc: Processor) -> XMLContent:
+    def getFormContent(self, proc: EditProcessor) -> XMLContent:
         args = proc.args
         if args.id != '':
             yield xhtml.h2[ 'Task Runner: ', xhtml.b[ args.id ]]

@@ -3,7 +3,7 @@
 from urllib.parse import urlparse
 import time
 
-from softfab.EditPage import EditPage
+from softfab.EditPage import EditPage, EditProcessor
 from softfab.FabPage import IconModifier
 from softfab.Page import PresentableError
 from softfab.formlib import DropDownList, RadioTable, checkBox, textInput
@@ -44,7 +44,7 @@ class ProjectEdit(EditPage):
         embed = EnumArg(EmbeddingPolicy, None)
         embedcustom = StrArg('')
 
-    class Processor(EditPage.Processor):
+    class Processor(EditProcessor):
 
         def createElement(self, req, recordId, args, oldElement):
             assert args is not None
