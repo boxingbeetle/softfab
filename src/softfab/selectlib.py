@@ -64,14 +64,15 @@ class SelectableABC(Selectable, ABC):
         # Note: the value must be already in its canonical form
         return cvalue in self.__tags.get(key, ())
 
-    def setTag(self, key: str, values: Sequence[str]) -> None:
+    def setTag(self, key: str, values: Iterable[str]) -> None:
         '''Sets the value set for the given key.
         '''
-        if values:
-            self.__tags[key] = dict(
-                self.cache.toCanonical(key, value)
-                for value in values
-                )
+        canonicalValues = dict(
+            self.cache.toCanonical(key, value)
+            for value in values
+            )
+        if canonicalValues:
+            self.__tags[key] = canonicalValues
         elif key in self.__tags:
             del self.__tags[key]
 
