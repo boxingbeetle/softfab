@@ -58,11 +58,14 @@ class AbstractPhase(Generic[EditProcT]):
         '''
         raise NotImplementedError
 
-class EditPhase(AbstractPhase):
+class EditPhase(AbstractPhase['EditProcessorBase[EditArgsT, Record]'],
+                Generic[EditArgsT, Record]):
     '''First and main phase: actual editing of the record.
     '''
 
-    def presentContent(self, proc: EditProcT) -> XMLContent:
+    def presentContent(self,
+                       proc: 'EditProcessorBase[EditArgsT, Record]'
+                       ) -> XMLContent:
         page = self.page
 
         buttons = ['save']
@@ -80,7 +83,8 @@ class EditPhase(AbstractPhase):
             xhtml.p[ actionButtons(*buttons) ]
             ].present(proc=proc)
 
-class SavePhase(AbstractPhase['EditProcessor[EditArgsT, Record]']):
+class SavePhase(AbstractPhase['EditProcessor[EditArgsT, Record]'],
+                Generic[EditArgsT, Record]):
     '''Commit edited element to the database.
     '''
 
@@ -119,13 +123,13 @@ class SavePhase(AbstractPhase['EditProcessor[EditArgsT, Record]']):
             self.updateRecord(proc, element)
 
     def addRecord(self,
-            proc: EditProcT, # pylint: disable=unused-argument
+            proc: 'EditProcessor[EditArgsT, Record]', # pylint: disable=unused-argument
             element: Record
             ) -> None:
         self.page.db.add(element)
 
     def updateRecord(self,
-            proc: EditProcT, # pylint: disable=unused-argument
+            proc: 'EditProcessor[EditArgsT, Record]', # pylint: disable=unused-argument
             element: Record
             ) -> None:
         self.page.db.update(element)
@@ -145,11 +149,14 @@ class SavePhase(AbstractPhase['EditProcessor[EditArgsT, Record]']):
             page.backToParent(proc.req)
             )
 
-class SaveAsPhase(AbstractPhase):
+class SaveAsPhase(AbstractPhase['EditProcessor[EditArgsT, Record]'],
+                  Generic[EditArgsT, Record]):
     '''Ask for a name for the record.
     '''
 
-    def presentContent(self, proc: EditProcT) -> XMLContent:
+    def presentContent(self,
+                       proc: 'EditProcessor[EditArgsT, Record]'
+                       ) -> XMLContent:
         page = self.page
         args = proc.args
         yield xhtml.h2[ 'Save As' ]
@@ -159,11 +166,14 @@ class SaveAsPhase(AbstractPhase):
             xhtml.p[ actionButtons('save', 'cancel') ],
             ].present(proc=proc)
 
-class ConfirmOverwritePhase(AbstractPhase):
+class ConfirmOverwritePhase(AbstractPhase['EditProcessor[EditArgsT, Record]'],
+                            Generic[EditArgsT, Record]):
     '''Asks the user for confirmation before overwriting an existing record.
     '''
 
-    def presentContent(self, proc: EditProcT) -> XMLContent:
+    def presentContent(self,
+                       proc: 'EditProcessor[EditArgsT, Record]'
+                       ) -> XMLContent:
         page = self.page
         args = proc.args
         yield xhtml.p[
@@ -225,7 +235,9 @@ class EditProcessorBase(PageProcessor[EditArgsT], Generic[EditArgsT, Record]):
         """
         raise NotImplementedError
 
-    def determinePhase(self, req: Request) -> AbstractPhase:
+    def determinePhase(self: EditProcT,
+                       req: Request
+                       ) -> AbstractPhase[EditProcT]:
         raise NotImplementedError
 
     def _validateState(self) -> None:
@@ -257,7 +269,9 @@ class EditProcessor(EditProcessorBase[EditArgsT, Record]):
                 self.args = self.args.override(action = 'edit')
                 raise
 
-    def determinePhase(self, req: Request) -> AbstractPhase:
+    def determinePhase(self,
+                       req: Request
+                       ) -> AbstractPhase['EditProcessor[EditArgsT, Record]']:
         # pylint: disable=attribute-defined-outside-init
         page = self.page
         args = self.args
@@ -404,10 +418,11 @@ class EditPage(FabPage[EditProcessor[EditArgsT, Record], EditArgsT], ABC):
 
     def __init__(self) -> None:
         FabPage.__init__(self)
-        self.editPhase = EditPhase(self)
+        self.editPhase = EditPhase[EditArgsT, Record](self)
         self.savePhase = SavePhase[EditArgsT, Record](self)
-        self.saveAsPhase = SaveAsPhase(self)
-        self.confirmOverwritePhase = ConfirmOverwritePhase(self)
+        self.saveAsPhase = SaveAsPhase[EditArgsT, Record](self)
+        self.confirmOverwritePhase = \
+                ConfirmOverwritePhase[EditArgsT, Record](self)
 
     def pageTitle(self, proc: EditProcessor[EditArgsT, Record]) -> str:
         return 'Edit ' + self.elemTitle

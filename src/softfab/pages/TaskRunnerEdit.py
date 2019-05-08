@@ -29,25 +29,36 @@ class TokenTable(Table):
         if password is not None:
             yield 'Access token password: ', xhtml.code[password]
 
-class TaskRunnerSavePhase(SavePhase):
+class TaskRunnerSavePhase(SavePhase['TaskRunnerEdit.Arguments', TaskRunner]):
 
-    def addRecord(self, proc, element):
+    def addRecord(self,
+            proc: EditProcessor['TaskRunnerEdit.Arguments', TaskRunner],
+            element: TaskRunner
+            ) -> None:
         super().addRecord(proc, element)
         self.resetTokenPassword(proc, element)
 
-    def updateRecord(self, proc, element):
+    def updateRecord(self,
+            proc: EditProcessor['TaskRunnerEdit.Arguments', TaskRunner],
+            element: TaskRunner
+            ) -> None:
         super().updateRecord(proc, element)
         self.resetTokenPassword(proc, element)
 
-    def resetTokenPassword(self, proc, element):
+    def resetTokenPassword(self,
+            proc: EditProcessor['TaskRunnerEdit.Arguments', TaskRunner],
+            element: TaskRunner
+            ) -> None:
         token = element.token
-        proc.tokenId = token.getId()
+        proc.tokenId = token.getId() # type: ignore
         if proc.args.resetpass:
-            proc.password = token.resetPassword()
+            proc.password = token.resetPassword() # type: ignore
         else:
-            proc.password = None
+            proc.password = None # type: ignore
 
-    def presentContent(self, proc: 'EditProcessor') -> XMLContent:
+    def presentContent(self,
+            proc: EditProcessor['TaskRunnerEdit.Arguments', TaskRunner]
+            ) -> XMLContent:
         yield TokenTable.instance.present(proc=proc)
         yield super().presentContent(proc)
 

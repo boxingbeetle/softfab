@@ -18,9 +18,9 @@ from softfab.webgui import PropertiesTable
 from softfab.xmlgen import XMLContent, xhtml
 
 
-class MergePhase(AbstractPhase):
+class MergePhase(AbstractPhase['StorageEdit.Processor']):
 
-    def process(self, proc):
+    def process(self, proc: 'StorageEdit.Processor') -> None:
         args = proc.args
 
         checkPrivilege(
@@ -34,25 +34,25 @@ class MergePhase(AbstractPhase):
             # It is not possible to create new storage records with this
             # page, so the absence of the old record means it was merged.
             proc.showBackButton = False
-            raise PresentableError((
+            raise PresentableError(xhtml[
                 xhtml.p[
                     'Your changes were ', xhtml.b['not saved'],
                     ' because the storage was merged into another'
                     ' while you were editing.'
                     ],
                 self.page.backToParent(proc.req)
-                ))
+                ])
 
         oldId = args.id
         newId = args.newId
         if oldId == newId:
             element = proc.createElement(newId, args, oldElement)
-            idByName = getStorageIdByName(element['name'])
-            idByURL = getStorageIdByURL(element['url'])
+            idByName = getStorageIdByName(element.getName())
+            idByURL = getStorageIdByURL(element.getURL())
             if idByName in (oldId, None) and idByURL in (oldId, None):
                 storageDB.update(element)
             # Pass "element" to presentContent().
-            proc.element = element
+            proc.element = element # type: ignore
         else:
             try:
                 newElement = storageDB[newId]
@@ -65,7 +65,7 @@ class MergePhase(AbstractPhase):
                     ])
             newElement.takeOver(oldElement)
 
-    def presentContent(self, proc: EditProcessor) -> XMLContent:
+    def presentContent(self, proc: 'StorageEdit.Processor') -> XMLContent:
         if proc.args.newId != proc.args.id:
             return (
                 xhtml.p[ 'The storages have been merged.' ],
@@ -99,7 +99,11 @@ class MergePhase(AbstractPhase):
         else:
             return self.__presentMerge(proc, message, mergeId)
 
-    def __presentMerge(self, proc, message, mergeId):
+    def __presentMerge(self,
+                       proc: 'StorageEdit.Processor',
+                       message: XMLContent,
+                       mergeId: str
+                       ) -> XMLContent:
         yield xhtml.p[
             message, xhtml.br, 'It can be merged with the current storage.'
             ]
@@ -116,7 +120,10 @@ class MergePhase(AbstractPhase):
                 ]
             ].present(proc=proc)
 
-    def __presentCommitted(self, proc, element):
+    def __presentCommitted(self,
+                           proc: 'StorageEdit.Processor',
+                           element: Storage
+                           ) -> XMLContent:
         page = self.page
         return (
             xhtml.p[
