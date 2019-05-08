@@ -3,7 +3,7 @@
 from abc import ABC
 from collections import defaultdict
 from typing import (
-    TYPE_CHECKING, Any, DefaultDict, Dict, Generic, Iterator, Optional, Set,
+    TYPE_CHECKING, DefaultDict, Dict, Generic, Iterator, Optional, Set,
     TypeVar, Union
 )
 import logging
@@ -23,7 +23,7 @@ if TYPE_CHECKING:
     from softfab.datawidgets import _TableData
     from softfab.request import Request
 else:
-    Request = object
+    Request = Generic
 
 
 def logPageException(req: Request, message: str) -> None:
@@ -100,7 +100,7 @@ class PageProcessor(Generic[ArgsT]):
 
     def __init__(self,
                  page: 'FabResource[ArgsT, PageProcessor[ArgsT]]',
-                 req: Any,
+                 req: Request[ArgsT],
                  args: ArgsT,
                  user: User
                  ):
@@ -113,7 +113,7 @@ class PageProcessor(Generic[ArgsT]):
     def getTableData(self, table: DataTable) -> '_TableData':
         return self.__tables[id(table)]
 
-    def process(self, req, user):
+    def process(self, req: Request[ArgsT], user: User) -> Optional[Deferred]:
         '''Process the given request for the page this processor belongs to.
         Typically this method returns nothing (implicit None).
         If processing uses an external service, a Deferred can be used to
