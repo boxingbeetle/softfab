@@ -88,7 +88,7 @@ class FabPage(UIPage[ProcT], FabResource[ArgsT, ProcT], ABC):
         return cls.__pageInfo[page or cls.getResourceName()]
 
     @classmethod
-    def getPageURL(cls, req: Request, page: str) -> Optional[str]:
+    def getPageURL(cls, req: Request[ArgsT], page: str) -> Optional[str]:
         '''Gets the URL of another page, relative to this page.
         This URL includes in its query part the arguments shared between
         this page and the other page.
@@ -96,9 +96,8 @@ class FabPage(UIPage[ProcT], FabResource[ArgsT, ProcT], ABC):
         None is returned.
         '''
         otherArgClass = cls.getPageInfo(page)['pageClass'].Arguments
-        try:
-            args = req.args
-        except AttributeError:
+        args = req.args
+        if args is None:
             # No arguments available.
             try:
                 emptyArgs = otherArgClass()
