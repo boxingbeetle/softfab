@@ -39,12 +39,12 @@ class EditArgs(PageArgs):
 EditArgsT = TypeVar('EditArgsT', bound='EditArgs')
 EditProcT = TypeVar('EditProcT', bound='EditProcessorBase')
 
-class AbstractPhase(Generic[EditProcT]):
+class AbstractPhase(Generic[EditProcT, EditArgsT, Record]):
     '''Note: This class is similar to DialogStep, but I don't know yet if/how
     that similarity can be exploited.
     '''
 
-    def __init__(self, page: 'EditPage'):
+    def __init__(self, page: 'EditPage[EditArgsT, Record]'):
         self.page = page
 
     def process(self, proc: EditProcT) -> None:
@@ -58,7 +58,8 @@ class AbstractPhase(Generic[EditProcT]):
         '''
         raise NotImplementedError
 
-class EditPhase(AbstractPhase['EditProcessor[EditArgsT, Record]'],
+class EditPhase(AbstractPhase['EditProcessor[EditArgsT, Record]',
+                              EditArgsT, Record],
                 Generic[EditArgsT, Record]):
     '''First and main phase: actual editing of the record.
     '''
@@ -83,7 +84,8 @@ class EditPhase(AbstractPhase['EditProcessor[EditArgsT, Record]'],
             xhtml.p[ actionButtons(*buttons) ]
             ].present(proc=proc)
 
-class SavePhase(AbstractPhase['EditProcessor[EditArgsT, Record]'],
+class SavePhase(AbstractPhase['EditProcessor[EditArgsT, Record]',
+                              EditArgsT, Record],
                 Generic[EditArgsT, Record]):
     '''Commit edited element to the database.
     '''
@@ -99,7 +101,7 @@ class SavePhase(AbstractPhase['EditProcessor[EditArgsT, Record]'],
 
         if proc.replace:
             try:
-                existingElement = page.db[args.newId]
+                existingElement = page.db[args.newId] # type: Optional[Record]
             except KeyError:
                 # Record is no longer in DB; create instead of replace.
                 existingElement = None
@@ -149,7 +151,8 @@ class SavePhase(AbstractPhase['EditProcessor[EditArgsT, Record]'],
             page.backToParent(proc.req)
             )
 
-class SaveAsPhase(AbstractPhase['EditProcessor[EditArgsT, Record]'],
+class SaveAsPhase(AbstractPhase['EditProcessor[EditArgsT, Record]',
+                                EditArgsT, Record],
                   Generic[EditArgsT, Record]):
     '''Ask for a name for the record.
     '''
@@ -166,7 +169,8 @@ class SaveAsPhase(AbstractPhase['EditProcessor[EditArgsT, Record]'],
             xhtml.p[ actionButtons('save', 'cancel') ],
             ].present(proc=proc)
 
-class ConfirmOverwritePhase(AbstractPhase['EditProcessor[EditArgsT, Record]'],
+class ConfirmOverwritePhase(AbstractPhase['EditProcessor[EditArgsT, Record]',
+                                          EditArgsT, Record],
                             Generic[EditArgsT, Record]):
     '''Asks the user for confirmation before overwriting an existing record.
     '''
@@ -240,7 +244,7 @@ class EditProcessorBase(PageProcessor[EditArgsT], Generic[EditArgsT, Record]):
 
     def determinePhase(self: EditProcT,
                        req: Request[EditArgsT]
-                       ) -> AbstractPhase[EditProcT]:
+                       ) -> AbstractPhase[EditProcT, EditArgsT, Record]:
         raise NotImplementedError
 
     def _validateState(self) -> None:
@@ -277,7 +281,8 @@ class EditProcessor(EditProcessorBase[EditArgsT, Record]):
 
     def determinePhase(self,
                        req: Request[EditArgsT]
-                       ) -> AbstractPhase['EditProcessor[EditArgsT, Record]']:
+                       ) -> AbstractPhase['EditProcessor[EditArgsT, Record]',
+                                          EditArgsT, Record]:
         # pylint: disable=attribute-defined-outside-init
         page = self.page
         args = self.args

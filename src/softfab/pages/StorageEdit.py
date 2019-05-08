@@ -18,7 +18,9 @@ from softfab.webgui import PropertiesTable
 from softfab.xmlgen import XMLContent, xhtml
 
 
-class MergePhase(AbstractPhase['StorageEdit.Processor']):
+class MergePhase(AbstractPhase['StorageEdit.Processor',
+                               'StorageEdit.Arguments',
+                               Storage]):
 
     def process(self, proc: 'StorageEdit.Processor') -> None:
         args = proc.args
