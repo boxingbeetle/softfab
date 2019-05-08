@@ -21,7 +21,6 @@ from softfab.xmlgen import XMLContent, xhtml
 class MergePhase(AbstractPhase):
 
     def process(self, proc):
-        req = proc.req
         args = proc.args
 
         checkPrivilege(
@@ -47,7 +46,7 @@ class MergePhase(AbstractPhase):
         oldId = args.id
         newId = args.newId
         if oldId == newId:
-            element = proc.createElement(req, newId, args, oldElement)
+            element = proc.createElement(newId, args, oldElement)
             idByName = getStorageIdByName(element['name'])
             idByURL = getStorageIdByURL(element['url'])
             if idByName in (oldId, None) and idByURL in (oldId, None):
@@ -151,7 +150,6 @@ class StorageEdit(EditPage):
     class Processor(EditProcessor['StorageEdit.Arguments', Storage]):
 
         def createElement(self,
-                          req: Request,
                           recordId: str,
                           args: 'StorageEdit.Arguments',
                           oldElement: Optional[Storage]

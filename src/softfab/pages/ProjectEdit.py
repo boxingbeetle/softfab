@@ -49,7 +49,6 @@ class ProjectEdit(EditPage):
     class Processor(EditProcessor['ProjectEdit.Arguments', Project]):
 
         def createElement(self,
-                          req: Request,
                           recordId: str,
                           args: 'ProjectEdit.Arguments',
                           oldElement: Optional[Project]

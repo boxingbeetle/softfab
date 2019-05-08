@@ -54,7 +54,6 @@ class FrameworkEdit(EditPage):
     class Processor(EditProcessor['FrameworkEdit.Arguments', Framework]):
 
         def createElement(self,
-                          req: Request,
                           recordId: str,
                           args: 'FrameworkEdit.Arguments',
                           oldElement: Optional[Framework]

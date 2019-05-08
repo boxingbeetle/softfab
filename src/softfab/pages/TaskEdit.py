@@ -52,7 +52,6 @@ class TaskEdit(EditPage):
     class Processor(EditProcessor['TaskEdit.Arguments', TaskDef]):
 
         def createElement(self,
-                          req: Request,
                           recordId: str,
                           args: 'TaskEdit.Arguments',
                           oldElement: Optional[TaskDef]

@@ -42,7 +42,6 @@ class ResourceEdit(EditPage):
     class Processor(EditProcessor['ResourceEdit.Arguments', Resource]):
 
         def createElement(self,
-                          req: Request,
                           recordId: str,
                           args: 'ResourceEdit.Arguments',
                           oldElement: Optional[Resource]

@@ -74,7 +74,6 @@ class TaskRunnerEdit(EditPage):
     class Processor(EditProcessor['TaskRunnerEdit.Arguments', TaskRunner]):
 
         def createElement(self,
-                          req: Request,
                           recordId: str,
                           args: 'TaskRunnerEdit.Arguments',
                           oldElement: Optional[TaskRunner]

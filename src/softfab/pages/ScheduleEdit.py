@@ -91,7 +91,6 @@ class ScheduleEdit(EditPage):
                     ])
 
         def createElement(self,
-                          req: Request,
                           recordId: str,
                           args: 'ScheduleEdit.Arguments',
                           oldElement: Optional[Scheduled]

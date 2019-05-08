@@ -33,7 +33,6 @@ class ProductEdit(EditPage):
     class Processor(EditProcessor['ProductEdit.Arguments', ProductDef]):
 
         def createElement(self,
-                          req: Request,
                           recordId: str,
                           args: 'ProductEdit.Arguments',
                           oldElement: Optional[ProductDef]

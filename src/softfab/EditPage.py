@@ -85,14 +85,13 @@ class SavePhase(AbstractPhase['EditProcessor[EditArgsT, Record]']):
     '''
 
     def process(self, proc: 'EditProcessor[EditArgsT, Record]') -> None:
-        req = proc.req
         page = self.page
         args = proc.args
         oldElement = proc.oldElement
 
         # TODO: All of these argument are taken from 'proc', do we really
         #       need to pass them?
-        element = proc.createElement(req, args.newId, args, oldElement)
+        element = proc.createElement(args.newId, args, oldElement)
 
         if proc.replace:
             try:
@@ -347,7 +346,6 @@ class EditProcessor(EditProcessorBase[EditArgsT, Record]):
         self.page.db.checkId(recordId)
 
     def createElement(self,
-                      req: Request,
                       recordId: str,
                       args: EditArgsT,
                       oldElement: Optional[Record]

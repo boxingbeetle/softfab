@@ -36,7 +36,6 @@ class ResTypeEdit(EditPage):
                 raise KeyError('names starting with "sf." are reserved')
 
         def createElement(self,
-                          req: Request,
                           recordId: str,
                           args: 'ResTypeEdit.Arguments',
                           oldElement: Optional[ResType]
