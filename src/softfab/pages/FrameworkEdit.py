@@ -126,20 +126,20 @@ class FrameworkEdit(EditPage):
                 'The wrapper field selects the directory in which to look for '
                 'a wrapper script. '
                 'Read ',
-				docLink(
-				   '/introduction/framework-and-task-definitions/#frameworkdef'
-				)['the documentation'],
-				' for details.'
+                docLink(
+                   '/introduction/framework-and-task-definitions/#frameworkdef'
+                )['the documentation'],
+                ' for details.'
                 ],
             xhtml.li[
                 'The extractor field indicates that mid-level data extraction '
                 'should be performed for this framework. '
                 'This requires an extractor script to be written. '
                 'Read ',
-				docLink(
-					'/introduction/framework-and-task-definitions/#extract'
-				)['the documentation'],
-				' for details.'
+                docLink(
+                    '/introduction/framework-and-task-definitions/#extract'
+                )['the documentation'],
+                ' for details.'
                 ]
             ]
 
