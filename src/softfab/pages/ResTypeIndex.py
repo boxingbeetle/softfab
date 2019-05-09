@@ -24,7 +24,7 @@ class ResTypeLinkColumn(LinkColumn):
 class ResTypeTable(DataTable):
     db = resTypeDB
     columns = (
-        DataColumn(keyName = 'name'),
+        DataColumn(keyName = 'presentationName', label = 'Name'),
         BoolDataColumn(keyName = 'pertask', label = 'Per Task'),
         BoolDataColumn(keyName = 'perjob', label = 'Per Job'),
         ResTypeLinkColumn('Edit', 'ResTypeEdit'),

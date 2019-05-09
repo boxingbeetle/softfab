@@ -50,6 +50,12 @@ class ResType(XMLTag, DatabaseElem):
         DatabaseElem.__init__(self)
         self.__description = ''
 
+    def __getitem__(self, key: str) -> object:
+        if key == 'presentationName':
+            return self.presentationName
+        else:
+            return super().__getitem__(key)
+
     def _textDescription(self, text: str) -> None:
         self.__description = text
 
