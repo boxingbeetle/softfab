@@ -253,7 +253,7 @@ class BatchExecute_POST(BatchExecute_GET):
                     try:
                         jobs += config.createJobs(userName,
                             locators = inputs, localAt = locations,
-                            taskParameters = params.get(config.getId())
+                            taskParameters = params.get(config.getId(), {})
                             )
                     except ValueError as ex:
                         notices.append('%s: %s' % (config.getId(), ex))
