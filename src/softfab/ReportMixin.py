@@ -47,6 +47,9 @@ def executionStateBox(objectName):
         for state in ExecutionState
         )]
 
+def timeValue(seconds: Optional[int]) -> str:
+    return '' if seconds is None else formatTime(seconds)
+
 class ReportProcessor(PageProcessor):
     db = None # type: Optional[Database]
 
@@ -176,14 +179,14 @@ class ReportFilterForm:
             xhtml.td[ 'Created after:' ],
             xhtml.td[
                 textInput(
-                    name='ctabove', value=formatTime(proc.args.ctabove),
+                    name='ctabove', value=timeValue(proc.args.ctabove),
                     style='width:20ex'
                     )
                 ],
             xhtml.td[ 'Created before:' ],
             xhtml.td[
                 textInput(
-                    name='ctbelow', value=formatTime(proc.args.ctbelow),
+                    name='ctbelow', value=timeValue(proc.args.ctbelow),
                     style='width:20ex'
                     )
                 ]
