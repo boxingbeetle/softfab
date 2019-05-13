@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from enum import Enum
-from typing import ClassVar, Optional
+from typing import ClassVar, Iterator, Optional
 
 from softfab.CSVPage import CSVPage
 from softfab.Page import PageProcessor
@@ -14,7 +14,7 @@ from softfab.joblib import jobDB
 from softfab.pageargs import DateTimeArg, EnumArg, PageArgs, SetArg
 from softfab.pagelinks import TaskIdSetArgs
 from softfab.projectlib import project
-from softfab.querylib import CustomFilter, SetFilter
+from softfab.querylib import CustomFilter, RecordFilter, SetFilter
 from softfab.timeview import formatTime
 from softfab.userlib import userDB
 from softfab.utils import SharedInstance, abstract
@@ -79,7 +79,7 @@ class ReportProcessor(PageProcessor):
         self.owners = owners
         self.ownerFilter = ownerFilter
 
-    def iterFilters(self):
+    def iterFilters(self) -> Iterator[RecordFilter]:
         cTimeAboveInt = self.args.ctabove
         cTimeBelowInt = self.args.ctbelow
 
@@ -110,7 +110,7 @@ class ReportProcessor(PageProcessor):
 class JobReportProcessor(ReportProcessor):
     db = jobDB
 
-    def iterFilters(self):
+    def iterFilters(self) -> Iterator[RecordFilter]:
         yield from super().iterFilters()
         execState = self.args.execState
         if execState is ExecutionState.COMPLETED:

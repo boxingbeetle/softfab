@@ -11,7 +11,7 @@ from softfab.formlib import textInput
 from softfab.joblib import jobDB
 from softfab.jobview import JobsTable
 from softfab.pageargs import IntArg, SortArg, StrArg
-from softfab.querylib import WildcardFilter
+from softfab.querylib import RecordFilter, WildcardFilter
 from softfab.userlib import User, checkPrivilege
 from softfab.xmlgen import XMLContent, xhtml
 
@@ -50,7 +50,7 @@ class ReportIndex_GET(FabPage['ReportIndex_GET.Processor', 'ReportIndex_GET.Argu
 
     class Processor(JobReportProcessor):
 
-        def iterFilters(self):
+        def iterFilters(self) -> Iterator[RecordFilter]:
             yield from super().iterFilters()
             if self.args.desc:
                 yield WildcardFilter('description', self.args.desc, self.db)

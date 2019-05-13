@@ -8,7 +8,7 @@ from softfab.ControlPage import ControlPage
 from softfab.ReportMixin import JobReportProcessor, ReportArgs
 from softfab.joblib import jobDB
 from softfab.pageargs import SetArg
-from softfab.querylib import SetFilter, runQuery
+from softfab.querylib import RecordFilter, SetFilter, runQuery
 from softfab.response import Response
 from softfab.userlib import User, checkPrivilege
 from softfab.utils import chop
@@ -33,7 +33,7 @@ class GetJobHistory_GET(ControlPage['GetJobHistory_GET.Arguments', 'GetJobHistor
             # pylint: disable=attribute-defined-outside-init
             self.jobs = jobs
 
-        def iterFilters(self):
+        def iterFilters(self) -> Iterator[RecordFilter]:
             yield from super().iterFilters()
 
             configId = self.args.configId
