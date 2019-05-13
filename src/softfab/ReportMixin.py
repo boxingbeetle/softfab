@@ -60,7 +60,6 @@ class ReportProcessor(PageProcessor):
         targets |= project.getTargets()
         # Make a set of targets that should be shown, valid targets only.
         targetFilter = req.args.target & targets
-        targetList = sorted(targets)
 
         # None is presented as "(none)" in the UI.
         ownerFilter = set(req.args.owner)
@@ -75,7 +74,7 @@ class ReportProcessor(PageProcessor):
         ownerFilter &= owners
 
         # pylint: disable=attribute-defined-outside-init
-        self.targetList = targetList
+        self.targets = targets
         self.targetFilter = targetFilter
         self.owners = owners
         self.ownerFilter = ownerFilter
@@ -100,7 +99,7 @@ class ReportProcessor(PageProcessor):
 
         if self.targetFilter:
             yield SetFilter.create(
-                'target', self.targetFilter, self.targetList, self.db
+                'target', self.targetFilter, self.targets, self.db
                 )
 
         if self.ownerFilter:
@@ -137,7 +136,7 @@ class ReportFilterForm:
         yield self.dateCheckScript.present(proc=proc, **kwargs)
 
     def presentRows(self, proc, numListItems, **kwargs):
-        targetList = proc.targetList
+        targets = proc.targets
         owners = proc.owners
         objectName = self.objectName
 
@@ -145,7 +144,7 @@ class ReportFilterForm:
             yield xhtml.td(colspan = 4)[
                 'Select %s to display reports for:' % objectName
                 ]
-            if targetList:
+            if targets:
                 yield xhtml.td[ 'Targets:' ]
             if len(owners) > 1 and project.showOwners:
                 yield xhtml.td[ 'Owners:' ]
@@ -155,12 +154,12 @@ class ReportFilterForm:
             yield self.presentCustomBox(
                 proc=proc, numListItems=numListItems, **kwargs
                 )
-            if targetList:
+            if targets:
                 yield xhtml.td(rowspan = 4, style = 'vertical-align:top')[
                     selectionList(
                         name='target', size=numListItems, style='width: 18ex',
                         selected=proc.targetFilter
-                        )[ targetList ]
+                        )[ sorted(targets) ]
                     ]
             if len(owners) > 1 and project.showOwners:
                 yield xhtml.td(rowspan = 4, style = 'vertical-align:top')[
