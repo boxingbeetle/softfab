@@ -118,16 +118,8 @@ class FrameworkEdit(EditPage):
             checkResourceRequirementsState(args)
 
         def _validateState(self) -> None:
-            args = self.args
-            # TODO: Improve type annotations in pageargs so we don't have
-            #       to typecast here.
-            #       Problem is that CollectionArg sets the value type as
-            #       Collection[ValueT], while for SetArg we want to know
-            #       that we have sets specifically.
-            self.args = args = args.override(
-                input = cast(AbstractSet[str], args.input) - { '' },
-                output = cast(AbstractSet[str], args.output) - { '' },
-                )
+            self.args = self.args.override(input=self.args.input - {''},
+                                           output=self.args.output - {''})
             validateParamState(self, paramTop)
             validateResourceRequirementsState(self)
 

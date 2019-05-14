@@ -3,9 +3,9 @@
 from enum import Enum
 from re import compile as re_compile
 from typing import (
-    TYPE_CHECKING, AbstractSet, Any, Callable, Dict, FrozenSet, Generic,
-    Iterable, Iterator, Mapping, Match, Optional, Sequence, Set, Tuple, Type,
-    TypeVar, Union, cast, overload
+    TYPE_CHECKING, AbstractSet, Any, Callable, Dict, Generic, Iterable,
+    Iterator, Mapping, Match, Optional, Sequence, Set, Tuple, Type, TypeVar,
+    Union, cast, overload
 )
 from urllib.parse import parse_qs
 
@@ -22,6 +22,7 @@ else:
 
 ArgsT = TypeVar('ArgsT', bound='PageArgs')
 ValueT = TypeVar('ValueT')
+CollectionT = TypeVar('CollectionT', bound=Collection)
 DefaultT = TypeVar('DefaultT')
 EnumT = TypeVar('EnumT', bound='Enum')
 
@@ -839,7 +840,8 @@ class SortArg(SingularArgument[Sequence[str], Sequence[str]]):
         else:
             raise TypeError('value is not iterable')
 
-class CollectionArg(Argument[Collection[ValueT], Collection[ValueT]]):
+class CollectionArg(Argument[CollectionT, CollectionT],
+                    Generic[CollectionT, ValueT]):
     '''Abstract base class for an argument that keeps multiple values.
     '''
 
@@ -851,10 +853,10 @@ class CollectionArg(Argument[Collection[ValueT], Collection[ValueT]]):
         self.__prototype = prototype
         default = (
             self._createValue(()) if allowEmpty else mandatory
-            ) # type: Union[Collection[ValueT], _MandatoryValue]
+            ) # type: Union[CollectionT, _MandatoryValue]
         super().__init__(default)
 
-    def _createValue(self, items: Iterable[ValueT]) -> Collection[ValueT]:
+    def _createValue(self, items: Iterable[ValueT]) -> CollectionT:
         '''Subclasses must implement this to return a value object
         of the right type that contains `items`.
         '''
@@ -864,21 +866,21 @@ class CollectionArg(Argument[Collection[ValueT], Collection[ValueT]]):
         # pylint: disable=protected-access
         return self.__prototype == cast(CollectionArg, other).__prototype
 
-    def parse(self, *strValues: str) -> Collection[ValueT]:
+    def parse(self, *strValues: str) -> CollectionT:
         parse = self.__prototype.parseValue
         return self._createValue(parse(strValue) for strValue in strValues)
 
-    def externalize(self, value: Collection[ValueT]) -> Sequence[str]:
+    def externalize(self, value: CollectionT) -> Sequence[str]:
         externalize = self.__prototype.externalize
         return [ externalize(item) for item in value ]
 
-    def convert(self, value: Iterable[ValueT]) -> Collection[ValueT]:
+    def convert(self, value: Iterable[ValueT]) -> CollectionT:
         if iterable(value):
             return self._createValue(value)
         else:
             raise TypeError('value is not iterable')
 
-class _ListArg(CollectionArg[ValueT]):
+class _ListArg(CollectionArg[Sequence[ValueT], ValueT]):
     '''Argument that keeps a list of values in the same order that
     they were in the request.
     Since arguments are immutable, the actual values are stored in
@@ -910,7 +912,7 @@ if TYPE_CHECKING:
 else:
     ListArg = _ListArg
 
-class _SetArg(CollectionArg[ValueT]):
+class _SetArg(CollectionArg[AbstractSet[ValueT], ValueT]):
     '''Argument that keeps a set of values in no particular order;
     duplicates are removed.
     If no default value is specified, the set for this argument will
@@ -921,11 +923,11 @@ class _SetArg(CollectionArg[ValueT]):
     a frozenset.
     '''
 
-    def _createValue(self, items: Iterable[ValueT]) -> FrozenSet[ValueT]:
+    def _createValue(self, items: Iterable[ValueT]) -> AbstractSet[ValueT]:
         return frozenset(items)
 
     # https://github.com/PyCQA/pylint/issues/2377
-    def parse(self, *strValues: str) -> Collection[ValueT]: # pylint: disable=unsubscriptable-object,useless-suppression
+    def parse(self, *strValues: str) -> AbstractSet[ValueT]: # pylint: disable=unsubscriptable-object,useless-suppression
         values = super().parse(*strValues)
         if len(values) == len(strValues):
             return values
@@ -1151,7 +1153,7 @@ class QueryArg(SingularArgument[Query, None]):
         self.__shared = frozenset(sharedNames)
 
     @property
-    def shared(self) -> FrozenSet[str]:
+    def shared(self) -> AbstractSet[str]:
         return self.__shared
 
     def _sameArg(self, other: Argument) -> bool:
@@ -1223,7 +1225,7 @@ def _externalizeArg(arg: SingularArgument[ValueT, DefaultT],
     pass
 
 @overload
-def _externalizeArg(arg: CollectionArg[ValueT],
+def _externalizeArg(arg: CollectionArg[Collection[ValueT], ValueT],
                     value: Collection[ValueT]
                     # pylint: disable=unused-argument
                     ) -> Sequence[str]:
