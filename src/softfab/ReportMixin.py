@@ -1,7 +1,9 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from enum import Enum
-from typing import ClassVar, Iterator, Optional
+from typing import (
+    AbstractSet, ClassVar, Iterator, Optional, Set, TypeVar, cast
+)
 
 from softfab.CSVPage import CSVPage
 from softfab.Page import PageProcessor
@@ -15,11 +17,12 @@ from softfab.pageargs import DateTimeArg, EnumArg, PageArgs, SetArg
 from softfab.pagelinks import TaskIdSetArgs
 from softfab.projectlib import project
 from softfab.querylib import CustomFilter, RecordFilter, SetFilter
+from softfab.request import Request
 from softfab.timeview import formatTime
-from softfab.userlib import userDB
+from softfab.userlib import User, userDB
 from softfab.utils import SharedInstance, abstract
 from softfab.webgui import script
-from softfab.xmlgen import xhtml
+from softfab.xmlgen import XMLContent, XMLPresentable, xhtml
 
 
 class ExecutionState(Enum):
@@ -35,13 +38,15 @@ class ReportArgs(PageArgs):
     target = SetArg()
     owner = SetArg()
 
+ReportArgsT = TypeVar('ReportArgsT', bound=ReportArgs)
+
 class ReportTaskArgs(ReportArgs, TaskIdSetArgs):
     pass
 
 class ReportTaskCSVArgs(ReportTaskArgs, CSVPage.Arguments):
     pass
 
-def executionStateBox(objectName):
+def executionStateBox(objectName: str) -> XMLPresentable:
     return dropDownList(name='execState', style='width:20ex')[(
         option(value=state)['%s %s' % (state.name.lower(), objectName)]
         for state in ExecutionState
@@ -50,10 +55,10 @@ def executionStateBox(objectName):
 def timeValue(seconds: Optional[int]) -> str:
     return '' if seconds is None else formatTime(seconds)
 
-class ReportProcessor(PageProcessor):
+class ReportProcessor(PageProcessor[ReportArgsT]):
     db = None # type: Optional[Database]
 
-    def process(self, req, user):
+    def process(self, req: Request[ReportArgsT], user: User) -> None:
         # Set of targets for which jobs have run.
         targets = jobDB.uniqueValues('target') - set([None])
         # Add targets that are available now.
@@ -62,7 +67,7 @@ class ReportProcessor(PageProcessor):
         targetFilter = req.args.target & targets
 
         # None is presented as "(none)" in the UI.
-        ownerFilter = set(req.args.owner)
+        ownerFilter = set(req.args.owner) # type: Set[Optional[str]]
         if '(none)' in ownerFilter:
             ownerFilter.remove('(none)')
             ownerFilter.add(None)
@@ -107,7 +112,7 @@ class ReportProcessor(PageProcessor):
                 'owner', self.ownerFilter, self.owners, self.db
                 )
 
-class JobReportProcessor(ReportProcessor):
+class JobReportProcessor(ReportProcessor[ReportArgsT]):
     db = jobDB
 
     def iterFilters(self) -> Iterator[RecordFilter]:
@@ -124,24 +129,25 @@ class ReportFilterForm:
     instance = SharedInstance() # type: ClassVar
     objectName = abstract # type: ClassVar[str]
 
-    def present(self, *, proc, **kwargs):
-        yield makeForm(
-            method = 'get', formId = 'filters', args = proc.args,
-            onsubmit = 'return checkFilters()'
-            )[
+    def present(self, **kwargs: object) -> XMLContent:
+        yield makeForm(method='get', formId='filters',
+                       onsubmit='return checkFilters()')[
             xhtml.table(class_ = 'filters')[
-                xhtml.tbody[ self.presentRows(proc, **kwargs) ]
+                xhtml.tbody[ self.presentRows(**kwargs) ]
                 ]
-            ].present(proc=proc, **kwargs)
-        yield self.dateCheckScript.present(proc=proc, **kwargs)
+            ].present(**kwargs)
+        yield self.dateCheckScript.present(**kwargs)
 
-    def presentRows(self, proc, numListItems, **kwargs):
+    def presentRows(self, **kwargs: object) -> XMLContent:
+        proc = cast(ReportProcessor, kwargs['proc'])
+        numListItems = cast(int, kwargs['numListItems'])
+
         targets = proc.targets
         owners = proc.owners
         objectName = self.objectName
 
-        def columns1():
-            yield xhtml.td(colspan = 4)[
+        def columns1() -> XMLContent:
+            yield xhtml.td(colspan=4)[
                 'Select %s to display reports for:' % objectName
                 ]
             if targets:
@@ -150,19 +156,17 @@ class ReportFilterForm:
                 yield xhtml.td[ 'Owners:' ]
         yield xhtml.tr[ columns1() ]
 
-        def columns2():
-            yield self.presentCustomBox(
-                proc=proc, numListItems=numListItems, **kwargs
-                )
+        def columns2() -> XMLContent:
+            yield self.presentCustomBox(**kwargs)
             if targets:
-                yield xhtml.td(rowspan = 4, style = 'vertical-align:top')[
+                yield xhtml.td(rowspan=4, style='vertical-align:top')[
                     selectionList(
                         name='target', size=numListItems, style='width: 18ex',
                         selected=proc.targetFilter
                         )[ sorted(targets) ]
                     ]
             if len(owners) > 1 and project.showOwners:
-                yield xhtml.td(rowspan = 4, style = 'vertical-align:top')[
+                yield xhtml.td(rowspan=4, style='vertical-align:top')[
                     selectionList(
                         name='owner', size=numListItems, style='width: 18ex',
                         selected=set(
@@ -202,7 +206,7 @@ class ReportFilterForm:
             submitButton[ 'Apply' ], ' ', resetButton, ' ', clearButton
             ]]
 
-    def presentCustomBox(self, **kwargs):
+    def presentCustomBox(self, **kwargs: object) -> XMLContent:
         raise NotImplementedError
 
     dateCheckScript = script[r'''

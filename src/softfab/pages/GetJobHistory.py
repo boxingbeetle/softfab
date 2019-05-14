@@ -23,7 +23,7 @@ class GetJobHistory_GET(ControlPage['GetJobHistory_GET.Arguments', 'GetJobHistor
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'j/l', 'view the report list')
 
-    class Processor(JobReportProcessor):
+    class Processor(JobReportProcessor[Arguments]):
 
         def process(self, req, user):
             super().process(req, user)
