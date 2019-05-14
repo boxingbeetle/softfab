@@ -1,10 +1,11 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Iterator, Sequence, Set, cast
+from typing import Iterator, Mapping, Optional, Sequence, Set, cast
 import time
 
 from softfab.CSVPage import CSVPage
 from softfab.TaskMatrixCommon import TaskMatrixCSVArgs, TaskMatrixProcessor
+from softfab.joblib import Task
 from softfab.querylib import KeySorter
 from softfab.resultcode import ResultCode
 from softfab.taskdeflib import taskDefDB
@@ -68,17 +69,13 @@ class TaskMatrixCSV_GET(CSVPage['TaskMatrixCSV_GET.Processor']):
             ]
         # Take the result of the most recent execution of each task, since that
         # is most likely to be representative.
-        sorter = KeySorter([ '-starttime' ])
+        sorter = KeySorter([ '-starttime' ]) # type: KeySorter[Task]
         for taskName in sorted(taskNames):
             resultCells = [ taskName ]
             for taskDict in taskData:
                 tasks = taskDict.get(taskName, ())
                 for taskRun in sorter(tasks):
-                    taskResult = {
-                        ResultCode.OK: 'P',
-                        ResultCode.WARNING: 'F',
-                        ResultCode.ERROR: 'F'
-                        }.get(taskRun.getResult())
+                    taskResult = RESULT_MAP.get(taskRun.getResult())
                     if taskResult is not None:
                         result = taskResult
                         break
@@ -86,3 +83,9 @@ class TaskMatrixCSV_GET(CSVPage['TaskMatrixCSV_GET.Processor']):
                     result = 'X'
                 resultCells.append(result)
             yield resultCells
+
+RESULT_MAP = {
+    ResultCode.OK: 'P',
+    ResultCode.WARNING: 'F',
+    ResultCode.ERROR: 'F'
+} # type: Mapping[Optional[ResultCode], str]
