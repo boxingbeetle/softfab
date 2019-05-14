@@ -21,8 +21,8 @@ from softfab.pnglib import getPNGDimensions
 from softfab.typing import NoReturn
 from softfab.utils import SharedInstance, iterable
 from softfab.xmlgen import (
-    XML, XMLAttributeValue, XMLContent, XMLNode, XMLPresentable,
-    XMLSubscriptable, adaptToXML, xhtml
+    XML, XMLContent, XMLNode, XMLPresentable, XMLSubscriptable, adaptToXML,
+    xhtml
 )
 
 if TYPE_CHECKING:
@@ -144,14 +144,14 @@ class Container:
         for element in self._contents:
             yield element.present(**kwargs)
 
-AttrT = Mapping[str, XMLAttributeValue]
 AttrContainerT = TypeVar('AttrContainerT', bound='AttrContainer')
 
 class AttrContainer(Container):
     '''A container that can have attributes.
     '''
 
-    def __init__(self, contents: Iterable[XML], attributes: AttrT):
+    def __init__(self, contents: Iterable[XML],
+                 attributes: Mapping[str, object]):
         super().__init__(contents)
         self._attributes = attributes
 
@@ -161,13 +161,11 @@ class AttrContainer(Container):
         return self.__class__(contents, self._attributes)
 
     def _replaceAttributes(
-            self: AttrContainerT, attributes: AttrT
+            self: AttrContainerT, attributes: Mapping[str, object]
             ) -> AttrContainerT:
         return self.__class__(self._contents, attributes)
 
-    def __call__(
-            self: AttrContainerT, **kwargs: XMLAttributeValue
-            ) -> AttrContainerT:
+    def __call__(self: AttrContainerT, **kwargs: object) -> AttrContainerT:
         attributes = dict(self._attributes)
         for key, value in kwargs.items():
             key = key.rstrip('_')
