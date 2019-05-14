@@ -153,13 +153,9 @@ class RunnerPerTaskStep(DialogStep):
         yield xhtml.p(class_ = 'hint')[
             '(Nothing selected means default settings for the job are used)'
             ]
-        target = proc.args.target
         yield TaskRunnersTable.instance.present(
             config=proc.getConfig(),
-            taskRunners=sorted(
-                runner for runner in iterTaskRunners()
-                if target in runner.targets
-                ),
+            taskRunners=sorted(proc.iterTaskRunners()),
             runnersPerTask=proc.args.runnerspt,
             **kwargs
             )
@@ -411,6 +407,18 @@ class ExecuteProcessorMixin:
                 priority = int(args.prio.get(taskId, 0)),
                 parameters = taskParams,
                 )
+
+    def iterTaskRunners(self) -> Iterator[TaskRunner]:
+        """Iterate through the Task Runners that match our targets.
+        """
+        args = cast(Execute_POST.Arguments, self.args) # type: ignore
+        targets = args.target
+        if targets:
+            for runner in iterTaskRunners():
+                if runner.targets & targets:
+                    yield runner
+        else:
+            yield from iterTaskRunners()
 
     def getConfig(self) -> Config:
         if self.__config is None:
@@ -706,10 +714,8 @@ class TaskRunnerSelectionTable(CheckBoxesTable):
                 requiredCaps &= caps
         taskCapsList.sort(key=len)
 
-        taskRunners = (
-            runner for runner in iterTaskRunners()
-            if proc.args.target in runner.targets
-            ) # type: Iterator[TaskRunner]
+        taskRunners = proc.iterTaskRunners()
+
         # Are there tasks with non-empty required capability set?
         if len(taskCapsList[0]) > 0:
             def capsMatch(runner):
