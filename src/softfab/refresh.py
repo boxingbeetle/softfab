@@ -59,8 +59,10 @@ function refreshRequestReady() {
                 var newNode = refreshRequest.responseXML.documentElement;
                 var nodeId = newNode.getAttribute("id");
                 var oldNode = document.getElementById(nodeId);
-                newNode = document.adoptNode(newNode);
-                oldNode.parentNode.replaceChild(newNode, oldNode);
+                if (oldNode) {
+                    newNode = document.adoptNode(newNode);
+                    oldNode.parentNode.replaceChild(newNode, oldNode);
+                }
             }
         } catch(e) {
         }
