@@ -78,9 +78,8 @@ class ShowReport_GET(FabPage['ShowReport_GET.Processor',
         yield SelfJobsTable.instance
         yield TaskRunsTable.instance
         yield OutputTable.instance
-        if not job.hasFinalResult() and (
-                job.getRunners() or
-                any(task.getRunners() for task in job.iterTasks())
+        if job.getRunners() or any(
+                task.getRunners() for task in job.iterTasks()
                 ):
             yield TaskRunnerTable.instance
 
