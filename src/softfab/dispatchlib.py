@@ -2,8 +2,8 @@
 
 from collections import defaultdict
 from typing import (
-    TYPE_CHECKING, Dict, Iterable, List, Mapping, Optional, Sequence, Set,
-    cast, overload
+    TYPE_CHECKING, DefaultDict, Dict, Iterable, List, Mapping, Optional,
+    Sequence, Set, TypeVar, cast
 )
 
 from softfab.resreq import ResourceClaim, ResourceSpec
@@ -17,18 +17,11 @@ if TYPE_CHECKING:
 else:
     Resource = None
 
-@overload
-def _groupByType(
-        items: Iterable[Resource] # pylint: disable=unused-argument
-        ) -> Mapping[str, Sequence[Resource]]:
-    pass
-@overload
-def _groupByType(
-        items: Iterable[ResourceSpec] # pylint: disable=unused-argument
-        ) -> Mapping[str, Sequence[ResourceSpec]]:
-    pass
-def _groupByType(items):
-    grouped = defaultdict(list)
+ResOrSpec = TypeVar('ResOrSpec', Resource, ResourceSpec)
+
+def _groupByType(items: Iterable[ResOrSpec]
+                 ) -> Mapping[str, Sequence[ResOrSpec]]:
+    grouped = defaultdict(list) # type: DefaultDict[str, List[ResOrSpec]]
     for item in items:
         grouped[item.typeName].append(item)
     return grouped

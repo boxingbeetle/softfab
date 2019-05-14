@@ -468,7 +468,7 @@ class Argument(Generic[ValueT, DefaultT]):
                  ): # pylint: disable=unused-argument
         ...
 
-    def __init__(self, default=mandatory):
+    def __init__(self, default: Any = mandatory):
         '''Creates a page argument with a given default value.
         '''
         self.__default = default
@@ -503,7 +503,10 @@ class Argument(Generic[ValueT, DefaultT]):
             ) -> Union[ValueT, DefaultT]:
         pass
 
-    def __get__(self, instance, owner):
+    def __get__(self,
+                instance: Optional[PageArgs],
+                owner: Type[PageArgs]
+                ) -> Any:
         if instance is None:
             # Class attribute access.
             return self
@@ -1234,7 +1237,7 @@ def _externalizeArg(arg: Any, value: Any # pylint: disable=unused-argument
     # type checks we do here just to please mypy.
     pass
 
-def _externalizeArg(arg, value):
+def _externalizeArg(arg: Any, value: Any) -> Sequence[str]:
     if isinstance(arg, SingularArgument):
         return (arg.externalize(value),)
     elif isinstance(arg, CollectionArg):
