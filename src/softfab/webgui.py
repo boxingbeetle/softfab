@@ -10,7 +10,7 @@ from io import BytesIO
 from itertools import chain
 from typing import (
     TYPE_CHECKING, Callable, ClassVar, Iterable, Iterator, List, Mapping,
-    Optional, Sequence, Tuple, Type, TypeVar, Union, cast
+    Optional, Sequence, Tuple, TypeVar, Union, cast
 )
 from xml.etree import ElementTree
 import logging
@@ -459,14 +459,10 @@ class Table(Widget):
     style = None # type: Optional[str]
     hideWhenEmpty = False
 
-    def present(self, *, # type: ignore
-                         # https://github.com/python/mypy/issues/5669
-            data: Optional['_TableData'] = None,
-            columns: Sequence[Column] = (),
-            **kwargs: object
-            ) -> XMLContent:
-        # Note: Any 'columns' argument will be from an outer table;
-        #       we capture it to remove it from `kwargs`.
+    def present(self, **kwargs: object) -> XMLContent:
+        data = cast(Optional['_TableData'], kwargs.pop('data', None))
+        # Any 'columns' argument will be from an outer table; discard it.
+        kwargs.pop('columns', None)
 
         # Determine visible columns.
         if data is None:
