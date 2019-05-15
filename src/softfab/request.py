@@ -11,7 +11,7 @@ from zope.interface import Attribute, Interface, implementer
 
 from softfab.Page import InvalidRequest
 from softfab.config import rootURL
-from softfab.pageargs import ArgsT, Query
+from softfab.pageargs import ArgsT_co, Query
 from softfab.useragent import UserAgent
 from softfab.userlib import User
 from softfab.utils import cachedProperty
@@ -130,14 +130,14 @@ class RequestBase:
         assert path.startswith(pagePath + b'/')
         return path[len(pagePath) + 1 : ].decode()
 
-class Request(RequestBase, Generic[ArgsT]):
+class Request(RequestBase, Generic[ArgsT_co]):
     '''Contains the request information that is only available during the
     "parse" and "process" request handling steps.
     '''
 
     def __init__(self, request: TwistedRequest):
         super().__init__(request)
-        self.args = cast(ArgsT, None)
+        self.args = cast(ArgsT_co, None)
 
     def processEnd(self) -> None:
         '''Called when the processing step is done.
@@ -145,7 +145,7 @@ class Request(RequestBase, Generic[ArgsT]):
         '''
         self.__class__ = RequestBase # type: ignore
 
-    def parseArgs(self, argsClass: Type[ArgsT]) -> ArgsT:
+    def parseArgs(self, argsClass: Type[ArgsT_co]) -> ArgsT_co:
         '''Initialises the Arguments, if the page has one.
         '''
         # Decode field names.

@@ -21,6 +21,7 @@ else:
     Request = None
 
 ArgsT = TypeVar('ArgsT', bound='PageArgs')
+ArgsT_co = TypeVar('ArgsT_co', bound='PageArgs', covariant=True)
 ValueT = TypeVar('ValueT')
 CollectionT = TypeVar('CollectionT', bound=Collection)
 DefaultT = TypeVar('DefaultT')
