@@ -45,7 +45,7 @@ class DetailsTable(PropertiesTable):
     def iterRows(self, *, proc, **kwargs):
         task = proc.task
         run = task.getLatestRun()
-        taskDef = proc.taskDef
+        taskDef = task.getDef()
         taskDefId = taskDef.getId()
         frameworkId = taskDef['parent']
         tdLatest = taskDefDB.latestVersion(taskDefId)
@@ -183,7 +183,6 @@ class ShowTaskInfo_GET(FabPage['ShowTaskInfo_GET.Processor',
             # pylint: disable=attribute-defined-outside-init
             self.job = job
             self.task = task
-            self.taskDef = task.getDef()
 
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'j/a')
