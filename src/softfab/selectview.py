@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from abc import ABC
-from typing import ClassVar
+from typing import ClassVar, Iterator
 
 from softfab.Page import Redirect
 from softfab.databaselib import Database
@@ -14,7 +14,7 @@ from softfab.querylib import CustomFilter, runQuery
 from softfab.selectlib import TagCache
 from softfab.utils import abstract
 from softfab.webgui import (
-    Table, addRemoveStyleScript, cell, hgroup, pageLink, pageURL,
+    Column, Table, addRemoveStyleScript, cell, hgroup, pageLink, pageURL,
     preserveSpaces, script
 )
 from softfab.xmlgen import txt, xhtml
@@ -389,10 +389,10 @@ class TagValueEditTable(Table, ABC):
         }
         '''].present()
 
-    def iterColumns(self, **kwargs):
-        yield 'Tag Key'
-        yield self.valTitle
-        yield 'Add Existing Value'
+    def iterColumns(self, **kwargs: object) -> Iterator[Column]:
+        yield Column('Tag Key')
+        yield Column(self.valTitle)
+        yield Column('Add Existing Value')
 
     def iterRows(self, *, getValues, **kwargs):
         tagKeys = self.tagCache.getKeys()

@@ -32,7 +32,7 @@ from softfab.typing import NoReturn
 from softfab.userlib import (
     AccessDenied, User, checkPrivilege, checkPrivilegeForOwned
 )
-from softfab.webgui import Table, cell
+from softfab.webgui import Column, Table, cell
 from softfab.xmlgen import XMLContent, xhtml
 
 
@@ -654,11 +654,11 @@ class NotifyTable(RadioTable):
 class TaskTable(CheckBoxesTable):
     name = 'tasks'
 
-    def iterColumns(self, **kwargs: object) -> Iterator[str]:
-        yield 'Task ID'
-        yield 'Title'
+    def iterColumns(self, **kwargs: object) -> Iterator[Column]:
+        yield Column('Task ID')
+        yield Column('Title')
         if project['taskprio']:
-            yield 'Priority'
+            yield Column('Priority')
 
     def iterOptions(self, **kwargs: object) -> Iterator[Tuple[str, XMLContent]]:
         proc = cast(Execute_POST.Processor, kwargs['proc'])

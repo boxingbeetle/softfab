@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Iterator
+from typing import Iterator, cast
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor, PresentableError, Redirect
@@ -18,7 +18,7 @@ from softfab.userlib import (
     UIRoleNames, User, checkPrivilege, rolesGrantPrivilege, userDB
 )
 from softfab.userview import activeRole, presentAnonGuestSetting, uiRoleToSet
-from softfab.webgui import pageLink, pageURL, script
+from softfab.webgui import Column, pageLink, pageURL, script
 from softfab.xmlgen import XML, XMLContent, xhtml
 
 
@@ -94,7 +94,8 @@ class UserTable(DataTable):
         if not proc.args.inactive:
             yield CustomFilter(lambda user: user.isActive())
 
-    def iterColumns(self, proc, **kwargs):
+    def iterColumns(self, **kwargs: object) -> Iterator[Column]:
+        proc = cast(PageProcessor, kwargs['proc'])
         yield NameColumn.instance
         yield RoleColumn.instance
         requestUser = proc.user

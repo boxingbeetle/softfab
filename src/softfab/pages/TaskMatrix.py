@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from collections import defaultdict
+from typing import Iterator, cast
 import time
 
 from softfab.CSVPage import presentCSVLink
@@ -14,7 +15,7 @@ from softfab.formlib import dropDownList, emptyOption, makeForm, submitButton
 from softfab.jobview import createStatusBar
 from softfab.timelib import iterDays, normalizeWeek, secondsPerDay, weeksInYear
 from softfab.userlib import User, checkPrivilege
-from softfab.webgui import Table, cell, pageLink, pageURL
+from softfab.webgui import Column, Table, cell, pageLink, pageURL
 from softfab.xmlgen import XMLContent, xhtml
 
 
@@ -76,22 +77,22 @@ class Matrix(Table):
     displayed wich uses it.
     '''
 
-    def iterColumns(self, proc, **kwargs):
-        yield 'Task Definitions'
-        dayStart = proc.beginWeek
+    def iterColumns(self, **kwargs: object) -> Iterator[Column]:
+        yield Column('Task Definitions')
+        dayStart = cast(TaskMatrixProcessor, kwargs['proc']).beginWeek
         for _ in range(7):
             timestamp = time.localtime(dayStart)
             # Note: This would fail in the weeks in which daylight saving time
             #       starts or ends, except that we only print 1 week and the
             #       day on which the time adjustment is done is always Sunday.
             dayStart += secondsPerDay
-            yield (
+            yield Column((
                 time.strftime("%a", timestamp),
                 xhtml.br,
                 time.strftime("%d %b", timestamp),
-                )
-        yield 'Total'
-        yield 'Week'
+                ))
+        yield Column('Total')
+        yield Column('Week')
 
     def iterRows(self, *, proc, **kwargs):
         beginWeek = proc.beginWeek

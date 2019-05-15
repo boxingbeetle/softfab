@@ -58,12 +58,12 @@ def presentMissingConfigs(missingIds: Sequence[str]) -> str:
 class InputTable(Table):
     hideWhenEmpty = True
 
-    def iterColumns(self, **kwargs: object) -> Iterator[str]:
+    def iterColumns(self, **kwargs: object) -> Iterator[Column]:
         taskSet = cast(TaskSetWithInputs, kwargs['taskSet'])
-        yield 'Input'
-        yield 'Locator'
+        yield Column('Input')
+        yield Column('Locator')
         if taskSet.hasLocalInputs():
-            yield 'Local at'
+            yield Column('Local at')
 
     def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
         taskSet = cast(TaskSetWithInputs, kwargs['taskSet'])

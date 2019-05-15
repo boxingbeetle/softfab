@@ -12,7 +12,7 @@ from softfab.frameworkview import FrameworkColumn
 from softfab.pageargs import IntArg, PageArgs, SortArg
 from softfab.pagelinks import createProductDetailsLink
 from softfab.userlib import User, checkPrivilege
-from softfab.webgui import docLink
+from softfab.webgui import Column, docLink
 from softfab.xmlgen import XMLContent, txt, xhtml
 
 
@@ -34,7 +34,7 @@ class FrameworksTable(DataTable):
     editColumn = LinkColumn('Edit', 'FrameworkEdit')
     deleteColumn = LinkColumn('Delete', 'FrameworkDelete')
 
-    def iterColumns(self, **kwargs):
+    def iterColumns(self, **kwargs: object) -> Iterator[Column]:
         yield self.nameColumn
         yield self.wrapperColumn
         if anyExtract():

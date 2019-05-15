@@ -1,5 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from typing import Iterator, cast
+
 from softfab.Page import InvalidRequest
 from softfab.datawidgets import (
     DataColumn, DataTable, DurationColumn, TimeColumn
@@ -15,6 +17,7 @@ from softfab.taskview import (
     getTaskStatus
 )
 from softfab.userview import OwnerColumn
+from softfab.webgui import Column
 
 
 class TaskRunsTable(DataTable):
@@ -39,7 +42,7 @@ class TaskRunsTable(DataTable):
         '''
         return project.showTargets
 
-    def iterColumns(self, **kwargs):
+    def iterColumns(self, **kwargs: object) -> Iterator[Column]:
         yield self.startTimeColumn
         yield self.durationColumn
         yield self.taskColumn
@@ -82,7 +85,8 @@ class JobTaskRunsTable(TaskRunsTable):
         job = proc.job
         return () if job is None else job.getTaskSequence()
 
-    def iterColumns(self, proc, **kwargs):
+    def iterColumns(self, **kwargs: object) -> Iterator[Column]:
+        proc = cast(JobProcessorMixin, kwargs['proc'])
         yield self.taskColumn
         if project['taskprio']:
             yield self.priorityColumn

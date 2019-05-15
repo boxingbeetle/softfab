@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from enum import Enum
-from typing import ClassVar, Mapping, Optional
+from typing import ClassVar, Iterator, Mapping, Optional
 
 from softfab.pageargs import dynamic, mandatory
 from softfab.utils import abstract, iterable
@@ -682,7 +682,7 @@ class FormTable(Table):
     '''CSS class for field widget cells.'''
     style = 'properties'
 
-    def iterColumns(self, **kwargs):
+    def iterColumns(self, **kwargs: object) -> Iterator[Column]:
         yield Column(None, cellStyle = self.labelStyle)
         yield Column(None, cellStyle = self.fieldStyle)
 

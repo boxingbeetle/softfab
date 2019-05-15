@@ -2,7 +2,7 @@
 
 from collections import defaultdict
 from enum import Enum
-from typing import Iterator
+from typing import Iterator, cast
 
 from softfab.FabPage import FabPage
 from softfab.ReportMixin import ReportProcessor, ReportTaskArgs
@@ -19,7 +19,7 @@ from softfab.tasktables import TaskRunsTable
 from softfab.taskview import TaskColumn
 from softfab.timeview import formatTime
 from softfab.userlib import User, checkPrivilege
-from softfab.webgui import pageLink
+from softfab.webgui import Column, pageLink
 from softfab.xmlgen import XMLContent, xhtml
 
 
@@ -178,7 +178,8 @@ class ExtractedDataTable(TaskRunsTable):
     def getRecordsToQuery(self, proc):
         return proc.tasks
 
-    def iterColumns(self, proc, **kwargs):
+    def iterColumns(self, **kwargs: object) -> Iterator[Column]:
+        proc = cast(ExtractedData_GET.Processor, kwargs['proc'])
         yield createTimeColumn
         yield TaskColumn.instance
         for key in sorted(proc.activeKeys):
@@ -186,7 +187,8 @@ class ExtractedDataTable(TaskRunsTable):
 
 VisualizationType = Enum('VisualizationType', 'CHART_BAR TABLE')
 
-class ExtractedData_GET(FabPage['ExtractedData_GET.Processor', 'ExtractedData_GET.Arguments']):
+class ExtractedData_GET(FabPage['ExtractedData_GET.Processor',
+                                'ExtractedData_GET.Arguments']):
     icon = 'Reports2'
     description = 'Extracted Data'
 

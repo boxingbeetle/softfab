@@ -25,8 +25,6 @@ from softfab.xmlgen import (
     xhtml
 )
 
-if TYPE_CHECKING:
-    from softfab.datawidgets import _TableData
 
 def pageURL(
         page: str,
@@ -458,29 +456,21 @@ class Table(Widget):
     hideWhenEmpty = False
 
     def present(self, **kwargs: object) -> XMLContent:
-        data = cast(Optional['_TableData'], kwargs.pop('data', None))
         # Any 'columns' argument will be from an outer table; discard it.
         kwargs.pop('columns', None)
-
         # Determine visible columns.
-        if data is None:
-            columns = tuple(
-                Column.adapt(column)
-                for column in self.iterColumns(**kwargs)
-                )
-        else:
-            columns = data.columns
+        columns = tuple(self.iterColumns(**kwargs))
 
-        body = self.__presentBody(columns=columns, data=data, **kwargs)
+        body = self.__presentBody(columns=columns, **kwargs)
         if body is None:
             return None
         else:
             return xhtml.table(
                 id_ = self.widgetId,
-                class_ = self.joinStyles(self.iterStyles(data=data, **kwargs))
+                class_ = self.joinStyles(self.iterStyles(**kwargs))
                 )[
-                    self.__presentCaption(data=data, **kwargs),
-                    self.__presentHead(columns=columns, data=data, **kwargs),
+                    self.__presentCaption(**kwargs),
+                    self.__presentHead(columns=columns, **kwargs),
                     body
                 ]
 
@@ -572,17 +562,16 @@ class Table(Widget):
 
     def iterColumns(self, # pylint: disable=unused-argument
             **kwargs: object
-            ) -> Iterator[Union[Column, XMLContent]]:
+            ) -> Iterator[Column]:
         '''Iterates through the column definitions.
-        The default implementation iterates through the field named "columns";
-        if the table always contains the same columns, defining the "columns"
-        field is more efficient than overriding this method.
-        Each element should be a Column instance or a string or XMLNode
-        containing a column label.
+        The default implementation iterates through the field named `columns`;
+        each element in the field should be a Column instance or a string or
+        XMLNode containing a column label.
         If the column should not be given a header, None should be used as the
         label; if all labels are None, the table will have no header.
         '''
-        return iter(getattr(self, 'columns'))
+        for column in getattr(self, 'columns'):
+            yield Column.adapt(column)
 
     def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
         '''Iterates through the row data.
@@ -601,10 +590,8 @@ class Panel(Table):
     content = None # type: Optional[XMLPresentable]
     hideWhenEmpty = True
 
-    def iterColumns(self,
-            **kwargs: object
-            ) -> Iterator[Union[Column, XMLContent]]:
-        yield self.label
+    def iterColumns(self, **kwargs: object) -> Iterator[Column]:
+        yield Column.adapt(self.label)
 
     def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
         content = adaptToXML(self.presentContent(**kwargs))

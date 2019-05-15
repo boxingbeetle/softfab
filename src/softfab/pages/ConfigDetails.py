@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Iterable
+from typing import Iterable, Iterator, cast
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
@@ -20,7 +20,7 @@ from softfab.selectview import TagArgs
 from softfab.userlib import User, checkPrivilege
 from softfab.utils import pluralize
 from softfab.webgui import (
-    PresenterFunction, Table, cell, decoration, pageLink, unorderedList
+    Column, PresenterFunction, Table, cell, decoration, pageLink, unorderedList
 )
 from softfab.xmlgen import XMLContent, txt, xhtml
 
@@ -79,11 +79,12 @@ class TasksTable(Table):
 class InputTable(Table):
     hideWhenEmpty = True
 
-    def iterColumns(self, proc, **kwargs):
-        yield 'Input'
-        yield 'Locator'
+    def iterColumns(self, **kwargs: object) -> Iterator[Column]:
+        proc = cast(ConfigDetails_GET.Processor, kwargs['proc'])
+        yield Column('Input')
+        yield Column('Locator')
         if proc.config.hasLocalInputs():
-            yield 'Local at'
+            yield Column('Local at')
 
     def iterRows(self, *, proc, **kwargs):
         config = proc.config

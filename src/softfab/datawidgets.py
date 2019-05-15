@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from abc import ABC
-from typing import ClassVar, Optional, Sequence, Union
+from typing import ClassVar, Iterator, Optional, Sequence, Union, cast
 
 from softfab.databaselib import Database
 from softfab.pageargs import ArgsCorrected
@@ -127,7 +127,7 @@ class DurationColumn(DataColumn):
 class _TableData:
 
     def __init__(self, table, proc):
-        columns = tuple(table.iterColumns(proc=proc))
+        columns = tuple(table.iterColumns(proc=proc, data=None))
 
         records = table.getRecordsToQuery(proc)
         if hasattr(records, '__len__'):
@@ -284,6 +284,14 @@ class DataTable(Table, ABC):
         Raises ArgsCorrected if the sort order was invalid or incomplete.
         '''
         return _TableData(self, proc)
+
+    def iterColumns(self, **kwargs: object) -> Iterator[Column]:
+        data = cast(Optional[_TableData], kwargs['data'])
+        if data is None:
+            return super().iterColumns(**kwargs)
+        else:
+            # Use cached version.
+            return iter(data.columns)
 
     def iterRowStyles(self, rowNr, record, **kwargs): # pylint: disable=unused-argument
         '''Override this to apply one or more CSS styles to a row.

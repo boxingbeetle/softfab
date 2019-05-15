@@ -2,7 +2,7 @@
 
 from collections import defaultdict
 from enum import Enum
-from typing import Iterator
+from typing import Iterator, Sequence, cast
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor, PresentableError, Redirect
@@ -17,7 +17,9 @@ from softfab.resourcelib import resourceDB
 from softfab.resourceview import getResourceStatus, presentCapabilities
 from softfab.restypelib import resTypeDB, taskRunnerResourceTypeName
 from softfab.userlib import User, checkPrivilege
-from softfab.webgui import Widget, docLink, header, pageLink, pageURL, row
+from softfab.webgui import (
+    Column, Widget, docLink, header, pageLink, pageURL, row
+)
 from softfab.xmlgen import XML, XMLContent, xhtml
 
 
@@ -76,7 +78,7 @@ class ResourcesTable(DataTable):
         CapabilitiesColumn(keyName = 'capabilities'),
         StateColumn(keyName = 'state', cellStyle = 'strong'),
         ReservedByColumn('Reserved By', 'user'),
-        )
+        ) # type: Sequence[Column]
     reserveColumn = ReserveColumn('Action')
     # TODO: These can be used again when the TR-specific pages have been
     #       replaced.
@@ -84,7 +86,8 @@ class ResourcesTable(DataTable):
     editColumn = EditColumn('Edit')
     deleteColumn = LinkColumn('Delete', 'ResourceDelete')
 
-    def iterColumns(self, proc, **kwargs):
+    def iterColumns(self, **kwargs: object) -> Iterator[Column]:
+        proc = cast(PageProcessor, kwargs['proc'])
         yield from self.fixedColumns
         user = proc.user
         if user.hasPrivilege('r/a'):

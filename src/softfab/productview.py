@@ -1,14 +1,14 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from abc import ABC
-from typing import ClassVar
+from typing import ClassVar, Iterator
 
 from softfab.jobview import combinedStatus
 from softfab.pagelinks import createTaskInfoLink, createTaskRunnerDetailsLink
 from softfab.productdeflib import ProductType
 from softfab.taskview import getTaskStatus
 from softfab.utils import abstract
-from softfab.webgui import Table, cell, row
+from softfab.webgui import Column, Table, cell, row
 from softfab.xmlgen import txt, xhtml
 
 
@@ -55,18 +55,18 @@ class ProductTable(Table, ABC):
     def getProducts(self, proc):
         raise NotImplementedError
 
-    def iterColumns(self, proc, **kwargs):
+    def iterColumns(self, **kwargs: object) -> Iterator[Column]:
         # TODO: hasLocal is computed twice: here and in iterRows().
-        products = self.getProducts(proc)
+        products = self.getProducts(kwargs['proc'])
         hasLocal = any(prod.isLocal() for prod in products)
-        yield self.label
+        yield Column(self.label)
         if hasLocal:
-            yield 'Local at'
+            yield Column('Local at')
         if self.showProducers:
-            yield 'Producer'
+            yield Column('Producer')
         if self.showConsumers:
-            yield 'Consumers'
-        yield 'Locator'
+            yield Column('Consumers')
+        yield Column('Locator')
 
     def filterProducers(self, proc, producers): # pylint: disable=unused-argument
         '''Iterates through those producer task names that should be shown in
