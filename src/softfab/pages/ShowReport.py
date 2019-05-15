@@ -3,18 +3,18 @@
 from typing import Iterator
 
 from softfab.FabPage import FabPage
-from softfab.Page import InvalidRequest, PageProcessor
+from softfab.Page import PageProcessor
 from softfab.datawidgets import DataTable
-from softfab.joblib import jobDB
 from softfab.jobview import CommentPanel, JobsSubTable
 from softfab.pagelinks import (
     JobIdArgs, TaskIdArgs, createConfigDetailsLink, createTaskInfoLink,
     createTaskRunnerDetailsLink
 )
 from softfab.productview import ProductTable
-from softfab.resourcelib import getTaskRunner, iterTaskRunners
+from softfab.request import Request
+from softfab.resourcelib import getTaskRunner
 from softfab.resourceview import getResourceStatus
-from softfab.tasktables import JobTaskRunsTable
+from softfab.tasktables import JobProcessorMixin, JobTaskRunsTable
 from softfab.userlib import User, checkPrivilege
 from softfab.utils import pluralize
 from softfab.webgui import Table, Widget, cell, pageLink
@@ -54,17 +54,10 @@ class ShowReport_GET(FabPage['ShowReport_GET.Processor',
     class Arguments(JobIdArgs):
         pass
 
-    class Processor(PageProcessor[JobIdArgs]):
+    class Processor(JobProcessorMixin, PageProcessor[JobIdArgs]):
 
-        def process(self, req, user):
-            jobId = req.args.jobId
-            try:
-                job = jobDB[jobId]
-            except KeyError:
-                raise InvalidRequest('No job exists with ID "%s"' % jobId)
-            job.updateSummaries(tuple(iterTaskRunners()))
-            # pylint: disable=attribute-defined-outside-init
-            self.job = job
+        def process(self, req: Request[JobIdArgs], user: User) -> None:
+            self.initJob(req)
 
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'j/a')

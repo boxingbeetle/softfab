@@ -6,7 +6,6 @@ from softfab.FabPage import FabPage
 from softfab.Page import InvalidRequest, PageProcessor
 from softfab.datawidgets import DataTable
 from softfab.frameworklib import frameworkDB
-from softfab.joblib import jobDB
 from softfab.pagelinks import (
     TaskIdArgs, createFrameworkDetailsLink, createJobLink,
     createTaskDetailsLink, createTaskHistoryLink, createTaskRunnerDetailsLink
@@ -14,12 +13,12 @@ from softfab.pagelinks import (
 from softfab.paramview import ParametersTable
 from softfab.productview import ProductTable
 from softfab.projectlib import project
-from softfab.resourcelib import iterTaskRunners
+from softfab.request import Request
 from softfab.resourceview import InlineResourcesTable
 from softfab.selectview import valuesToText
 from softfab.taskdeflib import taskDefDB
 from softfab.taskdefview import formatTimeout
-from softfab.tasktables import JobTaskRunsTable
+from softfab.tasktables import JobProcessorMixin, JobTaskRunsTable
 from softfab.userlib import User, checkPrivilege
 from softfab.webgui import PropertiesTable, Widget
 from softfab.xmlgen import XMLContent, txt, xhtml
@@ -162,26 +161,20 @@ class ShowTaskInfo_GET(FabPage['ShowTaskInfo_GET.Processor',
     class Arguments(TaskIdArgs):
         pass
 
-    class Processor(PageProcessor[TaskIdArgs]):
+    class Processor(JobProcessorMixin, PageProcessor[TaskIdArgs]):
 
-        def process(self, req, user):
-            jobId = req.args.jobId
+        def process(self, req: Request[TaskIdArgs], user: User) -> None:
+            self.initJob(req)
+
             taskName = req.args.taskName
-
-            try:
-                job = jobDB[jobId]
-            except KeyError:
-                raise InvalidRequest('No job exists with ID "%s"' % jobId)
-            job.updateSummaries(tuple(iterTaskRunners()))
-
-            task = job.getTask(taskName)
+            task = self.job.getTask(taskName)
             if task is None:
                 raise InvalidRequest(
-                    'There is no task named "%s" in job %s' % (taskName, jobId)
+                    'There is no task named "%s" in job %s'
+                    % (taskName, req.args.jobId)
                     )
 
             # pylint: disable=attribute-defined-outside-init
-            self.job = job
             self.task = task
 
     def checkAccess(self, user: User) -> None:

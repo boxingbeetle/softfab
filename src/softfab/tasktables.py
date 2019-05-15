@@ -1,11 +1,15 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from softfab.Page import InvalidRequest
 from softfab.datawidgets import (
     DataColumn, DataTable, DurationColumn, TimeColumn
 )
+from softfab.joblib import jobDB
 from softfab.jobview import targetColumn
-from softfab.pagelinks import createTaskRunnerDetailsLink
+from softfab.pagelinks import JobIdArgs, createTaskRunnerDetailsLink
 from softfab.projectlib import project
+from softfab.request import Request
+from softfab.resourcelib import iterTaskRunners
 from softfab.taskview import (
     AbortColumn, ExportColumn, ExtractedColumn, SummaryColumn, TaskColumn,
     getTaskStatus
@@ -50,6 +54,19 @@ class TaskRunnerColumn(DataColumn):
 
     def presentCell(self, record, **kwargs):
         return createTaskRunnerDetailsLink(record[self.keyName])
+
+class JobProcessorMixin:
+
+    def initJob(self, req: Request[JobIdArgs]) -> None:
+        jobId = req.args.jobId
+
+        try:
+            job = jobDB[jobId]
+        except KeyError:
+            raise InvalidRequest('No job exists with ID "%s"' % jobId)
+        job.updateSummaries(tuple(iterTaskRunners()))
+
+        self.job = job
 
 class JobTaskRunsTable(TaskRunsTable):
     sortField = None
