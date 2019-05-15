@@ -3,7 +3,7 @@
 from typing import Iterator
 
 from softfab.FabPage import FabPage
-from softfab.Page import PageProcessor
+from softfab.Page import InvalidRequest, PageProcessor
 from softfab.datawidgets import DataTable
 from softfab.frameworklib import frameworkDB
 from softfab.joblib import jobDB
@@ -168,19 +168,22 @@ class ShowTaskInfo_GET(FabPage['ShowTaskInfo_GET.Processor',
             jobId = req.args.jobId
             taskName = req.args.taskName
 
-            job = jobDB.get(jobId)
-            task = None
-            taskDef = None
-            if job is not None:
-                task = job.getTask(taskName)
-                if task is not None:
-                    taskDef = task.getDef()
-                    job.updateSummaries(tuple(iterTaskRunners()))
+            try:
+                job = jobDB[jobId]
+            except KeyError:
+                raise InvalidRequest('No job exists with ID "%s"' % jobId)
+            job.updateSummaries(tuple(iterTaskRunners()))
+
+            task = job.getTask(taskName)
+            if task is None:
+                raise InvalidRequest(
+                    'There is no task named "%s" in job %s' % (taskName, jobId)
+                    )
 
             # pylint: disable=attribute-defined-outside-init
             self.job = job
             self.task = task
-            self.taskDef = taskDef
+            self.taskDef = task.getDef()
 
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'j/a')
@@ -194,34 +197,8 @@ class ShowTaskInfo_GET(FabPage['ShowTaskInfo_GET.Processor',
         yield SelfTaskRunsTable.instance
 
     def presentContent(self, proc: Processor) -> XMLContent:
-        job = proc.job
-        task = proc.task
-        jobId = proc.args.jobId
-        taskName = proc.args.taskName
-
-        if job is None:
-            yield (
-                xhtml.h2[ 'Invalid job ID' ],
-                xhtml.p[
-                    'There is no job with ID ', xhtml.b[ jobId ]
-                    ]
-                )
-            # No parent link, since it would point to an invalid job as well.
-            return
-        if task is None:
-            yield (
-                xhtml.h2[ 'Invalid task name' ],
-                xhtml.p[
-                    'There is no task named ', xhtml.b[ taskName ],
-                    ' in this job.'
-                    ],
-                self.backToParent(proc.req)
-                )
-            return
-
-        taskName = task.getName()
         yield SelfTaskRunsTable.instance.present(proc=proc)
         yield DetailsTable.instance.present(proc=proc)
         yield InputTable.instance.present(proc=proc)
         yield OutputTable.instance.present(proc=proc)
-        yield xhtml.p[ createTaskHistoryLink(taskName) ]
+        yield xhtml.p[ createTaskHistoryLink(proc.args.taskName) ]
