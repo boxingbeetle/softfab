@@ -169,10 +169,10 @@ class SimpleConfigTable(DataTable):
         _NameColumn(),
         DataColumn('#', 'nrtasks', cellStyle = 'rightalign'),
         DataColumn(keyName = 'description')
-        ) # type: Sequence[Column]
+        ) # type: Sequence[DataColumn]
           # Workaround for https://github.com/python/mypy/issues/4444
 
-    def iterColumns(self, **kwargs: object) -> Iterator[Column]:
+    def iterColumns(self, **kwargs: object) -> Iterator[DataColumn]:
         yield from self.fixedColumns
         if self.showTargets and project.showTargets:
             yield TargetsColumn.instance
@@ -185,7 +185,7 @@ class SimpleConfigTable(DataTable):
 
 class ConfigTable(SimpleConfigTable):
 
-    def iterColumns(self, **kwargs: object) -> Iterator[Column]:
+    def iterColumns(self, **kwargs: object) -> Iterator[DataColumn]:
         yield LinkColumn('Load', 'Execute', idArg = 'config')
         yield from super().iterColumns(**kwargs)
         yield LinkColumn(

@@ -19,7 +19,7 @@ from softfab.tasktables import TaskRunsTable
 from softfab.taskview import TaskColumn
 from softfab.timeview import formatTime
 from softfab.userlib import User, checkPrivilege
-from softfab.webgui import Column, pageLink
+from softfab.webgui import pageLink
 from softfab.xmlgen import XMLContent, xhtml
 
 
@@ -178,7 +178,7 @@ class ExtractedDataTable(TaskRunsTable):
     def getRecordsToQuery(self, proc):
         return proc.tasks
 
-    def iterColumns(self, **kwargs: object) -> Iterator[Column]:
+    def iterColumns(self, **kwargs: object) -> Iterator[DataColumn]:
         proc = cast(ExtractedData_GET.Processor, kwargs['proc'])
         yield createTimeColumn
         yield TaskColumn.instance

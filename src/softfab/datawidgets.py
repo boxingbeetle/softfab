@@ -217,12 +217,11 @@ def _buildKeyMap(columns):
     '''
     keyMap = {}
     for column in columns:
-        if isinstance(column, DataColumn):
-            keyName = column.keyName
-            if keyName is not None:
-                sortKey = column.sortKey
-                if sortKey is not None:
-                    keyMap[keyName] = sortKey
+        keyName = column.keyName
+        if keyName is not None:
+            sortKey = column.sortKey
+            if sortKey is not None:
+                keyMap[keyName] = sortKey
     return keyMap
 
 class DataTable(Table, ABC):
@@ -285,10 +284,10 @@ class DataTable(Table, ABC):
         '''
         return _TableData(self, proc)
 
-    def iterColumns(self, **kwargs: object) -> Iterator[Column]:
+    def iterColumns(self, **kwargs: object) -> Iterator[DataColumn]:
         data = cast(Optional[_TableData], kwargs['data'])
         if data is None:
-            return super().iterColumns(**kwargs)
+            return cast(Iterator[DataColumn], super().iterColumns(**kwargs))
         else:
             # Use cached version.
             return iter(data.columns)

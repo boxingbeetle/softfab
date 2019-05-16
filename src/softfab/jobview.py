@@ -18,7 +18,7 @@ from softfab.schedulerefs import createScheduleDetailsURL
 from softfab.sortedqueue import SortedQueue
 from softfab.taskview import getTaskStatus
 from softfab.userview import OwnerColumn
-from softfab.webgui import Column, Panel, cell
+from softfab.webgui import Panel, cell
 from softfab.xmlgen import XMLContent, xhtml
 
 # High priority status codes are at the end of the list.
@@ -179,7 +179,7 @@ class JobsTable(DataTable):
     def iterRowStyles(self, rowNr, record, **kwargs):
         yield getJobStatus(record)
 
-    def iterColumns(self, **kwargs: object) -> Iterator[Column]:
+    def iterColumns(self, **kwargs: object) -> Iterator[DataColumn]:
         yield createTimeColumn
         yield self.leadTimeColumn
         yield _DescriptionColumn.instance

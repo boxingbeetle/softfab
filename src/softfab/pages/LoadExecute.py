@@ -14,7 +14,7 @@ from softfab.selectview import (
     BasketArgs, SelectProcMixin, TagArgs, selectDialog
 )
 from softfab.userlib import User, checkPrivilege
-from softfab.webgui import Column, docLink
+from softfab.webgui import docLink
 from softfab.xmlgen import XMLContent, xhtml
 
 
@@ -42,7 +42,7 @@ class BaseTagConfigTable(ConfigTable):
         if style is not None:
             yield style
 
-    def iterColumns(self, **kwargs: object) -> Iterator[Column]:
+    def iterColumns(self, **kwargs: object) -> Iterator[DataColumn]:
         proc = kwargs['proc']
         tableClass = (
             SimpleConfigTable if self._simpleMode(proc) else ConfigTable

@@ -17,7 +17,6 @@ from softfab.taskview import (
     getTaskStatus
 )
 from softfab.userview import OwnerColumn
-from softfab.webgui import Column
 
 
 class TaskRunsTable(DataTable):
@@ -42,7 +41,7 @@ class TaskRunsTable(DataTable):
         '''
         return project.showTargets
 
-    def iterColumns(self, **kwargs: object) -> Iterator[Column]:
+    def iterColumns(self, **kwargs: object) -> Iterator[DataColumn]:
         yield self.startTimeColumn
         yield self.durationColumn
         yield self.taskColumn
@@ -85,7 +84,7 @@ class JobTaskRunsTable(TaskRunsTable):
         job = proc.job
         return () if job is None else job.getTaskSequence()
 
-    def iterColumns(self, **kwargs: object) -> Iterator[Column]:
+    def iterColumns(self, **kwargs: object) -> Iterator[DataColumn]:
         proc = cast(JobProcessorMixin, kwargs['proc'])
         yield self.taskColumn
         if project['taskprio']:

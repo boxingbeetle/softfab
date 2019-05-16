@@ -17,9 +17,7 @@ from softfab.resourcelib import resourceDB
 from softfab.resourceview import getResourceStatus, presentCapabilities
 from softfab.restypelib import resTypeDB, taskRunnerResourceTypeName
 from softfab.userlib import User, checkPrivilege
-from softfab.webgui import (
-    Column, Widget, docLink, header, pageLink, pageURL, row
-)
+from softfab.webgui import Widget, docLink, header, pageLink, pageURL, row
 from softfab.xmlgen import XML, XMLContent, xhtml
 
 
@@ -78,7 +76,7 @@ class ResourcesTable(DataTable):
         CapabilitiesColumn(keyName = 'capabilities'),
         StateColumn(keyName = 'state', cellStyle = 'strong'),
         ReservedByColumn('Reserved By', 'user'),
-        ) # type: Sequence[Column]
+        ) # type: Sequence[DataColumn]
     reserveColumn = ReserveColumn('Action')
     # TODO: These can be used again when the TR-specific pages have been
     #       replaced.
@@ -86,7 +84,7 @@ class ResourcesTable(DataTable):
     editColumn = EditColumn('Edit')
     deleteColumn = LinkColumn('Delete', 'ResourceDelete')
 
-    def iterColumns(self, **kwargs: object) -> Iterator[Column]:
+    def iterColumns(self, **kwargs: object) -> Iterator[DataColumn]:
         proc = cast(PageProcessor, kwargs['proc'])
         yield from self.fixedColumns
         user = proc.user

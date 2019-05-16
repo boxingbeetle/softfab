@@ -16,7 +16,7 @@ from softfab.scheduleview import (
 )
 from softfab.userlib import User, checkPrivilege, checkPrivilegeForOwned
 from softfab.userview import OwnerColumn
-from softfab.webgui import Column, Widget, pageLink, pageURL
+from softfab.webgui import Widget, pageLink, pageURL
 from softfab.xmlgen import XMLContent, xhtml
 
 
@@ -67,7 +67,7 @@ class ScheduleTable(DataTable):
     def iterRowStyles(self, rowNr, record, **kwargs):
         yield getScheduleStatus(record)
 
-    def iterColumns(self, **kwargs: object) -> Iterator[Column]:
+    def iterColumns(self, **kwargs: object) -> Iterator[DataColumn]:
         yield NameColumn.instance
         yield LastRunColumn.instance
         yield NextRunColumn.instance
