@@ -10,7 +10,7 @@ from softfab.FabPage import FabPage, IconModifier
 from softfab.Page import (
     InternalError, InvalidRequest, PageProcessor, PresentableError, Redirect
 )
-from softfab.databaselib import Database, Record
+from softfab.databaselib import DBRecord, Database
 from softfab.formlib import actionButtons, backButton, makeForm, textInput
 from softfab.pageargs import EnumArg, PageArgs, StrArg
 from softfab.request import Request
@@ -39,12 +39,12 @@ class EditArgs(PageArgs):
 EditArgsT = TypeVar('EditArgsT', bound='EditArgs')
 EditProcT = TypeVar('EditProcT', bound='EditProcessorBase')
 
-class AbstractPhase(Generic[EditProcT, EditArgsT, Record]):
+class AbstractPhase(Generic[EditProcT, EditArgsT, DBRecord]):
     '''Note: This class is similar to DialogStep, but I don't know yet if/how
     that similarity can be exploited.
     '''
 
-    def __init__(self, page: 'EditPage[EditArgsT, Record]'):
+    def __init__(self, page: 'EditPage[EditArgsT, DBRecord]'):
         self.page = page
 
     def process(self, proc: EditProcT) -> None:
@@ -58,14 +58,14 @@ class AbstractPhase(Generic[EditProcT, EditArgsT, Record]):
         '''
         raise NotImplementedError
 
-class EditPhase(AbstractPhase['EditProcessor[EditArgsT, Record]',
-                              EditArgsT, Record],
-                Generic[EditArgsT, Record]):
+class EditPhase(AbstractPhase['EditProcessor[EditArgsT, DBRecord]',
+                              EditArgsT, DBRecord],
+                Generic[EditArgsT, DBRecord]):
     '''First and main phase: actual editing of the record.
     '''
 
     def presentContent(self,
-                       proc: 'EditProcessorBase[EditArgsT, Record]'
+                       proc: 'EditProcessorBase[EditArgsT, DBRecord]'
                        ) -> XMLContent:
         page = self.page
 
@@ -84,13 +84,13 @@ class EditPhase(AbstractPhase['EditProcessor[EditArgsT, Record]',
             xhtml.p[ actionButtons(*buttons) ]
             ].present(proc=proc)
 
-class SavePhase(AbstractPhase['EditProcessor[EditArgsT, Record]',
-                              EditArgsT, Record],
-                Generic[EditArgsT, Record]):
+class SavePhase(AbstractPhase['EditProcessor[EditArgsT, DBRecord]',
+                              EditArgsT, DBRecord],
+                Generic[EditArgsT, DBRecord]):
     '''Commit edited element to the database.
     '''
 
-    def process(self, proc: 'EditProcessor[EditArgsT, Record]') -> None:
+    def process(self, proc: 'EditProcessor[EditArgsT, DBRecord]') -> None:
         page = self.page
         args = proc.args
         oldElement = proc.oldElement
@@ -101,7 +101,7 @@ class SavePhase(AbstractPhase['EditProcessor[EditArgsT, Record]',
 
         if proc.replace:
             try:
-                existingElement = page.db[args.newId] # type: Optional[Record]
+                existingElement = page.db[args.newId] # type: Optional[DBRecord]
             except KeyError:
                 # Record is no longer in DB; create instead of replace.
                 existingElement = None
@@ -125,19 +125,19 @@ class SavePhase(AbstractPhase['EditProcessor[EditArgsT, Record]',
             self.updateRecord(proc, element)
 
     def addRecord(self,
-            proc: 'EditProcessor[EditArgsT, Record]', # pylint: disable=unused-argument
-            element: Record
+            proc: 'EditProcessor[EditArgsT, DBRecord]', # pylint: disable=unused-argument
+            element: DBRecord
             ) -> None:
         self.page.db.add(element)
 
     def updateRecord(self,
-            proc: 'EditProcessor[EditArgsT, Record]', # pylint: disable=unused-argument
-            element: Record
+            proc: 'EditProcessor[EditArgsT, DBRecord]', # pylint: disable=unused-argument
+            element: DBRecord
             ) -> None:
         self.page.db.update(element)
 
     def presentContent(self,
-                       proc: 'EditProcessor[EditArgsT, Record]'
+                       proc: 'EditProcessor[EditArgsT, DBRecord]'
                        ) -> XMLContent:
         page = self.page
         if page.autoName:
@@ -151,14 +151,14 @@ class SavePhase(AbstractPhase['EditProcessor[EditArgsT, Record]',
             page.backToParent(proc.req)
             )
 
-class SaveAsPhase(AbstractPhase['EditProcessor[EditArgsT, Record]',
-                                EditArgsT, Record],
-                  Generic[EditArgsT, Record]):
+class SaveAsPhase(AbstractPhase['EditProcessor[EditArgsT, DBRecord]',
+                                EditArgsT, DBRecord],
+                  Generic[EditArgsT, DBRecord]):
     '''Ask for a name for the record.
     '''
 
     def presentContent(self,
-                       proc: 'EditProcessor[EditArgsT, Record]'
+                       proc: 'EditProcessor[EditArgsT, DBRecord]'
                        ) -> XMLContent:
         page = self.page
         args = proc.args
@@ -169,14 +169,14 @@ class SaveAsPhase(AbstractPhase['EditProcessor[EditArgsT, Record]',
             xhtml.p[ actionButtons('save', 'cancel') ],
             ].present(proc=proc)
 
-class ConfirmOverwritePhase(AbstractPhase['EditProcessor[EditArgsT, Record]',
-                                          EditArgsT, Record],
-                            Generic[EditArgsT, Record]):
+class ConfirmOverwritePhase(AbstractPhase['EditProcessor[EditArgsT, DBRecord]',
+                                          EditArgsT, DBRecord],
+                            Generic[EditArgsT, DBRecord]):
     '''Asks the user for confirmation before overwriting an existing record.
     '''
 
     def presentContent(self,
-                       proc: 'EditProcessor[EditArgsT, Record]'
+                       proc: 'EditProcessor[EditArgsT, DBRecord]'
                        ) -> XMLContent:
         page = self.page
         args = proc.args
@@ -189,11 +189,11 @@ class ConfirmOverwritePhase(AbstractPhase['EditProcessor[EditArgsT, Record]',
             xhtml.p[ actionButtons('save', 'cancel') ]
             ].present(proc=proc)
 
-class EditProcessorBase(PageProcessor[EditArgsT], Generic[EditArgsT, Record]):
+class EditProcessorBase(PageProcessor[EditArgsT], Generic[EditArgsT, DBRecord]):
 
     if TYPE_CHECKING:
         @property
-        def page(self) -> 'EditPage[EditArgsT, Record]': # type: ignore
+        def page(self) -> 'EditPage[EditArgsT, DBRecord]': # type: ignore
             ...
 
     def process(self, req: Request[EditArgsT], user: User) -> None:
@@ -237,14 +237,14 @@ class EditProcessorBase(PageProcessor[EditArgsT], Generic[EditArgsT, Record]):
         self.phase = self.determinePhase(req)
         self.phase.process(self)
 
-    def processState(self, oldElement: Optional[Record]) -> None:
+    def processState(self, oldElement: Optional[DBRecord]) -> None:
         """Load or verify the element's state.
         """
         raise NotImplementedError
 
     def determinePhase(self: EditProcT,
                        req: Request[EditArgsT]
-                       ) -> AbstractPhase[EditProcT, EditArgsT, Record]:
+                       ) -> AbstractPhase[EditProcT, EditArgsT, DBRecord]:
         raise NotImplementedError
 
     def _validateState(self) -> None:
@@ -252,12 +252,12 @@ class EditProcessorBase(PageProcessor[EditArgsT], Generic[EditArgsT, Record]):
         such as inserting default values for empty entries.
         '''
 
-class EditProcessor(EditProcessorBase[EditArgsT, Record]):
+class EditProcessor(EditProcessorBase[EditArgsT, DBRecord]):
 
     if TYPE_CHECKING:
         replace = True
 
-    def processState(self, oldElement: Optional[Record]) -> None:
+    def processState(self, oldElement: Optional[DBRecord]) -> None:
         # Initialize args on first arrival to the edit page.
         # TODO: It would be cleaner if we could separate the data
         #       being edited from the control flow fields that EditPage
@@ -281,8 +281,8 @@ class EditProcessor(EditProcessorBase[EditArgsT, Record]):
 
     def determinePhase(self,
                        req: Request[EditArgsT]
-                       ) -> AbstractPhase['EditProcessor[EditArgsT, Record]',
-                                          EditArgsT, Record]:
+                       ) -> AbstractPhase['EditProcessor[EditArgsT, DBRecord]',
+                                          EditArgsT, DBRecord]:
         # pylint: disable=attribute-defined-outside-init
         page = self.page
         args = self.args
@@ -373,11 +373,11 @@ class EditProcessor(EditProcessorBase[EditArgsT, Record]):
     def createElement(self,
                       recordId: str,
                       args: EditArgsT,
-                      oldElement: Optional[Record]
-                      ) -> Record:
+                      oldElement: Optional[DBRecord]
+                      ) -> DBRecord:
         raise NotImplementedError
 
-    def _initArgs(self, element: Optional[Record]) -> Mapping[str, object]:
+    def _initArgs(self, element: Optional[DBRecord]) -> Mapping[str, object]:
         '''Get initial argument values for editing the given record.
         If the user is creating a new record, None is passed.
         Returns a dictionary containing argument names and values
@@ -394,7 +394,7 @@ class EditProcessor(EditProcessorBase[EditArgsT, Record]):
         Raises PresentableError if there is a problem.
         '''
 
-class EditPage(FabPage[EditProcessor[EditArgsT, Record], EditArgsT], ABC):
+class EditPage(FabPage[EditProcessor[EditArgsT, DBRecord], EditArgsT], ABC):
     description = abstract # type: ClassVar[str]
     icon = abstract # type: ClassVar[str]
     iconModifier = IconModifier.EDIT
@@ -403,7 +403,7 @@ class EditPage(FabPage[EditProcessor[EditArgsT, Record], EditArgsT], ABC):
     #       Pick one term and stick with it.
     elemTitle = abstract # type: ClassVar[str]
     elemName = abstract # type: ClassVar[str]
-    db = abstract # type: Database[Record]
+    db = abstract # type: Database[DBRecord]
     privDenyText = abstract # type: ClassVar[str]
     useScript = abstract # type: ClassVar[bool]
     formId = abstract # type: ClassVar[str]
@@ -420,7 +420,7 @@ class EditPage(FabPage[EditProcessor[EditArgsT, Record], EditArgsT], ABC):
         pass
 
     def getFormContent(self,
-                       proc: EditProcessorBase[EditArgsT, Record]
+                       proc: EditProcessorBase[EditArgsT, DBRecord]
                        ) -> XMLContent:
         """Returns the text and controls contained in the form.
         It will be presented later as part of the form presentation.
@@ -429,29 +429,29 @@ class EditPage(FabPage[EditProcessor[EditArgsT, Record], EditArgsT], ABC):
 
     def __init__(self) -> None:
         FabPage.__init__(self)
-        self.editPhase = EditPhase[EditArgsT, Record](self)
-        self.savePhase = SavePhase[EditArgsT, Record](self)
-        self.saveAsPhase = SaveAsPhase[EditArgsT, Record](self)
+        self.editPhase = EditPhase[EditArgsT, DBRecord](self)
+        self.savePhase = SavePhase[EditArgsT, DBRecord](self)
+        self.saveAsPhase = SaveAsPhase[EditArgsT, DBRecord](self)
         self.confirmOverwritePhase = \
-                ConfirmOverwritePhase[EditArgsT, Record](self)
+                ConfirmOverwritePhase[EditArgsT, DBRecord](self)
 
-    def pageTitle(self, proc: EditProcessor[EditArgsT, Record]) -> str:
+    def pageTitle(self, proc: EditProcessor[EditArgsT, DBRecord]) -> str:
         return 'Edit ' + self.elemTitle
 
     def presentHeadParts(self,
-                         proc: EditProcessor[EditArgsT, Record]
+                         proc: EditProcessor[EditArgsT, DBRecord]
                          ) -> XMLContent:
         yield super().presentHeadParts(proc)
         if self.useScript:
             yield rowManagerScript.present(proc=proc)
 
     def presentContent(self,
-                       proc: EditProcessorBase[EditArgsT, Record]
+                       proc: EditProcessorBase[EditArgsT, DBRecord]
                        ) -> XMLContent:
         return proc.phase.presentContent(proc)
 
     def presentError(self,
-                     proc: EditProcessor[EditArgsT, Record],
+                     proc: EditProcessor[EditArgsT, DBRecord],
                      message: XML
                      ) -> XMLContent:
         yield message

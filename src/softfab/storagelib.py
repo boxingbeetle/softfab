@@ -11,7 +11,7 @@ import logging
 
 from softfab.config import dbDir
 from softfab.databaselib import (
-    Database, DatabaseElem, Record, RecordObserver, createInternalId
+    Database, DatabaseElem, RecordObserver, createInternalId
 )
 from softfab.xmlbind import XMLTag
 from softfab.xmlgen import XMLAttributeValue, XMLContent, xml

@@ -4,14 +4,15 @@ from abc import ABC
 from typing import Callable, ClassVar, Iterator, Sequence, Tuple
 
 from softfab.databaselib import (
-    Comparable, Database, Record, RecordObserver, RecordSubjectMixin, Retriever
+    Comparable, DBRecord, Database, RecordObserver, RecordSubjectMixin,
+    Retriever
 )
 from softfab.utils import abstract
 
 
-def binarySearch(lst: Sequence[Record],
-                 elem: Record,
-                 key: Retriever[Record, Comparable]
+def binarySearch(lst: Sequence[DBRecord],
+                 elem: DBRecord,
+                 key: Retriever[DBRecord, Comparable]
                  ) -> Tuple[bool, int]:
     high = len(lst)
     if high == 0:
@@ -33,12 +34,12 @@ def binarySearch(lst: Sequence[Record],
     else: # elemKey > lowKey
         return False, high
 
-class SortedQueue(RecordSubjectMixin[Record], RecordObserver[Record], ABC):
+class SortedQueue(RecordSubjectMixin[DBRecord], RecordObserver[DBRecord], ABC):
     '''Base class for sorted subsets of databases.
     '''
     compareField = abstract # type: ClassVar[str]
 
-    def __init__(self, db: Database[Record]):
+    def __init__(self, db: Database[DBRecord]):
         RecordSubjectMixin.__init__(self)
         RecordObserver.__init__(self)
         self.__db = db
@@ -59,16 +60,16 @@ class SortedQueue(RecordSubjectMixin[Record], RecordObserver[Record], ABC):
         '''
         self.__db.removeObserver(self)
 
-    def __iter__(self) -> Iterator[Record]:
+    def __iter__(self) -> Iterator[DBRecord]:
         return iter(self._records)
 
-    def __getitem__(self, index: int) -> Record:
+    def __getitem__(self, index: int) -> DBRecord:
         return self._records[index]
 
     def __len__(self) -> int:
         return len(self._records)
 
-    def _filter(self, record: Record) -> bool: # pylint: disable=unused-argument
+    def _filter(self, record: DBRecord) -> bool: # pylint: disable=unused-argument
         '''By default every record is part of the queue.
         If you only want a subset, override this method to return True iff
         the record should be part of the queue.
@@ -92,26 +93,26 @@ class SortedQueue(RecordSubjectMixin[Record], RecordObserver[Record], ABC):
         if compareField in db.uniqueKeys:
             return retriever
         else:
-            def keyFunc(record: Record,
-                        retriever: Callable[[Record], Comparable] = retriever
+            def keyFunc(record: DBRecord,
+                        retriever: Callable[[DBRecord], Comparable] = retriever
                         ) -> Tuple[Comparable, str]:
                 return retriever(record), record.getId()
             return keyFunc
 
-    def added(self, record: Record) -> None:
+    def added(self, record: DBRecord) -> None:
         if self._filter(record):
             found, index = binarySearch(self._records, record, self.__keyFunc)
             assert not found
             self._records.insert(index, record)
             self._notifyAdded(record)
 
-    def removed(self, record: Record) -> None:
+    def removed(self, record: DBRecord) -> None:
         found, index = binarySearch(self._records, record, self.__keyFunc)
         if found:
             del self._records[index]
             self._notifyRemoved(record)
 
-    def updated(self, record: Record) -> None:
+    def updated(self, record: DBRecord) -> None:
         found, index = binarySearch(self._records, record, self.__keyFunc)
         if found == self._filter(record):
             if found:

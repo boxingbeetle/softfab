@@ -46,16 +46,16 @@ class ComparableProto(Protocol):
     def __lt__(self, other: Any) -> bool: ...
 
 Comparable = TypeVar('Comparable', bound=ComparableProto)
-Record = TypeVar('Record', bound='DatabaseElem')
+DBRecord = TypeVar('DBRecord', bound='DatabaseElem')
 R2 = TypeVar('R2', bound='DatabaseElem')
-Retriever = Callable[[Record], Comparable]
+Retriever = Callable[[DBRecord], Comparable]
 
 class DatabaseElem:
     '''Abstract base class for database elements.
     '''
 
-    def __init__(self: Record) -> None:
-        self.__observers = [] # type: List[Callable[[Record], None]]
+    def __init__(self: DBRecord) -> None:
+        self.__observers = [] # type: List[Callable[[DBRecord], None]]
 
     def __hash__(self) -> int:
         return hash(self.getId())
@@ -109,7 +109,7 @@ class DatabaseElem:
         '''
         raise NotImplementedError
 
-    def addObserver(self, observer: Callable[[Record], None]) -> None:
+    def addObserver(self, observer: Callable[[DBRecord], None]) -> None:
         '''Registers an observer function.
         This function is called when this object's value changes.
         The function should take a single parameter, which is a reference
@@ -124,12 +124,12 @@ class DatabaseElem:
         '''
         self.__observers.append(observer)
 
-    def removeObserver(self, observer: Callable[[Record], None]) -> None:
+    def removeObserver(self, observer: Callable[[DBRecord], None]) -> None:
         '''Unregisters an observer function.
         '''
         self.__observers.remove(observer)
 
-    def _notify(self: Record) -> None:
+    def _notify(self: DBRecord) -> None:
         '''Notifies all observers of a change in this object.
         '''
         for observer in list(self.__observers):
@@ -146,49 +146,49 @@ class DatabaseElem:
         or replaced by a more recent version.
         '''
 
-class RecordObserver(Generic[Record]):
+class RecordObserver(Generic[DBRecord]):
     '''Interface for observing changes to records.
     '''
 
-    def added(self, record: Record) -> None:
+    def added(self, record: DBRecord) -> None:
         '''Called when a new record was added to a table.
         '''
         raise NotImplementedError
 
-    def removed(self, record: Record) -> None:
+    def removed(self, record: DBRecord) -> None:
         '''Called when a record was removed from a table.
         '''
         raise NotImplementedError
 
-    def updated(self, record: Record) -> None:
+    def updated(self, record: DBRecord) -> None:
         '''Called when an existing record had its contents updated.
         '''
         raise NotImplementedError
 
-class RecordSubjectMixin(Generic[Record]):
+class RecordSubjectMixin(Generic[DBRecord]):
 
     def __init__(self) -> None:
-        self._observers = [] # type: List[RecordObserver[Record]]
+        self._observers = [] # type: List[RecordObserver[DBRecord]]
 
-    def _notifyAdded(self, record: Record) -> None:
+    def _notifyAdded(self, record: DBRecord) -> None:
         for observer in self._observers:
             observer.added(record)
 
-    def _notifyRemoved(self, record: Record) -> None:
+    def _notifyRemoved(self, record: DBRecord) -> None:
         for observer in self._observers:
             observer.removed(record)
 
-    def _notifyUpdated(self, record: Record) -> None:
+    def _notifyUpdated(self, record: DBRecord) -> None:
         for observer in self._observers:
             observer.updated(record)
 
-    def addObserver(self, observer: RecordObserver[Record]) -> None:
+    def addObserver(self, observer: RecordObserver[DBRecord]) -> None:
         self._observers.append(observer)
 
-    def removeObserver(self, observer: RecordObserver[Record]) -> None:
+    def removeObserver(self, observer: RecordObserver[DBRecord]) -> None:
         self._observers.remove(observer)
 
-class Database(Generic[Record], RecordSubjectMixin[Record], ABC):
+class Database(Generic[DBRecord], RecordSubjectMixin[DBRecord], ABC):
     """Database implemented by a directory containing XML files.
     An element must implement the methods defined in the DatabaseElem class,
     which is also defined in this module.
@@ -256,7 +256,7 @@ class Database(Generic[Record], RecordSubjectMixin[Record], ABC):
         super().__init__()
         if not os.path.exists(self.baseDir):
             os.makedirs(self.baseDir)
-        cache = {} # type: Dict[str, Optional[Record]]
+        cache = {} # type: Dict[str, Optional[DBRecord]]
         for fileName in os.listdir(self.baseDir):
             if fileName.endswith('.xml'):
                 cache[self._keyForFileName(fileName)] = None
@@ -268,17 +268,18 @@ class Database(Generic[Record], RecordSubjectMixin[Record], ABC):
         # created. Storing it per database avoids one instance per record.
         self.__updateFunc = self._update
 
-    def __getitem__(self, key: str) -> Record:
+    def __getitem__(self, key: str) -> DBRecord:
         value = self._cache[key]
         if value is None:
-            value = cast(Record, parse(self.factory, self._fileNameForKey(key)))
+            value = cast(DBRecord,
+                         parse(self.factory, self._fileNameForKey(key)))
             self._register(key, value)
         return value
 
-    def __iter__(self) -> Iterator[Record]:
+    def __iter__(self) -> Iterator[DBRecord]:
         # In most databases all records are cached, so make that quick.
         if self.alwaysInMemory:
-            yield from cast(Iterator[Record], self._cache.values())
+            yield from cast(Iterator[DBRecord], self._cache.values())
         else:
             for key, value in self._cache.items():
                 if value is None:
@@ -306,13 +307,17 @@ class Database(Generic[Record], RecordSubjectMixin[Record], ABC):
 
     _getValueToConvert = __getitem__
 
-    def _register(self, key: str, value: Record) -> None:
+    def _register(self, key: str, value: DBRecord) -> None:
         value.addObserver(self.__updateFunc)
         self._cache[key] = value
         for colKey, values in self.__uniqueValuesFor.items():
             values.add(value[colKey])
 
-    def _unregister(self, key: str, value: Record, notify: bool = True) -> None:
+    def _unregister(self,
+                    key: str,
+                    value: DBRecord,
+                    notify: bool = True
+                    ) -> None:
         value.removeObserver(self.__updateFunc)
         del self._cache[key]
         if notify:
@@ -320,18 +325,18 @@ class Database(Generic[Record], RecordSubjectMixin[Record], ABC):
             value._retired()
             value._unload()
 
-    def _update(self, value: Record) -> None:
+    def _update(self, value: DBRecord) -> None:
         assert self.get(value.getId()) is value, 'ID "%s"' % value.getId()
         self.update(value)
 
-    def _write(self, key: str, value: Record) -> None:
+    def _write(self, key: str, value: DBRecord) -> None:
         path = self._fileNameForKey(key)
         with atomicWrite(path, 'wb', fsync=dbAtomicWrites) as out:
             out.write(
                 value.toXML().flattenXML().encode('ascii', 'xmlcharrefreplace')
                 )
 
-    def get(self, key: str) -> Optional[Record]:
+    def get(self, key: str) -> Optional[DBRecord]:
         if key in self._cache:
             return self[key]
         else:
@@ -340,10 +345,10 @@ class Database(Generic[Record], RecordSubjectMixin[Record], ABC):
     def keys(self) -> KeysViewT[str]:
         return self._cache.keys()
 
-    def values(self) -> ValuesViewT[Record]:
+    def values(self) -> ValuesViewT[DBRecord]:
         if self.alwaysInMemory:
             # All values are in the cache.
-            return cast(ValuesViewT[Record], self._cache.values())
+            return cast(ValuesViewT[DBRecord], self._cache.values())
         else:
             # Load items as they are iterated through.
             # TODO: If you're going to iterate through all items, why not
@@ -353,9 +358,9 @@ class Database(Generic[Record], RecordSubjectMixin[Record], ABC):
             #       different operations.
             return _CachedValuesView(self._cache, self.__getitem__)
 
-    def items(self) -> ItemsViewT[str, Record]:
+    def items(self) -> ItemsViewT[str, DBRecord]:
         if self.alwaysInMemory:
-            return cast(ItemsViewT[str, Record], self._cache.items())
+            return cast(ItemsViewT[str, DBRecord], self._cache.items())
         else:
             return _CachedItemsView(self._cache, self.__getitem__)
 
@@ -423,7 +428,7 @@ class Database(Generic[Record], RecordSubjectMixin[Record], ABC):
                 adjusted += '_'
         return adjusted
 
-    def add(self, value: Record) -> None:
+    def add(self, value: DBRecord) -> None:
         """Adds a record to this database.
         If the added record has an invalid ID (see checkId),
         KeyError is raised.
@@ -441,7 +446,7 @@ class Database(Generic[Record], RecordSubjectMixin[Record], ABC):
         _changeLogger.info('datachange/%s/add/%s', self.name, key)
         self._notifyAdded(value)
 
-    def remove(self, value: Record) -> None:
+    def remove(self, value: DBRecord) -> None:
         """Removes record from this database.
         Raises KeyError if the ID of the given record does not occur in this
         database.
@@ -466,7 +471,7 @@ class Database(Generic[Record], RecordSubjectMixin[Record], ABC):
         value._retired()
         value._unload()
 
-    def update(self, value: Record) -> None:
+    def update(self, value: DBRecord) -> None:
         """Register new version of a record.
         Raises KeyError if the key of the given record does not exist.
         """
@@ -489,7 +494,7 @@ class Database(Generic[Record], RecordSubjectMixin[Record], ABC):
         for key in self.keys():
             self.__getitem__(key)
 
-    def convert(self, visitor: Optional[Callable[[Record], None]] = None) \
+    def convert(self, visitor: Optional[Callable[[DBRecord], None]] = None) \
             -> None:
         '''Converts the XML files that store this database's data to a new
         XML format.
@@ -531,7 +536,7 @@ class Database(Generic[Record], RecordSubjectMixin[Record], ABC):
             logging.exception('Exception while processing record: %s', key)
             raise
 
-class VersionedDatabase(Database[Record]):
+class VersionedDatabase(Database[DBRecord]):
     """Database implementation which keeps different versions of a record.
     VersionedDatabase provides the semantics of Database,
     except for modification: the only way to change a record
@@ -598,7 +603,7 @@ class VersionedDatabase(Database[Record]):
         self.__latestVersionOf = latestVersionOf
         self.__removedRecords = removedRecords
 
-    def __getitem__(self, key: str) -> Record:
+    def __getitem__(self, key: str) -> DBRecord:
         # Test the most common path first: key includes version and is cached.
         value = self._cache.get(key)
         if value is not None:
@@ -610,7 +615,7 @@ class VersionedDatabase(Database[Record]):
         else:
             return value
 
-    def __iter__(self) -> Iterator[Record]:
+    def __iter__(self) -> Iterator[DBRecord]:
         for versionedKey in self.__latestVersionOf.values():
             yield self.getVersion(versionedKey)
 
@@ -647,10 +652,10 @@ class VersionedDatabase(Database[Record]):
         sep = key.rindex('.')
         return key[ : sep] + '|' + key[sep + 1 : ]
 
-    def _update(self, value: Record) -> None:
+    def _update(self, value: DBRecord) -> None:
         raise RuntimeError('modification detected of versioned record')
 
-    def get(self, key: str) -> Optional[Record]:
+    def get(self, key: str) -> Optional[DBRecord]:
         # Lookups with versioned keys should be done with getVersion.
         assert '|' not in key, '"%s"' % key
 
@@ -662,7 +667,7 @@ class VersionedDatabase(Database[Record]):
         else:
             return self.getVersion(versionedKey)
 
-    def getVersion(self, versionedKey: str) -> Record:
+    def getVersion(self, versionedKey: str) -> DBRecord:
         """Get a specific version of a record.
         Raises KeyError if the key does not exist.
         """
@@ -671,7 +676,7 @@ class VersionedDatabase(Database[Record]):
         if value is None:
             # Key exists, but was not cached yet.
             value = cast(
-                Record,
+                DBRecord,
                 parse(self.factory, self._fileNameForKey(versionedKey))
                 )
             self._register(versionedKey, value)
@@ -687,13 +692,13 @@ class VersionedDatabase(Database[Record]):
     def keys(self) -> KeysViewT[str]:
         return self.__latestVersionOf.keys()
 
-    def values(self) -> ValuesViewT[Record]:
+    def values(self) -> ValuesViewT[DBRecord]:
         return _IndirectValuesView(self.__latestVersionOf, self.getVersion)
 
-    def items(self) -> ItemsViewT[str, Record]:
+    def items(self) -> ItemsViewT[str, DBRecord]:
         return _IndirectItemsView(self.__latestVersionOf, self.getVersion)
 
-    def add(self, value: Record) -> None:
+    def add(self, value: DBRecord) -> None:
         key = value.getId()
         self.checkId(key)
         if key in self.__latestVersionOf:
@@ -716,7 +721,7 @@ class VersionedDatabase(Database[Record]):
         _changeLogger.info('datachange/%s/add/%s', self.name, versionedKey)
         self._notifyAdded(value)
 
-    def remove(self, value: Record) -> None:
+    def remove(self, value: DBRecord) -> None:
         key = value.getId()
         if key not in self.__latestVersionOf:
             raise KeyError('unknown ID "%s"' % key)
@@ -734,7 +739,7 @@ class VersionedDatabase(Database[Record]):
 
         value._retired() # pylint: disable=protected-access
 
-    def update(self, value: Record) -> None:
+    def update(self, value: DBRecord) -> None:
         key = value.getId()
         oldValue = self.getVersion(self.__latestVersionOf[key])
 
@@ -832,27 +837,27 @@ class SingletonElem(DatabaseElem):
         # that here to please PyLint.
         raise NotImplementedError
 
-class SingletonObserver(RecordObserver[Record]):
+class SingletonObserver(RecordObserver[DBRecord]):
     '''Base class for observers of singleton tables.
     The subclass only has to implement the updated() method.
     '''
 
-    def added(self, record: Record) -> None:
+    def added(self, record: DBRecord) -> None:
         self.updated(record)
 
-    def removed(self, record: Record) -> None:
+    def removed(self, record: DBRecord) -> None:
         assert False, 'singleton instance removed'
 
-    def updated(self, record: Record) -> None:
+    def updated(self, record: DBRecord) -> None:
         raise NotImplementedError
 
-class SingletonWrapper(Generic[Record]):
+class SingletonWrapper(Generic[DBRecord]):
     '''Wrapper for easy access to the singleton record for databases which
     always contain exactly one record: anything you call on the singleton
     object is forwarded to the record object.
     '''
 
-    def __init__(self, db: Database[Record]):
+    def __init__(self, db: Database[DBRecord]):
         '''Creates a singleton wrapper for the given database.
         The database must already contain its single record.
         '''
@@ -866,7 +871,7 @@ class SingletonWrapper(Generic[Record]):
         updateInstance()
 
         class Observer(SingletonObserver):
-            def updated(self, record: Record) -> None:
+            def updated(self, record: DBRecord) -> None:
                 updateInstance()
 
         # TODO: For consistency, this observer must be the first one called

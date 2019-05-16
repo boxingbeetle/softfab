@@ -8,7 +8,7 @@ from typing import (
 )
 
 from softfab.config import dbDir
-from softfab.databaselib import Database, Record, RecordObserver
+from softfab.databaselib import DBRecord, Database, RecordObserver
 from softfab.frameworklib import Framework, frameworkDB
 from softfab.joblib import Job
 from softfab.productdeflib import ProductDef, ProductType, productDefDB
@@ -29,9 +29,9 @@ else:
     TaskDef = object
 
 
-class _ObserverProxy(RecordObserver[Record]):
+class _ObserverProxy(RecordObserver[DBRecord]):
 
-    def __init__(self, subjectDb: Database[Record]):
+    def __init__(self, subjectDb: Database[DBRecord]):
         RecordObserver.__init__(self)
         # Mapping from configId to set of keys observed by that config.
         self.__subjects = \
@@ -66,13 +66,13 @@ class _ObserverProxy(RecordObserver[Record]):
         assert len(self.__subjects[configId]) == 0
         del self.__subjects[configId]
 
-    def added(self, record: Record) -> None:
+    def added(self, record: DBRecord) -> None:
         pass
 
-    def removed(self, record: Record) -> None:
+    def removed(self, record: DBRecord) -> None:
         self.updated(record)
 
-    def updated(self, record: Record) -> None:
+    def updated(self, record: DBRecord) -> None:
         configs = self.__observers.get(record.getId())
         if configs is not None:
             for cfg in list(configs.values()):
