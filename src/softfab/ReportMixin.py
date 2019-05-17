@@ -9,11 +9,13 @@ from softfab.CSVPage import CSVPage
 from softfab.Page import PageProcessor
 from softfab.databaselib import Database
 from softfab.formlib import (
-    clearButton, dropDownList, makeForm, option, resetButton, selectionList,
-    submitButton, textInput
+    clearButton, dropDownList, emptyOption, makeForm, option, resetButton,
+    selectionList, submitButton, textInput
 )
 from softfab.joblib import jobDB
-from softfab.pageargs import DateTimeArg, EnumArg, PageArgs, SetArg
+from softfab.pageargs import (
+    ArgsCorrected, DateTimeArg, EnumArg, PageArgs, SetArg
+)
 from softfab.pagelinks import TaskIdSetArgs
 from softfab.projectlib import project
 from softfab.querylib import CustomFilter, RecordFilter, SetFilter
@@ -55,6 +57,33 @@ def executionStateBox(objectName: str) -> XMLPresentable:
 def timeValue(seconds: Optional[int]) -> str:
     return '' if seconds is None else formatTime(seconds)
 
+# Note: In the UI (args and form), an absent value is represented by
+#       the empty string, but in the DB it is represented by None.
+
+noneOption = emptyOption[ '(none)' ]
+
+def noneToEmpty(values: AbstractSet[Optional[str]]) -> AbstractSet[str]:
+    """Replaces a None value with empty string.
+    """
+    if None in values:
+        newValues = set(values)
+        newValues.remove(None)
+        newValues.add('')
+        return cast(Set[str], newValues)
+    else:
+        return cast(AbstractSet[str], values)
+
+def emptyToNone(values: AbstractSet[str]) -> AbstractSet[Optional[str]]:
+    """Replaces a None value with empty string.
+    """
+    if '' in values:
+        newValues = set(values) # type: Set[Optional[str]]
+        newValues.remove('')
+        newValues.add(None)
+        return newValues
+    else:
+        return values
+
 class ReportProcessor(PageProcessor[ReportArgsT]):
     db = None # type: Optional[Database]
 
@@ -66,23 +95,22 @@ class ReportProcessor(PageProcessor[ReportArgsT]):
         # Make a set of targets that should be shown, valid targets only.
         targetFilter = req.args.target & targets
 
-        # None is presented as "(none)" in the UI.
-        ownerFilter = set(req.args.owner) # type: Set[Optional[str]]
-        if '(none)' in ownerFilter:
-            ownerFilter.remove('(none)')
-            ownerFilter.add(None)
         # Set of users that have initiated jobs.
-        owners = jobDB.uniqueValues('owner')
+        owners = cast(AbstractSet[Optional[str]], jobDB.uniqueValues('owner'))
         # Add users that are available now.
         owners |= userDB.keys()
-        # Make a set of owners that should be shown, valid owners only.
-        ownerFilter &= owners
+        # Reject unknown owners.
+        uiOwners = noneToEmpty(owners)
+        if req.args.owner - uiOwners:
+            raise ArgsCorrected(req.args.override(
+                owner=req.args.owner & uiOwners
+                ))
 
         # pylint: disable=attribute-defined-outside-init
         self.targets = targets
         self.targetFilter = targetFilter
         self.owners = owners
-        self.ownerFilter = ownerFilter
+        self.uiOwners = uiOwners
 
     def iterFilters(self) -> Iterator[RecordFilter]:
         cTimeAboveInt = self.args.ctabove
@@ -107,9 +135,9 @@ class ReportProcessor(PageProcessor[ReportArgsT]):
                 'target', self.targetFilter, self.targets, self.db
                 )
 
-        if self.ownerFilter:
+        if self.args.owner:
             yield SetFilter.create(
-                'owner', self.ownerFilter, self.owners, self.db
+                'owner', emptyToNone(self.args.owner), self.owners, self.db
                 )
 
 class JobReportProcessor(ReportProcessor[ReportArgsT]):
@@ -143,7 +171,7 @@ class ReportFilterForm:
         numListItems = cast(int, kwargs['numListItems'])
 
         targets = proc.targets
-        owners = proc.owners
+        owners = proc.uiOwners
         objectName = self.objectName
 
         def columns1() -> XMLContent:
@@ -167,13 +195,11 @@ class ReportFilterForm:
                     ]
             if len(owners) > 1 and project.showOwners:
                 yield xhtml.td(rowspan=4, style='vertical-align:top')[
-                    selectionList(
-                        name='owner', size=numListItems, style='width: 18ex',
-                        selected=set(
-                            owner or '(none)' for owner in proc.ownerFilter
-                            )
-                        )[
-                        sorted(owner or '(none)' for owner in owners)
+                    selectionList(name='owner',
+                                  size=numListItems,
+                                  style='width: 18ex'
+                                  )[
+                        (owner or noneOption for owner in sorted(owners))
                         ]
                     ]
         yield xhtml.tr[ columns2() ]
