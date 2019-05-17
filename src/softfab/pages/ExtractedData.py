@@ -15,8 +15,7 @@ from softfab.pagelinks import createJobURL
 from softfab.querylib import KeySorter, runQuery
 from softfab.resultlib import getData, getKeys
 from softfab.setcalc import intersection
-from softfab.tasktables import TaskRunsTable
-from softfab.taskview import TaskColumn
+from softfab.tasktables import TaskColumn, TaskRunsTable
 from softfab.timeview import formatTime
 from softfab.userlib import User, checkPrivilege
 from softfab.webgui import pageLink

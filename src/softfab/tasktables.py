@@ -1,23 +1,120 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Iterator, cast
+from typing import Iterator, Optional, Sequence, cast
 
-from softfab.Page import InvalidRequest
+from softfab.Page import InvalidRequest, PageProcessor
 from softfab.datawidgets import (
     DataColumn, DataTable, DurationColumn, TimeColumn
 )
-from softfab.joblib import Task, jobDB
+from softfab.joblib import Job, Task, jobDB
 from softfab.jobview import targetColumn
-from softfab.pagelinks import JobIdArgs, createTaskRunnerDetailsLink
+from softfab.pagelinks import (
+    JobIdArgs, TaskIdArgs, createTaskInfoLink, createTaskRunnerDetailsLink
+)
 from softfab.projectlib import project
 from softfab.request import Request
 from softfab.resourcelib import iterTaskRunners
-from softfab.taskview import (
-    AbortColumn, ExportColumn, ExtractedColumn, SummaryColumn, TaskColumn,
-    getTaskStatus
-)
+from softfab.shadowlib import shadowDB
+from softfab.shadowview import getShadowRunStatus
+from softfab.taskrunlib import TaskRun
+from softfab.taskview import getTaskStatus
 from softfab.userview import OwnerColumn
+from softfab.webgui import cell, maybeLink, pageLink
+from softfab.xmlgen import XMLContent, xhtml
 
+
+class TaskColumn(DataColumn[TaskRun]):
+    label = 'Task'
+    keyName = 'name'
+
+    def presentCell(self, record: TaskRun, **kwargs: object) -> XMLContent:
+        table = cast('TaskRunsTable', kwargs['table'])
+        if table.taskNameLink:
+            return createTaskInfoLink(record.getJob().getId(), record.getName())
+        else:
+            return record.getName()
+
+class SummaryColumn(DataColumn):
+    keyName = 'summary'
+
+    def presentCell(self, record: TaskRun, **kwargs: object) -> XMLContent:
+        return record.getSummaryHTML()
+
+class ExtractedColumn(DataColumn):
+    label = 'Data'
+    cellStyle = 'nobreak'
+
+    def presentCell(self, record: TaskRun, **kwargs: object) -> XMLContent:
+        proc = cast(PageProcessor, kwargs['proc'])
+        dataLink = pageLink(
+            'ExtractionDetails',
+            TaskIdArgs(
+                jobId = proc.args.jobId,
+                taskName = record.getName()
+                )
+            )[ 'view data' ]
+        extractionRunId = cast(Optional[str], record['extractionRun'])
+        if extractionRunId is None:
+            if record.isDone():
+                # No extraction was scheduled after task completed execution,
+                # but execution wrapper might have provided data.
+                return dataLink
+            elif record.isCancelled():
+                # Execution will not run, so no data is available.
+                return '-'
+            else:
+                # Data might become available later.
+                return 'not yet'
+        else:
+            extractionRun = shadowDB.get(extractionRunId)
+            if extractionRun is None:
+                return dataLink
+            else:
+                # Extraction run still exists.
+                logLabel, style = {
+                    'waiting': ( 'waiting', 'idle'      ),
+                    'running': ( 'running', 'busy'      ),
+                    'error':   ( 'failed',  'error'     ),
+                    'warning': ( 'warning', 'warning'   ),
+                    'ok':      ( 'log',     None        ),
+                    }[getShadowRunStatus(extractionRun)]
+                return cell(class_ = style)[
+                    dataLink, ' | ',
+                    maybeLink(extractionRun.getURL())[ logLabel ]
+                    ]
+
+class ExportColumn(DataColumn[TaskRun]):
+    label = 'Export'
+
+    def presentCell(self, record: TaskRun, **kwargs: object) -> XMLContent:
+        if not record.hasExport():
+            return '-'
+        if record.isDone():
+            url = record.getExportURL()
+            if url:
+                return xhtml.a(href = url)[ 'Export' ]
+            else:
+                return 'location unknown'
+        elif record.isCancelled():
+            return '-'
+        else:
+            return 'not yet'
+
+class AbortColumn(DataColumn[TaskRun]):
+    label = 'Abort'
+
+    def presentCell(self, record: TaskRun, **kwargs: object) -> XMLContent:
+        if record.hasResult():
+            return '-'
+        else:
+            proc = cast(PageProcessor, kwargs['proc'])
+            return pageLink(
+                'AbortTask',
+                TaskIdArgs(
+                    jobId = proc.args.jobId,
+                    taskName = record.getName()
+                    )
+                )[ 'Abort' ]
 
 class TaskRunsTable(DataTable[Task]):
     db = None
@@ -31,17 +128,21 @@ class TaskRunsTable(DataTable[Task]):
     ownerColumn = OwnerColumn.instance
     summaryColumn = SummaryColumn.instance
 
-    def iterRowStyles(self, rowNr, record, **kwargs):
+    def iterRowStyles(self,
+                      rowNr: int,
+                      record: Task,
+                      **kwargs: object
+                      ) -> Iterator[str]:
         yield getTaskStatus(record)
 
-    def showTargetColumn(self):
+    def showTargetColumn(self) -> bool:
         '''Returns True iff the target column should be included.
         Default implementation returns True iff there are multiple targets
         defined for this project.
         '''
         return project.showTargets
 
-    def iterColumns(self, **kwargs: object) -> Iterator[DataColumn]:
+    def iterColumns(self, **kwargs: object) -> Iterator[DataColumn[Task]]:
         yield self.startTimeColumn
         yield self.durationColumn
         yield self.taskColumn
@@ -54,8 +155,8 @@ class TaskRunsTable(DataTable[Task]):
 class TaskRunnerColumn(DataColumn):
     keyName = 'runner'
 
-    def presentCell(self, record, **kwargs):
-        return createTaskRunnerDetailsLink(record[self.keyName])
+    def presentCell(self, record: TaskRun, **kwargs: object) -> XMLContent:
+        return createTaskRunnerDetailsLink(cast(str, record[self.keyName]))
 
 class JobProcessorMixin:
 
@@ -80,14 +181,14 @@ class JobTaskRunsTable(TaskRunsTable):
         keyName='priority', cellStyle='rightalign'
         )
 
-    def getRecordsToQuery(self, proc):
+    def getRecordsToQuery(self, proc: PageProcessor) -> Sequence[Task]:
         # Note: The table will not be displayed when the job ID is invalid,
         #       but this method will be called at the end of processing.
-        job = proc.job
+        job = cast(Job, getattr(proc, 'job'))
         return () if job is None else job.getTaskSequence()
 
     def iterColumns(self, **kwargs: object) -> Iterator[DataColumn]:
-        proc = cast(JobProcessorMixin, kwargs['proc'])
+        proc = cast(PageProcessor, kwargs['proc'])
         yield self.taskColumn
         if project['taskprio']:
             yield self.priorityColumn
@@ -105,5 +206,5 @@ class JobTaskRunsTable(TaskRunsTable):
         #       However, this is beyond what can easily be implemented now.
         if any(task.hasExport() for task in self.getRecordsToQuery(proc)):
             yield ExportColumn.instance
-        if not proc.job.hasFinalResult():
+        if not cast(JobProcessorMixin, proc).job.hasFinalResult():
             yield AbortColumn.instance
