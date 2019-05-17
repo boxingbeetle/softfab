@@ -2,18 +2,18 @@
 
 from softfab.datawidgets import DataColumn, DataTable, LinkColumn
 from softfab.storagelib import Storage, storageDB
-from softfab.xmlgen import xhtml
+from softfab.xmlgen import XMLContent, xhtml
 
 
 class _URLColumn(DataColumn[Storage]):
     keyName = 'url'
     label = 'URL'
 
-    def presentCell(self, record, **kwargs):
-        url = record['url']
-        return xhtml.a(href = url)[ url ]
+    def presentCell(self, record: Storage, **kwargs: object) -> XMLContent:
+        url = record.getURL()
+        return xhtml.a(href=url)[ url ]
 
-class StorageTable(DataTable):
+class StorageTable(DataTable[Storage]):
     db = storageDB
     columns = (
         DataColumn[Storage](keyName = 'name'),
