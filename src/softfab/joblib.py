@@ -609,11 +609,11 @@ class Job(TaskRunnerSet, TaskSet[Task], XMLTag, DatabaseElem):
         '''
         return cast(Optional[str], self._properties.get('target'))
 
-    def getOwner(self) -> Optional[User]:
+    def getOwner(self) -> Optional[str]:
         """Gets the owner of this job,
         or None if this job does not have an owner.
         """
-        return cast(Optional[User], self._properties.get('owner'))
+        return cast(Optional[str], self._properties.get('owner'))
 
     def getScheduledBy(self) -> Optional[str]:
         """Gets the ID of the schedule that started of this job,
