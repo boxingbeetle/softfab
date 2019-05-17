@@ -6,7 +6,7 @@ from softfab.Page import InvalidRequest
 from softfab.datawidgets import (
     DataColumn, DataTable, DurationColumn, TimeColumn
 )
-from softfab.joblib import jobDB
+from softfab.joblib import Task, jobDB
 from softfab.jobview import targetColumn
 from softfab.pagelinks import JobIdArgs, createTaskRunnerDetailsLink
 from softfab.projectlib import project
@@ -19,14 +19,14 @@ from softfab.taskview import (
 from softfab.userview import OwnerColumn
 
 
-class TaskRunsTable(DataTable):
+class TaskRunsTable(DataTable[Task]):
     db = None
     objectName = 'tasks'
     taskNameLink = True
-    startTimeColumn = TimeColumn(
-        label = 'Start Time', keyName = '-starttime', keyDisplay = 'starttime'
+    startTimeColumn = TimeColumn[Task](
+        label='Start Time', keyName='-starttime', keyDisplay='starttime'
         )
-    durationColumn = DurationColumn(keyName = 'duration')
+    durationColumn = DurationColumn[Task](keyName='duration')
     taskColumn = TaskColumn.instance
     ownerColumn = OwnerColumn.instance
     summaryColumn = SummaryColumn.instance
@@ -76,7 +76,9 @@ class JobTaskRunsTable(TaskRunsTable):
     printRecordCount = False
     style = 'nostrong'
 
-    priorityColumn = DataColumn(keyName = 'priority', cellStyle = 'rightalign')
+    priorityColumn = DataColumn[Task](
+        keyName='priority', cellStyle='rightalign'
+        )
 
     def getRecordsToQuery(self, proc):
         # Note: The table will not be displayed when the job ID is invalid,

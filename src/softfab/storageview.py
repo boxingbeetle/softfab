@@ -1,11 +1,11 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from softfab.datawidgets import DataColumn, DataTable, LinkColumn
-from softfab.storagelib import storageDB
+from softfab.storagelib import Storage, storageDB
 from softfab.xmlgen import xhtml
 
 
-class _URLColumn(DataColumn):
+class _URLColumn(DataColumn[Storage]):
     keyName = 'url'
     label = 'URL'
 
@@ -16,7 +16,7 @@ class _URLColumn(DataColumn):
 class StorageTable(DataTable):
     db = storageDB
     columns = (
-        DataColumn(keyName = 'name'),
+        DataColumn[Storage](keyName = 'name'),
         _URLColumn.instance,
-        LinkColumn(label = 'Edit', page = 'StorageEdit'),
+        LinkColumn[Storage]('Edit', 'StorageEdit'),
         )

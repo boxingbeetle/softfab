@@ -13,7 +13,7 @@ from softfab.datawidgets import (
 from softfab.formlib import makeForm, submitButton
 from softfab.pageargs import EnumArg, IntArg, PageArgs, SortArg, StrArg
 from softfab.pagelinks import createTaskLink, createTaskRunnerDetailsLink
-from softfab.resourcelib import resourceDB
+from softfab.resourcelib import ResourceBase, resourceDB
 from softfab.resourceview import getResourceStatus, presentCapabilities
 from softfab.restypelib import resTypeDB, taskRunnerResourceTypeName
 from softfab.userlib import User, checkPrivilege
@@ -21,23 +21,25 @@ from softfab.webgui import Widget, docLink, header, pageLink, pageURL, row
 from softfab.xmlgen import XML, XMLContent, xhtml
 
 
-class NameColumn(DataColumn):
+class NameColumn(DataColumn[ResourceBase]):
     def presentCell(self, record, **kwargs):
         if record.typeName == taskRunnerResourceTypeName:
             return createTaskRunnerDetailsLink(record.getId())
         else:
             return record.getId()
 
-class CapabilitiesColumn(ListDataColumn):
+class CapabilitiesColumn(ListDataColumn[ResourceBase]):
     def presentCell(self, record, **kwargs):
         return presentCapabilities(record.capabilities, record.typeName)
 
-class StateColumn(DataColumn):
-    sortKey = staticmethod(getResourceStatus)
+class StateColumn(DataColumn[ResourceBase]):
+    @staticmethod
+    def sortKey(record):
+        return getResourceStatus(record)
     def presentCell(self, record, **kwargs):
         return getResourceStatus(record)
 
-class ReservedByColumn(DataColumn):
+class ReservedByColumn(DataColumn[ResourceBase]):
     def presentCell(self, record, **kwargs):
         if record.isReserved():
             if record.typeName == taskRunnerResourceTypeName:
@@ -49,7 +51,7 @@ class ReservedByColumn(DataColumn):
         else:
             return '-'
 
-class ReserveColumn(DataColumn):
+class ReserveColumn(DataColumn[ResourceBase]):
     def presentCell(self, record, *, proc, **kwargs):
         action = Actions.RESUME if record.isSuspended() else Actions.SUSPEND
         return makeForm(
@@ -57,7 +59,7 @@ class ReserveColumn(DataColumn):
             setFocus=False
             )[ submitButton(name='action', value=action) ]
 
-class EditColumn(DataColumn):
+class EditColumn(DataColumn[ResourceBase]):
     def presentCell(self, record, **kwargs):
         pageName = (
             'TaskRunnerEdit'
@@ -66,23 +68,23 @@ class EditColumn(DataColumn):
             )
         return pageLink(pageName, DeleteArgs(id=record.getId()))[ 'Edit' ]
 
-class ResourcesTable(DataTable):
+class ResourcesTable(DataTable[ResourceBase]):
     widgetId = 'resourcesTable'
     autoUpdate = True
     db = resourceDB
     fixedColumns = (
         NameColumn('Name', 'id'),
-        DataColumn(keyName = 'locator'),
+        DataColumn[ResourceBase](keyName = 'locator'),
         CapabilitiesColumn(keyName = 'capabilities'),
         StateColumn(keyName = 'state', cellStyle = 'strong'),
         ReservedByColumn('Reserved By', 'user'),
-        ) # type: Sequence[DataColumn]
+        ) # type: Sequence[DataColumn[ResourceBase]]
     reserveColumn = ReserveColumn('Action')
     # TODO: These can be used again when the TR-specific pages have been
     #       replaced.
     #editColumn = LinkColumn('Edit', 'ResourceEdit')
     editColumn = EditColumn('Edit')
-    deleteColumn = LinkColumn('Delete', 'ResourceDelete')
+    deleteColumn = LinkColumn[ResourceBase]('Delete', 'ResourceDelete')
 
     def iterColumns(self, **kwargs: object) -> Iterator[DataColumn]:
         proc = cast(PageProcessor, kwargs['proc'])

@@ -8,7 +8,7 @@ from softfab.databaselib import RecordObserver
 from softfab.datawidgets import (
     DataColumn, DataTable, DurationColumn, TimeColumn
 )
-from softfab.joblib import jobDB
+from softfab.joblib import Job, jobDB
 from softfab.notification import sendNotification
 from softfab.pagelinks import createJobURL
 from softfab.projectlib import project
@@ -118,7 +118,7 @@ def createStatusBar(tasks, length = 10):
 _scheduleIcon = styleRoot.addIcon('ScheduleSmall')
 _scheduleIconGray = styleRoot.addIcon('ScheduleSmallD')
 
-class _DescriptionColumn(DataColumn):
+class _DescriptionColumn(DataColumn[Job]):
     keyName = 'description'
 
     def presentCell(self, record, *, table, **kwargs):
@@ -144,7 +144,7 @@ class _DescriptionColumn(DataColumn):
                 class_ = 'jobicon'
                 )[ icon.present(**kwargs) ]
 
-class _StatusColumn(DataColumn):
+class _StatusColumn(DataColumn[Job]):
     label = 'Status'
 
     def presentCell(self, record, **kwargs):
@@ -152,25 +152,25 @@ class _StatusColumn(DataColumn):
             createStatusBar(record.getTaskSequence())
             ]
 
-class TargetColumn(DataColumn):
+class TargetColumn(DataColumn[Job]):
     keyName = 'target'
 
     def presentCell(self, record, **kwargs):
         target = record.getTarget()
         return '-' if target is None else target
 
-createTimeColumn = TimeColumn(
+createTimeColumn = TimeColumn[Job](
     label = 'Create Time', keyName = 'recent', keyDisplay = 'timestamp'
     )
 targetColumn = TargetColumn.instance
 
-class JobsTable(DataTable):
+class JobsTable(DataTable[Job]):
     bodyId = 'jobs'
     db = jobDB
     descriptionLink = True
     objectName = 'jobs'
 
-    leadTimeColumn = DurationColumn(label = 'Lead Time', keyName = 'leadtime')
+    leadTimeColumn = DurationColumn[Job](label='Lead Time', keyName='leadtime')
     statusColumn = _StatusColumn.instance
 
     def showTargetColumn(self):

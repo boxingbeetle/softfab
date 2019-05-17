@@ -7,7 +7,7 @@ from softfab.Page import PageProcessor
 from softfab.datawidgets import (
     BoolDataColumn, DataColumn, DataTable, LinkColumn, ListDataColumn
 )
-from softfab.frameworklib import anyExtract, frameworkDB
+from softfab.frameworklib import Framework, anyExtract, frameworkDB
 from softfab.frameworkview import FrameworkColumn
 from softfab.pageargs import IntArg, PageArgs, SortArg
 from softfab.pagelinks import createProductDetailsLink
@@ -16,23 +16,23 @@ from softfab.webgui import docLink
 from softfab.xmlgen import XMLContent, txt, xhtml
 
 
-class ProductColumn(DataColumn):
+class ProductColumn(DataColumn[Framework]):
     def presentCell(self, record, **kwargs):
         return txt(', ').join(
             createProductDetailsLink(productDefId)
             for productDefId in record[self.keyName]
             )
 
-class FrameworksTable(DataTable):
+class FrameworksTable(DataTable[Framework]):
     db = frameworkDB
     nameColumn = FrameworkColumn('Framework ID', 'id')
-    wrapperColumn = DataColumn('Wrapper', 'wrapper')
-    extractColumn = BoolDataColumn('Extract', 'extract')
+    wrapperColumn = DataColumn[Framework]('Wrapper', 'wrapper')
+    extractColumn = BoolDataColumn[Framework]('Extract', 'extract')
     inputColumn = ProductColumn('Input Products', 'inputs')
     outputColumn = ProductColumn('Output Products', 'outputs')
-    parameterColumn = ListDataColumn('Parameters', 'parameters')
-    editColumn = LinkColumn('Edit', 'FrameworkEdit')
-    deleteColumn = LinkColumn('Delete', 'FrameworkDelete')
+    parameterColumn = ListDataColumn[Framework]('Parameters', 'parameters')
+    editColumn = LinkColumn[Framework]('Edit', 'FrameworkEdit')
+    deleteColumn = LinkColumn[Framework]('Delete', 'FrameworkDelete')
 
     def iterColumns(self, **kwargs: object) -> Iterator[DataColumn]:
         yield self.nameColumn

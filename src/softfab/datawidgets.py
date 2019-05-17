@@ -1,27 +1,41 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from abc import ABC
-from typing import ClassVar, Iterator, Optional, Sequence, Union, cast
+from typing import (
+    TYPE_CHECKING, Any, ClassVar, Dict, Generic, Iterable, Iterator, List,
+    Mapping, Optional, Sequence, Tuple, Union, cast
+)
 
-from softfab.databaselib import Database
+from softfab.databaselib import DBRecord, Database, Retriever
 from softfab.pageargs import ArgsCorrected
-from softfab.querylib import KeySorter, runQuery
+from softfab.querylib import (
+    KeySorter, Record, RecordFilter, RecordProcessor, runQuery
+)
 from softfab.timeview import formatDuration, formatTime
+from softfab.typing import Collection
 from softfab.utils import abstract, escapeURL, pluralize
 from softfab.webgui import Column, Table, cell, pageLink, pageURL, row
-from softfab.xmlgen import xhtml
+from softfab.xmlgen import XMLContent, XMLNode, xhtml
+
+if TYPE_CHECKING:
+    from softfab.Page import PageProcessor
+else:
+    PageProcessor = object
 
 
-class DataColumn(Column):
+class DataColumn(Column, Generic[Record]):
     label = None # type: Optional[str]
     keyName = None # type: Optional[str]
-    sortKey = None # type: Union[None, str, staticmethod]
+    sortKey = None # type: Union[None, str, Retriever]
     '''Can be used to override the comparison key for sorting, using either
     the name of a record item or a static method that, when called with
     a record, returns the comparison key.
     '''
 
-    def __init__(self, label = None, keyName = None, **kwargs):
+    def __init__(self,
+                 label: Optional[str] = None,
+                 keyName: Optional[str] = None,
+                 **kwargs: Any
+                 ):
         if keyName is None:
             keyName = self.keyName
         if label is None:
@@ -35,8 +49,10 @@ class DataColumn(Column):
             # Override class-scope default.
             self.keyName = keyName
 
-    def presentHeaderContent(self, proc, table, **kwargs):
-        content = super().presentHeaderContent(proc=proc, **kwargs)
+    def presentHeaderContent(self, **kwargs: object) -> XMLContent:
+        table = cast(DataTable, kwargs.pop('table'))
+        proc = cast(PageProcessor, kwargs['proc'])
+        content = super().presentHeaderContent(**kwargs)
 
         # Is this a column with data attached?
         keyName = self.keyName
@@ -47,12 +63,12 @@ class DataColumn(Column):
             return content
 
         # Determine index in current sort order and compute new sort order.
-        sortOrder = list(getattr(proc.args, sortField))
+        sortOrder = list(getattr(proc.args, sortField)) # type: List[str]
         index = sortOrder.index(keyName)
         del sortOrder[index]
         sortOrder.insert(0, keyName)
 
-        override = {sortField: sortOrder}
+        override = {sortField: sortOrder} # type: Dict[str, object]
         tabOffsetField = table.tabOffsetField
         if tabOffsetField is not None:
             override[tabOffsetField] = 0
@@ -62,13 +78,20 @@ class DataColumn(Column):
             content, ' ', xhtml.span(class_='sortorder')['%d' % (index + 1)]
             ]
 
-    def presentCell(self, record, **kwargs): # pylint: disable=unused-argument
-        return record[self.keyName]
+    def presentCell(self, # pylint: disable=unused-argument
+                    record: Record,
+                    **kwargs: object
+                    ) -> XMLContent:
+        key = self.keyName
+        assert key is not None
+        return cast(XMLContent, record[key])
 
-class BoolDataColumn(DataColumn):
+class BoolDataColumn(DataColumn[Record]):
 
-    def presentCell(self, record, **kwargs):
-        value = record[self.keyName]
+    def presentCell(self, record: Record, **kwargs: object) -> XMLContent:
+        key = self.keyName
+        assert key is not None
+        value = record[key]
         if value is True:
             return 'yes'
         elif value is False:
@@ -79,14 +102,20 @@ class BoolDataColumn(DataColumn):
                 % ( value, type(value).__name__ )
                 )
 
-class ListDataColumn(DataColumn):
+class ListDataColumn(DataColumn[Record]):
 
-    def presentCell(self, record, **kwargs):
-        return ', '.join(record[self.keyName])
+    def presentCell(self, record: Record, **kwargs: object) -> XMLContent:
+        key = self.keyName
+        assert key is not None
+        return ', '.join(cast(Iterable[str], record[key]))
 
-class LinkColumn(DataColumn):
+class LinkColumn(DataColumn[DBRecord]):
 
-    def __init__(self, label, page, idArg = 'id', extraArgs = (), **kwargs):
+    def __init__(self, label: str, page: str, *,
+                 idArg: str = 'id',
+                 extraArgs: Sequence[Tuple[str, str]] = (),
+                 **kwargs: Any
+                 ):
         DataColumn.__init__(self, label, **kwargs)
         self.__urlBase = (
             page + '?' +
@@ -97,41 +126,50 @@ class LinkColumn(DataColumn):
             idArg + '='
             )
 
-    def presentCell(self, record, **kwargs):
+    def presentCell(self, record: DBRecord, **kwargs: object) -> XMLContent:
         return xhtml.a(href = self.__urlBase + escapeURL(record.getId()))[
             self.label
             ]
 
-class TimeColumn(DataColumn):
+class TimeColumn(DataColumn[Record]):
     cellStyle = 'nobreak'
-    keyDisplay = None
+    keyDisplay = None # type: Optional[str]
 
     def __init__(self,
-        label = None, keyName = None, keyDisplay = None, **kwargs
-        ):
+                 label: Optional[str] = None,
+                 keyName: Optional[str] = None,
+                 keyDisplay: Optional[str] = None,
+                 **kwargs: Any
+                 ):
         if keyDisplay is not None:
             # Override class-scope default.
             self.keyDisplay = keyDisplay
         assert self.keyDisplay is not None
         DataColumn.__init__(self, label, keyName, **kwargs)
 
-    def presentCell(self, record, **kwargs):
-        return formatTime(record[self.keyDisplay])
+    def presentCell(self, record: Record, **kwargs: object) -> XMLContent:
+        key = self.keyDisplay
+        assert key is not None
+        return formatTime(cast(Optional[int], record[key]))
 
-class DurationColumn(DataColumn):
+class DurationColumn(DataColumn[Record]):
     cellStyle = 'nobreak'
 
-    def presentCell(self, record, **kwargs):
-        return cell(class_ = 'rightalign')[formatDuration(record[self.keyName])]
+    def presentCell(self, record: Record, **kwargs: object) -> XMLContent:
+        key = self.keyName
+        assert key is not None
+        return cell(class_ = 'rightalign')[
+            formatDuration(cast(Optional[int], record[key]))
+            ]
 
-class _TableData:
+class _TableData(Generic[Record]):
 
-    def __init__(self, table, proc):
+    def __init__(self, table: 'DataTable[Record]', proc: PageProcessor):
         columns = tuple(table.iterColumns(proc=proc, data=None))
 
         records = table.getRecordsToQuery(proc)
         if hasattr(records, '__len__'):
-            unfilteredNrRecords = len(records)
+            unfilteredNrRecords = len(records) # type: Optional[int]
         else:
             # We could store all records in a list or wrap a counting iterator
             # around it, but so far that has not been necessary.
@@ -141,8 +179,12 @@ class _TableData:
         if sortField is None:
             # We don't know if getRecordsToQuery() has filtered or not.
             filtered = None
+            if isinstance(records, list):
+                records = cast(List[Record], records)
+            else:
+                records = list(records)
         else:
-            sortOrder = getattr(proc.args, sortField)
+            sortOrder = cast(Sequence[str], getattr(proc.args, sortField))
             cleanSortOrder = self.__cleanSortOrder(columns, sortOrder)
             if sortOrder != cleanSortOrder:
                 if proc.args.isArgument(sortField):
@@ -151,19 +193,20 @@ class _TableData:
                         ))
                 else:
                     setattr(proc.args, sortField, cleanSortOrder)
-            query = list(table.iterFilters(proc))
+            query = list(table.iterFilters(proc)) # type: List[RecordProcessor]
             filtered = bool(query)
             keyMap = _buildKeyMap(columns)
-            query.append(KeySorter(
+            sorter = KeySorter(
                 (keyMap.get(key, key) for key in cleanSortOrder),
                 table.db, table.uniqueKeys
-                ))
+                ) # type: KeySorter[Record]
+            query.append(sorter)
             records = runQuery(query, records)
 
         totalNrRecords = len(records)
         tabOffsetField = table.tabOffsetField
         if tabOffsetField is not None:
-            tabOffset = getattr(proc.args, tabOffsetField)
+            tabOffset = getattr(proc.args, tabOffsetField) # type: int
             recordsPerPage = table.recordsPerPage
             newOffset = tabOffset
             if tabOffset < 0:
@@ -191,7 +234,10 @@ class _TableData:
         self.totalNrRecords = totalNrRecords
         self.filtered = filtered
 
-    def __cleanSortOrder(self, columns, sortOrder):
+    def __cleanSortOrder(self,
+                         columns: Sequence[DataColumn[Record]],
+                         sortOrder: Sequence[str]
+                         ) -> Sequence[str]:
         '''Returns the given sort order, with non-existing column keys removed,
         duplicate keys removed and missing keys added.
         '''
@@ -200,7 +246,7 @@ class _TableData:
             if key is not None
             ]
 
-        cleanSortOrder = []
+        cleanSortOrder = [] # type: List[str]
         # Add keys that exist and are not duplicates.
         for key in sortOrder:
             if key in colKeys and key not in cleanSortOrder:
@@ -211,7 +257,8 @@ class _TableData:
                 cleanSortOrder.append(key)
         return tuple(cleanSortOrder)
 
-def _buildKeyMap(columns):
+def _buildKeyMap(columns: Iterable[DataColumn[Record]]
+                 ) -> Mapping[str, Union[str, Retriever]]:
     '''Returns a mapping from column key name to a key name or key function
     used to retrieve the comparison key.
     '''
@@ -224,7 +271,7 @@ def _buildKeyMap(columns):
                 keyMap[keyName] = sortKey
     return keyMap
 
-class DataTable(Table, ABC):
+class DataTable(Table, Generic[Record]):
     '''A table filled with data from a database.
     '''
     # Database to fetch records from.
@@ -256,18 +303,25 @@ class DataTable(Table, ABC):
     # Maximum number of tabs that can be put above a table.
     __maxNrTabs = 10
 
-    def __init__(self):
+    def __init__(self) -> None:
         Table.__init__(self)
         if self.objectName is None:
+            assert self.db is not None
             self.objectName = pluralize(self.db.description, 42)
 
-    def getRecordsToQuery(self, proc): # pylint: disable=unused-argument
+    def getRecordsToQuery(self,
+                          proc: PageProcessor # pylint: disable=unused-argument
+                          ) -> Collection[Record]:
         '''Returns the initial record set on which filters will be applied.
         If "sortField" is None, the initial record set must be already sorted.
         '''
-        return self.db
+        db = self.db
+        assert db is not None
+        return db
 
-    def iterFilters(self, proc): # pylint: disable=unused-argument
+    def iterFilters(self,
+                    proc: PageProcessor # pylint: disable=unused-argument
+                    ) -> Iterator[RecordFilter[Record]]:
         '''Generates filter objects (see "querylib" module) to filter the
         records that are going to be displayed in a DataTable.
         The default implementation yields no filters; override this method to
@@ -276,15 +330,15 @@ class DataTable(Table, ABC):
               mandatory, DataTable will only call this method if it is
               responsible for sorting (sortField is not None).
         '''
-        return ()
+        return iter(())
 
-    def process(self, proc):
+    def process(self, proc: PageProcessor) -> _TableData:
         '''Runs the queries necessary to populate the this table with data.
         Raises ArgsCorrected if the sort order was invalid or incomplete.
         '''
         return _TableData(self, proc)
 
-    def iterColumns(self, **kwargs: object) -> Iterator[DataColumn]:
+    def iterColumns(self, **kwargs: object) -> Iterator[DataColumn[Record]]:
         data = cast(Optional[_TableData], kwargs['data'])
         if data is None:
             return cast(Iterator[DataColumn], super().iterColumns(**kwargs))
@@ -292,23 +346,28 @@ class DataTable(Table, ABC):
             # Use cached version.
             return iter(data.columns)
 
-    def iterRowStyles(self, rowNr, record, **kwargs): # pylint: disable=unused-argument
+    def iterRowStyles(self, # pylint: disable=unused-argument
+                      rowNr: int, # pylint: disable=unused-argument
+                      record: Record, # pylint: disable=unused-argument
+                      **kwargs: object
+                      ) -> Iterator[str]:
         '''Override this to apply one or more CSS styles to a row.
         '''
-        return ()
+        return iter(())
 
-    def iterRows(self, *, data, **kwargs):
+    def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
+        data = cast(_TableData[Record], kwargs['data'])
         columns = data.columns
         for rowNr, record in enumerate(data.records):
             style = self.joinStyles(
-                self.iterRowStyles(rowNr, record, data=data, **kwargs)
+                self.iterRowStyles(rowNr, record, **kwargs)
                 )
             yield row(class_ = style)[(
-                column.presentCell(record, data=data, **kwargs)
+                column.presentCell(record, **kwargs)
                 for column in columns
                 )]
 
-    def __presentNrRecords(self, data):
+    def __presentNrRecords(self, data: _TableData[Record]) -> XMLContent:
         '''Generate a piece of text displaying the total record count.
         '''
         if not self.printRecordCount:
@@ -331,34 +390,34 @@ class DataTable(Table, ABC):
                 data.totalNrRecords
                 )
 
-    def __showTabs(self, data):
-        '''Returns True iff this table should be presented with tabs.
-        '''
-        if self.tabOffsetField is None:
-            # Table subclass declares it does not want tabs.
-            return False
-
-        # Is there more than 1 tab worth of data?
-        return data.totalNrRecords > self.recordsPerPage
-
-    def __presentTabs(self, proc, data):
+    def __presentTabs(self,
+                      proc: PageProcessor,
+                      data: _TableData[Record]
+                      ) -> XMLContent:
         '''Generate tabs to switch pages of a long record set.
         '''
-        if not self.__showTabs(data):
+
+        # Should this table should be presented with tabs?
+        tabOffsetField = self.tabOffsetField
+        if tabOffsetField is None:
+            # Table subclass declares it does not want tabs.
+            return None
+
+        # Is there more than 1 tab worth of data?
+        recordsPerPage = self.recordsPerPage
+        totalNrRecords = data.totalNrRecords
+        if totalNrRecords <= recordsPerPage:
             return None
 
         numColumns = sum(column.colSpan for column in data.columns)
-        totalNrRecords = data.totalNrRecords
-        recordsPerPage = self.recordsPerPage
-        tabOffsetField = self.tabOffsetField
-        current = getattr(proc.args, tabOffsetField)
+        current = cast(int, getattr(proc.args, tabOffsetField))
         maxNrTabs = self.__maxNrTabs
         numDigits = len(str(totalNrRecords))
         numTabs = (totalNrRecords + recordsPerPage - 1) // recordsPerPage
         firstTab = max(current // recordsPerPage - maxNrTabs // 2, 0)
         limitTab = min(numTabs, firstTab + maxNrTabs)
 
-        def linkTab(tab, text):
+        def linkTab(tab: int, text: str) -> XMLNode:
             return xhtml.td(class_ = 'navother')[
                 xhtml.a(
                     href = pageURL(
@@ -371,7 +430,7 @@ class DataTable(Table, ABC):
                     )[ text ]
                 ]
 
-        def pageTab(tab):
+        def pageTab(tab: int) -> XMLNode:
             pageFirst = tab * recordsPerPage
             pageLast = min(pageFirst + recordsPerPage - 1, totalNrRecords - 1)
             text = str(pageFirst).zfill(numDigits)
@@ -396,13 +455,17 @@ class DataTable(Table, ABC):
                 ]
             ] ]
 
-    def present(self, *, proc, **kwargs):
+    def present(self, **kwargs: object) -> XMLContent:
+        proc = cast(PageProcessor, kwargs['proc'])
         data = proc.getTableData(self)
-        return super().present(proc=proc, data=data, table=self, **kwargs)
+        return super().present(data=data, table=self, **kwargs)
 
-    def presentCaptionParts(self, *, data, **kwargs):
+    def presentCaptionParts(self, **kwargs: object) -> XMLContent:
+        data = cast(_TableData[Record], kwargs['data'])
         yield self.__presentNrRecords(data)
 
-    def presentHeadParts(self, *, proc, data, **kwargs):
+    def presentHeadParts(self, **kwargs: object) -> XMLContent:
+        proc = cast(PageProcessor, kwargs['proc'])
+        data = cast(_TableData[Record], kwargs['data'])
         yield self.__presentTabs(proc, data)
-        yield super().presentHeadParts(proc=proc, data=data, **kwargs)
+        yield super().presentHeadParts(**kwargs)

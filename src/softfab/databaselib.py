@@ -290,7 +290,7 @@ class Database(Generic[DBRecord], RecordSubjectMixin[DBRecord], ABC):
     def __len__(self) -> int:
         return len(self._cache)
 
-    def __contains__(self, key: str) -> bool:
+    def __contains__(self, key: object) -> bool:
         return key in self._cache
 
     @cachedProperty
@@ -622,7 +622,7 @@ class VersionedDatabase(Database[DBRecord]):
     def __len__(self) -> int:
         return len(self.__latestVersionOf)
 
-    def __contains__(self, key: str) -> bool:
+    def __contains__(self, key: object) -> bool:
         return key in self.__latestVersionOf
 
     def __increaseVersion(self, versionedKey: Optional[str]) -> str:

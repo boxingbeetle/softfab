@@ -10,27 +10,27 @@ from softfab.datawidgets import (
 from softfab.frameworkview import FrameworkColumn
 from softfab.pageargs import IntArg, PageArgs, SortArg
 from softfab.pagelinks import createTaskDetailsLink
-from softfab.taskdeflib import taskDefDB
+from softfab.taskdeflib import TaskDef, taskDefDB
 from softfab.userlib import User, checkPrivilege
 from softfab.webgui import docLink
 from softfab.xmlgen import XMLContent, xhtml
 
 
-class NameColumn(DataColumn):
+class NameColumn(DataColumn[TaskDef]):
     label = 'Task Definition ID'
     keyName = 'id'
     def presentCell(self, record, **kwargs):
         return createTaskDetailsLink(record.getId())
 
-class TasksTable(DataTable):
+class TasksTable(DataTable[TaskDef]):
     db = taskDefDB
     columns = (
         NameColumn.instance,
-        DataColumn('Title', 'title'),
+        DataColumn[TaskDef]('Title', 'title'),
         FrameworkColumn('Framework ID', 'parent'),
-        ListDataColumn('Parameters', 'parameters'),
-        LinkColumn('Edit', 'TaskEdit'),
-        LinkColumn('Delete', 'TaskDelete'),
+        ListDataColumn[TaskDef]('Parameters', 'parameters'),
+        LinkColumn[TaskDef]('Edit', 'TaskEdit'),
+        LinkColumn[TaskDef]('Delete', 'TaskDelete'),
         )
 
 class TaskIndex_GET(FabPage['TaskIndex_GET.Processor',

@@ -9,34 +9,34 @@ from softfab.datawidgets import (
 )
 from softfab.pageargs import IntArg, PageArgs, SortArg
 from softfab.pagelinks import createProductDetailsLink
-from softfab.productdeflib import productDefDB
+from softfab.productdeflib import ProductDef, productDefDB
 from softfab.userlib import User, checkPrivilege
 from softfab.webgui import docLink
 from softfab.xmlgen import XMLContent, xhtml
 
 
-class NameColumn(DataColumn):
+class NameColumn(DataColumn[ProductDef]):
     label = 'Product ID'
     keyName = 'id'
     def presentCell(self, record, **kwargs):
         return createProductDetailsLink(record.getId())
 
-class TypeColumn(DataColumn):
+class TypeColumn(DataColumn[ProductDef]):
     label = 'Type'
     keyName = 'type'
     @staticmethod
     def sortKey(record):
         return record['type'].name
 
-class ProductDefTable(DataTable):
+class ProductDefTable(DataTable[ProductDef]):
     db = productDefDB
     columns = (
         NameColumn.instance,
         TypeColumn.instance,
-        BoolDataColumn('Local', 'local'),
-        BoolDataColumn('Combined', 'combined'),
-        LinkColumn('Edit', 'ProductEdit'),
-        LinkColumn('Delete', 'ProductDelete'),
+        BoolDataColumn[ProductDef]('Local', 'local'),
+        BoolDataColumn[ProductDef]('Combined', 'combined'),
+        LinkColumn[ProductDef]('Edit', 'ProductEdit'),
+        LinkColumn[ProductDef]('Delete', 'ProductDelete'),
         )
 
 class ProductIndex_GET(FabPage['ProductIndex_GET.Processor',

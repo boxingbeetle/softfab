@@ -45,7 +45,7 @@ def pageLink(
         page: str,
         args: Optional[PageArgs] = None,
         **kwargs: str
-        ) -> XMLSubscriptable:
+        ) -> XMLNode:
     '''Creates a hyperlink to another page.
     '''
     return xhtml.a(href=pageURL(page, args, **kwargs))
@@ -62,7 +62,7 @@ def maybeLink(url: Optional[str]) -> XMLSubscriptable:
     else:
         return xhtml.a(href = url)
 
-def docLink(path: str) -> XMLSubscriptable:
+def docLink(path: str) -> XMLNode:
     '''Creates a hyperlink to a documentation page.
     '''
     assert path.startswith('/'), path
@@ -490,16 +490,11 @@ class Table(Widget):
             )
         return xhtml.thead[ presentations ] if presentations else None
 
-    def presentHeadParts(self, *,
-            columns: Sequence[Column],
-            **kwargs: object
-            ) -> XMLContent:
-        yield self.presentColumnHeads(columns=columns, **kwargs)
+    def presentHeadParts(self, **kwargs: object) -> XMLContent:
+        yield self.presentColumnHeads(**kwargs)
 
-    def presentColumnHeads(self, *,
-            columns: Sequence[Column],
-            **kwargs: object
-            ) -> XMLContent:
+    def presentColumnHeads(self, **kwargs: object) -> XMLContent:
+        columns = cast(Sequence[Column], kwargs['columns'])
         allNone = True
         columnPresentations = []
         for column in columns:

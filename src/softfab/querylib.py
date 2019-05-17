@@ -2,8 +2,8 @@
 
 from operator import itemgetter
 from typing import (
-    AbstractSet, Callable, Generic, Iterable, Iterator, List, Optional, Type,
-    TypeVar, Union, cast, overload
+    AbstractSet, Callable, Generic, Iterable, List, Optional, Type, TypeVar,
+    Union, cast, overload
 )
 
 from softfab.databaselib import Comparable, DBRecord, Database, Retriever
@@ -22,7 +22,7 @@ class RecordFilter(Generic[Record]):
     they were given.
     '''
 
-    def __call__(self, records: Iterable[Record]) -> Iterator[Record]:
+    def __call__(self, records: Iterable[Record]) -> Iterable[Record]:
         raise NotImplementedError
 
 class CustomFilter(RecordFilter[Record]):
@@ -31,7 +31,7 @@ class CustomFilter(RecordFilter[Record]):
         RecordFilter.__init__(self)
         self.__func = func
 
-    def __call__(self, records: Iterable[Record]) -> Iterator[Record]:
+    def __call__(self, records: Iterable[Record]) -> Iterable[Record]:
         return filter(self.__func, records)
 
 class ValueFilter(RecordFilter[Record], Generic[Record, Comparable]):
@@ -60,7 +60,7 @@ class ValueFilter(RecordFilter[Record], Generic[Record, Comparable]):
             )
         self.__value = value
 
-    def __call__(self, records: Iterable[Record]) -> Iterator[Record]:
+    def __call__(self, records: Iterable[Record]) -> Iterable[Record]:
         retriever = self.__retriever
         value = self.__value
         for record in records:
@@ -93,7 +93,7 @@ class WildcardFilter(RecordFilter[Record]):
             )
         self.__matcher = wildcardMatcher(pattern)
 
-    def __call__(self, records: Iterable[Record]) -> Iterator[Record]:
+    def __call__(self, records: Iterable[Record]) -> Iterable[Record]:
         retriever = self.__retriever
         matcher = self.__matcher
         for record in records:
@@ -105,7 +105,7 @@ class _BlockFilter(RecordFilter[Record]):
     Used for optimizing special cases in other filters.
     '''
 
-    def __call__(self, records: Iterable[Record]) -> Iterator[Record]:
+    def __call__(self, records: Iterable[Record]) -> Iterable[Record]:
         return iter(())
 
 class _PassFilter(RecordFilter[Record]):
@@ -113,7 +113,7 @@ class _PassFilter(RecordFilter[Record]):
     Used for optimizing special cases in other filters.
     '''
 
-    def __call__(self, records: Iterable[Record]) -> Iterator[Record]:
+    def __call__(self, records: Iterable[Record]) -> Iterable[Record]:
         return iter(records)
 
 class SetFilter(RecordFilter[Record], Generic[Record, Comparable]):
@@ -176,7 +176,7 @@ class SetFilter(RecordFilter[Record], Generic[Record, Comparable]):
             )
         self.__selected = selected
 
-    def __call__(self, records: Iterable[Record]) -> Iterator[Record]:
+    def __call__(self, records: Iterable[Record]) -> Iterable[Record]:
         retriever = self.__retriever
         selected = self.__selected
         for record in records:
@@ -286,8 +286,10 @@ def _getRetriever(db: Optional[Database[DBRecord]], key: str) -> Retriever:
     '''
     return itemgetter(key) if db is None else db.retrieverFor(key)
 
+RecordProcessor = Callable[[Iterable[Record]], Iterable[Record]]
+
 def runQuery(
-        processors: Iterable[Callable[[Iterable[Record]], Iterator[Record]]],
+        processors: Iterable[RecordProcessor],
         db: Iterable[Record]
         ) -> List[Record]:
     records = db

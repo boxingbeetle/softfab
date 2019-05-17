@@ -186,11 +186,10 @@ class SimpleConfigTable(DataTable):
 class ConfigTable(SimpleConfigTable):
 
     def iterColumns(self, **kwargs: object) -> Iterator[DataColumn]:
-        yield LinkColumn('Load', 'Execute', idArg = 'config')
+        yield LinkColumn('Load', 'Execute', idArg='config')
         yield from super().iterColumns(**kwargs)
         yield LinkColumn(
-            'Edit', 'Execute',
-            idArg = 'config', extraArgs = ( ('step', 'edit'), )
+            'Edit', 'Execute', idArg='config', extraArgs=(('step', 'edit'),)
             )
         yield LinkColumn('Delete', 'DelJobConfig')
 

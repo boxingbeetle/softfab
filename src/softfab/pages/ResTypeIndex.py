@@ -8,25 +8,25 @@ from softfab.datawidgets import (
     BoolDataColumn, DataColumn, DataTable, LinkColumn
 )
 from softfab.pageargs import IntArg, PageArgs, SortArg
-from softfab.restypelib import resTypeDB
+from softfab.restypelib import ResType, resTypeDB
 from softfab.userlib import User, checkPrivilege
 from softfab.xmlgen import XMLContent
 
 
-class ResTypeLinkColumn(LinkColumn):
+class ResTypeLinkColumn(LinkColumn[ResType]):
 
-    def presentCell(self, record, **kwargs):
+    def presentCell(self, record: ResType, **kwargs: object) -> XMLContent:
         if record.getId().startswith('sf.'):
             return '-'
         else:
             return super().presentCell(record, **kwargs)
 
-class ResTypeTable(DataTable):
+class ResTypeTable(DataTable[ResType]):
     db = resTypeDB
     columns = (
-        DataColumn(keyName = 'presentationName', label = 'Name'),
-        BoolDataColumn(keyName = 'pertask', label = 'Per Task'),
-        BoolDataColumn(keyName = 'perjob', label = 'Per Job'),
+        DataColumn[ResType](keyName = 'presentationName', label = 'Name'),
+        BoolDataColumn[ResType](keyName = 'pertask', label = 'Per Task'),
+        BoolDataColumn[ResType](keyName = 'perjob', label = 'Per Job'),
         ResTypeLinkColumn('Edit', 'ResTypeEdit'),
         ResTypeLinkColumn('Delete', 'ResTypeDelete'),
         )
