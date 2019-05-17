@@ -1,11 +1,15 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from typing import Optional, Sequence
+
 from softfab.configlib import configDB
 from softfab.pageargs import BoolArg, PageArgs, SetArg, StrArg
+from softfab.request import Request
+from softfab.resourcelib import TaskRunner
 from softfab.restypelib import resTypeDB, taskRunnerResourceTypeName
 from softfab.shadowlib import shadowDB
 from softfab.webgui import pageLink, pageURL
-from softfab.xmlgen import XML, txt, xhtml
+from softfab.xmlgen import XMLContent, XMLNode, txt, xhtml
 
 
 class ProductDefIdArgs(PageArgs):
@@ -13,13 +17,13 @@ class ProductDefIdArgs(PageArgs):
     '''
     id = StrArg()
 
-def createProductDetailsURL(productDefId):
+def createProductDetailsURL(productDefId: str) -> str:
     return pageURL(
         'ProductDetails',
         ProductDefIdArgs(id = productDefId)
         )
 
-def createProductDetailsLink(productDefId):
+def createProductDetailsLink(productDefId: str) -> XMLNode:
     return pageLink('ProductDetails', ProductDefIdArgs(id = productDefId))[
         productDefId
         ]
@@ -29,13 +33,13 @@ class FrameworkIdArgs(PageArgs):
     '''
     id = StrArg()
 
-def createFrameworkDetailsURL(frameworkId):
+def createFrameworkDetailsURL(frameworkId: str) -> str:
     return pageURL(
         'FrameworkDetails',
         FrameworkIdArgs(id = frameworkId)
         )
 
-def createFrameworkDetailsLink(frameworkId):
+def createFrameworkDetailsLink(frameworkId: str)-> XMLNode:
     return pageLink('FrameworkDetails', FrameworkIdArgs(id = frameworkId))[
         frameworkId
         ]
@@ -45,7 +49,7 @@ class TaskDefIdArgs(PageArgs):
     '''
     id = StrArg()
 
-def createTaskDetailsLink(taskDefId):
+def createTaskDetailsLink(taskDefId: str) -> XMLNode:
     return pageLink('TaskDetails', TaskDefIdArgs(id = taskDefId))[
         taskDefId
         ]
@@ -55,7 +59,9 @@ class ConfigIdArgs(PageArgs):
     '''
     configId = StrArg()
 
-def createConfigDetailsLink(configId, label = None):
+def createConfigDetailsLink(configId: str,
+                            label: Optional[str] = None
+                            ) -> XMLContent:
     if label is None:
         label = configId
     if configId in configDB:
@@ -75,40 +81,38 @@ class JobIdSetArgs(PageArgs):
     '''
     jobId = SetArg()
 
-def createJobURL(jobId):
+def createJobURL(jobId: str) -> str:
     '''Returns a URL of a page that contains details about the given job.
     '''
     return pageURL('ShowReport', JobIdArgs(jobId = jobId))
 
-def createJobLink(jobId):
+def createJobLink(jobId: str) -> XMLNode:
     '''Returns a Link of a page that contains details about the given job.
     '''
     return pageLink('ShowReport', JobIdArgs(jobId = jobId))[
         jobId
         ]
 
-def createJobsURL(jobIDs):
-    '''Returns a URL of a page that contains details about the given jobs,
-    or None if there are no jobs.
+def createJobsURL(jobIDs: Sequence[str]) -> str:
+    '''Returns a URL of a page that contains details about the given jobs.
     '''
-    if len(jobIDs) == 0:
-        return None
-    elif len(jobIDs) == 1:
+    if len(jobIDs) == 1:
         return createJobURL(jobIDs[0])
     else:
-        return pageURL('ShowJobs', JobIdSetArgs(jobId = jobIDs))
+        # Note: This also works fine for zero jobs.
+        return pageURL('ShowJobs', JobIdSetArgs(jobId=jobIDs))
 
 class TaskIdArgs(JobIdArgs):
     '''Identifies a particular task.
     '''
     taskName = StrArg()
 
-def createTaskInfoLink(jobId, taskName):
+def createTaskInfoLink(jobId: str, taskName: str) -> XMLNode:
     return pageLink(
         'ShowTaskInfo', TaskIdArgs(jobId = jobId, taskName = taskName)
         )[ taskName ]
 
-def createTaskLink(taskrunner):
+def createTaskLink(taskrunner: TaskRunner) -> XMLContent:
     run = taskrunner.getRun()
     if run is not None:
         return createTaskInfoLink(run.getJob().getId(), run.getName())
@@ -130,7 +134,7 @@ class TaskIdSetArgs(PageArgs):
     '''
     task = SetArg()
 
-def createTaskHistoryLink(taskName):
+def createTaskHistoryLink(taskName: str) -> XMLNode:
     return pageLink('ReportTasks', TaskIdSetArgs(task = {taskName}))[
         'Show history of task ', xhtml.b[ taskName ]
         ]
@@ -149,15 +153,15 @@ class CapFilterArgs(PageArgs):
     restype = StrArg(taskRunnerResourceTypeName)
     cap = StrArg('')
 
-def createCapabilityLink(typeName: str, cap: str = '') -> XML:
+def createCapabilityLink(typeName: str, cap: str = '') -> XMLNode:
     return pageLink('Capabilities', CapFilterArgs(restype=typeName, cap=cap))[
         cap or resTypeDB[typeName].presentationName
         ]
 
-def createTargetLink(target: str) -> XML:
+def createTargetLink(target: str) -> XMLNode:
     return createCapabilityLink(taskRunnerResourceTypeName, target)
 
-def createTaskRunnerDetailsLink(taskRunnerId):
+def createTaskRunnerDetailsLink(taskRunnerId: str) -> XMLContent:
     if not taskRunnerId:
         return '-'
     elif taskRunnerId == '?':
@@ -177,10 +181,10 @@ class AnonGuestArgs(PageArgs):
     """
     anonguest = BoolArg()
 
-def createUserDetailsURL(userId):
+def createUserDetailsURL(userId: str) -> str:
     return pageURL('UserDetails', UserIdArgs(user = userId))
 
-def createUserDetailsLink(userId):
+def createUserDetailsLink(userId: str) -> XMLNode:
     return xhtml.a(href = createUserDetailsURL(userId))[ userId ]
 
 class URLArgs(PageArgs):
@@ -188,13 +192,13 @@ class URLArgs(PageArgs):
     """
     url = StrArg(None)
 
-def loginURL(req):
+def loginURL(req: Request) -> str:
     """Returns a URL of the Login page, so that it returns to the request's
     URL after the user has logged in.
     """
     return pageURL('Login', URLArgs(url=req.getURL()))
 
-def logoutURL(req):
+def logoutURL(req: Request) -> str:
     """Returns a URL of the Logout page, so that it returns to the request's
     URL after the user has logged out.
     """
