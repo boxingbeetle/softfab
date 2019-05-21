@@ -89,26 +89,27 @@ class ReportProcessor(PageProcessor[ReportArgsT]):
 
     def process(self, req: Request[ReportArgsT], user: User) -> None:
         # Set of targets for which jobs have run.
-        targets = jobDB.uniqueValues('target') - set([None])
+        targets = cast(AbstractSet[Optional[str]], jobDB.uniqueValues('target'))
         # Add targets that are available now.
         targets |= project.getTargets()
-        # Make a set of targets that should be shown, valid targets only.
-        targetFilter = req.args.target & targets
+        uiTargets = noneToEmpty(targets)
 
         # Set of users that have initiated jobs.
         owners = cast(AbstractSet[Optional[str]], jobDB.uniqueValues('owner'))
         # Add users that are available now.
         owners |= userDB.keys()
-        # Reject unknown owners.
         uiOwners = noneToEmpty(owners)
-        if req.args.owner - uiOwners:
+
+        # Reject unknown targets and/or owners.
+        if req.args.target - uiTargets or req.args.owner - uiOwners:
             raise ArgsCorrected(req.args.override(
+                target=req.args.target & uiTargets,
                 owner=req.args.owner & uiOwners
                 ))
 
         # pylint: disable=attribute-defined-outside-init
         self.targets = targets
-        self.targetFilter = targetFilter
+        self.uiTargets = uiTargets
         self.owners = owners
         self.uiOwners = uiOwners
 
@@ -130,9 +131,9 @@ class ReportProcessor(PageProcessor[ReportArgsT]):
                 record['timestamp'] <= cTimeBelowInt
                 )
 
-        if self.targetFilter:
+        if self.args.target:
             yield SetFilter.create(
-                'target', self.targetFilter, self.targets, self.db
+                'target', emptyToNone(self.args.target), self.targets, self.db
                 )
 
         if self.args.owner:
@@ -170,7 +171,7 @@ class ReportFilterForm:
         proc = cast(ReportProcessor, kwargs['proc'])
         numListItems = cast(int, kwargs['numListItems'])
 
-        targets = proc.targets
+        targets = proc.uiTargets
         owners = proc.uiOwners
         objectName = self.objectName
 
@@ -178,7 +179,7 @@ class ReportFilterForm:
             yield xhtml.td(colspan=4)[
                 'Select %s to display reports for:' % objectName
                 ]
-            if targets:
+            if len(targets) > 1:
                 yield xhtml.td[ 'Targets:' ]
             if len(owners) > 1 and project.showOwners:
                 yield xhtml.td[ 'Owners:' ]
@@ -186,12 +187,14 @@ class ReportFilterForm:
 
         def columns2() -> XMLContent:
             yield self.presentCustomBox(**kwargs)
-            if targets:
+            if len(targets) > 1:
                 yield xhtml.td(rowspan=4, style='vertical-align:top')[
-                    selectionList(
-                        name='target', size=numListItems, style='width: 18ex',
-                        selected=proc.targetFilter
-                        )[ sorted(targets) ]
+                    selectionList(name='target',
+                                  size=numListItems,
+                                  style='width: 18ex'
+                                  )[
+                        (target or noneOption for target in sorted(targets))
+                        ]
                     ]
             if len(owners) > 1 and project.showOwners:
                 yield xhtml.td(rowspan=4, style='vertical-align:top')[
