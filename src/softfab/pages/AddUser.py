@@ -6,7 +6,7 @@ from typing import Optional
 from twisted.cred.error import LoginFailed
 from twisted.internet.defer import inlineCallbacks
 
-from softfab.FabPage import FabPage
+from softfab.FabPage import FabPage, IconModifier
 from softfab.Page import PageProcessor, PresentableError, ProcT, Redirect
 from softfab.formlib import (
     FormTable, actionButtons, dropDownList, emptyOption, hiddenInput, makeForm,
@@ -26,7 +26,8 @@ from softfab.xmlgen import XML, XMLContent, xhtml
 Actions = Enum('Actions', 'ADD CANCEL')
 
 class AddUserBase(FabPage[ProcT, ArgsT]):
-    icon = 'AddUser1'
+    icon = 'IconUser'
+    iconModifier = IconModifier.NEW
     description = 'Add User'
 
     def checkAccess(self, user: User) -> None:

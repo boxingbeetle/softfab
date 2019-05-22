@@ -5,7 +5,7 @@ from enum import Enum
 from twisted.cred.error import LoginFailed
 from twisted.internet.defer import inlineCallbacks
 
-from softfab.FabPage import FabPage
+from softfab.FabPage import FabPage, IconModifier
 from softfab.Page import PageProcessor, PresentableError, Redirect
 from softfab.formlib import (
     FormTable, actionButtons, hiddenInput, makeForm, passwordInput
@@ -64,7 +64,8 @@ Actions = Enum('Actions', 'CHANGE CANCEL')
 
 class ChangePassword_GET(FabPage['ChangePassword_GET.Processor',
                                  'ChangePassword_GET.Arguments']):
-    icon = 'UserList1'
+    icon = 'IconUser'
+    iconModifier = IconModifier.EDIT
     description = 'Change Password'
 
     class Arguments(PasswordMsgArgs):

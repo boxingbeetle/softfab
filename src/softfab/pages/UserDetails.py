@@ -31,7 +31,7 @@ class OwnedJobsTable(JobsSubTable):
 
 class UserDetails_GET(FabPage['UserDetails_GET.Processor',
                               'UserDetails_GET.Arguments']):
-    icon = 'UserList1'
+    icon = 'IconUser'
     description = 'User Details'
 
     class Arguments(PageArgs):

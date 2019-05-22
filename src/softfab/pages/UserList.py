@@ -131,7 +131,7 @@ for (var i = 0; i < document.forms.length; i++) {
 ''']
 
 class UserList_GET(FabPage['UserList_GET.Processor', 'UserList_GET.Arguments']):
-    icon = 'UserList1'
+    icon = 'IconUser'
     description = 'Users'
     children = 'UserDetails', 'AddUser', 'ChangePassword', 'AnonGuest'
 
@@ -181,7 +181,7 @@ class UserList_GET(FabPage['UserList_GET.Processor', 'UserList_GET.Arguments']):
 
 class UserList_POST(FabPage['UserList_POST.Processor',
                             'UserList_POST.Arguments']):
-    icon = 'UserList1'
+    icon = 'IconUser'
     description = 'Change Role'
 
     def checkAccess(self, user: User) -> None:

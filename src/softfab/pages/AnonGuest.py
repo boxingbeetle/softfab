@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from softfab.FabPage import FabPage
+from softfab.FabPage import FabPage, IconModifier
 from softfab.Page import PageProcessor, ProcT, Redirect
 from softfab.pageargs import ArgsT
 from softfab.pagelinks import AnonGuestArgs
@@ -11,7 +11,8 @@ from softfab.xmlgen import XML, XMLContent
 
 
 class AnonGuestBase(FabPage[ProcT, ArgsT]):
-    icon = 'UserList1'
+    icon = 'IconUser'
+    iconModifier = IconModifier.EDIT
     description = 'Anonymous Guests'
     linkDescription = False
 
