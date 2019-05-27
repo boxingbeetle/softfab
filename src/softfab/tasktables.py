@@ -188,6 +188,7 @@ class JobTaskRunsTable(TaskRunsTable):
 
     def iterColumns(self, **kwargs: object) -> Iterator[DataColumn[Task]]:
         proc = cast(PageProcessor, kwargs['proc'])
+        tasks = self.getRecordsToQuery(proc)
         yield self.taskColumn
         if project['taskprio']:
             yield self.priorityColumn
@@ -203,7 +204,7 @@ class JobTaskRunsTable(TaskRunsTable):
         #       of the set of Task Runners potentially capable of running the
         #       tasks writes its reports in a storage pool that is exportable.
         #       However, this is beyond what can easily be implemented now.
-        if any(task.hasExport() for task in self.getRecordsToQuery(proc)):
+        if any(task.hasExport() for task in tasks):
             yield ExportColumn.instance
-        if not cast(JobProcessorMixin, proc).job.hasFinalResult():
+        if any(task.canBeAborted() for task in tasks):
             yield AbortColumn.instance
