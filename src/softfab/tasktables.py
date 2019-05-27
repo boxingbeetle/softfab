@@ -103,9 +103,7 @@ class AbortColumn(DataColumn[Task]):
     label = 'Abort'
 
     def presentCell(self, record: Task, **kwargs: object) -> XMLContent:
-        if record.hasResult():
-            return '-'
-        else:
+        if record.canBeAborted():
             proc = cast(PageProcessor, kwargs['proc'])
             return pageLink(
                 'AbortTask',
@@ -114,6 +112,8 @@ class AbortColumn(DataColumn[Task]):
                     taskName = record.getName()
                     )
                 )[ 'Abort' ]
+        else:
+            return '-'
 
 class TaskRunsTable(DataTable[Task]):
     db = None

@@ -382,6 +382,22 @@ class Task(
 
         taskRun.checkResources(whyNot)
 
+    def canBeAborted(self) -> bool:
+        """Returns True iff this task is in a state in which it can be
+        aborted.
+        """
+        if self.hasResult():
+            # The task has already completed.
+            # Note that we check whether there is a result rather than
+            # whether execution is finished, since it should be possible
+            # to cancel postponed inspection.
+            return False
+        elif self.getLatestRun().isToBeAborted():
+            # Already marked to be aborted.
+            return False
+        else:
+            return True
+
     def abort(self, user: Optional[User] = None) -> Tuple[bool, str]:
         return self.getLatestRun().abort(user)
 
