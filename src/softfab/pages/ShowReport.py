@@ -84,7 +84,7 @@ class ShowReport_GET(FabPage['ShowReport_GET.Processor',
         yield SelfJobsTable.instance.present(proc=proc)
         yield TaskRunsTable.instance.present(proc=proc)
 
-        if not job.hasFinalResult():
+        if any(task.canBeAborted() for task in tasks):
             if any(task.isWaiting() for task in tasks):
                 yield xhtml.p[
                     pageLink(
