@@ -16,35 +16,34 @@ from softfab.request import Request
 from softfab.resourcelib import iterTaskRunners
 from softfab.shadowlib import shadowDB
 from softfab.shadowview import getShadowRunStatus
-from softfab.taskrunlib import TaskRun
 from softfab.taskview import getTaskStatus
 from softfab.userview import OwnerColumn
 from softfab.webgui import cell, maybeLink, pageLink
 from softfab.xmlgen import XMLContent, xhtml
 
 
-class TaskColumn(DataColumn[TaskRun]):
+class TaskColumn(DataColumn[Task]):
     label = 'Task'
     keyName = 'name'
 
-    def presentCell(self, record: TaskRun, **kwargs: object) -> XMLContent:
+    def presentCell(self, record: Task, **kwargs: object) -> XMLContent:
         table = cast('TaskRunsTable', kwargs['table'])
         if table.taskNameLink:
             return createTaskInfoLink(record.getJob().getId(), record.getName())
         else:
             return record.getName()
 
-class SummaryColumn(DataColumn):
+class SummaryColumn(DataColumn[Task]):
     keyName = 'summary'
 
-    def presentCell(self, record: TaskRun, **kwargs: object) -> XMLContent:
+    def presentCell(self, record: Task, **kwargs: object) -> XMLContent:
         return record.getSummaryHTML()
 
-class ExtractedColumn(DataColumn):
+class ExtractedColumn(DataColumn[Task]):
     label = 'Data'
     cellStyle = 'nobreak'
 
-    def presentCell(self, record: TaskRun, **kwargs: object) -> XMLContent:
+    def presentCell(self, record: Task, **kwargs: object) -> XMLContent:
         proc = cast(PageProcessor, kwargs['proc'])
         dataLink = pageLink(
             'ExtractionDetails',
@@ -83,10 +82,10 @@ class ExtractedColumn(DataColumn):
                     maybeLink(extractionRun.getURL())[ logLabel ]
                     ]
 
-class ExportColumn(DataColumn[TaskRun]):
+class ExportColumn(DataColumn[Task]):
     label = 'Export'
 
-    def presentCell(self, record: TaskRun, **kwargs: object) -> XMLContent:
+    def presentCell(self, record: Task, **kwargs: object) -> XMLContent:
         if not record.hasExport():
             return '-'
         if record.isDone():
@@ -100,10 +99,10 @@ class ExportColumn(DataColumn[TaskRun]):
         else:
             return 'not yet'
 
-class AbortColumn(DataColumn[TaskRun]):
+class AbortColumn(DataColumn[Task]):
     label = 'Abort'
 
-    def presentCell(self, record: TaskRun, **kwargs: object) -> XMLContent:
+    def presentCell(self, record: Task, **kwargs: object) -> XMLContent:
         if record.hasResult():
             return '-'
         else:
@@ -152,10 +151,10 @@ class TaskRunsTable(DataTable[Task]):
             yield self.ownerColumn
         yield self.summaryColumn
 
-class TaskRunnerColumn(DataColumn):
+class TaskRunnerColumn(DataColumn[Task]):
     keyName = 'runner'
 
-    def presentCell(self, record: TaskRun, **kwargs: object) -> XMLContent:
+    def presentCell(self, record: Task, **kwargs: object) -> XMLContent:
         return createTaskRunnerDetailsLink(cast(str, record[self.keyName]))
 
 class JobProcessorMixin:
@@ -187,7 +186,7 @@ class JobTaskRunsTable(TaskRunsTable):
         job = cast(Job, getattr(proc, 'job'))
         return () if job is None else job.getTaskSequence()
 
-    def iterColumns(self, **kwargs: object) -> Iterator[DataColumn]:
+    def iterColumns(self, **kwargs: object) -> Iterator[DataColumn[Task]]:
         proc = cast(PageProcessor, kwargs['proc'])
         yield self.taskColumn
         if project['taskprio']:
