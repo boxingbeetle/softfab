@@ -189,18 +189,17 @@ class PageLoader:
             className = pageClass.__name__
             index = className.find('_')
             if index == -1:
-                base = className
-                assert 'GET' not in pagesByMethod
-                pagesByMethod['GET'] = page
-                assert 'POST' not in pagesByMethod
-                pagesByMethod['POST'] = page
-            else:
-                base = className[ : index]
-                method = className[index + 1 : ]
-                assert method not in pagesByMethod
-                pagesByMethod[method] = page
-                if base == 'Login':
-                    setattr(page, 'secureCookie', root.secureCookie)
+                startupLogger.error(
+                    '%s does not specify HTTP method',
+                    page.Processor.__qualname__
+                    )
+                continue
+            base = className[ : index]
+            method = className[index + 1 : ]
+            assert method not in pagesByMethod
+            pagesByMethod[method] = page
+            if base == 'Login':
+                setattr(page, 'secureCookie', root.secureCookie)
             if name is None:
                 name = base
             else:
