@@ -2,15 +2,23 @@
 
 from typing import Mapping, Optional
 
-from softfab.EditPage import EditArgs, EditPage, EditProcessor
+from softfab.EditPage import (
+    EditArgs, EditPage, EditProcessor, EditProcessorBase, InitialEditArgs,
+    InitialEditProcessor
+)
 from softfab.formlib import checkBox, dropDownList
 from softfab.pageargs import BoolArg, EnumArg
 from softfab.productdeflib import ProductDef, ProductType, productDefDB
-from softfab.request import Request
 from softfab.webgui import PropertiesTable, docLink
+from softfab.xmlgen import XMLContent
 
 
-class ProductEdit(EditPage):
+class ProductEditArgs(EditArgs):
+    type = EnumArg(ProductType, ProductType.STRING)
+    local = BoolArg()
+    combined = BoolArg()
+
+class ProductEditBase(EditPage[ProductEditArgs, ProductDef]):
     # FabPage constants:
     icon = 'Product1'
     description = 'Edit Product'
@@ -25,21 +33,18 @@ class ProductEdit(EditPage):
     formId = 'product'
     autoName = None
 
-    class Arguments(EditArgs):
-        type = EnumArg(ProductType, ProductType.STRING)
-        local = BoolArg()
-        combined = BoolArg()
+    def getFormContent(self,
+                       proc: EditProcessorBase[ProductEditArgs, ProductDef]
+                       ) -> XMLContent:
+        return ProductTable.instance
 
-    class Processor(EditProcessor['ProductEdit.Arguments', ProductDef]):
+class ProductEdit_GET(ProductEditBase):
 
-        def createElement(self,
-                          recordId: str,
-                          args: 'ProductEdit.Arguments',
-                          oldElement: Optional[ProductDef]
-                          ) -> ProductDef:
-            return ProductDef.create(
-                recordId, args.type, args.local, args.combined
-                )
+    class Arguments(InitialEditArgs):
+        pass
+
+    class Processor(InitialEditProcessor[ProductEditArgs, ProductDef]):
+        argsClass = ProductEditArgs
 
         def _initArgs(self,
                       element: Optional[ProductDef]
@@ -53,8 +58,21 @@ class ProductEdit(EditPage):
                     combined = element.isCombined()
                     )
 
-    def getFormContent(self, proc):
-        return ProductTable.instance
+class ProductEdit_POST(ProductEditBase):
+
+    class Arguments(ProductEditArgs):
+        pass
+
+    class Processor(EditProcessor[Arguments, ProductDef]):
+
+        def createElement(self,
+                          recordId: str,
+                          args: ProductEditArgs,
+                          oldElement: Optional[ProductDef]
+                          ) -> ProductDef:
+            return ProductDef.create(
+                recordId, args.type, args.local, args.combined
+                )
 
 class ProductTable(PropertiesTable):
 

@@ -1,11 +1,14 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Dict, Mapping, Optional
+from typing import Dict, Mapping, Optional, cast
 
-from softfab.EditPage import EditArgs, EditPage, EditProcessor
+from softfab.EditPage import (
+    EditArgs, EditPage, EditProcessor, EditProcessorBase, InitialEditArgs,
+    InitialEditProcessor
+)
 from softfab.Page import PresentableError
 from softfab.formlib import dropDownList, emptyOption, textArea, textInput
-from softfab.frameworklib import frameworkDB
+from softfab.frameworklib import Framework, frameworkDB
 from softfab.pageargs import IntArg, StrArg
 from softfab.paramlib import ParamMixin, paramTop
 from softfab.paramview import (
@@ -13,7 +16,6 @@ from softfab.paramview import (
     initParamArgs, validateParamState
 )
 from softfab.projectlib import project
-from softfab.request import Request
 from softfab.resourceview import (
     ResourceRequirementsArgsMixin, addResourceRequirementsToElement,
     checkResourceRequirementsState, initResourceRequirementsArgs,
@@ -22,10 +24,17 @@ from softfab.resourceview import (
 from softfab.selectview import textToValues, valuesToText
 from softfab.taskdeflib import TaskDef, taskDefDB
 from softfab.webgui import PropertiesTable
-from softfab.xmlgen import xhtml
+from softfab.xmlgen import XMLContent, xhtml
 
 
-class TaskEdit(EditPage):
+class TaskEditArgs(EditArgs, ParamArgsMixin, ResourceRequirementsArgsMixin):
+    title = StrArg('')
+    descr = StrArg('')
+    framework = StrArg('')
+    timeout = IntArg(0)
+    requirements = StrArg('')
+
+class TaskEditBase(EditPage[TaskEditArgs, TaskDef]):
     # FabPage constants:
     icon = 'TaskDef2'
     description = 'Edit Task Definition'
@@ -40,20 +49,55 @@ class TaskEdit(EditPage):
     formId = 'taskdef'
     autoName = None
 
-    class Arguments(
-            EditArgs, ParamArgsMixin, ResourceRequirementsArgsMixin
-            ):
-        title = StrArg('')
-        descr = StrArg('')
-        framework = StrArg('')
-        timeout = IntArg(0)
-        requirements = StrArg('')
+    def getFormContent(self,
+                       proc: EditProcessorBase[TaskEditArgs, TaskDef]
+                       ) -> XMLContent:
+        parent = getattr(proc, 'parent')
+        yield TaskPropertiesTable.instance
+        yield ParamDefTable(parent)
+        yield resourceRequirementsWidget(
+            None
+            if parent is paramTop
+            else cast(Framework, parent).resourceClaim
+            )
 
-    class Processor(EditProcessor['TaskEdit.Arguments', TaskDef]):
+class TaskEdit_GET(TaskEditBase):
+
+    class Arguments(InitialEditArgs):
+        pass
+
+    class Processor(InitialEditProcessor[TaskEditArgs, TaskDef]):
+        argsClass = TaskEditArgs
+
+        def _initArgs(self, element: Optional[TaskDef]) -> Mapping[str, object]:
+            if element is None:
+                overrides = {} # type: Dict[str, object]
+            else:
+                overrides = dict(
+                    title = element.getTitle(),
+                    descr = element.getDescription(),
+                    framework = element.getParentName() or '',
+                    timeout = element.timeoutMins or 0,
+                    requirements = valuesToText(element.getTagValues('sf.req')),
+                    )
+                overrides.update(initParamArgs(element))
+            overrides.update(initResourceRequirementsArgs(element))
+            return overrides
+
+        def _validateState(self) -> None:
+            # pylint: disable=attribute-defined-outside-init
+            self.parent = paramTop # type: ParamMixin
+
+class TaskEdit_POST(TaskEditBase):
+
+    class Arguments(TaskEditArgs):
+        pass
+
+    class Processor(EditProcessor[TaskEditArgs, TaskDef]):
 
         def createElement(self,
                           recordId: str,
-                          args: 'TaskEdit.Arguments',
+                          args: TaskEditArgs,
                           oldElement: Optional[TaskDef]
                           ) -> TaskDef:
             element = TaskDef.create(
@@ -68,26 +112,6 @@ class TaskEdit(EditPage):
             element.setTag('sf.req', textToValues(args.requirements))
             addResourceRequirementsToElement(element, args)
             return element
-
-        def _initArgs(self, element: Optional[TaskDef]) -> Mapping[str, object]:
-            if self.args.framework != '':
-                # This is a scripted form submission from the framework
-                # drop-down list; don't reload arguments.
-                return {}
-
-            if element is None:
-                overrides = {} # type: Dict[str, object]
-            else:
-                overrides = dict(
-                    title = element.getTitle(),
-                    descr = element.getDescription(),
-                    framework = element.getParentName() or '',
-                    timeout = element.timeoutMins or 0,
-                    requirements = valuesToText(element.getTagValues('sf.req')),
-                    )
-                overrides.update(initParamArgs(element))
-            overrides.update(initResourceRequirementsArgs(element))
-            return overrides
 
         def _checkState(self) -> None:
             args = self.args
@@ -128,14 +152,6 @@ class TaskEdit(EditPage):
             # Filter out empty lines.
             validateParamState(self, self.parent)
             validateResourceRequirementsState(self)
-
-    def getFormContent(self, proc):
-        parent = proc.parent
-        yield TaskPropertiesTable.instance
-        yield ParamDefTable(parent)
-        yield resourceRequirementsWidget(
-            None if parent is paramTop else parent.resourceClaim
-            )
 
 class TaskPropertiesTable(PropertiesTable):
 

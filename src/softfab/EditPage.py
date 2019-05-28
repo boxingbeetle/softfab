@@ -3,7 +3,7 @@
 from abc import ABC
 from enum import Enum
 from typing import (
-    TYPE_CHECKING, ClassVar, Generic, Mapping, Optional, TypeVar, Union
+    TYPE_CHECKING, ClassVar, Generic, Mapping, Optional, Type, TypeVar, Union
 )
 
 from softfab.FabPage import FabPage, IconModifier
@@ -28,16 +28,19 @@ from softfab.xmlgen import XML, XMLContent, xhtml
 EditPagePrev = Enum('EditPagePrev', 'CONFIRM SAVE_AS EDIT')
 """Names for the previous dialog step."""
 
-class EditArgs(PageArgs):
+class InitialEditArgs(PageArgs):
     id = StrArg('')
+
+class EditArgs(InitialEditArgs):
     newId = StrArg('')
     prev = EnumArg(EditPagePrev, None)
     #action = EnumArg(EditPageActions, None)
     action = StrArg(None)
     back = StrArg(None)
 
+InitialEditArgsT = TypeVar('InitialEditArgsT', bound='InitialEditArgs')
 EditArgsT = TypeVar('EditArgsT', bound='EditArgs')
-EditProcT = TypeVar('EditProcT', bound='EditProcessorBase')
+EditProcT = TypeVar('EditProcT', bound='EditProcessorBase', contravariant=True)
 
 class AbstractPhase(Generic[EditProcT, EditArgsT, DBRecord]):
     '''Note: This class is similar to DialogStep, but I don't know yet if/how
@@ -58,7 +61,7 @@ class AbstractPhase(Generic[EditProcT, EditArgsT, DBRecord]):
         '''
         raise NotImplementedError
 
-class EditPhase(AbstractPhase['EditProcessor[EditArgsT, DBRecord]',
+class EditPhase(AbstractPhase['EditProcessorBase[EditArgsT, DBRecord]',
                               EditArgsT, DBRecord],
                 Generic[EditArgsT, DBRecord]):
     '''First and main phase: actual editing of the record.
@@ -252,31 +255,46 @@ class EditProcessorBase(PageProcessor[EditArgsT], Generic[EditArgsT, DBRecord]):
         such as inserting default values for empty entries.
         '''
 
+class InitialEditProcessor(EditProcessorBase[EditArgsT, DBRecord]):
+
+    argsClass = abstract # type: ClassVar[Type[EditArgsT]]
+    """The argument class used for editing: a subclass of `EditArgs`,
+    that contains all the values needed to construct a record.
+    """
+
+    def processState(self, oldElement: Optional[DBRecord]) -> None:
+        editArgs = self.argsClass(action='edit', id=self.args.id,
+                                  **self._initArgs(oldElement))
+        # TODO: An internal redirect to the POST page would be cleaner
+        #       than overwriting the args, but that doesn't fit into
+        #       the way pages are currently processed.
+        self.args = editArgs
+
+    def determinePhase(self,
+                       req: Request[InitialEditArgsT]
+                       ) -> EditPhase[EditArgsT, DBRecord]:
+        return self.page.editPhase
+
+    def _initArgs(self, element: Optional[DBRecord]) -> Mapping[str, object]:
+        '''Get initial argument values for editing the given record.
+        If the user is creating a new record, None is passed.
+        Returns a dictionary containing argument names and values
+        for those arguments that need to be overridden from their
+        defaults.
+        '''
+        raise NotImplementedError
+
 class EditProcessor(EditProcessorBase[EditArgsT, DBRecord]):
 
     if TYPE_CHECKING:
         replace = True
 
     def processState(self, oldElement: Optional[DBRecord]) -> None:
-        # Initialize args on first arrival to the edit page.
-        # TODO: It would be cleaner if we could separate the data
-        #       being edited from the control flow fields that EditPage
-        #       needs. For example, we could avoid calls to _initArgs
-        #       when the user selects 'Cancel'. Currently ProjectEdit
-        #       has to be able to deal with element == None in its
-        #       _initArgs, even though project is a singleton.
-        #       -> maybe this is fixed now?
-        if self.args.action is None:
-            self.args = self.args.override(
-                action = 'edit',
-                **self._initArgs(oldElement)
-                )
-
         if self.args.action not in ('edit', 'cancel'):
             try:
                 self._checkState()
             except PresentableError:
-                self.args = self.args.override(action = 'edit')
+                self.args = self.args.override(action='edit')
                 raise
 
     def determinePhase(self,
@@ -290,7 +308,7 @@ class EditProcessor(EditProcessorBase[EditArgsT, DBRecord]):
         # In IE, if a form with two submit buttons is submitted by pressing
         # the Enter key, neither button is considered successful.
         # In this case, perform the default action for that page.
-        if action == '':
+        if not action:
             if prev is EditPagePrev.SAVE_AS:
                 action = 'save'
             elif prev is EditPagePrev.EDIT:
@@ -377,15 +395,6 @@ class EditProcessor(EditProcessorBase[EditArgsT, DBRecord]):
                       ) -> DBRecord:
         raise NotImplementedError
 
-    def _initArgs(self, element: Optional[DBRecord]) -> Mapping[str, object]:
-        '''Get initial argument values for editing the given record.
-        If the user is creating a new record, None is passed.
-        Returns a dictionary containing argument names and values
-        for those arguments that need to be overridden from their
-        defaults.
-        '''
-        raise NotImplementedError
-
     def _checkState(self) -> None:
         '''Checks whether the arguments contain only valid values and
         whether they are consistent with the current contents of the
@@ -394,7 +403,7 @@ class EditProcessor(EditProcessorBase[EditArgsT, DBRecord]):
         Raises PresentableError if there is a problem.
         '''
 
-class EditPage(FabPage[EditProcessor[EditArgsT, DBRecord], EditArgsT], ABC):
+class EditPage(FabPage[EditProcessorBase[EditArgsT, DBRecord], EditArgsT], ABC):
     description = abstract # type: ClassVar[str]
     icon = abstract # type: ClassVar[str]
     iconModifier = IconModifier.EDIT
@@ -435,11 +444,11 @@ class EditPage(FabPage[EditProcessor[EditArgsT, DBRecord], EditArgsT], ABC):
         self.confirmOverwritePhase = \
                 ConfirmOverwritePhase[EditArgsT, DBRecord](self)
 
-    def pageTitle(self, proc: EditProcessor[EditArgsT, DBRecord]) -> str:
+    def pageTitle(self, proc: EditProcessorBase[EditArgsT, DBRecord]) -> str:
         return 'Edit ' + self.elemTitle
 
     def presentHeadParts(self,
-                         proc: EditProcessor[EditArgsT, DBRecord]
+                         proc: EditProcessorBase[EditArgsT, DBRecord]
                          ) -> XMLContent:
         yield super().presentHeadParts(proc)
         if self.useScript:
@@ -451,7 +460,7 @@ class EditPage(FabPage[EditProcessor[EditArgsT, DBRecord], EditArgsT], ABC):
         return proc.phase.presentContent(proc)
 
     def presentError(self,
-                     proc: EditProcessor[EditArgsT, DBRecord],
+                     proc: EditProcessorBase[EditArgsT, DBRecord],
                      message: XML
                      ) -> XMLContent:
         yield message

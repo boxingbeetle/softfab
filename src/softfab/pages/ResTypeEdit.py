@@ -2,15 +2,22 @@
 
 from typing import Mapping, Optional
 
-from softfab.EditPage import EditArgs, EditPage, EditProcessor
+from softfab.EditPage import (
+    EditArgs, EditPage, EditProcessor, EditProcessorBase, InitialEditArgs,
+    InitialEditProcessor
+)
 from softfab.formlib import CheckBoxesTable, textInput
 from softfab.pageargs import SetArg, StrArg
-from softfab.request import Request
 from softfab.restypelib import ResType, resTypeDB
 from softfab.webgui import Column, PropertiesTable, cell
+from softfab.xmlgen import XMLContent
 
 
-class ResTypeEdit(EditPage):
+class ResTypeEditArgs(EditArgs):
+    type = SetArg()
+    description = StrArg('')
+
+class ResTypeEditBase(EditPage[ResTypeEditArgs, ResType]):
     # FabPage constants:
     icon = 'IconResources'
     description = 'Edit Resource Type'
@@ -25,27 +32,18 @@ class ResTypeEdit(EditPage):
     formId = 'restype'
     autoName = None
 
-    class Arguments(EditArgs):
-        type = SetArg()
-        description = StrArg('')
+    def getFormContent(self,
+                       proc: EditProcessorBase[ResTypeEditArgs, ResType]
+                       ) -> XMLContent:
+        return ResTypeTable.instance
 
-    class Processor(EditProcessor['ResTypeEdit.Arguments', ResType]):
+class ResTypeEdit_GET(ResTypeEditBase):
 
-        def checkId(self, recordId: str) -> None:
-            if recordId.startswith('sf.'):
-                raise KeyError('names starting with "sf." are reserved')
+    class Arguments(InitialEditArgs):
+        pass
 
-        def createElement(self,
-                          recordId: str,
-                          args: 'ResTypeEdit.Arguments',
-                          oldElement: Optional[ResType]
-                          ) -> ResType:
-            return ResType.create(
-                name = recordId,
-                pertask = 'pertask' in args.type,
-                perjob = 'perjob' in args.type,
-                description = args.description
-                )
+    class Processor(InitialEditProcessor[ResTypeEditArgs, ResType]):
+        argsClass = ResTypeEditArgs
 
         def _initArgs(self, element: Optional[ResType]) -> Mapping[str, object]:
             if element is None:
@@ -58,8 +56,28 @@ class ResTypeEdit(EditPage):
                         )
                     }
 
-    def getFormContent(self, proc):
-        return ResTypeTable.instance
+class ResTypeEdit_POST(ResTypeEditBase):
+
+    class Arguments(ResTypeEditArgs):
+        pass
+
+    class Processor(EditProcessor[ResTypeEditArgs, ResType]):
+
+        def checkId(self, recordId: str) -> None:
+            if recordId.startswith('sf.'):
+                raise KeyError('names starting with "sf." are reserved')
+
+        def createElement(self,
+                          recordId: str,
+                          args: ResTypeEditArgs,
+                          oldElement: Optional[ResType]
+                          ) -> ResType:
+            return ResType.create(
+                name = recordId,
+                pertask = 'pertask' in args.type,
+                perjob = 'perjob' in args.type,
+                description = args.description
+                )
 
 class ExclusiveWidget(CheckBoxesTable):
     name = 'type'

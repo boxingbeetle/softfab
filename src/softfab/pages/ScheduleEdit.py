@@ -4,7 +4,9 @@ from enum import Enum
 from time import localtime
 from typing import Dict, Mapping, Optional
 
-from softfab.EditPage import EditArgs, EditPage, EditProcessor
+from softfab.EditPage import (
+    EditArgs, EditPage, EditProcessor, InitialEditArgs, InitialEditProcessor
+)
 from softfab.Page import PresentableError
 from softfab.configlib import Config, configDB
 from softfab.formlib import (
@@ -13,7 +15,6 @@ from softfab.formlib import (
 )
 from softfab.pageargs import BoolArg, EnumArg, IntArg, SetArg, StrArg
 from softfab.projectlib import project
-from softfab.request import Request
 from softfab.schedulelib import (
     ScheduleRepeat, Scheduled, asap, endOfTime, scheduleDB
 )
@@ -30,17 +31,20 @@ SelectBy = Enum('SelectBy', 'NAME TAG')
 '''Mechanism by which a schedule selects the configurations it will start.
 '''
 
-class TagList(DropDownList):
-    name = 'tag'
-    extraAttribs = { 'style': 'width:100%' }
-    def getActive(self, proc, **kwargs):
-        args = proc.args
-        return args.tag if args.selectBy is SelectBy.TAG else None
-    def iterOptions(self, **kwargs):
-        for key in project.getTagKeys():
-            yield key, Config.cache.getValues(key)
+class ScheduleEditArgs(EditArgs):
+    selectBy = EnumArg(SelectBy, SelectBy.NAME)
+    configId = StrArg('')
+    tag = StrArg('')
+    # TODO: Make TimeArg? We already have DateArg.
+    startTime = StrArg('')
+    suspended = BoolArg()
+    sequence = EnumArg(ScheduleRepeat, ScheduleRepeat.ONCE)
+    days = SetArg()
+    minDelay = IntArg(10)
+    cmtrigger = StrArg('')
+    comment = StrArg('')
 
-class ScheduleEdit(EditPage):
+class ScheduleEditBase(EditPage[ScheduleEditArgs, Scheduled]):
     # FabPage constants:
     icon = 'IconSchedule'
     description = 'Edit Schedule'
@@ -55,20 +59,82 @@ class ScheduleEdit(EditPage):
     formId = 'schedule'
     autoName = None
 
-    class Arguments(EditArgs):
-        selectBy = EnumArg(SelectBy, SelectBy.NAME)
-        configId = StrArg('')
-        tag = StrArg('')
-        # TODO: Make TimeArg? We already have DateArg.
-        startTime = StrArg('')
-        suspended = BoolArg()
-        sequence = EnumArg(ScheduleRepeat, ScheduleRepeat.ONCE)
-        days = SetArg()
-        minDelay = IntArg(10)
-        cmtrigger = StrArg('')
-        comment = StrArg('')
+    def iterStyleDefs(self):
+        yield _pageStyles
 
-    class Processor(EditProcessor['ScheduleEdit.Arguments', Scheduled]):
+    def getFormContent(self, proc):
+        args = proc.args
+        if args.id != '':
+            yield xhtml.h2[ 'Schedule: ', xhtml.b[ args.id ]]
+        yield vgroup[
+            (ConfigTagTable if project.getTagKeys() else ConfigTable).instance,
+            TimeTable.instance,
+            SequenceTable.instance,
+            _createGroupItem(args.sequence is ScheduleRepeat.WEEKLY)[
+                DaysTable.instance
+                ],
+            _createGroupItem(args.sequence is ScheduleRepeat.CONTINUOUSLY)[
+                DelayPanel.instance
+                ],
+            _createGroupItem(args.sequence is ScheduleRepeat.PASSIVE)[
+                CMTriggerPanel.instance
+                ],
+            CommentPanel.instance,
+            ]
+        yield addRemoveStyleScript
+        yield ScheduleScript.instance
+
+_pageStyles = r'''
+#jobConfTable td {
+    line-height: 150%;
+}
+'''
+
+class ScheduleEdit_GET(ScheduleEditBase):
+
+    class Arguments(InitialEditArgs):
+        pass
+
+    class Processor(InitialEditProcessor[ScheduleEditArgs, Scheduled]):
+        argsClass = ScheduleEditArgs
+
+        def _initArgs(self,
+                      element: Optional[Scheduled]
+                      ) -> Mapping[str, object]:
+            if element is None:
+                return {}
+            else:
+                overrides = {} # type: Dict[str, object]
+                configId = element['configId']
+                if configId is None:
+                    overrides['selectBy'] = SelectBy.TAG
+                    overrides['tag'] = \
+                        element['tagKey'] + ',' + element['tagValue']
+                else:
+                    overrides['selectBy'] = SelectBy.NAME
+                    overrides['configId'] = configId
+                overrides['suspended'] = element.isSuspended()
+                if element['startTime'] not in (asap, endOfTime):
+                    overrides['startTime'] = formatTime(element['startTime'])
+                sequence = element['sequence']
+                overrides['sequence'] = sequence
+                if sequence is ScheduleRepeat.WEEKLY:
+                    overrides['days'] = stringToListDays(element['days'])
+                elif sequence is ScheduleRepeat.CONTINUOUSLY:
+                    overrides['minDelay'] = element['minDelay']
+                elif sequence is ScheduleRepeat.PASSIVE:
+                    overrides['cmtrigger'] = '\n'.join(
+                        sorted(element.getTagValues('sf.cmtrigger'))
+                        )
+                overrides['comment'] = element.comment
+                return overrides
+
+class ScheduleEdit_POST(ScheduleEditBase):
+
+    class Arguments(ScheduleEditArgs):
+        pass
+
+    class Processor(EditProcessor[ScheduleEditArgs, Scheduled]):
 
         def _checkState(self) -> None:
             args = self.args
@@ -92,7 +158,7 @@ class ScheduleEdit(EditPage):
 
         def createElement(self,
                           recordId: str,
-                          args: 'ScheduleEdit.Arguments',
+                          args: ScheduleEditArgs,
                           oldElement: Optional[Scheduled]
                           ) -> Scheduled:
             try:
@@ -139,67 +205,15 @@ class ScheduleEdit(EditPage):
                         element.setTrigger()
             return element
 
-        def _initArgs(self,
-                      element: Optional[Scheduled]
-                      ) -> Mapping[str, object]:
-            if element is None:
-                return {}
-            else:
-                overrides = {} # type: Dict[str, object]
-                configId = element['configId']
-                if configId is None:
-                    overrides['selectBy'] = SelectBy.TAG
-                    overrides['tag'] = \
-                        element['tagKey'] + ',' + element['tagValue']
-                else:
-                    overrides['selectBy'] = SelectBy.NAME
-                    overrides['configId'] = configId
-                overrides['suspended'] = element.isSuspended()
-                if element['startTime'] not in (asap, endOfTime):
-                    overrides['startTime'] = formatTime(element['startTime'])
-                sequence = element['sequence']
-                overrides['sequence'] = sequence
-                if sequence is ScheduleRepeat.WEEKLY:
-                    overrides['days'] = stringToListDays(element['days'])
-                elif sequence is ScheduleRepeat.CONTINUOUSLY:
-                    overrides['minDelay'] = element['minDelay']
-                elif sequence is ScheduleRepeat.PASSIVE:
-                    overrides['cmtrigger'] = '\n'.join(
-                        sorted(element.getTagValues('sf.cmtrigger'))
-                        )
-                overrides['comment'] = element.comment
-                return overrides
-
-    def iterStyleDefs(self):
-        yield _pageStyles
-
-    def getFormContent(self, proc):
+class TagList(DropDownList):
+    name = 'tag'
+    extraAttribs = { 'style': 'width:100%' }
+    def getActive(self, proc, **kwargs):
         args = proc.args
-        if args.id != '':
-            yield xhtml.h2[ 'Schedule: ', xhtml.b[ args.id ]]
-        yield vgroup[
-            (ConfigTagTable if project.getTagKeys() else ConfigTable).instance,
-            TimeTable.instance,
-            SequenceTable.instance,
-            _createGroupItem(args.sequence is ScheduleRepeat.WEEKLY)[
-                DaysTable.instance
-                ],
-            _createGroupItem(args.sequence is ScheduleRepeat.CONTINUOUSLY)[
-                DelayPanel.instance
-                ],
-            _createGroupItem(args.sequence is ScheduleRepeat.PASSIVE)[
-                CMTriggerPanel.instance
-                ],
-            CommentPanel.instance,
-            ]
-        yield addRemoveStyleScript
-        yield ScheduleScript.instance
-
-_pageStyles = r'''
-#jobConfTable td {
-    line-height: 150%;
-}
-'''
+        return args.tag if args.selectBy is SelectBy.TAG else None
+    def iterOptions(self, **kwargs):
+        for key in project.getTagKeys():
+            yield key, Config.cache.getValues(key)
 
 def _createGroupItem(visible):
     return groupItem(class_=None if visible else 'hidden')
@@ -293,7 +307,9 @@ class CMTriggerPanel(Panel):
         yield (
             'This sets the "', xhtml.code[ 'sf.cmtrigger' ], '" tag '
             'on this schedule, for use by a ',
-            docLink('/reference/cm-triggered-build-and-test/')[ 'CM trigger script' ], '.'
+            docLink('/reference/cm-triggered-build-and-test/')[
+                'CM trigger script'
+                ], '.'
             )
 
 class CommentPanel(Panel):

@@ -3,7 +3,10 @@
 from abc import ABC
 from typing import AbstractSet, ClassVar, Dict, Mapping, Optional, cast
 
-from softfab.EditPage import EditArgs, EditPage, EditProcessor
+from softfab.EditPage import (
+    EditArgs, EditPage, EditProcessor, EditProcessorBase, InitialEditArgs,
+    InitialEditProcessor
+)
 from softfab.Page import PresentableError
 from softfab.formlib import checkBox, dropDownList, emptyOption, textInput
 from softfab.frameworklib import Framework, frameworkDB
@@ -14,7 +17,6 @@ from softfab.paramview import (
     initParamArgs, validateParamState
 )
 from softfab.productdeflib import productDefDB
-from softfab.request import Request
 from softfab.resourceview import (
     ResourceRequirementsArgsMixin, addResourceRequirementsToElement,
     checkResourceRequirementsState, initResourceRequirementsArgs,
@@ -25,10 +27,18 @@ from softfab.utils import abstract
 from softfab.webgui import (
     PropertiesTable, Table, docLink, hgroup, rowManagerInstanceScript
 )
-from softfab.xmlgen import xhtml
+from softfab.xmlgen import XMLContent, xhtml
 
 
-class FrameworkEdit(EditPage):
+class FrameworkEditArgs(
+        EditArgs, ParamArgsMixin, ResourceRequirementsArgsMixin
+        ):
+    wrapper = StrArg('')
+    extractor = BoolArg()
+    input = SetArg()
+    output = SetArg()
+
+class FrameworkEditBase(EditPage[FrameworkEditArgs, Framework]):
     # FabPage constants:
     icon = 'Framework1'
     description = 'Edit Framework'
@@ -43,31 +53,48 @@ class FrameworkEdit(EditPage):
     formId = 'framework'
     autoName = None
 
-    class Arguments(
-            EditArgs, ParamArgsMixin, ResourceRequirementsArgsMixin
-            ):
-        wrapper = StrArg('')
-        extractor = BoolArg()
-        input = SetArg()
-        output = SetArg()
+    def getFormContent(self,
+                       proc: EditProcessorBase[FrameworkEditArgs, Framework]
+                       ) -> XMLContent:
+        yield FrameworkPropertiesTable.instance
+        yield xhtml.ul[
+            xhtml.li[
+                'The wrapper field selects the directory in which to look for '
+                'a wrapper script. '
+                'Read ',
+                docLink(
+                   '/introduction/framework-and-task-definitions/#frameworkdef'
+                )['the documentation'],
+                ' for details.'
+                ],
+            xhtml.li[
+                'The extractor field indicates that mid-level data extraction '
+                'should be performed for this framework. '
+                'This requires an extractor script to be written. '
+                'Read ',
+                docLink(
+                    '/introduction/framework-and-task-definitions/#extract'
+                )['the documentation'],
+                ' for details.'
+                ]
+            ]
 
-    class Processor(EditProcessor['FrameworkEdit.Arguments', Framework]):
+        yield hgroup[
+            InputsTable.instance,
+            OutputsTable.instance
+            ]
 
-        def createElement(self,
-                          recordId: str,
-                          args: 'FrameworkEdit.Arguments',
-                          oldElement: Optional[Framework]
-                          ) -> Framework:
-            inputs = set(args.input)
-            inputs.discard('')
-            outputs = set(args.output)
-            outputs.discard('')
-            element = Framework.create(recordId, inputs, outputs)
-            addParamsToElement(element, args)
-            element.addParameter('sf.wrapper', args.wrapper, True)
-            element.addParameter('sf.extractor', str(args.extractor), True)
-            addResourceRequirementsToElement(element, args)
-            return element
+        yield ParamDefTable(paramTop)
+
+        yield resourceRequirementsWidget()
+
+class FrameworkEdit_GET(FrameworkEditBase):
+
+    class Arguments(InitialEditArgs):
+        pass
+
+    class Processor(InitialEditProcessor[FrameworkEditArgs, Framework]):
+        argsClass = FrameworkEditArgs
 
         def _initArgs(self,
                       element: Optional[Framework]
@@ -85,6 +112,29 @@ class FrameworkEdit(EditPage):
                 overrides.update(initParamArgs(element))
             overrides.update(initResourceRequirementsArgs(element))
             return overrides
+
+class FrameworkEdit_POST(FrameworkEditBase):
+
+    class Arguments(FrameworkEditArgs):
+        pass
+
+    class Processor(EditProcessor[FrameworkEditArgs, Framework]):
+
+        def createElement(self,
+                          recordId: str,
+                          args: FrameworkEditArgs,
+                          oldElement: Optional[Framework]
+                          ) -> Framework:
+            inputs = set(args.input)
+            inputs.discard('')
+            outputs = set(args.output)
+            outputs.discard('')
+            element = Framework.create(recordId, inputs, outputs)
+            addParamsToElement(element, args)
+            element.addParameter('sf.wrapper', args.wrapper, True)
+            element.addParameter('sf.extractor', str(args.extractor), True)
+            addResourceRequirementsToElement(element, args)
+            return element
 
         def _checkState(self) -> None:
             """Check against making parameters final which are overridden in
@@ -122,39 +172,6 @@ class FrameworkEdit(EditPage):
                                            output=self.args.output - {''})
             validateParamState(self, paramTop)
             validateResourceRequirementsState(self)
-
-    def getFormContent(self, proc):
-        yield FrameworkPropertiesTable.instance
-        yield xhtml.ul[
-            xhtml.li[
-                'The wrapper field selects the directory in which to look for '
-                'a wrapper script. '
-                'Read ',
-                docLink(
-                   '/introduction/framework-and-task-definitions/#frameworkdef'
-                )['the documentation'],
-                ' for details.'
-                ],
-            xhtml.li[
-                'The extractor field indicates that mid-level data extraction '
-                'should be performed for this framework. '
-                'This requires an extractor script to be written. '
-                'Read ',
-                docLink(
-                    '/introduction/framework-and-task-definitions/#extract'
-                )['the documentation'],
-                ' for details.'
-                ]
-            ]
-
-        yield hgroup[
-            InputsTable.instance,
-            OutputsTable.instance
-            ]
-
-        yield ParamDefTable(paramTop)
-
-        yield resourceRequirementsWidget()
 
 class FrameworkPropertiesTable(PropertiesTable):
 

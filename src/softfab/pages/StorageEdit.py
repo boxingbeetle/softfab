@@ -4,12 +4,12 @@ from typing import Mapping, Optional
 from urllib.parse import urlparse
 
 from softfab.EditPage import (
-    AbstractPhase, EditArgs, EditPage, EditPagePrev, EditProcessor
+    AbstractPhase, EditArgs, EditPage, EditPagePrev, EditProcessor,
+    EditProcessorBase, InitialEditArgs, InitialEditProcessor
 )
 from softfab.Page import PresentableError
 from softfab.formlib import checkBox, makeForm, submitButton, textInput
 from softfab.pageargs import BoolArg, StrArg
-from softfab.request import Request
 from softfab.storagelib import (
     Storage, getStorageIdByName, getStorageIdByURL, storageDB
 )
@@ -18,11 +18,17 @@ from softfab.webgui import PropertiesTable
 from softfab.xmlgen import XMLContent, xhtml
 
 
-class MergePhase(AbstractPhase['StorageEdit.Processor',
-                               'StorageEdit.Arguments',
+class StorageEditArgs(EditArgs):
+    id = StrArg()
+    name = StrArg('')
+    url = StrArg('')
+    export = BoolArg()
+
+class MergePhase(AbstractPhase[EditProcessor[StorageEditArgs, Storage],
+                               StorageEditArgs,
                                Storage]):
 
-    def process(self, proc: 'StorageEdit.Processor') -> None:
+    def process(self, proc: EditProcessor[StorageEditArgs, Storage]) -> None:
         args = proc.args
 
         checkPrivilege(
@@ -67,7 +73,9 @@ class MergePhase(AbstractPhase['StorageEdit.Processor',
                     ])
             newElement.takeOver(oldElement)
 
-    def presentContent(self, proc: 'StorageEdit.Processor') -> XMLContent:
+    def presentContent(self,
+                       proc: EditProcessor[StorageEditArgs, Storage]
+                       ) -> XMLContent:
         if proc.args.newId != proc.args.id:
             return (
                 xhtml.p[ 'The storages have been merged.' ],
@@ -102,7 +110,7 @@ class MergePhase(AbstractPhase['StorageEdit.Processor',
             return self.__presentMerge(proc, message, mergeId)
 
     def __presentMerge(self,
-                       proc: 'StorageEdit.Processor',
+                       proc: EditProcessor[StorageEditArgs, Storage],
                        message: XMLContent,
                        mergeId: str
                        ) -> XMLContent:
@@ -123,7 +131,7 @@ class MergePhase(AbstractPhase['StorageEdit.Processor',
             ].present(proc=proc)
 
     def __presentCommitted(self,
-                           proc: 'StorageEdit.Processor',
+                           proc: EditProcessor[StorageEditArgs, Storage],
                            element: Storage
                            ) -> XMLContent:
         page = self.page
@@ -135,7 +143,7 @@ class MergePhase(AbstractPhase['StorageEdit.Processor',
             page.backToParent(proc.req)
             )
 
-class StorageEdit(EditPage):
+class StorageEditBase(EditPage):
     # FabPage constants:
     icon = 'IconReport'
     description = 'Edit Storage'
@@ -150,26 +158,16 @@ class StorageEdit(EditPage):
     formId = 'storage'
     autoName = False
 
-    class Arguments(EditArgs):
-        id = StrArg()
-        name = StrArg('')
-        url = StrArg('')
-        export = BoolArg()
+    def getFormContent(self, proc: EditProcessorBase) -> XMLContent:
+        return StorageTable.instance
 
-    class Processor(EditProcessor['StorageEdit.Arguments', Storage]):
+class StorageEdit_GET(StorageEditBase):
 
-        def createElement(self,
-                          recordId: str,
-                          args: 'StorageEdit.Arguments',
-                          oldElement: Optional[Storage]
-                          ) -> Storage:
-            assert oldElement is not None
-            return Storage({
-                'id': recordId,
-                'name': args.name,
-                'url': args.url,
-                'export': args.export
-                }, oldElement)
+    class Arguments(StorageEditArgs):
+        pass
+
+    class Processor(InitialEditProcessor[StorageEditArgs, Storage]):
+        argsClass = StorageEditArgs
 
         def _initArgs(self, element: Optional[Storage]) -> Mapping[str, object]:
             if element is None:
@@ -180,6 +178,26 @@ class StorageEdit(EditPage):
                     url = element['url'],
                     export = element.hasExport()
                     )
+
+class StorageEdit_POST(StorageEditBase):
+
+    class Arguments(StorageEditArgs):
+        pass
+
+    class Processor(EditProcessor[StorageEditArgs, Storage]):
+
+        def createElement(self,
+                          recordId: str,
+                          args: StorageEditArgs,
+                          oldElement: Optional[Storage]
+                          ) -> Storage:
+            assert oldElement is not None
+            return Storage({
+                'id': recordId,
+                'name': args.name,
+                'url': args.url,
+                'export': args.export
+                }, oldElement)
 
         def _checkState(self) -> None:
             args = self.args
@@ -207,9 +225,6 @@ class StorageEdit(EditPage):
     def __init__(self):
         EditPage.__init__(self)
         self.savePhase = MergePhase(self)
-
-    def getFormContent(self, proc):
-        return StorageTable.instance
 
 class StorageTable(PropertiesTable):
 

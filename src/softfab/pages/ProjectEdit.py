@@ -4,7 +4,9 @@ from typing import Mapping, Optional, cast
 from urllib.parse import urlparse
 import time
 
-from softfab.EditPage import EditArgs, EditPage, EditProcessor
+from softfab.EditPage import (
+    EditArgs, EditPage, EditProcessor, InitialEditArgs, InitialEditProcessor
+)
 from softfab.FabPage import IconModifier
 from softfab.Page import PresentableError
 from softfab.formlib import DropDownList, RadioTable, checkBox, textInput
@@ -13,13 +15,24 @@ from softfab.projectlib import (
     EmbeddingPolicy, Project, _projectDB, defaultMaxJobs, getKnownTimezones,
     project
 )
-from softfab.request import Request
 from softfab.setcalc import categorizedLists
 from softfab.webgui import PropertiesTable, Widget, docLink
 from softfab.xmlgen import xhtml
 
 
-class ProjectEdit(EditPage):
+class ProjectEditArgs(EditArgs):
+    name = StrArg('')
+    targets = StrArg('')
+    tagkeys = StrArg('')
+    timezone = StrArg('')
+    maxjobs = IntArg(defaultMaxJobs)
+    taskprio = BoolArg()
+    trselect = BoolArg()
+    reqtag = BoolArg()
+    embed = EnumArg(EmbeddingPolicy, None)
+    embedcustom = StrArg('')
+
+class ProjectEditBase(EditPage[ProjectEditArgs, Project]):
     # FabPage constants:
     icon = 'Project1'
     iconModifier = IconModifier.NONE
@@ -34,23 +47,49 @@ class ProjectEdit(EditPage):
     formId = 'project'
     autoName = 'singleton'
 
-    class Arguments(EditArgs):
-        name = StrArg('')
-        targets = StrArg('')
-        tagkeys = StrArg('')
-        timezone = StrArg('')
-        maxjobs = IntArg(defaultMaxJobs)
-        taskprio = BoolArg()
-        trselect = BoolArg()
-        reqtag = BoolArg()
-        embed = EnumArg(EmbeddingPolicy, None)
-        embedcustom = StrArg('')
+    def getFormContent(self, proc):
+        yield ProjectTable.instance
+        yield xhtml.p[
+            'For help about above project values, please read the '
+            'document: ', docLink('/reference/user-manual/#configure')[
+                'Configure project' ], '.'
+            ]
 
-    class Processor(EditProcessor['ProjectEdit.Arguments', Project]):
+class ProjectEdit_GET(ProjectEditBase):
+
+    class Arguments(InitialEditArgs):
+        pass
+
+    class Processor(InitialEditProcessor[ProjectEditArgs, Project]):
+        argsClass = ProjectEditArgs
+
+        def _initArgs(self, element: Optional[Project]) -> Mapping[str, object]:
+            if element is None:
+                return {}
+            else:
+                return dict(
+                    name = project.name,
+                    targets = ' '.join(sorted(project.getTargets())),
+                    tagkeys = ', '.join(project.getTagKeys()),
+                    timezone = project.timezone,
+                    maxjobs = project['maxjobs'],
+                    taskprio = project['taskprio'],
+                    trselect = project['trselect'],
+                    reqtag = project['reqtag'],
+                    embed = project['embed'],
+                    embedcustom = project['embedcustom'],
+                    )
+
+class ProjectEdit_POST(ProjectEditBase):
+
+    class Arguments(ProjectEditArgs):
+        pass
+
+    class Processor(EditProcessor[ProjectEditArgs, Project]):
 
         def createElement(self,
                           recordId: str,
-                          args: 'ProjectEdit.Arguments',
+                          args: ProjectEditArgs,
                           oldElement: Optional[Project]
                           ) -> Project:
             assert args is not None
@@ -74,23 +113,6 @@ class ProjectEdit(EditPage):
                 if key
                 )
             return element
-
-        def _initArgs(self, element: Optional[Project]) -> Mapping[str, object]:
-            if element is None:
-                return {}
-            else:
-                return dict(
-                    name = project.name,
-                    targets = ' '.join(sorted(project.getTargets())),
-                    tagkeys = ', '.join(project.getTagKeys()),
-                    timezone = project.timezone,
-                    maxjobs = project['maxjobs'],
-                    taskprio = project['taskprio'],
-                    trselect = project['trselect'],
-                    reqtag = project['reqtag'],
-                    embed = project['embed'],
-                    embedcustom = project['embedcustom'],
-                    )
 
         def _checkState(self) -> None:
             args = self.args
@@ -167,14 +189,6 @@ class ProjectEdit(EditPage):
                 #raise PresentableError(xhtml.p[
                     #'Illegal character in site filter: ";"'
                     #])
-
-    def getFormContent(self, proc):
-        yield ProjectTable.instance
-        yield xhtml.p[
-            'For help about above project values, please read the '
-            'document: ', docLink('/reference/user-manual/#configure')[
-                'Configure project' ], '.'
-            ]
 
 def decodeTimezone(tzStr):
     if tzStr:
