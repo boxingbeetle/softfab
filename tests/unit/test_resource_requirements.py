@@ -237,7 +237,7 @@ class TestResourceRequirements(unittest.TestCase):
         resA = gen.createResource(resType, ('cap_a', ))
         resB = gen.createResource(resType, ('cap_b', 'cap_d'))
         resC = gen.createResource(resType, ('cap_c', ))
-        tr = gen.createTaskRunner('tr', gen.target, ())
+        tr = gen.createTaskRunner()
 
         fwSpecs = (
             ('ref1', resType, ('cap_a', )),
@@ -274,7 +274,7 @@ class TestResourceRequirements(unittest.TestCase):
         gen = DataGenerator()
         resType = gen.createResourceType()
         res = gen.createResource(resType, ())
-        tr = gen.createTaskRunner('tr', gen.target, ())
+        tr = gen.createTaskRunner()
 
         fwSpecs = (
             ('ref', resType, ()),

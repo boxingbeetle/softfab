@@ -42,7 +42,6 @@ class DataGenerator:
         else:
             self.rnd = rnd
         self.run = run
-        self.target = 'target1'
         self.owner = 'owner1'
         self.comment = 'this is a comment'
         self.products = []
@@ -138,15 +137,17 @@ class DataGenerator:
             resourcelib.RequestFactory(),
             StringIO(
                 '<request runnerId="' + name + '" '
-                'runnerVersion="' + versionStr + '">'
-                    '<target name="' + target + '"/>'
-                '</request>'
+                'runnerVersion="' + versionStr + '"/>'
             ))
 
-    def createTaskRunner(self, name, target, capabilities, versionStr='2.0.0'):
-        taskRunner = resourcelib.TaskRunner.create(
-            name, '', list(capabilities) + [target]
-            )
+    def createTaskRunner(self, *, name=None, target=None, capabilities=(),
+                         versionStr='3.0.0'):
+        if name is None:
+            name = 'taskrunner%d_%d' % (self.run, len(resourcelib.resourceDB))
+        capabilities = list(capabilities)
+        if target is not None:
+            capabilities.append(target)
+        taskRunner = resourcelib.TaskRunner.create(name, '', capabilities)
         resourcelib.resourceDB.add(taskRunner)
         data = self.createTaskRunnerData(name, target, versionStr)
         taskRunner.sync(data)
@@ -156,13 +157,8 @@ class DataGenerator:
     def createTaskRunners(self):
         """Create Task Runner records.
         """
-
-        for count in range(self.numTaskRunners):
-            self.createTaskRunner(
-                'taskrunner'+ str(self.run) + '_' + str(count),
-                self.target,
-                self.frameworksForTaskRunner()
-                )
+        for _ in range(self.numTaskRunners):
+            self.createTaskRunner(capabilities=self.frameworksForTaskRunner())
 
     def frameworksForTaskRunner(self):
         return self.frameworks
@@ -187,7 +183,7 @@ class DataGenerator:
                 taskRunner = resourcelib.resourceDB[trName]
                 taskRunner.capabilities |= set(missingCaps)
 
-    def createConfiguration(self, name = None, tasks = None):
+    def createConfiguration(self, name=None, tasks=None, targets=()):
         """Create a job configuration.
         """
 
@@ -203,7 +199,7 @@ class DataGenerator:
 
         config = configlib.Config.create(
             name = name,
-            targets = {self.target},
+            targets = targets,
             owner = self.owner,
             trselect = False,
             comment = self.comment,

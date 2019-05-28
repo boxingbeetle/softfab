@@ -34,7 +34,6 @@ class TestJobs(unittest.TestCase):
 
     def __init__(self, methodName = 'runTest'):
         unittest.TestCase.__init__(self, methodName)
-        self.target = 'target1'
         self.owner = 'owner1'
         self.comment = 'this is a comment'
         self.jobId = 'job1'
@@ -176,7 +175,7 @@ class TestJobs(unittest.TestCase):
 
         def checkProperties(config):
             jobId = 'job0'
-            self.assertEqual(config.targets, {self.target})
+            self.assertEqual(config.targets, {'target1', 'target2'})
             self.assertEqual(config.getId(), jobId)
             self.assertEqual(config['name'], jobId)
             self.assertEqual(config.getOwner(), self.owner)
@@ -184,7 +183,9 @@ class TestJobs(unittest.TestCase):
             self.assertEqual(config.comment, self.comment)
             #self.assertEqual(config.getDescription(), config['description'])
 
-        config = DataGenerator().createConfiguration()
+        config = DataGenerator().createConfiguration(
+            targets=('target1', 'target2')
+            )
         self.runWithReload(config, checkProperties)
 
     def test0020Empty(self):
@@ -253,8 +254,8 @@ class TestJobs(unittest.TestCase):
         buildTask2 = gen.createTask('build2', buildFw)
         testTask = gen.createTask('test', testFw)
 
-        buildTR = gen.createTaskRunner('tr_build', gen.target, [ 'build' ])
-        testTR = gen.createTaskRunner('tr_test', gen.target, [ 'test' ])
+        buildTR = gen.createTaskRunner(name='tr_build', capabilities=['build'])
+        testTR = gen.createTaskRunner(name='tr_test', capabilities=['test'])
 
         def simulate(config):
             self.sanityCheck(gen, config)
@@ -315,8 +316,8 @@ class TestJobs(unittest.TestCase):
         gen = DataGenerator()
         fwName = gen.createFramework('testfw1')
         taskName = gen.createTask('task1', fwName)
-        tr1Name = gen.createTaskRunner('tr1', gen.target, [fwName])
-        tr2Name = gen.createTaskRunner('tr2', gen.target, [fwName])
+        tr1Name = gen.createTaskRunner(capabilities=[fwName])
+        tr2Name = gen.createTaskRunner(capabilities=[fwName])
         config = gen.createConfiguration()
         config._setRunners([tr2Name])
         config._notify()
@@ -341,8 +342,8 @@ class TestJobs(unittest.TestCase):
         gen = DataGenerator()
         fwName = gen.createFramework('testfw1')
         taskName = gen.createTask('task1', fwName)
-        tr1Name = gen.createTaskRunner('tr1', gen.target, [fwName])
-        tr2Name = gen.createTaskRunner('tr2', gen.target, [fwName])
+        tr1Name = gen.createTaskRunner(capabilities=[fwName])
+        tr2Name = gen.createTaskRunner(capabilities=[fwName])
         config = gen.createConfiguration()
         config.getTask(taskName)._setRunners([tr2Name])
         config._notify()
@@ -368,8 +369,8 @@ class TestJobs(unittest.TestCase):
         gen = DataGenerator()
         fwName = gen.createFramework('testfw1')
         taskName = gen.createTask('task1', fwName)
-        tr1Name = gen.createTaskRunner('tr1', gen.target, [fwName])
-        tr2Name = gen.createTaskRunner('tr2', gen.target, [fwName])
+        tr1Name = gen.createTaskRunner(capabilities=[fwName])
+        tr2Name = gen.createTaskRunner(capabilities=[fwName])
         config = gen.createConfiguration()
         config._setRunners([tr1Name])
         config.getTask(taskName)._setRunners([tr2Name])
@@ -396,7 +397,7 @@ class TestJobs(unittest.TestCase):
         gen = DataGenerator()
         fwName = gen.createFramework('testfw1')
         taskName = gen.createTask('task1', fwName)
-        tr1Name = gen.createTaskRunner('tr1', gen.target, ['dummy'])
+        tr1Name = gen.createTaskRunner(capabilities=['dummy'])
         config = gen.createConfiguration()
         config._setRunners([tr1Name])
         config.getTask(taskName)._setRunners([tr1Name])
@@ -419,8 +420,8 @@ class TestJobs(unittest.TestCase):
         prodName = gen.createProduct('input1', True)
         fwName = gen.createFramework('testfw1', [prodName])
         taskName = gen.createTask('task1', fwName)
-        tr1Name = gen.createTaskRunner('tr1', gen.target, [fwName])
-        tr2Name = gen.createTaskRunner('tr2', gen.target, [fwName])
+        tr1Name = gen.createTaskRunner(capabilities=[fwName])
+        tr2Name = gen.createTaskRunner(capabilities=[fwName])
         config = gen.createConfiguration()
         config._addInput({
             'name': prodName,
@@ -577,8 +578,8 @@ class TestJobs(unittest.TestCase):
         buildTask2 = gen.createTask('build2', buildFw)
         testTask = gen.createTask('test', testFw)
 
-        buildTR = gen.createTaskRunner('tr_build', gen.target, [ 'build' ])
-        testTR = gen.createTaskRunner('tr_test', gen.target, [ 'test' ])
+        buildTR = gen.createTaskRunner(name='tr_build', capabilities=['build'])
+        testTR = gen.createTaskRunner(name='tr_test', capabilities=['test'])
 
         def simulate(config):
             self.sanityCheck(gen, config)
@@ -634,7 +635,8 @@ class TestJobs(unittest.TestCase):
         testTask2 = gen.createTask('test2', testFw)
         testTask3 = gen.createTask('test3', testFw)
 
-        tr = gen.createTaskRunner('tr_build', gen.target, [ 'build', 'test' ])
+        tr = gen.createTaskRunner(name='tr_build',
+                                  capabilities=['build', 'test'])
 
         def simulate(config):
             self.sanityCheck(gen, config)

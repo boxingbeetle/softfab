@@ -37,7 +37,7 @@ class TestResults(unittest.TestCase):
     def createAssignedRun(self):
         run = self.createRun()
         gen = DataGenerator()
-        taskRunnerId = gen.createTaskRunner('capable', 'softfab', [])
+        taskRunnerId = gen.createTaskRunner(name='capable')
         taskRunner = resourcelib.resourceDB[taskRunnerId]
         assigned = run.assign(taskRunner)
         self.assertTrue(assigned)
@@ -77,7 +77,7 @@ class TestResults(unittest.TestCase):
         "Test assigning to an incapable Task Runner."
         run = self.createRun()
         gen = DataGenerator()
-        taskRunnerId = gen.createTaskRunner('incapable', 'softfab', [])
+        taskRunnerId = gen.createTaskRunner(name='incapable')
         taskRunner = resourcelib.resourceDB[taskRunnerId]
         assigned = run.assign(taskRunner)
         self.assertTrue(not assigned)
