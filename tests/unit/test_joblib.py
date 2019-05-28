@@ -701,5 +701,76 @@ class TestJobs(unittest.TestCase):
 
         self.runWithReload(gen.createConfiguration(), simulate)
 
+    def test0200TRLostWhileRunning(self):
+        """Test what happens when a busy Task Runner is lost."""
+        gen = DataGenerator()
+        fwName = gen.createFramework('testfw1')
+        taskName = gen.createTask('task1', fwName)
+        trName = gen.createTaskRunner(capabilities=[fwName])
+        config = gen.createConfiguration()
+
+        self.sanityCheck(gen, config)
+        job, = config.createJobs(self.owner)
+        runner = resourcelib.resourceDB[trName]
+        task = job.assignTask(runner)
+        self.assertIsNotNone(task)
+        self.assertTrue(task.isRunning())
+        runner.markLost()
+        self.assertFalse(task.isRunning())
+        self.assertEqual(task.getResult(), ResultCode.ERROR)
+
+    def test0210TRRemovedWhileRunning(self):
+        """Test what happens when a busy Task Runner is removed."""
+        gen = DataGenerator()
+        fwName = gen.createFramework('testfw1')
+        taskName = gen.createTask('task1', fwName)
+        trName = gen.createTaskRunner(capabilities=[fwName])
+        config = gen.createConfiguration()
+
+        self.sanityCheck(gen, config)
+        job, = config.createJobs(self.owner)
+        runner = resourcelib.resourceDB[trName]
+        task = job.assignTask(runner)
+        self.assertIsNotNone(task)
+        self.assertTrue(task.isRunning())
+        resourcelib.resourceDB.remove(runner)
+        self.assertFalse(task.isRunning())
+        self.assertEqual(task.getResult(), ResultCode.ERROR)
+
+    def test0220ResourceRemovedWhileRunning(self):
+        """Test what happens when a non-TR resource removed while in use.
+        Unlike with a TR, this is not a reason to fail the task, since it
+        may be possible for the task to complete successfully.
+        For example, removal of the resource may simply be the resource
+        management being moved outside of SoftFab.
+        """
+        gen = DataGenerator()
+        resType = gen.createResourceType(pertask=True)
+        fwName = gen.createFramework(
+            name='testfw1',
+            resources= [('ref1', resType, ())]
+            )
+        taskName = gen.createTask('task1', fwName)
+        trName = gen.createTaskRunner(capabilities=[fwName])
+        config = gen.createConfiguration()
+        resName = gen.createResource(resType)
+
+        self.sanityCheck(gen, config)
+        job, = config.createJobs(self.owner)
+        runner = resourcelib.resourceDB[trName]
+        resource = resourcelib.resourceDB[resName]
+        task = job.assignTask(runner)
+        self.assertIsNotNone(task)
+        self.assertTrue(task.isRunning())
+        self.assertTrue(resource.isReserved())
+        resourcelib.resourceDB.remove(resource)
+        self.assertTrue(task.isRunning())
+        self.assertIsNone(task.getResult())
+        taskDone(job, taskName, ResultCode.OK)
+        self.assertTrue(job.isExecutionFinished())
+        self.assertTrue(job.hasFinalResult())
+        self.assertEqual(job.getResult(), ResultCode.OK)
+        self.assertEqual(job.getFinalResult(), ResultCode.OK)
+
 if __name__ == '__main__':
     unittest.main()

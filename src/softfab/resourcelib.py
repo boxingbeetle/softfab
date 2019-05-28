@@ -577,6 +577,7 @@ class TaskRunner(ResourceBase):
 
     def _retired(self) -> None:
         self.__cancelLostCallback()
+        self.__failRun('removed')
 
         self.__executionObserver.retired()
         self.__executionObserver = cast(ExecutionObserver, None)
@@ -665,6 +666,10 @@ class TaskRunner(ResourceBase):
         '''
         self._properties['status'] = ConnectionStatus.LOST
         self._notify()
+        self.__failRun('lost')
+
+    def __failRun(self, reason: str) -> None:
+        """Marks any task this Task Runner was running as failed."""
         observers = (
             self.__executionObserver,
             self.__shadowObserver
@@ -674,10 +679,10 @@ class TaskRunner(ResourceBase):
             if run is not None:
                 logging.warning(
                     'Marking %s run %s as failed, '
-                    'because its Task Runner "%s" is lost',
-                    observer.runType, run.getId(), self.getId()
+                    'because its Task Runner "%s" is %s',
+                    observer.runType, run.getId(), self.getId(), reason
                     )
-                run.failed('Task Runner is lost')
+                run.failed('Task Runner is %s' % reason)
 
     def getWarnTimeout(self) -> int:
         """Returns the maximum time that may elapse until the
