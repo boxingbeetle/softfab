@@ -927,11 +927,29 @@ def recomputeRunning() -> None:
         for run in db:
             if run.isRunning():
                 runnerId = run.getTaskRunnerId()
-                if runnerId is not None:
-                    try:
-                        runner = getTaskRunner(runnerId)
-                    except KeyError as ex:
-                        run.failed(ex.args[0])
+                if runnerId is None:
+                    logging.warning(
+                        'No associated Task Runner for run %s',
+                        run.getId()
+                        )
+                    run.failed('No associated Task Runner')
+                    continue
+                try:
+                    runner = getTaskRunner(runnerId)
+                except KeyError as ex:
+                    message = ex.args[0]
+                    logging.warning(
+                        'Task Runner for run %s disappeared: %s',
+                        run.getId(), message
+                        )
+                    run.failed(message)
+                else:
+                    if runner.getConnectionStatus() == ConnectionStatus.LOST:
+                        logging.warning(
+                            'Task Runner "%s" for run %s was already lost',
+                            runnerId, run.getId()
+                            )
+                        run.failed('Task Runner was lost')
                     else:
                         setter(runner, run)
     checkRunners(taskRunDB, TaskRunner._initExecutionRun)
