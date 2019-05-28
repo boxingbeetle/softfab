@@ -104,20 +104,18 @@ class Storage(XMLTag, DatabaseElem):
     def _initData(self) -> None:
         storageId = self.getId()
         name = self.getName()
-        if name not in _storageNames:
-            _storageNames[name] = storageId
-        else:
+        idForName = _storageNames.setdefault(name, storageId)
+        if idForName != storageId:
             logging.warning(
-                'Duplicate storage name: \'%s\' (storages: \'%s\', \'%s\')',
-                name, _storageNames[name], storageId
+                'Duplicate storage name: "%s" (storages: "%s", "%s")',
+                name, idForName, storageId
                 )
         url = self.getURL()
-        if url not in _storageURLMap:
-            _storageURLMap[url] = storageId
-        else:
+        idForURL = _storageURLMap.setdefault(url, storageId)
+        if idForURL != storageId:
             logging.warning(
-                'Duplicate storage URL: \'%s\' (storages: \'%s\', \'%s\')',
-                url, _storageURLMap[url], storageId
+                'Duplicate storage URL: "%s" (storages: "%s", "%s")',
+                url, idForURL, storageId
                 )
         for alias in self.__aliases:
             _storageAliases[alias] = storageId
