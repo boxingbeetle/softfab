@@ -14,12 +14,12 @@ from softfab.resourceview import getResourceStatus
 from softfab.timelib import setTime
 
 class DataFactory:
-    "Factory for TaskRunnerData class."
+    """Factory for TaskRunnerData class."""
     def createData(self, attributes):
         return resourcelib._TaskRunnerData(attributes)
 
 class TestTRDatabase(unittest.TestCase):
-    "Test basic Taskrunner database functionality."
+    """Test basic Task Runner database functionality."""
 
     dataRun = xmlbind.parse(resourcelib.RequestFactory(), StringIO(
         '<request runnerVersion="2.0.0" host="factorypc">'
@@ -42,7 +42,7 @@ class TestTRDatabase(unittest.TestCase):
         removeRec(config.dbDir)
 
     def suspendTest(self, data):
-        "Test suspend functionality"
+        """Test suspend functionality."""
         record = resourcelib.TaskRunner.create('runner1', '', set())
         record.sync(data)
 
@@ -64,7 +64,7 @@ class TestTRDatabase(unittest.TestCase):
         self.assertRaises(TypeError, lambda: record.setSuspend('abc', None))
 
     def syncTest(self, data1, data2):
-        "Test syncing of the TR database"
+        """Test syncing of the TR database."""
         record1 = resourcelib.TaskRunner.create('runner1', '', set())
         resourcelib.resourceDB.add(record1)
         record1.sync(data1)
@@ -81,7 +81,7 @@ class TestTRDatabase(unittest.TestCase):
         self.assertEqual(record1._properties, record2._properties)
 
     def statusTest(self, data, busy):
-        "Test if right status is returned"
+        """Test if right status is returned."""
         setTime(1000) # time at moment of record creation
         record = resourcelib.TaskRunner.create('runner1', '', set())
         resourcelib.resourceDB.add(record)
@@ -166,19 +166,19 @@ class TestTRDatabase(unittest.TestCase):
         self.assertEqual(record1._properties, record2._properties)
 
     def test0010sync(self):
-        "Test syncing from a busy TR to an idle TR"
+        """Test syncing from a busy TR to an idle TR."""
         self.syncTest(self.dataRun, self.dataNoRun)
 
     def test0015sync(self):
-        "Test syncing from an idle TR to a busy TR"
+        """Test syncing from an idle TR to a busy TR."""
         self.syncTest(self.dataNoRun, self.dataRun)
 
     def test0020suspend(self):
-        "Test suspend functionality while TR is busy"
+        """Test suspend functionality while TR is busy."""
         self.suspendTest(self.dataRun)
 
     def test0025suspend(self):
-        "Test suspend functionality while TR is not busy"
+        """Test suspend functionality while TR is not busy."""
         self.suspendTest(self.dataNoRun)
 
 # TODO: The old design of resourcelib made the Task Runner the authority that
@@ -190,19 +190,19 @@ class TestTRDatabase(unittest.TestCase):
 #       and disabled this test case. However, it means that parts of the
 #       functionality remain untested, which is not a good situation.
 #    def test0030status(self):
-#        "Test status reproduction of a busy TR"
+#        """Test status reproduction of a busy TR."""
 #        self.statusTest(self.dataRun, True)
 
     def test0035status(self):
-        "Test status reproduction of an idle TR"
+        """Test status reproduction of an idle TR."""
         self.statusTest(self.dataNoRun, False)
 
     def test0040toXML(self):
-        "Test XML generation of objects of a busy TR"
+        """Test XML generation of objects of a busy TR."""
         self.toXMLTest(self.dataRun)
 
     def test0045toXML(self):
-        "Test XML generation of objects of an idle TR"
+        """Test XML generation of objects of an idle TR."""
         self.toXMLTest(self.dataNoRun)
 
 if __name__ == '__main__':
