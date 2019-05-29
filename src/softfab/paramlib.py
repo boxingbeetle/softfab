@@ -125,7 +125,7 @@ class ParamMixin:
 class _ParamTop(ParamMixin, metaclass=SingletonMeta):
     '''Singleton for object at the top of the parameter inheritance hierarchy.
     '''
-    instance = SharedInstance() # type: ClassVar[SharedInstance[_ParamTop]]
+    instance = SharedInstance() # type: ClassVar[SharedInstance]
 
     @staticmethod
     def getParent(key: str) -> 'ParamMixin':

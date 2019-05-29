@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Iterator, Mapping, Optional, Tuple, TypeVar, cast
+from typing import ClassVar, Iterator, Mapping, Optional, Tuple, TypeVar, cast
 
 from softfab.StyleResources import styleRoot
 from softfab.config import rootURL
@@ -173,7 +173,7 @@ class JobsTable(DataTable[Job]):
     objectName = 'jobs'
 
     leadTimeColumn = DurationColumn[Job](label='Lead Time', keyName='leadtime')
-    statusColumn = _StatusColumn.instance
+    statusColumn = _StatusColumn.instance # type: ClassVar[DataColumn[Job]]
 
     def showTargetColumn(self):
         return project.showTargets

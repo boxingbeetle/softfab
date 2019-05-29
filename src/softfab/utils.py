@@ -307,7 +307,7 @@ class ResultKeeper(dict, Mapping[KT, VT]):
         self[key] = value
         return value
 
-class SharedInstance(Generic[T]):
+class SharedInstance:
     '''A descriptor that can be used as a class variable which always
     returns the same instance, that is allocated on first use.
     This is only applicable to classes that do not require any arguments
