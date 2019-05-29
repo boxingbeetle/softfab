@@ -253,5 +253,5 @@ class ISessionData(Interface): # pylint: disable=inherit-non-class
 @implementer(ISessionData)
 class SessionData:
 
-    def __init__(self, user):
+    def __init__(self, user: User):
         self.user = user

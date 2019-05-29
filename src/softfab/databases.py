@@ -1,11 +1,12 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from importlib import reload
+from typing import Iterator
 
 from softfab import (
-    configlib, frameworklib, joblib, productdeflib, productlib, projectlib,
-    resourcelib, restypelib, schedulelib, shadowlib, storagelib, taskdeflib,
-    taskrunlib, tokens, userlib
+    configlib, databaselib, frameworklib, joblib, productdeflib, productlib,
+    projectlib, resourcelib, restypelib, schedulelib, shadowlib, storagelib,
+    taskdeflib, taskrunlib, tokens, userlib
 )
 
 
@@ -13,7 +14,7 @@ from softfab import (
 #       D1 is positioned in the list before D2.
 # TODO: Automatically order in this way, or at least detect if the order is
 #       invalid.
-def iterDatabases():
+def iterDatabases() -> Iterator[databaselib.Database]:
     yield projectlib._projectDB # pylint: disable=protected-access
     yield restypelib.resTypeDB
     yield productdeflib.productDefDB
@@ -30,12 +31,12 @@ def iterDatabases():
     yield userlib.userDB
     yield tokens.tokenDB
 
-def iterDatabasesToPreload():
+def iterDatabasesToPreload() -> Iterator[databaselib.Database]:
     for db in iterDatabases():
         if db.alwaysInMemory:
             yield db
 
-def reloadDatabases():
+def reloadDatabases() -> None:
     # !!! NOTE: The order of reloading is very important:
     # dependent modules must be reloaded AFTER their dependencies
     # TODO: Automate this.

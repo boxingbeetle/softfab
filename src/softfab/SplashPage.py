@@ -1,5 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from typing import Iterator
+
 from softfab.Page import FabResource, PageProcessor
 from softfab.UIPage import UIPage
 from softfab.authentication import NoAuthPage
@@ -11,16 +13,16 @@ from softfab.xmlgen import XMLContent, xhtml
 
 class _StartupMessages:
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.__messages = [ 'Server startup initiated' ]
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[str]:
         return iter(self.__messages)
 
-    def addMessage(self, message):
+    def addMessage(self, message: str) -> None:
         self.__messages.append(message)
 
-    def replaceMessage(self, message):
+    def replaceMessage(self, message: str) -> None:
         self.__messages[-1] = message
 
 startupMessages = _StartupMessages()
