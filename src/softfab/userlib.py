@@ -291,7 +291,7 @@ def addUserAccount(userName: str, password: str, roles: Iterable[str]) -> None:
 
     # Create user record.
     userInfo = UserInfo({'id': userName})
-    userInfo.setRoles(roles)
+    userInfo.roles = roles
     userDB.add(userInfo)
 
     # Commit the password.
@@ -426,11 +426,8 @@ class UserInfo(XMLTag, DatabaseElem, User):
         self.__roles = set() # type: Union[FrozenSet[str], Set[str]]
 
     def __getitem__(self, key: str) -> Any:
-        if key == 'roles':
-            return tuple(
-                UIRoleNames.__members__[role.upper()]
-                for role in sorted(self.__roles, reverse=True)
-                )
+        if key == 'uirole':
+            return self.uiRole
         else:
             return XMLTag.__getitem__(self, key)
 
@@ -442,7 +439,12 @@ class UserInfo(XMLTag, DatabaseElem, User):
     def _endParse(self) -> None:
         self.__roles = frozenset(self.__roles)
 
-    def setRoles(self, roles: Iterable[str]) -> None:
+    @property
+    def roles(self) -> Iterable[str]:
+        return self.__roles
+
+    @roles.setter
+    def roles(self, roles: Iterable[str]) -> None:
         roles = frozenset(roles)
         if roles - roleNames:
             raise ValueError('Unknown role(s): ' + ', '.join(
@@ -451,6 +453,23 @@ class UserInfo(XMLTag, DatabaseElem, User):
         if roles != self.__roles:
             self.__roles = roles
             self._notify()
+
+    @property
+    def uiRole(self) -> UIRoleNames:
+        """Returns the most privileged role the user has, or "inactive" if the
+        user does not have any roles.
+        In the database, a user can have multiple roles. This is a flexible
+        design, but we do not currently need all that flexibility.
+        This function translates a set of roles to a single word.
+        """
+        roles = self.__roles
+        if roles:
+            return max(
+                UIRoleNames.__members__[role.upper()]
+                for role in roles
+                )
+        else:
+            return UIRoleNames.INACTIVE
 
     def getId(self) -> str:
         return self['id']

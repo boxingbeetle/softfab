@@ -32,18 +32,8 @@ class LoginPassArgs(PageArgs):
     #       than storing the password in the first place.
     loginpass = PasswordArg()
 
-def activeRole(user):
-    '''Returns the most privileged role the user has, or "inactive" if the user
-    does not have any roles.
-    In the database, a user can have multiple roles. This is a flexible design,
-    but we do not currently need all that flexibility. This function translates
-    a set of roles to a single word.
-    '''
-    roles = user['roles']
-    return max(roles) if roles else UIRoleNames.INACTIVE
-
 def uiRoleToSet(role):
-    '''The opposite transformation of activeRole().
+    '''The opposite transformation of `UserInfo.uiRole`.
     '''
     assert role in UIRoleNames
     return set() if role is UIRoleNames.INACTIVE else { role.name.lower() }

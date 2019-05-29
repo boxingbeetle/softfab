@@ -12,7 +12,6 @@ from softfab.pageargs import PageArgs, StrArg
 from softfab.pagelinks import UserIdArgs
 from softfab.querylib import KeySorter, ValueFilter, runQuery
 from softfab.userlib import User, userDB
-from softfab.userview import activeRole
 from softfab.webgui import PropertiesTable, Widget, pageLink
 from softfab.xmlgen import XMLContent, xhtml
 
@@ -20,7 +19,7 @@ from softfab.xmlgen import XMLContent, xhtml
 class DetailsTable(PropertiesTable):
 
     def iterRows(self, *, proc, **kwargs):
-        yield 'Role', activeRole(proc.infoUser)
+        yield 'Role', proc.infoUser.uiRole
 
 class OwnedJobsTable(JobsSubTable):
     widgetId = 'jobsTable'

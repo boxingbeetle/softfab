@@ -17,7 +17,7 @@ from softfab.querylib import CustomFilter
 from softfab.userlib import (
     UIRoleNames, User, checkPrivilege, rolesGrantPrivilege, userDB
 )
-from softfab.userview import activeRole, presentAnonGuestSetting, uiRoleToSet
+from softfab.userview import presentAnonGuestSetting, uiRoleToSet
 from softfab.webgui import pageLink, pageURL, script
 from softfab.xmlgen import XML, XMLContent, xhtml
 
@@ -32,10 +32,10 @@ roleDropDownList = dropDownList(name='role')[ UIRoleNames ]
 
 class RoleColumn(DataColumn):
     label = 'Role'
-    keyName = 'roles'
+    keyName = 'uirole'
 
     def presentCell(self, record, *, proc, **kwargs):
-        role = activeRole(record)
+        role = record.uiRole
         if proc.canChangeRoles:
             userName = record.getId()
             return makeForm(
@@ -224,7 +224,7 @@ class UserList_POST(FabPage['UserList_POST.Processor',
                     ))
 
             # Changes are OK, commit them.
-            user.setRoles(newRoles)
+            user.roles = newRoles
 
             raise Redirect(pageURL(
                 'UserList',
