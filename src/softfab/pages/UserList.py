@@ -197,7 +197,7 @@ class UserList_POST(FabPage['UserList_POST.Processor',
             # Find user record.
             userName = req.args.user
             try:
-                user = userDB[userName]
+                subject = userDB[userName]
             except KeyError:
                 raise PresentableError(
                     xhtml.p(class_ = 'notice')[
@@ -224,7 +224,7 @@ class UserList_POST(FabPage['UserList_POST.Processor',
                     ))
 
             # Changes are OK, commit them.
-            user.roles = newRoles
+            subject.roles = newRoles
 
             raise Redirect(pageURL(
                 'UserList',
