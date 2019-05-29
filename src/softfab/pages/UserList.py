@@ -15,14 +15,14 @@ from softfab.pagelinks import AnonGuestArgs, UserIdArgs, createUserDetailsLink
 from softfab.projectlib import project
 from softfab.querylib import CustomFilter
 from softfab.userlib import (
-    UIRoleNames, User, checkPrivilege, rolesGrantPrivilege, userDB
+    UIRoleNames, User, UserInfo, checkPrivilege, rolesGrantPrivilege, userDB
 )
 from softfab.userview import presentAnonGuestSetting, uiRoleToSet
 from softfab.webgui import pageLink, pageURL, script
 from softfab.xmlgen import XML, XMLContent, xhtml
 
 
-class NameColumn(DataColumn):
+class NameColumn(DataColumn[UserInfo]):
     label = 'Name'
     keyName = 'id'
     def presentCell(self, record, **kwargs):
@@ -30,7 +30,7 @@ class NameColumn(DataColumn):
 
 roleDropDownList = dropDownList(name='role')[ UIRoleNames ]
 
-class RoleColumn(DataColumn):
+class RoleColumn(DataColumn[UserInfo]):
     label = 'Role'
     keyName = 'uirole'
 
@@ -49,7 +49,7 @@ class RoleColumn(DataColumn):
         else:
             return role
 
-class PasswordColumn(DataColumn):
+class PasswordColumn(DataColumn[UserInfo]):
     label = 'Password'
 
     def presentCell(self, record, *, proc, **kwargs):
@@ -86,7 +86,7 @@ class AnonGuestTable(SingleCheckBoxTable):
             ),
         yield submitButton[ 'Apply' ].present(**kwargs),
 
-class UserTable(DataTable):
+class UserTable(DataTable[UserInfo]):
     db = userDB
     objectName = 'users'
 
@@ -94,7 +94,7 @@ class UserTable(DataTable):
         if not proc.args.inactive:
             yield CustomFilter(lambda user: user.isActive())
 
-    def iterColumns(self, **kwargs: object) -> Iterator[DataColumn]:
+    def iterColumns(self, **kwargs: object) -> Iterator[DataColumn[UserInfo]]:
         proc = cast(PageProcessor, kwargs['proc'])
         yield NameColumn.instance
         yield RoleColumn.instance

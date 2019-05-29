@@ -9,7 +9,7 @@ from softfab.datawidgets import DataColumn, DataTable, LinkColumn
 from softfab.formlib import makeForm
 from softfab.pageargs import DictArg, EnumArg, IntArg, PageArgs, SortArg
 from softfab.projectlib import project
-from softfab.schedulelib import scheduleDB
+from softfab.schedulelib import Scheduled, scheduleDB
 from softfab.schedulerefs import createScheduleDetailsLink
 from softfab.scheduleview import (
     createLastJobLink, describeNextRun, getScheduleStatus
@@ -20,34 +20,34 @@ from softfab.webgui import Widget, pageLink, pageURL
 from softfab.xmlgen import XMLContent, xhtml
 
 
-class NameColumn(DataColumn):
+class NameColumn(DataColumn[Scheduled]):
     label = 'Name'
     keyName = 'id'
     def presentCell(self, record, **kwargs):
         return createScheduleDetailsLink(record.getId())
 
-class LastRunColumn(DataColumn):
+class LastRunColumn(DataColumn[Scheduled]):
     label = 'Last Run'
     keyName = 'lastStartTime'
     cellStyle = 'nobreak'
     def presentCell(self, record, **kwargs):
         return createLastJobLink(record)
 
-class NextRunColumn(DataColumn):
+class NextRunColumn(DataColumn[Scheduled]):
     label = 'Next Run'
     keyName = 'startTime'
     cellStyle = 'nobreak'
     def presentCell(self, record, **kwargs):
         return describeNextRun(record)
 
-class SequenceColumn(DataColumn):
+class SequenceColumn(DataColumn[Scheduled]):
     label = 'Sequence'
     keyName = 'sequence'
     @staticmethod
     def sortKey(record):
         return record['sequence'].name
 
-class SuspendColumn(DataColumn):
+class SuspendColumn(DataColumn[Scheduled]):
     label = 'Action'
     def presentCell(self, record, **kwargs):
         if record.isDone():
@@ -59,7 +59,7 @@ class SuspendColumn(DataColumn):
                 value = Actions.SUSPEND if suspend else Actions.RESUME
                 )[ 'Suspend' if suspend else 'Resume' ]
 
-class ScheduleTable(DataTable):
+class ScheduleTable(DataTable[Scheduled]):
     widgetId = 'scheduleTable'
     autoUpdate = True
     db = scheduleDB
@@ -67,13 +67,13 @@ class ScheduleTable(DataTable):
     def iterRowStyles(self, rowNr, record, **kwargs):
         yield getScheduleStatus(record)
 
-    def iterColumns(self, **kwargs: object) -> Iterator[DataColumn]:
+    def iterColumns(self, **kwargs: object) -> Iterator[DataColumn[Scheduled]]:
         yield NameColumn.instance
         yield LastRunColumn.instance
         yield NextRunColumn.instance
         yield SequenceColumn.instance
         if project.showOwners:
-            yield OwnerColumn.instance
+            yield OwnerColumn[Scheduled].instance
         yield LinkColumn('Edit', 'ScheduleEdit')
         yield LinkColumn('Delete', 'DelSchedule')
         yield SuspendColumn.instance

@@ -7,7 +7,7 @@ from softfab.Page import PageProcessor
 from softfab.datawidgets import (
     BoolDataColumn, DataColumn, DataTable, LinkColumn, ListDataColumn
 )
-from softfab.frameworklib import Framework, anyExtract, frameworkDB
+from softfab.frameworklib import TaskDefBase, anyExtract, frameworkDB
 from softfab.frameworkview import FrameworkColumn
 from softfab.pageargs import IntArg, PageArgs, SortArg
 from softfab.pagelinks import createProductDetailsLink
@@ -16,25 +16,27 @@ from softfab.webgui import docLink
 from softfab.xmlgen import XMLContent, txt, xhtml
 
 
-class ProductColumn(DataColumn[Framework]):
+class ProductColumn(DataColumn[TaskDefBase]):
     def presentCell(self, record, **kwargs):
         return txt(', ').join(
             createProductDetailsLink(productDefId)
             for productDefId in record[self.keyName]
             )
 
-class FrameworksTable(DataTable[Framework]):
+class FrameworksTable(DataTable[TaskDefBase]):
     db = frameworkDB
     nameColumn = FrameworkColumn('Framework ID', 'id')
-    wrapperColumn = DataColumn[Framework]('Wrapper', 'wrapper')
-    extractColumn = BoolDataColumn[Framework]('Extract', 'extract')
+    wrapperColumn = DataColumn[TaskDefBase]('Wrapper', 'wrapper')
+    extractColumn = BoolDataColumn[TaskDefBase]('Extract', 'extract')
     inputColumn = ProductColumn('Input Products', 'inputs')
     outputColumn = ProductColumn('Output Products', 'outputs')
-    parameterColumn = ListDataColumn[Framework]('Parameters', 'parameters')
-    editColumn = LinkColumn[Framework]('Edit', 'FrameworkEdit')
-    deleteColumn = LinkColumn[Framework]('Delete', 'FrameworkDelete')
+    parameterColumn = ListDataColumn[TaskDefBase]('Parameters', 'parameters')
+    editColumn = LinkColumn[TaskDefBase]('Edit', 'FrameworkEdit')
+    deleteColumn = LinkColumn[TaskDefBase]('Delete', 'FrameworkDelete')
 
-    def iterColumns(self, **kwargs: object) -> Iterator[DataColumn]:
+    def iterColumns(self,
+                    **kwargs: object
+                    ) -> Iterator[DataColumn[TaskDefBase]]:
         yield self.nameColumn
         yield self.wrapperColumn
         if anyExtract():

@@ -18,7 +18,7 @@ from softfab.webgui import docLink
 from softfab.xmlgen import XMLContent, xhtml
 
 
-class SelectColumn(DataColumn):
+class SelectColumn(DataColumn[Config]):
     keyName = None
     label = None
 
@@ -42,7 +42,7 @@ class BaseTagConfigTable(ConfigTable):
         if style is not None:
             yield style
 
-    def iterColumns(self, **kwargs: object) -> Iterator[DataColumn]:
+    def iterColumns(self, **kwargs: object) -> Iterator[DataColumn[Config]]:
         proc = kwargs['proc']
         tableClass = (
             SimpleConfigTable if self._simpleMode(proc) else ConfigTable

@@ -86,7 +86,9 @@ class ResourcesTable(DataTable[ResourceBase]):
     editColumn = EditColumn('Edit')
     deleteColumn = LinkColumn[ResourceBase]('Delete', 'ResourceDelete')
 
-    def iterColumns(self, **kwargs: object) -> Iterator[DataColumn]:
+    def iterColumns(self,
+                    **kwargs: object
+                    ) -> Iterator[DataColumn[ResourceBase]]:
         proc = cast(PageProcessor, kwargs['proc'])
         yield from self.fixedColumns
         user = proc.user

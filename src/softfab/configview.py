@@ -131,13 +131,13 @@ class InputTable(Table):
                          ) -> bool:
         raise NotImplementedError
 
-class _NameColumn(DataColumn):
+class _NameColumn(DataColumn[Config]):
     label = 'Configuration ID'
     keyName = 'name'
     def presentCell(self, record, **kwargs):
         return createConfigDetailsLink(record.getId())
 
-class TargetsColumn(DataColumn):
+class TargetsColumn(DataColumn[Config]):
     keyName = 'targets'
 
     def presentCell(self, record, **kwargs):
@@ -150,7 +150,7 @@ class TargetsColumn(DataColumn):
         else:
             return '-'
 
-class SimpleConfigTable(DataTable):
+class SimpleConfigTable(DataTable[Config]):
     db = configDB
     printRecordCount = False
     showConflictAsError = False
@@ -167,17 +167,17 @@ class SimpleConfigTable(DataTable):
 
     fixedColumns = (
         _NameColumn(),
-        DataColumn('#', 'nrtasks', cellStyle = 'rightalign'),
-        DataColumn(keyName = 'description')
-        ) # type: Sequence[DataColumn]
+        DataColumn[Config]('#', 'nrtasks', cellStyle = 'rightalign'),
+        DataColumn[Config](keyName = 'description')
+        ) # type: Sequence[DataColumn[Config]]
           # Workaround for https://github.com/python/mypy/issues/4444
 
-    def iterColumns(self, **kwargs: object) -> Iterator[DataColumn]:
+    def iterColumns(self, **kwargs: object) -> Iterator[DataColumn[Config]]:
         yield from self.fixedColumns
         if self.showTargets and project.showTargets:
             yield TargetsColumn.instance
         if self.showOwner and project.showOwners:
-            yield OwnerColumn.instance
+            yield OwnerColumn[Config].instance
 
     def iterRowStyles(self, rowNr, record, **kwargs):
         if self.showConflictAsError and not record.hasValidInputs():
@@ -185,7 +185,7 @@ class SimpleConfigTable(DataTable):
 
 class ConfigTable(SimpleConfigTable):
 
-    def iterColumns(self, **kwargs: object) -> Iterator[DataColumn]:
+    def iterColumns(self, **kwargs: object) -> Iterator[DataColumn[Config]]:
         yield LinkColumn('Load', 'Execute', idArg='config')
         yield from super().iterColumns(**kwargs)
         yield LinkColumn(

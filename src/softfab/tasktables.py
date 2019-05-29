@@ -7,7 +7,7 @@ from softfab.datawidgets import (
     DataColumn, DataTable, DurationColumn, TimeColumn
 )
 from softfab.joblib import Job, Task, jobDB
-from softfab.jobview import targetColumn
+from softfab.jobview import TargetColumn
 from softfab.pagelinks import (
     JobIdArgs, TaskIdArgs, createTaskInfoLink, createTaskRunnerDetailsLink
 )
@@ -124,7 +124,8 @@ class TaskRunsTable(DataTable[Task]):
         )
     durationColumn = DurationColumn[Task](keyName='duration')
     taskColumn = TaskColumn.instance
-    ownerColumn = OwnerColumn.instance
+    targetColumn = TargetColumn[Task].instance
+    ownerColumn = OwnerColumn[Task].instance
     summaryColumn = SummaryColumn.instance
 
     def iterRowStyles(self,
@@ -146,7 +147,7 @@ class TaskRunsTable(DataTable[Task]):
         yield self.durationColumn
         yield self.taskColumn
         if self.showTargetColumn():
-            yield targetColumn
+            yield self.targetColumn
         if project.showOwners:
             yield self.ownerColumn
         yield self.summaryColumn

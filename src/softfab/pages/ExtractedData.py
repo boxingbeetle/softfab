@@ -8,8 +8,8 @@ from softfab.FabPage import FabPage
 from softfab.ReportMixin import ReportProcessor, ReportTaskArgs
 from softfab.datawidgets import DataColumn, DataTable
 from softfab.formlib import CheckBoxesTable, RadioTable, makeForm, submitButton
-from softfab.joblib import iterDoneTasks
-from softfab.jobview import createTimeColumn
+from softfab.joblib import Task, iterDoneTasks
+from softfab.jobview import CreateTimeColumn
 from softfab.pageargs import EnumArg, IntArg, SetArg, SortArg
 from softfab.pagelinks import createJobURL
 from softfab.querylib import KeySorter, runQuery
@@ -161,7 +161,7 @@ def visualizeBarChart(key, tasks, dataByRunId):
         class_ = 'graph', style = 'height: %dpx' % graphHeight
         )[ xhtml.tbody[ xhtml.tr[ generateBars() ] ] ]
 
-class ExtractedDataColumn(DataColumn):
+class ExtractedDataColumn(DataColumn[Task]):
 
     def __init__(self, key):
         DataColumn.__init__(self, key, cellStyle = 'rightalign')
@@ -177,9 +177,9 @@ class ExtractedDataTable(TaskRunsTable):
     def getRecordsToQuery(self, proc):
         return proc.tasks
 
-    def iterColumns(self, **kwargs: object) -> Iterator[DataColumn]:
+    def iterColumns(self, **kwargs: object) -> Iterator[DataColumn[Task]]:
         proc = cast(ExtractedData_GET.Processor, kwargs['proc'])
-        yield createTimeColumn
+        yield CreateTimeColumn[Task].instance
         yield TaskColumn.instance
         for key in sorted(proc.activeKeys):
             yield ExtractedDataColumn(key)

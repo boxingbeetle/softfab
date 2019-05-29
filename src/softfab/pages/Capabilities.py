@@ -11,7 +11,7 @@ from softfab.pagelinks import (
 )
 from softfab.projectlib import project
 from softfab.querylib import CustomFilter
-from softfab.resourcelib import resourceDB
+from softfab.resourcelib import ResourceBase, resourceDB
 from softfab.resourceview import presentCapabilities
 from softfab.restypelib import resTypeDB, taskRunnerResourceTypeName
 from softfab.restypeview import ResTypeTableMixin
@@ -35,13 +35,13 @@ class ResTypeTable(ResTypeTableMixin, Table):
                 desc
                 ]
 
-class NameColumn(DataColumn):
+class NameColumn(DataColumn[ResourceBase]):
     cellStyle = 'nobreak'
 
     def presentCell(self, record, **kwargs):
         return createTaskRunnerDetailsLink(record.getId())
 
-class CapabilitiesColumn(DataColumn):
+class CapabilitiesColumn(DataColumn[ResourceBase]):
 
     def presentHeader(self, **kwargs):
         return super().presentHeader(**kwargs)(style='width:62%')
@@ -54,7 +54,7 @@ class CapabilitiesColumn(DataColumn):
             lambda name, cap=args.cap: name == cap
             )
 
-class ResourcesTable(DataTable):
+class ResourcesTable(DataTable[ResourceBase]):
     db = resourceDB
     columns = (
         NameColumn('Name', 'id'),
@@ -68,7 +68,7 @@ class ResourcesTable(DataTable):
             lambda res, typeName=proc.args.restype: res.typeName == typeName
             )
 
-class CapabilityColumn(DataColumn):
+class CapabilityColumn(DataColumn[ResourceBase]):
     cellStyle = 'nobreak'
 
     def presentCell(self, record, *, proc, **kwargs):
@@ -77,7 +77,7 @@ class CapabilityColumn(DataColumn):
             proc.args.restype
             )
 
-class ResourcesColumn(DataColumn):
+class ResourcesColumn(DataColumn[ResourceBase]):
 
     def presentCell(self, record, **kwargs):
         return txt(', ').join(
@@ -85,7 +85,7 @@ class ResourcesColumn(DataColumn):
             for runnerId in sorted(record['resourceIds'])
             )
 
-class TaskDefinitionsColumn(DataColumn):
+class TaskDefinitionsColumn(DataColumn[ResourceBase]):
 
     def presentCell(self, record, **kwargs):
         return txt(', ').join(
@@ -93,7 +93,7 @@ class TaskDefinitionsColumn(DataColumn):
             for taskDefId in sorted(record[self.keyName])
             )
 
-class CapabilitiesTable(DataTable):
+class CapabilitiesTable(DataTable[ResourceBase]):
     db = None
     uniqueKeys = ('capability',)
     objectName = 'capabilities'

@@ -15,7 +15,7 @@ from softfab.UIPage import iterStyleSheets
 from softfab.config import dbDir, homePage, rootURL
 from softfab.databaselib import RecordObserver
 from softfab.datawidgets import DataColumn, DataTable
-from softfab.joblib import jobDB
+from softfab.joblib import Job, jobDB
 from softfab.jobview import CommentPanel, JobsSubTable
 from softfab.pagelinks import createJobURL, createUserDetailsURL
 from softfab.projectlib import project
@@ -55,7 +55,7 @@ class MostRecent(RecordObserver):
             self.records.insert(0, record)
             self.records[self.number : ] = []
 
-class JobResultColumn(DataColumn):
+class JobResultColumn(DataColumn[Job]):
     label = 'Result'
 
     def presentCell(self, record, **kwargs):

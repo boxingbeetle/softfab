@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Iterator, Mapping, Optional, Tuple, cast
+from typing import Iterator, Mapping, Optional, Tuple, TypeVar, cast
 
 from softfab.StyleResources import styleRoot
 from softfab.config import rootURL
@@ -8,7 +8,7 @@ from softfab.databaselib import RecordObserver
 from softfab.datawidgets import (
     DataColumn, DataTable, DurationColumn, TimeColumn
 )
-from softfab.joblib import Job, jobDB
+from softfab.joblib import Job, Task, jobDB
 from softfab.notification import sendNotification
 from softfab.pagelinks import createJobURL
 from softfab.projectlib import project
@@ -20,6 +20,8 @@ from softfab.taskview import getTaskStatus
 from softfab.userview import OwnerColumn
 from softfab.webgui import Panel, cell
 from softfab.xmlgen import XMLContent, xhtml
+
+JobOrTask = TypeVar('JobOrTask', Job, Task)
 
 # High priority status codes are at the end of the list.
 _resultList = (
@@ -152,17 +154,17 @@ class _StatusColumn(DataColumn[Job]):
             createStatusBar(record.getTaskSequence())
             ]
 
-class TargetColumn(DataColumn[Job]):
+class TargetColumn(DataColumn[JobOrTask]):
     keyName = 'target'
 
     def presentCell(self, record, **kwargs):
         target = record.getTarget()
         return '-' if target is None else target
 
-createTimeColumn = TimeColumn[Job](
-    label = 'Create Time', keyName = 'recent', keyDisplay = 'timestamp'
-    )
-targetColumn = TargetColumn.instance
+class CreateTimeColumn(TimeColumn[JobOrTask]):
+    label = 'Create Time'
+    keyName = 'recent'
+    keyDisplay = 'timestamp'
 
 class JobsTable(DataTable[Job]):
     bodyId = 'jobs'
@@ -179,14 +181,14 @@ class JobsTable(DataTable[Job]):
     def iterRowStyles(self, rowNr, record, **kwargs):
         yield getJobStatus(record)
 
-    def iterColumns(self, **kwargs: object) -> Iterator[DataColumn]:
-        yield createTimeColumn
+    def iterColumns(self, **kwargs: object) -> Iterator[DataColumn[Job]]:
+        yield CreateTimeColumn[Job].instance
         yield self.leadTimeColumn
         yield _DescriptionColumn.instance
         if self.showTargetColumn():
-            yield targetColumn
+            yield TargetColumn[Job].instance
         if project.showOwners:
-            yield OwnerColumn.instance
+            yield OwnerColumn[Job].instance
         yield self.statusColumn
 
 class JobsSubTable(JobsTable):
