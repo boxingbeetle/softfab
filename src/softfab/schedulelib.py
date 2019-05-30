@@ -10,11 +10,6 @@ There is a feature request to make continuous schedules run only in specified
 time slots. Although this does not have to be implemented yet, the design
 should leave this option open.
 
-Start time can be:
-- timestamp
-- never
-- asap
-
 New start time is calculated like this:
 - once: never
 - daily/weekly: start_time + N
@@ -54,7 +49,9 @@ A: For repeating schedules, advance to next time.
 '''
 
 from enum import Enum
-from typing import ClassVar, Optional
+from typing import (
+    Callable, ClassVar, List, Mapping, Optional, Sequence, Tuple, cast
+)
 import logging
 import time
 
@@ -62,13 +59,21 @@ from twisted.internet import reactor
 
 from softfab.config import dbDir
 from softfab.configlib import Config, configDB, iterConfigsByTag
-from softfab.databaselib import Database, DatabaseElem, RecordObserver
-from softfab.joblib import jobDB
-from softfab.selectlib import ObservingTagCache, SelectableABC
+from softfab.databaselib import Database, RecordObserver
+from softfab.joblib import Job, jobDB
+from softfab.selectlib import ObservingTagCache, SelectableRecordABC
 from softfab.timelib import endOfTime, getTime
 from softfab.utils import Heap, SharedInstance
 from softfab.xmlbind import XMLTag
-from softfab.xmlgen import xml
+from softfab.xmlgen import XMLAttributeValue, XMLContent, xml
+
+
+def _listToTimestamp(timeList: Sequence[int]) -> int:
+    assert len(timeList) == 9, timeList
+    return int(time.mktime(cast(
+        Tuple[int, int, int, int, int, int, int, int, int],
+        tuple(timeList)
+        )))
 
 asap = 0 # Schedule runs as soon as possible.
 
@@ -83,10 +88,10 @@ class ScheduleRepeat(Enum):
 
 class ScheduledFactory:
     @staticmethod
-    def createScheduled(attributes):
+    def createScheduled(attributes: Mapping[str, str]) -> 'Scheduled':
         return Scheduled(attributes)
 
-class ScheduleDB(Database):
+class ScheduleDB(Database['Scheduled']):
     baseDir = dbDir + '/scheduled'
     factory = ScheduledFactory()
     privilegeObject = 's'
@@ -94,26 +99,26 @@ class ScheduleDB(Database):
     uniqueKeys = ( 'id', )
 scheduleDB = ScheduleDB()
 
-class JobDBObserver(RecordObserver):
+class JobDBObserver(RecordObserver[Job]):
     '''Send notifications if a job related to a schedule is new or changed.
     '''
     instance = SharedInstance() # type: ClassVar[SharedInstance]
 
-    def __init__(self):
+    def __init__(self) -> None:
         RecordObserver.__init__(self)
-        self.__observers = []
+        self.__observers = [] # type: List[Callable[[Job, 'Scheduled'], None]]
         jobDB.addObserver(self)
 
-    def addObserver(self, observer):
+    def addObserver(self, observer: Callable[[Job, 'Scheduled'], None]) -> None:
         self.__observers.append(observer)
 
-    def added(self, record):
+    def added(self, record: Job) -> None:
         self.updated(record)
 
-    def removed(self, record):
+    def removed(self, record: Job) -> None:
         assert False, 'job %s removed' % record.getId()
 
-    def updated(self, record):
+    def updated(self, record: Job) -> None:
         schedId = record.getScheduledBy()
         if schedId is not None:
             schedule = scheduleDB.get(schedId) # schedule might be deleted
@@ -121,36 +126,33 @@ class JobDBObserver(RecordObserver):
                 for observer in self.__observers:
                     observer(record, schedule)
 
-class ScheduleManager(RecordObserver):
+class ScheduleManager(RecordObserver['Scheduled']):
     instance = None # Singleton instance.
 
-    def __init__(self):
+    def __init__(self) -> None:
         RecordObserver.__init__(self)
-        # Initialise singleton instance.
+        # Initialize singleton instance.
         assert ScheduleManager.instance is None
         ScheduleManager.instance = self
 
-        self.__heap = None
-        self.__initHeap()
-
-        scheduleDB.addObserver(self)
-        JobDBObserver.instance.addObserver(self.__jobUpdated)
-
-    def __initHeap(self):
-        self.__heap = Heap(key=lambda schedule:
-            (schedule['startTime'], schedule._properties['id'])
+        # Initialize heap.
+        self.__heap = Heap[Scheduled](key=lambda schedule:
+            (schedule.startTime, schedule._properties['id'])
             )
         for schedule in scheduleDB:
             self.added(schedule)
 
-    def __jobUpdated(self, job, schedule):
+        scheduleDB.addObserver(self)
+        JobDBObserver.instance.addObserver(self.__jobUpdated)
+
+    def __jobUpdated(self, job: Job, schedule: 'Scheduled') -> None:
         if job.isExecutionFinished() and job.getId() in schedule.getLastJobs() \
                 and not schedule.isRunning():
             # The schedule itself has not changed, but the return value of
             # isBlocked() might have.
             self.updated(schedule)
 
-    def __addToQueue(self, record):
+    def __addToQueue(self, record: 'Scheduled') -> None:
         if not record.isBlocked():
             self.__heap.add(record)
             # If the new schedule should start right away, trigger it.
@@ -158,13 +160,13 @@ class ScheduleManager(RecordObserver):
             # are instantiated on upgrade.
             reactor.callLater(0, self.__triggerSchedules, getTime())
 
-    def __removeFromQueue(self, record):
+    def __removeFromQueue(self, record: 'Scheduled') -> None:
         try:
             self.__heap.remove(record)
         except ValueError:
             pass
 
-    def __triggerSchedules(self, untilSecs):
+    def __triggerSchedules(self, untilSecs: int) -> None:
         '''Create jobs for all schedules which have a start time that is
         before or equal to 'untilSecs'.
         '''
@@ -172,22 +174,22 @@ class ScheduleManager(RecordObserver):
         # If yes, clone and change 'startTime' in the database.
         while True:
             nextSchedule = self.__heap.peek()
-            if nextSchedule is None or nextSchedule['startTime'] > untilSecs:
+            if nextSchedule is None or nextSchedule.startTime > untilSecs:
                 break
             next(self.__heap)
             nextSchedule.trigger(untilSecs)
 
-    def added(self, record):
+    def added(self, record: 'Scheduled') -> None:
         self.__addToQueue(record)
 
-    def removed(self, record):
+    def removed(self, record: 'Scheduled') -> None:
         self.__removeFromQueue(record)
 
-    def updated(self, record):
+    def updated(self, record: 'Scheduled') -> None:
         self.__removeFromQueue(record)
         self.__addToQueue(record)
 
-    def trigger(self, scheduledMinute = 0):
+    def trigger(self, scheduledMinute: int = 0) -> None:
         currentSecs = getTime()
         currentMinute = currentSecs // 60
         # If the call comes just before the minute boundary, trust the
@@ -203,7 +205,7 @@ class ScheduleManager(RecordObserver):
                 minute + 1
                 )
 
-class Scheduled(XMLTag, DatabaseElem, SelectableABC):
+class Scheduled(XMLTag, SelectableRecordABC):
     '''A configuration that is scheduled for (repeated) execution.
     '''
     tagName = 'scheduled'
@@ -211,7 +213,11 @@ class Scheduled(XMLTag, DatabaseElem, SelectableABC):
     enumProperties = {'sequence': ScheduleRepeat}
     cache = ObservingTagCache(scheduleDB, lambda: ('sf.cmtrigger',) )
 
-    def __init__(self, properties, comment = '', adjustTime = False):
+    def __init__(self,
+                 properties: Mapping[str, XMLAttributeValue],
+                 comment: str = '',
+                 adjustTime: bool = False
+                 ):
         assert 'configId' in properties \
             or ('tagKey' in properties and 'tagValue' in properties)
         # COMPAT 2.16: Rename 'paused' to 'suspended'.
@@ -220,9 +226,8 @@ class Scheduled(XMLTag, DatabaseElem, SelectableABC):
             del properties['paused']
 
         XMLTag.__init__(self, properties)
-        DatabaseElem.__init__(self)
-        SelectableABC.__init__(self)
-        self.__lastJobIds = []
+        SelectableRecordABC.__init__(self)
+        self.__lastJobIds = [] # type: List[str]
         # Cached value: True means "might be running", False means "certainly
         # not running", since jobs can go from not fixed to fixed but not
         # vice versa.
@@ -241,8 +246,6 @@ class Scheduled(XMLTag, DatabaseElem, SelectableABC):
             assert 'trigger' not in self._properties
         self._properties['suspended'] = \
             self._properties.get('suspended') not in (None, '0', 'False')
-        if not self._properties.get('owner'):
-            self._properties['owner'] = None
         if sequence is ScheduleRepeat.CONTINUOUSLY:
             self._properties.setdefault('minDelay', 10)
         elif 'minDelay' in self._properties:
@@ -252,21 +255,16 @@ class Scheduled(XMLTag, DatabaseElem, SelectableABC):
         if adjustTime:
             self.__adjustStartTime(False)
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: str) -> object:
         if key == 'startTime':
-            startTime = self._properties.get('startTime')
-            if startTime is None:
-                return endOfTime if self.isDone() else asap
-            else:
-                return startTime
+            return self.startTime
         elif key == 'configId':
             # configId is None if this schedule is based on tags.
             return self._properties.get('configId')
         elif key == 'tagValue':
             # Return the current display value.
-            tagKey = self._properties['tagKey']
-            tagValue = self._properties['tagValue']
-            cvalue_, dvalue = Config.cache.toCanonical(tagKey, tagValue)
+            cvalue_, dvalue = Config.cache.toCanonical(self.tagKey,
+                                                       self.tagValue)
             return dvalue
         elif key == 'days':
             return self._properties.get('days', '')
@@ -279,40 +277,77 @@ class Scheduled(XMLTag, DatabaseElem, SelectableABC):
         else:
             return self._properties[key]
 
-    def _addLastJob(self, jobId):
+    def _addLastJob(self, jobId: str) -> None:
         if jobDB.get(jobId) is not None:
             # We sometimes clean up old jobs by manually removing records from
             # the database, so in those cases the job may no longer exist.
             self.__lastJobIds.append(jobId)
 
-    def _addJob(self, attributes):
+    def _addJob(self, attributes: Mapping[str, str]) -> None:
         self._addLastJob(attributes['jobId'])
 
-    def _textComment(self, text):
+    def _textComment(self, text: str) -> None:
         self.__comment = text
 
-    def getId(self):
-        return self._properties['id']
+    def getId(self) -> str:
+        return cast(str, self._properties['id'])
 
-    def getLastJobs(self):
+    def getLastJobs(self) -> Sequence[str]:
         '''Returns the job IDs of the last set of jobs started by this schedule.
         '''
         return tuple(self.__lastJobIds)
 
-    def getOwner(self):
+    def getOwner(self) -> Optional[str]:
         """Gets the owner of this scheduled job,
         or None if this job does not have an owner.
         """
-        return self._properties.get('owner')
+        return cast(Optional[str], self._properties.get('owner'))
 
     @property
-    def comment(self):
+    def comment(self) -> str:
         """Gets user-specified comment string for this schedule.
         Comment string may contain newlines.
         """
         return self.__comment
 
-    def isBlocked(self):
+    @property
+    def startTime(self) -> int:
+        """Returns the start time for this schedule (in seconds since the
+        epoch), or `asap` if the schedule will start as soon as possible,
+        or `endOfTime` if the schedule has finished and won't start again.
+        """
+        startTime = self._properties.get('startTime')
+        if startTime is None:
+            return endOfTime if self.isDone() else asap
+        else:
+            return cast(int, startTime)
+
+    @property
+    def minDelay(self) -> int:
+        """The minimum delay between instantiating a continuous schedule,
+        in minutes.
+        """
+        return cast(int, self._properties['minDelay'])
+
+    @property
+    def tagKey(self) -> str:
+        """The tag key for configurations started by this schedule.
+        Raises KeyError if this schedule identifies a configuration by
+        name instead of by tag.
+        TODO: We could have a reserved tag key for the configuration name
+              and always use the tagging mechanism.
+        """
+        return cast(str, self._properties['tagKey'])
+
+    @property
+    def tagValue(self) -> str:
+        """The tag value for configurations started by this schedule.
+        Raises KeyError if this schedule identifies a configuration by
+        name instead of by tag.
+        """
+        return cast(str, self._properties['tagValue'])
+
+    def isBlocked(self) -> bool:
         '''Return True iff this schedule cannot be triggered in its current
         state. Note that triggering is different from running: for example
         a daily schedule can be triggered when suspended, in that case it will
@@ -329,17 +364,17 @@ class Scheduled(XMLTag, DatabaseElem, SelectableABC):
         else:
             return False
 
-    def isDone(self):
+    def isDone(self) -> bool:
         '''Returns True iff this schedule will not run again.
         '''
-        return self._properties.get('done', False)
+        return cast(bool, self._properties.get('done', False))
 
-    def isSuspended(self):
+    def isSuspended(self) -> bool:
         '''Returns True iff this schedule is suspended.
         '''
-        return self._properties['suspended']
+        return cast(bool, self._properties['suspended'])
 
-    def isRunning(self):
+    def isRunning(self) -> bool:
         '''Returns True iff one or more of the jobs last instantiated by this
         schedule are not finished yet.
         '''
@@ -351,7 +386,7 @@ class Scheduled(XMLTag, DatabaseElem, SelectableABC):
         self.__running = False
         return False
 
-    def setSuspend(self, suspended):
+    def setSuspend(self, suspended: bool) -> None:
         '''Suspends or resumes a schedule.
         '''
         if not isinstance(suspended, bool):
@@ -363,7 +398,7 @@ class Scheduled(XMLTag, DatabaseElem, SelectableABC):
             self._properties['suspended'] = suspended
             self._notify()
 
-    def setTrigger(self):
+    def setTrigger(self) -> None:
         '''Sets the trigger on a passive schedule.
         Raises ValueError if this is not a passive schedule.
         '''
@@ -383,7 +418,10 @@ class Scheduled(XMLTag, DatabaseElem, SelectableABC):
             default=None
             )
 
-    def __adjustStartTime(self, skipToNext, currentTime = None):
+    def __adjustStartTime(self,
+                          skipToNext: bool,
+                          currentTime: Optional[int] = None
+                          ) -> None:
         '''Calculate time of next scheduled job.
         If 'skipToNext' is True, the time is advanced one time period (for
         periodic schedules) or set to 0 (for non-periodic schedules);
@@ -395,7 +433,7 @@ class Scheduled(XMLTag, DatabaseElem, SelectableABC):
         '''
         if currentTime is None:
             currentTime = getTime()
-        startTime = self._properties.get('startTime')
+        startTime = cast(Optional[int], self._properties.get('startTime'))
         sequence = self._properties['sequence']
 
         if startTime is None:
@@ -423,7 +461,7 @@ class Scheduled(XMLTag, DatabaseElem, SelectableABC):
             assert startTime is None or currentTime >= startTime
             if skipToNext:
                 nextTime = ( # round up to minute boundary
-                    (currentTime + 59) // 60 + self._properties['minDelay']
+                    (currentTime + 59) // 60 + self.minDelay
                     ) * 60
             else:
                 nextTime = None
@@ -431,37 +469,38 @@ class Scheduled(XMLTag, DatabaseElem, SelectableABC):
             nextTime = None
         else:
             if sequence is ScheduleRepeat.WEEKLY:
-                dayFlags = self._properties['days']
+                dayFlags = cast(str, self._properties['days'])
                 assert '1' in dayFlags and len(dayFlags) == 7
             else:
-                dayFlags = '1' * 7
                 assert sequence is ScheduleRepeat.DAILY
-            nextTimeList = list(time.localtime(startTime))
+                dayFlags = '1' * 7
+            nextTimeList = list(time.localtime(startTime)[:9])
             nextTimeList[8] = -1 # local time: no time zone
             if startTime is None or currentTime >= startTime:
                 # Set day to today.
-                nextTimeList[ : 3] = time.localtime(currentTime)[ : 3]
+                nextTimeList[:3] = time.localtime(currentTime)[:3]
                 if skipToNext:
                     # Move ahead at least one day.
                     nextTimeList[2] += 1
-            nextTime = int(time.mktime(tuple(nextTimeList)))
+            nextTime = _listToTimestamp(nextTimeList)
             while nextTime < currentTime \
                or dayFlags[time.localtime(nextTime)[6]] != '1':
                 nextTimeList[2] += 1
-                nextTime = int(time.mktime(tuple(nextTimeList)))
-        self._properties['startTime'] = nextTime
+                nextTime = _listToTimestamp(nextTimeList)
+        if nextTime is None:
+            self._properties.pop('startTime', None)
+        else:
+            self._properties['startTime'] = nextTime
 
-    def getMatchingConfigIds(self):
+    def getMatchingConfigIds(self) -> Sequence[str]:
         '''Returns the IDs of configurations that will be instantiated by this
         schedule, if the schedule would be triggered right now.
         '''
-        configId = self._properties.get('configId')
+        configId = cast(Optional[str], self._properties.get('configId'))
         if configId is None:
-            key = self._properties['tagKey']
-            value = self._properties['tagValue']
             return tuple(
                 config.getId()
-                for config in iterConfigsByTag(key, value)
+                for config in iterConfigsByTag(self.tagKey, self.tagValue)
                 )
         else:
             if configId in configDB:
@@ -472,7 +511,7 @@ class Scheduled(XMLTag, DatabaseElem, SelectableABC):
                 # are schedules that point to non-existing configs.
                 return ()
 
-    def trigger(self, currentTime):
+    def trigger(self, currentTime: int) -> None:
         # To avoid an infinite loop in ScheduleManager, each invocation of
         # trigger() should either increase the schedule's start time or
         # cause isBlocked() to return False (which will lead to the schedule
@@ -493,14 +532,14 @@ class Scheduled(XMLTag, DatabaseElem, SelectableABC):
             # failed.
             self._notify()
 
-    def __createJobs(self):
+    def __createJobs(self) -> None:
         # Create job from each matched configuration.
         jobIds = []
         for configId in self.getMatchingConfigIds():
             try:
                 config = configDB[configId]
                 if config.hasValidInputs():
-                    for job in config.createJobs(self['owner']):
+                    for job in config.createJobs(self.getOwner()):
                         job.comment += '\n' + self.comment
                         job.setScheduledBy(self.getId())
                         jobDB.add(job)
@@ -523,7 +562,7 @@ class Scheduled(XMLTag, DatabaseElem, SelectableABC):
             self.__lastJobIds = jobIds
             self.__running = True
 
-    def _getContent(self):
+    def _getContent(self) -> XMLContent:
         yield xml.comment[ self.__comment ]
         for jobId in self.__lastJobIds:
             yield xml.job(jobId = jobId)

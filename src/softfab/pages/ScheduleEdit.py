@@ -25,7 +25,7 @@ from softfab.webgui import (
     Column, Panel, Script, Table, addRemoveStyleScript, docLink, groupItem,
     vgroup
 )
-from softfab.xmlgen import XMLContent, txt, xhtml
+from softfab.xmlgen import XMLAttributeValue, XMLContent, txt, xhtml
 
 SelectBy = Enum('SelectBy', 'NAME TAG')
 '''Mechanism by which a schedule selects the configurations it will start.
@@ -108,20 +108,20 @@ class ScheduleEdit_GET(ScheduleEditBase):
                 configId = element['configId']
                 if configId is None:
                     overrides['selectBy'] = SelectBy.TAG
-                    overrides['tag'] = \
-                        element['tagKey'] + ',' + element['tagValue']
+                    overrides['tag'] = element.tagKey + ',' + element.tagValue
                 else:
                     overrides['selectBy'] = SelectBy.NAME
                     overrides['configId'] = configId
                 overrides['suspended'] = element.isSuspended()
-                if element['startTime'] not in (asap, endOfTime):
-                    overrides['startTime'] = formatTime(element['startTime'])
+                startTime = element.startTime
+                if startTime not in (asap, endOfTime):
+                    overrides['startTime'] = formatTime(startTime)
                 sequence = element['sequence']
                 overrides['sequence'] = sequence
                 if sequence is ScheduleRepeat.WEEKLY:
                     overrides['days'] = stringToListDays(element['days'])
                 elif sequence is ScheduleRepeat.CONTINUOUSLY:
-                    overrides['minDelay'] = element['minDelay']
+                    overrides['minDelay'] = element.minDelay
                 elif sequence is ScheduleRepeat.PASSIVE:
                     overrides['cmtrigger'] = '\n'.join(
                         sorted(element.getTagValues('sf.cmtrigger'))
@@ -172,7 +172,7 @@ class ScheduleEdit_POST(ScheduleEditBase):
                 'startTime': startTime,
                 'sequence': sequence.name,
                 'owner': self.user.name,
-                }
+                } # type: Dict[str, XMLAttributeValue]
             if args.selectBy is SelectBy.NAME:
                 parameters['configId'] = args.configId
             elif args.selectBy is SelectBy.TAG:

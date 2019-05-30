@@ -64,7 +64,7 @@ def describeNextRun(schedule):
     suspended = schedule.isSuspended()
 
     # Look for future start time.
-    startTime = schedule['startTime']
+    startTime = schedule.startTime
     if startTime != asap:
         return (
             ('\u2265 ' if waiting or suspended else '= ') # ">=" or "="
