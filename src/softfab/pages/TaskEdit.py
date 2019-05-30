@@ -61,6 +61,17 @@ class TaskEditBase(EditPage[TaskEditArgs, TaskDef]):
             else cast(Framework, parent).resourceClaim
             )
 
+def getParent(args: TaskEditArgs) -> ParamMixin:
+    framework = args.framework
+    if framework == '':
+        return paramTop
+    else:
+        try:
+            return frameworkDB[framework]
+        except KeyError:
+            # Framework no longer exists.
+            return paramTop
+
 class TaskEdit_GET(TaskEditBase):
 
     class Arguments(InitialEditArgs):
@@ -86,7 +97,7 @@ class TaskEdit_GET(TaskEditBase):
 
         def _validateState(self) -> None:
             # pylint: disable=attribute-defined-outside-init
-            self.parent = paramTop # type: ParamMixin
+            self.parent = getParent(self.args)
 
 class TaskEdit_POST(TaskEditBase):
 
@@ -134,24 +145,13 @@ class TaskEdit_POST(TaskEditBase):
             checkResourceRequirementsState(args)
 
         def _validateState(self) -> None:
-            args = self.args
-
-            # TODO: It would be better to do things like this in the
-            #       constructor.
-            # pylint: disable=attribute-defined-outside-init
-            framework = args.framework
-            if framework == '':
-                self.parent = paramTop # type: ParamMixin
-            else:
-                try:
-                    self.parent = frameworkDB[framework]
-                except KeyError:
-                    # Framework no longer exists.
-                    self.parent = paramTop
+            parent = getParent(self.args)
 
             # Filter out empty lines.
-            validateParamState(self, self.parent)
+            validateParamState(self, parent)
             validateResourceRequirementsState(self)
+
+            self.parent = parent # pylint: disable=attribute-defined-outside-init
 
 class TaskPropertiesTable(PropertiesTable):
 
