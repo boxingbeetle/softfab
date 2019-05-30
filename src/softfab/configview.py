@@ -134,13 +134,13 @@ class InputTable(Table):
 class _NameColumn(DataColumn[Config]):
     label = 'Configuration ID'
     keyName = 'name'
-    def presentCell(self, record, **kwargs):
+    def presentCell(self, record: Config, **kwargs: object) -> XMLContent:
         return createConfigDetailsLink(record.getId())
 
 class TargetsColumn(DataColumn[Config]):
     keyName = 'targets'
 
-    def presentCell(self, record, **kwargs):
+    def presentCell(self, record: Config, **kwargs: object) -> XMLContent:
         targets = record.targets
         if targets:
             return txt(', ').join(
@@ -179,7 +179,8 @@ class SimpleConfigTable(DataTable[Config]):
         if self.showOwner and project.showOwners:
             yield OwnerColumn[Config].instance
 
-    def iterRowStyles(self, rowNr, record, **kwargs):
+    def iterRowStyles(self, rowNr: int, record: Config, **kwargs: object
+                      ) -> Iterator[str]:
         if self.showConflictAsError and not record.hasValidInputs():
             yield 'error'
 
