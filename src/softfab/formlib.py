@@ -647,12 +647,12 @@ class RadioTable(Table):
                 class_ = 'clickable'
                 )[ self.formatOption(box, item[1:]) ]
 
-    def getActive(self, formArgs, **_kwargs):
+    def getActive(self, **kwargs):
         '''Returns the active option, or None if no option is active.
         The default implementation returns the value of the page argument
         with the same name as this control.
         '''
-        return getattr(formArgs, self.name)
+        return getattr(kwargs['formArgs'], self.name)
 
     def iterOptions(self, **kwargs):
         '''Iterates through the multiple choice options.

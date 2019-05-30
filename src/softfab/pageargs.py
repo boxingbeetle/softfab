@@ -1027,7 +1027,7 @@ def _expandNames(
     else:
         yield prefix, value
 
-class DictArgInstance(dict, Mapping[str, DictValue[ValueT]]):
+class DictArgInstance(Dict[str, DictValue[ValueT]]):
     '''Stores the values for a DictArg and offers a mapping interface
     to read them.
     Writing is not supported, since Arguments are supposed to be read-only.

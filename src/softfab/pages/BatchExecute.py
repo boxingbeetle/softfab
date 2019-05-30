@@ -290,9 +290,13 @@ class BatchInputTable(InputTable):
 class ParamTable(ParamOverrideTable):
 
     def getParamCell(self,
-                     taskId, name, curValue, defValue,
-                     *, indexStr, **kwargs
-                     ):
+                     taskId: str,
+                     name: str,
+                     curValue: str,
+                     defValue: str,
+                     **kwargs: object
+                     ) -> XMLContent:
+        indexStr = cast(str, kwargs['indexStr'])
         return textInput(
             name='param/' + indexStr + '/' + taskId + '/' + name,
             value=defValue if curValue is None else curValue,

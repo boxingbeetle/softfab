@@ -1,14 +1,18 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from enum import Enum
+from typing import (
+    Dict, Iterable, Iterator, Mapping, Optional, Set, Tuple, cast
+)
 import re
 
-from softfab.Page import PresentableError
+from softfab.Page import PageProcessor, PresentableError
 from softfab.formlib import RadioTable, checkBox, hiddenInput, textInput
-from softfab.pageargs import BoolArg, DictArg, EnumArg, StrArg
-from softfab.paramlib import specialParameters
+from softfab.pageargs import BoolArg, DictArg, EnumArg, PageArgs, StrArg
+from softfab.paramlib import ParamMixin, specialParameters
+from softfab.taskdeflib import TaskDef
 from softfab.webgui import Table, cell, rowManagerInstanceScript, script
-from softfab.xmlgen import xhtml
+from softfab.xmlgen import XMLContent, xhtml
 
 reParamName = re.compile(r'^(?:sf\.|[A-Za-z_])[A-Za-z_0-9]*$')
 '''Regular expression which defines valid parameter names.
@@ -32,19 +36,29 @@ class ParamArgsMixin:
     summaryfile = StrArg('')
     summarydir = StrArg('')
 
-def _namePresentation(name):
+class _ParamArgs:
+    """Helper class for type checking."""
+    params = Dict[str, str]()
+    values = Dict[str, str]()
+    final = Dict[str, bool]()
+    poverride = Dict[str, bool]()
+    summary = SummaryType.INHERIT
+    summaryfile = ''
+    summarydir = ''
+
+def _namePresentation(name: str) -> str:
     if name == 'sf.summary':
         return 'Summary report'
     else:
         return name
 
-def _valuePresentation(name, value):
+def _valuePresentation(name: str, value: str) -> str:
     if name == 'sf.summary':
         return _summaryValuePresentation(value)
     else:
         return value
 
-def _summaryValuePresentation(value):
+def _summaryValuePresentation(value: str) -> str:
     if value == '':
         return 'none'
     elif value.endswith('/'):
@@ -56,17 +70,19 @@ class ParamCell(RadioTable):
     style = 'hollow'
     columns = None, None
 
-    def __init__(self, key, value, parentValue):
+    def __init__(self, key: str, value: str, parentValue: str):
         RadioTable.__init__(self)
         self.__key = key
         self.__value = value
         self.__parentValue = parentValue
         self.name = 'poverride.' + key
 
-    def getActive(self, proc, **kwargs):
-        return str(proc.args.poverride.get(self.__key, False)).lower()
+    def getActive(self, **kwargs: object) -> Optional[str]:
+        args = cast(_ParamArgs, kwargs['formArgs'])
+        return str(args.poverride.get(self.__key, False)).lower()
 
-    def iterOptions(self, **kwargs):
+    def iterOptions(self, **kwargs: object
+                    ) -> Iterator[Tuple[str, str, XMLContent]]:
         parentValue = self.__parentValue
         if parentValue == '':
             parentValue = '(empty)'
@@ -84,8 +100,12 @@ class ParamOverrideTable(Table):
     hideWhenEmpty = True
     suppressedParams = 'sf.summary',
 
-    def iterRows(self, *, tasks, **kwargs):
+    def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
         # Sort tasks by name (first element in tuple).
+        tasks = cast(
+            Iterable[Tuple[str, TaskDef, Mapping[str, str]]],
+            kwargs['tasks']
+            )
         sortedTasks = sorted(tasks)
 
         for taskId, taskDef, taskParams in sortedTasks:
@@ -97,34 +117,39 @@ class ParamOverrideTable(Table):
                 )
             for name, defValue in sortedParams:
                 if not taskDef.isFinal(name):
-                    curValue = taskParams.get(name)
+                    curValue = taskParams.get(name, '')
                     tableRows.append([
                         name,
-                        self.getParamCell(
-                            taskId, name, curValue, defValue,
-                            tasks=tasks, **kwargs
-                            )
+                        self.getParamCell(taskId, name, curValue, defValue,
+                                          **kwargs)
                         ])
             if len(tableRows) > 0:
                 tableRows[0].insert(0, cell(rowspan = len(tableRows))[taskId])
                 yield from tableRows
 
-    def getParamCell(self, taskId, name, curValue, defValue, **kwargs):
+    def getParamCell(self,
+                     taskId: str,
+                     name: str,
+                     curValue: str,
+                     defValue: str,
+                     **kwargs: object
+                     ) -> XMLContent:
         raise NotImplementedError
 
 class SummaryParamCell(RadioTable):
     style = 'hollow summaryparam'
     columns = None, None
 
-    def __init__(self, key, value, parentValue):
+    def __init__(self, key: str, value: str, parentValue: str):
         RadioTable.__init__(self)
         self.__key = key
         self.__value = value
         self.__parentValue = parentValue
         self.name = 'summary'
 
-    def getActive(self, proc, **kwargs):
-        if not proc.args.poverride.get(self.__key, False):
+    def getActive(self, **kwargs: object) -> SummaryType:
+        args = cast(_ParamArgs, kwargs['formArgs'])
+        if not args.poverride.get(self.__key, False):
             return SummaryType.INHERIT
         elif self.__value == '':
             return SummaryType.NONE
@@ -133,7 +158,8 @@ class SummaryParamCell(RadioTable):
         else:
             return SummaryType.FILE
 
-    def iterOptions(self, **kwargs):
+    def iterOptions(self, **kwargs: object
+                    ) -> Iterator[Tuple[SummaryType, str, XMLContent]]:
         if self.__value.endswith('/'):
             fileValue = ''
             dirValue = self.__value
@@ -165,30 +191,28 @@ function initRowIndices(node, index) {
 }
 ''']
 
-    def __init__(self, parent):
+    def __init__(self, parent: ParamMixin):
         super().__init__()
         self.__parentParams = parent.getParameters()
 
-    def iterRows(self, *, proc, **kwargs):
-        args = proc.args
+    def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
+        args = cast(_ParamArgs, kwargs['formArgs'])
         parentParams = self.__parentParams
-        valueFieldAttribs = {}
+        valueFieldAttribs = {} # type: Mapping[str, str]
         for index in [ str(i) for i in range(len(args.params) + 1) ]:
             name = args.params.get(index, '')
             value = args.values.get(index, '')
             final = args.final.get(index, False)
             if name in parentParams:
-                if name == 'sf.summary':
-                    valueWidget = SummaryParamCell
-                else:
-                    valueWidget = ParamCell
+                valueWidget = SummaryParamCell if name == 'sf.summary' \
+                                               else ParamCell
                 nameField = (
                     _namePresentation(name),
                     hiddenInput(name='params.' + index, value=name)
-                    )
+                    ) # type: XMLContent
                 valueField = valueWidget(
-                    index, value, parentParams.get(name)
-                    ).present(proc=proc, **kwargs)
+                    index, value, parentParams[name]
+                    ).present(**kwargs)
                 # The value text box for new parameters that will follow the
                 # parent parameters should be stretched to fill the entire
                 # cell, otherwise the layout looks ugly.
@@ -210,18 +234,19 @@ function initRowIndices(node, index) {
                 checkBox(name='final.' + index, checked = final)
                 )
 
-    def present(self, *, proc, **kwargs):
+    def present(self, **kwargs: object) -> XMLContent:
+        args = cast(_ParamArgs, kwargs['formArgs'])
         numParams = len(
-            set(proc.args.params.values()) & set(self.__parentParams)
+            set(args.params.values()) & set(self.__parentParams)
             )
         yield xhtml.h2[ 'Parameters' ]
-        yield super().present(proc=proc, **kwargs)
-        yield self.initRowIndicesScript.present(proc=proc, **kwargs)
+        yield super().present(**kwargs)
+        yield self.initRowIndicesScript.present(**kwargs)
         yield rowManagerInstanceScript(
             bodyId=self.bodyId,
             rowStart=numParams,
             initRow='initRowIndices'
-            ).present(proc=proc, **kwargs)
+            ).present(**kwargs)
         yield xhtml.ul[
             xhtml.li[
                 'Parameters will be passed as variables to the wrapper.'
@@ -240,12 +265,12 @@ class ParametersTable(Table):
     columns = None, None, None, None
     style = 'hollow'
 
-    def __init__(self, fieldName):
+    def __init__(self, fieldName: str):
         Table.__init__(self)
         self.__fieldName = fieldName
 
-    def iterRows(self, *, proc, **kwargs):
-        obj = getattr(proc, self.__fieldName)
+    def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
+        obj = cast(ParamMixin, getattr(kwargs['proc'], self.__fieldName))
         parameters = set(obj.getParameters()) - specialParameters
         reservedParameters = set(
             param for param in parameters if param.startswith('sf.')
@@ -256,19 +281,21 @@ class ParametersTable(Table):
             yield (
                 ( _namePresentation(name), '\u00A0' ),
                 ( '=\u00A0' ),
-                ( _valuePresentation(name, value), '\u00A0' ),
+                ( _valuePresentation(name, value or ''), '\u00A0' ),
                 '(final)' if obj.isFinal(name) else ''
                 )
 
-def addParamsToElement(element, args):
-    for index, name in args.params.items():
-        if args.poverride.get(index):
-            value = args.values.get(index, '')
-        else:
-            value = None
-        element.addParameter(name, value, args.final.get(index, False))
+def addParamsToElement(element: ParamMixin, args: ParamArgsMixin) -> None:
+    args_ = cast(_ParamArgs, args)
+    for index, name in args_.params.items():
+        value = (
+            args_.values.get(index, '')
+            if args_.poverride.get(index)
+            else None
+            )
+        element.addParameter(name, value, args_.final.get(index, False))
 
-def initParamArgs(element):
+def initParamArgs(element: ParamMixin) -> Mapping[str, object]:
     # Note: Only parameters of this task def are considered part of
     #       the editing state, not the parameters of its parents.
     overriddenParams = element.getParametersSelf()
@@ -299,9 +326,9 @@ def initParamArgs(element):
         summarydir = summaryVal if summaryType is SummaryType.DIR else '',
         )
 
-def checkParamState(args, parent):
-    usedParams = set()
-    for param in args.params.values():
+def checkParamState(args: ParamArgsMixin, parent: ParamMixin) -> None:
+    usedParams = set() # type: Set[str]
+    for param in cast(_ParamArgs, args).params.values():
         if param == '':
             continue
         elif reParamName.match(param) is None:
@@ -322,8 +349,8 @@ def checkParamState(args, parent):
                 ])
         usedParams.add(param)
 
-def validateParamState(proc, parent):
-    args = proc.args
+def validateParamState(proc: PageProcessor, parent: ParamMixin) -> None:
+    args = cast(_ParamArgs, proc.args)
 
     parentParams = dict(
         ( name, value )
@@ -340,24 +367,23 @@ def validateParamState(proc, parent):
     #   an inherited parameter is omitted from the dictionary
     # - parameters with empty name are removed
     # - duplicate parameters are silently reduced to one
-    data = {}
-    for index, name in args.params.items():
+    data = {} # type: Dict[str, Tuple[Optional[str], bool]]
+    for indexStr, name in args.params.items():
         if name != '':
-            value = args.values[index]
-            final = args.final.get(index, False)
-            if name in parentParams and not args.poverride.get(index):
+            value = args.values[indexStr] # type: Optional[str]
+            final = args.final.get(indexStr, False)
+            if name in parentParams and not args.poverride.get(indexStr):
                 value = None # inherited
-            data[name] = ( value, final )
+            data[name] = (value, final)
+
     if 'sf.summary' in data:
         summaryType = args.summary
         if summaryType is SummaryType.NONE:
-            summary = ''
+            summary = '' # type: Optional[str]
         elif summaryType is SummaryType.FILE:
             summary = args.summaryfile
         elif summaryType is SummaryType.DIR:
-            summary = args.summarydir
-            if not summary.endswith('/'):
-                summary += '/'
+            summary = args.summarydir.rstrip('/') + '/'
         elif summaryType is SummaryType.INHERIT:
             summary = None
         else:
@@ -400,6 +426,6 @@ def validateParamState(proc, parent):
             poverride[strIndex] = False
         if final:
             finals[strIndex] = True
-    proc.args = args.override(
+    proc.args = cast(PageArgs, args).override(
         params = params, values = values, final = finals, poverride = poverride
         )
