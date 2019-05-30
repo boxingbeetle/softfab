@@ -1,18 +1,22 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from typing import Iterable, List
+
 from softfab.config import rootURL
 from softfab.configlib import configDB
 from softfab.joblib import jobDB
 from softfab.pagelinks import createJobsURL
 from softfab.resultcode import combineResults
-from softfab.schedulelib import JobDBObserver, ScheduleRepeat, asap, scheduleDB
+from softfab.schedulelib import (
+    JobDBObserver, ScheduleRepeat, Scheduled, asap, scheduleDB
+)
 from softfab.schedulerefs import createScheduleDetailsURL
 from softfab.statuslib import (
     DBStatusModelGroup, StatusModel, StatusModelRegistry
 )
 from softfab.timeview import formatTime
 from softfab.webgui import maybeLink
-from softfab.xmlgen import xml
+from softfab.xmlgen import XML, XMLContent, xml
 
 weekDays = [
     'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday',
@@ -21,15 +25,16 @@ weekDays = [
 
 # Note: If we make weekDays a parameter, these are generic sublist <-> flags
 #       converter functions.
+# TODO: In Python 3.6 we could use IntFlag.
 
-def listToStringDays(listDays):
+def listToStringDays(listDays: Iterable[str]) -> str:
     '''Returns a list of days into a 7 characters string
     representative of a week.
     Example: ['Tuesday', 'Thursday'] will be converted into "0101000"
     '''
     return ''.join( str(int(day in listDays)) for day in weekDays )
 
-def stringToListDays(binDays):
+def stringToListDays(binDays: str) -> List[str]:
     '''Returns a list of days on which a configuration
     should be scheduled in case of a weekly sequence.
     Example: "0101000" will be converted into ['Tuesday', 'Thursday']
@@ -43,12 +48,12 @@ def stringToListDays(binDays):
         if int(flag)
         ]
 
-def createLastJobLink(schedule):
+def createLastJobLink(schedule: Scheduled) -> XML:
     return maybeLink(createJobsURL(schedule.getLastJobs()))[
         formatTime(schedule.getLastStartTime())
         ]
 
-def describeNextRun(schedule):
+def describeNextRun(schedule: Scheduled) -> XMLContent:
     '''Returns a description of when the schedule is next expected to run.
     '''
 
@@ -87,7 +92,7 @@ def describeNextRun(schedule):
     # is really short, it is unlikely the user will see this value.
     return 'now'
 
-def getScheduleStatus(schedule):
+def getScheduleStatus(schedule: Scheduled) -> str:
     '''Returns the status of the given schedule.
     The familiar color coding is used:
     'done' (gray) means: job will not run anymore

@@ -2,7 +2,7 @@
 
 from enum import Enum
 from time import localtime
-from typing import Dict, Mapping, Optional
+from typing import Dict, Mapping, Optional, cast
 
 from softfab.EditPage import (
     EditArgs, EditPage, EditProcessor, InitialEditArgs, InitialEditProcessor
@@ -119,7 +119,9 @@ class ScheduleEdit_GET(ScheduleEditBase):
                 sequence = element['sequence']
                 overrides['sequence'] = sequence
                 if sequence is ScheduleRepeat.WEEKLY:
-                    overrides['days'] = stringToListDays(element['days'])
+                    overrides['days'] = stringToListDays(
+                        cast(str, element['days'])
+                        )
                 elif sequence is ScheduleRepeat.CONTINUOUSLY:
                     overrides['minDelay'] = element.minDelay
                 elif sequence is ScheduleRepeat.PASSIVE:
