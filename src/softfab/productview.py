@@ -30,7 +30,7 @@ def formatLocator(product: Product,
     else:
         return txt(locator)
 
-def getProductStatus(job: Job, name: str) -> str:
+def getProductStatus(job: Job, name: str) -> Optional[str]:
     '''Returns the status of the product with the given name.
     Raises KeyError if there is no product with the given name in the given job.
     '''

@@ -1,6 +1,9 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import ClassVar, Iterator, Mapping, Optional, Tuple, TypeVar, cast
+from typing import (
+    ClassVar, Dict, Iterable, Iterator, Optional, Sequence, Tuple, TypeVar,
+    cast
+)
 
 from softfab.StyleResources import styleRoot
 from softfab.config import rootURL
@@ -44,17 +47,17 @@ _resultOrder = dict(
         cast(Tuple[Optional[str]], ( None, )) + _resultList + alertList
         )
     )
-def combinedStatus(statuses):
+def combinedStatus(statuses: Iterable[Optional[str]]) -> Optional[str]:
     '''Find the most urgent of the given statuses.
     Returns a status name (string), or None if statuses was empty or all of
     them were None.
     '''
-    return max(list(statuses) + [None], key=_resultOrder.__getitem__)
+    return max(statuses, key=_resultOrder.__getitem__, default=None)
 
 # Cache for getJobStatus().
-_finalJobStatus = {} # type: Mapping[str, str]
+_finalJobStatus = {} # type: Dict[str, str]
 
-def getJobStatus(job):
+def getJobStatus(job: Job) -> str:
     '''Summarizes the current status of the given job by combining the task
     statuses into a single value.
     '''
@@ -63,6 +66,7 @@ def getJobStatus(job):
     status = _finalJobStatus.get(jobId)
     if status is None:
         status = combinedStatus(getTaskStatus(task) for task in job.iterTasks())
+        assert status is not None
         if job.hasFinalResult():
             # Status will never change again, so store it.
             _finalJobStatus[jobId] = status
@@ -71,23 +75,23 @@ def getJobStatus(job):
 # Note: Originally "unfinishedJobs" and "resultlessJobs" were located in joblib,
 #       but that led to problems with the circular import of joblib and tasklib.
 
-class _UnfinishedJobs(SortedQueue):
+class _UnfinishedJobs(SortedQueue[Job]):
     compareField = 'timestamp'
 
-    def _filter(self, record):
+    def _filter(self, record: Job) -> bool:
         return not record.isExecutionFinished()
 
 unfinishedJobs = _UnfinishedJobs(jobDB)
 
-class _ResultlessJobs(SortedQueue):
+class _ResultlessJobs(SortedQueue[Job]):
     compareField = 'timestamp'
 
-    def _filter(self, record):
+    def _filter(self, record: Job) -> bool:
         return not record.hasFinalResult()
 
 resultlessJobs = _ResultlessJobs(jobDB)
 
-def createStatusBar(tasks, length = 10):
+def createStatusBar(tasks: Sequence[Task], length: int = 10) -> XMLContent:
     if len(tasks) == 0:
         return None
     elif len(tasks) <= length:
@@ -103,7 +107,7 @@ def createStatusBar(tasks, length = 10):
         statusFreq = dict.fromkeys(statusList, 0)
         for task in tasks:
             statusFreq[getTaskStatus(task)] += 1
-        def iterBars():
+        def iterBars() -> Iterator[XMLContent]:
             for status in statusList:
                 freq = statusFreq[status]
                 if freq != 0:
@@ -123,7 +127,8 @@ _scheduleIconGray = styleRoot.addIcon('ScheduleSmallD')
 class _DescriptionColumn(DataColumn[Job]):
     keyName = 'description'
 
-    def presentCell(self, record, *, table, **kwargs):
+    def presentCell(self, record: Job, **kwargs: object) -> XMLContent:
+        table = cast(JobsTable, kwargs['table'])
         if table.descriptionLink:
             yield xhtml.a(
                 href = createJobURL(record.getId()),
@@ -149,7 +154,7 @@ class _DescriptionColumn(DataColumn[Job]):
 class _StatusColumn(DataColumn[Job]):
     label = 'Status'
 
-    def presentCell(self, record, **kwargs):
+    def presentCell(self, record: Job, **kwargs: object) -> XMLContent:
         return cell(class_ = 'strong')[
             createStatusBar(record.getTaskSequence())
             ]
@@ -157,7 +162,7 @@ class _StatusColumn(DataColumn[Job]):
 class TargetColumn(DataColumn[JobOrTask]):
     keyName = 'target'
 
-    def presentCell(self, record, **kwargs):
+    def presentCell(self, record: JobOrTask, **kwargs: object) -> XMLContent:
         target = record.getTarget()
         return '-' if target is None else target
 
@@ -175,10 +180,11 @@ class JobsTable(DataTable[Job]):
     leadTimeColumn = DurationColumn[Job](label='Lead Time', keyName='leadtime')
     statusColumn = _StatusColumn.instance # type: ClassVar[DataColumn[Job]]
 
-    def showTargetColumn(self):
+    def showTargetColumn(self) -> bool:
         return project.showTargets
 
-    def iterRowStyles(self, rowNr, record, **kwargs):
+    def iterRowStyles(self, rowNr: int, record: Job, **kwargs: object
+                      ) -> Iterator[str]:
         yield getJobStatus(record)
 
     def iterColumns(self, **kwargs: object) -> Iterator[DataColumn[Job]]:
@@ -200,11 +206,11 @@ class CommentPanel(Panel):
     '''Presents the optional user comment (if any) on a panel.
     '''
 
-    def __init__(self, comment):
+    def __init__(self, comment: str):
         super().__init__()
         self.lines = comment.splitlines()
 
-    def present(self, **kwargs):
+    def present(self, **kwargs: object) -> XMLContent:
         presentation = super().present(**kwargs)
         if presentation is None:
             return None
@@ -219,13 +225,13 @@ class CommentPanel(Panel):
 
 class _JobOverviewPresenter:
 
-    def singleLineSummary(self, jobId):
+    def singleLineSummary(self, jobId: str) -> str:
         job = jobDB[jobId]
         return 'Job Complete: %s (%s)' % (
             getJobStatus(job), job.getDescription()
             )
 
-    def keyValue(self, jobId):
+    def keyValue(self, jobId: str) -> Iterator[Tuple[str, str]]:
         '''Generates key-value pairs which give an overview of the most
         important properties of a job.
         This is used to create easily parseable files for external processes,
@@ -244,19 +250,19 @@ class _JobOverviewPresenter:
 
 class _JobNotificationObserver(RecordObserver):
 
-    def __init__(self):
+    def __init__(self) -> None:
         RecordObserver.__init__(self)
         # TODO: Create a new presenter for each presentation and remove the
         #       jobId from the interface?
         self.presenter = _JobOverviewPresenter()
 
-    def added(self, record):
+    def added(self, record: Job) -> None:
         pass
 
-    def updated(self, record):
+    def updated(self, record: Job) -> None:
         pass
 
-    def removed(self, record):
+    def removed(self, record: Job) -> None:
         params = record.getParams()
         locator = params.get('notify')
         if locator is not None:
