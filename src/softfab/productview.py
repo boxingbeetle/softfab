@@ -1,18 +1,26 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from abc import ABC
-from typing import ClassVar, Iterator
+from typing import (
+    ClassVar, Generic, Iterable, Iterator, Optional, Sequence, cast
+)
 
+from softfab.Page import ProcT
+from softfab.joblib import Job
 from softfab.jobview import combinedStatus
 from softfab.pagelinks import createTaskInfoLink, createTaskRunnerDetailsLink
 from softfab.productdeflib import ProductType
+from softfab.productlib import Product
+from softfab.tasktables import JobProcessorMixin
 from softfab.taskview import getTaskStatus
 from softfab.utils import abstract
 from softfab.webgui import Column, Table, cell, row
-from softfab.xmlgen import txt, xhtml
+from softfab.xmlgen import XMLContent, txt, xhtml
 
 
-def formatLocator(product, locator, finishedTask):
+def formatLocator(product: Product,
+                  locator: Optional[str],
+                  finishedTask: bool
+                  ) -> XMLContent:
     if locator is None:
         return 'unavailable' if finishedTask else 'not yet'
     elif product.getType() is ProductType.URL:
@@ -22,7 +30,7 @@ def formatLocator(product, locator, finishedTask):
     else:
         return txt(locator)
 
-def getProductStatus(job, name):
+def getProductStatus(job: Job, name: str) -> str:
     '''Returns the status of the product with the given name.
     Raises KeyError if there is no product with the given name in the given job.
     '''
@@ -43,7 +51,7 @@ def getProductStatus(job, name):
         )
 
 # TODO: This is similar to configview.InputTable.
-class ProductTable(Table, ABC):
+class ProductTable(Table, Generic[ProcT]):
     style = 'nostrong'
     hideWhenEmpty = True
 
@@ -52,12 +60,12 @@ class ProductTable(Table, ABC):
     showConsumers = abstract # type: ClassVar[bool]
     showColors = abstract # type: ClassVar[bool]
 
-    def getProducts(self, proc):
+    def getProducts(self, proc: ProcT) -> Sequence[Product]:
         raise NotImplementedError
 
     def iterColumns(self, **kwargs: object) -> Iterator[Column]:
         # TODO: hasLocal is computed twice: here and in iterRows().
-        products = self.getProducts(kwargs['proc'])
+        products = self.getProducts(cast(ProcT, kwargs['proc']))
         hasLocal = any(prod.isLocal() for prod in products)
         yield Column(self.label)
         if hasLocal:
@@ -68,15 +76,19 @@ class ProductTable(Table, ABC):
             yield Column('Consumers')
         yield Column('Locator')
 
-    def filterProducers(self, proc, producers): # pylint: disable=unused-argument
+    def filterProducers(self,
+                        proc: ProcT, # pylint: disable=unused-argument
+                        producers: Iterable[str]
+                        ) -> Iterator[str]:
         '''Iterates through those producer task names that should be shown in
         this table.
         The default implementation does not filter out any producers.
         '''
         return iter(producers)
 
-    def iterRows(self, *, proc, **kwargs):
-        job = proc.job
+    def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
+        proc = cast(ProcT, kwargs['proc'])
+        job = cast(JobProcessorMixin, proc).job
         jobId = job.getId()
         products = self.getProducts(proc)
         hasLocal = any(prod.isLocal() for prod in products)
@@ -95,10 +107,8 @@ class ProductTable(Table, ABC):
             producers = sorted(
                 self.filterProducers(proc, potentialProducers | actualProducers)
                 )
-            if self.showColors:
-                rowStyle = getProductStatus(job, productName)
-            else:
-                rowStyle = None
+            rowStyle = getProductStatus(job, productName) if self.showColors \
+                                                          else None
 
             consumers = sorted(job.getConsumers(productName))
 

@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Iterator
+from typing import Iterator, Sequence
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
@@ -10,6 +10,7 @@ from softfab.pagelinks import (
     JobIdArgs, TaskIdArgs, createConfigDetailsLink, createTaskInfoLink,
     createTaskRunnerDetailsLink
 )
+from softfab.productlib import Product
 from softfab.productview import ProductTable
 from softfab.request import Request
 from softfab.resourcelib import getTaskRunner
@@ -20,6 +21,11 @@ from softfab.utils import pluralize
 from softfab.webgui import Table, Widget, cell, pageLink
 from softfab.xmlgen import XMLContent, xhtml
 
+
+class JobProcessor(JobProcessorMixin, PageProcessor[JobIdArgs]):
+
+    def process(self, req: Request[JobIdArgs], user: User) -> None:
+        self.initJob(req)
 
 class SelfJobsTable(JobsSubTable):
     descriptionLink = False
@@ -54,10 +60,8 @@ class ShowReport_GET(FabPage['ShowReport_GET.Processor',
     class Arguments(JobIdArgs):
         pass
 
-    class Processor(JobProcessorMixin, PageProcessor[JobIdArgs]):
-
-        def process(self, req: Request[JobIdArgs], user: User) -> None:
-            self.initJob(req)
+    class Processor(JobProcessor):
+        pass
 
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'j/a')
@@ -167,7 +171,7 @@ class InputTable(ProductTable):
     showConsumers = False
     showColors = False
 
-    def getProducts(self, proc):
+    def getProducts(self, proc: JobProcessor) -> Sequence[Product]:
         # Create list of inputs in alphabetical order.
         return sorted(proc.job.getInputs())
 
@@ -185,7 +189,7 @@ class OutputTable(ProductTable):
     widgetId = 'outputTable'
     autoUpdate = True
 
-    def getProducts(self, proc):
+    def getProducts(self, proc: JobProcessor) -> Sequence[Product]:
         return proc.job.getProduced()
 
     def presentCaptionParts(self, *, proc, **kwargs):

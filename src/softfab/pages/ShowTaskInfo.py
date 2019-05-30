@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Iterator
+from typing import Iterable, Iterator, Sequence
 
 from softfab.FabPage import FabPage
 from softfab.Page import InvalidRequest, PageProcessor
@@ -11,6 +11,7 @@ from softfab.pagelinks import (
     createTaskDetailsLink, createTaskHistoryLink, createTaskRunnerDetailsLink
 )
 from softfab.paramview import ParametersTable
+from softfab.productlib import Product
 from softfab.productview import ProductTable
 from softfab.projectlib import project
 from softfab.request import Request
@@ -103,7 +104,23 @@ class DetailsTable(PropertiesTable):
             claim=task.resourceClaim, **kwargs
             )
 
-class InputTable(ProductTable):
+class TaskProcessor(JobProcessorMixin, PageProcessor[TaskIdArgs]):
+
+    def process(self, req: Request[TaskIdArgs], user: User) -> None:
+        self.initJob(req)
+
+        taskName = req.args.taskName
+        task = self.job.getTask(taskName)
+        if task is None:
+            raise InvalidRequest(
+                'There is no task named "%s" in job %s'
+                % (taskName, req.args.jobId)
+                )
+
+        # pylint: disable=attribute-defined-outside-init
+        self.task = task
+
+class InputTable(ProductTable[TaskProcessor]):
     label = 'Input'
     hideWhenEmpty = False
     showProducers = True
@@ -116,7 +133,7 @@ class InputTable(ProductTable):
         taskName = proc.args.taskName
         yield 'Task ', xhtml.b[ taskName ], ' consumes the following inputs:'
 
-    def getProducts(self, proc):
+    def getProducts(self, proc: TaskProcessor) -> Sequence[Product]:
         job = proc.job
         task = proc.task
         # Create list of inputs in alphabetical order.
@@ -125,7 +142,7 @@ class InputTable(ProductTable):
             for prodName in sorted(task.getInputs())
             ]
 
-class OutputTable(ProductTable):
+class OutputTable(ProductTable[TaskProcessor]):
     label = 'Output'
     hideWhenEmpty = False
     showProducers = False
@@ -138,7 +155,7 @@ class OutputTable(ProductTable):
         taskName = proc.args.taskName
         yield 'Task ', xhtml.b[ taskName ], ' produces the following outputs:'
 
-    def getProducts(self, proc):
+    def getProducts(self, proc: TaskProcessor) -> Sequence[Product]:
         job = proc.job
         task = proc.task
         # Create list of outputs in alphabetical order.
@@ -147,7 +164,10 @@ class OutputTable(ProductTable):
             for prodName in sorted(task.getOutputs())
             ]
 
-    def filterProducers(self, proc, producers):
+    def filterProducers(self,
+                        proc: TaskProcessor,
+                        producers: Iterable[str]
+                        ) -> Iterator[str]:
         # Only show producer if it is our task.
         taskName = proc.args.taskName
         if taskName in producers:
@@ -161,21 +181,8 @@ class ShowTaskInfo_GET(FabPage['ShowTaskInfo_GET.Processor',
     class Arguments(TaskIdArgs):
         pass
 
-    class Processor(JobProcessorMixin, PageProcessor[TaskIdArgs]):
-
-        def process(self, req: Request[TaskIdArgs], user: User) -> None:
-            self.initJob(req)
-
-            taskName = req.args.taskName
-            task = self.job.getTask(taskName)
-            if task is None:
-                raise InvalidRequest(
-                    'There is no task named "%s" in job %s'
-                    % (taskName, req.args.jobId)
-                    )
-
-            # pylint: disable=attribute-defined-outside-init
-            self.task = task
+    class Processor(TaskProcessor):
+        pass
 
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'j/a')

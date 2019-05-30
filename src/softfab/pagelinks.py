@@ -161,7 +161,7 @@ def createCapabilityLink(typeName: str, cap: str = '') -> XMLNode:
 def createTargetLink(target: str) -> XMLNode:
     return createCapabilityLink(taskRunnerResourceTypeName, target)
 
-def createTaskRunnerDetailsLink(taskRunnerId: str) -> XMLContent:
+def createTaskRunnerDetailsLink(taskRunnerId: Optional[str]) -> XMLContent:
     if not taskRunnerId:
         return '-'
     elif taskRunnerId == '?':
