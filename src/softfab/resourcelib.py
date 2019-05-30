@@ -179,7 +179,7 @@ class ResourceBase(XMLTag, DatabaseElem):
         '''
         raise NotImplementedError
 
-    def getRun(self):
+    def getRun(self) -> Optional[TaskRun]:
         """Returns the execution run that this resource is reserved by,
         or None if it is not currently reserved by an execution run.
         """

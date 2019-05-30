@@ -1,22 +1,28 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from collections import defaultdict
+from typing import (
+    Callable, DefaultDict, Iterator, List, Mapping, Optional, Set, Tuple, cast
+)
 
-from softfab.Page import PresentableError
+from softfab.Page import PageProcessor, PresentableError
 from softfab.connection import ConnectionStatus
 from softfab.databaselib import checkWrapperVarName
 from softfab.formlib import dropDownList, emptyOption, hiddenInput, textInput
-from softfab.pageargs import ListArg
+from softfab.frameworklib import TaskDefBase
+from softfab.pageargs import ListArg, PageArgs
 from softfab.pagelinks import createCapabilityLink
+from softfab.resourcelib import ResourceBase
 from softfab.resreq import (
     ResourceClaim, ResourceSpec, taskRunnerResourceRefName
 )
 from softfab.restypelib import resTypeDB, taskRunnerResourceTypeName
+from softfab.typing import Collection
 from softfab.webgui import Panel, Table, rowManagerInstanceScript
-from softfab.xmlgen import txt, xhtml
+from softfab.xmlgen import XMLContent, txt, xhtml
 
 
-def getResourceStatus(resource):
+def getResourceStatus(resource: ResourceBase) -> str:
     """Returns a status summary string for `resource`."""
     connectionStatus = resource.getConnectionStatus()
     if connectionStatus in (ConnectionStatus.LOST, ConnectionStatus.WARNING):
@@ -35,7 +41,10 @@ def getResourceStatus(resource):
     else:
         return connectionStatus.name.lower()
 
-def presentCapabilities(capabilities, resType, capFilter = None):
+def presentCapabilities(capabilities: Collection[str],
+                        resType: str,
+                        capFilter: Optional[Callable[[str], bool]] = None
+                        ) -> XMLContent:
     if not capabilities:
         return '-'
     if capFilter is None:
@@ -72,13 +81,20 @@ class ResourceRequirementsArgsMixin:
     type = ListArg()
     caps = ListArg()
 
-def addResourceRequirementsToElement(element, args):
+class _ResourceRequirementsArgs(ResourceRequirementsArgsMixin, PageArgs):
+    """Helper class for type checking."""
+
+def addResourceRequirementsToElement(element: TaskDefBase,
+                                     args: ResourceRequirementsArgsMixin
+                                     ) -> None:
+    args = cast(_ResourceRequirementsArgs, args)
     for ref, resType, caps in zip(args.ref, args.type, args.caps):
         element.addResourceSpec(
             ResourceSpec.create(ref, resType, caps.split())
             )
 
-def initResourceRequirementsArgs(element):
+def initResourceRequirementsArgs(element: Optional[TaskDefBase]
+                                 ) -> Mapping[str, object]:
     if element is None:
         claim = initialResourceClaim
     else:
@@ -89,7 +105,8 @@ def initResourceRequirementsArgs(element):
         caps=[' '.join(sorted(spec.capabilities)) for spec in claim]
         )
 
-def checkResourceRequirementsState(args):
+def checkResourceRequirementsState(args: ResourceRequirementsArgsMixin) -> None:
+    args = cast(_ResourceRequirementsArgs, args)
     if args.type.count(taskRunnerResourceTypeName) != 1:
         # Even though the UI can only produce one Task Runner entry,
         # we should never trust the client to enforce that.
@@ -102,7 +119,7 @@ def checkResourceRequirementsState(args):
         raise PresentableError(xhtml.p[
             'Unequal number of ref/type/caps args'
             ])
-    usedRefs = set()
+    usedRefs = set() # type: Set[str]
     for ref, resType in zip(args.ref, args.type):
         if resType == '':
             continue
@@ -140,7 +157,8 @@ def checkResourceRequirementsState(args):
                 'Resource type "%s" does not exist (anymore).' % resType
                 ])
 
-def resourceRequirementsWidget(parentClaim=None):
+def resourceRequirementsWidget(parentClaim: Optional[ResourceClaim] = None
+                               ) -> XMLContent:
     yield xhtml.h2[ 'Resource Requirements' ]
     yield ResourceRequirementsTable(parentClaim)
     yield xhtml.ul[
@@ -168,11 +186,12 @@ class ResourceRequirementsTable(Table):
 
     NONE_TEXT = '(none)'
 
-    def __init__(self, parentClaim=None):
+    def __init__(self, parentClaim: Optional[ResourceClaim] = None):
         super().__init__()
         self.__parentClaim = parentClaim
 
-    def iterRows(self, *, proc, **kwargs):
+    def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
+        proc = cast(PageProcessor, kwargs['proc'])
         nonFixedResTypeNames = sorted(
             set(resTypeDB.keys()) - {taskRunnerResourceTypeName}
             )
@@ -181,8 +200,11 @@ class ResourceRequirementsTable(Table):
             nonFixedResTypeNames
             ]
 
-        # reqMap: type -> ref -> (inherited, caps)*
-        reqMap = defaultdict(lambda: defaultdict(list))
+        # pylint: disable=line-too-long
+        reqMap = defaultdict(
+            lambda: defaultdict(list)
+            ) # type: DefaultDict[str, DefaultDict[str, List[Tuple[bool, List[str]]]]]
+              #       type -> ref -> (inherited, caps)*
         parentClaim = self.__parentClaim
         if parentClaim is not None:
             for spec in parentClaim:
@@ -191,7 +213,7 @@ class ResourceRequirementsTable(Table):
                 reqMap[resType][ref].append(
                     (True, sorted(spec.capabilities))
                     )
-        args = proc.args
+        args = cast(_ResourceRequirementsArgs, proc.args)
         for ref, resType, caps in zip(args.ref, args.type, args.caps):
             reqMap[resType][ref].append(
                 (False, sorted(caps.split()))
@@ -208,11 +230,11 @@ class ResourceRequirementsTable(Table):
                     typeControl = (
                         resTypeDB[resType].presentationName,
                         hiddenInput(name='type', value=resType)
-                        )
+                        ) # type: XMLContent
                     refControl = (
                         xhtml.span(class_='var')[ref],
                         hiddenInput(name='ref', value=ref)
-                        )
+                        ) # type: XMLContent
                 else:
                     # User can edit type and reference.
                     typeControl = resWidget(selected=resType)
@@ -220,7 +242,7 @@ class ResourceRequirementsTable(Table):
 
                 if inherited:
                     capsControl = _CapabilitiesTable.instance.present(
-                        proc=proc, resType=resType, capMap=capMap, **kwargs
+                        resType=resType, capMap=capMap, **kwargs
                         )
                 else:
                     capsControl = _capsInput(value=' '.join(capMap[False]))
@@ -230,7 +252,7 @@ class ResourceRequirementsTable(Table):
         # Empty entry at the end.
         yield resWidget(selected=''), _refInput(value=''), _capsInput(value='')
 
-    def present(self, **kwargs):
+    def present(self, **kwargs: object) -> XMLContent:
         yield super().present(**kwargs)
         yield rowManagerInstanceScript(bodyId=self.bodyId).present(**kwargs)
 
@@ -241,7 +263,9 @@ class _CapabilitiesTable(Table):
     columns = None, None
     style = 'hollow'
 
-    def iterRows(self, *, resType, capMap, **kwargs):
+    def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
+        resType = cast(str, kwargs['resType'])
+        capMap = cast(Mapping[bool, List[str]], kwargs['capMap'])
         yield 'inherited:\u00A0', presentCapabilities(
             capMap.get(True, []), resType
             )
@@ -249,8 +273,8 @@ class _CapabilitiesTable(Table):
             value=' '.join(capMap.get(False, [])), size=51
             )
 
-def validateResourceRequirementsState(proc):
-    args = proc.args
+def validateResourceRequirementsState(proc: PageProcessor) -> None:
+    args = cast(_ResourceRequirementsArgs, proc.args)
 
     filteredRef, filteredType, filteredCaps = [], [], []
     for ref, resType, caps in zip(args.ref, args.type, args.caps):
@@ -269,7 +293,8 @@ class InlineResourcesTable(Table):
     columns = None, None, None
     style = 'hollow'
 
-    def iterRows(self, *, claim, **kwargs):
+    def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
+        claim = cast(ResourceClaim, kwargs['claim'])
         for spec in claim:
             ref = spec.reference
             resType = spec.typeName
