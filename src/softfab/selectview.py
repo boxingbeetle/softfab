@@ -1,7 +1,11 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from abc import ABC
-from typing import ClassVar, Iterator
+from itertools import chain
+from typing import (
+    TYPE_CHECKING, Callable, ClassVar, Generic, Iterable, Iterator, List,
+    MutableSet, Optional, Sequence, Tuple, TypeVar, cast
+)
 
 from softfab.Page import Redirect
 from softfab.databaselib import Database
@@ -11,20 +15,20 @@ from softfab.formlib import (
 )
 from softfab.pageargs import ArgsCorrected, PageArgs, SetArg, StrArg
 from softfab.querylib import CustomFilter, runQuery
-from softfab.selectlib import TagCache
+from softfab.selectlib import SelectableRecord, TagCache
 from softfab.utils import abstract
 from softfab.webgui import (
     Column, Table, addRemoveStyleScript, cell, hgroup, pageLink, pageURL,
     preserveSpaces, script
 )
-from softfab.xmlgen import txt, xhtml
+from softfab.xmlgen import XML, XMLContent, XMLNode, txt, xhtml
 
 
 class TagArgs(PageArgs):
     tagkey = StrArg(None)
     tagvalue = StrArg(None)
 
-def textToValues(text):
+def textToValues(text: str) -> MutableSet[str]:
     '''Splits a comma separated text into a value set.
     '''
     return set(
@@ -33,7 +37,7 @@ def textToValues(text):
         if value
         )
 
-def valuesToText(values):
+def valuesToText(values: Iterable[str]) -> str:
     return ', '.join(sorted(values))
 
 _selectScript1 = script[
@@ -108,20 +112,26 @@ class SelectArgs(PageArgs):
     # Basket form: basket contents when form was generated.
     sel = SetArg()
 
-class BasketArgs(SelectArgs):
+class BasketArgs(TagArgs, SelectArgs):
     # Items selected in the basket.
     bsk = SetArg()
     # Identifies the submit button that was used.
     action = StrArg(None)
 
-class SelectProcMixin(ABC):
-    tagCache = abstract # type: ClassVar[TagCache]
-    db = abstract # type: ClassVar[Database]
+BasketArgsT = TypeVar('BasketArgsT', bound=BasketArgs)
 
-    def iterActions(self):
+class SelectProcMixin(Generic[BasketArgsT, SelectableRecord]):
+    tagCache = abstract # type: ClassVar[TagCache]
+    db = abstract # type: Database[SelectableRecord]
+
+    if TYPE_CHECKING:
+        def __init__(self, args: BasketArgsT) -> None:
+            self.args = args
+
+    def iterActions(self) -> Iterator[Tuple[str, str, str]]:
         raise NotImplementedError
 
-    def processSelection(self):
+    def processSelection(self) -> None:
         db = self.db
         args = self.args
         tagCache = self.tagCache
@@ -184,22 +194,33 @@ class SelectProcMixin(ABC):
         self.filtered = set( record.getId() for record in filteredRecords )
         self.filteredRecords = filteredRecords
 
-    def __filterRecords(self, tagKey, tagValue):
+    def __filterRecords(self, tagKey: Optional[str], tagValue: Optional[str]
+                        ) -> Iterable[SelectableRecord]:
         if tagKey:
-            if tagValue == '':
-                recordFilter = CustomFilter(
-                    lambda record: not record.hasTagKey(tagKey)
-                    )
-            else:
+            assert tagValue is not None
+            if tagValue:
                 cvalue, dvalue_ = self.tagCache.toCanonical(tagKey, tagValue)
-                recordFilter = CustomFilter(
-                    lambda record: record.hasTagValue(tagKey, cvalue)
-                    )
+                assert cvalue is not None
+                # The cast is necessary because mypy seems to ignore
+                # the narrowed type in the parameter default value.
+                #   https://github.com/python/mypy/issues/2608
+                def valueFilter(record: SelectableRecord,
+                                tagKey: str = cast(str, tagKey),
+                                cvalue: str = cvalue
+                                ) -> bool:
+                    return record.hasTagValue(tagKey, cvalue)
+                recordFilter = CustomFilter(valueFilter)
+            else:
+                def keyFilter(record: SelectableRecord,
+                              tagKey: str = cast(str, tagKey)
+                              ) -> bool:
+                    return not record.hasTagKey(tagKey)
+                recordFilter = CustomFilter(keyFilter)
             return runQuery(( recordFilter, ), self.db)
         else:
             return self.db
 
-def _scriptButton(select, inputName = 'sel'):
+def _scriptButton(select: bool, inputName: str = 'sel') -> XMLNode:
     return xhtml.button(
         type = 'button', tabindex = 1,
         onclick = "setSelection(form, '%s', %s);" % (
@@ -207,7 +228,13 @@ def _scriptButton(select, inputName = 'sel'):
             )
         )
 
-def selectDialog(proc, formAction, tagCache, filterTable, basketTable, title):
+def selectDialog(proc: SelectProcMixin[BasketArgsT, SelectableRecord],
+                 formAction: str,
+                 tagCache: TagCache,
+                 filterTable: XMLContent,
+                 basketTable: XMLContent,
+                 title: str
+                 ) -> Iterator[XML]:
     tagKey = proc.args.tagkey
     tagValue = proc.args.tagvalue
     selected = proc.selected
@@ -224,7 +251,7 @@ def selectDialog(proc, formAction, tagCache, filterTable, basketTable, title):
         % ( proc.db.description, len(filtered), len(proc.db) )
         ]
 
-    def actionButtons():
+    def actionButtons() -> List[XMLContent]:
         return [
             submitButton(name = 'action', value = value)[ label ]
             for value, label, action_ in proc.iterActions()
@@ -243,11 +270,11 @@ def selectDialog(proc, formAction, tagCache, filterTable, basketTable, title):
                 "window.onload = function() { RowSelection('selform1'); }"
                 ],
             xhtml.p[
-                txt('\u00A0').join(
-                    [    _scriptButton(True)[ _selButtonLabel ],
-                        _scriptButton(False)[ _resButtonLabel ],
-                        ] + actionButtons()
-                    )
+                txt('\u00A0').join(chain(
+                    [ _scriptButton(True)[ _selButtonLabel ],
+                      _scriptButton(False)[ _resButtonLabel ] ],
+                    actionButtons()
+                    ))
                 ]
             ].present(
                 proc=proc,
@@ -257,7 +284,7 @@ def selectDialog(proc, formAction, tagCache, filterTable, basketTable, title):
                 )
         return
 
-    def createKeyCell(key):
+    def createKeyCell(key: str) -> XML:
         label = preserveSpaces(key) if key else '(show all)'
         if key == tagKey:
             return xhtml.td(class_ = 'navthis')[ label ]
@@ -273,15 +300,13 @@ def selectDialog(proc, formAction, tagCache, filterTable, basketTable, title):
         xhtml.tbody[
             xhtml.tr[
                 xhtml.th[ 'Tag Keys:' ],
-                ( createKeyCell(key) for key in tagKeys + [''] )
+                ( createKeyCell(key) for key in chain(tagKeys, ['']) )
                 ]
             ]
         ]
 
-    if tagKey == '':
-        valueTable = None
-    else:
-        def createTagCell(value):
+    if tagKey:
+        def createTagCell(value: str) -> XML:
             label = preserveSpaces(value) if value else '(undefined)'
             if value == tagValue:
                 return xhtml.td(class_ = 'navthis')[ label ]
@@ -299,9 +324,11 @@ def selectDialog(proc, formAction, tagCache, filterTable, basketTable, title):
                 ( xhtml.tr[ createTagCell(value) ]
                   for value in list(tagCache.getValues(tagKey)) + [''] )
                 ]
-            ]
+            ] # type: XMLContent
+    else:
+        valueTable = None
 
-    def selectedDisable(recordId):
+    def selectedDisable(recordId: str) -> Tuple[bool, bool]:
         sel = recordId in selected
         return sel, not sel
     if filtered - selected:
@@ -320,6 +347,8 @@ def selectDialog(proc, formAction, tagCache, filterTable, basketTable, title):
             disabledButton[ 'Add' ],
             ]
         setFocus = False
+    def rowStyle(record: SelectableRecord) -> Optional[str]:
+        return 'selected' if record.getId() in selected else None
     yield makeForm(
         formId = 'selform1', action = formAction, method = 'get',
         args = cleanedArgs, setFocus = setFocus
@@ -333,31 +362,31 @@ def selectDialog(proc, formAction, tagCache, filterTable, basketTable, title):
         xhtml.p[ txt('\u00A0').join(buttons) ]
         ].present(
             proc=proc,
-            getRowStyle=lambda record:
-                'selected' if record.getId() in selected else None,
+            getRowStyle=rowStyle,
             selectName='sel',
             selectFunc=selectedDisable
             )
 
     if selected:
         yield xhtml.hr
-        if title:
-            yield xhtml.h2[ title ]
+        yield xhtml.h2[ title ]
         yield xhtml.p[
             'Number of %ss in basket: %d'
              % ( proc.db.description, len(proc.selectedRecords) )
             ]
-        buttons = [
-            _scriptButton(True, 'bsk')[ _selButtonLabel ],
-            resetButton[ _resButtonLabel ],
-            submitButton(name = 'action', value = 'remove')
-            ] + actionButtons()
         yield makeForm(
             formId = 'selform2', action = formAction, method = 'get',
             args = cleanedArgs, setFocus = not setFocus
             )[
             basketTable,
-            xhtml.p[ txt('\u00A0').join(buttons) ]
+            xhtml.p[
+                txt('\u00A0').join(chain(
+                    [ _scriptButton(True, 'bsk')[ _selButtonLabel ],
+                      resetButton[ _resButtonLabel ],
+                      submitButton(name = 'action', value = 'remove') ],
+                    actionButtons()
+                    ))
+                ]
             ].present(
                 proc=proc,
                 getRowStyle=lambda record: 'selected',
@@ -402,7 +431,8 @@ class TagValueEditTable(Table, ABC):
         yield Column(self.valTitle)
         yield Column('Add Existing Value')
 
-    def iterRows(self, *, getValues, **kwargs):
+    def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
+        getValues = cast(Callable[[str], Sequence[str]], kwargs['getValues'])
         tagKeys = self.tagCache.getKeys()
         for index, key in enumerate(tagKeys):
             indexStr = str(index)
@@ -416,10 +446,10 @@ class TagValueEditTable(Table, ABC):
                     dropDownList(
                         selected='', style='width: 100%',
                         onchange = "AddTagValue('" + inputName + "', event);"
-                        )[ [''] + values ]
+                        )[ chain([''], values) ]
                     ] if values else cell
                 )
 
-    def present(self, **kwargs):
+    def present(self, **kwargs: object) -> XMLContent:
         yield self.addTagValueScript
         yield super().present(**kwargs)

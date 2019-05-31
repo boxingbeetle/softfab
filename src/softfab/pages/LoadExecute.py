@@ -10,9 +10,7 @@ from softfab.datawidgets import DataColumn, DataTable
 from softfab.formlib import checkBox
 from softfab.pageargs import IntArg, SortArg
 from softfab.projectlib import project
-from softfab.selectview import (
-    BasketArgs, SelectProcMixin, TagArgs, selectDialog
-)
+from softfab.selectview import BasketArgs, SelectProcMixin, selectDialog
 from softfab.userlib import User, checkPrivilege
 from softfab.webgui import docLink
 from softfab.xmlgen import XMLContent, xhtml
@@ -78,13 +76,13 @@ class LoadExecute_GET(FabPage['LoadExecute_GET.Processor',
         'ConfigDetails'
         ]
 
-    class Arguments(TagArgs, BasketArgs):
+    class Arguments(BasketArgs):
         first = IntArg(0)
         sort = SortArg()
         sort_basket = SortArg()
 
-    class Processor(PageProcessor['LoadExecute_GET.Arguments'],
-                    SelectProcMixin):
+    class Processor(PageProcessor[Arguments],
+                    SelectProcMixin[Arguments, Config]):
         tagCache = Config.cache
         db = configDB
 

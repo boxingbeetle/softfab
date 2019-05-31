@@ -101,7 +101,7 @@ class TagCache:
 
     def __init__(self,
                  items: Iterable[Selectable],
-                 getKeys: Callable[[], Iterable[str]]
+                 getKeys: Callable[[], Sequence[str]]
                  ):
         self.__getKeys = getKeys
         self.__items = items
@@ -131,7 +131,7 @@ class TagCache:
             if values:
                 self.__tags[key].update(values)
 
-    def getKeys(self) -> Iterable[str]:
+    def getKeys(self) -> Sequence[str]:
         return self.__getKeys()
 
     def getValues(self, key: str) -> Sequence[str]:
@@ -186,7 +186,7 @@ class ObservingTagCache(TagCache, RecordObserver[SelectableRecord]):
 
     def __init__(self,
                  db: Database[SelectableRecord],
-                 getKeys: Callable[[], Iterable[str]]
+                 getKeys: Callable[[], Sequence[str]]
                  ):
         TagCache.__init__(self, db, getKeys)
         RecordObserver.__init__(self)
