@@ -398,7 +398,7 @@ class Task(
         else:
             return True
 
-    def abort(self, user: Optional[User] = None) -> Tuple[bool, str]:
+    def abort(self, user: Optional[str] = None) -> Tuple[bool, str]:
         return self.getLatestRun().abort(user)
 
     def done(self,
@@ -895,7 +895,7 @@ class Job(TaskRunnerSet, TaskSet[Task], XMLTag, DatabaseElem):
         '''
         self._tasks[name].inspectDone(result, summary)
 
-    def abortTask(self, name: str, user: Optional[User] = None) -> str:
+    def abortTask(self, name: str, user: Optional[str] = None) -> str:
         """Abort the task with the given name.
         Returns a message intended for the user that describes the result.
         """
@@ -909,7 +909,7 @@ class Job(TaskRunnerSet, TaskSet[Task], XMLTag, DatabaseElem):
 
     def abortAll(self,
                  taskFilter: Callable[[Task], bool] = lambda t: True,
-                 user: Optional[User] = None
+                 user: Optional[str] = None
                  ) -> Iterable[str]:
         """Abort multiple tasks in this job.
         The given filter function is called with each task object;

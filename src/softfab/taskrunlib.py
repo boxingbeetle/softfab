@@ -417,7 +417,7 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
             nonTRClaim, 'T-' + self.getId(), whyNot
             )
 
-    def abort(self, user: Optional[User] = None) -> Tuple[bool, str]:
+    def abort(self, user: Optional[str] = None) -> Tuple[bool, str]:
         '''Attempts to abort this task.
         Returns a pair of a boolean and a message string.
         The boolean is True if this task was cancelled or marked for abortion
