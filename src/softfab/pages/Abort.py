@@ -2,8 +2,9 @@
 
 from softfab.ControlPage import ControlPage
 from softfab.Page import InvalidRequest, PageProcessor
-from softfab.joblib import jobDB
+from softfab.joblib import Task, jobDB
 from softfab.pageargs import BoolArg, PageArgs, SetArg
+from softfab.request import Request
 from softfab.response import Response
 from softfab.userlib import User, checkPrivilege
 from softfab.xmlgen import xml
@@ -21,41 +22,38 @@ class Abort_POST(ControlPage['Abort_POST.Arguments', 'Abort_POST.Processor']):
 
     class Processor(PageProcessor['Abort_POST.Arguments']):
 
-        def process(self, req, user):
+        def process(self,
+                    req: Request['Abort_POST.Arguments'],
+                    user: User
+                    ) -> None:
             jobIds = req.args.jobId
             taskNames = req.args.taskName
             onlyWaiting = req.args.onlyWaiting
 
             # Expect at least 1 jobId
             if not jobIds:
-                raise InvalidRequest('No jobId\'s given; expected at least one')
+                raise InvalidRequest('No job IDs given; expected at least one')
 
             # Validate all jobId's
             invalidJobs = [jobId for jobId in jobIds if jobId not in jobDB]
             if invalidJobs:
                 raise InvalidRequest(
-                    'Not existing jobs: %s' % ', '.join(sorted(invalidJobs))
+                    'Non-existing jobs: %s' % ', '.join(sorted(invalidJobs))
                     )
 
-            if onlyWaiting:
-                waitingFunc = lambda task: task.isWaiting()
-            else:
-                waitingFunc = lambda task: True
-
-            if taskNames:
-                nameFunc = lambda task: task.getName() in taskNames
-            else:
-                nameFunc = lambda task: True
+            def checkAbort(task: Task) -> bool:
+                if onlyWaiting and not task.isWaiting():
+                    return False
+                elif taskNames and task.getName() not in taskNames:
+                    return False
+                else:
+                    return True
 
             userName = user.name
             abortedTasks = {}
-
             for jobId in jobIds:
-                abortedTaskNames = jobDB[jobId].abortAll(
-                    lambda task: waitingFunc(task) and nameFunc(task),
-                    userName
-                    )
-                abortedTasks[jobId] = abortedTaskNames
+                job = jobDB[jobId]
+                abortedTasks[jobId] = job.abortAll(checkAbort, userName)
 
             # pylint: disable=attribute-defined-outside-init
             self.abortedTasks = abortedTasks
