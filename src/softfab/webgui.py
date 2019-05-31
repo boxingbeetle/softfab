@@ -92,15 +92,16 @@ class Container:
     '''A page element containing other page elements.
     '''
 
-    def __init__(self, contents: Iterable[XML]):
+    def __init__(self, contents: Iterable[XMLPresentable]):
         self._contents = contents
 
     def _replaceContents(
-            self: ContainerT, contents: Iterable[XML]
+            self: ContainerT, contents: Iterable[XMLPresentable]
             ) -> ContainerT:
         return self.__class__(contents)
 
-    def _adaptContentElement(self, element: XMLContent) -> Iterator[XML]:
+    def _adaptContentElement(self, element: XMLContent
+                             ) -> Iterator[XMLPresentable]:
         yield adaptToXML(element)
 
     def __getitem__(self: ContainerT, index: XMLContent) -> ContainerT:
@@ -138,7 +139,7 @@ class Container:
                 )
             )))
 
-    def _presentContents(self, **kwargs: object) -> Iterator[XML]:
+    def _presentContents(self, **kwargs: object) -> Iterator[XMLContent]:
         for element in self._contents:
             yield element.present(**kwargs)
 
@@ -148,13 +149,13 @@ class AttrContainer(Container):
     '''A container that can have attributes.
     '''
 
-    def __init__(self, contents: Iterable[XML],
+    def __init__(self, contents: Iterable[XMLPresentable],
                  attributes: Mapping[str, object]):
         super().__init__(contents)
         self._attributes = attributes
 
     def _replaceContents(
-            self: AttrContainerT, contents: Iterable[XML]
+            self: AttrContainerT, contents: Iterable[XMLPresentable]
             ) -> AttrContainerT:
         return self.__class__(contents, self._attributes)
 
@@ -827,7 +828,7 @@ RowManager.prototype.rowChanged = rowChanged;
 
 class _RowManagerInstanceScript(AttrContainer):
 
-    def _replaceContents(self, contents: Iterable[XML]) -> NoReturn:
+    def _replaceContents(self, contents: Iterable[XMLPresentable]) -> NoReturn:
         raise ValueError(
             '"rowManagerInstanceScript" does not support nested content'
             )
