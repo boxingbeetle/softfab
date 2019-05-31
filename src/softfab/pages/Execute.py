@@ -1,7 +1,9 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from enum import Enum
-from typing import TYPE_CHECKING, Iterator, Optional, Tuple, Type, cast
+from typing import (
+    TYPE_CHECKING, Iterator, List, Optional, Sequence, Tuple, Type, cast
+)
 
 from softfab.FabPage import IconModifier
 from softfab.Page import InternalError, InvalidRequest, PageProcessor, Redirect
@@ -636,7 +638,8 @@ class TargetTable(CheckBoxesTable):
     name = 'target'
     columns = ('Target', )
 
-    def iterOptions(self, **kwargs: object) -> Iterator[Tuple[str, XMLContent]]:
+    def iterOptions(self, **kwargs: object
+                    ) -> Iterator[Tuple[str, Sequence[XMLContent]]]:
         for target in sorted(project.getTargets()):
             yield target, ( target, )
 
@@ -644,7 +647,8 @@ class NotifyTable(RadioTable):
     name = 'onfail'
     columns = ('Notify by email when job has finished', )
 
-    def iterOptions(self, **kwargs: object) -> Iterator[Tuple[str, XMLContent]]:
+    def iterOptions(self, **kwargs: object
+                    ) -> Iterator[Tuple[str, Sequence[XMLContent]]]:
         yield 'always', ( 'always', '\u00A0' )
         yield 'onfail', ( 'only if a task result is a warning or an error',
             '\u00A0' )
@@ -660,7 +664,8 @@ class TaskTable(CheckBoxesTable):
         if project['taskprio']:
             yield Column('Priority')
 
-    def iterOptions(self, **kwargs: object) -> Iterator[Tuple[str, XMLContent]]:
+    def iterOptions(self, **kwargs: object
+                    ) -> Iterator[Tuple[str, Sequence[XMLContent]]]:
         proc = cast(Execute_POST.Processor, kwargs['proc'])
         prio = cast(DictArgInstance[int], proc.args.prio)
 
@@ -680,7 +685,7 @@ class TaskTable(CheckBoxesTable):
                 ):
             for taskId in taskIds:
                 task = taskDefDB[taskId]
-                cells = [ taskId, task.getTitle() ]
+                cells = [ taskId, task.getTitle() ] # type: List[XMLContent]
                 if project['taskprio']:
                     cells.append(
                         textInput(
@@ -700,7 +705,8 @@ class TaskRunnerSelectionTable(CheckBoxesTable):
     name = 'runners'
     columns = 'Task Runner',
 
-    def iterOptions(self, **kwargs: object) -> Iterator[Tuple[str, XMLContent]]:
+    def iterOptions(self, **kwargs: object
+                    ) -> Iterator[Tuple[str, Sequence[XMLContent]]]:
         proc = cast(Execute_POST.Processor, kwargs['proc'])
 
         taskCapsList = []
