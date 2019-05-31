@@ -137,14 +137,20 @@ class SelectProcMixin(ABC):
                         page, SelectArgs(sel = selected)
                         ))
 
-        tagKey = None
+        # Determine tag key to filter by.
+        # Empty string as key shows all records (all-pass filter).
+        tagKey = args.tagkey
         tagKeys = tagCache.getKeys()
-        if tagKeys:
-            tagKey = args.tagkey
-            if tagKey is None or not (tagKey == '' or tagKey in tagKeys):
-                tagKey = tagKeys[0]
+        if tagKey and tagKey not in tagKeys:
+            # Drop non-existing key.
+            tagKey = None
+        if tagKey is None and tagKeys:
+            # Pick default key.
+            tagKey = tagKeys[0]
 
-        tagValue = None
+        # Determine tag value to filter by.
+        # Empty string as value shows records that are not tagged
+        # with the given tag key.
         if tagKey:
             tagValue = args.tagvalue
             if tagValue:
@@ -152,44 +158,46 @@ class SelectProcMixin(ABC):
                     # Known tag, use display value.
                     _, tagValue = tagCache.toCanonical(tagKey, tagValue)
                 else:
+                    # Drop non-existing value.
                     tagValue = None
             if tagValue is None:
                 tagValues = tagCache.getValues(tagKey)
                 if tagValues:
+                    # Pick default value.
                     tagValue = tagValues[0]
                 else:
+                    # Nothing is tagged with this key; show untagged.
                     tagValue = ''
+        else:
+            # A value only has meaning if we have a key.
+            tagValue = None
 
-        if (selected != args.sel
-        or tagKey != args.tagkey or tagValue != args.tagvalue):
+        if (selected != args.sel or tagKey != args.tagkey
+                                 or tagValue != args.tagvalue):
             raise ArgsCorrected(args,
-                sel = selected, tagkey = tagKey, tagvalue = tagValue
-                )
+                                sel=selected, tagkey=tagKey, tagvalue=tagValue)
 
-        filteredRecords = self.filterRecords()
+        filteredRecords = self.__filterRecords(tagKey, tagValue)
 
         self.selected = selected
         self.selectedRecords = [ db[recordId] for recordId in selected ]
         self.filtered = set( record.getId() for record in filteredRecords )
         self.filteredRecords = filteredRecords
 
-    def filterRecords(self):
-        tagKey = self.args.tagkey
-        tagValue = self.args.tagvalue
-        tagCache = self.tagCache
-        if len(tagCache.getKeys()) == 0 or tagKey == '':
-            return self.db
-        else:
+    def __filterRecords(self, tagKey, tagValue):
+        if tagKey:
             if tagValue == '':
                 recordFilter = CustomFilter(
                     lambda record: not record.hasTagKey(tagKey)
                     )
             else:
-                cvalue, dvalue_ = tagCache.toCanonical(tagKey, tagValue)
+                cvalue, dvalue_ = self.tagCache.toCanonical(tagKey, tagValue)
                 recordFilter = CustomFilter(
                     lambda record: record.hasTagValue(tagKey, cvalue)
                     )
             return runQuery(( recordFilter, ), self.db)
+        else:
+            return self.db
 
 def _scriptButton(select, inputName = 'sel'):
     return xhtml.button(
