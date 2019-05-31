@@ -4,6 +4,8 @@
 The Design page containing the execution graph(s).
 '''
 
+from typing import Sized, Tuple
+
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
 from softfab.graphview import (
@@ -11,6 +13,7 @@ from softfab.graphview import (
     createLegend, iterConnectedExecutionGraphs
 )
 from softfab.pageargs import PageArgs, StrArg
+from softfab.request import Request
 from softfab.userlib import User, checkPrivilege
 from softfab.webgui import docLink, pageLink
 from softfab.xmlgen import XMLContent, xhtml
@@ -31,7 +34,10 @@ class Design_GET(
 
     class Processor(PageProcessor['Design_GET.Arguments']):
 
-        def process(self, req, user):
+        def process(self,
+                    req: Request['Design_GET.Arguments'],
+                    user: User
+                    ) -> None:
             orphanProducts = set()
             orphanFrameworks = set()
             nonTrivialGraphs = []
@@ -44,11 +50,11 @@ class Design_GET(
                     orphanFrameworks.add(frameworkIds.pop())
                 else:
                     nonTrivialGraphs.append((productIds, frameworkIds))
+            def keyFunc(productAndFrameworkIds: Tuple[Sized, ...]) -> int:
+                return sum(len(ids) for ids in productAndFrameworkIds)
             graphNodes = sorted(
                 nonTrivialGraphs,
-                key = lambda productAndFrameworkIds: sum(
-                    len(ids) for ids in productAndFrameworkIds
-                    ),
+                key = keyFunc,
                 reverse = True
                 )
             if orphanFrameworks:
@@ -132,7 +138,9 @@ class Design_GET(
                 ]
         yield xhtml.p[
             'For help please read the documentation about the ',
-            docLink('/introduction/execution-graph/')[ 'Execution Graph' ], ', ',
+            docLink('/introduction/execution-graph/')[
+                'Execution Graph'
+                ], ', ',
             docLink('/introduction/framework-and-task-definitions/')[
                 'Framework and Task Definitions'
                 ], ' or ',
