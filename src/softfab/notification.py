@@ -9,6 +9,7 @@ that happened in the SoftFab (e.g. Job complete or Job failed).
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import formatdate
+from typing import Iterator, Tuple
 import logging
 import re
 
@@ -27,13 +28,26 @@ except ImportError:
 
 _reAddressSep = re.compile(r'[\s,;]+')
 
-def sendNotification(locator, presenter, *presenterArgs):
+class NotificationPresenter:
+    """Interface for generating notification messages."""
+
+    @property
+    def singleLineSummary(self) -> str:
+        raise NotImplementedError
+
+    def keyValue(self) -> Iterator[Tuple[str, str]]:
+        """Generates key-value pairs which give an overview of the most
+        important properties of a job.
+        This is used to create easily parseable files for external processes,
+        such as mail filters.
+        """
+        raise NotImplementedError
+
+def sendNotification(locator, presenter):
     '''Sends a notification about some event that happened in the SoftFab.
     The locator specifies how the message should be sent: the protocol and
     the recipient. The presenter is used to create the message body.
     Depending on the protocol, different presenter methods will be called.
-    Each presenter method is passed the presenterArgs, that define which
-    data should be presented.
     The presentation is constructed before this method returns, to ensure
     the data being presented is from the moment the event happened.
     The notification is sent asynchronously.
@@ -46,7 +60,7 @@ def sendNotification(locator, presenter, *presenterArgs):
 
         def createPlaintextContent():
             yield 'SoftFab\n'
-            for key, value in presenter.keyValue(*presenterArgs):
+            for key, value in presenter.keyValue():
                 if key is None:
                     yield ''
                 else:
@@ -58,16 +72,14 @@ def sendNotification(locator, presenter, *presenterArgs):
             yield '<HEAD></HEAD>'
             yield '<BODY>'
             yield '<H3>SoftFab notification email</H3>'
-            yield '<B>%s</B>' % ''.join(
-                presenter.singleLineSummary(*presenterArgs)
-                )
-            for key, value in presenter.keyValue(*presenterArgs):
+            yield '<B>%s</B>' % presenter.singleLineSummary
+            for key, value in presenter.keyValue():
                 if key is None:
                     yield ''
                 elif key == 'URL':
                     yield '<P>%s</P>' % value
             yield '<TABLE border="1" style="margin:4px 10px;" summary="tasks">'
-            for key, value in presenter.keyValue(*presenterArgs):
+            for key, value in presenter.keyValue():
                 if key is None:
                     yield ''
                 elif key.endswith('name'):
@@ -80,9 +92,7 @@ def sendNotification(locator, presenter, *presenterArgs):
             yield '</BODY></HTML> '
 
         messageStr = MIMEMultipart('alternative')
-        messageStr["Subject"] = ''.join(
-            presenter.singleLineSummary(*presenterArgs)
-            )
+        messageStr["Subject"] = presenter.singleLineSummary
         textpart = MIMEText('\n '.join(createPlaintextContent()), 'plain')
         htmlpart = MIMEText('\n '.join(createHTMLContent()), 'html')
         messageStr.attach(textpart)

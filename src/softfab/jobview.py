@@ -12,7 +12,7 @@ from softfab.datawidgets import (
     DataColumn, DataTable, DurationColumn, TimeColumn
 )
 from softfab.joblib import Job, Task, jobDB
-from softfab.notification import sendNotification
+from softfab.notification import NotificationPresenter, sendNotification
 from softfab.pagelinks import createJobURL
 from softfab.projectlib import project
 from softfab.resultcode import ResultCode
@@ -223,21 +223,26 @@ class CommentPanel(Panel):
     def presentContent(self, **kwargs: object) -> XMLContent:
         return xhtml.br.join(self.lines)
 
-class _JobOverviewPresenter:
+class _JobOverviewPresenter(NotificationPresenter):
 
-    def singleLineSummary(self, jobId: str) -> str:
-        job = jobDB[jobId]
+    def __init__(self, job: Job):
+        self.__job = job
+
+    @property
+    def singleLineSummary(self) -> str:
+        job = self.__job
         return 'Job Complete: %s (%s)' % (
             getJobStatus(job), job.getDescription()
             )
 
-    def keyValue(self, jobId: str) -> Iterator[Tuple[str, str]]:
+    def keyValue(self) -> Iterator[Tuple[str, str]]:
         '''Generates key-value pairs which give an overview of the most
         important properties of a job.
         This is used to create easily parseable files for external processes,
         such as mail filters.
         '''
-        job = jobDB[jobId]
+        job = self.__job
+        jobId = job.getId()
         yield 'Id', jobId
         yield 'URL', rootURL + createJobURL(jobId)
         for key, value in job.getParams().items():
@@ -249,12 +254,6 @@ class _JobOverviewPresenter:
                 yield prefix + prop, str(taskRun[prop] or 'unknown')
 
 class _JobNotificationObserver(RecordObserver):
-
-    def __init__(self) -> None:
-        RecordObserver.__init__(self)
-        # TODO: Create a new presenter for each presentation and remove the
-        #       jobId from the interface?
-        self.presenter = _JobOverviewPresenter()
 
     def added(self, record: Job) -> None:
         pass
@@ -268,10 +267,11 @@ class _JobNotificationObserver(RecordObserver):
         if locator is not None:
             mode = params.get('notify-mode', 'always')
             if mode == 'always' or (
-                mode == 'onfail' and
-                record.getFinalResult() is not ResultCode.OK
-                ) or (mode == 'onerror' and
-                record.getFinalResult() is ResultCode.ERROR):
-                sendNotification(locator, self.presenter, record.getId())
+                    mode == 'onfail' and
+                        record.getFinalResult() is not ResultCode.OK) or (
+                    mode == 'onerror' and
+                        record.getFinalResult() is ResultCode.ERROR
+                    ):
+                sendNotification(locator, _JobOverviewPresenter(record))
 
 resultlessJobs.addObserver(_JobNotificationObserver())
