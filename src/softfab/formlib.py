@@ -730,7 +730,7 @@ class RadioTable(Table):
     def formatOption(self,
                      box: XML,
                      cells: Sequence[XMLContent]
-                     ) -> Sequence[XMLContent]:
+                     ) -> XMLContent:
         '''Formats the given `box` and `cells` into row contents.
         The default implementation puts the radio box into the first column
         with the entire first cell as its label and puts the other cells in

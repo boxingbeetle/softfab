@@ -2,7 +2,8 @@
 
 from enum import Enum
 from typing import (
-    TYPE_CHECKING, Iterator, List, Optional, Sequence, Tuple, Type, cast
+    TYPE_CHECKING, AbstractSet, Dict, Iterable, Iterator, List, Mapping,
+    Optional, Sequence, Tuple, Type, cast
 )
 
 from softfab.FabPage import IconModifier
@@ -35,7 +36,7 @@ from softfab.userlib import (
     AccessDenied, User, checkPrivilege, checkPrivilegeForOwned
 )
 from softfab.webgui import Column, Table, cell
-from softfab.xmlgen import XMLContent, xhtml
+from softfab.xmlgen import XML, XMLContent, xhtml
 
 
 class TargetStep(DialogStep):
@@ -392,7 +393,7 @@ class ExecuteProcessorMixin:
             self.user = cast(User, None)
 
     def iterTasks(self) -> Iterator[Task]:
-        args = cast(Execute_POST.Arguments, self.args) # type: ignore
+        args = cast(Execute_POST.Arguments, getattr(self, 'args'))
         for taskId in args.tasks:
             taskDef = taskDefDB[taskId]
             taskParams = {}
@@ -413,7 +414,7 @@ class ExecuteProcessorMixin:
     def iterTaskRunners(self) -> Iterator[TaskRunner]:
         """Iterate through the Task Runners that match our targets.
         """
-        args = cast(Execute_POST.Arguments, self.args) # type: ignore
+        args = cast(Execute_POST.Arguments, getattr(self, 'args'))
         targets = args.target
         if targets:
             for runner in iterTaskRunners():
@@ -424,9 +425,9 @@ class ExecuteProcessorMixin:
 
     def getConfig(self) -> Config:
         if self.__config is None:
-            args = cast(Execute_POST.Arguments, self.args) # type: ignore
+            args = cast(Execute_POST.Arguments, getattr(self, 'args'))
 
-            jobParams = {}
+            jobParams = {} # type: Dict[str, str]
             if args.notify:
                 jobParams['notify'] = 'mailto:' + args.notify
                 if args.onfail:
@@ -631,7 +632,8 @@ class Execute_POST(ExecuteBase):
                 tagvalues = tagvalues,
                 )
 
-    class Processor(ExecuteProcessorMixin, ContinuedDialogProcessor):
+    class Processor(ExecuteProcessorMixin,
+                    ContinuedDialogProcessor[Arguments]):
         pass
 
 class TargetTable(CheckBoxesTable):
@@ -724,15 +726,15 @@ class TaskRunnerSelectionTable(CheckBoxesTable):
 
         # Are there tasks with non-empty required capability set?
         if len(taskCapsList[0]) > 0:
-            def capsMatch(runner):
+            def capsMatch(runner: TaskRunner) -> bool:
                 trCaps = runner.capabilities
-                if not requiredCaps.issubset(trCaps):
+                if requiredCaps > trCaps:
                     return False
                 trCapsLen = len(trCaps)
                 for caps in taskCapsList:
                     if len(caps) > trCapsLen:
                         return False
-                    elif caps.issubset(trCaps):
+                    elif caps <= trCaps:
                         return True
                 return False
             taskRunners = (
@@ -775,7 +777,12 @@ class ParamTable(ParamOverrideTable):
 class TaskRunnersTable(Table):
     columns = 'Task', 'Task Runners'
 
-    def iterRows(self, *, config, taskRunners, runnersPerTask, **kwargs):
+    def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
+        config = cast(Config, kwargs['config'])
+        taskRunners = cast(Iterable[TaskRunner], kwargs['taskRunners'])
+        runnersPerTask = cast(
+            Mapping[str, AbstractSet[str]], kwargs['runnersPerTask']
+            )
         for item in config.getTaskGroupSequence():
             caps = item.getNeededCaps()
             if isinstance(item, TaskGroup):
@@ -784,7 +791,7 @@ class TaskRunnersTable(Table):
                 tasks = (item,)
             runners = [
                 runner.getId() for runner in taskRunners
-                if caps.issubset(runner.capabilities)
+                if caps <= runner.capabilities
                 ]
             taskName = tasks[0].getName()
             listBox = selectionList(
@@ -801,7 +808,7 @@ class ActionTable(RadioTable):
     name = 'action'
     columns = ('Execute now or Save', )
 
-    def iterOptions(self, **kwargs):
+    def iterOptions(self, **kwargs: object) -> Iterator[Sequence[XMLContent]]:
         # The onchange event handlers are there to make sure the right
         # radio button is activated when text is pasted into an edit
         # box from the context menu (right mouse button).
@@ -815,6 +822,9 @@ class ActionTable(RadioTable):
             )
         yield Actions.TAGS, 'Save configuration', None
 
-    def formatOption(self, box, cells):
+    def formatOption(self,
+                     box: XML,
+                     cells: Sequence[XMLContent]
+                     ) -> XMLContent:
         label, rest = cells
-        yield xhtml.label[box, ' ', label] + rest
+        return xhtml.label[box, ' ', label] + rest
