@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Mapping, Optional, cast
+from typing import Mapping, Optional
 from urllib.parse import urlparse
 import time
 
@@ -104,7 +104,7 @@ class ProjectEdit_POST(ProjectEditBase):
                 'reqtag': args.reqtag,
                 'embed': args.embed,
                 'embedcustom': args.embedcustom,
-                'version': cast(str, oldElement['version']),
+                'version': oldElement.dbVersion,
                 } )
             element.setTargets(args.targets.split())
             element.setTagKeys(

@@ -64,7 +64,7 @@ class StatusTable(Table):
         yield 'Up since', (
             formatTime(getBootTime())
             )
-        dbVersion = project['version']
+        dbVersion = project.dbVersion
         yield 'Database version', (
             dbVersion
             if parseVersion(dbVersion)[:2] == parseVersion(softFabVersion)[:2]

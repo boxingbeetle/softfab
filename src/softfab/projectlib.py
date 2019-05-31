@@ -236,6 +236,11 @@ class Project(XMLTag, SingletonElem):
         self._properties['anonguest'] = bool(enabled)
         self._notify()
 
+    @property
+    def dbVersion(self) -> str:
+        """SoftFab version at which the database was last migrated."""
+        return cast(str, self._properties['version'])
+
     def updateVersion(self) -> None:
         '''Indicates that the database format is up-to-date.
         Used by "upgrade.py" to save version of the last upgrade.
