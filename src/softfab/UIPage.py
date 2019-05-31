@@ -11,7 +11,7 @@ from softfab.request import Request
 from softfab.response import Response
 from softfab.timelib import getTime
 from softfab.timeview import formatTime
-from softfab.version import version
+from softfab.version import VERSION
 from softfab.xmlgen import XML, XMLContent, XMLNode, xhtml
 
 _logoIcon = styleRoot.addIcon('SoftFabLogo')
@@ -166,7 +166,7 @@ class UIPage(Generic[ProcT]):
                 formatTime(getTime())
                 ],
             xhtml.div(class_ = 'logo')[
-                xhtml.a(href = 'About', title = 'SoftFab %s' % version)[
+                xhtml.a(href = 'About', title = 'SoftFab %s' % VERSION)[
                     _logoIcon.present(proc=proc)
                     ]
                 ]

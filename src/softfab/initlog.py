@@ -5,7 +5,7 @@ import os
 import os.path
 
 from softfab.config import dbDir, loggingLevel
-from softfab.version import version
+from softfab.version import VERSION
 
 
 def _convertLoggingLevel(level):
@@ -29,4 +29,4 @@ logging.basicConfig(
     filename = dbDir + '/cc-log.txt', filemode = 'a'
     )
 
-logging.info('> > Control Center startup, version %s', version)
+logging.info('> > Control Center startup, version %s', VERSION)

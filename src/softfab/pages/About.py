@@ -11,7 +11,7 @@ from softfab.projectlib import getBootTime, project
 from softfab.timeview import formatTime
 from softfab.userlib import User
 from softfab.utils import parseVersion
-from softfab.version import version as softFabVersion
+from softfab.version import VERSION as softFabVersion
 from softfab.webgui import Table, docLink
 from softfab.xmlgen import XMLContent, xhtml
 

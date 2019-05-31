@@ -8,7 +8,7 @@ from softfab.projectlib import getBootTime, project
 from softfab.response import Response
 from softfab.timeview import formatTimeAttr
 from softfab.userlib import User, checkPrivilege, privileges
-from softfab.version import version
+from softfab.version import VERSION
 from softfab.xmlgen import xml
 
 
@@ -33,7 +33,7 @@ class GetFactoryInfo_GET(ControlPage[ControlPage.Arguments,
             xml.factory(
                 name = project.name,
                 url = rootURL,
-                version = version,
+                version = VERSION,
                 boottime = formatTimeAttr(getBootTime()),
                 timezone = project.timezone,
                 )[

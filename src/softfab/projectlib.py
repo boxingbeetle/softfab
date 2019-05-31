@@ -19,7 +19,7 @@ from softfab.databaselib import (
 from softfab.timelib import getTime
 from softfab.userlib import AnonGuestUser, UnknownUser, User, userDB
 from softfab.utils import cachedProperty
-from softfab.version import version
+from softfab.version import VERSION
 from softfab.xmlbind import XMLTag
 from softfab.xmlgen import XMLAttributeValue, XMLContent, xml
 
@@ -240,7 +240,7 @@ class Project(XMLTag, SingletonElem):
         '''Indicates that the database format is up-to-date.
         Used by "upgrade.py" to save version of the last upgrade.
         '''
-        self._properties['version'] = version
+        self._properties['version'] = VERSION
         self._notify()
 
     def _getContent(self) -> XMLContent:
