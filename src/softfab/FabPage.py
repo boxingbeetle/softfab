@@ -240,7 +240,7 @@ class LinkBar(Widget):
             ) -> Optional[XMLNode]:
         page = cast(FabPage, proc.page)
         pageInfo = page.getPageInfo(pageName)
-        description = pageInfo[infoKey]
+        description = cast(Union[str, bool, None], pageInfo[infoKey])
         if description is False:
             return None
         url = page.getPageURL(proc.req, pageName)
@@ -248,7 +248,7 @@ class LinkBar(Widget):
             return None
         icon = pageInfo['icon'].present(proc=proc)
 
-        iconModifier = pageInfo['iconModifier']
+        iconModifier = cast(IconModifier, pageInfo['iconModifier'])
         iconStyle = ['navicon']
         if iconModifier is IconModifier.NEW:
             iconStyle.append('newicon')
@@ -297,5 +297,6 @@ class LinkBar(Widget):
             if button is not None:
                 yield button
 
-    def present(self, *, proc, **kwargs):
+    def present(self, **kwargs: object) -> XMLContent:
+        proc = cast(PageProcessor, kwargs['proc'])
         return xhtml.div(class_ = 'linkbar')[ self.__presentButtons(proc) ]
