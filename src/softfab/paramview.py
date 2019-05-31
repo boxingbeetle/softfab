@@ -2,7 +2,8 @@
 
 from enum import Enum
 from typing import (
-    Dict, Iterable, Iterator, Mapping, Optional, Set, Tuple, cast
+    TYPE_CHECKING, Dict, Iterable, Iterator, Mapping, Optional, Set, Tuple,
+    cast
 )
 import re
 
@@ -38,13 +39,14 @@ class ParamArgsMixin:
 
 class _ParamArgs:
     """Helper class for type checking."""
-    params = Dict[str, str]()
-    values = Dict[str, str]()
-    final = Dict[str, bool]()
-    poverride = Dict[str, bool]()
-    summary = SummaryType.INHERIT
-    summaryfile = ''
-    summarydir = ''
+    if TYPE_CHECKING:
+        params = Dict[str, str]()
+        values = Dict[str, str]()
+        final = Dict[str, bool]()
+        poverride = Dict[str, bool]()
+        summary = SummaryType.INHERIT
+        summaryfile = ''
+        summarydir = ''
 
 def _namePresentation(name: str) -> str:
     if name == 'sf.summary':
