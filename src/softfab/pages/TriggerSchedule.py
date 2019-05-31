@@ -3,6 +3,7 @@
 from softfab.ControlPage import ControlPage
 from softfab.Page import InvalidRequest, PageProcessor
 from softfab.pageargs import PageArgs, StrArg
+from softfab.request import Request
 from softfab.response import Response
 from softfab.schedulelib import scheduleDB
 from softfab.userlib import User, checkPrivilege, checkPrivilegeForOwned
@@ -17,7 +18,10 @@ class TriggerSchedule_POST(ControlPage['TriggerSchedule_POST.Arguments',
 
     class Processor(PageProcessor['TriggerSchedule_POST.Arguments']):
 
-        def process(self, req, user):
+        def process(self,
+                    req: Request['TriggerSchedule_POST.Arguments'],
+                    user: User
+                    ) -> None:
             scheduleId = req.args.scheduleId
             try:
                 schedule = scheduleDB[scheduleId]
