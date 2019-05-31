@@ -1,11 +1,13 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from platform import python_version
+from typing import Iterator, cast
 
 from passlib import __version__ as passlibVersion
 from twisted import __version__ as twistedVersion
 
 from softfab.FabPage import FabPage
+from softfab.Page import PageProcessor
 from softfab.notification import sendmail
 from softfab.projectlib import getBootTime, project
 from softfab.timeview import formatTime
@@ -60,7 +62,7 @@ class About_GET(FabPage[FabPage.Processor, FabPage.Arguments]):
 class StatusTable(Table):
     columns = None, None
 
-    def iterRows(self, **kwargs):
+    def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
         yield 'Up since', (
             formatTime(getBootTime())
             )
@@ -76,7 +78,7 @@ class StatusTable(Table):
 class InstallationTable(Table):
     columns = None, None
 
-    def iterRows(self, **kwargs):
+    def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
         yield 'SoftFab version:', softFabVersion
         yield 'Twisted version:', twistedVersion
         yield 'twisted.mail package:', (
@@ -90,7 +92,8 @@ class InstallationTable(Table):
 class BrowserTable(Table):
     columns = None, None
 
-    def iterRows(self, *, proc, **kwargs):
+    def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
+        proc = cast(PageProcessor, kwargs['proc'])
         userAgent = proc.req.userAgent
         yield 'Browser:', userAgent.family or 'unknown'
         versionTuple = userAgent.version
