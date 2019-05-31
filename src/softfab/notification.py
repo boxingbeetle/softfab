@@ -6,18 +6,24 @@ It can be used to send certain recipients an email about a certain event
 that happened in the SoftFab (e.g. Job complete or Job failed).
 '''
 
+from email.message import Message
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import formatdate
-from typing import Iterator, Tuple
+from typing import Iterable, Iterator, Tuple
 import logging
 import re
+
+from twisted.internet.defer import Deferred
+from twisted.python.failure import Failure
 
 from softfab.projectlib import project
 from softfab.utils import IllegalStateError
 
 # The twisted.mail package wasn't ported to Python 3 until Twisted 17.x.
 try:
+    # pylint: disable=useless-suppression
+    # pylint: disable=ungrouped-imports
     from twisted.mail.smtp import sendmail
 except ImportError:
     logging.error(
@@ -25,6 +31,7 @@ except ImportError:
         "sending notifcation e-mails won't work"
         )
     sendmail = None
+
 
 _reAddressSep = re.compile(r'[\s,;]+')
 
@@ -43,7 +50,7 @@ class NotificationPresenter:
         """
         raise NotImplementedError
 
-def sendNotification(locator, presenter):
+def sendNotification(locator: str, presenter: NotificationPresenter) -> None:
     '''Sends a notification about some event that happened in the SoftFab.
     The locator specifies how the message should be sent: the protocol and
     the recipient. The presenter is used to create the message body.
@@ -58,7 +65,7 @@ def sendNotification(locator, presenter):
         # TODO: Parse and validate address when it is input.
         recipients = _reAddressSep.split(path)
 
-        def createPlaintextContent():
+        def createPlaintextContent() -> Iterator[str]:
             yield 'SoftFab\n'
             for key, value in presenter.keyValue():
                 if key is None:
@@ -67,7 +74,7 @@ def sendNotification(locator, presenter):
                     yield '%s:\t%s' % ( key, value )
             yield '\n' # force a new-line at end of file
 
-        def createHTMLContent():
+        def createHTMLContent() -> Iterator[str]:
             yield '<HTML>'
             yield '<HEAD></HEAD>'
             yield '<BODY>'
@@ -115,11 +122,15 @@ def sendNotification(locator, presenter):
     else:
         logging.error('Unknown notification protocol "%s"', protocol)
 
-def _logMailSendFailure(failure):
+def _logMailSendFailure(failure: Failure) -> Failure:
     logging.error('Notification sending failed: %s', failure.getErrorMessage())
     return failure
 
-def _sendMailLogged(smtpRelay, mailSender, recipients, message):
+def _sendMailLogged(smtpRelay: str,
+                    mailSender: str,
+                    recipients: Iterable[str],
+                    message: Message
+                    ) -> Deferred:
     if sendmail is None:
         raise IllegalStateError('twisted.mail is not installed')
     message['From'] = mailSender
@@ -133,7 +144,7 @@ _testMailBody = '''
 This is a notification test e-mail sent by SoftFab.
 '''
 
-def sendTestMail(smtpRelay, mailSender, recipient):
+def sendTestMail(smtpRelay: str, mailSender: str, recipient: str) -> Deferred:
     message = MIMEText(_testMailBody)
     message['Subject'] = 'SoftFab notification test'
     recipients = _reAddressSep.split(recipient)
