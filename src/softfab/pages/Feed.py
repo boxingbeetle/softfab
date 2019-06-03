@@ -21,6 +21,7 @@ from softfab.pagelinks import createJobURL, createUserDetailsURL
 from softfab.projectlib import project
 from softfab.querylib import CustomFilter, KeySorter, runQuery
 from softfab.response import Response
+from softfab.taskview import taskSummary
 from softfab.timelib import getTime
 from softfab.timeview import formatDuration, formatTime
 from softfab.userlib import User, checkPrivilege
@@ -81,7 +82,7 @@ class TasksTable(Table):
                 task.getName(),
                 formatTime(task['starttime']),
                 cell(class_ = 'rightalign')[formatDuration(task.getDuration())],
-                task.getSummaryHTML(),
+                taskSummary(task),
                 task.getResult()
                 ]
 

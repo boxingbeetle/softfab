@@ -4,6 +4,8 @@ from typing import Optional, cast
 
 from softfab.joblib import Task
 from softfab.shadowlib import shadowDB
+from softfab.webgui import maybeLink
+from softfab.xmlgen import XML, xhtml
 
 
 def getTaskStatus(task: Task) -> str:
@@ -36,3 +38,7 @@ def getTaskStatus(task: Task) -> str:
         return task.getAlert() or 'busy'
     else:
         return 'idle'
+
+def taskSummary(task: Task) -> XML:
+    run = task.getLatestRun()
+    return maybeLink(run.getURL())[ run.getSummary() ]

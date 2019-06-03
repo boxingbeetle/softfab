@@ -315,15 +315,6 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
             else:
                 return 'no summary available'
 
-    def getSummaryHTML(self) -> XMLContent:
-        # TODO: This presentation method does not belong here.
-        summary = self.getSummary()
-        url = self.getURL()
-        if url:
-            return xhtml.a(href=url)[ summary ]
-        else:
-            return summary
-
     @cachedProperty
     def timeoutMins(self) -> Optional[int]:
         '''Task execution timeout in minutes, or None for never.

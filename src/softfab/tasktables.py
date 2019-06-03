@@ -16,7 +16,7 @@ from softfab.request import Request
 from softfab.resourcelib import iterTaskRunners
 from softfab.shadowlib import shadowDB
 from softfab.shadowview import getShadowRunStatus
-from softfab.taskview import getTaskStatus
+from softfab.taskview import getTaskStatus, taskSummary
 from softfab.userview import OwnerColumn
 from softfab.webgui import cell, maybeLink, pageLink
 from softfab.xmlgen import XMLContent, xhtml
@@ -37,7 +37,7 @@ class SummaryColumn(DataColumn[Task]):
     keyName = 'summary'
 
     def presentCell(self, record: Task, **kwargs: object) -> XMLContent:
-        return record.getSummaryHTML()
+        return taskSummary(record)
 
 class ExtractedColumn(DataColumn[Task]):
     label = 'Data'

@@ -331,9 +331,6 @@ class Task(
     def getProduced(self) -> List[Product]:
         return self.getLatestRun().getProduced()
 
-    def getSummaryHTML(self) -> XMLContent:
-        return self.getLatestRun().getSummaryHTML()
-
     def assign(self, taskRunner: TaskRunner) -> Optional[TaskRun]:
         taskRun = self.getLatestRun()
         if not taskRun.isWaiting():
