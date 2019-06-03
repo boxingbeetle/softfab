@@ -113,6 +113,10 @@ class FrameworkEdit_GET(FrameworkEditBase):
             overrides.update(initResourceRequirementsArgs(element))
             return overrides
 
+        def _validateState(self) -> None:
+            # Add 'sf.summary' and put parameters in the right order.
+            validateParamState(self, paramTop)
+
 class FrameworkEdit_POST(FrameworkEditBase):
 
     class Arguments(FrameworkEditArgs):
