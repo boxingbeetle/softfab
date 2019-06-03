@@ -1,33 +1,36 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Iterator
+from typing import Dict, Iterator, MutableSet, cast
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
 from softfab.datawidgets import DataColumn, DataTable
+from softfab.frameworklib import TaskDefBase
 from softfab.pageargs import ArgsCorrected, IntArg
 from softfab.pagelinks import (
     CapFilterArgs, createTaskDetailsLink, createTaskRunnerDetailsLink
 )
 from softfab.projectlib import project
-from softfab.querylib import CustomFilter
+from softfab.querylib import CustomFilter, RecordFilter
+from softfab.request import Request
 from softfab.resourcelib import ResourceBase, resourceDB
 from softfab.resourceview import presentCapabilities
 from softfab.restypelib import resTypeDB, taskRunnerResourceTypeName
 from softfab.restypeview import ResTypeTableMixin
 from softfab.taskdeflib import taskDefDB
+from softfab.typing import Collection
 from softfab.userlib import User, checkPrivilege
 from softfab.utils import ResultKeeper
 from softfab.webgui import Table, pageLink, row, vgroup
-from softfab.xmlgen import XMLContent, txt, xhtml
+from softfab.xmlgen import XMLContent, XMLNode, txt, xhtml
 
 
 class ResTypeTable(ResTypeTableMixin, Table):
 
-    def iterRows(self, *, proc, **kwargs):
-        args = proc.args
-        active = proc.args.restype
-        for value, name, desc in self.iterOptions(proc=proc, **kwargs):
+    def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
+        args = cast(CapFilterArgs, getattr(kwargs['proc'], 'args'))
+        active = args.restype
+        for value, name, desc in self.iterOptions(**kwargs):
             yield row(class_='match' if active == value else None)[
                 pageLink('Capabilities', args.override(restype=value))[
                     name
@@ -38,62 +41,76 @@ class ResTypeTable(ResTypeTableMixin, Table):
 class NameColumn(DataColumn[ResourceBase]):
     cellStyle = 'nobreak'
 
-    def presentCell(self, record, **kwargs):
+    def presentCell(self, record: ResourceBase, **kwargs: object) -> XMLContent:
         return createTaskRunnerDetailsLink(record.getId())
 
 class CapabilitiesColumn(DataColumn[ResourceBase]):
+    keyName = 'capabilities'
 
-    def presentHeader(self, **kwargs):
+    def presentHeader(self, **kwargs: object) -> XMLNode:
         return super().presentHeader(**kwargs)(style='width:62%')
 
-    def presentCell(self, record, *, proc, **kwargs):
-        args = proc.args
-        return presentCapabilities(
-            record[self.keyName],
-            args.restype,
-            lambda name, cap=args.cap: name == cap
-            )
+    def presentCell(self, record: ResourceBase, **kwargs: object) -> XMLContent:
+        args = cast(CapFilterArgs, getattr(kwargs['proc'], 'args'))
+        def highlight(name: str, cap: str = args.cap) -> bool:
+            return name == cap
+        return presentCapabilities(record.capabilities, args.restype, highlight)
 
 class ResourcesTable(DataTable[ResourceBase]):
     db = resourceDB
     columns = (
         NameColumn('Name', 'id'),
-        CapabilitiesColumn('Capabilities', 'capabilities'),
+        CapabilitiesColumn('Capabilities'),
         )
     tabOffsetField = 'first_tr'
     style = 'properties'
 
-    def iterFilters(self, proc):
-        yield CustomFilter(
-            lambda res, typeName=proc.args.restype: res.typeName == typeName
-            )
+    def iterFilters(self, proc: PageProcessor) -> Iterator[RecordFilter]:
+        def match(res: ResourceBase, typeName: str = proc.args.restype) -> bool:
+            return res.typeName == typeName
+        yield CustomFilter(match)
 
-class CapabilityColumn(DataColumn[ResourceBase]):
+# TODO: NamedTuple would be a simpler solution here, but proper
+#       type annotation support for that requires Python 3.6.
+#       Also DataColumn currently doesn't support NamedTuple.
+class CapInfo:
+    """Information about a capability's use."""
+
+    def __init__(self, capability: str):
+        self.capability = capability
+        self.taskDefIds = set() # type: MutableSet[str]
+        self.resourceIds = set() # type: MutableSet[str]
+
+    def __getitem__(self, key: str) -> object:
+        return getattr(self, key)
+
+class CapabilityColumn(DataColumn[CapInfo]):
+    keyName = 'capability'
     cellStyle = 'nobreak'
 
-    def presentCell(self, record, *, proc, **kwargs):
-        return presentCapabilities(
-            [record[self.keyName]],
-            proc.args.restype
-            )
+    def presentCell(self, record: CapInfo, **kwargs: object) -> XMLContent:
+        args = cast(CapFilterArgs, getattr(kwargs['proc'], 'args'))
+        return presentCapabilities([record.capability], args.restype)
 
-class ResourcesColumn(DataColumn[ResourceBase]):
+class ResourcesColumn(DataColumn[CapInfo]):
+    keyName = 'resourceIds'
 
-    def presentCell(self, record, **kwargs):
+    def presentCell(self, record: CapInfo, **kwargs: object) -> XMLContent:
         return txt(', ').join(
             createTaskRunnerDetailsLink(runnerId)
-            for runnerId in sorted(record['resourceIds'])
+            for runnerId in sorted(record.resourceIds)
             )
 
-class TaskDefinitionsColumn(DataColumn[ResourceBase]):
+class TaskDefinitionsColumn(DataColumn[CapInfo]):
+    keyName = 'taskDefIds'
 
-    def presentCell(self, record, **kwargs):
+    def presentCell(self, record: CapInfo, **kwargs: object) -> XMLContent:
         return txt(', ').join(
             createTaskDetailsLink(taskDefId)
-            for taskDefId in sorted(record[self.keyName])
+            for taskDefId in sorted(record.taskDefIds)
             )
 
-class CapabilitiesTable(DataTable[ResourceBase]):
+class CapabilitiesTable(DataTable[CapInfo]):
     db = None
     uniqueKeys = ('capability',)
     objectName = 'capabilities'
@@ -101,17 +118,19 @@ class CapabilitiesTable(DataTable[ResourceBase]):
     style = 'properties'
 
     columns = (
-        CapabilityColumn('Capability', 'capability'),
-        ResourcesColumn('Provided by Resources', 'taskDefIds'),
-        TaskDefinitionsColumn('Required for Tasks', 'taskDefIds'),
+        CapabilityColumn('Capability'),
+        ResourcesColumn('Provided by Resources'),
+        TaskDefinitionsColumn('Required for Tasks'),
         )
 
-    def iterRowStyles(self, rowNr, record, *, proc, **kwargs):
-        if record['capability'] == proc.args.cap:
+    def iterRowStyles(self, rowNr: int, record: CapInfo, **kwargs: object
+                      ) -> Iterator[str]:
+        args = cast(CapFilterArgs, getattr(kwargs['proc'], 'args'))
+        if record.capability == args.cap:
             yield 'match'
 
-    def getRecordsToQuery(self, proc):
-        return proc.capMap
+    def getRecordsToQuery(self, proc: PageProcessor) -> Collection[CapInfo]:
+        return cast('Capabilities_GET.Processor', proc).capMap
 
 class Capabilities_GET(FabPage['Capabilities_GET.Processor',
                                'Capabilities_GET.Arguments']):
@@ -126,18 +145,11 @@ class Capabilities_GET(FabPage['Capabilities_GET.Processor',
 
     class Processor(PageProcessor['Capabilities_GET.Arguments']):
 
-        def process(self, req, user):
+        def process(self, req: Request[CapFilterArgs], user: User) -> None:
             args = req.args
-
             typeName = args.restype
 
-            capMap = ResultKeeper(
-                lambda rcap: {
-                    'capability': rcap,
-                    'taskDefIds': set(),
-                    'resourceIds': set(),
-                    }
-                )
+            capMap = ResultKeeper(CapInfo) # type: ResultKeeper[str, CapInfo]
 
             # Always include targets, even if there are no TRs for them.
             for target in project.getTargets():
@@ -148,7 +160,7 @@ class Capabilities_GET(FabPage['Capabilities_GET.Processor',
                 for record in (taskDef, taskDef.getFramework()):
                     for spec in record.resourceClaim.iterSpecsOfType(typeName):
                         for rcap in spec.capabilities:
-                            capMap[rcap]['taskDefIds'].add(taskDefId)
+                            capMap[rcap].taskDefIds.add(taskDefId)
 
             # Determine which resources are necessary for each task.
             for resource in (
@@ -157,7 +169,7 @@ class Capabilities_GET(FabPage['Capabilities_GET.Processor',
                     ):
                 resourceId = resource.getId()
                 for cap in resource.capabilities:
-                    capMap[cap]['resourceIds'].add(resourceId)
+                    capMap[cap].resourceIds.add(resourceId)
 
             cap = args.cap
             if cap and cap not in capMap:

@@ -5,7 +5,7 @@ from codecs import getencoder
 from contextlib import contextmanager
 from itertools import islice
 from typing import (
-    IO, Any, Callable, Generic, Iterable, Iterator, List, Mapping, Match,
+    IO, Any, Callable, Dict, Generic, Iterable, Iterator, List, Match,
     Optional, Pattern, Sized, Tuple, Type, TypeVar, Union, cast
 )
 from urllib.parse import quote_plus
@@ -287,7 +287,7 @@ def pluralize(word: str, amount: Union[int, Sized]) -> str:
     #       it.
     return word if amount == 1 else (word + 's')
 
-class ResultKeeper(dict, Mapping[KT, VT]):
+class ResultKeeper(Dict[KT, VT]):
     '''A dictionary that will get missing values from a factory function.
     The factory function takes a single argument, which is the key that was
     looked up but not found in the dictionary.
