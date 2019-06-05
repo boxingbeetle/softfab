@@ -3,7 +3,7 @@
 from typing import Iterable, Iterator, Sequence
 
 from softfab.FabPage import FabPage
-from softfab.Page import InvalidRequest, PageProcessor
+from softfab.Page import PageProcessor
 from softfab.datawidgets import DataTable
 from softfab.frameworklib import frameworkDB
 from softfab.pagelinks import (
@@ -19,7 +19,7 @@ from softfab.resourceview import InlineResourcesTable
 from softfab.selectview import valuesToText
 from softfab.taskdeflib import taskDefDB
 from softfab.taskdefview import formatTimeout
-from softfab.tasktables import JobProcessorMixin, JobTaskRunsTable
+from softfab.tasktables import JobTaskRunsTable, TaskProcessorMixin
 from softfab.userlib import User, checkPrivilege
 from softfab.webgui import PropertiesTable, Widget
 from softfab.xmlgen import XMLContent, txt, xhtml
@@ -104,21 +104,10 @@ class DetailsTable(PropertiesTable):
             claim=task.resourceClaim, **kwargs
             )
 
-class TaskProcessor(JobProcessorMixin, PageProcessor[TaskIdArgs]):
+class TaskProcessor(TaskProcessorMixin, PageProcessor[TaskIdArgs]):
 
     def process(self, req: Request[TaskIdArgs], user: User) -> None:
-        self.initJob(req)
-
-        taskName = req.args.taskName
-        task = self.job.getTask(taskName)
-        if task is None:
-            raise InvalidRequest(
-                'There is no task named "%s" in job %s'
-                % (taskName, req.args.jobId)
-                )
-
-        # pylint: disable=attribute-defined-outside-init
-        self.task = task
+        self.initTask(req)
 
 class InputTable(ProductTable[TaskProcessor]):
     label = 'Input'

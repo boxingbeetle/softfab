@@ -1,13 +1,16 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from typing import Mapping, cast
+
 from softfab.ControlPage import ControlPage
 from softfab.Page import InvalidRequest, PageProcessor
-from softfab.joblib import jobDB
 from softfab.pageargs import DictArg, EnumArg, StrArg
 from softfab.pagelinks import TaskIdArgs
+from softfab.request import Request
 from softfab.response import Response
 from softfab.resultcode import ResultCode
 from softfab.resultlib import putData
+from softfab.tasktables import TaskProcessorMixin
 from softfab.userlib import User, checkPrivilege, checkPrivilegeForOwned
 from softfab.xmlgen import xml
 
@@ -20,22 +23,18 @@ class InspectDone_POST(ControlPage['InspectDone_POST.Arguments',
         summary = StrArg(None)
         data = DictArg(StrArg())
 
-    class Processor(PageProcessor['InspectDone_POST.Arguments']):
+    class Processor(TaskProcessorMixin,
+                    PageProcessor['InspectDone_POST.Arguments']):
 
-        def process(self, req, user):
+        def process(self,
+                    req: Request['InspectDone_POST.Arguments'],
+                    user: User
+                    ) -> None:
             # Fetch and check job and task.
-            jobId = req.args.jobId
-            try:
-                job = jobDB[jobId]
-            except KeyError:
-                raise InvalidRequest('Job "%s" does not exist' % jobId)
-            taskName = req.args.taskName
-            task = job.getTask(taskName)
-            if task is None:
-                raise InvalidRequest(
-                    'Job "%s" does not have a task named "%s"'
-                    % ( jobId, taskName )
-                    )
+            self.initTask(req)
+            job = self.job
+            task = self.task
+            taskName = task.getName()
             taskRun = task.getLatestRun()
             if not taskRun.isWaitingForInspection():
                 raise InvalidRequest(
@@ -54,8 +53,9 @@ class InspectDone_POST(ControlPage['InspectDone_POST.Arguments',
             checkPrivilegeForOwned(user, 't/m', job)
 
             # Store mid-level data, if any.
-            if req.args.data:
-                putData(taskName, taskRun.getId(), req.args.data)
+            data = cast(Mapping[str, str], req.args.data)
+            if data:
+                putData(taskName, taskRun.getId(), data)
 
             # Store inspection result.
             job.inspectDone(taskName, result, summary)

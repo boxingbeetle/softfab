@@ -1,11 +1,12 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from softfab.FabPage import FabPage
-from softfab.Page import PageProcessor, PresentableError
+from softfab.Page import PageProcessor
 from softfab.ReportMixin import ReportTaskArgs
-from softfab.joblib import jobDB
 from softfab.pagelinks import TaskIdArgs
+from softfab.request import Request
 from softfab.resultlib import getData, getKeys
+from softfab.tasktables import TaskProcessorMixin
 from softfab.userlib import User, checkPrivilege
 from softfab.webgui import Table, cell, pageLink
 from softfab.xmlgen import XMLContent, xhtml
@@ -19,23 +20,9 @@ class ExtractionDetails_GET(FabPage['ExtractionDetails_GET.Processor',
     class Arguments(TaskIdArgs):
         pass
 
-    class Processor(PageProcessor[TaskIdArgs]):
-
-        def process(self, req, user):
-            # pylint: disable=attribute-defined-outside-init
-            try:
-                job = jobDB[req.args.jobId]
-            except KeyError:
-                raise PresentableError(xhtml.p[
-                    'There is no job with ID ', xhtml.b[ req.args.jobId ], '.'
-                    ])
-            task = job.getTask(req.args.taskName)
-            if task is None:
-                raise PresentableError(xhtml.p[
-                    'There is task named ', xhtml.b[ req.args.taskName ],
-                    ' in job ', xhtml.b[ req.args.jobId ], '.'
-                    ])
-            self.task = task
+    class Processor(TaskProcessorMixin, PageProcessor[TaskIdArgs]):
+        def process(self, req: Request[TaskIdArgs], user: User) -> None:
+            self.initTask(req)
 
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 't/a')

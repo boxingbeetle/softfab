@@ -171,6 +171,21 @@ class JobProcessorMixin:
 
         self.job = job
 
+class TaskProcessorMixin(JobProcessorMixin):
+
+    def initTask(self, req: Request[TaskIdArgs]) -> None:
+        self.initJob(req)
+
+        taskName = req.args.taskName
+        task = self.job.getTask(taskName)
+        if task is None:
+            raise InvalidRequest(
+                'There is no task named "%s" in job %s'
+                % (taskName, req.args.jobId)
+                )
+
+        self.task = task
+
 class JobTaskRunsTable(TaskRunsTable):
     sortField = None
     tabOffsetField = None
