@@ -1,12 +1,12 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Iterator, Optional, Sequence, cast
+from typing import Iterator, Optional, cast
 
 from softfab.Page import InvalidRequest, PageProcessor
 from softfab.datawidgets import (
     DataColumn, DataTable, DurationColumn, TimeColumn
 )
-from softfab.joblib import Job, Task, jobDB
+from softfab.joblib import Task, jobDB
 from softfab.jobview import TargetColumn
 from softfab.pagelinks import (
     JobIdArgs, TaskIdArgs, createTaskInfoLink, createTaskRunnerDetailsLink
@@ -17,6 +17,7 @@ from softfab.resourcelib import iterTaskRunners
 from softfab.shadowlib import shadowDB
 from softfab.shadowview import getShadowRunStatus
 from softfab.taskview import getTaskStatus, taskSummary
+from softfab.typing import Collection
 from softfab.userview import OwnerColumn
 from softfab.webgui import cell, maybeLink, pageLink
 from softfab.xmlgen import XMLContent, xhtml
@@ -196,11 +197,8 @@ class JobTaskRunsTable(TaskRunsTable):
         keyName='priority', cellStyle='rightalign'
         )
 
-    def getRecordsToQuery(self, proc: PageProcessor) -> Sequence[Task]:
-        # Note: The table will not be displayed when the job ID is invalid,
-        #       but this method will be called at the end of processing.
-        job = cast(Job, getattr(proc, 'job'))
-        return () if job is None else job.getTaskSequence()
+    def getRecordsToQuery(self, proc: PageProcessor) -> Collection[Task]:
+        return cast(JobProcessorMixin, proc).job.getTaskSequence()
 
     def iterColumns(self, **kwargs: object) -> Iterator[DataColumn[Task]]:
         proc = cast(PageProcessor, kwargs['proc'])
