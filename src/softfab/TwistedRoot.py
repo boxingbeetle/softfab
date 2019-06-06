@@ -151,10 +151,11 @@ class PageLoader:
         self.root = root
 
     def __addPage(self, module: ModuleType, pageName: str) -> None:
+        pageNamePrefix = pageName + '_'
         pageClasses = tuple(
             cast(Type[FabResource], getattr(module, name))
             for name in dir(module)
-            if name.partition('_')[0] == pageName
+            if name.startswith(pageNamePrefix)
             )
         if not pageClasses:
             startupLogger.error(
@@ -167,7 +168,14 @@ class PageLoader:
         name = None
         root = self.root
         for pageClass in pageClasses:
-            page = pageClass()
+            try:
+                page = pageClass()
+            except Exception:
+                startupLogger.exception(
+                    'Error creating instance of page class "%s.%s"',
+                    module.__name__, pageClass.__name__
+                    )
+                continue
             page.debugSupport = root.debugSupport
             if root.anonOperator:
                 if not isinstance(page.authenticator, TokenAuthPage):
@@ -187,13 +195,7 @@ class PageLoader:
                     )
 
             className = pageClass.__name__
-            index = className.find('_')
-            if index == -1:
-                startupLogger.error(
-                    '%s does not specify HTTP method',
-                    page.Processor.__qualname__
-                    )
-                continue
+            index = className.index('_')
             base = className[ : index]
             method = className[index + 1 : ]
             assert method not in pagesByMethod

@@ -58,8 +58,7 @@ class FabPage(UIPage[ProcT], FabResource[ArgsT, ProcT], ABC):
         if fullName not in sys.modules:
             __import__(fullName)
         module = sys.modules[fullName]
-        pageClass = getattr(module, name, None) \
-            or getattr(module, name + '_GET')
+        pageClass = getattr(module, name + '_GET')
         description = pageClass.description
         linkDescription = pageClass.linkDescription
         if linkDescription is None:
