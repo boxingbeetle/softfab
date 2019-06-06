@@ -634,4 +634,4 @@ class _XHTMLNodeFactory(_XMLNodeFactory):
 xml = _XMLNodeFactory(None)
 atom = _XMLNodeFactory('http://www.w3.org/2005/Atom')
 xhtml = _XHTMLNodeFactory('http://www.w3.org/1999/xhtml')
-txt = _Text.__call__
+txt = _Text.__call__ # type: Callable[[str], XML]

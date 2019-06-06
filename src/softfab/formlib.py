@@ -338,7 +338,7 @@ class _TextArea(AttrContainer, XMLPresentable):
         name = cast(Optional[str], attributes.get('name'))
         focus = form.addControl(name, True)
 
-        contents = tuple(self._presentContents(**kwargs))
+        contents = tuple(self._presentContents(**kwargs)) # type: XMLContent
         if not contents and name is not None:
             formArgs = kwargs['formArgs']
             if formArgs is not None:

@@ -336,7 +336,7 @@ def selectDialog(proc: SelectProcMixin[BasketArgsT, SelectableRecord],
             _scriptButton(True)[ _selButtonLabel ],
             resetButton[ _resButtonLabel ],
             submitButton(name = 'action', value = 'add')
-            ]
+            ] # type: List[XMLContent]
         if not selected:
             buttons += actionButtons()
         setFocus = True
