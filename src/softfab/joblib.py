@@ -6,6 +6,7 @@ from typing import (
     TYPE_CHECKING, AbstractSet, Callable, DefaultDict, Dict, Iterable,
     Iterator, List, Mapping, MutableSet, Optional, Sequence, Tuple, Union, cast
 )
+from urllib.parse import urljoin
 import logging
 
 from softfab import frameworklib, taskdeflib, taskrunlib
@@ -330,6 +331,18 @@ class Task(
 
     def getProduced(self) -> List[Product]:
         return self.getLatestRun().getProduced()
+
+    def iterReports(self) -> Iterator[Tuple[str, str]]:
+        """Yields the reports that currently exist for this task.
+        Each report is yielded as a pair consisting of name (label) and URL.
+        """
+        run = self.getLatestRun()
+        url = run.getURL()
+        if url is not None:
+            summary = self.getParameter('sf.summary')
+            if summary:
+                yield 'Main', urljoin(url, summary)
+            yield 'Wrapper', urljoin(url, 'wrapper_log.txt')
 
     def assign(self, taskRunner: TaskRunner) -> Optional[TaskRun]:
         taskRun = self.getLatestRun()

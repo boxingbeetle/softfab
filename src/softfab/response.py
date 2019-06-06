@@ -73,6 +73,7 @@ class Response:
             'Content-Security-Policy',
             "default-src 'self'; "
             "form-action 'self'; "
+            "frame-src http: https:; "
             "script-src 'self' 'unsafe-inline'; "
             "style-src 'self' 'unsafe-inline'; "
             "frame-ancestors %s" % project.frameAncestors

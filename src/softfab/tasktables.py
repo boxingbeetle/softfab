@@ -9,7 +9,8 @@ from softfab.datawidgets import (
 from softfab.joblib import Task, jobDB
 from softfab.jobview import TargetColumn
 from softfab.pagelinks import (
-    JobIdArgs, TaskIdArgs, createTaskInfoLink, createTaskRunnerDetailsLink
+    JobIdArgs, TaskIdArgs, TaskReportArgs, createTaskInfoLink,
+    createTaskRunnerDetailsLink
 )
 from softfab.projectlib import project
 from softfab.request import Request
@@ -47,10 +48,11 @@ class ExtractedColumn(DataColumn[Task]):
     def presentCell(self, record: Task, **kwargs: object) -> XMLContent:
         proc = cast(PageProcessor, kwargs['proc'])
         dataLink = pageLink(
-            'ExtractionDetails',
-            TaskIdArgs(
-                jobId = proc.args.jobId,
-                taskName = record.getName()
+            'Task',
+            TaskReportArgs(
+                jobId=proc.args.jobId,
+                taskName=record.getName(),
+                report='data'
                 )
             )[ 'view data' ]
         extractionRunId = cast(Optional[str], record['extractionRun'])

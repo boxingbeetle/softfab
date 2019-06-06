@@ -3,9 +3,10 @@
 from typing import Optional, cast
 
 from softfab.joblib import Task
+from softfab.pagelinks import TaskIdArgs
 from softfab.shadowlib import shadowDB
-from softfab.webgui import maybeLink
-from softfab.xmlgen import XML, xhtml
+from softfab.webgui import pageLink
+from softfab.xmlgen import XML
 
 
 def getTaskStatus(task: Task) -> str:
@@ -40,5 +41,7 @@ def getTaskStatus(task: Task) -> str:
         return 'idle'
 
 def taskSummary(task: Task) -> XML:
-    run = task.getLatestRun()
-    return maybeLink(run.getURL())[ run.getSummary() ]
+    return pageLink(
+        'Task',
+        TaskIdArgs(jobId=task.getJob().getId(), taskName=task.getName())
+        )[ task.getLatestRun().getSummary() ]

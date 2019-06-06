@@ -107,9 +107,15 @@ class TaskIdArgs(JobIdArgs):
     '''
     taskName = StrArg()
 
+class TaskReportArgs(TaskIdArgs):
+    """Identifies a task and a report to show for that task.
+    """
+    report = StrArg(None)
+
 def createTaskInfoLink(jobId: str, taskName: str) -> XMLNode:
     return pageLink(
-        'ShowTaskInfo', TaskIdArgs(jobId = jobId, taskName = taskName)
+        'Task',
+        TaskReportArgs(jobId=jobId, taskName=taskName, report='overview')
         )[ taskName ]
 
 def createTaskLink(taskrunner: TaskRunner) -> XMLContent:

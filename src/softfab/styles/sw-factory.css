@@ -489,6 +489,31 @@ div.graph > div.export {
 	white-space: nowrap;
 }
 
+div.reporttabs {
+	display: flex;
+	padding: 0 12px;
+	border-bottom: 1px solid #C0C0C0;
+}
+div.reporttabs > div {
+	background: #F0F0F0;
+	border-top: 1px solid #C0C0C0;
+	border-left: 1px solid #C0C0C0;
+	padding: 2px 5px;
+}
+div.reporttabs > div.active {
+	background: #D0DCFF;
+}
+div.reporttabs > div:last-child {
+	border-right: 1px solid #C0C0C0;
+}
+iframe.report {
+	border: none;
+	position: absolute;
+	width: 100%;
+	height: 800px;
+	height: calc(100% - 4rem - 56px);
+}
+
 ::-webkit-scrollbar {
 	width: 11pt;
 	height: 11pt;
