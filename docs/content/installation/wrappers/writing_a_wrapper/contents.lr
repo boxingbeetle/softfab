@@ -16,9 +16,9 @@ A wrapper executes on a Factory PC. The Task Runner is responsible for starting 
 
 Before you can start writing a wrapper you should have a way to run the process you want to hook into SoftFab fully automatically (no manual actions required) from the command line. Many tools have a command line interface (read the manual of the tool), if it is a GUI tool without command line interface, a tool such as 'Auto-It' can be used to control the GUI tool.
 
-Most tools generate an output file in a specific file format (e.g.: txt, xml, html). The wrapper has to post-process the output file(s) of the tool and convert it into browser suitable data, e.g. to create a summary string or a summary results file in HTML format. For examples of wrappers see section: [Shared wrappers](../shared-wrappers/).
+Most tools generate an output file in a specific file format (e.g.: txt, xml, html). The wrapper has to post-process the output file(s) of the tool and convert it into browser suitable data, e.g. to create a summary string or a summary results file in HTML format. For examples of wrappers see section: [Shared wrappers](../shared_wrappers/).
 
-You should have a PC ready with a working Task Runner on it. For the installation procedure of a Factory PC, please read the [Factory PC Installation](../../factory-pc-installation/) document. To start learning how the SoftFab TaskRunner works, you can also use your own development PC of course. Maybe at nights, your PC can also run tasks in the future! Why not use all idle CPU time to automatically run tasks (builds and tests)?
+You should have a PC ready with a working Task Runner on it. For the installation procedure of a Factory PC, please read the [Factory PC Installation](../../factory_pc_installation/) document. To start learning how the SoftFab TaskRunner works, you can also use your own development PC of course. Maybe at nights, your PC can also run tasks in the future! Why not use all idle CPU time to automatically run tasks (builds and tests)?
 
 ## Task Execution
 

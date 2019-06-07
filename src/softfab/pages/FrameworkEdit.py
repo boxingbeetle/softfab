@@ -63,7 +63,7 @@ class FrameworkEditBase(EditPage[FrameworkEditArgs, Framework]):
                 'a wrapper script. '
                 'Read ',
                 docLink(
-                   '/introduction/framework-and-task-definitions/#frameworkdef'
+                   '/introduction/framework_and_task_definitions/#frameworkdef'
                 )['the documentation'],
                 ' for details.'
                 ],
@@ -73,7 +73,7 @@ class FrameworkEditBase(EditPage[FrameworkEditArgs, Framework]):
                 'This requires an extractor script to be written. '
                 'Read ',
                 docLink(
-                    '/introduction/framework-and-task-definitions/#extract'
+                    '/introduction/framework_and_task_definitions/#extract'
                 )['the documentation'],
                 ' for details.'
                 ]

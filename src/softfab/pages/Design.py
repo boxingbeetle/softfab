@@ -138,11 +138,11 @@ class Design_GET(
                 ]
         yield xhtml.p[
             'For help please read the documentation about the ',
-            docLink('/introduction/execution-graph/')[
+            docLink('/introduction/execution_graph/')[
                 'Execution Graph'
                 ], ', ',
-            docLink('/introduction/framework-and-task-definitions/')[
+            docLink('/introduction/framework_and_task_definitions/')[
                 'Framework and Task Definitions'
                 ], ' or ',
-            docLink('/reference/user-manual/#resources')[ 'Resources' ], '.'
+            docLink('/reference/user_manual/#resources')[ 'Resources' ], '.'
             ]

@@ -110,7 +110,7 @@ class LoadExecute_GET(FabPage['LoadExecute_GET.Processor',
             )
         yield xhtml.p[
             'Read here more about: ',
-            docLink('/reference/user-manual/#execute')[
+            docLink('/reference/user_manual/#execute')[
                 'Execute from Configuration'
                 ]
             ]

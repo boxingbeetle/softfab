@@ -158,7 +158,7 @@ class ResourceIndex_GET(FabPage['ResourceIndex_GET.Processor',
         yield xhtml.p[
             'For help about "Resources" or "Resource Types" read the '
             'document: ',
-            docLink('/reference/user-manual/#resources')[ 'Resources' ],
+            docLink('/reference/user_manual/#resources')[ 'Resources' ],
             '.'
             ]
 

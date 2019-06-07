@@ -40,8 +40,8 @@ A secondary reason for having two separate colors is that when a task ends up re
 
 Related information:
 
-*   [job/task colors](../../reference/user-manual/#history) in the User Manual
-*   [passing results](../../installation/wrappers/writing-a-wrapper/#passing-results) in Writing a Wrapper
+*   [job/task colors](../../reference/user_manual/#history) in the User Manual
+*   [passing results](../../installation/wrappers/writing_a_wrapper/#passing-results) in Writing a Wrapper
 
 ### How to rename a Framework or Task Definition?<a id="rename_framework_or_teskdef"></a>
 
@@ -55,7 +55,7 @@ From the homepage of your factory go to: Configure / Design / Frameworks or Task
 
 ### Why is the next task not carried out, if the previous task succeeded?<a id="next_task_not_executed"></a>
 
-In the execution graph you have defined e.g. a first framework `build`, a product `BINARY` and a next framework `test` as follows: `build` ==> `BINARY` ==> `test`. A task derived from framework `test` will only start to execute if the output.`BINARY`.locator has been set in the wrapper script of framework `build`. Thus, if the task `build` succeeds, the output locator should be set. For more info read the document about [passing results](../../installation/wrappers/writing-a-wrapper/#passing-results). You can always check the content of the file behind SF\_RESULTS. In your browser simply open e.g. `http://.../reports/20090621/2050-30E2/build/results.properties`
+In the execution graph you have defined e.g. a first framework `build`, a product `BINARY` and a next framework `test` as follows: `build` ==> `BINARY` ==> `test`. A task derived from framework `test` will only start to execute if the output.`BINARY`.locator has been set in the wrapper script of framework `build`. Thus, if the task `build` succeeds, the output locator should be set. For more info read the document about [passing results](../../installation/wrappers/writing_a_wrapper/#passing-results). You can always check the content of the file behind SF\_RESULTS. In your browser simply open e.g. `http://.../reports/20090621/2050-30E2/build/results.properties`
 
 Simple example in Batch file script language (wrapper.bat):
 
@@ -81,7 +81,7 @@ ECHO %SF_TASK_ID% is finished.
 
 ### Why is the next task still carried out, if the previous task failed with result=error?<a id="next_task_executed"></a>
 
-In the execution graph you have defined e.g. a first framework `build`, a product `BINARY` and a next framework `test` as follows: `build` ==> `BINARY` ==> `test`. A task derived from framework `test` will only start to execute if the output.`BINARY`.locator has been set in the wrapper script of framework `build`. Thus, if the task `build` fails, the output locator should **not** be set! For more info read the document about [passing results](../../installation/wrappers/writing-a-wrapper/#passing-results). You can always check the content of the file behind SF\_RESULTS. In your browser simply open e.g. `http://.../reports/20090621/2050-30E2/build/results.properties`
+In the execution graph you have defined e.g. a first framework `build`, a product `BINARY` and a next framework `test` as follows: `build` ==> `BINARY` ==> `test`. A task derived from framework `test` will only start to execute if the output.`BINARY`.locator has been set in the wrapper script of framework `build`. Thus, if the task `build` fails, the output locator should **not** be set! For more info read the document about [passing results](../../installation/wrappers/writing_a_wrapper/#passing-results). You can always check the content of the file behind SF\_RESULTS. In your browser simply open e.g. `http://.../reports/20090621/2050-30E2/build/results.properties`
 
 Simple example in Batch file script language (wrapper.bat):
 
