@@ -1,6 +1,5 @@
 from pathlib import Path
 from os import makedirs, remove
-from os.path import exists
 from shutil import rmtree
 
 from invoke import UnexpectedExit, task
@@ -21,8 +20,8 @@ def source_arg(pattern):
 
 def remove_dir(path):
     """Recursively removes a directory."""
-    if exists(path):
-        rmtree(path)
+    if path.exists():
+        rmtree(str(path))
 
 @task
 def clean(c):
