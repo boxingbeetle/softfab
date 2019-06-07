@@ -1,5 +1,5 @@
 from itertools import chain
-from os import makedirs, remove
+from os import makedirs, remove, walk
 from pathlib import Path
 from shutil import rmtree
 
@@ -27,6 +27,22 @@ def remove_dir(path):
     """Recursively removes a directory."""
     if path.exists():
         rmtree(str(path))
+
+def make_package(path, description):
+    """Make a directory into a Python package by inserting __init__.py
+    at every subdirectory level.
+    """
+    for dirpath, dirnames, filenames in walk(str(path)):
+        # Ignore hidden directories.
+        i = 0
+        while i < len(dirnames):
+            if dirnames[i].startswith('.'):
+                del dirnames[i]
+            else:
+                i += 1
+        # Create __init__.py.
+        with (Path(dirpath) / '__init__.py').open('w') as out:
+            print('"""%s"""' % description, file=out)
 
 @task
 def clean(c):
@@ -83,6 +99,7 @@ def docs(c):
     """Build documentation."""
     with c.cd(str(TOP_DIR / 'docs')):
         c.run('lektor build --output-path %s' % DOC_DIR, pty=True)
+    make_package(DOC_DIR, 'Documentation files.')
     print('Created documentation in: %s' % DOC_DIR)
 
 @task(docs)
