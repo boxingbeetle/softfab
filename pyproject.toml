@@ -32,6 +32,7 @@ classifiers = [
     'Topic :: Software Development :: Quality Assurance',
     'Topic :: Software Development :: Testing',
     ]
+exclude = ['src/softfab/docs/.lektor/**/*']
 
 [tool.poetry.dependencies]
 python = '^3.5'

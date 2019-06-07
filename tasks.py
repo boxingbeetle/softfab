@@ -1,10 +1,12 @@
-from pathlib import Path
+from itertools import chain
 from os import makedirs, remove
+from pathlib import Path
 from shutil import rmtree
 
 from invoke import UnexpectedExit, task
 
 TOP_DIR = Path(__file__).parent
+DOC_DIR = TOP_DIR / 'src' / 'softfab' / 'docs'
 SRC_ENV = {'PYTHONPATH': '{}/src'.format(TOP_DIR)}
 PYLINT_ENV = {'PYTHONPATH': '{0}/src:{0}/tests/pylint'.format(TOP_DIR)}
 
@@ -13,7 +15,10 @@ mypy_report = 'mypy-report'
 def source_arg(pattern):
     """Converts a source pattern to a command line argument."""
     if pattern is None:
-        paths = (TOP_DIR / 'src').glob('**/*.py')
+        paths = chain(
+            (TOP_DIR / 'src' / 'softfab').glob('*.py'),
+            (TOP_DIR / 'src' / 'softfab' / 'pages').glob('*.py')
+            )
     else:
         paths = Path.cwd().glob(pattern)
     return ' '.join(str(path) for path in paths)
@@ -27,8 +32,8 @@ def remove_dir(path):
 def clean(c):
     """Clean up our output."""
     print('Cleaning up...')
+    remove_dir(DOC_DIR)
     remove_dir(TOP_DIR / mypy_report)
-    remove_dir(TOP_DIR / 'docs' / 'output')
 
 @task
 def lint(c, src=None, rule=None):
@@ -68,6 +73,19 @@ def isort(c, src=None):
         c.run('isort %s' % source_arg(src), pty=True)
 
 @task
+def livedocs(c, host='localhost', port=5000):
+    """Serve editable version of documentation."""
+    with c.cd(str(TOP_DIR / 'docs')):
+        c.run('lektor serve --host %s --port %d' % (host, port), pty=True)
+
+@task
+def docs(c):
+    """Build documentation."""
+    with c.cd(str(TOP_DIR / 'docs')):
+        c.run('lektor build --output-path %s' % DOC_DIR, pty=True)
+    print('Created documentation in: %s' % DOC_DIR)
+
+@task(docs)
 def run(c, host='localhost', port=8180, auth=False):
     """Run a Control Center instance."""
     print('Starting Control Center at: http://%s:%d/' % (host, port))
@@ -78,16 +96,3 @@ def run(c, host='localhost', port=8180, auth=False):
                 ' --listen tcp:interface=%s:port=%d'
                 ' --class softfab.TwistedApp.%s' % (host, port, root),
                 env=SRC_ENV, pty=True)
-
-@task
-def livedocs(c, host='localhost', port=5000):
-    """Serve editable version of documentation."""
-    with c.cd(str(TOP_DIR / 'docs')):
-        c.run('lektor serve --host %s --port %d' % (host, port), pty=True)
-
-@task
-def docs(c):
-    """Build documentation."""
-    with c.cd(str(TOP_DIR / 'docs')):
-        c.run('lektor build --output-path output', pty=True)
-    print('Created documentation in: docs/output')
