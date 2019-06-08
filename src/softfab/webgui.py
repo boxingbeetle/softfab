@@ -15,7 +15,6 @@ from typing import (
 from xml.etree import ElementTree
 import logging
 
-from softfab.config import docPage
 from softfab.pageargs import PageArgs, Query
 from softfab.pnglib import getPNGDimensions
 from softfab.typing import NoReturn
@@ -66,7 +65,7 @@ def docLink(path: str) -> XMLNode:
     '''Creates a hyperlink to a documentation page.
     '''
     assert path.startswith('/'), path
-    return xhtml.a(href=docPage + path, target='_blank')
+    return xhtml.a(href='../docs' + path, target='_blank')
 
 def preserveSpaces(text: str) -> str:
     '''Replace all spaces in `text` by non-break space, such that the space

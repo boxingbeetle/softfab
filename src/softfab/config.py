@@ -12,9 +12,6 @@ rootURL = 'https://softfab.example.com/projname/'
 # The SoftFab homepage
 homePage = 'https://boxingbeetle.com/tools/softfab/'
 
-# The SoftFab documentation page
-docPage = 'https://softfab.example.com/docs'
-
 # Directory this fab's database is located in.
 dbDir = 'run'
 
