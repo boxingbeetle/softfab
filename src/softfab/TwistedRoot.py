@@ -3,6 +3,7 @@
 from functools import partial
 from importlib import import_module
 from inspect import getmodulename
+from os.path import splitext
 from types import GeneratorType, ModuleType
 from typing import (
     Callable, Dict, Generator, Iterator, Mapping, Optional, Type, Union, cast
@@ -18,6 +19,7 @@ from twisted.python.failure import Failure
 from twisted.web.http import Request as TwistedRequest
 from twisted.web.resource import Resource
 from twisted.web.server import NOT_DONE_YET
+from twisted.web.util import redirectTo
 import importlib_resources
 
 from softfab.Page import (
@@ -212,6 +214,7 @@ class PageLoader:
 
     def process(self) -> None:
         startupMessages.addMessage('Registering pages')
+        self.root.putChild(b'docs', DocResource())
         pagesPackage = 'softfab.pages'
         for fileName in importlib_resources.contents(pagesPackage):
             moduleName = getmodulename(fileName)
@@ -249,6 +252,63 @@ class PageResource(Resource):
                 partial(renderAuthenticated, page)
                 )
         return instance
+
+class DocResource(Resource):
+    """Twisted Resource that serves documentation pages."""
+    isLeaf = True
+
+    contentTypes = {
+        '.html': b'text/html',
+        '.css': b'text/css',
+        '.png': b'image/png',
+        '.svg': b'image/svg+xml',
+        }
+
+    def render_GET(self, request: TwistedRequest) -> bytes:
+        try:
+            path = request.path.decode('ascii')
+        except UnicodeDecodeError as ex:
+            request.setResponseCode(404)
+            request.setHeader(b'Content-Type', b'text/plain')
+            return b'Documentation paths must be pure ASCII'
+
+        if not path.startswith('/docs/'):
+            request.setResponseCode(500)
+            request.setHeader(b'Content-Type', b'text/plain')
+            return b'Documentation at unexpected path'
+
+        segments = ['softfab'] + path.lstrip('/').split('/')
+        if '.' not in segments[-1]:
+            if segments[-1]:
+                url = request.prePathURL() + b'/' + b'/'.join(
+                    segment.encode() for segment in segments[2:]
+                    ) + b'/'
+                return redirectTo(url, request)
+            else:
+                segments[-1] = 'index.html'
+        package = '.'.join(segments[:-1])
+        name = segments[-1]
+
+        try:
+            exists = importlib_resources.is_resource(package, name)
+        except ImportError:
+            exists = False
+        if not exists:
+            request.setResponseCode(404)
+            request.setHeader(b'Content-Type', b'text/plain')
+            return b'Requested documentation resource does not exist'
+
+        fileBase_, fileExt = splitext(name)
+        try:
+            contentType = self.contentTypes[fileExt]
+        except KeyError:
+            request.setResponseCode(500)
+            request.setHeader(b'Content-Type', b'text/plain')
+            return b'Failed to determine content type'
+        else:
+            request.setHeader(b'Content-Type', contentType)
+
+        return importlib_resources.read_binary(package, name)
 
 def renderAuthenticated(page: FabResource, request: TwistedRequest) -> object:
     def done(result: object) -> None: # pylint: disable=unused-argument
