@@ -65,7 +65,7 @@ def docLink(path: str) -> XMLNode:
     '''Creates a hyperlink to a documentation page.
     '''
     assert path.startswith('/'), path
-    return xhtml.a(href='../docs' + path, target='_blank')
+    return xhtml.a(href='docs' + path, target='_blank')
 
 def preserveSpaces(text: str) -> str:
     '''Replace all spaces in `text` by non-break space, such that the space
