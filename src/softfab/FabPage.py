@@ -245,7 +245,7 @@ class LinkBar(Widget):
         url = page.getPageURL(proc.req, pageName)
         if url is None:
             return None
-        icon = pageInfo['icon'].present(proc=proc)
+        icon = pageInfo['icon']
 
         iconModifier = cast(IconModifier, pageInfo['iconModifier'])
         iconStyle = ['navicon']
