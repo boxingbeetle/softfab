@@ -115,7 +115,7 @@ class ChangePassword_GET(FabPage['ChangePassword_GET.Processor',
         if proc.retry:
             yield presentForm(proc)
         else:
-            yield self.backToReferer(proc.req)
+            yield self.backToReferer(proc.args)
 
 
 class ChangePassword_POST(FabPage['ChangePassword_POST.Processor',
@@ -214,7 +214,7 @@ class ChangePassword_POST(FabPage['ChangePassword_POST.Processor',
         if proc.retry:
             yield presentForm(proc)
         else:
-            yield self.backToReferer(proc.req)
+            yield self.backToReferer(proc.args)
 
     def presentContent(self, proc: Processor) -> XMLContent:
         assert False

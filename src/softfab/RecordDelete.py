@@ -83,7 +83,7 @@ class RecordDelete_GET(FabPage['RecordDelete_GET.Processor',
     class Arguments(DeleteArgs):
         pass
 
-    class Processor(PageProcessor[DeleteArgs]):
+    class Processor(PageProcessor[Arguments]):
         def process(self, req: Request[DeleteArgs], user: User) -> None:
             page = cast(RecordDelete_GET, self.page)
             fetchRecordForDeletion(req.args.id, page)
@@ -113,7 +113,7 @@ class RecordDelete_GET(FabPage['RecordDelete_GET.Processor',
 
     def presentError(self, proc: Processor, message: XML) -> XMLContent:
         yield message
-        yield self.backToReferer(proc.req)
+        yield self.backToReferer(proc.args)
 
     def checkState(self, record: DBRecord) -> None:
         '''Checks whether the given record can be deleted.
@@ -156,5 +156,5 @@ class RecordDelete_POSTMixin:
                 self.recordName.capitalize(), ' ',
                 xhtml.b[ proc.args.id ], ' has been deleted.'
                 ],
-            self.backToReferer(proc.req)
+            self.backToReferer(proc.args)
             )

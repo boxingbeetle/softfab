@@ -118,7 +118,7 @@ class FastExecute_GET(FabPage['FastExecute_GET.Processor',
                     ' tag key ', xhtml.b[ proc.args.tagkey ],
                     ' and value ', xhtml.b[ proc.args.tagvalue ], '.'
                     ],
-                self.backToReferer(proc.req)
+                self.backToReferer(proc.args)
                 )
         else:
             yield (
@@ -126,12 +126,12 @@ class FastExecute_GET(FabPage['FastExecute_GET.Processor',
                     'No configuration named ', xhtml.b[ proc.args.configId ],
                     ' exists.'
                     ],
-                self.backToReferer(proc.req)
+                self.backToReferer(proc.args)
                 )
 
     def presentError(self, proc: Processor, message: XML) -> XMLContent:
         yield message
-        yield self.backToReferer(proc.req)
+        yield self.backToReferer(proc.args)
 
 class FastExecute_POST(FabPage['FastExecute_POST.Processor',
                                'FastExecute_POST.Arguments']):

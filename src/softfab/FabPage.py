@@ -13,7 +13,6 @@ from softfab.UIPage import UIPage
 from softfab.authentication import LoginAuthPage
 from softfab.pageargs import ArgsT
 from softfab.refresh import RefreshScript
-from softfab.request import Request
 from softfab.response import Response
 from softfab.utils import abstract
 from softfab.webgui import Widget, pageURL
@@ -194,9 +193,7 @@ class FabPage(UIPage[ProcT], FabResource[ArgsT, ProcT], ABC):
                 ]
             ]
 
-    def backToReferer(self, req: Request) -> XMLNode:
-        args = req.args
-
+    def backToReferer(self, args: ArgsT) -> XMLNode:
         refererName = args.refererName
         if refererName is None:
             # No referer, fall back to page hierarchy.
