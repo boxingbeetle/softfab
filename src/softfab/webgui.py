@@ -9,8 +9,8 @@ TODO: Currently the "css" Python argument sets the XHTML "style" attribute and
 from io import BytesIO
 from itertools import chain
 from typing import (
-    TYPE_CHECKING, Callable, ClassVar, Iterable, Iterator, List, Mapping,
-    Optional, Sequence, Tuple, TypeVar, Union, cast
+    Callable, ClassVar, Iterable, Iterator, List, Mapping, Optional, Sequence,
+    Tuple, TypeVar, Union, cast
 )
 from xml.etree import ElementTree
 import logging
