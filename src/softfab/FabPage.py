@@ -221,6 +221,22 @@ class _WidgetResponder(Responder):
         self.__page.writeHTTPHeaders(response)
         response.writeXML(self.__widget.present(proc=self.__proc))
 
+class LinkBarButton:
+    """The information to present one button in a `LinkBar`."""
+
+    def __init__(self,
+                 label: str,
+                 url: str,
+                 icon: XMLNode,
+                 modifier: IconModifier,
+                 active: bool
+                 ):
+        self.label = label
+        self.url = url
+        self.icon = icon
+        self.modifier = modifier
+        self.active = active
+
 class LinkBar(Widget):
     '''A bar which contains links to other pages.
     '''
@@ -234,35 +250,45 @@ class LinkBar(Widget):
 
     def __createLinkButton(self,
             pageName: str, infoKey: str, **kwargs: object
-            ) -> Optional[XMLNode]:
+            ) -> Optional[LinkBarButton]:
         page = cast(FabPage, kwargs['page'])
         args = cast(Optional[PageArgs], kwargs.get('args'))
-
         pageInfo = page.getPageInfo(pageName)
-        description = cast(Union[str, bool, None], pageInfo[infoKey])
+
+        description = pageInfo[infoKey]
         if description is False:
             return None
+
         url = page.getPageURL(pageName, args)
         if url is None:
             return None
-        icon = pageInfo['icon']
 
-        iconModifier = cast(IconModifier, pageInfo['iconModifier'])
+        return LinkBarButton(
+            label=description,
+            url=url,
+            icon=pageInfo['icon'],
+            modifier=pageInfo['iconModifier'],
+            active=pageName == page.name
+            )
+
+    def __presentLinkButton(self, button: LinkBarButton) -> XMLNode:
+        active = button.active
+
+        iconModifier = button.modifier
         iconStyle = ['navicon']
         if iconModifier is IconModifier.NEW:
             iconStyle.append('newicon')
         elif iconModifier is IconModifier.EDIT:
-            iconStyle.append('editicon' if pageName == page.name else 'newicon')
+            iconStyle.append('editicon' if active else 'newicon')
         elif iconModifier is IconModifier.DELETE:
             iconStyle.append('delicon')
         else:
             assert iconModifier is IconModifier.NONE, iconModifier
 
-        style = 'navthis' if pageName == page.name else None
-        return xhtml.div(class_ = style)[
-            xhtml.a(href = url)[
-                xhtml.span(class_=' '.join(iconStyle))[ icon ],
-                xhtml.span(class_='navlabel')[ description ]
+        return xhtml.div(class_='navthis' if active else None)[
+            xhtml.a(href=button.url)[
+                xhtml.span(class_=' '.join(iconStyle))[ button.icon ],
+                xhtml.span(class_='navlabel')[ button.label ]
                 ]
             ]
 
@@ -284,14 +310,13 @@ class LinkBar(Widget):
             ) -> Iterator[XMLNode]:
         page = cast(FabPage, kwargs['page'])
 
-        thisPage = page.name
         for pageName in page.iterRootPath():
             button = self.__createLinkButton(pageName, 'description', **kwargs)
             if button is not None:
-                if pageName != thisPage or styleThis:
-                    yield button.addClass('rootpath')
-                else:
-                    yield button
+                presentation = self.__presentLinkButton(button)
+                if not button.active or styleThis:
+                    presentation = presentation.addClass('rootpath')
+                yield presentation
 
     def __presentChildButtons(self, **kwargs: object) -> Iterator[XMLNode]:
         page = cast(FabPage, kwargs['page'])
@@ -301,7 +326,7 @@ class LinkBar(Widget):
                 pageName, 'linkDescription', **kwargs
                 )
             if button is not None:
-                yield button
+                yield self.__presentLinkButton(button)
 
     def present(self, **kwargs: object) -> XMLContent:
         return xhtml.div(class_='linkbar')[ self.__presentButtons(**kwargs) ]
