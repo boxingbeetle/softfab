@@ -11,7 +11,7 @@ from softfab.Page import FabResource, PageProcessor, ProcT, Responder
 from softfab.StyleResources import styleRoot
 from softfab.UIPage import UIPage
 from softfab.authentication import LoginAuthPage
-from softfab.pageargs import ArgsT
+from softfab.pageargs import ArgsT, PageArgs
 from softfab.refresh import RefreshScript
 from softfab.response import Response
 from softfab.utils import abstract
@@ -159,7 +159,7 @@ class FabPage(UIPage[ProcT], FabResource[ArgsT, ProcT], ABC):
 
     def presentHeader(self, proc: ProcT) -> XMLContent:
         yield super().presentHeader(proc)
-        yield LinkBar.instance.present(proc=proc)
+        yield LinkBar.instance.present(page=self, args=proc.args)
 
     def presentContent(self, proc: ProcT) -> XMLContent:
         # This method is already declared abstract in UIPage, we re-assert
@@ -233,10 +233,11 @@ class LinkBar(Widget):
     __levelSep = xhtml.div(class_ = 'level')[ '\u25B8' ]
 
     def __createLinkButton(self,
-            proc: PageProcessor, pageName: str, infoKey: str
+            pageName: str, infoKey: str, **kwargs: object
             ) -> Optional[XMLNode]:
-        args = proc.req.args
-        page = cast(FabPage, proc.page)
+        page = cast(FabPage, kwargs['page'])
+        args = cast(Optional[PageArgs], kwargs.get('args'))
+
         pageInfo = page.getPageInfo(pageName)
         description = cast(Union[str, bool, None], pageInfo[infoKey])
         if description is False:
@@ -265,36 +266,42 @@ class LinkBar(Widget):
                 ]
             ]
 
-    def __presentButtons(self, proc: PageProcessor) -> XMLContent:
-        childButtons = tuple(self.__presentChildButtons(proc))
+    def __presentButtons(self, **kwargs: object) -> XMLContent:
+        childButtons = tuple(self.__presentChildButtons(**kwargs))
         levelSep = self.__levelSep
         # Root path.
-        yield levelSep.join(self.__presentRootButtons(proc, bool(childButtons)))
+        yield levelSep.join(
+            self.__presentRootButtons(bool(childButtons), **kwargs)
+            )
         # Children.
         if childButtons:
             yield levelSep
             yield from childButtons
 
     def __presentRootButtons(self,
-            proc: PageProcessor, styleThis: bool
+            styleThis: bool,
+            **kwargs: object
             ) -> Iterator[XMLNode]:
-        page = cast(FabPage, proc.page)
+        page = cast(FabPage, kwargs['page'])
+
         thisPage = page.name
         for pageName in page.iterRootPath():
-            button = self.__createLinkButton(proc, pageName, 'description')
+            button = self.__createLinkButton(pageName, 'description', **kwargs)
             if button is not None:
                 if pageName != thisPage or styleThis:
                     yield button.addClass('rootpath')
                 else:
                     yield button
 
-    def __presentChildButtons(self, proc: PageProcessor) -> Iterator[XMLNode]:
-        page = cast(FabPage, proc.page)
+    def __presentChildButtons(self, **kwargs: object) -> Iterator[XMLNode]:
+        page = cast(FabPage, kwargs['page'])
+
         for pageName in page.iterActiveChildren():
-            button = self.__createLinkButton(proc, pageName, 'linkDescription')
+            button = self.__createLinkButton(
+                pageName, 'linkDescription', **kwargs
+                )
             if button is not None:
                 yield button
 
     def present(self, **kwargs: object) -> XMLContent:
-        proc = cast(PageProcessor, kwargs['proc'])
-        return xhtml.div(class_ = 'linkbar')[ self.__presentButtons(proc) ]
+        return xhtml.div(class_='linkbar')[ self.__presentButtons(**kwargs) ]
