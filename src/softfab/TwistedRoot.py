@@ -3,10 +3,10 @@
 from functools import partial
 from importlib import import_module
 from inspect import getmodulename
-from os.path import splitext
 from types import GeneratorType, ModuleType
 from typing import (
-    Callable, Dict, Generator, Iterator, Mapping, Optional, Type, Union, cast
+    Callable, Dict, Generator, Iterator, List, Mapping, Optional, Sequence,
+    Type, Union, cast
 )
 import logging
 
@@ -16,6 +16,7 @@ from twisted.internet.defer import Deferred, inlineCallbacks
 from twisted.internet.error import ConnectionLost
 from twisted.python import log
 from twisted.python.failure import Failure
+from twisted.python.urlpath import URLPath
 from twisted.web.http import Request as TwistedRequest
 from twisted.web.resource import Resource
 from twisted.web.server import NOT_DONE_YET
@@ -214,7 +215,7 @@ class PageLoader:
 
     def process(self) -> None:
         startupMessages.addMessage('Registering pages')
-        self.root.putChild(b'docs', DocResource())
+        self.root.putChild(b'docs', DocResource.registerDocs('softfab.docs'))
         pagesPackage = 'softfab.pages'
         for fileName in importlib_resources.contents(pagesPackage):
             moduleName = getmodulename(fileName)
@@ -255,7 +256,6 @@ class PageResource(Resource):
 
 class DocResource(Resource):
     """Twisted Resource that serves documentation pages."""
-    isLeaf = True
 
     contentTypes = {
         '.html': b'text/html',
@@ -264,51 +264,105 @@ class DocResource(Resource):
         '.svg': b'image/svg+xml',
         }
 
-    def render_GET(self, request: TwistedRequest) -> bytes:
+    metadataFallbacks = {
+        'button': 'ERROR',
+        'children': (),
+        }
+
+    @classmethod
+    def registerDocs(cls, packageName: str) -> Resource:
+        # TODO: In Python 3.6, we could use IntFlag instead.
+        errors = []
+
+        # Load module.
+        initName = packageName + '.__init__'
         try:
-            path = request.path.decode('ascii')
-        except UnicodeDecodeError as ex:
-            request.setResponseCode(404)
-            request.setHeader(b'Content-Type', b'text/plain')
-            return b'Documentation paths must be pure ASCII'
+            initModule = import_module(initName) # type: Optional[ModuleType]
+        except Exception:
+            startupLogger.exception(
+                'Error importing documentation module "%s"', initName
+                )
+            errors.append('module')
+            initModule = None
 
-        if not path.startswith('/docs/'):
-            request.setResponseCode(500)
-            request.setHeader(b'Content-Type', b'text/plain')
-            return b'Documentation at unexpected path'
-
-        segments = ['softfab'] + path.lstrip('/').split('/')
-        if '.' not in segments[-1]:
-            if segments[-1]:
-                url = request.prePathURL() + b'/' + b'/'.join(
-                    segment.encode() for segment in segments[2:]
-                    ) + b'/'
-                return redirectTo(url, request)
-            else:
-                segments[-1] = 'index.html'
-        package = '.'.join(segments[:-1])
-        name = segments[-1]
-
-        try:
-            exists = importlib_resources.is_resource(package, name)
-        except ImportError:
-            exists = False
-        if not exists:
-            request.setResponseCode(404)
-            request.setHeader(b'Content-Type', b'text/plain')
-            return b'Requested documentation resource does not exist'
-
-        fileBase_, fileExt = splitext(name)
-        try:
-            contentType = self.contentTypes[fileExt]
-        except KeyError:
-            request.setResponseCode(500)
-            request.setHeader(b'Content-Type', b'text/plain')
-            return b'Failed to determine content type'
+        # Load content.
+        if initModule is None:
+            # If the init module fails to import, resources in the package
+            # are inaccessible. Don't try to load them, to avoid error spam.
+            content = None
         else:
-            request.setHeader(b'Content-Type', contentType)
+            contentName = 'contents.md'
+            try:
+                content = importlib_resources.read_text(
+                    packageName, contentName
+                    )
+            except Exception:
+                startupLogger.exception(
+                    'Error loading documentation content "%s"', contentName
+                    )
+                errors.append('content')
+                content = None
 
-        return importlib_resources.read_binary(package, name)
+        # Collect metadata.
+        metadata = {}
+        for name, fallback in cls.metadataFallbacks.items():
+            if initModule is None:
+                value = fallback
+            else:
+                try:
+                    value = getattr(initModule, name)
+                except AttributeError:
+                    startupLogger.exception(
+                        'Missing metadata "%s" in module "%s"', name, initName
+                        )
+                    errors.append('metadata')
+                    value = fallback
+            metadata[name] = value
+
+        # Create resource.
+        contents = [] # type: List[str]
+        for where in errors:
+            contents += [
+                '## Error loading documentation %s' % where,
+                'Please check the Control Center log for details.'
+                ]
+        contents.append(content or '')
+        resource = cls(initModule, '\n\n'.join(contents), errors)
+
+        # Register children.
+        for childName in cast(Sequence[str], metadata['children']):
+            childResource = cls.registerDocs('%s.%s' % (packageName, childName))
+            resource.putChild(childName.encode(), childResource)
+
+        return resource
+
+    def __init__(self,
+                 module: Optional[ModuleType],
+                 content: str,
+                 errors: Sequence[str]
+                 ):
+        super().__init__()
+        self.module = module
+        self.content = content
+        self.errors = errors
+
+    def getChild(self, path: bytes, request: TwistedRequest) -> Resource:
+        if path:
+            return super().getChild(path, request)
+        else:
+            return self
+
+    def render_GET(self, request: TwistedRequest) -> bytes:
+        if not request.path.endswith(b'/'):
+            # Redirect to directory, to make sure local assets will be found.
+            url = URLPath.fromBytes(request.uri)
+            url.path += b'/'
+            return redirectTo(str(url).encode('ascii'), request)
+
+        if self.errors:
+            request.setResponseCode(500)
+        request.setHeader(b'Content-Type', b'text/plain')
+        return self.content.encode()
 
 def renderAuthenticated(page: FabResource, request: TwistedRequest) -> object:
     def done(result: object) -> None: # pylint: disable=unused-argument
