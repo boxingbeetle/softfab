@@ -2,5 +2,5 @@
 .mypy_cache/
 src/softfab.egg-info/
 poetry.lock
-src/softfab/docs/
+docs/output
 run/
