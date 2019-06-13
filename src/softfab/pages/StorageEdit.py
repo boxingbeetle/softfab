@@ -48,7 +48,7 @@ class MergePhase(AbstractPhase[EditProcessor[StorageEditArgs, Storage],
                     ' because the storage was merged into another'
                     ' while you were editing.'
                     ],
-                self.page.backToParent(proc.req)
+                self.page.backToParent(proc.args)
                 ])
 
         oldId = args.id
@@ -79,7 +79,7 @@ class MergePhase(AbstractPhase[EditProcessor[StorageEditArgs, Storage],
         if proc.args.newId != proc.args.id:
             return (
                 xhtml.p[ 'The storages have been merged.' ],
-                self.page.backToParent(proc.req)
+                self.page.backToParent(proc.args)
                 )
 
         # TODO: Design a way of passing data that mypy understands.
@@ -140,7 +140,7 @@ class MergePhase(AbstractPhase[EditProcessor[StorageEditArgs, Storage],
                 'Changes to ', page.elemName, ' ', element['name'],
                 ' have been committed.'
                 ],
-            page.backToParent(proc.req)
+            page.backToParent(proc.args)
             )
 
 class StorageEditBase(EditPage):

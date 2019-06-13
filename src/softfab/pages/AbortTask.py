@@ -96,4 +96,4 @@ class AbortTask_POST(FabPage['AbortTask_POST.Processor',
                 ]
         else:
             yield xhtml.p[ message ]
-        yield self.backToParent(proc.req)
+        yield self.backToParent(proc.args)

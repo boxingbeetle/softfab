@@ -66,5 +66,5 @@ class DelFinishedSchedules_POST(
     def presentContent(self, proc: Processor) -> XMLContent:
         yield (
             xhtml.p[ 'All finished schedules have been deleted.' ],
-            self.backToParent(proc.req)
+            self.backToParent(proc.args)
             )

@@ -151,7 +151,7 @@ class SavePhase(AbstractPhase['EditProcessor[EditArgsT, DBRecord]',
             xhtml.p[
                 'Changes to ', page.elemName, elementId, ' have been committed.'
                 ],
-            page.backToParent(proc.req)
+            page.backToParent(proc.args)
             )
 
 class SaveAsPhase(AbstractPhase['EditProcessor[EditArgsT, DBRecord]',

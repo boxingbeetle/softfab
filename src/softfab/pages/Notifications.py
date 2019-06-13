@@ -172,7 +172,7 @@ class Notifications_POST(FabPage['Notifications_POST.Processor',
             yield from presentForm(proc, proc.args)
         elif action is Actions.SAVE:
             yield xhtml.p[ 'Notification settings saved.' ]
-            yield self.backToParent(proc.req)
+            yield self.backToParent(proc.args)
         else:
             assert False, action
 

@@ -55,9 +55,6 @@ class DialogStep(ABC, Generic[DialogProcT]):
         self._page = page
         self._formBodyPresenter = PresenterFunction(self.presentFormBody)
 
-    def backToParent(self, req: Request) -> XMLNode:
-        return self._page.backToParent(req)
-
     def process(self, proc: DialogProcT) -> bool: # pylint: disable=unused-argument
         '''Process request. This method is allowed to use the same exceptions
         as Processor.process().

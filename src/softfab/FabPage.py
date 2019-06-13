@@ -185,8 +185,7 @@ class FabPage(UIPage[ProcT], FabResource[ArgsT, ProcT], ABC):
         # so it is unlikely we will ever get here.
         return 'Home'
 
-    def backToParent(self, req: Request) -> XMLNode:
-        args = req.args
+    def backToParent(self, args: Optional[ArgsT]) -> XMLNode:
         parentName = self.getPageInfo()['parents'][-1]
         parentURL = self.getPageURL(parentName, args)
         return xhtml.p[
@@ -196,13 +195,15 @@ class FabPage(UIPage[ProcT], FabResource[ArgsT, ProcT], ABC):
             ]
 
     def backToReferer(self, req: Request) -> XMLNode:
-        refererName = req.args.refererName
+        args = req.args
+
+        refererName = args.refererName
         if refererName is None:
             # No referer, fall back to page hierarchy.
-            return self.backToParent(req)
+            return self.backToParent(args)
 
         return xhtml.p[
-            xhtml.a(href = req.args.refererURL)[
+            xhtml.a(href=args.refererURL)[
                 'Back to ', self.getPageInfo(refererName)['description']
                 ]
             ]

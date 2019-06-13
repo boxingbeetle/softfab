@@ -29,7 +29,7 @@ class AnonGuest_GET(AnonGuestBase[FabPage.Processor, FabPage.Arguments]):
 
     def presentContent(self, proc: FabPage.Processor) -> XMLContent:
         yield presentAnonGuestSetting()
-        yield self.backToParent(proc.req)
+        yield self.backToParent(proc.args)
 
 class AnonGuest_POST(AnonGuestBase['AnonGuest_POST.Processor',
                                    'AnonGuest_POST.Arguments']):
@@ -40,7 +40,7 @@ class AnonGuest_POST(AnonGuestBase['AnonGuest_POST.Processor',
     class Arguments(AnonGuestArgs):
         pass
 
-    class Processor(PageProcessor[AnonGuestArgs]):
+    class Processor(PageProcessor[Arguments]):
 
         def process(self, req, user):
             project.setAnonGuestAccess(req.args.anonguest)
@@ -51,4 +51,4 @@ class AnonGuest_POST(AnonGuestBase['AnonGuest_POST.Processor',
 
     def presentError(self, proc: Processor, message: XML) -> XMLContent:
         yield message
-        yield self.backToParent(proc.req)
+        yield self.backToParent(proc.args)

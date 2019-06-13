@@ -372,7 +372,7 @@ class SaveStep(DialogStep):
     def presentContent(self, proc: PageProcessor) -> XMLContent:
         yield (
             xhtml.p[ 'Configuration saved.' ],
-            self.backToParent(proc.req)
+            self._page.backToParent(proc.args)
             )
         # TODO: Having a direct way to execute the saved config would be useful.
 
