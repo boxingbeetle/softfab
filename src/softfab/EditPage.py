@@ -318,7 +318,7 @@ class EditProcessor(EditProcessorBase[EditArgsT, DBRecord]):
 
         if action == 'cancel':
             if prev is EditPagePrev.EDIT:
-                raise Redirect(page.getParentURL(req))
+                raise Redirect(page.getParentURL(req.args))
             elif prev is EditPagePrev.SAVE_AS:
                 return page.editPhase
             elif prev is EditPagePrev.CONFIRM:

@@ -176,8 +176,7 @@ class FabPage(UIPage[ProcT], FabResource[ArgsT, ProcT], ABC):
         if autoUpdateWidgets:
             yield RefreshScript(*autoUpdateWidgets).present(proc=proc)
 
-    def getParentURL(self, req: Request) -> str:
-        args = req.args
+    def getParentURL(self, args: Optional[ArgsT]) -> str:
         for ancestor in reversed(self.getPageInfo()['parents']):
             url = self.getPageURL(ancestor, args)
             if url is not None:

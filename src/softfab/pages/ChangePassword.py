@@ -207,7 +207,7 @@ class ChangePassword_POST(FabPage['ChangePassword_POST.Processor',
         pass
 
     def getCancelURL(self, req):
-        return req.args.refererURL or self.getParentURL(req)
+        return req.args.refererURL or self.getParentURL(req.args)
 
     def presentError(self, proc: Processor, message: XML) -> XMLContent:
         yield xhtml.p(class_ = 'notice')[ message ]

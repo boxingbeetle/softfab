@@ -60,7 +60,7 @@ class AddUserBase(FabPage[ProcT, ArgsT]):
         yield xhtml.p[ actionButtons(Actions) ]
 
     def getCancelURL(self, req):
-        return req.args.refererURL or self.getParentURL(req)
+        return req.args.refererURL or self.getParentURL(req.args)
 
 class AddUser_GET(AddUserBase['AddUser_GET.Processor',
                               'AddUser_GET.Arguments']):

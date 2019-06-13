@@ -56,7 +56,7 @@ class AbortTask_POST(FabPage['AbortTask_POST.Processor',
             action = req.args.action
 
             if action is Actions.CANCEL:
-                raise Redirect(self.page.getParentURL(req))
+                raise Redirect(self.page.getParentURL(req.args))
             assert action is Actions.ABORT, action
 
             job = jobDB[jobId]

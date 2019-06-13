@@ -122,7 +122,7 @@ def _checkActive(
     '''
     if isinstance(page, FabPage):
         if not page.isActive():
-            raise Redirect(page.getParentURL(req))
+            raise Redirect(page.getParentURL(req.args))
 
 @inlineCallbacks
 def parseAndProcess(page: FabResource[ArgsT, PageProcessor[ArgsT]],

@@ -121,7 +121,7 @@ class Notifications_POST(FabPage['Notifications_POST.Processor',
             mailSender = args.mailSender
 
             if action is Actions.CANCEL:
-                raise Redirect(self.page.getParentURL(req))
+                raise Redirect(self.page.getParentURL(req.args))
             elif action is Actions.TEST:
                 # pylint: disable=attribute-defined-outside-init
                 recipient = args.mailRecipient

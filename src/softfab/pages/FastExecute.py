@@ -149,7 +149,7 @@ class FastExecute_POST(FabPage['FastExecute_POST.Processor',
 
             if action is Actions.CANCEL:
                 raise Redirect(
-                    req.args.refererURL or self.page.getParentURL(req)
+                    req.args.refererURL or self.page.getParentURL(req.args)
                     )
 
             if action is Actions.EXECUTE:
