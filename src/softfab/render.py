@@ -115,14 +115,14 @@ class InternalErrorPage(ErrorPage[ProcT]):
             )
 
 def _checkActive(
-        req: Request[ArgsT],
-        page: FabResource[ArgsT, PageProcessor[ArgsT]]
+        page: FabResource[ArgsT, PageProcessor[ArgsT]],
+        args: ArgsT
         ) -> None:
     '''If page is not active, redirect to parent.
     '''
     if isinstance(page, FabPage):
         if not page.isActive():
-            raise Redirect(page.getParentURL(req.args))
+            raise Redirect(page.getParentURL(args))
 
 @inlineCallbacks
 def parseAndProcess(page: FabResource[ArgsT, PageProcessor[ArgsT]],
@@ -151,7 +151,7 @@ def parseAndProcess(page: FabResource[ArgsT, PageProcessor[ArgsT]],
                 args = cast(ArgsCorrected[ArgsT], ex).correctedArgs
         req.args = args
 
-        _checkActive(req, page)
+        _checkActive(page, args)
 
         # Processing step.
         proc = page.Processor(
