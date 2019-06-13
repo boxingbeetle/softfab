@@ -87,7 +87,7 @@ class FabPage(UIPage[ProcT], FabResource[ArgsT, ProcT], ABC):
         return cls.__pageInfo[page or cls.getResourceName()]
 
     @classmethod
-    def getPageURL(cls, req: Request[ArgsT], page: str) -> Optional[str]:
+    def getPageURL(cls, page: str, args: Optional[ArgsT]) -> Optional[str]:
         '''Gets the URL of another page, relative to this page.
         This URL includes in its query part the arguments shared between
         this page and the other page.
@@ -95,7 +95,6 @@ class FabPage(UIPage[ProcT], FabResource[ArgsT, ProcT], ABC):
         None is returned.
         '''
         otherArgClass = cls.getPageInfo(page)['pageClass'].Arguments
-        args = req.args
         if args is None:
             # No arguments available.
             try:
@@ -178,8 +177,9 @@ class FabPage(UIPage[ProcT], FabResource[ArgsT, ProcT], ABC):
             yield RefreshScript(*autoUpdateWidgets).present(proc=proc)
 
     def getParentURL(self, req: Request) -> str:
+        args = req.args
         for ancestor in reversed(self.getPageInfo()['parents']):
-            url = self.getPageURL(req, ancestor)
+            url = self.getPageURL(ancestor, args)
             if url is not None:
                 return url
         # In normal situations, the home page will be in the ancestry,
@@ -187,8 +187,9 @@ class FabPage(UIPage[ProcT], FabResource[ArgsT, ProcT], ABC):
         return 'Home'
 
     def backToParent(self, req: Request) -> XMLNode:
+        args = req.args
         parentName = self.getPageInfo()['parents'][-1]
-        parentURL = self.getPageURL(req, parentName)
+        parentURL = self.getPageURL(parentName, args)
         return xhtml.p[
             xhtml.a(href = parentURL)[
                 'Back to ', self.getPageInfo(parentName)['description']
@@ -237,12 +238,13 @@ class LinkBar(Widget):
     def __createLinkButton(self,
             proc: PageProcessor, pageName: str, infoKey: str
             ) -> Optional[XMLNode]:
+        args = proc.req.args
         page = cast(FabPage, proc.page)
         pageInfo = page.getPageInfo(pageName)
         description = cast(Union[str, bool, None], pageInfo[infoKey])
         if description is False:
             return None
-        url = page.getPageURL(proc.req, pageName)
+        url = page.getPageURL(pageName, args)
         if url is None:
             return None
         icon = pageInfo['icon']
