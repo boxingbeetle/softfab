@@ -16,7 +16,7 @@ from softfab.pageargs import ArgsT
 from softfab.refresh import RefreshScript
 from softfab.response import Response
 from softfab.utils import abstract
-from softfab.webgui import Widget, pageURL
+from softfab.webgui import Image, Widget, pageURL
 from softfab.xmlgen import XMLContent, XMLNode, xhtml
 
 IconModifier = Enum('IconModifier', 'NONE NEW EDIT DELETE')
@@ -264,7 +264,7 @@ class LinkBarButton:
     def __init__(self,
                  label: str,
                  url: str,
-                 icon: XMLNode,
+                 icon: Image,
                  modifier: IconModifier,
                  active: bool
                  ):
@@ -301,7 +301,7 @@ class LinkBar(Widget):
 
         return xhtml.div(class_='navthis' if active else None)[
             xhtml.a(href=button.url)[
-                xhtml.span(class_=' '.join(iconStyle))[ button.icon ],
+                xhtml.span(class_=' '.join(iconStyle))[ button.icon.present() ],
                 xhtml.span(class_='navlabel')[ button.label ]
                 ]
             ]

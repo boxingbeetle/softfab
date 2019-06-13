@@ -9,8 +9,8 @@ TODO: Currently the "css" Python argument sets the XHTML "style" attribute and
 from io import BytesIO
 from itertools import chain
 from typing import (
-    Callable, ClassVar, Iterable, Iterator, List, Mapping, Optional, Sequence,
-    Tuple, TypeVar, Union, cast
+    Callable, ClassVar, Dict, Iterable, Iterator, List, Mapping, Optional,
+    Sequence, Tuple, TypeVar, Union, cast
 )
 from xml.etree import ElementTree
 import logging
@@ -610,7 +610,28 @@ class PropertiesTable(Table):
         # that here to please PyLint.
         raise NotImplementedError
 
-def pngIcon(url: str, data: Optional[bytes]) -> XMLNode:
+class Image(AttrContainer):
+
+    @classmethod
+    def create(cls,
+               url: str,
+               width: Optional[int] = None,
+               height: Optional[int] = None
+               ) -> 'Image':
+        attributes = dict(src=url, alt='') # type: Dict[str, object]
+        if width is not None:
+            attributes['width'] = width
+        if height is not None:
+            attributes['height'] = height
+        return cls((), attributes)
+
+    def _replaceContents(self, contents: Iterable[XMLPresentable]) -> NoReturn:
+        raise ValueError('Image does not support nested content')
+
+    def present(self, **kwargs: object) -> XMLContent: # pylint: disable=unused-argument
+        return xhtml.img(**self._attributes)
+
+def pngIcon(url: str, data: Optional[bytes]) -> Image:
     width, height = None, None
     if data is not None:
         with BytesIO(data) as inp:
@@ -619,9 +640,9 @@ def pngIcon(url: str, data: Optional[bytes]) -> XMLNode:
             except ValueError as ex:
                 name = url[ url.rfind('/') + 1 : ]
                 logging.error('Invalid PNG file for icon "%s": %s', name, ex)
-    return xhtml.img(src = url, alt = '', width = width, height = height)
+    return Image.create(url, width, height)
 
-def svgIcon(url: str, data: Optional[bytes]) -> XMLNode:
+def svgIcon(url: str, data: Optional[bytes]) -> Image:
     width = height = None
     if data is not None:
         try:
@@ -630,9 +651,11 @@ def svgIcon(url: str, data: Optional[bytes]) -> XMLNode:
             name = url[ url.rfind('/') + 1 : ]
             logging.error('Error parsing SVG icon "%s": %s', name, ex)
         else:
-            width = svgElement.get('width')
-            height = svgElement.get('height')
-    return xhtml.img(src = url, alt = '', width = width, height = height)
+            widthStr = svgElement.get('width')
+            width = None if widthStr is None else int(widthStr)
+            heightStr = svgElement.get('height')
+            height = None if heightStr is None else int(heightStr)
+    return Image.create(url, width, height)
 
 class ShortcutIcon(Widget):
 

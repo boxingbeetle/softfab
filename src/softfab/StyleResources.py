@@ -16,8 +16,7 @@ from softfab import styles
 from softfab.databaselib import createInternalId
 from softfab.timelib import getTime, secondsPerDay
 from softfab.useragent import AcceptedEncodings
-from softfab.webgui import ShortcutIcon, StyleSheet, pngIcon, svgIcon
-from softfab.xmlgen import XMLNode
+from softfab.webgui import Image, ShortcutIcon, StyleSheet, pngIcon, svgIcon
 
 
 def _load(fileName: str) -> Optional[bytes]:
@@ -86,7 +85,7 @@ class _StyleRoot(Resource):
 
     def __init__(self):
         Resource.__init__(self)
-        self.__icons = {} # type: Dict[str, XMLNode]
+        self.__icons = {} # type: Dict[str, Image]
 
     def __addFile(self, fileName: str, mediaType: str) -> Optional[bytes]:
         data = _load(fileName)
@@ -99,14 +98,14 @@ class _StyleRoot(Resource):
             self.putChild(fileName.encode(), resourceFactory(data, mediaType))
         return data
 
-    def addIcon(self, name: str) -> XMLNode:
+    def addIcon(self, name: str) -> Image:
         icon = self.__icons.get(name)
         if icon is None:
             icon = self.__addIcon(name)
             self.__icons[name] = icon
         return icon
 
-    def __addIcon(self, name: str) -> XMLNode:
+    def __addIcon(self, name: str) -> Image:
         fileName = name + '.svg'
         if is_resource(styles, fileName):
             data = self.__addFile(fileName, 'image/svg+xml')
