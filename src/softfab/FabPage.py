@@ -3,7 +3,8 @@
 from abc import ABC
 from enum import Enum
 from typing import (
-    Any, ClassVar, Dict, Iterator, Mapping, Optional, Sequence, Union, cast
+    Any, ClassVar, Dict, Iterable, Iterator, Mapping, Optional, Sequence,
+    Union, cast
 )
 import sys
 
@@ -11,7 +12,7 @@ from softfab.Page import FabResource, PageProcessor, ProcT, Responder
 from softfab.StyleResources import styleRoot
 from softfab.UIPage import UIPage
 from softfab.authentication import LoginAuthPage
-from softfab.pageargs import ArgsT, PageArgs
+from softfab.pageargs import ArgsT
 from softfab.refresh import RefreshScript
 from softfab.response import Response
 from softfab.utils import abstract
@@ -157,9 +158,45 @@ class FabPage(UIPage[ProcT], FabResource[ArgsT, ProcT], ABC):
     def pageTitle(self, proc: ProcT) -> str:
         return self.description
 
+    def __createLinkButton(self,
+            pageName: str, infoKey: str, args: Optional[ArgsT]
+            ) -> Optional['LinkBarButton']:
+        pageInfo = self.getPageInfo(pageName)
+
+        description = pageInfo[infoKey]
+        if description is False:
+            return None
+
+        url = self.getPageURL(pageName, args)
+        if url is None:
+            return None
+
+        return LinkBarButton(
+            label=description,
+            url=url,
+            icon=pageInfo['icon'],
+            modifier=pageInfo['iconModifier'],
+            active=pageName == self.name
+            )
+
+    def __createLinkButtons(self,
+            pageNames: Iterable[str], infoKey: str, args: Optional[ArgsT]
+            ) -> Iterator['LinkBarButton']:
+        for name in pageNames:
+            button = self.__createLinkButton(name, infoKey, args)
+            if button is not None:
+                yield button
+
     def presentHeader(self, proc: ProcT) -> XMLContent:
         yield super().presentHeader(proc)
-        yield LinkBar.instance.present(page=self, args=proc.args)
+        yield LinkBar.instance.present(
+            rootButtons=tuple(self.__createLinkButtons(
+                self.iterRootPath(), 'description', proc.args
+                )),
+            childButtons=tuple(self.__createLinkButtons(
+                self.iterActiveChildren(), 'linkDescription', proc.args
+                ))
+            )
 
     def presentContent(self, proc: ProcT) -> XMLContent:
         # This method is already declared abstract in UIPage, we re-assert
@@ -248,29 +285,6 @@ class LinkBar(Widget):
 
     __levelSep = xhtml.div(class_ = 'level')[ '\u25B8' ]
 
-    def __createLinkButton(self,
-            pageName: str, infoKey: str, **kwargs: object
-            ) -> Optional[LinkBarButton]:
-        page = cast(FabPage, kwargs['page'])
-        args = cast(Optional[PageArgs], kwargs.get('args'))
-        pageInfo = page.getPageInfo(pageName)
-
-        description = pageInfo[infoKey]
-        if description is False:
-            return None
-
-        url = page.getPageURL(pageName, args)
-        if url is None:
-            return None
-
-        return LinkBarButton(
-            label=description,
-            url=url,
-            icon=pageInfo['icon'],
-            modifier=pageInfo['iconModifier'],
-            active=pageName == page.name
-            )
-
     def __presentLinkButton(self, button: LinkBarButton) -> XMLNode:
         active = button.active
 
@@ -293,39 +307,24 @@ class LinkBar(Widget):
             ]
 
     def __presentButtons(self, **kwargs: object) -> XMLContent:
-        childButtons = tuple(self.__presentChildButtons(**kwargs))
+        rootButtons = cast(Sequence[LinkBarButton], kwargs['rootButtons'])
+        childButtons = cast(Sequence[LinkBarButton], kwargs['childButtons'])
         levelSep = self.__levelSep
+
         # Root path.
-        yield levelSep.join(
-            self.__presentRootButtons(bool(childButtons), **kwargs)
-            )
+        for button in rootButtons:
+            presentation = self.__presentLinkButton(button)
+            isParent = not button.active
+            if isParent or childButtons:
+                presentation = presentation.addClass('rootpath')
+            yield presentation
+            if isParent:
+                yield levelSep
+
         # Children.
         if childButtons:
             yield levelSep
-            yield from childButtons
-
-    def __presentRootButtons(self,
-            styleThis: bool,
-            **kwargs: object
-            ) -> Iterator[XMLNode]:
-        page = cast(FabPage, kwargs['page'])
-
-        for pageName in page.iterRootPath():
-            button = self.__createLinkButton(pageName, 'description', **kwargs)
-            if button is not None:
-                presentation = self.__presentLinkButton(button)
-                if not button.active or styleThis:
-                    presentation = presentation.addClass('rootpath')
-                yield presentation
-
-    def __presentChildButtons(self, **kwargs: object) -> Iterator[XMLNode]:
-        page = cast(FabPage, kwargs['page'])
-
-        for pageName in page.iterActiveChildren():
-            button = self.__createLinkButton(
-                pageName, 'linkDescription', **kwargs
-                )
-            if button is not None:
+            for button in childButtons:
                 yield self.__presentLinkButton(button)
 
     def present(self, **kwargs: object) -> XMLContent:
