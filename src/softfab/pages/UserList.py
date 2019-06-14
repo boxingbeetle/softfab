@@ -156,18 +156,20 @@ class UserList_GET(FabPage['UserList_GET.Processor', 'UserList_GET.Arguments']):
     def pageTitle(self, proc: Processor) -> str:
         return 'Configure Users'
 
-    def presentContent(self, proc: Processor) -> XMLContent:
+    def presentContent(self, **kwargs: object) -> XMLContent:
+        proc = cast(UserList_GET.Processor, kwargs['proc'])
+
         yield makeForm(method = 'get', formId = 'inactive')[
             FilterTable.instance
-            ].present(proc=proc)
+            ].present(**kwargs)
 
-        yield UserTable.instance.present(proc=proc)
+        yield UserTable.instance.present(**kwargs)
         if proc.canChangeRoles:
             yield xhtml.p[
                 'To deny an existing user access to your SoftFab, '
                 'set the user\'s role to "inactive".'
                 ]
-            yield roleApplyScript.present(proc=proc)
+            yield roleApplyScript.present(**kwargs)
 
         if proc.canChangeAnonGuest:
             yield makeForm(
@@ -175,7 +177,7 @@ class UserList_GET(FabPage['UserList_GET.Processor', 'UserList_GET.Arguments']):
                 action='AnonGuest',
                 setFocus=False,
                 args=AnonGuestArgs(anonguest=project['anonguest'])
-                )[ AnonGuestTable.instance ].present(proc=proc)
+                )[ AnonGuestTable.instance ].present(**kwargs)
         else:
             yield presentAnonGuestSetting()
 
@@ -234,7 +236,7 @@ class UserList_POST(FabPage['UserList_POST.Processor',
     def pageTitle(self, proc: Processor) -> str:
         return 'Change User Role'
 
-    def presentContent(self, proc: Processor) -> XMLContent:
+    def presentContent(self, **kwargs: object) -> XMLContent:
         assert False
 
     def presentError(self, message: XML, **kwargs: object) -> XMLContent:

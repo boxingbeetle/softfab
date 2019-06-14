@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Iterator
+from typing import Iterator, cast
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
@@ -70,7 +70,8 @@ class TaskRunnerHistory_GET(FabPage['TaskRunnerHistory_GET.Processor',
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield HistoryTable.instance
 
-    def presentContent(self, proc: Processor) -> XMLContent:
+    def presentContent(self, **kwargs: object) -> XMLContent:
+        proc = cast(TaskRunnerHistory_GET.Processor, kwargs['proc'])
         runnerId = proc.args.runnerId
 
         yield xhtml.h2[
@@ -85,4 +86,4 @@ class TaskRunnerHistory_GET(FabPage['TaskRunnerHistory_GET.Processor',
             yield xhtml.p[xhtml.i[
                 'Only tasks from the last %d jobs are shown.' % _jobsLimit
                 ]]
-        yield HistoryTable.instance.present(proc=proc)
+        yield HistoryTable.instance.present(**kwargs)

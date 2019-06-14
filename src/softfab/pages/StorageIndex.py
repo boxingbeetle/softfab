@@ -30,5 +30,5 @@ class StorageIndex_GET(FabPage['StorageIndex_GET.Processor',
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield StorageTable.instance
 
-    def presentContent(self, proc: Processor) -> XMLContent:
-        return StorageTable.instance.present(proc=proc)
+    def presentContent(self, **kwargs: object) -> XMLContent:
+        return StorageTable.instance.present(**kwargs)

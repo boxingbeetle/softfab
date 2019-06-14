@@ -58,8 +58,8 @@ class ProductIndex_GET(FabPage['ProductIndex_GET.Processor',
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield ProductDefTable.instance
 
-    def presentContent(self, proc: Processor) -> XMLContent:
-        yield ProductDefTable.instance.present(proc=proc)
+    def presentContent(self, **kwargs: object) -> XMLContent:
+        yield ProductDefTable.instance.present(**kwargs)
         yield xhtml.p[
             'For help about "Products", please read the following document: ',
             docLink('/introduction/execution_graph/')[

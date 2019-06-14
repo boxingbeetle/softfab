@@ -35,7 +35,7 @@ class AddUserBase(FabPage[ProcT, ArgsT]):
     def iterStyleDefs(self) -> Iterator[str]:
         yield 'td.formlabel { width: 16em; }'
 
-    def presentContent(self, proc: ProcT) -> XMLContent:
+    def presentContent(self, **kwargs: object) -> XMLContent:
         raise NotImplementedError
 
     def presentForm(self,
@@ -72,8 +72,8 @@ class AddUser_GET(AddUserBase['AddUser_GET.Processor',
         def process(self, req, user):
             pass
 
-    def presentContent(self, proc: Processor) -> XMLContent:
-        yield self.presentForm(None, proc=proc)
+    def presentContent(self, **kwargs: object) -> XMLContent:
+        yield self.presentForm(None, **kwargs)
 
 class AddUser_POST(AddUserBase['AddUser_POST.Processor',
                                'AddUser_POST.Arguments']):
@@ -133,7 +133,8 @@ class AddUser_POST(AddUserBase['AddUser_POST.Processor',
             else:
                 assert False, req.args.action
 
-    def presentContent(self, proc: Processor) -> XMLContent:
+    def presentContent(self, **kwargs: object) -> XMLContent:
+        proc = cast(AddUser_POST.Processor, kwargs['proc'])
         yield xhtml.p[ xhtml.b[
             'User "%s" has been added successfully.' % proc.args.user
             ] ]
@@ -143,7 +144,7 @@ class AddUser_POST(AddUserBase['AddUser_POST.Processor',
                 'go back to the users overview page'
                 ], '.'
             ]
-        yield self.presentForm(LoginPassArgs.subset(proc.args), proc=proc)
+        yield self.presentForm(LoginPassArgs.subset(proc.args), **kwargs)
 
     def presentError(self, message: XML, **kwargs: object) -> XMLContent:
         proc = cast('AddUser_POST.Processor', kwargs['proc'])

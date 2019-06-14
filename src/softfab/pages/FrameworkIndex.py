@@ -66,8 +66,8 @@ class FrameworkIndex_GET(FabPage['FrameworkIndex_GET.Processor',
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield FrameworksTable.instance
 
-    def presentContent(self, proc: Processor) -> XMLContent:
-        yield FrameworksTable.instance.present(proc=proc)
+    def presentContent(self, **kwargs: object) -> XMLContent:
+        yield FrameworksTable.instance.present(**kwargs)
         yield xhtml.p[
             'Final parameters are not shown in the table above. '
             'If you follow one of the framework name links, you are taken '

@@ -103,7 +103,8 @@ class InputTable(Table):
                     )
             yield cells
 
-def presentTargets(*, proc: 'ConfigDetails_GET.Processor') -> XMLContent:
+def presentTargets(**kwargs: object) -> XMLContent:
+    proc = cast(ConfigDetails_GET.Processor, kwargs['proc'])
     targets = proc.config.targets
     if targets:
         yield xhtml.p[
@@ -195,7 +196,8 @@ class ConfigDetails_GET(
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'c/a')
 
-    def presentContent(self, proc: Processor) -> XMLContent:
+    def presentContent(self, **kwargs: object) -> XMLContent:
+        proc = cast(ConfigDetails_GET.Processor, kwargs['proc'])
         config = proc.config
         configId = proc.args.configId
         if config is None:
@@ -208,15 +210,15 @@ class ConfigDetails_GET(
         yield xhtml.p[
             'Execution graph of frameworks and products in this configuration:'
             ]
-        yield GraphPanel.instance.present(proc=proc, graph=proc.graph)
-        yield decoratedTagsTable.present(proc=proc)
-        yield CommentPanel(config.comment).present(proc=proc)
-        yield presentTargets(proc=proc)
-        yield decoratedInputTable.present(proc=proc)
-        yield decoratedConflictsList.present(proc=proc)
+        yield GraphPanel.instance.present(graph=proc.graph, **kwargs)
+        yield decoratedTagsTable.present(**kwargs)
+        yield CommentPanel(config.comment).present(**kwargs)
+        yield presentTargets(**kwargs)
+        yield decoratedInputTable.present(**kwargs)
+        yield decoratedConflictsList.present(**kwargs)
         yield xhtml.p[ 'Configuration contains the following tasks:' ]
-        yield TasksTable.instance.present(proc=proc)
-        yield decoratedSchedulesTable.present(proc=proc)
+        yield TasksTable.instance.present(**kwargs)
+        yield decoratedSchedulesTable.present(**kwargs)
         yield xhtml.p[ xhtml.br.join(self.iterLinks(proc)) ]
 
     def iterLinks(self, proc: Processor) -> Iterable[XMLContent]:

@@ -58,7 +58,7 @@ class ErrorPage(UIPage[ProcT]):
         response.setStatus(self.status, self.messageText)
         super().writeHTTPHeaders(response)
 
-    def presentContent(self, proc: ProcT) -> XMLContent:
+    def presentContent(self, **kwargs: object) -> XMLContent:
         raise NotImplementedError
 
 class BadRequestPage(ErrorPage[ProcT]):
@@ -72,7 +72,7 @@ class BadRequestPage(ErrorPage[ProcT]):
         ErrorPage.__init__(self, messageText)
         self.messageHTML = messageHTML
 
-    def presentContent(self, proc: ProcT) -> XMLContent:
+    def presentContent(self, **kwargs: object) -> XMLContent:
         return self.messageHTML
 
 class ForbiddenPage(ErrorPage[ProcT]):
@@ -82,7 +82,7 @@ class ForbiddenPage(ErrorPage[ProcT]):
     status = 403
     title = 'Access Denied'
 
-    def presentContent(self, proc: ProcT) -> XMLContent:
+    def presentContent(self, **kwargs: object) -> XMLContent:
         return xhtml.p[ 'Access denied: %s.' % self.messageText ]
 
 class NotFoundPage(ErrorPage[ProcT]):
@@ -94,7 +94,7 @@ class NotFoundPage(ErrorPage[ProcT]):
     status = 404
     title = 'Page Not Found'
 
-    def presentContent(self, proc: ProcT) -> XMLContent:
+    def presentContent(self, **kwargs: object) -> XMLContent:
         return (
             xhtml.p[ 'The page you requested was not found on this server.' ],
             xhtml.p[ xhtml.a(href = 'Home')[ 'Back to Home' ] ]
@@ -107,7 +107,7 @@ class InternalErrorPage(ErrorPage[ProcT]):
     status = 500
     title = 'Internal Error'
 
-    def presentContent(self, proc: ProcT) -> XMLContent:
+    def presentContent(self, **kwargs: object) -> XMLContent:
         return (
             xhtml.p[ 'Internal error: %s.' % self.messageText ],
             xhtml.p[ 'Please ', docLink('/reference/contact/')[

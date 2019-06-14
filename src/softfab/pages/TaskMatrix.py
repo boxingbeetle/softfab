@@ -201,12 +201,13 @@ class TaskMatrix_GET(FabPage['TaskMatrix_GET.Processor', 'TaskMatrix_GET.Argumen
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'j/a', 'view the task list')
 
-    def presentContent(self, proc: Processor) -> XMLContent:
+    def presentContent(self, **kwargs: object) -> XMLContent:
+        proc = cast(TaskMatrix_GET.Processor, kwargs['proc'])
         yield makeForm(method = 'get', args = proc.args)[
             NavigationBar.instance
-            ].present(proc=proc)
+            ].present(**kwargs)
         yield presentCSVLink(
             'TaskMatrixCSV',
             TaskMatrixCSVArgs(proc.args)
             )
-        yield Matrix.instance.present(proc=proc)
+        yield Matrix.instance.present(**kwargs)

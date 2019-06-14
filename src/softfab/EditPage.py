@@ -57,7 +57,7 @@ class AbstractPhase(Generic[EditProcT, EditArgsT, DBRecord]):
         The default implementation does nothing.
         '''
 
-    def presentContent(self, proc: EditProcT) -> XMLContent:
+    def presentContent(self, **kwargs: object) -> XMLContent:
         '''Presents this phase.
         '''
         raise NotImplementedError
@@ -68,9 +68,8 @@ class EditPhase(AbstractPhase['EditProcessorBase[EditArgsT, DBRecord]',
     '''First and main phase: actual editing of the record.
     '''
 
-    def presentContent(self,
-                       proc: 'EditProcessorBase[EditArgsT, DBRecord]'
-                       ) -> XMLContent:
+    def presentContent(self, **kwargs: object) -> XMLContent:
+        proc = cast(EditProcessorBase[EditArgsT, DBRecord], kwargs['proc'])
         page = self.page
 
         buttons = ['save']
@@ -86,7 +85,7 @@ class EditPhase(AbstractPhase['EditProcessorBase[EditArgsT, DBRecord]',
             )[
             page.getFormContent(proc),
             xhtml.p[ actionButtons(*buttons) ]
-            ].present(proc=proc)
+            ].present(**kwargs)
 
 class SavePhase(AbstractPhase['EditProcessor[EditArgsT, DBRecord]',
                               EditArgsT, DBRecord],
@@ -140,9 +139,8 @@ class SavePhase(AbstractPhase['EditProcessor[EditArgsT, DBRecord]',
             ) -> None:
         self.page.db.update(element)
 
-    def presentContent(self,
-                       proc: 'EditProcessor[EditArgsT, DBRecord]'
-                       ) -> XMLContent:
+    def presentContent(self, **kwargs: object) -> XMLContent:
+        proc = cast(EditProcessor[EditArgsT, DBRecord], kwargs['proc'])
         page = self.page
         if page.autoName:
             elementId = None
@@ -161,9 +159,8 @@ class SaveAsPhase(AbstractPhase['EditProcessor[EditArgsT, DBRecord]',
     '''Ask for a name for the record.
     '''
 
-    def presentContent(self,
-                       proc: 'EditProcessor[EditArgsT, DBRecord]'
-                       ) -> XMLContent:
+    def presentContent(self, **kwargs: object) -> XMLContent:
+        proc = cast(EditProcessor[EditArgsT, DBRecord], kwargs['proc'])
         page = self.page
         args = proc.args
         yield xhtml.h2[ 'Save As' ]
@@ -171,7 +168,7 @@ class SaveAsPhase(AbstractPhase['EditProcessor[EditArgsT, DBRecord]',
         yield makeForm(args = args.override(prev = EditPagePrev.SAVE_AS))[
             xhtml.p[ textInput(name = 'newId', size = 40) ],
             xhtml.p[ actionButtons('save', 'cancel') ],
-            ].present(proc=proc)
+            ].present(**kwargs)
 
 class ConfirmOverwritePhase(AbstractPhase['EditProcessor[EditArgsT, DBRecord]',
                                           EditArgsT, DBRecord],
@@ -179,9 +176,8 @@ class ConfirmOverwritePhase(AbstractPhase['EditProcessor[EditArgsT, DBRecord]',
     '''Asks the user for confirmation before overwriting an existing record.
     '''
 
-    def presentContent(self,
-                       proc: 'EditProcessor[EditArgsT, DBRecord]'
-                       ) -> XMLContent:
+    def presentContent(self, **kwargs: object) -> XMLContent:
+        proc = cast(EditProcessor[EditArgsT, DBRecord], kwargs['proc'])
         page = self.page
         args = proc.args
         yield xhtml.p[
@@ -191,7 +187,7 @@ class ConfirmOverwritePhase(AbstractPhase['EditProcessor[EditArgsT, DBRecord]',
         yield xhtml.p[ 'Do you want to ', xhtml.b[ 'overwrite' ], ' it?' ]
         yield makeForm(args = args.override(prev = EditPagePrev.CONFIRM))[
             xhtml.p[ actionButtons('save', 'cancel') ]
-            ].present(proc=proc)
+            ].present(**kwargs)
 
 class EditProcessorBase(PageProcessor[EditArgsT], Generic[EditArgsT, DBRecord]):
 
@@ -455,10 +451,9 @@ class EditPage(FabPage[EditProcessorBase[EditArgsT, DBRecord], EditArgsT], ABC):
         if self.useScript:
             yield rowManagerScript.present(proc=proc)
 
-    def presentContent(self,
-                       proc: EditProcessorBase[EditArgsT, DBRecord]
-                       ) -> XMLContent:
-        return proc.phase.presentContent(proc)
+    def presentContent(self, **kwargs: object) -> XMLContent:
+        proc = cast(EditProcessorBase[EditArgsT, DBRecord], kwargs['proc'])
+        return proc.phase.presentContent(**kwargs)
 
     def presentError(self, message: XML, **kwargs: object) -> XMLContent:
         proc = cast(EditProcessorBase[EditArgsT, DBRecord], kwargs['proc'])

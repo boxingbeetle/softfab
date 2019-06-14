@@ -103,13 +103,14 @@ class RecordDelete_GET(FabPage['RecordDelete_GET.Processor',
         '''
         return args.refererURL or self.getParentURL(args)
 
-    def presentContent(self, proc: Processor) -> XMLContent:
+    def presentContent(self, **kwargs: object) -> XMLContent:
+        proc = cast(RecordDelete_GET.Processor, kwargs['proc'])
         yield xhtml.p[
             'Delete ', self.recordName, ' ', xhtml.b[ proc.args.id ], '?'
             ]
         yield makeForm(args = proc.args)[
             xhtml.p[ actionButtons(Actions) ]
-            ].present(proc=proc)
+            ].present(**kwargs)
 
     def presentError(self, message: XML, **kwargs: object) -> XMLContent:
         proc = cast('RecordDelete_GET.Processor', kwargs['proc'])
@@ -150,7 +151,8 @@ class RecordDelete_POSTMixin:
                 )
             page.db.remove(record)
 
-    def presentContent(self, proc: PageProcessor) -> XMLContent:
+    def presentContent(self, **kwargs: object) -> XMLContent:
+        proc = cast(PageProcessor, kwargs['proc'])
         assert isinstance(self, FabPage), self # indirect type hint
         yield (
             xhtml.p[

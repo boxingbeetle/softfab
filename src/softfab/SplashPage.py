@@ -53,8 +53,8 @@ class SplashPage(UIPage[PageProcessor],
 
         super().writeHTTPHeaders(response)
 
-    def presentContent(self, proc: PageProcessor) -> XMLContent:
+    def presentContent(self, **kwargs: object) -> XMLContent:
         return (
             xhtml.h2[ 'Server starting:' ],
-            unorderedList[ startupMessages ].present(proc=proc)
+            unorderedList[ startupMessages ].present(**kwargs)
             )

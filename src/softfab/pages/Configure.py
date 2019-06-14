@@ -18,7 +18,7 @@ class Configure_GET(FabPage[FabPage.Processor, FabPage.Arguments]):
     def checkAccess(self, user: User) -> None:
         pass
 
-    def presentContent(self, proc: FabPage.Processor) -> XMLContent:
+    def presentContent(self, **kwargs: object) -> XMLContent:
         descriptions = (
             ( 'Project',
                 'Change overall settings, such as the project name '

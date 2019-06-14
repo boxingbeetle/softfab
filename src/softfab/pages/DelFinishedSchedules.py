@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from enum import Enum
+from typing import cast
 
 from softfab.FabPage import FabPage, IconModifier
 from softfab.Page import PageProcessor, ProcT, Redirect
@@ -22,7 +23,7 @@ class DelFinishedSchedulesBase(FabPage[ProcT, ArgsT]):
     def checkAccess(self, user: User) -> None:
         pass
 
-    def presentContent(self, proc: ProcT) -> XMLContent:
+    def presentContent(self, **kwargs: object) -> XMLContent:
         raise NotImplementedError
 
 class DelFinishedSchedules_GET(
@@ -33,11 +34,11 @@ class DelFinishedSchedules_GET(
     class Arguments(PageArgs):
         pass
 
-    def presentContent(self, proc: FabPage.Processor) -> XMLContent:
+    def presentContent(self, **kwargs: object) -> XMLContent:
         yield xhtml.p[ 'Delete all finished schedules?' ]
         yield makeForm()[
             xhtml.p[ actionButtons(Actions) ]
-            ].present(proc=proc)
+            ].present(**kwargs)
 
 class DelFinishedSchedules_POST(
         DelFinishedSchedulesBase['DelFinishedSchedules_POST.Processor',
@@ -63,7 +64,8 @@ class DelFinishedSchedules_POST(
             else:
                 assert False, action
 
-    def presentContent(self, proc: Processor) -> XMLContent:
+    def presentContent(self, **kwargs: object) -> XMLContent:
+        proc = cast(DelFinishedSchedules_POST.Processor, kwargs['proc'])
         yield (
             xhtml.p[ 'All finished schedules have been deleted.' ],
             self.backToParent(proc.args)

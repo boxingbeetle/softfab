@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Iterator
+from typing import Iterator, cast
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
@@ -113,7 +113,8 @@ class ScheduleDetails_GET(FabPage['ScheduleDetails_GET.Processor',
     def iterWidgets(self, proc: Processor) -> Iterator[Widget]:
         yield DetailsTable.instance
 
-    def presentContent(self, proc: Processor) -> XMLContent:
+    def presentContent(self, **kwargs: object) -> XMLContent:
+        proc = cast(ScheduleDetails_GET.Processor, kwargs['proc'])
         scheduleId = proc.args.id
         scheduled = proc.scheduled
         if scheduled is None:
@@ -123,7 +124,7 @@ class ScheduleDetails_GET(FabPage['ScheduleDetails_GET.Processor',
             return
 
         yield xhtml.h2[ 'Details of schedule ', xhtml.b[ scheduleId ], ':' ]
-        yield DetailsTable.instance.present(proc=proc)
+        yield DetailsTable.instance.present(**kwargs)
         yield xhtml.p[
             xhtml.br.join((
                 pageLink('ScheduleEdit', proc.args)[

@@ -48,11 +48,9 @@ class TaskRunnerSavePhase(SavePhase[TaskRunnerEditArgs, TaskRunner]):
         else:
             proc.password = None # type: ignore
 
-    def presentContent(self,
-            proc: EditProcessor[TaskRunnerEditArgs, TaskRunner]
-            ) -> XMLContent:
-        yield TokenTable.instance.present(proc=proc)
-        yield super().presentContent(proc)
+    def presentContent(self, **kwargs: object) -> XMLContent:
+        yield TokenTable.instance.present(**kwargs)
+        yield super().presentContent(**kwargs)
 
 class TaskRunnerEditBase(EditPage[TaskRunnerEditArgs, TaskRunner]):
     # FabPage constants:

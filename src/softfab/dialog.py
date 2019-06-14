@@ -3,7 +3,7 @@
 from abc import ABC
 from typing import (
     TYPE_CHECKING, Callable, ClassVar, Generic, List, Optional, Sequence, Type,
-    TypeVar
+    TypeVar, cast
 )
 
 from softfab.FabPage import FabPage
@@ -65,11 +65,12 @@ class DialogStep(ABC, Generic[DialogProcT]):
         '''
         return True
 
-    def presentContent(self, proc: DialogProcT) -> XMLContent:
+    def presentContent(self, **kwargs: object) -> XMLContent:
         '''Presents this step.
         Is only called if process() returned True.
         The default implementation presents a form.
         '''
+        proc = cast(DialogProcT, kwargs['proc'])
         buttons = _backAndNextButton(proc.backName, proc.nextLabel)
         return makeForm(
             formId = 'dialog', action = self._page.name, args = proc.args
@@ -77,7 +78,7 @@ class DialogStep(ABC, Generic[DialogProcT]):
             buttons,
             self._formBodyPresenter,
             buttons
-            ].present(proc=proc)
+            ].present(**kwargs)
 
     def presentFormBody(self, **kwargs: object) -> XMLContent: # pylint: disable=unused-argument
         return None
@@ -302,7 +303,8 @@ class DialogPage(FabPage[DialogProcessorBase, 'DialogPage.Arguments'], ABC):
         else:
             return self.description + ' \u2013 ' + proc.step.title
 
-    def presentContent(self, proc: DialogProcessorBase) -> XMLContent:
+    def presentContent(self, **kwargs: object) -> XMLContent:
+        proc = cast(DialogProcessorBase, kwargs['proc'])
         if proc.errorMessage is not None:
             yield xhtml.p(class_ = 'notice')[ proc.errorMessage ]
-        yield proc.step.presentContent(proc)
+        yield proc.step.presentContent(**kwargs)

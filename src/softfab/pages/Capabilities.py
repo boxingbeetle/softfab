@@ -184,7 +184,8 @@ class Capabilities_GET(FabPage['Capabilities_GET.Processor',
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'r/l')
 
-    def presentContent(self, proc: Processor) -> XMLContent:
+    def presentContent(self, **kwargs: object) -> XMLContent:
+        proc = cast(Capabilities_GET.Processor, kwargs['proc'])
         resType = resTypeDB[proc.args.restype]
         yield vgroup[
             ResTypeTable.instance,
@@ -194,4 +195,4 @@ class Capabilities_GET(FabPage['Capabilities_GET.Processor',
                 ],
             ResourcesTable.instance,
             CapabilitiesTable.instance
-            ].present(proc=proc)
+            ].present(**kwargs)

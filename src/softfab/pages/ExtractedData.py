@@ -234,14 +234,15 @@ class ExtractedData_GET(FabPage['ExtractedData_GET.Processor',
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield ExtractedDataTable.instance
 
-    def presentContent(self, proc: Processor) -> XMLContent:
+    def presentContent(self, **kwargs: object) -> XMLContent:
+        proc = cast(ExtractedData_GET.Processor, kwargs['proc'])
         parentArgs = ReportTaskArgs.subset(proc.args)
 
         yield makeForm(formId='keys', method='get')[
             KeysTable.instance,
             VisualizationTable.instance,
             xhtml.p[ submitButton[ 'Apply' ] ],
-            ].present(proc=proc)
+            ].present(**kwargs)
 
         yield xhtml.p[
             pageLink('ReportTasks', parentArgs)[
@@ -254,4 +255,4 @@ class ExtractedData_GET(FabPage['ExtractedData_GET.Processor',
         elif proc.args.vistype is VisualizationType.CHART_BAR:
             yield visualizeBarCharts(proc)
         elif proc.args.vistype is VisualizationType.TABLE:
-            yield ExtractedDataTable.instance.present(proc=proc)
+            yield ExtractedDataTable.instance.present(**kwargs)

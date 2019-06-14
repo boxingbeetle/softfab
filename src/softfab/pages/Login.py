@@ -39,7 +39,8 @@ class LoginBase(UIPage[ProcT], FabResource[ArgsT, ProcT]):
     def pageTitle(self, proc: ProcT) -> str:
         return 'Log In'
 
-    def presentContent(self, proc: ProcT) -> XMLContent:
+    def presentContent(self, **kwargs: object) -> XMLContent:
+        proc = cast(ProcT, kwargs['proc'])
         if self.secureCookie and not proc.req.secure:
             yield xhtml.p(class_='notice')[
                 'Login is not possible over insecure channel.'
@@ -51,7 +52,7 @@ class LoginBase(UIPage[ProcT], FabResource[ArgsT, ProcT]):
             yield makeForm(args = proc.args)[
                 LoginTable.instance,
                 xhtml.p[ submitButton[ 'Log In' ] ]
-                ].present(proc=proc)
+                ].present(**kwargs)
 
         userAgent = proc.req.userAgent
         if userAgent.family == 'MSIE':
@@ -147,6 +148,5 @@ class Login_POST(LoginBase['Login_POST.Processor', 'Login_POST.Arguments']):
                     raise Redirect('Home' if url is None else url)
 
     def presentError(self, message: XML, **kwargs: object) -> XMLContent:
-        proc = cast(Login_POST.Processor, kwargs['proc'])
         yield xhtml.p(class_ = 'notice')[ message ]
-        yield self.presentContent(proc)
+        yield self.presentContent(**kwargs)

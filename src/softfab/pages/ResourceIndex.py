@@ -146,8 +146,8 @@ class ResourceIndex_GET(FabPage['ResourceIndex_GET.Processor',
     def iterWidgets(self, proc: Processor) -> Iterator[Widget]:
         yield ResourcesTable.instance
 
-    def presentContent(self, proc: Processor) -> XMLContent:
-        yield ResourcesTable.instance.present(proc=proc)
+    def presentContent(self, **kwargs: object) -> XMLContent:
+        yield ResourcesTable.instance.present(**kwargs)
         yield xhtml.p[
             'The Task Runner installation package can be found on the ',
             docLink('/installation/downloads/#taskrunner_downloads')[
@@ -204,7 +204,7 @@ class ResourceIndex_POST(FabPage['ResourceIndex_POST.Processor',
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'r/a', 'reserve resources')
 
-    def presentContent(self, proc: Processor) -> XMLContent:
+    def presentContent(self, **kwargs: object) -> XMLContent:
         assert False
 
     def presentError(self, message: XML, **kwargs: object) -> XMLContent:

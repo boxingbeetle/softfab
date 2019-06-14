@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from enum import Enum
-from typing import Iterator
+from typing import Iterator, cast
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor, Redirect
@@ -110,10 +110,11 @@ class ScheduleIndex_GET(FabPage['ScheduleIndex_GET.Processor',
     def iterWidgets(self, proc: Processor) -> Iterator[Widget]:
         yield ScheduleTable.instance
 
-    def presentContent(self, proc: Processor) -> XMLContent:
+    def presentContent(self, **kwargs: object) -> XMLContent:
+        proc = cast(ScheduleIndex_GET.Processor, kwargs['proc'])
         yield makeForm(args=proc.args)[
             ScheduleTable.instance
-            ].present(proc=proc)
+            ].present(**kwargs)
         if proc.finishedSchedules:
             yield xhtml.p[
                 pageLink('DelFinishedSchedules')[
@@ -153,5 +154,5 @@ class ScheduleIndex_POST(FabPage['ScheduleIndex_POST.Processor',
     def checkAccess(self, user: User) -> None:
         pass # Processor checks privs.
 
-    def presentContent(self, proc: Processor) -> XMLContent:
+    def presentContent(self, **kwargs: object) -> XMLContent:
         assert False

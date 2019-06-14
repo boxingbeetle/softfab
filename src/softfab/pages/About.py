@@ -34,15 +34,16 @@ class About_GET(FabPage[FabPage.Processor, FabPage.Arguments]):
     def checkAccess(self, user: User) -> None:
         pass
 
-    def presentContent(self, proc: FabPage.Processor) -> XMLContent:
+    def presentContent(self, **kwargs: object) -> XMLContent:
         yield xhtml.h2[ 'Status' ]
-        yield StatusTable.instance.present(proc=proc)
+        yield StatusTable.instance.present(**kwargs)
 
         yield xhtml.h2[ 'Installation' ]
-        yield InstallationTable.instance.present(proc=proc)
+        yield InstallationTable.instance.present(**kwargs)
 
+        proc = cast(FabPage.Processor, kwargs['proc'])
         yield xhtml.h2[ 'Web Browser' ]
-        yield BrowserTable.instance.present(proc=proc)
+        yield BrowserTable.instance.present(**kwargs)
         yield (
             xhtml.p[ 'Raw user agent string:' ],
             xhtml.pre(style = 'white-space: pre-wrap')[

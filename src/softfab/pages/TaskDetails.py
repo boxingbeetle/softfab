@@ -1,5 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from typing import cast
+
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
 from softfab.RecordDelete import DeleteArgs
@@ -66,7 +68,8 @@ class TaskDetails_GET(FabPage['TaskDetails_GET.Processor',
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'td/a')
 
-    def presentContent(self, proc: Processor) -> XMLContent:
+    def presentContent(self, **kwargs: object) -> XMLContent:
+        proc = cast(TaskDetails_GET.Processor, kwargs['proc'])
         taskDef = proc.taskDef
         taskDefId = proc.args.id
         configs = proc.configs
@@ -79,7 +82,7 @@ class TaskDetails_GET(FabPage['TaskDetails_GET.Processor',
         yield xhtml.h2[
             'Details of task definition ', xhtml.b[ taskDefId ], ':'
             ]
-        yield DetailsTable.instance.present(proc=proc)
+        yield DetailsTable.instance.present(**kwargs)
         yield xhtml.p[ createTaskHistoryLink(taskDefId) ]
         numConfigs = len(configs)
         yield xhtml.p[

@@ -4,7 +4,7 @@
 The Design page containing the execution graph(s).
 '''
 
-from typing import Sized, Tuple
+from typing import Sized, Tuple, cast
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
@@ -77,7 +77,8 @@ class Design_GET(
         checkPrivilege(user, 'fd/a')
         checkPrivilege(user, 'pd/a')
 
-    def presentContent(self, proc: Processor) -> XMLContent:
+    def presentContent(self, **kwargs: object) -> XMLContent:
+        proc = cast(Design_GET.Processor, kwargs['proc'])
         show = proc.args.show
         if show == 'yes':
             if len(proc.graphs) == 1: # only containing the Legend
@@ -100,7 +101,7 @@ class Design_GET(
                 for index, graph in enumerate(proc.graphs):
                     if index == len(proc.graphs) - 1:
                         yield xhtml.h2[ 'Legend' ]
-                    yield GraphPanel.instance.present(proc=proc, graph=graph)
+                    yield GraphPanel.instance.present(graph=graph, **kwargs)
             else:
                 yield xhtml.p[
                     pageLink('Design', show='yes')[ 'Execution Graph(s)' ],

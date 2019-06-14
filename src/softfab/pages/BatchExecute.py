@@ -157,13 +157,14 @@ class BatchExecute_GET(FabPage['BatchExecute_GET.Processor',
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield BatchConfigTable.instance
 
-    def presentContent(self, proc: Processor) -> XMLContent:
+    def presentContent(self, **kwargs: object) -> XMLContent:
+        proc = cast(BatchExecute_GET.Processor, kwargs['proc'])
         for notice in proc.notices:
             yield xhtml.p(class_ = 'notice')[ notice ]
         configs = proc.configs
         if configs:
             yield xhtml.h2[ 'Selected configurations:' ]
-            yield BatchConfigTable.instance.present(proc=proc)
+            yield BatchConfigTable.instance.present(**kwargs)
 
             taskSet = proc.taskSet
             if taskSet is None:
@@ -180,7 +181,7 @@ class BatchExecute_GET(FabPage['BatchExecute_GET.Processor',
                         ],
                     ( hiddenInput(name='config.%d' % i, value=cfg.getId())
                       for i, cfg in enumerate(configs) ),
-                    ].present(proc=proc, taskSet=taskSet)
+                    ].present(taskSet=taskSet, **kwargs)
                 return
         else:
             yield xhtml.h2[ 'No configurations selected' ]

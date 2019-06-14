@@ -152,7 +152,7 @@ class UIPage(Generic[ProcT]):
         elif proc.error is not None:
             return self.presentError(proc.error, **kwargs)
         else:
-            return self.presentContent(proc)
+            return self.presentContent(**kwargs)
 
     def presentHeader(self, **kwargs: object) -> XMLContent:
         proc = cast(ProcT, kwargs['proc'])
@@ -175,7 +175,7 @@ class UIPage(Generic[ProcT]):
                 ]
             ]
 
-    def presentContent(self, proc: ProcT) -> XMLContent:
+    def presentContent(self, **kwargs: object) -> XMLContent:
         raise NotImplementedError
 
     def presentError(self, # pylint: disable=unused-argument

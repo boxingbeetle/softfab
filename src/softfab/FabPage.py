@@ -200,7 +200,7 @@ class FabPage(UIPage[ProcT], FabResource[ArgsT, ProcT], ABC):
             **kwargs
             )
 
-    def presentContent(self, proc: ProcT) -> XMLContent:
+    def presentContent(self, **kwargs: object) -> XMLContent:
         # This method is already declared abstract in UIPage, we re-assert
         # that here to please PyLint.
         raise NotImplementedError

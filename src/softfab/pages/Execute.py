@@ -369,11 +369,10 @@ class SaveStep(DialogStep):
             configDB.update(config)
         return True
 
-    def presentContent(self, proc: PageProcessor) -> XMLContent:
-        yield (
-            xhtml.p[ 'Configuration saved.' ],
-            self._page.backToParent(proc.args)
-            )
+    def presentContent(self, **kwargs: object) -> XMLContent:
+        proc = cast(PageProcessor, kwargs['proc'])
+        yield xhtml.p[ 'Configuration saved.' ]
+        yield self._page.backToParent(proc.args)
         # TODO: Having a direct way to execute the saved config would be useful.
 
     def verify(self, proc: 'Execute_POST.Processor') -> Type[DialogStep]:

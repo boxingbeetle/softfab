@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Iterator
+from typing import Iterator, cast
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
@@ -40,7 +40,8 @@ class TaskRunnerDetails_GET(FabPage['TaskRunnerDetails_GET.Processor',
     def iterWidgets(self, proc: Processor) -> Iterator[Widget]:
         yield DetailsTable.instance
 
-    def presentContent(self, proc: Processor) -> XMLContent:
+    def presentContent(self, **kwargs: object) -> XMLContent:
+        proc = cast(TaskRunnerDetails_GET.Processor, kwargs['proc'])
         yield xhtml.h2[
             'Details / ',
             pageLink('TaskRunnerHistory', TaskRunnerIdArgs.subset(proc.args))[
@@ -48,7 +49,7 @@ class TaskRunnerDetails_GET(FabPage['TaskRunnerDetails_GET.Processor',
                 ],
             ' of Task Runner ', xhtml.b[ proc.args.runnerId ], ':'
             ]
-        yield DetailsTable.instance.present(proc=proc)
+        yield DetailsTable.instance.present(**kwargs)
         yield xhtml.p[xhtml.br.join(self.__presentLinks(proc.taskRunner))]
 
     def __presentLinks(self, taskRunner):

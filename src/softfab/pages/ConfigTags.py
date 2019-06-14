@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from enum import Enum
-from typing import Iterator
+from typing import Iterator, cast
 
 from softfab.FabPage import FabPage, IconModifier
 from softfab.Page import PageProcessor, Redirect
@@ -54,13 +54,14 @@ class ConfigTagsBase(FabPage['ConfigTagsBase.Processor', FabPage.Arguments]):
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield TagConfigTable.instance
 
-    def presentContent(self, proc: Processor) -> XMLContent:
+    def presentContent(self, **kwargs: object) -> XMLContent:
+        proc = cast(ConfigTagsBase.Processor, kwargs['proc'])
         for notice in proc.notices:
             yield xhtml.p(class_ = 'notice')[ notice ]
         configs = proc.configs
         if configs:
             yield xhtml.h2[ 'Selected Configurations:' ]
-            yield TagConfigTable.instance.present(proc=proc)
+            yield TagConfigTable.instance.present(**kwargs)
 
             yield xhtml.h2[ 'Common Selection Tags:' ]
             tagKeys = project.getTagKeys()
@@ -76,8 +77,9 @@ class ConfigTagsBase(FabPage['ConfigTagsBase.Processor', FabPage.Arguments]):
                   for index, tagKey in enumerate(tagKeys)
                   for tagName in commonTags[tagKey].keys() )
                 ].present(
-                    proc=proc,
-                    getValues=lambda key: valuesToText(commonTags[key].values())
+                    getValues=lambda key:
+                        valuesToText(commonTags[key].values()),
+                    **kwargs
                     )
         else:
             yield (
@@ -166,9 +168,10 @@ class ConfigTags_POST(ConfigTagsBase):
                                     })
                                 config._notify()
 
-    def presentContent(self, proc: ConfigTagsBase.Processor) -> XMLContent:
+    def presentContent(self, **kwargs: object) -> XMLContent:
+        proc = cast(ConfigTagsBase.Processor, kwargs['proc'])
         if proc.notices:
-            yield super().presentContent(proc)
+            yield super().presentContent(**kwargs)
         else:
             yield xhtml.p[ 'The tags have been updated successfully.' ]
             yield xhtml.p[

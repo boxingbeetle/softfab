@@ -1,5 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from typing import cast
+
 from softfab.Page import FabResource, PageProcessor
 from softfab.UIPage import UIPage
 from softfab.authentication import NoAuthPage
@@ -72,11 +74,12 @@ class ExecutionGraphExamples_GET(
     def checkAccess(self, user: User) -> None:
         pass
 
-    def presentContent(self, proc: Processor) -> XMLContent:
+    def presentContent(self, **kwargs: object) -> XMLContent:
+        proc = cast(ExecutionGraphExamples_GET.Processor, kwargs['proc'])
         for graph in proc.graphs:
             yield PNGPanel.instance.present(
-                proc=proc,
-                imagePath='%s.png' % graph.getName()
+                imagePath='%s.png' % graph.getName(),
+                **kwargs
                 )
 
 class PNGPanel(Table):

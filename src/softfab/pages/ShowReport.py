@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Iterator, Sequence
+from typing import Iterator, Sequence, cast
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
@@ -80,13 +80,14 @@ class ShowReport_GET(FabPage['ShowReport_GET.Processor',
                 ):
             yield TaskRunnerTable.instance
 
-    def presentContent(self, proc: Processor) -> XMLContent:
+    def presentContent(self, **kwargs: object) -> XMLContent:
+        proc = cast(ShowReport_GET.Processor, kwargs['proc'])
         jobId = proc.args.jobId
         job = proc.job
         tasks = job.getTaskSequence()
 
-        yield SelfJobsTable.instance.present(proc=proc)
-        yield TaskRunsTable.instance.present(proc=proc)
+        yield SelfJobsTable.instance.present(**kwargs)
+        yield TaskRunsTable.instance.present(**kwargs)
 
         if any(task.canBeAborted() for task in tasks):
             if any(task.isWaiting() for task in tasks):
@@ -103,16 +104,16 @@ class ShowReport_GET(FabPage['ShowReport_GET.Processor',
                     )[ 'Abort all unfinished tasks' ]
                 ]
 
-        yield CommentPanel(job.comment).present(proc=proc)
-        yield InputTable.instance.present(proc=proc)
-        yield OutputTable.instance.present(proc=proc)
-        yield ParamTable.instance.present(proc=proc)
+        yield CommentPanel(job.comment).present(**kwargs)
+        yield InputTable.instance.present(**kwargs)
+        yield OutputTable.instance.present(**kwargs)
+        yield ParamTable.instance.present(**kwargs)
         if not job.hasFinalResult():
             # Note: We check hasFinalResult instead of isExecutionFinished
             #       because the Task Runner binding applies to extraction too
             #       and often postponed inspection is done on the Factory PC
             #       that ran the task.
-            yield TaskRunnerTable.instance.present(proc=proc)
+            yield TaskRunnerTable.instance.present(**kwargs)
 
         notify = job.getParams().get('notify')
         if notify:

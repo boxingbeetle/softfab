@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Iterator
+from typing import Iterator, cast
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
@@ -63,7 +63,8 @@ class UserDetails_GET(FabPage['UserDetails_GET.Processor',
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield OwnedJobsTable.instance
 
-    def presentContent(self, proc: Processor) -> XMLContent:
+    def presentContent(self, **kwargs: object) -> XMLContent:
+        proc = cast(UserDetails_GET.Processor, kwargs['proc'])
         infoUser = proc.infoUser
         infoUserName = proc.args.user
         requestUser = proc.user
@@ -76,7 +77,7 @@ class UserDetails_GET(FabPage['UserDetails_GET.Processor',
             return
 
         yield xhtml.h2[ 'Details of user ', xhtml.b[ infoUserName ], ':' ]
-        yield DetailsTable.instance.present(proc=proc)
+        yield DetailsTable.instance.present(**kwargs)
 
         if infoUserName == requestUserName:
             if requestUser.hasPrivilege('u/mo'):
@@ -88,7 +89,7 @@ class UserDetails_GET(FabPage['UserDetails_GET.Processor',
                     ]
 
         yield xhtml.h2[ 'Recent jobs:' ]
-        yield OwnedJobsTable.instance.present(proc=proc)
+        yield OwnedJobsTable.instance.present(**kwargs)
 
         reportOwnerArgs = ReportArgs(owner = set([ infoUserName ]))
         yield xhtml.p[

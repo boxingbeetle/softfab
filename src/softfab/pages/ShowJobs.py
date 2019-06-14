@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Iterator
+from typing import Iterator, cast
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
@@ -53,7 +53,8 @@ class ShowJobs_GET(FabPage['ShowJobs_GET.Processor', 'ShowJobs_GET.Arguments']):
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield ShowJobsTable.instance
 
-    def presentContent(self, proc: Processor) -> XMLContent:
+    def presentContent(self, **kwargs: object) -> XMLContent:
+        proc = cast(ShowJobs_GET.Processor, kwargs['proc'])
         if len(proc.jobs) != 0:
             if proc.req.refererPage in (
                 'BatchExecute', 'Execute', 'FastExecute'
@@ -62,7 +63,7 @@ class ShowJobs_GET(FabPage['ShowJobs_GET.Processor', 'ShowJobs_GET.Arguments']):
                     'Created the following %s:'
                     % ( 'jobs', 'job' )[ len(proc.jobs) == 1 ]
                     ]
-            yield ShowJobsTable.instance.present(proc=proc)
+            yield ShowJobsTable.instance.present(**kwargs)
         if len(proc.invalidJobIds) != 0:
             yield (
                 xhtml.p[

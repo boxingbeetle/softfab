@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from enum import Enum
+from typing import cast
 
 from softfab.FabPage import FabPage, IconModifier
 from softfab.Page import PageProcessor, Redirect
@@ -25,8 +26,9 @@ class AbortTask_GET(FabPage[FabPage.Processor, FabPage.Arguments]):
         # No permission needed to display the confirmation dialog.
         pass
 
-    def presentContent(self, proc: FabPage.Processor) -> XMLContent:
+    def presentContent(self, **kwargs: object) -> XMLContent:
         # Ask for confirmation.
+        proc = cast(FabPage.Processor, kwargs['proc'])
         taskName = proc.args.taskName
         if taskName == '/all-waiting':
             yield xhtml.p[ 'Abort all waiting tasks?' ]
@@ -36,7 +38,7 @@ class AbortTask_GET(FabPage[FabPage.Processor, FabPage.Arguments]):
             yield xhtml.p[ 'Abort task ', xhtml.b[ taskName ], '?' ]
         yield makeForm(args = proc.args)[
             xhtml.p[ actionButtons(Actions) ]
-            ].present(proc=proc)
+            ].present(**kwargs)
 
 class AbortTask_POST(FabPage['AbortTask_POST.Processor',
                              'AbortTask_POST.Arguments']):
@@ -88,7 +90,8 @@ class AbortTask_POST(FabPage['AbortTask_POST.Processor',
         # The permission is checked by the Processor.
         pass
 
-    def presentContent(self, proc: Processor) -> XMLContent:
+    def presentContent(self, **kwargs: object) -> XMLContent:
+        proc = cast(AbortTask_POST.Processor, kwargs['proc'])
         message = proc.message
         if isinstance(message, tuple):
             yield xhtml.p[

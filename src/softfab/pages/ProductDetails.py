@@ -1,5 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from typing import cast
+
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
 from softfab.RecordDelete import DeleteArgs
@@ -73,7 +75,8 @@ class ProductDetails_GET(
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'pd/a')
 
-    def presentContent(self, proc: Processor) -> XMLContent:
+    def presentContent(self, **kwargs: object) -> XMLContent:
+        proc = cast(ProductDetails_GET.Processor, kwargs['proc'])
         productDef = proc.productDef
         productDefId = proc.args.id
         producers = proc.producers
@@ -99,8 +102,8 @@ class ProductDetails_GET(
         yield xhtml.h2[ 'Details of product ', xhtml.b[ productDefId ], ':' ]
         yield hgroup[
             DetailsTable.instance,
-            GraphPanel.instance.present(proc=proc, graph=proc.graph)
-            ].present(proc=proc)
+            GraphPanel.instance.present(graph=proc.graph, **kwargs)
+            ].present(**kwargs)
         yield xhtml.p[
             pageLink('ProductEdit', proc.args)[ 'Edit this product' ],
             xhtml.br,

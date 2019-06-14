@@ -50,5 +50,5 @@ class ResTypeIndex_GET(FabPage['ResTypeIndex_GET.Processor',
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield ResTypeTable.instance
 
-    def presentContent(self, proc: Processor) -> XMLContent:
-        return ResTypeTable.instance.present(proc=proc)
+    def presentContent(self, **kwargs: object) -> XMLContent:
+        return ResTypeTable.instance.present(**kwargs)

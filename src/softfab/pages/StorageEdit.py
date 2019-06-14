@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Mapping, Optional
+from typing import Mapping, Optional, cast
 from urllib.parse import urlparse
 
 from softfab.EditPage import (
@@ -73,9 +73,8 @@ class MergePhase(AbstractPhase[EditProcessor[StorageEditArgs, Storage],
                     ])
             newElement.takeOver(oldElement)
 
-    def presentContent(self,
-                       proc: EditProcessor[StorageEditArgs, Storage]
-                       ) -> XMLContent:
+    def presentContent(self, **kwargs: object) -> XMLContent:
+        proc = cast(EditProcessor[StorageEditArgs, Storage], kwargs['proc'])
         if proc.args.newId != proc.args.id:
             return (
                 xhtml.p[ 'The storages have been merged.' ],
@@ -105,15 +104,16 @@ class MergePhase(AbstractPhase[EditProcessor[StorageEditArgs, Storage],
             mergeId = None
 
         if mergeId is None:
-            return self.__presentCommitted(proc, element)
+            return self.__presentCommitted(element, **kwargs)
         else:
-            return self.__presentMerge(proc, message, mergeId)
+            return self.__presentMerge(message, mergeId, **kwargs)
 
     def __presentMerge(self,
-                       proc: EditProcessor[StorageEditArgs, Storage],
                        message: XMLContent,
-                       mergeId: str
+                       mergeId: str,
+                       **kwargs: object
                        ) -> XMLContent:
+        proc = cast(EditProcessor[StorageEditArgs, Storage], kwargs['proc'])
         yield xhtml.p[
             message, xhtml.br, 'It can be merged with the current storage.'
             ]
@@ -128,12 +128,13 @@ class MergePhase(AbstractPhase[EditProcessor[StorageEditArgs, Storage],
                 ' ',
                 submitButton(name = 'action', value = 'cancel')
                 ]
-            ].present(proc=proc)
+            ].present(**kwargs)
 
     def __presentCommitted(self,
-                           proc: EditProcessor[StorageEditArgs, Storage],
-                           element: Storage
+                           element: Storage,
+                           **kwargs: object
                            ) -> XMLContent:
+        proc = cast(EditProcessor[StorageEditArgs, Storage], kwargs['proc'])
         page = self.page
         return (
             xhtml.p[

@@ -1,5 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from typing import cast
+
 from softfab.Page import FabResource, PageProcessor, Redirect
 from softfab.UIPage import UIPage
 from softfab.authentication import NoAuthPage
@@ -45,7 +47,8 @@ class Logout_GET(UIPage['Logout_GET.Processor'],
     def pageTitle(self, proc: Processor) -> str:
         return 'Log Out'
 
-    def presentContent(self, proc: Processor) -> XMLContent:
+    def presentContent(self, **kwargs: object) -> XMLContent:
+        proc = cast(Logout_GET.Processor, kwargs['proc'])
         return (
             xhtml.p[
                 'You have been logged out.'

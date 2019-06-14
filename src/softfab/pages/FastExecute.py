@@ -91,7 +91,8 @@ class FastExecute_GET(FabPage['FastExecute_GET.Processor',
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield FastConfigTable.instance
 
-    def presentContent(self, proc: Processor) -> XMLContent:
+    def presentContent(self, **kwargs: object) -> XMLContent:
+        proc = cast(FastExecute_GET.Processor, kwargs['proc'])
         configs = proc.configs
         tagged = proc.args.configId is None
         if configs:
@@ -109,8 +110,8 @@ class FastExecute_GET(FabPage['FastExecute_GET.Processor',
                     # Args used by 'execute':
                     confirmedId = (config.getId() for config in configs)
                     )
-                )[ xhtml.p[ actionButtons(Actions) ] ].present(proc=proc)
-            yield FastConfigTable.instance.present(proc=proc)
+                )[ xhtml.p[ actionButtons(Actions) ] ].present(**kwargs)
+            yield FastConfigTable.instance.present(**kwargs)
         elif tagged:
             yield (
                 xhtml.p[
@@ -179,5 +180,5 @@ class FastExecute_POST(FabPage['FastExecute_POST.Processor',
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'c/l')
 
-    def presentContent(self, proc: Processor) -> XMLContent:
+    def presentContent(self, **kwargs: object) -> XMLContent:
         assert False

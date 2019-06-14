@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Iterator
+from typing import Iterator, cast
 
 from softfab.CSVPage import presentCSVLink
 from softfab.FabPage import FabPage
@@ -69,10 +69,11 @@ class ReportTasks_GET(FabPage['ReportTasks_GET.Processor', 'ReportTasks_GET.Argu
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield FilteredTaskRunsTable.instance
 
-    def presentContent(self, proc: Processor) -> XMLContent:
+    def presentContent(self, **kwargs: object) -> XMLContent:
+        proc = cast(ReportTasks_GET.Processor, kwargs['proc'])
         taskFilter = proc.args.task
 
-        yield FilterForm.instance.present(proc=proc, numListItems=10)
+        yield FilterForm.instance.present(numListItems=10, **kwargs)
 
         if len(taskFilter) == 0:
             return
@@ -104,4 +105,4 @@ class ReportTasks_GET(FabPage['ReportTasks_GET.Processor', 'ReportTasks_GET.Argu
             ReportTaskCSVArgs(ReportTaskArgs.subset(proc.args))
             )
 
-        yield FilteredTaskRunsTable.instance.present(proc=proc)
+        yield FilteredTaskRunsTable.instance.present(**kwargs)

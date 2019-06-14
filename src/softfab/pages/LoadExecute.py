@@ -101,12 +101,13 @@ class LoadExecute_GET(FabPage['LoadExecute_GET.Processor',
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'c/l')
 
-    def presentContent(self, proc: Processor) -> XMLContent:
+    def presentContent(self, **kwargs: object) -> XMLContent:
         yield xhtml.h2[ 'Execute from Configuration' ],
         yield selectDialog(
-            proc, self.name, Config.cache,
+            self.name, Config.cache,
             TagConfigTable.instance, BasketConfigTable.instance,
-            'Configurations to Tag or Execute'
+            'Configurations to Tag or Execute',
+            **kwargs
             )
         yield xhtml.p[
             'Read here more about: ',

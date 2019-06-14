@@ -61,6 +61,6 @@ class ReportIndex_GET(FabPage['ReportIndex_GET.Processor', 'ReportIndex_GET.Argu
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield FilteredJobsTable.instance
 
-    def presentContent(self, proc: Processor) -> XMLContent:
-        yield FilterForm.instance.present(proc=proc, numListItems=5)
-        yield FilteredJobsTable.instance.present(proc=proc)
+    def presentContent(self, **kwargs: object) -> XMLContent:
+        yield FilterForm.instance.present(numListItems=5, **kwargs)
+        yield FilteredJobsTable.instance.present(**kwargs)

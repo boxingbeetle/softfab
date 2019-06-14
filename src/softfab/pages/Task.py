@@ -96,7 +96,8 @@ class Task_GET(FabPage['Task_GET.Processor', 'Task_GET.Arguments']):
     def pageTitle(self, proc: Processor) -> str:
         return 'Task: %s' % proc.task.getName()
 
-    def presentContent(self, proc: Processor) -> XMLContent:
+    def presentContent(self, **kwargs: object) -> XMLContent:
+        proc = cast(Task_GET.Processor, kwargs['proc'])
         reports = proc.reports
         active = proc.active
 
@@ -110,28 +111,30 @@ class Task_GET(FabPage['Task_GET.Processor', 'Task_GET.Arguments']):
             )]
 
         if active == 'Overview':
-            yield self.presentOverview(proc)
+            yield self.presentOverview(**kwargs)
         elif active == 'Data':
-            yield self.presentData(proc)
+            yield self.presentData(**kwargs)
         else:
             yield xhtml.iframe(
                 class_='report', src=reports[active], sandbox=REPORT_SANDBOX
                 )
 
-    def presentOverview(self, proc: Processor) -> XMLContent:
-        yield SelfTaskRunsTable.instance.present(proc=proc)
-        yield DetailsTable.instance.present(proc=proc)
-        yield InputTable.instance.present(proc=proc)
-        yield OutputTable.instance.present(proc=proc)
+    def presentOverview(self, **kwargs: object) -> XMLContent:
+        proc = cast(Task_GET.Processor, kwargs['proc'])
+        yield SelfTaskRunsTable.instance.present(**kwargs)
+        yield DetailsTable.instance.present(**kwargs)
+        yield InputTable.instance.present(**kwargs)
+        yield OutputTable.instance.present(**kwargs)
         yield xhtml.p[ createTaskHistoryLink(proc.args.taskName) ]
 
-    def presentData(self, proc: Processor) -> XMLContent:
+    def presentData(self, **kwargs: object) -> XMLContent:
+        proc = cast(Task_GET.Processor, kwargs['proc'])
         taskName = proc.task.getName()
         yield xhtml.p[ 'Extracted data for task ', xhtml.b[ taskName ], ':' ]
 
         task = proc.task
         if task.isDone():
-            yield ExtractedDataTable.instance.present(proc=proc)
+            yield ExtractedDataTable.instance.present(**kwargs)
         elif task.isCancelled():
             yield xhtml.p[ 'Task execution was cancelled.' ]
         else:

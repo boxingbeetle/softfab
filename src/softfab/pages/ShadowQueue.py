@@ -38,6 +38,6 @@ class ShadowQueue_GET(FabPage['ShadowQueue_GET.Processor',
     def iterWidgets(self, proc: Processor) -> Iterator[Widget]:
         yield ShadowTable.instance
 
-    def presentContent(self, proc: Processor) -> XMLContent:
+    def presentContent(self, **kwargs: object) -> XMLContent:
         yield trimPolicy
-        yield ShadowTable.instance.present(proc=proc)
+        yield ShadowTable.instance.present(**kwargs)

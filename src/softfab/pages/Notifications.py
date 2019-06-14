@@ -18,6 +18,11 @@ from softfab.userlib import User, checkPrivilege
 from softfab.xmlgen import XML, XMLContent, xhtml
 
 
+class MailConfigArgs(PageArgs):
+    mailNotification = BoolArg()
+    smtpRelay = StrArg()
+    mailSender = StrArg()
+
 def presentEmailForm():
     yield xhtml.p[
         checkBox(name='mailNotification')['Send notifications via e-mail']
@@ -50,7 +55,7 @@ def presentEmailForm():
     yield xhtml.p[textInput(name='mailRecipient', size=60)]
     yield xhtml.p[ actionButtons(Actions.TEST) ]
 
-def presentForm(proc, args):
+def presentForm(args: MailConfigArgs, **kwargs: object) -> XMLContent:
     yield xhtml.h2[ 'E-mail' ]
     if sendmail is None:
         yield xhtml.p(class_='notice')[
@@ -67,7 +72,7 @@ def presentForm(proc, args):
                 'while this SoftFab is currently running on Twisted ',
                 twistedVersion.public(), '.'
                 ]
-    yield makeForm(args=args)[ presentEmailForm() ].present(proc=proc)
+    yield makeForm(args=args)[ presentEmailForm() ].present(**kwargs)
 
 class Notifications_GET(FabPage[FabPage.Processor, FabPage.Arguments]):
     icon = 'IconNotification'
@@ -76,14 +81,14 @@ class Notifications_GET(FabPage[FabPage.Processor, FabPage.Arguments]):
     def checkAccess(self, user: User) -> None:
         pass
 
-    def presentContent(self, proc: FabPage.Processor) -> XMLContent:
-        yield from presentForm(
-            proc,
+    def presentContent(self, **kwargs: object) -> XMLContent:
+        return presentForm(
             MailConfigArgs(
                 mailNotification=project['mailnotification'],
                 smtpRelay=project.smtpRelay,
                 mailSender=project.mailSender,
-                )
+                ),
+            **kwargs
             )
 
 # This is not an accurate check whether the address complies with the RFC,
@@ -94,11 +99,6 @@ class Notifications_GET(FabPage[FabPage.Processor, FabPage.Arguments]):
 reMailAddress = re.compile(r'[^@\s]+@([^@.\s]+\.)*[^@.\s]+$')
 
 Actions = Enum('Actions', 'TEST SAVE CANCEL')
-
-class MailConfigArgs(PageArgs):
-    mailNotification = BoolArg()
-    smtpRelay = StrArg()
-    mailSender = StrArg()
 
 class Notifications_POST(FabPage['Notifications_POST.Processor',
                                  'Notifications_POST.Arguments']):
@@ -157,7 +157,8 @@ class Notifications_POST(FabPage['Notifications_POST.Processor',
             else:
                 assert False, action
 
-    def presentContent(self, proc: Processor) -> XMLContent:
+    def presentContent(self, **kwargs: object) -> XMLContent:
+        proc = cast(Notifications_POST.Processor, kwargs['proc'])
         action = proc.args.action
         if action is Actions.TEST:
             yield xhtml.p(class_='notice')[
@@ -170,7 +171,7 @@ class Notifications_POST(FabPage['Notifications_POST.Processor',
                     for address, result in proc.mailTestResult
                     )
                 ]
-            yield from presentForm(proc, proc.args)
+            yield presentForm(proc.args, **kwargs)
         elif action is Actions.SAVE:
             yield xhtml.p[ 'Notification settings saved.' ]
             yield self.backToParent(proc.args)
@@ -180,4 +181,4 @@ class Notifications_POST(FabPage['Notifications_POST.Processor',
     def presentError(self, message: XML, **kwargs: object) -> XMLContent:
         proc = cast(Notifications_POST.Processor, kwargs['proc'])
         yield super().presentError(message, **kwargs)
-        yield from presentForm(proc, proc.args)
+        yield presentForm(proc.args, **kwargs)

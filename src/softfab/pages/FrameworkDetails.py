@@ -1,5 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from typing import cast
+
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
 from softfab.RecordDelete import DeleteArgs
@@ -83,7 +85,8 @@ class FrameworkDetails_GET(
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'fd/a')
 
-    def presentContent(self, proc: Processor) -> XMLContent:
+    def presentContent(self, **kwargs: object) -> XMLContent:
+        proc = cast(FrameworkDetails_GET.Processor, kwargs['proc'])
         taskDef = proc.taskDef
         frameworkId = proc.args.id
         if taskDef is None:
@@ -105,8 +108,8 @@ class FrameworkDetails_GET(
         yield xhtml.h2[ 'Details of framework ', xhtml.b[ frameworkId ], ':' ]
         yield hgroup[
             DetailsTable.instance,
-            GraphPanel.instance.present(proc=proc, graph=proc.graph)
-            ].present(proc=proc)
+            GraphPanel.instance.present(graph=proc.graph, **kwargs)
+            ].present(**kwargs)
         yield xhtml.p[
             pageLink('FrameworkEdit', proc.args)[ 'Edit this framework' ],
             xhtml.br,

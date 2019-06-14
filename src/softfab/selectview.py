@@ -15,7 +15,7 @@ from softfab.formlib import (
 )
 from softfab.pageargs import ArgsCorrected, PageArgs, SetArg, StrArg
 from softfab.querylib import CustomFilter, runQuery
-from softfab.selectlib import SelectableRecord, TagCache
+from softfab.selectlib import SelectableRecord, SelectableRecordABC, TagCache
 from softfab.utils import abstract
 from softfab.webgui import (
     Column, Table, addRemoveStyleScript, cell, hgroup, pageLink, pageURL,
@@ -228,13 +228,15 @@ def _scriptButton(select: bool, inputName: str = 'sel') -> XMLNode:
             )
         )
 
-def selectDialog(proc: SelectProcMixin[BasketArgsT, SelectableRecord],
-                 formAction: str,
+def selectDialog(formAction: str,
                  tagCache: TagCache,
                  filterTable: XMLContent,
                  basketTable: XMLContent,
-                 title: str
+                 title: str,
+                 **kwargs: object
                  ) -> Iterator[XML]:
+    proc = cast(SelectProcMixin[BasketArgs, SelectableRecordABC],
+                kwargs['proc'])
     tagKey = proc.args.tagkey
     tagValue = proc.args.tagvalue
     selected = proc.selected
@@ -277,10 +279,10 @@ def selectDialog(proc: SelectProcMixin[BasketArgsT, SelectableRecord],
                     ))
                 ]
             ].present(
-                proc=proc,
                 getRowStyle=lambda record: None,
                 selectName='sel',
-                selectFunc=lambda recordId: (recordId in selected, True)
+                selectFunc=lambda recordId: (recordId in selected, True),
+                **kwargs
                 )
         return
 
@@ -361,10 +363,10 @@ def selectDialog(proc: SelectProcMixin[BasketArgsT, SelectableRecord],
         (hiddenInput(name='sel', value=item) for item in selected),
         xhtml.p[ txt('\u00A0').join(buttons) ]
         ].present(
-            proc=proc,
             getRowStyle=rowStyle,
             selectName='sel',
-            selectFunc=selectedDisable
+            selectFunc=selectedDisable,
+            **kwargs
             )
 
     if selected:
@@ -388,10 +390,10 @@ def selectDialog(proc: SelectProcMixin[BasketArgsT, SelectableRecord],
                     ))
                 ]
             ].present(
-                proc=proc,
                 getRowStyle=lambda record: 'selected',
                 selectName='bsk',
-                selectFunc=lambda recordId: (False, True)
+                selectFunc=lambda recordId: (False, True),
+                **kwargs
                 )
 
 class TagValueEditTable(Table, ABC):

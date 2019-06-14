@@ -1,5 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from typing import cast
+
 from softfab.Page import FabResource, PageProcessor, Redirect
 from softfab.UIPage import UIPage
 from softfab.authentication import LoginAuthPage
@@ -41,5 +43,6 @@ class LatestReport_GET(
     def pageTitle(self, proc: Processor) -> str:
         return 'Latest Report'
 
-    def presentContent(self, proc: Processor) -> XMLContent:
+    def presentContent(self, **kwargs: object) -> XMLContent:
+        proc = cast(LatestReport_GET.Processor, kwargs['proc'])
         return xhtml.p[ 'No reports found for task "%s".' % proc.args.id ]

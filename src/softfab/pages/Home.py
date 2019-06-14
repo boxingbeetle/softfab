@@ -75,12 +75,12 @@ class Home_GET(FabPage['Home_GET.Processor', FabPage.Arguments]):
             title = 'SoftFab Jobs Atom Feed',
             )
 
-    def presentContent(self, proc: Processor) -> XMLContent:
+    def presentContent(self, **kwargs: object) -> XMLContent:
         atomFeedLink = pageLink('Feed')[
-            self.feedIcon.present(proc=proc)
+            self.feedIcon.present(**kwargs)
             ]
         yield xhtml.h2[ 'Recent Jobs ', atomFeedLink ]
-        yield RecentJobsTable.instance.present(proc=proc)
+        yield RecentJobsTable.instance.present(**kwargs)
 
         if len(jobDB) < 20:
             yield xhtml.p[

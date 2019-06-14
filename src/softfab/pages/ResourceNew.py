@@ -16,7 +16,7 @@ class ResourceNew_GET(FabPage[FabPage.Processor, FabPage.Arguments]):
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'rt/l')
 
-    def presentContent(self, proc: FabPage.Processor) -> XMLContent:
+    def presentContent(self, **kwargs: object) -> XMLContent:
         descriptions = (
             ( pageLink('TaskRunnerEdit')['Task Runner'],
                 'SoftFab task execution agent.'
