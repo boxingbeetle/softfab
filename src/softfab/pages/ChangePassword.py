@@ -21,12 +21,14 @@ from softfab.webgui import pageURL
 from softfab.xmlgen import XML, XMLContent, xhtml
 
 
-def presentForm(proc):
+def presentForm(**kwargs: object) -> XMLContent:
+    proc = cast(PageProcessor, kwargs['proc'])
     return makeForm(args = proc.args)[
-        presentFormBody(proc)
-        ].present(proc=proc)
+        presentFormBody(**kwargs)
+        ].present(**kwargs)
 
-def presentFormBody(proc):
+def presentFormBody(**kwargs: object) -> XMLContent:
+    proc = cast(PageProcessor[PasswordMsgArgs], kwargs['proc'])
     yield xhtml.p[
         'Please enter a new password for user ', xhtml.b[ proc.args.user ], ':'
         ]
@@ -110,12 +112,13 @@ class ChangePassword_GET(FabPage['ChangePassword_GET.Processor',
         yield 'td.formlabel { width: 16em; }'
 
     def presentContent(self, proc: Processor) -> XMLContent:
-        return presentForm(proc)
+        return presentForm(proc=proc)
 
-    def presentError(self, proc: Processor, message: XML) -> XMLContent:
+    def presentError(self, message: XML, **kwargs: object) -> XMLContent:
+        proc = cast('ChangePassword_GET.Processor', kwargs['proc'])
         yield xhtml.p(class_ = 'notice')[ message ]
         if proc.retry:
-            yield presentForm(proc)
+            yield presentForm(**kwargs)
         else:
             yield self.backToReferer(proc.args)
 
@@ -211,10 +214,11 @@ class ChangePassword_POST(FabPage['ChangePassword_POST.Processor',
     def getCancelURL(self, args: Arguments) -> str:
         return args.refererURL or self.getParentURL(args)
 
-    def presentError(self, proc: Processor, message: XML) -> XMLContent:
+    def presentError(self, message: XML, **kwargs: object) -> XMLContent:
+        proc = cast('ChangePassword_POST.Processor', kwargs['proc'])
         yield xhtml.p(class_ = 'notice')[ message ]
         if proc.retry:
-            yield presentForm(proc)
+            yield presentForm(**kwargs)
         else:
             yield self.backToReferer(proc.args)
 

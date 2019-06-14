@@ -1,5 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from typing import cast
+
 from softfab.FabPage import FabPage, IconModifier
 from softfab.Page import PageProcessor, ProcT, Redirect
 from softfab.pageargs import ArgsT
@@ -49,6 +51,7 @@ class AnonGuest_POST(AnonGuestBase['AnonGuest_POST.Processor',
     def presentContent(self, proc: Processor) -> XMLContent:
         assert False
 
-    def presentError(self, proc: Processor, message: XML) -> XMLContent:
+    def presentError(self, message: XML, **kwargs: object) -> XMLContent:
+        proc = cast('AnonGuest_POST.Processor', kwargs['proc'])
         yield message
         yield self.backToParent(proc.args)

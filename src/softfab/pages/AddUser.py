@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from enum import Enum
-from typing import Iterator, Optional, Tuple
+from typing import Iterator, Optional, Tuple, cast
 
 from twisted.cred.error import LoginFailed
 from twisted.internet.defer import inlineCallbacks
@@ -39,11 +39,12 @@ class AddUserBase(FabPage[ProcT, ArgsT]):
         raise NotImplementedError
 
     def presentForm(self,
-            proc: ProcT, prefill: Optional[PageArgs]
+            prefill: Optional[PageArgs], **kwargs: object
             ) -> XMLContent:
+        proc = cast(ProcT, kwargs['proc'])
         return makeForm(args = prefill)[
             self.__presentFormBody(proc.user)
-            ].present(proc=proc)
+            ].present(**kwargs)
 
     def __presentFormBody(self, user: User) -> XMLContent:
         yield xhtml.p[ 'Enter information about new user:' ]
@@ -72,7 +73,7 @@ class AddUser_GET(AddUserBase['AddUser_GET.Processor',
             pass
 
     def presentContent(self, proc: Processor) -> XMLContent:
-        yield self.presentForm(proc, None)
+        yield self.presentForm(None, proc=proc)
 
 class AddUser_POST(AddUserBase['AddUser_POST.Processor',
                                'AddUser_POST.Arguments']):
@@ -142,11 +143,12 @@ class AddUser_POST(AddUserBase['AddUser_POST.Processor',
                 'go back to the users overview page'
                 ], '.'
             ]
-        yield self.presentForm(proc, LoginPassArgs.subset(proc.args))
+        yield self.presentForm(LoginPassArgs.subset(proc.args), proc=proc)
 
-    def presentError(self, proc: Processor, message: XML) -> XMLContent:
+    def presentError(self, message: XML, **kwargs: object) -> XMLContent:
+        proc = cast('AddUser_POST.Processor', kwargs['proc'])
         yield xhtml.p(class_ = 'notice')[ message ]
-        yield self.presentForm(proc, proc.args)
+        yield self.presentForm(proc.args, **kwargs)
 
 class UserTable(FormTable):
     labelStyle = 'formlabel'

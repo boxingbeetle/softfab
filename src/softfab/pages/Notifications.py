@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from enum import Enum
+from typing import cast
 import re
 import time
 
@@ -176,6 +177,7 @@ class Notifications_POST(FabPage['Notifications_POST.Processor',
         else:
             assert False, action
 
-    def presentError(self, proc: Processor, message: XML) -> XMLContent:
-        yield super().presentError(proc, message)
+    def presentError(self, message: XML, **kwargs: object) -> XMLContent:
+        proc = cast(Notifications_POST.Processor, kwargs['proc'])
+        yield super().presentError(message, **kwargs)
         yield from presentForm(proc, proc.args)

@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from enum import Enum
-from typing import Iterator
+from typing import Iterator, cast
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor, PresentableError, Redirect
@@ -129,7 +129,8 @@ class FastExecute_GET(FabPage['FastExecute_GET.Processor',
                 self.backToReferer(proc.args)
                 )
 
-    def presentError(self, proc: Processor, message: XML) -> XMLContent:
+    def presentError(self, message: XML, **kwargs: object) -> XMLContent:
+        proc = cast(FastExecute_GET.Processor, kwargs['proc'])
         yield message
         yield self.backToReferer(proc.args)
 

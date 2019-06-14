@@ -150,7 +150,7 @@ class UIPage(Generic[ProcT]):
         if proc.processingError is not None:
             return self.__formatError(proc.processingError)
         elif proc.error is not None:
-            return self.presentError(proc, proc.error)
+            return self.presentError(proc.error, **kwargs)
         else:
             return self.presentContent(proc)
 
@@ -178,9 +178,8 @@ class UIPage(Generic[ProcT]):
     def presentContent(self, proc: ProcT) -> XMLContent:
         raise NotImplementedError
 
-    def presentError(self,
-            proc: ProcT, # pylint: disable=unused-argument
-            message: XML
+    def presentError(self, # pylint: disable=unused-argument
+            message: XML, **kwargs: object
             ) -> XMLContent:
         return message
 

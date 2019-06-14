@@ -3,7 +3,8 @@
 from abc import ABC
 from enum import Enum
 from typing import (
-    TYPE_CHECKING, ClassVar, Generic, Mapping, Optional, Type, TypeVar, Union
+    TYPE_CHECKING, ClassVar, Generic, Mapping, Optional, Type, TypeVar, Union,
+    cast
 )
 
 from softfab.FabPage import FabPage, IconModifier
@@ -459,12 +460,10 @@ class EditPage(FabPage[EditProcessorBase[EditArgsT, DBRecord], EditArgsT], ABC):
                        ) -> XMLContent:
         return proc.phase.presentContent(proc)
 
-    def presentError(self,
-                     proc: EditProcessorBase[EditArgsT, DBRecord],
-                     message: XML
-                     ) -> XMLContent:
+    def presentError(self, message: XML, **kwargs: object) -> XMLContent:
+        proc = cast(EditProcessorBase[EditArgsT, DBRecord], kwargs['proc'])
         yield message
         if proc.showBackButton:
             yield makeForm(args = proc.args)[
                 xhtml.p[ backButton(name = 'back') ]
-                ].present(proc=proc)
+                ].present(**kwargs)

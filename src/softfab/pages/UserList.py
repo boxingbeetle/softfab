@@ -237,7 +237,8 @@ class UserList_POST(FabPage['UserList_POST.Processor',
     def presentContent(self, proc: Processor) -> XMLContent:
         assert False
 
-    def presentError(self, proc: Processor, message: XML) -> XMLContent:
+    def presentError(self, message: XML, **kwargs: object) -> XMLContent:
+        proc = cast(UserList_POST.Processor, kwargs['proc'])
         yield message
         yield xhtml.p[
             pageLink('UserList', UserList_GET.Arguments.subset(proc.args))[

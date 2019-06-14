@@ -207,6 +207,6 @@ class ResourceIndex_POST(FabPage['ResourceIndex_POST.Processor',
     def presentContent(self, proc: Processor) -> XMLContent:
         assert False
 
-    def presentError(self, proc: Processor, message: XML) -> XMLContent:
+    def presentError(self, message: XML, **kwargs: object) -> XMLContent:
         yield message
         yield self.backToSelf()

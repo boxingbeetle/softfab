@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Iterator, Tuple
+from typing import Iterator, Tuple, cast
 
 from twisted.cred.error import LoginFailed
 from twisted.internet.defer import inlineCallbacks
@@ -146,6 +146,7 @@ class Login_POST(LoginBase['Login_POST.Processor', 'Login_POST.Arguments']):
                     url = req.args.url
                     raise Redirect('Home' if url is None else url)
 
-    def presentError(self, proc: Processor, message: XML) -> XMLContent:
+    def presentError(self, message: XML, **kwargs: object) -> XMLContent:
+        proc = cast(Login_POST.Processor, kwargs['proc'])
         yield xhtml.p(class_ = 'notice')[ message ]
         yield self.presentContent(proc)
