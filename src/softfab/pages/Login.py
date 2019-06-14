@@ -1,5 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from typing import Iterator, Tuple
+
 from twisted.cred.error import LoginFailed
 from twisted.internet.defer import inlineCallbacks
 
@@ -23,7 +25,7 @@ from softfab.xmlgen import XML, XMLContent, xhtml
 
 class LoginTable(FormTable):
 
-    def iterFields(self, proc):
+    def iterFields(self, **kwargs: object) -> Iterator[Tuple[str, XMLContent]]:
         yield 'User name', textInput(name = 'loginname')
         yield 'Password', passwordInput(name = 'loginpass')
 

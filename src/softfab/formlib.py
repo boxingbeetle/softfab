@@ -756,13 +756,10 @@ class FormTable(Table):
         yield Column(None, cellStyle = self.fieldStyle)
 
     def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
-        proc = cast(PageProcessor, kwargs['proc'])
-        for label, widget in self.iterFields(proc):
+        for label, widget in self.iterFields(**kwargs):
             yield label + ':', widget
 
-    def iterFields(self,
-                   proc: PageProcessor
-                   ) -> Iterator[Tuple[str, XMLPresentable]]:
+    def iterFields(self, **kwargs: object) -> Iterator[Tuple[str, XMLContent]]:
         '''Iterates through the fields in this form.
         Each element should be a (label, widget) pair.
         '''

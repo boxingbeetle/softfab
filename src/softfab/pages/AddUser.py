@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from enum import Enum
-from typing import Iterator, Optional
+from typing import Iterator, Optional, Tuple
 
 from twisted.cred.error import LoginFailed
 from twisted.internet.defer import inlineCallbacks
@@ -152,7 +152,7 @@ class AddUser_POST(AddUserBase['AddUser_POST.Processor',
 class UserTable(FormTable):
     labelStyle = 'formlabel'
 
-    def iterFields(self, proc):
+    def iterFields(self, **kwargs: object) -> Iterator[Tuple[str, XMLContent]]:
         yield 'User name', textInput(name = 'user')
         yield 'Role', dropDownList(name = 'role', required = True)[
             emptyOption[ '(not set)' ], UIRoleNames
@@ -163,5 +163,5 @@ class UserTable(FormTable):
 class ReqPasswordTable(FormTable):
     labelStyle = 'formlabel'
 
-    def iterFields(self, proc):
+    def iterFields(self, **kwargs: object) -> Iterator[Tuple[str, XMLContent]]:
         yield 'Operator password', passwordInput(name = 'loginpass')

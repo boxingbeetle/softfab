@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from enum import Enum
-from typing import Iterator
+from typing import Iterator, Tuple, cast
 
 from twisted.cred.error import LoginFailed
 from twisted.internet.defer import inlineCallbacks
@@ -46,14 +46,15 @@ def presentFormBody(proc):
 class NewPasswordTable(FormTable):
     labelStyle = 'formlabel'
 
-    def iterFields(self, proc):
+    def iterFields(self, **kwargs: object) -> Iterator[Tuple[str, XMLContent]]:
         yield 'New password', passwordInput(name = 'password')
         yield 'New password (again)', passwordInput(name = 'password2')
 
 class ReqPasswordTable(FormTable):
     labelStyle = 'formlabel'
 
-    def iterFields(self, proc):
+    def iterFields(self, **kwargs: object) -> Iterator[Tuple[str, XMLContent]]:
+        proc = cast(PageProcessor[PasswordMsgArgs], kwargs['proc'])
         userName = proc.args.user
         reqUserName = proc.user.name
         reqPasswordLabel = '%s password' % (
