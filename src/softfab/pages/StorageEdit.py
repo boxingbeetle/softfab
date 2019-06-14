@@ -5,11 +5,11 @@ from urllib.parse import urlparse
 
 from softfab.EditPage import (
     AbstractPhase, EditArgs, EditPage, EditPagePrev, EditProcessor,
-    EditProcessorBase, InitialEditArgs, InitialEditProcessor
+    EditProcessorBase, InitialEditProcessor
 )
 from softfab.Page import PresentableError
 from softfab.formlib import checkBox, makeForm, submitButton, textInput
-from softfab.pageargs import BoolArg, StrArg
+from softfab.pageargs import BoolArg, PageArgs, StrArg
 from softfab.storagelib import (
     Storage, getStorageIdByName, getStorageIdByURL, storageDB
 )
@@ -163,8 +163,8 @@ class StorageEditBase(EditPage):
 
 class StorageEdit_GET(StorageEditBase):
 
-    class Arguments(StorageEditArgs):
-        pass
+    class Arguments(PageArgs):
+        id = StrArg()
 
     class Processor(InitialEditProcessor[StorageEditArgs, Storage]):
         argsClass = StorageEditArgs
