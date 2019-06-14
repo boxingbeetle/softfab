@@ -1,6 +1,7 @@
 **/__pycache__/
 .mypy_cache/
 src/softfab.egg-info/
+dist/
 poetry.lock
 docs/output
 run/
