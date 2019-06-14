@@ -96,12 +96,12 @@ class RecordDelete_GET(FabPage['RecordDelete_GET.Processor',
     def checkAccess(self, user: User) -> None:
         pass
 
-    def getCancelURL(self, req: Request[Arguments]) -> str:
+    def getCancelURL(self, args: Arguments) -> str:
         '''URL to redirect to when the user chooses "Cancel".
         By default this is the active referer with a fallback to the parent
         page, but subclasses can override this.
         '''
-        return req.args.refererURL or self.getParentURL(req.args)
+        return args.refererURL or self.getParentURL(args)
 
     def presentContent(self, proc: Processor) -> XMLContent:
         yield xhtml.p[
@@ -137,7 +137,7 @@ class RecordDelete_POSTMixin:
             action = req.args.action
             if action is not Actions.DELETE:
                 assert action is Actions.CANCEL, action
-                raise Redirect(page.getCancelURL(req))
+                raise Redirect(page.getCancelURL(req.args))
 
             record = fetchRecordForDeletion(req.args.id, page)
             checkPrivilegeForOwned(

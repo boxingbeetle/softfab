@@ -140,7 +140,7 @@ class ChangePassword_POST(FabPage['ChangePassword_POST.Processor',
         @inlineCallbacks
         def process(self, req, user):
             if req.args.action is Actions.CANCEL:
-                raise Redirect(self.page.getCancelURL(req))
+                raise Redirect(self.page.getCancelURL(req.args))
             elif req.args.action is Actions.CHANGE:
                 # Validate input.
                 userName = req.args.user
@@ -208,8 +208,8 @@ class ChangePassword_POST(FabPage['ChangePassword_POST.Processor',
         # Processor checks privileges.
         pass
 
-    def getCancelURL(self, req):
-        return req.args.refererURL or self.getParentURL(req.args)
+    def getCancelURL(self, args: Arguments) -> str:
+        return args.refererURL or self.getParentURL(args)
 
     def presentError(self, proc: Processor, message: XML) -> XMLContent:
         yield xhtml.p(class_ = 'notice')[ message ]

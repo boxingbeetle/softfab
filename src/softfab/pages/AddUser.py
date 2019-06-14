@@ -59,8 +59,8 @@ class AddUserBase(FabPage[ProcT, ArgsT]):
             yield ReqPasswordTable.instance
         yield xhtml.p[ actionButtons(Actions) ]
 
-    def getCancelURL(self, req):
-        return req.args.refererURL or self.getParentURL(req.args)
+    def getCancelURL(self, args: ArgsT) -> str:
+        return args.refererURL or self.getParentURL(args)
 
 class AddUser_GET(AddUserBase['AddUser_GET.Processor',
                               'AddUser_GET.Arguments']):
@@ -90,7 +90,7 @@ class AddUser_POST(AddUserBase['AddUser_POST.Processor',
         @inlineCallbacks
         def process(self, req, user):
             if req.args.action is Actions.CANCEL:
-                raise Redirect(self.page.getCancelURL(req))
+                raise Redirect(self.page.getCancelURL(req.args))
             elif req.args.action is Actions.ADD:
                 # Validate input.
                 userName = req.args.user
@@ -139,7 +139,7 @@ class AddUser_POST(AddUserBase['AddUser_POST.Processor',
             ] ]
         yield xhtml.p[
             'You can use the form below to add another user, or ',
-            xhtml.a(href = self.getCancelURL(proc.req))[
+            xhtml.a(href = self.getCancelURL(proc.args))[
                 'go back to the users overview page'
                 ], '.'
             ]
