@@ -1,11 +1,10 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Dict, Iterator, MutableSet, cast
+from typing import Iterator, MutableSet, cast
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
 from softfab.datawidgets import DataColumn, DataTable
-from softfab.frameworklib import TaskDefBase
 from softfab.pageargs import ArgsCorrected, IntArg
 from softfab.pagelinks import (
     CapFilterArgs, createTaskDetailsLink, createTaskRunnerDetailsLink
@@ -15,7 +14,7 @@ from softfab.querylib import CustomFilter, RecordFilter
 from softfab.request import Request
 from softfab.resourcelib import ResourceBase, resourceDB
 from softfab.resourceview import presentCapabilities
-from softfab.restypelib import resTypeDB, taskRunnerResourceTypeName
+from softfab.restypelib import resTypeDB
 from softfab.restypeview import ResTypeTableMixin
 from softfab.taskdeflib import taskDefDB
 from softfab.typing import Collection

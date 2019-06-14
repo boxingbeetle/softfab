@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from abc import ABC
-from typing import AbstractSet, ClassVar, Dict, Mapping, Optional, cast
+from typing import ClassVar, Dict, Mapping, Optional, cast
 
 from softfab.EditPage import (
     EditArgs, EditPage, EditProcessor, EditProcessorBase, InitialEditArgs,

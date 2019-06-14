@@ -14,7 +14,7 @@ from softfab.request import Request
 from softfab.userlib import User
 from softfab.utils import abstract
 from softfab.webgui import PresenterFunction
-from softfab.xmlgen import XML, XMLContent, XMLNode, xhtml
+from softfab.xmlgen import XML, XMLContent, xhtml
 
 DialogProcT = TypeVar('DialogProcT', bound='DialogProcessorBase')
 DialogArgsT = TypeVar('DialogArgsT', bound='DialogPage.Arguments')

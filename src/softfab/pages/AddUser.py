@@ -13,7 +13,6 @@ from softfab.formlib import (
     passwordInput, textInput
 )
 from softfab.pageargs import ArgsT, EnumArg, PageArgs, RefererArg, StrArg
-from softfab.request import Request
 from softfab.userlib import (
     PasswordMessage, User, addUserAccount, authenticateUser, checkPrivilege,
     passwordQuality

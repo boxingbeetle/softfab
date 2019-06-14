@@ -6,7 +6,7 @@ from softfab import frameworklib
 from softfab.config import dbDir
 from softfab.databaselib import VersionedDatabase
 from softfab.paramlib import GetParent
-from softfab.selectlib import ObservingTagCache, SelectableABC
+from softfab.selectlib import ObservingTagCache
 from softfab.xmlgen import XMLAttributeValue, XMLContent, xml
 
 

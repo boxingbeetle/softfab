@@ -19,7 +19,7 @@ from softfab.timeview import formatTime
 from softfab.utils import IllegalStateError, cachedProperty, pluralize
 from softfab.waiting import ReasonForWaiting, topWhyNot
 from softfab.xmlbind import XMLTag
-from softfab.xmlgen import XML, XMLAttributeValue, XMLContent, xhtml, xml
+from softfab.xmlgen import XML, XMLAttributeValue, XMLContent, xml
 
 if TYPE_CHECKING:
     from softfab.joblib import Job, Task, jobDB

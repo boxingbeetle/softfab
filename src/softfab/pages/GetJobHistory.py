@@ -12,7 +12,7 @@ from softfab.querylib import RecordFilter, SetFilter, runQuery
 from softfab.response import Response
 from softfab.userlib import User, checkPrivilege
 from softfab.utils import chop
-from softfab.xmlgen import adaptToXML, xml
+from softfab.xmlgen import xml
 
 
 class GetJobHistory_GET(ControlPage['GetJobHistory_GET.Arguments', 'GetJobHistory_GET.Processor']):
