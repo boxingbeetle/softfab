@@ -40,7 +40,10 @@ def lint(c, src=None, rule=None):
     print('Checking sources with PyLint...')
     args = []
     if rule is not None:
-        args += ['--disable=all', '--enable=' + rule]
+        args += [
+            '--disable=all', '--enable=' + rule,
+            '--persistent=n', '--score=n'
+            ]
     args.append(source_arg(src))
     with c.cd(str(TOP_DIR)):
         c.run('pylint %s' % ' '.join(args), env=PYLINT_ENV, pty=True)
