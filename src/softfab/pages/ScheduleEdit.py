@@ -2,7 +2,7 @@
 
 from enum import Enum
 from time import localtime
-from typing import Dict, Mapping, Optional, cast
+from typing import Dict, Iterator, Mapping, Optional, cast
 
 from softfab.EditPage import (
     EditArgs, EditPage, EditProcessor, InitialEditArgs, InitialEditProcessor
@@ -59,7 +59,7 @@ class ScheduleEditBase(EditPage[ScheduleEditArgs, Scheduled]):
     formId = 'schedule'
     autoName = None
 
-    def iterStyleDefs(self):
+    def iterStyleDefs(self) -> Iterator[str]:
         yield _pageStyles
 
     def getFormContent(self, proc):

@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from enum import Enum
+from typing import Iterator
 
 from twisted.cred.error import LoginFailed
 from twisted.internet.defer import inlineCallbacks
@@ -104,7 +105,7 @@ class ChangePassword_GET(FabPage['ChangePassword_GET.Processor',
         # Processor checks privileges.
         pass
 
-    def iterStyleDefs(self):
+    def iterStyleDefs(self) -> Iterator[str]:
         yield 'td.formlabel { width: 16em; }'
 
     def presentContent(self, proc: Processor) -> XMLContent:

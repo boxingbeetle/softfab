@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from enum import Enum
-from typing import Optional
+from typing import Iterator, Optional
 
 from twisted.cred.error import LoginFailed
 from twisted.internet.defer import inlineCallbacks
@@ -33,7 +33,7 @@ class AddUserBase(FabPage[ProcT, ArgsT]):
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'u/c', 'add new users')
 
-    def iterStyleDefs(self):
+    def iterStyleDefs(self) -> Iterator[str]:
         yield 'td.formlabel { width: 16em; }'
 
     def presentContent(self, proc: ProcT) -> XMLContent:
