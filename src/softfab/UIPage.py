@@ -133,18 +133,20 @@ class UIPage(Generic[ProcT]):
             yield xhtml.p['Details were written to the server log.']
 
     def __presentBodyParts(self, response: Response, proc: ProcT) -> XMLContent:
-        yield self.presentHeader(proc)
+        presentationArgs = dict(proc=proc)
+        yield self.presentHeader(**presentationArgs)
         try:
-            yield (
-                xhtml.div(class_ = 'body')[ self.__presentBody(proc) ],
-                self.presentBackgroundScripts(proc)
-                )
+            yield xhtml.div(class_='body')[
+                self.__presentBody(**presentationArgs)
+                ]
+            yield self.presentBackgroundScripts(**presentationArgs)
         except Exception as ex:
             logPageException(proc.req, 'Error presenting page')
             response.setStatus(500, 'Error presenting page')
             yield from self.__formatError(ex)
 
-    def __presentBody(self, proc: ProcT) -> XMLContent:
+    def __presentBody(self, **kwargs: object) -> XMLContent:
+        proc = cast(ProcT, kwargs['proc'])
         if proc.processingError is not None:
             return self.__formatError(proc.processingError)
         elif proc.error is not None:
@@ -152,7 +154,8 @@ class UIPage(Generic[ProcT]):
         else:
             return self.presentContent(proc)
 
-    def presentHeader(self, proc: ProcT) -> XMLContent:
+    def presentHeader(self, **kwargs: object) -> XMLContent:
+        proc = cast(ProcT, kwargs['proc'])
         userName = proc.user.name
         return xhtml.div(class_ = 'titlebar')[
             xhtml.div(class_ = 'title')[ self.__title(proc) ],
@@ -167,7 +170,7 @@ class UIPage(Generic[ProcT]):
                 ],
             xhtml.div(class_ = 'logo')[
                 xhtml.a(href = 'About', title = 'SoftFab %s' % VERSION)[
-                    _logoIcon.present(proc=proc)
+                    _logoIcon.present(**kwargs)
                     ]
                 ]
             ]
@@ -181,7 +184,7 @@ class UIPage(Generic[ProcT]):
             ) -> XMLContent:
         return message
 
-    def presentBackgroundScripts(self,
-            proc: ProcT # pylint: disable=unused-argument
+    def presentBackgroundScripts(self, # pylint: disable=unused-argument
+            **kwargs: object
             ) -> XMLContent:
         return None

@@ -187,15 +187,17 @@ class FabPage(UIPage[ProcT], FabResource[ArgsT, ProcT], ABC):
             if button is not None:
                 yield button
 
-    def presentHeader(self, proc: ProcT) -> XMLContent:
-        yield super().presentHeader(proc)
+    def presentHeader(self, **kwargs: object) -> XMLContent:
+        proc = cast(ProcT, kwargs['proc'])
+        yield super().presentHeader(**kwargs)
         yield LinkBar.instance.present(
             rootButtons=tuple(self.__createLinkButtons(
                 self.iterRootPath(), 'description', proc.args
                 )),
             childButtons=tuple(self.__createLinkButtons(
                 self.iterActiveChildren(), 'linkDescription', proc.args
-                ))
+                )),
+            **kwargs
             )
 
     def presentContent(self, proc: ProcT) -> XMLContent:
@@ -203,14 +205,15 @@ class FabPage(UIPage[ProcT], FabResource[ArgsT, ProcT], ABC):
         # that here to please PyLint.
         raise NotImplementedError
 
-    def presentBackgroundScripts(self, proc: ProcT) -> XMLContent:
+    def presentBackgroundScripts(self, **kwargs: object) -> XMLContent:
+        proc = cast(ProcT, kwargs['proc'])
         autoUpdateWidgets = [
             widget
             for widget in self.iterWidgets(proc)
             if widget.autoUpdate
             ]
         if autoUpdateWidgets:
-            yield RefreshScript(*autoUpdateWidgets).present(proc=proc)
+            yield RefreshScript(*autoUpdateWidgets).present(**kwargs)
 
     def getParentURL(self, args: Optional[ArgsT]) -> str:
         for ancestor in reversed(self.getPageInfo()['parents']):
@@ -285,7 +288,10 @@ class LinkBar(Widget):
 
     __levelSep = xhtml.div(class_ = 'level')[ '\u25B8' ]
 
-    def __presentLinkButton(self, button: LinkBarButton) -> XMLNode:
+    def __presentLinkButton(self,
+                            button: LinkBarButton,
+                            **kwargs: object
+                            ) -> XMLNode:
         active = button.active
 
         iconModifier = button.modifier
@@ -301,8 +307,12 @@ class LinkBar(Widget):
 
         return xhtml.div(class_='navthis' if active else None)[
             xhtml.a(href=button.url)[
-                xhtml.span(class_=' '.join(iconStyle))[ button.icon.present() ],
-                xhtml.span(class_='navlabel')[ button.label ]
+                xhtml.span(class_=' '.join(iconStyle))[
+                    button.icon.present(**kwargs)
+                    ],
+                xhtml.span(class_='navlabel')[
+                    button.label
+                    ]
                 ]
             ]
 
@@ -313,7 +323,7 @@ class LinkBar(Widget):
 
         # Root path.
         for button in rootButtons:
-            presentation = self.__presentLinkButton(button)
+            presentation = self.__presentLinkButton(button, **kwargs)
             isParent = not button.active
             if isParent or childButtons:
                 presentation = presentation.addClass('rootpath')
@@ -325,7 +335,7 @@ class LinkBar(Widget):
         if childButtons:
             yield levelSep
             for button in childButtons:
-                yield self.__presentLinkButton(button)
+                yield self.__presentLinkButton(button, **kwargs)
 
     def present(self, **kwargs: object) -> XMLContent:
         return xhtml.div(class_='linkbar')[ self.__presentButtons(**kwargs) ]
