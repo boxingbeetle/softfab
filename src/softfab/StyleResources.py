@@ -135,6 +135,6 @@ class _StyleRoot(Resource):
                 imageFile = match.group(1)
                 self.__addFile(imageFile, 'image/png')
                 index = match.end()
-        return StyleSheet(self.relativeURL + '/' + fileName)
+        return StyleSheet(fileName)
 
 styleRoot = _StyleRoot()

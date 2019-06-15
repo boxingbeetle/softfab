@@ -95,7 +95,7 @@ class UIPage(Generic[ProcT]):
             )
         yield xhtml.title[ '%s - %s' % (project.name, self.pageTitle(proc)) ]
         for sheet in iterStyleSheets(proc.req):
-            yield sheet.present(proc=proc)
+            yield sheet.present(**kwargs)
         customStyleDefs = '\n'.join(self.iterStyleDefs())
         if customStyleDefs:
             yield xhtml.style[customStyleDefs]

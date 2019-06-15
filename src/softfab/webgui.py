@@ -692,20 +692,18 @@ class ShortcutIcon(Widget):
 
 class StyleSheet(Widget):
 
-    def __init__(self, path: str):
+    def __init__(self, fileName: str):
         Widget.__init__(self)
-        self.__path = path
-
-    def getURL(self) -> str:
-        '''Returns the relative URL to this style sheet.
-        '''
-        return self.__path
+        self.fileName = fileName
 
     def present(self, **kwargs: object) -> XMLContent:
         '''Returns an XHTML fragment for linking this style sheet.
         '''
+        styleURL = cast(str, kwargs['styleURL'])
         yield xhtml.link(
-            rel = 'stylesheet', type = 'text/css', href = self.__path
+            rel = 'stylesheet',
+            href = '%s/%s' % (styleURL, self.fileName),
+            type = 'text/css',
             )
 
 class Script(Widget):
