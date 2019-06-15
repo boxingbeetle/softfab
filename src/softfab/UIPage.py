@@ -69,15 +69,22 @@ class UIPage(Generic[ProcT]):
         response.setHeader('Content-Type', contentType + '; charset=UTF-8')
 
     def writeHTML(self, response: Response, proc: ProcT) -> None:
+        presentationArgs = dict(proc=proc)
         response.write('<!DOCTYPE html>\n')
         response.writeXML(
-            xhtml.html(lang = 'en')[
-                xhtml.head[ self.presentHeadParts(proc) ],
-                xhtml.body[ self.__presentBodyParts(response, proc) ],
+            xhtml.html(lang='en')[
+                xhtml.head[
+                    self.presentHeadParts(**presentationArgs)
+                    ],
+                xhtml.body[
+                    self.__presentBodyParts(proc.req, response,
+                                            **presentationArgs)
+                    ],
                 ]
             )
 
-    def presentHeadParts(self, proc: ProcT) -> XMLContent:
+    def presentHeadParts(self, **kwargs: object) -> XMLContent:
+        proc = cast(ProcT, kwargs['proc'])
         yield xhtml.meta(charset='UTF-8')
         yield xhtml.meta(
             name='viewport',
@@ -132,16 +139,19 @@ class UIPage(Generic[ProcT]):
         else:
             yield xhtml.p['Details were written to the server log.']
 
-    def __presentBodyParts(self, response: Response, proc: ProcT) -> XMLContent:
-        presentationArgs = dict(proc=proc)
-        yield self.presentHeader(**presentationArgs)
+    def __presentBodyParts(self,
+                           req: Request,
+                           response: Response,
+                           **kwargs: object
+                           ) -> XMLContent:
+        yield self.presentHeader(**kwargs)
         try:
             yield xhtml.div(class_='body')[
-                self.__presentBody(**presentationArgs)
+                self.__presentBody(**kwargs)
                 ]
-            yield self.presentBackgroundScripts(**presentationArgs)
+            yield self.presentBackgroundScripts(**kwargs)
         except Exception as ex:
-            logPageException(proc.req, 'Error presenting page')
+            logPageException(req, 'Error presenting page')
             response.setStatus(500, 'Error presenting page')
             yield from self.__formatError(ex)
 

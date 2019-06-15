@@ -444,12 +444,10 @@ class EditPage(FabPage[EditProcessorBase[EditArgsT, DBRecord], EditArgsT], ABC):
     def pageTitle(self, proc: EditProcessorBase[EditArgsT, DBRecord]) -> str:
         return 'Edit ' + self.elemTitle
 
-    def presentHeadParts(self,
-                         proc: EditProcessorBase[EditArgsT, DBRecord]
-                         ) -> XMLContent:
-        yield super().presentHeadParts(proc)
+    def presentHeadParts(self, **kwargs: object) -> XMLContent:
+        yield super().presentHeadParts(**kwargs)
         if self.useScript:
-            yield rowManagerScript.present(proc=proc)
+            yield rowManagerScript.present(**kwargs)
 
     def presentContent(self, **kwargs: object) -> XMLContent:
         proc = cast(EditProcessorBase[EditArgsT, DBRecord], kwargs['proc'])

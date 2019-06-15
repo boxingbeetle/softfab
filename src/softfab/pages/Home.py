@@ -66,8 +66,8 @@ class Home_GET(FabPage['Home_GET.Processor', FabPage.Arguments]):
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield RecentJobsTable.instance
 
-    def presentHeadParts(self, proc: Processor) -> XMLContent:
-        yield super().presentHeadParts(proc)
+    def presentHeadParts(self, **kwargs: object) -> XMLContent:
+        yield super().presentHeadParts(**kwargs)
         yield xhtml.link(
             rel = 'alternate',
             type = 'application/atom+xml',
