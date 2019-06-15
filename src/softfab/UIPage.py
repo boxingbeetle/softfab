@@ -71,7 +71,7 @@ class UIPage(Generic[ProcT]):
     def writeHTML(self, response: Response, proc: ProcT) -> None:
         presentationArgs = dict(
             proc=proc,
-            styleURL=styleRoot.relativeURL,
+            styleURL=response.relativeRoot + styleRoot.relativeURL,
             )
         response.write('<!DOCTYPE html>\n')
         response.writeXML(
