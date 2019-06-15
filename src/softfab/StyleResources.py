@@ -110,11 +110,11 @@ class _StyleRoot(Resource):
         if is_resource(styles, fileName):
             data = self.__addFile(fileName, 'image/svg+xml')
             if data is not None:
-                return svgIcon(self.relativeURL + '/' + fileName, data)
+                return svgIcon(fileName, data)
 
         fileName = name + '.png'
         data = self.__addFile(fileName, 'image/png')
-        return pngIcon(self.relativeURL + '/' + fileName, data)
+        return pngIcon(fileName, data)
 
     def addShortcutIcon(self, name: str) -> ShortcutIcon:
         icon = ShortcutIcon(name, self.relativeURL)

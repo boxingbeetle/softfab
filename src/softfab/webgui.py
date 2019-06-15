@@ -614,48 +614,57 @@ class Image(AttrContainer):
 
     @classmethod
     def create(cls,
-               url: str,
+               fileName: str,
                width: Optional[int] = None,
                height: Optional[int] = None
                ) -> 'Image':
-        attributes = dict(src=url, alt='') # type: Dict[str, object]
+        attributes = dict(alt='') # type: Dict[str, object]
         if width is not None:
             attributes['width'] = width
         if height is not None:
             attributes['height'] = height
-        return cls((), attributes)
+        return cls(fileName, attributes)
+
+    def __init__(self, fileName: str, attributes: Mapping[str, object]):
+        super().__init__((), attributes)
+        self.fileName = fileName
 
     def _replaceContents(self, contents: Iterable[XMLPresentable]) -> NoReturn:
         raise ValueError('Image does not support nested content')
 
-    def present(self, **kwargs: object) -> XMLContent: # pylint: disable=unused-argument
-        return xhtml.img(**self._attributes)
+    def _replaceAttributes(self, attributes: Mapping[str, object]) -> 'Image':
+        return self.__class__(self.fileName, attributes)
 
-def pngIcon(url: str, data: Optional[bytes]) -> Image:
+    def present(self, **kwargs: object) -> XMLContent: # pylint: disable=unused-argument
+        styleURL = cast(str, kwargs['styleURL'])
+        url = '%s/%s' % (styleURL, self.fileName)
+        return xhtml.img(src=url, **self._attributes)
+
+def pngIcon(fileName: str, data: Optional[bytes]) -> Image:
     width, height = None, None
     if data is not None:
         with BytesIO(data) as inp:
             try:
                 width, height = getPNGDimensions(inp)
             except ValueError as ex:
-                name = url[ url.rfind('/') + 1 : ]
-                logging.error('Invalid PNG file for icon "%s": %s', name, ex)
-    return Image.create(url, width, height)
+                logging.error(
+                    'Invalid PNG file for icon "%s": %s', fileName, ex
+                    )
+    return Image.create(fileName, width, height)
 
-def svgIcon(url: str, data: Optional[bytes]) -> Image:
+def svgIcon(fileName: str, data: Optional[bytes]) -> Image:
     width = height = None
     if data is not None:
         try:
             svgElement = ElementTree.fromstring(data)
         except ElementTree.ParseError as ex:
-            name = url[ url.rfind('/') + 1 : ]
-            logging.error('Error parsing SVG icon "%s": %s', name, ex)
+            logging.error('Error parsing SVG icon "%s": %s', fileName, ex)
         else:
             widthStr = svgElement.get('width')
             width = None if widthStr is None else int(widthStr)
             heightStr = svgElement.get('height')
             height = None if heightStr is None else int(heightStr)
-    return Image.create(url, width, height)
+    return Image.create(fileName, width, height)
 
 class ShortcutIcon(Widget):
 

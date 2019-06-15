@@ -175,16 +175,20 @@ class Feed_GET(ControlPage[ControlPage.Arguments, 'Feed_GET.Processor']):
                 atom.uri[ rootURL + createJobURL(jobId) ],
                 ]
         # Note: The Atom spec requires all XHTML to be inside a single <div>.
+        presentationArgs = dict(
+            proc=proc,
+            styleURL=rootURL + 'styles',
+            )
         yield atom.summary(type = 'xhtml')[ xhtml.div[
             # TODO: Does xhtml.style work with other RSS readers too?
             xhtml.style[(
                 '@import url(%s%s);' % (rootURL, sheet.getURL())
                 for sheet in iterStyleSheets(proc.req)
                 )],
-            jobTable.present(proc=proc),
+            jobTable.present(**presentationArgs),
             xhtml.p[ self.presentJobInfo(job) ],
-            tasksTable.present(proc=proc),
-            jobComment.present(proc=proc),
+            tasksTable.present(**presentationArgs),
+            jobComment.present(**presentationArgs),
             ] ]
 
     def presentJobInfo(self, job):

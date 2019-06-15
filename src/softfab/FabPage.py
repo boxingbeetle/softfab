@@ -259,7 +259,14 @@ class _WidgetResponder(Responder):
 
     def respond(self, response: Response) -> None:
         self.__page.writeHTTPHeaders(response)
-        response.writeXML(self.__widget.present(proc=self.__proc))
+        # TODO: This is copy-pasted from UIPage.
+        #       I'm not sure yet where the proper location would be;
+        #       if it is copy-pasted a third time it might be clearer.
+        presentationArgs = dict(
+            proc=self.__proc,
+            styleURL=response.relativeRoot + styleRoot.relativeURL,
+            )
+        response.writeXML(self.__widget.present(**presentationArgs))
 
 class LinkBarButton:
     """The information to present one button in a `LinkBar`."""

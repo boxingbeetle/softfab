@@ -69,7 +69,10 @@ class UIPage(Generic[ProcT]):
         response.setHeader('Content-Type', contentType + '; charset=UTF-8')
 
     def writeHTML(self, response: Response, proc: ProcT) -> None:
-        presentationArgs = dict(proc=proc)
+        presentationArgs = dict(
+            proc=proc,
+            styleURL=styleRoot.relativeURL,
+            )
         response.write('<!DOCTYPE html>\n')
         response.writeXML(
             xhtml.html(lang='en')[
