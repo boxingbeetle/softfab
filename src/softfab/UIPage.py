@@ -99,7 +99,7 @@ class UIPage(Generic[ProcT]):
         customStyleDefs = '\n'.join(self.iterStyleDefs())
         if customStyleDefs:
             yield xhtml.style[customStyleDefs]
-        yield _shortcutIcon.present(proc=proc)
+        yield _shortcutIcon.present(**kwargs)
 
     def __title(self, proc: ProcT) -> XMLContent:
         return (

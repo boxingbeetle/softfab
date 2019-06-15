@@ -668,10 +668,9 @@ def svgIcon(fileName: str, data: Optional[bytes]) -> Image:
 
 class ShortcutIcon(Widget):
 
-    def __init__(self, name: str, relativeURL: str):
+    def __init__(self, name: str):
         Widget.__init__(self)
         self.__name = name
-        self.__urlPrefix = relativeURL + '/'
 
     def iterFiles(self) -> Iterator[Tuple[str, str]]:
         '''Iterates through pairs of file name and media type.
@@ -683,10 +682,11 @@ class ShortcutIcon(Widget):
         A shortcut icon is the small icon typically displayed to the left of
         the URL of a page in a web browser.
         '''
+        styleURL = cast(str, kwargs['styleURL'])
         for fileName, mediaType in self.iterFiles():
             yield xhtml.link(
                 rel = 'icon',
-                href = self.__urlPrefix + fileName,
+                href = '%s/%s' % (styleURL, fileName),
                 type = mediaType,
                 )
 

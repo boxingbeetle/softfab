@@ -117,7 +117,7 @@ class _StyleRoot(Resource):
         return pngIcon(fileName, data)
 
     def addShortcutIcon(self, name: str) -> ShortcutIcon:
-        icon = ShortcutIcon(name, self.relativeURL)
+        icon = ShortcutIcon(name)
         for fileName, mediaType in icon.iterFiles():
             self.__addFile(fileName, mediaType)
         return icon
