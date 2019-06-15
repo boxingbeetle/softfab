@@ -3,7 +3,8 @@
 from collections import defaultdict
 from enum import Enum
 from typing import (
-    AbstractSet, DefaultDict, Iterator, Mapping, Optional, Set, cast
+    AbstractSet, DefaultDict, Dict, Iterator, List, Mapping, Optional, Set,
+    cast
 )
 
 from softfab.FabPage import FabPage
@@ -14,13 +15,15 @@ from softfab.configview import (
 )
 from softfab.datawidgets import DataTable
 from softfab.formlib import actionButtons, hiddenInput, makeForm, textInput
-from softfab.joblib import jobDB
+from softfab.joblib import Job, jobDB
 from softfab.pageargs import DictArg, EnumArg, RefererArg, StrArg
 from softfab.pagelinks import createJobsURL
 from softfab.paramview import ParamOverrideTable
+from softfab.request import Request
 from softfab.resourcelib import TaskRunner
 from softfab.selectview import SelectArgs
 from softfab.taskgroup import LocalGroup
+from softfab.typing import Collection
 from softfab.userlib import User, checkPrivilege
 from softfab.webgui import decoration
 from softfab.xmlgen import XMLContent, xhtml
@@ -33,7 +36,7 @@ class InputConflict(Exception):
 
 class FakeTask:
 
-    def __init__(self, name: str, inputs: Mapping):
+    def __init__(self, name: str, inputs: Mapping[str, Input]):
         self.__inputs = inputs
         self.__name = name
 
@@ -103,8 +106,8 @@ class BatchConfigTable(SimpleConfigTable):
     showTargets = True
     showOwner = False
 
-    def getRecordsToQuery(self, proc):
-        return proc.configs
+    def getRecordsToQuery(self, proc: PageProcessor) -> Collection[Config]:
+        return cast(BatchExecute_GET.Processor, proc).configs
 
 parentPage = 'LoadExecute'
 
@@ -126,7 +129,7 @@ class BatchExecute_GET(FabPage['BatchExecute_GET.Processor',
 
     class Processor(SelectConfigsMixin[ParentArgs], PageProcessor[ParentArgs]):
 
-        def initTaskSet(self):
+        def initTaskSet(self) -> None:
             '''Initializes our `taskSet` attribute with a TaskSetWithInputs
             instance that contains all tasks from the given configurations.
             Problems should be appended to `notices`.
@@ -143,10 +146,10 @@ class BatchExecute_GET(FabPage['BatchExecute_GET.Processor',
             else:
                 self.taskSet = taskSet
 
-        def process(self, req, user):
+        def process(self, req: Request[ParentArgs], user: User) -> None:
             # pylint: disable=attribute-defined-outside-init
             self.notices = []
-            self.params = {}
+            self.params = {} # type: Dict[str, Mapping[str, Mapping[str, str]]]
 
             self.findConfigs()
             self.initTaskSet()
@@ -204,8 +207,8 @@ class BatchExecute_POST(BatchExecute_GET):
 
     class Processor(BatchExecute_GET.Processor):
 
-        def process(self, req, user):
-            args = req.args
+        def process(self, req: Request[ParentArgs], user: User) -> None:
+            args = cast('BatchExecute_POST.Arguments', req.args)
             action = args.action
 
             if action is not Actions.EXECUTE:
@@ -213,26 +216,30 @@ class BatchExecute_POST(BatchExecute_GET):
                 raise Redirect(args.refererURL or parentPage)
 
             # pylint: disable=attribute-defined-outside-init
-            self.notices = notices = []
+            self.notices = notices = [] # type: List[str]
 
             # Parse inputs.
-            inputs = args.prod
-            locations = dict(args.local)
-            for inp, lref in args.lref.items():
-                location = args.local.get(lref)
+            local = cast(Mapping[str, str], args.local)
+            locations = dict(local)
+            for inpName, lref in cast(Mapping[str, str], args.lref).items():
+                location = local.get(lref)
                 if location is not None:
-                    locations[inp] = location
+                    locations[inpName] = location
             missingIds = []
-            self.params = params = {}
-            self.configs = configs = []
-            for index, configId in args.config.items():
+            self.params = params = \
+                        {} # type: Dict[str, Mapping[str, Mapping[str, str]]]
+            self.configs = configs = [] # type: List[Config]
+            for index, configId in cast(Mapping[str, str], args.config).items():
                 try:
                     config = configDB[configId]
                 except KeyError:
                     missingIds.append(configId)
                 else:
                     configs.append(config)
-                    taskParameters = args.param.get(index)
+                    taskParameters = cast(
+                        Mapping[str, Mapping[str, Mapping[str, str]]],
+                        args.param
+                        ).get(index)
                     if taskParameters is not None:
                         params[configId] = taskParameters
             if missingIds:
@@ -241,20 +248,27 @@ class BatchExecute_POST(BatchExecute_GET):
             self.initTaskSet()
             taskSet = self.taskSet
             if taskSet is not None:
-                for inpName, locator in self.args.prod.items():
-                    taskSet.getInput(inpName).setLocator(locator)
+                for inpName, locator in cast(Mapping[str, str],
+                                             args.prod).items():
+                    inp = taskSet.getInput(inpName)
+                    assert inp is not None
+                    inp.setLocator(locator)
                 for inpName, location in locations.items():
-                    taskSet.getInput(inpName).setLocalAt(location)
+                    inp = taskSet.getInput(inpName)
+                    assert inp is not None
+                    inp.setLocalAt(location)
 
             if not notices:
                 # Create jobs.
+                inputs = cast(Mapping[str, str], args.prod)
                 userName = user.name
-                jobs = []
+                jobs = [] # type: List[Job]
+                empty = {} # type: Mapping[str, Mapping[str, str]]
                 for config in configs:
                     try:
                         jobs += config.createJobs(userName,
                             locators = inputs, localAt = locations,
-                            taskParameters = params.get(config.getId(), {})
+                            taskParameters = params.get(config.getId(), empty)
                             )
                     except ValueError as ex:
                         notices.append('%s: %s' % (config.getId(), ex))
@@ -278,11 +292,12 @@ class BatchInputTable(InputTable):
         targets = cast(FakeTaskSet, taskSet).getTargets(inp)
         return not targets or targets <= taskRunner.capabilities
 
-    def present(self, *, taskSet, **kwargs):
-        tablePresentation = super().present(taskSet=taskSet, **kwargs)
+    def present(self, **kwargs: object) -> XMLContent:
+        tablePresentation = super().present(**kwargs)
         if tablePresentation:
             yield xhtml.h2[ 'Inputs for the jobs:' ]
             yield tablePresentation
+            taskSet = cast(FakeTaskSet, kwargs['taskSet'])
             if taskSet.hasLocalInputs():
                 yield xhtml.p[
                     'Please specify "Local at" for all local inputs.'
@@ -304,24 +319,26 @@ class ParamTable(ParamOverrideTable):
             size=72
             )
 
-    def present(self, *, proc, **kwargs):
+    def present(self, **kwargs: object) -> XMLContent:
+        proc = cast(BatchExecute_GET.Processor, kwargs['proc'])
+
         # Because we're wrapped in a decoration, the presentation should
         # evaluate to False if there are only empty tables.
-        presentation = []
+        presentation = [] # type: List[XMLContent]
         for index, config in enumerate(proc.configs):
             configId = config.getId()
             taskParameters = proc.params.get(configId)
             tasks = []
             for task in config.getTasks():
                 taskName = task.getName()
-                taskParams = None
+                taskParams = None # type: Optional[Mapping[str, str]]
                 if taskParameters is not None:
                     taskParams = taskParameters.get(taskName)
                 if taskParams is None:
                     taskParams = task.getParameters()
                 tasks.append(( taskName, task.getDef(), taskParams ))
             table = super().present(
-                proc=proc, indexStr=str(index), tasks=tasks, **kwargs
+                indexStr=str(index), tasks=tasks, **kwargs
                 )
             if table:
                 presentation += (
