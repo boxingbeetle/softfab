@@ -727,6 +727,7 @@ class TaskRunnerSelectionTable(CheckBoxesTable):
         if len(taskCapsList[0]) > 0:
             def capsMatch(runner: TaskRunner) -> bool:
                 trCaps = runner.capabilities
+                assert requiredCaps is not None
                 if requiredCaps > trCaps:
                     return False
                 trCapsLen = len(trCaps)

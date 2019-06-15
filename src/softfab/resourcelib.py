@@ -2,8 +2,8 @@
 
 from abc import ABC
 from typing import (
-    AbstractSet, Callable, ClassVar, Iterable, Iterator, Mapping, Optional,
-    Set, Tuple, TypeVar, cast
+    TYPE_CHECKING, AbstractSet, Callable, ClassVar, Iterable, Iterator,
+    Mapping, Optional, Set, Tuple, TypeVar, cast
 )
 import logging
 
@@ -597,15 +597,18 @@ class TaskRunner(ResourceBase):
         else:
             return cast(str, data['host'])
 
-    @ResourceBase.description.setter # type: ignore
-    def description(self, value: str) -> None:
-        self._properties['description'] = value
-        self._notify()
+    if not TYPE_CHECKING:
+        # This construct isn't understood by mypy 0.701.
 
-    @ResourceBase.capabilities.setter # type: ignore
-    def capabilities(self, value: Iterable[str]) -> None:
-        self._capabilities = frozenset(value)
-        self._notify()
+        @ResourceBase.description.setter
+        def description(self, value: str) -> None:
+            self._properties['description'] = value
+            self._notify()
+
+        @ResourceBase.capabilities.setter
+        def capabilities(self, value: Iterable[str]) -> None:
+            self._capabilities = frozenset(value)
+            self._notify()
 
     @property
     def targets(self) -> AbstractSet[str]:

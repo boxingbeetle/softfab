@@ -327,10 +327,7 @@ def _checkCapabilities(
     missingOnAny = set() # type: AbstractSet[str]
     missingOnAll = None # type: Optional[AbstractSet[str]]
     for runner in runners:
-        # TODO: Mypy marks this line as an error in the report, but doesn't
-        #       log any issue for it.
-        #       Without the cast, several more lines are marked as errors.
-        missingCaps = cast(AbstractSet[str], neededCaps - runner.capabilities)
+        missingCaps = neededCaps - runner.capabilities
         if missingCaps:
             missingOnAny |= missingCaps
             if missingOnAll is None:
