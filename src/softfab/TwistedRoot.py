@@ -256,6 +256,10 @@ class PageResource(Resource):
                 )
         return instance
 
+class DocMetadata:
+    button = 'ERROR'
+    children = () # type: Sequence[str]
+
 class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
     authenticator = NoAuthPage.instance
 
@@ -346,11 +350,6 @@ class DocResource(Resource):
         '.svg': b'image/svg+xml',
         }
 
-    metadataFallbacks = {
-        'button': 'ERROR',
-        'children': (),
-        }
-
     @classmethod
     def registerDocs(cls, packageName: str) -> Resource:
         # TODO: In Python 3.6, we could use IntFlag instead.
@@ -386,11 +385,11 @@ class DocResource(Resource):
                 content = None
 
         # Collect metadata.
-        metadata = {}
-        for name, fallback in cls.metadataFallbacks.items():
-            if initModule is None:
-                value = fallback
-            else:
+        metadata = DocMetadata()
+        if initModule is not None:
+            for name, value in DocMetadata.__dict__.items():
+                if name.startswith('_'):
+                    continue
                 try:
                     value = getattr(initModule, name)
                 except AttributeError:
@@ -398,8 +397,8 @@ class DocResource(Resource):
                         'Missing metadata "%s" in module "%s"', name, initName
                         )
                     errors.append('metadata')
-                    value = fallback
-            metadata[name] = value
+                else:
+                    setattr(metadata, name, value)
 
         # Create resource.
         relativeRoot = '../' * packageName.count('.')
@@ -407,7 +406,7 @@ class DocResource(Resource):
         resource = cls(page)
 
         # Register children.
-        for childName in cast(Sequence[str], metadata['children']):
+        for childName in metadata.children:
             childResource = cls.registerDocs('%s.%s' % (packageName, childName))
             resource.putChild(childName.encode(), childResource)
 
