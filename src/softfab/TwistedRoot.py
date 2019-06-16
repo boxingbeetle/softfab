@@ -23,6 +23,7 @@ from twisted.web.server import NOT_DONE_YET
 from twisted.web.util import redirectTo
 import importlib_resources
 
+from softfab.FabPage import BasePage, IconModifier, LinkBarButton
 from softfab.Page import (
     FabResource, InternalError, PageProcessor, Redirect, Redirector, Responder
 )
@@ -41,6 +42,7 @@ from softfab.response import Response
 from softfab.schedulelib import ScheduleManager
 from softfab.shadowlib import startShadowRunCleanup
 from softfab.userlib import UnknownUser, User
+from softfab.xmlgen import XML, XMLContent, xhtml
 
 startupLogger = logging.getLogger('ControlCenter.startup')
 
@@ -254,6 +256,86 @@ class PageResource(Resource):
                 )
         return instance
 
+class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
+    authenticator = NoAuthPage.instance
+
+    class Arguments(PageArgs):
+        pass
+
+    class Processor(PageProcessor[Arguments]):
+        pass
+
+    def __init__(self,
+                 module: Optional[ModuleType],
+                 content: Optional[str],
+                 errors: Sequence[str],
+                 relativeRoot: str
+                 ):
+        super().__init__()
+        self.module = module
+        self.content = content
+        self.errors = errors
+        self.relativeRoot = relativeRoot
+
+    def getResponder(self,
+                     path: Optional[str],
+                     proc: PageProcessor
+                     ) -> Responder:
+        if self.errors:
+            message = xhtml.p(class_='notice')[
+                'Failed to load documentation ', ', '.join(self.errors), '. ',
+                xhtml.br,
+                'Please check the Control Center log for details.'
+                ]
+            return DocErrorResponder(
+                self, cast('DocPage.Processor', proc), message
+                )
+        else:
+            return super().getResponder(path, proc)
+
+    def checkAccess(self, user: User) -> None:
+        pass
+
+    def pageTitle(self, proc: Processor) -> str:
+        if self.content:
+            return '(title)'
+        else:
+            return 'Error'
+
+    def iterRootButtons(self,
+                        args: Optional[Arguments]
+                        ) -> Iterator[LinkBarButton]:
+        yield LinkBarButton(
+            label='Home',
+            url=self.relativeRoot + 'Home',
+            icon=styleRoot.addIcon('IconHome'),
+            modifier=IconModifier.NONE,
+            active=False
+            )
+
+    def iterChildButtons(self,
+                         args: Optional[Arguments]
+                         ) -> Iterator[LinkBarButton]:
+        return iter(())
+
+    def presentContent(self, **kwargs: object) -> XMLContent:
+        return xhtml.pre[ self.content ]
+
+    def presentError(self, message: XML, **kwargs: object) -> XMLContent:
+        yield message
+        yield self.presentContent(**kwargs)
+
+class DocErrorResponder(UIResponder[DocPage.Processor]):
+
+    def __init__(self, page: DocPage, proc: DocPage.Processor, error: XML):
+        super().__init__(page, proc)
+        self.error = error
+
+    def respond(self, response: Response) -> None:
+        response.setStatus(500)
+        self.proc.error = self.error
+        super().respond(response)
+
 class DocResource(Resource):
     """Twisted Resource that serves documentation pages."""
 
@@ -320,14 +402,9 @@ class DocResource(Resource):
             metadata[name] = value
 
         # Create resource.
-        contents = [] # type: List[str]
-        for where in errors:
-            contents += [
-                '## Error loading documentation %s' % where,
-                'Please check the Control Center log for details.'
-                ]
-        contents.append(content or '')
-        resource = cls(initModule, '\n\n'.join(contents), errors)
+        relativeRoot = '../' * packageName.count('.')
+        page = DocPage(initModule, content, errors, relativeRoot)
+        resource = cls(page)
 
         # Register children.
         for childName in cast(Sequence[str], metadata['children']):
@@ -336,15 +413,9 @@ class DocResource(Resource):
 
         return resource
 
-    def __init__(self,
-                 module: Optional[ModuleType],
-                 content: str,
-                 errors: Sequence[str]
-                 ):
+    def __init__(self, page: DocPage):
         super().__init__()
-        self.module = module
-        self.content = content
-        self.errors = errors
+        self.page = page
 
     def getChild(self, path: bytes, request: TwistedRequest) -> Resource:
         if path:
@@ -352,17 +423,14 @@ class DocResource(Resource):
         else:
             return self
 
-    def render_GET(self, request: TwistedRequest) -> bytes:
+    def render_GET(self, request: TwistedRequest) -> object:
         if not request.path.endswith(b'/'):
             # Redirect to directory, to make sure local assets will be found.
             url = URLPath.fromBytes(request.uri)
             url.path += b'/'
             return redirectTo(str(url).encode('ascii'), request)
 
-        if self.errors:
-            request.setResponseCode(500)
-        request.setHeader(b'Content-Type', b'text/plain')
-        return self.content.encode()
+        return renderAuthenticated(self.page, request)
 
 def renderAuthenticated(page: FabResource, request: TwistedRequest) -> object:
     def done(result: object) -> None: # pylint: disable=unused-argument

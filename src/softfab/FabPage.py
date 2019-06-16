@@ -21,7 +21,59 @@ from softfab.xmlgen import XMLContent, XMLNode, xhtml
 
 IconModifier = Enum('IconModifier', 'NONE NEW EDIT DELETE')
 
-class FabPage(UIPage[ProcT], FabResource[ArgsT, ProcT], ABC):
+class BasePage(UIPage[ProcT], FabResource[ArgsT, ProcT], ABC):
+
+    def getResponder(self,
+                     path: Optional[str],
+                     proc: PageProcessor
+                     ) -> Responder:
+        if path is None:
+            return super().getResponder(None, proc)
+        for widget in self.iterWidgets(cast(ProcT, proc)):
+            if widget.widgetId == path:
+                return _WidgetResponder(self, widget, proc)
+        raise KeyError('Page does not contain a widget named "%s"' % path)
+
+    def iterRootButtons(self,
+                        args: Optional[ArgsT]
+                        ) -> Iterator['LinkBarButton']:
+        """Yields the link bar buttons for pages from the site root up to
+        and including this page.
+        """
+        raise NotImplementedError
+
+    def iterChildButtons(self,
+                        args: Optional[ArgsT]
+                        ) -> Iterator['LinkBarButton']:
+        """Yields the link bar buttons for child pages of this page.
+        """
+        raise NotImplementedError
+
+    def presentHeader(self, **kwargs: object) -> XMLContent:
+        proc = cast(ProcT, kwargs['proc'])
+        yield super().presentHeader(**kwargs)
+        yield LinkBar.instance.present(
+            rootButtons=tuple(self.iterRootButtons(proc.args)),
+            childButtons=tuple(self.iterChildButtons(proc.args)),
+            **kwargs
+            )
+
+    def presentContent(self, **kwargs: object) -> XMLContent:
+        # This method is already declared abstract in UIPage, we re-assert
+        # that here to please PyLint.
+        raise NotImplementedError
+
+    def presentBackgroundScripts(self, **kwargs: object) -> XMLContent:
+        proc = cast(ProcT, kwargs['proc'])
+        autoUpdateWidgets = [
+            widget
+            for widget in self.iterWidgets(proc)
+            if widget.autoUpdate
+            ]
+        if autoUpdateWidgets:
+            yield RefreshScript(*autoUpdateWidgets).present(**kwargs)
+
+class FabPage(BasePage[ProcT, ArgsT]):
     authenticator = LoginAuthPage.instance
 
     __pageInfo = {} # type: ClassVar[Dict[str, Mapping[str, Any]]]
@@ -144,17 +196,6 @@ class FabPage(UIPage[ProcT], FabResource[ArgsT, ProcT], ABC):
                 if pageInfo['isActive']():
                     yield childName
 
-    def getResponder(self,
-                     path: Optional[str],
-                     proc: PageProcessor
-                     ) -> Responder:
-        if path is None:
-            return super().getResponder(None, proc)
-        for widget in self.iterWidgets(cast(ProcT, proc)):
-            if widget.widgetId == path:
-                return _WidgetResponder(self, widget, proc)
-        raise KeyError('Page does not contain a widget named "%s"' % path)
-
     def pageTitle(self, proc: ProcT) -> str:
         return self.description
 
@@ -187,33 +228,24 @@ class FabPage(UIPage[ProcT], FabResource[ArgsT, ProcT], ABC):
             if button is not None:
                 yield button
 
-    def presentHeader(self, **kwargs: object) -> XMLContent:
-        proc = cast(ProcT, kwargs['proc'])
-        yield super().presentHeader(**kwargs)
-        yield LinkBar.instance.present(
-            rootButtons=tuple(self.__createLinkButtons(
-                self.iterRootPath(), 'description', proc.args
-                )),
-            childButtons=tuple(self.__createLinkButtons(
-                self.iterActiveChildren(), 'linkDescription', proc.args
-                )),
-            **kwargs
+    def iterRootButtons(self,
+                        args: Optional[ArgsT]
+                        ) -> Iterator['LinkBarButton']:
+        return self.__createLinkButtons(
+            self.iterRootPath(), 'description', args
+            )
+
+    def iterChildButtons(self,
+                         args: Optional[ArgsT]
+                         ) -> Iterator['LinkBarButton']:
+        return self.__createLinkButtons(
+            self.iterActiveChildren(), 'linkDescription', args
             )
 
     def presentContent(self, **kwargs: object) -> XMLContent:
         # This method is already declared abstract in UIPage, we re-assert
         # that here to please PyLint.
         raise NotImplementedError
-
-    def presentBackgroundScripts(self, **kwargs: object) -> XMLContent:
-        proc = cast(ProcT, kwargs['proc'])
-        autoUpdateWidgets = [
-            widget
-            for widget in self.iterWidgets(proc)
-            if widget.autoUpdate
-            ]
-        if autoUpdateWidgets:
-            yield RefreshScript(*autoUpdateWidgets).present(**kwargs)
 
     def getParentURL(self, args: Optional[ArgsT]) -> str:
         for ancestor in reversed(self.getPageInfo()['parents']):
@@ -251,7 +283,7 @@ class FabPage(UIPage[ProcT], FabResource[ArgsT, ProcT], ABC):
 
 class _WidgetResponder(Responder):
 
-    def __init__(self, page: FabPage, widget: Widget, proc: PageProcessor):
+    def __init__(self, page: BasePage, widget: Widget, proc: PageProcessor):
         Responder.__init__(self)
         self.__page = page
         self.__widget = widget
