@@ -69,9 +69,11 @@ class UIPage(Generic[ProcT]):
         response.setHeader('Content-Type', contentType + '; charset=UTF-8')
 
     def writeHTML(self, response: Response, proc: ProcT) -> None:
+        ccURL = response.relativeRoot
         presentationArgs = dict(
             proc=proc,
-            styleURL=response.relativeRoot + styleRoot.relativeURL,
+            ccURL=ccURL,
+            styleURL=ccURL + styleRoot.relativeURL,
             )
         response.write('<!DOCTYPE html>\n')
         response.writeXML(
@@ -169,20 +171,21 @@ class UIPage(Generic[ProcT]):
 
     def presentHeader(self, **kwargs: object) -> XMLContent:
         proc = cast(ProcT, kwargs['proc'])
+        ccURL = cast(str, kwargs['ccURL'])
         userName = proc.user.name
         return xhtml.div(class_ = 'titlebar')[
             xhtml.div(class_ = 'title')[ self.__title(proc) ],
             xhtml.div(class_ = 'info')[
-                xhtml.a(href=loginURL(proc.req))[ 'log in' ]
+                xhtml.a(href=ccURL + loginURL(proc.req))[ 'log in' ]
                 if userName is None else (
                     createUserDetailsLink(userName), ' \u2013 ',
-                    xhtml.a(href=logoutURL(proc.req))[ 'log out' ]
+                    xhtml.a(href=ccURL + logoutURL(proc.req))[ 'log out' ]
                     ),
                 xhtml.br,
                 formatTime(getTime())
                 ],
             xhtml.div(class_ = 'logo')[
-                xhtml.a(href = 'About', title = 'SoftFab %s' % VERSION)[
+                xhtml.a(href=ccURL + 'About', title='SoftFab %s' % VERSION)[
                     _logoIcon.present(**kwargs)
                     ]
                 ]
