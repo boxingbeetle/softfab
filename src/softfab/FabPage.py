@@ -307,8 +307,8 @@ class LinkBarButton:
                  label: str,
                  url: str,
                  icon: Image,
-                 modifier: IconModifier,
-                 active: bool
+                 modifier: IconModifier = IconModifier.NONE,
+                 active: bool = False
                  ):
         self.label = label
         self.url = url
