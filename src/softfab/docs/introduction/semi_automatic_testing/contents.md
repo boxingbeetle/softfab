@@ -37,11 +37,11 @@ A postponed inspection consists of the following steps:
 1.  **Record test results**
     The wrapper should record test results so they can be inspected later. This could be making a video or audio recording, writing a detailed log file or anything else depending on the test.
 2.  **Request postponed inspection**
-    The wrapper should tell the Control Center that postponed inspection is required to know the result of the executed task. This is done by passing the result code "inspect" in the results file; see the [Writing a Wrapper](/installation/wrappers/writing_a_wrapper/#passing_results) document for details.
+    The wrapper should tell the Control Center that postponed inspection is required to know the result of the executed task. This is done by passing the result code "inspect" in the results file; see the [Writing a Wrapper](../../installation/wrappers/writing_a_wrapper/#passing_results) document for details.
 3.  **Offer the user an interface for inspecting the results**
     The user should be presented the recorded test results and given an interface to judge them. Typically this is done with a CGI script on the web server that serves the test reports. For example, the user might be presented a page with a form containing a series of screen captures with next to each capture a set of radio buttons to select "pass" or "fail".
 4.  **Report inspection result**
-    The Control Center should be told that the postponed inspection has finished and what the result of it was. This is done using the [InspectDone](/reference/api/#InspectDone)  API call. If the previous step was implemented with a CGI script, that CGI script can make the API call when the user submits the form.
+    The Control Center should be told that the postponed inspection has finished and what the result of it was. This is done using the [InspectDone](../../reference/api/#InspectDone)  API call. If the previous step was implemented with a CGI script, that CGI script can make the API call when the user submits the form.
 
 ### Example
 
@@ -68,11 +68,11 @@ A human intervention point is useful if task execution can be mostly, but not fu
 A human intervention point is controlled by the wrapper in three steps:
 
 1.  **Signal start of human intervention point**
-    The wrapper notifies the Control Center that the task execution has reached a human intervention point. This is done using the [TaskAlert](/reference/api/#TaskAlert)  API call.
+    The wrapper notifies the Control Center that the task execution has reached a human intervention point. This is done using the [TaskAlert](../../reference/api/#TaskAlert)  API call.
 2.  **Wait for user to perform the required action**
     The wrapper should suspend execution until the required manual action has been taken. In some cases it is possible to automatically detect that the action has been completed. In other cases the user is required to indicate that the action has been performed, for example by pressing a button.
 3.  **Signal end of human intervention point**
-    The wrapper should tell the Control Center that the task execution is no longer stuck in a human intervention point. This is also done using the [TaskAlert](/reference/api/#TaskAlert)  API call.
+    The wrapper should tell the Control Center that the task execution is no longer stuck in a human intervention point. This is also done using the [TaskAlert](../../reference/api/#TaskAlert)  API call.
 
 ### Example
 

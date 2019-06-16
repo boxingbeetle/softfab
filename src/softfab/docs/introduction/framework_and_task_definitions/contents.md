@@ -1,6 +1,6 @@
 # Framework and Task Definitions
 
-This document describes what framework and task definitions are and how you can create them. It builds on the concepts explained in the [Execution Graph](/introduction/execution_graph/) document.
+This document describes what framework and task definitions are and how you can create them. It builds on the concepts explained in the [Execution Graph](../execution_graph/) document.
 
 ##Control Center Configuration
 
@@ -38,7 +38,7 @@ To execute tasks, first a configuration has to be created. A configuration conta
 
 With SoftFab it is possible to store mid-level data and to visualize this so-called mid-level data by plotting trend graphs (examples are e.g. number of lines of code, number of problems reported by a static code check tool, number of compiler errors/warnings, etc.) In this way it is possible to track the evolution of the software developed in the project. It will help to run and lead the project if the extracted data is chosen well. In order to plot a trend graph, the mid-level data has to be extracted from a low-level log report or from the executing environment and stored in the factory. In SoftFab the following two ways are available to send the extracted mid-level data to the control center:
 
-*   **execution task**: add mid-level data extraction code to the wrapper script. How to write extraction code in your wrappers is script language specific. Some examples are available in the [Shared Wrappers](/installation/wrappers/shared_wrappers) web-page. Please read also the document about generating [Mid-level Data](/introduction/mid_level_data/).
+*   **execution task**: add mid-level data extraction code to the wrapper script. How to write extraction code in your wrappers is script language specific. Some examples are available in the [Shared Wrappers](../../installation/wrappers/shared_wrappers) web-page. Please read also the document about generating [Mid-level Data](../mid_level_data/).
 *   **extraction task**: add mid-level data extraction code to an additional extraction wrapper, which runs as a separate "shadow" task. The extraction tasks are to be phased-out in a future version of SoftFab. Do not start writing new extraction wrappers, but perform the extraction code in the regular wrapper (execution wrapper).
 
 Here the "extraction task" is explained (for maintenance reasons). It is possible to do task post-processing, such as extraction of mid-level data, as a separate "shadow" task. A "shadow" task always runs directly after the execution task when it finished and before a next execution task starts (if any). An "extraction" task (as opposed to "execution" task) does not appear in the list of tasks belonging to the job. The advantage of a separate "extraction wrapper" is mainly to split mid-level data extraction from the execution wrapper. Sometimes another more suitable script language is used (e.g. Perl or Python) to do the data extraction from low level (text) reports. The extraction task must produce a file called 'extracted.properties', containing the mid-level data fields and their values. It is not possible to extract mid-level data in both the wrapper script (execution task) and the extractor script (extraction task) for the same task (framework). It is strongly advised not to put 'data.<key\>=<value\>' in both the files: 'results.properties' and 'extracted.properties'.
@@ -47,7 +47,7 @@ If the "Extract" checkbox is checked on the framework definition edit page, it m
 
 ## Related Documentation
 #### Execution Graph
-The [Execution Graph](/introduction/execution_graph/) is the language we use for modeling the build and test process.
+The [Execution Graph](../execution_graph/) is the language we use for modeling the build and test process.
 
 #### Writing a Wrapper
-To implement execution of defined tasks (and extraction of mid-level data), wrappers should be written. The [Writing a Wrapper](/installation/wrappers/writing_a_wrapper/) document explains how this works.
+To implement execution of defined tasks (and extraction of mid-level data), wrappers should be written. The [Writing a Wrapper](../../installation/wrappers/writing_a_wrapper/) document explains how this works.

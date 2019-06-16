@@ -349,7 +349,7 @@ Arguments:
 
 In order to signal the end of the HIP the same API call should be made again with empty value for `alert`.
 
-More information on the HIP can be found in the document about [semi-automatic testing](/introduction/semi_automatic_testing/#hip).
+More information on the HIP can be found in the document about [semi-automatic testing](../../introduction/semi_automatic_testing/#hip).
 
 ### TaskRunnerExit<a id="TaskRunnerExit"></a>
 

@@ -67,9 +67,9 @@ In the project page operators can change project wide settings.
 Here you can create or extend the design of the SoftFab project by building an execution graph. The execution graph must contain at least one framework. If more than one framework is defined, these can be connected by products. The execution graph gives you a visual overview of all the different frameworks and what the order of these frameworks are, when executed. Try to split up an automatic job into several parts (frameworks), e.g.: prepare\_code, static\_code\_check, build, unit\_tests, coverage\_tests or report\_generation tasks.
 Hint: always try to automate as much as possible (e.g. creation of install packages, archiving or clean-up actions, create CM baseline, generate documentation, etc.).
 
-Read more about the concept of execution graphs in [this document](/introduction/execution_graph/).
+Read more about the concept of execution graphs in [this document](../../introduction/execution_graph/).
 
-To be able to create and run a new job configuration you must have or create at least the following items: one framework, a wrapper script for the framework (to execute your task) and one task definition (using the framework). Learn more about framework and task definitions in [this document](/introduction/framework_and_task_definitions/).
+To be able to create and run a new job configuration you must have or create at least the following items: one framework, a wrapper script for the framework (to execute your task) and one task definition (using the framework). Learn more about framework and task definitions in [this document](../../introduction/framework_and_task_definitions/).
 
 ### Users ![Users](/styles/UserList1.png)
 
