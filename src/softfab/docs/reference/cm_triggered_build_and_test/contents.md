@@ -3,7 +3,7 @@
 In a Continuous Integration (CI) development process, as used in Agile and DevOps environments, the build and tests are kicked off on a change in the Configuration Management (CM) system. To do so the CM system should trigger a SoftFab schedule which fires, in its turn, a specified configuration.
 
 <p class="todo">
-TODO: Update and re-test the example scripts for SoftFab 3.0+.<br>
+TODO: Update and re-test the example scripts for SoftFab 3.0+.<br/>
 </p>
 
 Introduction

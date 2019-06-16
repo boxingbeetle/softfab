@@ -46,7 +46,7 @@ A postponed inspection consists of the following steps:
 ### Example
 
 <p class="todo">
-TODO: Re-do the examples for SoftFab 3.0+.<br>
+TODO: Re-do the examples for SoftFab 3.0+.<br/>
 </p>
 
 ## Human Intervention Point (HIP)<a id="hip"></a>
@@ -77,5 +77,5 @@ A human intervention point is controlled by the wrapper in three steps:
 ### Example
 
 <p class="todo">
-TODO: Re-do the examples for SoftFab 3.0+.<br>
+TODO: Re-do the examples for SoftFab 3.0+.<br/>
 </p>

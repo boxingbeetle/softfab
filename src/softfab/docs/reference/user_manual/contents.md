@@ -5,8 +5,8 @@ This document contains a global manual for SoftFab users. SoftFab users typicall
 Note that this manual is not going into too much detail since the UI may vary a little from release to release. But this global explanation is enough to get started. Most details are more or less self-explanatory.
 
 <p class="todo">
-TODO: Replace the old resource png in the resources section header by the windmill.<br>
-TODO: The explanation of the Task Runner resource status table should be replaced and relocated by one covering other resources too.<br>
+TODO: Replace the old resource png in the resources section header by the windmill.<br/>
+TODO: The explanation of the Task Runner resource status table should be replaced and relocated by one covering other resources too.<br/>
 </p>
 
 ##SoftFab Web GUI
@@ -38,7 +38,7 @@ The "Home" page is the default SoftFab page. From here you have access to all fu
 
 More about jobs in the section titled [History](#history).
 
-## Configure ![Configure](/styles/Configure.png)<a id=configure></a>
+## Configure ![Configure](/styles/Configure.png)<a id="configure"></a>
 
 This is the starting point where you have to define the project settings, create or extend the design of the SoftFab project by building an executation graph including frameworks and products and where you can create new task definitions and resources.
 
@@ -75,7 +75,7 @@ To be able to create and run a new job configuration you must have or create at 
 
 On this page you can see all the SoftFab users for this factory. You can add a new user, change password(s) and change the user roles (inactive, guest, user or operator). It is not possible to delete a user. Set the user role to inactive this such case (this is done for traceability; the job history of all users are kept).
 
-## Execute ![Execute](/styles/ExecConf2.png)<a id=execute></a>
+## Execute ![Execute](/styles/ExecConf2.png)<a id="execute"></a>
 
 From this page you are able to start remotely one or more builds, one or more tests or any other type of task an operator has integrated into the SoftFab tool. A 'task' in SoftFab terminology is the smallest unit of execution. A task runs on exactly one (available) Task Runner. It is possible that the tasks of a multi task job configuration run on many different, possibly globally distributed, Task Runners in parallel. In this way a job can complete in shorter time.
 
@@ -106,7 +106,7 @@ On the latest 'Execute' page you have the possibility to either execute or save 
 
 On the same page there is a field where you can fill in your email address. You will receive an automated email on this address when the job is finished. If you select "On failure only" you will only receive an email in case the finished job has tasks with result: not OK (not green). You may enter a by comma separated list of addresses.
 
-## History ![History](/styles/Reports1.png)<a id=history></a>
+## History ![History](/styles/Reports1.png)<a id="history"></a>
 
 On this page a table is visible with all jobs ever executed, currently executing or waiting for execution. Sorting and filtering this table is possible by making use of the filter box (on top of the page) and by clicking on the sorting links.
 
@@ -270,7 +270,7 @@ Task Matrix is again another new way of displaying which tasks have run and thei
 
 Filtering on (Job) configuration means: show only tasks that occur in this/these particular configuration(s).
 
-## Resources![Resources](/styles/Resources1.png)<a id=resources></a>
+## Resources![Resources](/styles/Resources1.png)<a id="resources"></a>
 
 In this section all resources instances, ordered by their type, and their status are presented.
 
@@ -290,7 +290,7 @@ Via this resource reserving mechanism it is even possible to share resources bet
 
 The projects SoftFab operator controls the configuration of the Resources.
 
-### Task Runners<a id=runner></a>
+### Task Runners<a id="runner"></a>
 
 The Task Runner is the part of the SoftFab, which is installed in the field, typically on a Factory PC. This OS independent piece of software (Java) has the actual control over the tasks.
 
