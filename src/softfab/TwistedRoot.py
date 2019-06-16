@@ -270,16 +270,18 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
         pass
 
     def __init__(self,
+                 resource: 'DocResource',
                  module: Optional[ModuleType],
+                 metadata: DocMetadata,
                  content: Optional[str],
-                 errors: Sequence[str],
-                 relativeRoot: str
+                 errors: Sequence[str]
                  ):
         super().__init__()
+        self.resource = resource
         self.module = module
+        self.metadata = metadata
         self.content = content
         self.errors = errors
-        self.relativeRoot = relativeRoot
 
     def getResponder(self,
                      path: Optional[str],
@@ -306,19 +308,38 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
         else:
             return 'Error'
 
+    def createLinkBarButton(self, url: str) -> LinkBarButton:
+        return LinkBarButton(
+            label=self.metadata.button,
+            url=url,
+            icon=styleRoot.addIcon('IconHome'),
+            active=not url
+            )
+
     def iterRootButtons(self,
                         args: Optional[Arguments]
                         ) -> Iterator[LinkBarButton]:
+        parents = [] # type: List[LinkBarButton]
+        resource = self.resource # type: Optional[DocResource]
+        url = ''
+        while resource is not None:
+            parents.append(resource.page.createLinkBarButton(url))
+            resource = resource.parent
+            url += '../'
         yield LinkBarButton(
             label='Home',
-            url=self.relativeRoot + 'Home',
+            url=url + 'Home',
             icon=styleRoot.addIcon('IconHome')
             )
+        yield from reversed(parents)
 
     def iterChildButtons(self,
                          args: Optional[Arguments]
                          ) -> Iterator[LinkBarButton]:
-        return iter(())
+        resource = self.resource
+        for childName in self.metadata.children:
+            childResource = resource.children[childName.encode()]
+            yield childResource.page.createLinkBarButton(childName + '/')
 
     def presentContent(self, **kwargs: object) -> XMLContent:
         return xhtml.pre[ self.content ]
@@ -349,7 +370,10 @@ class DocResource(Resource):
         }
 
     @classmethod
-    def registerDocs(cls, packageName: str) -> Resource:
+    def registerDocs(cls,
+                     packageName: str,
+                     parent: Optional['DocResource'] = None
+                     ) -> 'DocResource':
         # TODO: In Python 3.6, we could use IntFlag instead.
         errors = []
 
@@ -399,20 +423,23 @@ class DocResource(Resource):
                     setattr(metadata, name, value)
 
         # Create resource.
-        relativeRoot = '../' * packageName.count('.')
-        page = DocPage(initModule, content, errors, relativeRoot)
-        resource = cls(page)
+        resource = cls(parent)
+        resource.page = DocPage( # pylint: disable=attribute-defined-outside-init
+            resource, initModule, metadata, content, errors
+            )
 
         # Register children.
         for childName in metadata.children:
-            childResource = cls.registerDocs('%s.%s' % (packageName, childName))
+            childResource = cls.registerDocs(
+                '%s.%s' % (packageName, childName), resource
+                )
             resource.putChild(childName.encode(), childResource)
 
         return resource
 
-    def __init__(self, page: DocPage):
+    def __init__(self, parent: Optional['DocResource']):
         super().__init__()
-        self.page = page
+        self.parent = parent
 
     def getChild(self, path: bytes, request: TwistedRequest) -> Resource:
         if path:
