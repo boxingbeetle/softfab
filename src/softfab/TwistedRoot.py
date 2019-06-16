@@ -5,11 +5,15 @@ from importlib import import_module
 from inspect import getmodulename
 from types import GeneratorType, ModuleType
 from typing import (
-    Callable, Dict, Generator, Iterator, List, Mapping, Optional, Sequence,
-    Type, Union, cast
+    Callable, Dict, Generator, Iterable, Iterator, List, Mapping, Optional,
+    Sequence, Tuple, Type, Union, cast
 )
+from xml.etree import ElementTree
 import logging
 
+from markdown import Markdown
+from markdown.extensions.fenced_code import FencedCodeExtension
+from markdown.extensions.tables import TableExtension
 from twisted.cred.error import LoginFailed, Unauthorized
 from twisted.internet import reactor
 from twisted.internet.defer import Deferred, inlineCallbacks
@@ -256,6 +260,10 @@ class PageResource(Resource):
                 )
         return instance
 
+markdownConverter = Markdown(
+    extensions=[FencedCodeExtension(), TableExtension()]
+    )
+
 class DocMetadata:
     button = 'ERROR'
     children = () # type: Sequence[str]
@@ -274,22 +282,58 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
                  module: Optional[ModuleType],
                  metadata: DocMetadata,
                  content: Optional[str],
-                 errors: Sequence[str]
+                 errors: Iterable[str]
                  ):
         super().__init__()
         self.resource = resource
         self.module = module
         self.metadata = metadata
         self.content = content
-        self.errors = errors
+        self.errors = list(errors)
+        self.__rendered = None # type: Optional[XML]
+
+    def renderContent(self) -> None:
+        if self.__rendered is not None or 'rendering' in self.errors:
+            # Already rendered.
+            return
+        content = self.content
+        if content is None:
+            # Nothing to render.
+            return
+
+        # TODO: Getting the ElementTree from Python-Markdown would be
+        #       far more efficient.
+        markdownConverter.reset()
+        xhtmlStr = '<body>%s</body>' % markdownConverter.convert(content)
+        # TODO: Solve this in a cleaner way.
+        xhtmlStr = xhtmlStr.replace('&nbsp;', '&#xA0;')
+        try:
+            element = ElementTree.fromstring(xhtmlStr)
+        except ElementTree.ParseError as ex:
+            message = 'Markdown rendering produced invalid XHTML'
+            position = getattr(
+                        ex, 'position', None) # type: Optional[Tuple[int, int]]
+            if position is not None:
+                row, col = position
+                line = xhtmlStr.split('\n')[row - 1]
+                message = ''.join((
+                    message, '; offending line:\n',
+                    line, '\n',
+                    col * ' ', '^'
+                    ))
+            logging.exception(message)
+            self.errors.append('rendering')
+        else:
+            self.__rendered = xhtml[iter(element)]
 
     def getResponder(self,
                      path: Optional[str],
                      proc: PageProcessor
                      ) -> Responder:
+        self.renderContent()
         if self.errors:
             message = xhtml.p(class_='notice')[
-                'Failed to load documentation ', ', '.join(self.errors), '. ',
+                'Error in documentation ', ', '.join(self.errors), '. ',
                 xhtml.br,
                 'Please check the Control Center log for details.'
                 ]
@@ -342,7 +386,7 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
             yield childResource.page.createLinkBarButton(childName + '/')
 
     def presentContent(self, **kwargs: object) -> XMLContent:
-        return xhtml.pre[ self.content ]
+        return self.__rendered
 
     def presentError(self, message: XML, **kwargs: object) -> XMLContent:
         yield message

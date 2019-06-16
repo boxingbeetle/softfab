@@ -41,6 +41,7 @@ pygraphviz = '^1.4'
 pytz = '*'
 importlib_resources = "^1.0"
 "zope.interface" = '^4.4.2'
+markdown = "^3.1"
 
 [tool.poetry.dev-dependencies]
 lektor = '^3.1'
