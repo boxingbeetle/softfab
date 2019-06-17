@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from enum import Enum
 from functools import partial
 from importlib import import_module
 from inspect import getmodulename
@@ -320,6 +321,23 @@ markdownConverter = Markdown(
     )
 markdownConverter.stripTopLevelTags = False
 
+# TODO: In Python 3.6, we could use IntFlag instead.
+class DocErrors(Enum):
+    """Errors that can happen when processing documentation.
+    """
+
+    MODULE = 1
+    """Python module failed to load."""
+
+    METADATA = 2
+    """Missing metadata."""
+
+    CONTENT = 3
+    """Markdown content failed to load."""
+
+    RENDERING = 4
+    """Markdown content failed to render."""
+
 class DocMetadata:
     button = 'ERROR'
     children = () # type: Sequence[str]
@@ -338,19 +356,19 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
                  module: Optional[ModuleType],
                  metadata: DocMetadata,
                  content: Optional[str],
-                 errors: Iterable[str]
+                 errors: Iterable[DocErrors]
                  ):
         super().__init__()
         self.resource = resource
         self.module = module
         self.metadata = metadata
         self.content = content
-        self.errors = list(errors)
+        self.errors = set(errors)
         self.__rendered = None # type: Optional[XML]
         self.title = 'Error'
 
     def renderContent(self) -> None:
-        if self.__rendered is not None or 'rendering' in self.errors:
+        if self.__rendered is not None or DocErrors.RENDERING in self.errors:
             # Already rendered.
             return
         content = self.content
@@ -369,7 +387,7 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
         except Exception:
             logging.exception('Error rendering Markdown for %s',
                               self.resource.packageName)
-            self.errors.append('rendering')
+            self.errors.add(DocErrors.RENDERING)
             self.__rendered = None
         else:
             self.title = extractor.title
@@ -381,7 +399,7 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
         self.renderContent()
         if self.errors:
             message = xhtml.p(class_='notice')[
-                'Error in documentation ', ', '.join(self.errors), '. ',
+                'Error in documentation ', xhtml[', '].join(self.errors), '. ',
                 xhtml.br,
                 'Please check the Control Center log for details.'
                 ]
@@ -461,8 +479,7 @@ class DocResource(Resource):
                      packageName: str,
                      parent: Optional['DocResource'] = None
                      ) -> 'DocResource':
-        # TODO: In Python 3.6, we could use IntFlag instead.
-        errors = []
+        errors = set()
 
         # Load module.
         initName = packageName + '.__init__'
@@ -472,7 +489,7 @@ class DocResource(Resource):
             startupLogger.exception(
                 'Error importing documentation module "%s"', initName
                 )
-            errors.append('module')
+            errors.add(DocErrors.MODULE)
             initModule = None
 
         # Load content.
@@ -490,7 +507,7 @@ class DocResource(Resource):
                 startupLogger.exception(
                     'Error loading documentation content "%s"', contentName
                     )
-                errors.append('content')
+                errors.add(DocErrors.CONTENT)
                 content = None
 
         # Collect metadata.
@@ -505,7 +522,7 @@ class DocResource(Resource):
                     startupLogger.exception(
                         'Missing metadata "%s" in module "%s"', name, initName
                         )
-                    errors.append('metadata')
+                    errors.add(DocErrors.METADATA)
                 else:
                     setattr(metadata, name, value)
 
