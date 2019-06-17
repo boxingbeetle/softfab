@@ -101,11 +101,10 @@ Imagine you're doing a build which consists of the following steps:
 
 If you later want to add static code checks (e.g. Lint, QAC, JTest, etc.) or documentation extraction (Doxygen, JavaDoc, etc.) it would make sense to split the execution into two frameworks:
 
-<dl>
-  <dt>export:</dt>
-  <dd>Get the source code from configuration management (step 1)</dd>
-  <dt>build:</dt>
-  <dd>Invoke Make and postprocess the logging (step 2 and 3)</dd>
-</dl>
+export:
+:   Get the source code from configuration management (step 1)
+
+build:
+:   Invoke Make and postprocess the logging (step 2 and 3)
 
 The advantage of having a separate "export" framework is that you can use that same "export" framework for the static code check or documentation extraction. This means you avoid duplication of code in your framework wrappers, making them easier to maintain. It also means that a job which contains a build and a static code check and a documentation extraction will only take the sources from configuration management once, instead of three times, so the job will run faster and put a lower load on your CM server.

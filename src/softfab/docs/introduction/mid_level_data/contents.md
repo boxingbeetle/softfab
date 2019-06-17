@@ -12,16 +12,14 @@ There are different levels at which reports can be made. Depending on what infor
 
 In SoftFab, we distinguish three levels of reporting:
 
-<dl>
-  <dt>low</dt>
-  <dd>The most detailed level of reporting that the build/test tool can produce. It is intended to help the user to fix individual problems. It is not worthwhile to store this reporting in a format suitable for automatic comparison to other reports. Examples: build log; a report containing the computed values, logging, exception traces, etc. of single test cases.</dd>
+low
+:   The most detailed level of reporting that the build/test tool can produce. It is intended to help the user to fix individual problems. It is not worthwhile to store this reporting in a format suitable for automatic comparison to other reports. Examples: build log; a report containing the computed values, logging, exception traces, etc. of single test cases.
 
-  <dt>middle</dt>
-  <dd>Data at this level can be automatically compared between different runs of the same task. The data can have a lot of detail or it can be aggregated. Examples: the number of warnings and errors in a build; the result code (pass, fail, error) for each test case in a unit test, lines of code, number of violations, etc.</dd>
+middle
+:   Data at this level can be automatically compared between different runs of the same task. The data can have a lot of detail or it can be aggregated. Examples: the number of warnings and errors in a build; the result code (pass, fail, error) for each test case in a unit test, lines of code, number of violations, etc.
 
-  <dt>high</dt>
-  <dd>The least detailed level of reporting. This level contains only the data which is essential for the Control Center to handle a task. Examples: the result code (ok/warning/error); the summary string; the locators of the produced products.</dd>
-</dl>
+high
+:   The least detailed level of reporting. This level contains only the data which is essential for the Control Center to handle a task. Examples: the result code (ok/warning/error); the summary string; the locators of the produced products.
 
 You may have noticed we define a level in terms of what operations we want to perform on the reporting, rather than on what type of reporting it is. This is intentional: for one project results of individual test cases may be too detailed to consider them mid-level, while for another project comparing individual test cases between task runs is a very valuable feature. It is even possible that a project starts out with a small or empty middle level, but as time progresses more reporting is moved from low-level to mid-level by writing the necessary extraction/conversion tools.
 

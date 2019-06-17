@@ -4,13 +4,11 @@ Ideally, all build and test tasks in your factory run fully automatic. However, 
 
 The are two strategies for semi-automating tasks that cannot be fully automated:
 
-<dl>
-  <dt><a href="#postponed">Postponed Inspection</a></dt>
-  <dd>This strategy is applicable if the execution of the task can be fully automated, but a human is required to tell whether the task has passed or failed. Execution can run unattended, but the results of the execution have to be inspected afterwards.</dd>
+<a href="#postponed">Postponed Inspection</a>
+: This strategy is applicable if the execution of the task can be fully automated, but a human is required to tell whether the task has passed or failed. Execution can run unattended, but the results of the execution have to be inspected afterwards.
 
-  <dt><a href="#hip">Human Intervention Point (HIP)</a></dt>
-  <dd>This strategy is applicable if the execution of the task requires human intervention. The Task Runner suspends the execution of the task and marks this in SoftFab (yellow) to indicated a human action is required. After the intervention the Task Runner informs SoftFab and execution is resumed. This method is often more efficient than not automating a task at all.</dd>
-</dl>
+<a href="#hip">Human Intervention Point (HIP)</a>
+:   This strategy is applicable if the execution of the task requires human intervention. The Task Runner suspends the execution of the task and marks this in SoftFab (yellow) to indicated a human action is required. After the intervention the Task Runner informs SoftFab and execution is resumed. This method is often more efficient than not automating a task at all.
 
 As postponed inspection and human intervention point are two independent strategies, it is possible to use both in the same task, if necessary.
 

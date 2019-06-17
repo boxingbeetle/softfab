@@ -36,16 +36,14 @@ Possible associated waiting or running extraction tasks are **not** aborted.
 
 Arguments:
 
-<dl>
-  <dt>jobId: (multiple, at least one)</dt>
-  <dd>The job ID of the job to abort tasks of.</dd>
+jobId: (multiple, at least one)
+:   The job ID of the job to abort tasks of.
 
-  <dt>taskName: (optional, multiple)</dt>
-  <dd>The names of the tasks to abort. If this argument is omitted, all tasks in the job will be aborted.</dd>
+taskName: (optional, multiple)
+:   The names of the tasks to abort. If this argument is omitted, all tasks in the job will be aborted.
 
-  <dt>onlyWaiting: (optional)</dt>
-  <dd>Abort only tasks that are waiting: do not abort currently running tasks. Possible values are `true` and `false`. If absent `false` is implied.</dd>
-</dl>
+onlyWaiting: (optional)
+:   Abort only tasks that are waiting: do not abort currently running tasks. Possible values are `true` and `false`. If absent `false` is implied.
 
 Returns:
 
@@ -53,16 +51,14 @@ On success 'Abort' returns an XML structure tagged by `<abortedtasks>` with 0 or
 
 Examples:
 
-<dl>
-  <dt><code>http://factory.company.com/Abort?jobId=080910-1234-ABCD&amp;taskName=build</code></dt>
-  <dd>Abort the "build" task in the specified job.</dd>
+`http://factory.company.com/Abort?jobId=080910-1234-ABCD&amp;taskName=build`
+:   Abort the "build" task in the specified job.
 
-  <dt><code>http://factory.company.com/Abort?jobId=080910-1234-ABCD&amp;jobId=080910-2345-BCDE</code></dt>
-  <dd>Abort all running and waiting tasks in two specified jobs.</dd>
+`http://factory.company.com/Abort?jobId=080910-1234-ABCD&amp;jobId=080910-2345-BCDE`
+:   Abort all running and waiting tasks in two specified jobs.
 
-  <dt><code>http://factory.company.com/Abort?jobId=080910-2345-BCDE&amp;onlyWaiting=true</code></dt>
-  <dd>Abort all waiting tasks in the specified job.</dd>
-</dl>
+`http://factory.company.com/Abort?jobId=080910-2345-BCDE&amp;onlyWaiting=true`
+:   Abort all waiting tasks in the specified job.
 
 ### GetFactoryInfo<a id="GetFactoryInfo"></a>
 
@@ -74,10 +70,8 @@ none
 
 Example:
 
-<dl>
-  <dt><code>http://factory.company.com/GetFactoryInfo</code></dt>
-  <dd>Return all kind of monitoring information in XML format of "factory".</dd>
-</dl>
+`http://factory.company.com/GetFactoryInfo`
+:   Return all kind of monitoring information in XML format of "factory".
 
 ### GetJobHistory<a id="GetJobHistory"></a>
 
@@ -85,32 +79,28 @@ Queries the job history. The returned XML contains the matching job IDs; you can
 
 Arguments:
 
-<dl>
-  <dt>ctabove: (optional)</dt>
-  <dd>Only return jobs created on or after the given date. The format of the date is "yyyy-mm-dd", optionally extended with a time stamp in the format "hh:mm".</dd>
+ctabove: (optional)
+:   Only return jobs created on or after the given date. The format of the date is "yyyy-mm-dd", optionally extended with a time stamp in the format "hh:mm".
 
-  <dt>ctbelow: (optional)</dt>
-  <dd>Only return jobs created before the given date. The format of the date is "yyyy-mm-dd", optionally extended with a time stamp in the format "hh:mm".</dd>
+ctbelow: (optional)
+:   Only return jobs created before the given date. The format of the date is "yyyy-mm-dd", optionally extended with a time stamp in the format "hh:mm".
 
-  <dt>configId: (optional, multiple)</dt>
-  <dd>Only return jobs created from the specified configuration(s).</dd>
+configId: (optional, multiple)
+:   Only return jobs created from the specified configuration(s).
 
-  <dt>owner: (optional, multiple)</dt>
-  <dd>Only return jobs owned by the specified user(s).</dd>
+owner: (optional, multiple)
+:   Only return jobs owned by the specified user(s).
 
-  <dt>target: (optional, multiple)</dt>
-  <dd>Only return jobs that have the specified target(s).</dd>
+target: (optional, multiple)
+:   Only return jobs that have the specified target(s).
 
-  <dt>execState: (optional)</dt>
-  <dd>Only return jobs in the given execution state. Possible values are <code>all</code>, <code>completed</code>, <code>finished</code> and <code>unfinished</code>. If absent, <code>all</code> is implied.</dd>
-</dl>
+execState: (optional)
+:   Only return jobs in the given execution state. Possible values are `all`, `completed`, `finished` and `unfinished`. If absent, `all` is implied.
 
 Example:
 
-<dl>
-  <dt><code>http://factory.company.com/GetJobHistory?ctabove=2008-01-01&amp;ctbelow=2009-01-01&amp;configId=Regression+tests&amp;execState=completed</code></dt>
-  <dd>Return the IDs of all jobs created in 2008 from the configuration "Regression tests" that ran to completion.</dd>
-</dl>
+`http://factory.company.com/GetJobHistory?ctabove=2008-01-01&amp;ctbelow=2009-01-01&amp;configId=Regression+tests&amp;execState=completed`
+:   Return the IDs of all jobs created in 2008 from the configuration "Regression tests" that ran to completion.
 
 ### GetJobInfo<a id="GetJobInfo"></a>
 
@@ -118,17 +108,13 @@ Exports job information in XML format.
 
 Arguments:
 
-<dl>
-  <dt>jobId: (mandatory)</dt>
-  <dd>The job ID of the job to retrieve the job information from.</dd>
-</dl>
+jobId: (mandatory)
+:   The job ID of the job to retrieve the job information from.
 
 Example:
 
-<dl>
-  <dt><code>http://factory.company.com/GetJobInfo?jobId=080104-1435-AF98</code></dt>
-  <dd>Return all information in XML format about job "080104-1435-AF98".</dd>
-</dl>
+`http://factory.company.com/GetJobInfo?jobId=080104-1435-AF98`
+:   Return all information in XML format about job "080104-1435-AF98".
 
 ### GetResourceInfo<a id="GetResourceInfo"></a>
 
@@ -136,33 +122,28 @@ Exports information of any resource in XML format. Currently the resource types 
 
 Arguments:
 
-<dl>
-  <dt>type: (optional, multiple)</dt>
-  <dd>The type of resource to retrieve the information from. The resource types are defined by the customer or <code>"sf.tr"</code> which is the definition for a
-Task Runner.</dd>
+type: (optional, multiple)
+:   The type of resource to retrieve the information from. The resource types are defined by the customer or `"sf.tr"` which is the definition for a Task Runner.
 
-  <dt>name: (optional, multiple)</dt>
-  <dd>The name of the resource to retrieve the information from. The current implementation allows different types of resource sharing the same name. This will change in future.</dd>
-</dl>
+name: (optional, multiple)
+:   The name of the resource to retrieve the information from. The current implementation allows different types of resource sharing the same name. This will change in future.
 
 Examples:
 
-<dl>
-  <dt><code>http://factory.company.com/GetResourceInfo</code></dt>
-  <dd>Return information of all resources.</dd>
+`http://factory.company.com/GetResourceInfo`
+:   Return information of all resources.
 
-  <dt><code>http://factory.company.com/GetResourceInfo?type=sf.tr</code></dt>
-  <dd>Return information of all resources of type "sf.tr".</dd>
+`http://factory.company.com/GetResourceInfo?type=sf.tr`
+:   Return information of all resources of type "sf.tr".
 
-  <dt><code>http://factory.company.com/GetResourceInfo?name=myresource</code></dt>
-  <dd>Return information of all different kind of resources identified by the name "myresource".</dd>
+`http://factory.company.com/GetResourceInfo?name=myresource`
+:   Return information of all different kind of resources identified by the name "myresource".
 
-  <dt><code>http://factory.company.com/GetResourceInfo?type=sf.tr&amp;name=myresource</code></dt>
-  <dd>Return just the information of resource "sf.tr" with name "myresource".</dd>
+`http://factory.company.com/GetResourceInfo?type=sf.tr&amp;name=myresource`
+:   Return just the information of resource "sf.tr" with name "myresource".
 
-  <dt><code>http://factory.company.com/GetResourceInfo?type=sf.tr&amp;type=mytype</code></dt>
-  <dd>Return the information of all resources "sf.tr" and custom resource typed "mytype".</dd>
-</dl>
+`http://factory.company.com/GetResourceInfo?type=sf.tr&amp;type=mytype`
+:   Return the information of all resources "sf.tr" and custom resource typed "mytype".
 
 ### GetTagged<a id="GetTagged"></a>
 
@@ -170,29 +151,25 @@ Filters records using tags. The output is in XML format and consists of a set of
 
 Arguments:
 
-<dl>
-  <dt>subject: (mandatory)</dt>
-  <dd>The type of record to query. Valid values are <code>config</code> (configuration), <code>schedule</code> and <code>taskdef</code> (task definitions).</dd>
+subject: (mandatory)
+:   The type of record to query. Valid values are `config` (configuration), `schedule` and `taskdef` (task definitions).
 
-  <dt>key: (any number of times)</dt>
-  <dd>Match only those records that have a value for the given keys. If no keys are specified, all keys match.</dd>
+key: (any number of times)
+:   Match only those records that have a value for the given keys. If no keys are specified, all keys match.
 
-  <dt>value: (any number of times)</dt>
-  <dd>Match only those records that have one of the given tag values. If no values are specified, all values match.</dd>
-</dl>
+value: (any number of times)
+:   Match only those records that have one of the given tag values. If no values are specified, all values match.
 
 Examples:
 
-<dl>
-  <dt><code>http://factory.company.com/GetTagged?subject=config</code></dt>
-  <dd>List all tagged configurations and their keys and values. Configurations without any tags are omitted.</dd>
+`http://factory.company.com/GetTagged?subject=config`
+:   List all tagged configurations and their keys and values. Configurations without any tags are omitted.
 
-  <dt><code>http://factory.company.com/GetTagged?subject=schedule&amp;key=sf.cmtrigger</code></dt>
-  <dd>List all passive schedules that have a CM trigger filter.</dd>
+`http://factory.company.com/GetTagged?subject=schedule&amp;key=sf.cmtrigger`
+:   List all passive schedules that have a CM trigger filter.
 
-  <dt><code>http://factory.company.com/GetTagged?subject=taskdef&amp;key=sf.req&amp;value=R1&amp;value=R2</code></dt>
-  <dd>List all task definitions that apply to requirement "R1" or requirement "R2".</dd>
-</dl>
+`http://factory.company.com/GetTagged?subject=taskdef&amp;key=sf.req&amp;value=R1&amp;value=R2`
+:   List all task definitions that apply to requirement "R1" or requirement "R2".
 
 ### GetTaskDefParams<a id="GetTaskDefParams"></a>
 
@@ -200,20 +177,16 @@ Requests selected parameter values from all task definitions. Output is in XML f
 
 Arguments:
 
-<dl>
-  <dt>param: (any number of times)</dt>
-  <dd>The name(s) of the task parameters to list. If no names are specified, all task parameters are listed.</dd>
-</dl>
+param: (any number of times)
+:   The name(s) of the task parameters to list. If no names are specified, all task parameters are listed.
 
 Examples:
 
-<dl>
-  <dt><code>http://factory.company.com/GetTaskDefParams</code></dt>
-  <dd>Get all parameters and their values for all task definitions.</dd>
+`http://factory.company.com/GetTaskDefParams`
+:   Get all parameters and their values for all task definitions.
 
-  <dt><code>http://factory.company.com/GetTaskDefParams?param=sf.wrapper&amp;param=SOURCE_ROOT</code></dt>
-  <dd>Get the wrapper names and the values of parameter "SOURCE_ROOT" for all task definitions.</dd>
-</dl>
+`http://factory.company.com/GetTaskDefParams?param=sf.wrapper&amp;param=SOURCE_ROOT`
+:   Get the wrapper names and the values of parameter "SOURCE_ROOT" for all task definitions.
 
 ### InspectDone<a id="InspectDone"></a>
 
@@ -223,31 +196,27 @@ Method: **POST**
 
 Arguments:
 
-<dl>
-  <dt>jobId: (mandatory)</dt>
-  <dd>The ID of the job that the inspected task is part of. See the <code>SF_JOB_ID</code> <a href="../../installation/wrappers/writing_a_wrapper/#variables">wrapper variable</a>.</dd>
+jobId: (mandatory)
+:   The ID of the job that the inspected task is part of. See the `SF_JOB_ID` <a href="../../installation/wrappers/writing_a_wrapper/#variables">wrapper variable</a>.
 
-  <dt>taskName: (mandatory)</dt>
-  <dd>The name of the inspected task. See the <code>SF_TASK_ID</code> <a href="../../installation/wrappers/writing_a_wrapper/#variables">wrapper variable</a></dd>
+taskName: (mandatory)
+:   The name of the inspected task. See the `SF_TASK_ID` <a href="../../installation/wrappers/writing_a_wrapper/#variables">wrapper variable</a>
 
-  <dt>result: (mandatory)</dt>
-  <dd>The result of the inspection. Accepted values are "ok" (green), "warning" (orange) and "error" (red).</dd>
+result: (mandatory)
+:   The result of the inspection. Accepted values are "ok" (green), "warning" (orange) and "error" (red).
 
-  <dt>summary: (optional)</dt>
-  <dd>Human readable string describing the result in more detail. For example: "8 passed, 2 failed, 0 errors".</dd>
+summary: (optional)
+:   Human readable string describing the result in more detail. For example: "8 passed, 2 failed, 0 errors".
 
-  <dt>data._key_: (optional)</dt>
-  <dd>Any number of mid-level data key/value pairs can be stored by this API call.</dd>
-</dl>
+data._key_: (optional)
+:   Any number of mid-level data key/value pairs can be stored by this API call.
 
 Examples:
 
 <p class="todo">This API call is now POST-only; example needs updating.</p>
 
-<dl>
-  <dt><code>http://factory.company.com/InspectDone?jobId=080706-1234-ABCD&amp;taskName=inspect&amp;result=warning&amp;summary=Some+problems&amp;data.pass=8&amp;data.fail=2</code></dt>
-  <dd>Mark the task "inspect" in job "080706-1234-ABCD" as done. The inspection found problems, hence the result being "warning" and the summary "Some problems". Two mid-level data pairs are stored: "pass=8" and "fail=2".</dd>
-</dl>
+`http://factory.company.com/InspectDone?jobId=080706-1234-ABCD&amp;taskName=inspect&amp;result=warning&amp;summary=Some+problems&amp;data.pass=8&amp;data.fail=2`
+:   Mark the task "inspect" in job "080706-1234-ABCD" as done. The inspection found problems, hence the result being "warning" and the summary "Some problems". Two mid-level data pairs are stored: "pass=8" and "fail=2".
 
 ### LoadExecuteDefault<a id="LoadExecuteDefault"></a>
 
@@ -257,22 +226,20 @@ Method: **POST**
 
 Arguments:
 
-<dl>
-  <dt>config: (mandatory)</dt>
-  <dd>The name of the configuration to load.</dd>
+config: (mandatory)
+:   The name of the configuration to load.
 
-  <dt>comment: (optional)</dt>
-  <dd>Comment string that will be appended to the comment in the configuration.</dd>
+comment: (optional)
+:   Comment string that will be appended to the comment in the configuration.
 
-  <dt>prod.<i>name</i>: (optional)</dt>
-  <dd>Locator for input product <i>name</i>. For example: <code>prod.image=http://host/path/</code>. Multiple locators can be specified on a single function call, but only for inputs that actually occur in the chosen configuration.</dd>
+prod.<i>name</i>: (optional)
+:   Locator for input product <i>name</i>. For example: `prod.image=http://host/path/`. Multiple locators can be specified on a single function call, but only for inputs that actually occur in the chosen configuration.
 
-  <dt>local.<i>name</i>: (optional)</dt>
-  <dd>Task Runner which has access to local input product <i>name</i>. For example: <code>local.image=MyRunner01</code>.</dd>
+local.<i>name</i>: (optional)
+:   Task Runner which has access to local input product <i>name</i>. For example: `local.image=MyRunner01`.
 
-  <dt>param.<i>name</i>: (optional)</dt>
-  <dd>It is possible to pass any number of optional job parameters, which do not affect execution of the job, but may provide some extra features. These job parameters are mainly useful for the program processing notification mails (see below).</dd>
-</dl>
+param.<i>name</i>: (optional)
+:   It is possible to pass any number of optional job parameters, which do not affect execution of the job, but may provide some extra features. These job parameters are mainly useful for the program processing notification mails (see below).
 
 One optional parameter has special meaning. If `param.notify=_notification_` is specified then a notification message will be sent when the job is complete. The way the message is sent and its content are defined by the specified notification method.
 
@@ -306,13 +273,11 @@ Method: **POST**
 
 Arguments:
 
-<dl>
-  <dt>name: (multiple, at least one)</dt>
-  <dd>The name of the resource to operate on.</dd>
+name: (multiple, at least one)
+:   The name of the resource to operate on.
 
-  <dt>action: (mandatory)</dt>
-  <dd>The action to perform: "suspend" or "resume".</dd>
-</dl>
+action: (mandatory)
+:   The action to perform: "suspend" or "resume".
 
 The call is considered successful if the desired end state was reached. This means that suspending an already suspended resource or resuming a resource that was not suspended is considered a successful action.
 
@@ -320,13 +285,11 @@ Examples:
 
 <p class="todo">This API call is now POST-only; example needs updating.</p>
 
-<dl>
-  <dt><code>http://factory.company.com/ResouceControl?name=toollicense&amp;action=suspend</code></dt>
-  <dd>Suspends the resource "toollicense".</dd>
+`http://factory.company.com/ResouceControl?name=toollicense&amp;action=suspend`
+:   Suspends the resource "toollicense".
 
-  <dt><code>http://factory.company.com/ResouceControl?name=runner1&amp;name=runner2&amp;action=resume</code></dt>
-  <dd>Resumes Task Runners "runner1" and "runner2".</dd>
-</dl>
+`http://factory.company.com/ResouceControl?name=runner1&amp;name=runner2&amp;action=resume`
+:   Resumes Task Runners "runner1" and "runner2".
 
 ### TaskAlert<a id="TaskAlert"></a>
 
@@ -336,16 +299,14 @@ Method: **POST**
 
 Arguments:
 
-<dl>
-  <dt>jobId: (mandatory)</dt>
-  <dd>The job ID of the job that contains the task to suspend. You can use the SF_JOB_ID variable for this.</dd>
+jobId: (mandatory)
+:   The job ID of the job that contains the task to suspend. You can use the SF_JOB_ID variable for this.
 
-  <dt>taskId: (mandatory)</dt>
-  <dd>The task ID of the task to suspend. You can use the SF_TASK_ID variable for this.</dd>
+taskId: (mandatory)
+:   The task ID of the task to suspend. You can use the SF_TASK_ID variable for this.
 
-  <dt>alert: (mandatory)</dt>
-  <dd>Alert type. Currently, the only supported type is <code>attention</code>.</dd>
-</dl>
+alert: (mandatory)
+:   Alert type. Currently, the only supported type is `attention`.
 
 In order to signal the end of the HIP the same API call should be made again with empty value for `alert`.
 
@@ -359,10 +320,8 @@ Method: **POST**
 
 Arguments:
 
-<dl>
-  <dt>runnerId: (mandatory)</dt>
-  <dd>The ID of the Task Runner to set the flag for. This Task Runner has to be of version 2.12.0 or higher.</dd>
-</dl>
+runnerId: (mandatory)
+:   The ID of the Task Runner to set the flag for. This Task Runner has to be of version 2.12.0 or higher.
 
 ### TriggerSchedule<a id="TriggerSchedule"></a>
 
@@ -372,10 +331,8 @@ Method: **POST**
 
 Arguments:
 
-<dl>
-  <dt>scheduleId: (mandatory)</dt>
-  <dd>The ID of the schedule to set the trigger flag for. This schedule has to be a passive schedule.</dd>
-</dl>
+scheduleId: (mandatory)
+:   The ID of the schedule to set the trigger flag for. This schedule has to be a passive schedule.
 
 ##Call Mechanism<a id="call"></a>
 
@@ -397,16 +354,14 @@ Fetching the constructed URL from the SoftFab Control Center will return data in
 
 Failure is indicated by an HTTP error code. The human-readable part of the HTTP status line contains a brief description of the nature of the failure. The following HTTP status codes are used by the SoftFab API:
 
-<dl>
-  <dt>400 - Bad Request</dt>
-  <dd>There is something wrong about the request. It can be a syntax error, a reference to a non-existing database record, an otherwise invalid value etc. See the human-readable part of the status line for details.</dd>
+400 - Bad Request
+:   There is something wrong about the request. It can be a syntax error, a reference to a non-existing database record, an otherwise invalid value etc. See the human-readable part of the status line for details.
 
-  <dt>403 - Forbidden</dt>
-  <dd>The access privileges were insufficient for the action that the API function tried to perform. See the next section on authorization for a way to fix this.</dd>
+403 - Forbidden
+:   The access privileges were insufficient for the action that the API function tried to perform. See the next section on authorization for a way to fix this.
 
-  <dt>500 - Internal Server Error</dt>
-  <dd>The Control Center had problems handling the request. Please, report this as a bug.</dd>
-</dl>
+500 - Internal Server Error
+:   The Control Center had problems handling the request. Please, report this as a bug.
 
 ### Authorization
 

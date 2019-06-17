@@ -14,6 +14,7 @@ import logging
 
 from markdown import Markdown
 from markdown.extensions import Extension
+from markdown.extensions.def_list import DefListExtension
 from markdown.extensions.fenced_code import FencedCodeExtension
 from markdown.extensions.tables import TableExtension
 from markdown.treeprocessors import Treeprocessor
@@ -316,6 +317,7 @@ markdownConverter = Markdown(
     extensions=[
         extractor,
         FixupExtension(),
+        DefListExtension(),
         FencedCodeExtension(),
         TableExtension()
         ]

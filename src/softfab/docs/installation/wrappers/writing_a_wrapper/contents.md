@@ -95,22 +95,20 @@ The SoftFab Control Center must know the following things about a task run that 
 
 This information is passed via the Task Runner to the Control Center using the `results.properties` file (or `extracted.properties` for extraction tasks). It should be written in the root of the report directory tree (see SoftFab variable `SF_REPORT_ROOT`). The full path of this file is available in variable `SF_RESULTS`. Its format is similar to Java property files and looks like this:
 
-<dl>
-  <dt><code>result=&lt;result code&gt;</code></dt>
-  <dd>Possible values for &lt;result code&gt; are "<code>ok</code>", "<code>warning</code>", "<code>error</code>" and "<code>inspect</code>".</dd>
+`result=<result code>`
+:   Possible values for `<result code>` are "`ok`", "`warning`", "`error`" and "`inspect`".
 
-  <dt><code>summary=&lt;summary string&gt;</code></dt>
-  <dd>Any human-readable string. If absent or empty it is automatically generated based on the result code.</dd>
+`summary=<summary string>`
+:   Any human-readable string. If absent or empty it is automatically generated based on the result code.
 
-  <dt><code>output.&lt;product name&gt;.locator=&lt;locator&gt;</code></dt>
-  <dd>A machine-readable string that indicates the location where the by the task produced output product can be found, for example a file path or a URL. If the framework produces multiple outputs, you should specify a separate locator for each of them. Output locators are only relevant for execution tasks. An extraction task is not supposed to report any output locators and if it does they are ignored and a warning is written in the task runner log.</dd>
+`output.<product name>.locator=<locator>`
+:   A machine-readable string that indicates the location where the by the task produced output product can be found, for example a file path or a URL. If the framework produces multiple outputs, you should specify a separate locator for each of them. Output locators are only relevant for execution tasks. An extraction task is not supposed to report any output locators and if it does they are ignored and a warning is written in the task runner log.
 
-  <dt><code>data.&lt;key&gt;=&lt;value&gt;</code></dt>
-  <dd>A key-value pair containing some mid-level data relevant to this task run. The results file can contain any number of these pairs. The key name and its value are stored in the SoftFab Control Center database. If more tasks have run, a trend graph can be plotted (this can be used to monitor the software project progress and to take action if required). Here a some mid-level data examples: Size of code per module (lines of code), total number of unit tests, number of failed tests and coverage percentage. The data value has to be extracted by the wrapper from the output report (file).</dd>
+`data.<key>=<value>`
+:   A key-value pair containing some mid-level data relevant to this task run. The results file can contain any number of these pairs. The key name and its value are stored in the SoftFab Control Center database. If more tasks have run, a trend graph can be plotted (this can be used to monitor the software project progress and to take action if required). Here a some mid-level data examples: Size of code per module (lines of code), total number of unit tests, number of failed tests and coverage percentage. The data value has to be extracted by the wrapper from the output report (file).
 
-  <dt><code>extraction.result=&lt;value&gt;</code></dt>
-  <dd>The result of the extraction task. Possible values are the same as for <code>result</code>. This represents the result of the extraction itself, while <code>result</code> produced by the extraction task represents the result of the corresponding execution task calculated by the extraction task.</dd>
-</dl>
+`extraction.result=<value>`
+:   The result of the extraction task. Possible values are the same as for `result`. This represents the result of the extraction itself, while `result` produced by the extraction task represents the result of the corresponding execution task calculated by the extraction task.
 
 If execution of a wrapper finishes with a non-zero exit code, the Task Runner will assume there was a problem executing the wrapper and report result "error" to the Control Center, without looking at the `results.properties` file. If the `results.properties` file is missing, the Task Runner will also report result "error" to the Control Center.
 
@@ -133,34 +131,32 @@ It is also possible to use an abort wrapper to abort (mid-level data) extraction
 
 The Task Runner supports the following different script languages for writing a wrapper:
 
-<dl>
-  <dt><a href="#shell">Shell Script</a></dt>
-  <dd>Unix shell script, also available under Windows by using Cygwin. Powerful and portable way of writing a wrapper.</dd>
+<a href="#shell">Shell Script</a>
+:   Unix shell script, also available under Windows by using Cygwin. Powerful and portable way of writing a wrapper.
 
-  <dt><a href="#batch">Batch File</a></dt>
-  <dd>Windows batch file. This is a very straightforward way of writing a wrapper script. For complex scripts it is not the best choice though because it has limited functionality.</dd>
+<a href="#batch">Batch File</a>
+:   Windows batch file. This is a very straightforward way of writing a wrapper script. For complex scripts it is not the best choice though because it has limited functionality.
 
-  <dt><a href="#make">Makefile</a></dt>
-  <dd>Input file for the Make build tool. Useful for handling dependencies.</dd>
+<a href="#make">Makefile</a>
+:   Input file for the Make build tool. Useful for handling dependencies.
 
-  <dt><a href="#perl">Perl Script</a></dt>
-  <dd>A wrapper written in Perl can be useful if it has to perform more complex tasks, for which shell scripts or batch files are not powerful enough.</dd>
+<a href="#perl">Perl Script</a>
+:   A wrapper written in Perl can be useful if it has to perform more complex tasks, for which shell scripts or batch files are not powerful enough.
 
-  <dt><a href="#python">Python Script</a></dt>
-  <dd>Like Perl scripts, Python scripts can be used for wrappers that have to do more complex things.</dd>
+<a href="#python">Python Script</a>
+:   Like Perl scripts, Python scripts can be used for wrappers that have to do more complex things.
 
-  <dt><a href="#ruby">Ruby</a></dt>
-  <dd>Like Perl and Python scripts, Ruby scripts can be used for wrappers that have to do more complex things.</dd>
+<a href="#ruby">Ruby</a>
+:   Like Perl and Python scripts, Ruby scripts can be used for wrappers that have to do more complex things.
 
-  <dt><a href="#wsh">WSH Script</a></dt>
-  <dd>A wrapper can be written in a language supported by Windows Scripting Host (thus works on Windows only). Currently the Task Runner supports VBScript and JScript.</dd>
+<a href="#wsh">WSH Script</a>
+:   A wrapper can be written in a language supported by Windows Scripting Host (thus works on Windows only). Currently the Task Runner supports VBScript and JScript.
 
-  <dt><a href="#ant">Ant</a></dt>
-  <dd>A wrapper can be written as a build file for Apache Ant. Ant is the most popular build tool for Java.</dd>
+<a href="#ant">Ant</a>
+:   A wrapper can be written as a build file for Apache Ant. Ant is the most popular build tool for Java.
 
-  <dt><a href="#nant">NAnt</a></dt>
-  <dd>A wrapper can be written as a build file for NAnt. NAnt is a build tool similar to Ant, but for the .NET Framework.</dd>
-</dl>
+<a href="#nant">NAnt</a>
+:   A wrapper can be written as a build file for NAnt. NAnt is a build tool similar to Ant, but for the .NET Framework.
 
 Which language is selected depends on the file name extension of the wrapper script. For example `wrapper.pl` will be executed as Perl script.
 
