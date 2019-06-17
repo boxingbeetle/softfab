@@ -38,12 +38,13 @@ than repeated addition.
 '''
 
 from enum import Enum
+from html.parser import HTMLParser
 from itertools import chain
 from sys import intern
 from types import MappingProxyType, MethodType
 from typing import (
     Callable, Dict, Iterable, Iterator, List, Mapping, Match, Optional,
-    Sequence, Type, Union, cast
+    Sequence, Tuple, Type, Union, cast
 )
 from xml.etree import ElementTree
 from xml.sax.saxutils import escape
@@ -630,6 +631,34 @@ class _XHTMLNodeFactory(_XMLNodeFactory):
         else:
             nodeClass = _XHTMLNode
         return nodeClass(self._namespace, key, {}, _emptySequence)
+
+class _XHTMLParser(HTMLParser):
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.stack = [
+            (cast(XMLNode, None), [])
+            ] # type: List[Tuple[XMLNode, List[XMLContent]]]
+
+    def handle_starttag(self, tag: str, attrs: List[Tuple[str, str]]) -> None:
+        node = xhtml(tag)(**dict(attrs))
+        self.stack.append((node, []))
+
+    def handle_endtag(self, tag: str) -> None:
+        stack = self.stack
+        node, content = stack.pop()
+        stack[-1][-1].append(node[content])
+
+    def handle_data(self, data: str) -> None:
+        self.stack[-1][-1].append(data)
+
+def parseHTML(html: str) -> XML:
+    """Parses an HTML document or fragment.
+    """
+    parser = _XHTMLParser()
+    parser.feed(html)
+    (_, content), = parser.stack
+    return xhtml[content]
 
 xml = _XMLNodeFactory(None)
 atom = _XMLNodeFactory('http://www.w3.org/2005/Atom')

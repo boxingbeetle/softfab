@@ -2,7 +2,7 @@
 
 import unittest
 
-from softfab.xmlgen import xhtml
+from softfab.xmlgen import parseHTML, xhtml
 
 """Test XML generation module."""
 
@@ -98,6 +98,46 @@ class TestStyle(unittest.TestCase):
             '<style xmlns="http://www.w3.org/1999/xhtml">'
             '/*<![CDATA[*/@import url(more.css); /* <\\/StyLe *//*]]>*/'
             '</style>'
+            )
+
+class TestHTMLParser(unittest.TestCase):
+    """Test parsing of HTML fragments."""
+
+    def testBasic(self):
+        """Check whether basic functionality works."""
+        parsed = parseHTML('<h1>Hello!</h1>')
+        self.assertEqual(
+            parsed.flattenXML(),
+            '<h1 xmlns="http://www.w3.org/1999/xhtml">Hello!</h1>'
+            )
+
+    def testMultiTopLevel(self):
+        """Check whether we can handle multiple top-level tags."""
+        parsed = parseHTML('<h1>Hello!</h1><h1>Goodbye!</h1>')
+        self.assertEqual(
+            parsed.flattenXML(),
+            '<h1 xmlns="http://www.w3.org/1999/xhtml">Hello!</h1>'
+            '<h1 xmlns="http://www.w3.org/1999/xhtml">Goodbye!</h1>'
+            )
+
+    def testNested(self):
+        """Check handling of nested content."""
+        parsed = parseHTML('<p>Text with <i>nested</i> tags.</p>')
+        self.assertEqual(
+            parsed.flattenXML(),
+            '<p xmlns="http://www.w3.org/1999/xhtml">'
+            'Text with <i>nested</i> tags.'
+            '</p>'
+            )
+
+    def testVoid(self):
+        """Check handling of void elements."""
+        parsed = parseHTML('<p>Text with<br/>a void element.</p>')
+        self.assertEqual(
+            parsed.flattenXML(),
+            '<p xmlns="http://www.w3.org/1999/xhtml">'
+            'Text with<br/>a void element.'
+            '</p>'
             )
 
 if __name__ == '__main__':
