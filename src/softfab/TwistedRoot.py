@@ -26,6 +26,7 @@ from twisted.python.urlpath import URLPath
 from twisted.web.http import Request as TwistedRequest
 from twisted.web.resource import Resource
 from twisted.web.server import NOT_DONE_YET
+from twisted.web.static import Data
 from twisted.web.util import redirectTo
 import importlib_resources
 
@@ -420,10 +421,8 @@ class DocResource(Resource):
     """Twisted Resource that serves documentation pages."""
 
     contentTypes = {
-        '.html': b'text/html',
-        '.css': b'text/css',
-        '.png': b'image/png',
-        '.svg': b'image/svg+xml',
+        '.png': 'image/png',
+        '.svg': 'image/svg+xml',
         }
 
     @classmethod
@@ -480,7 +479,7 @@ class DocResource(Resource):
                     setattr(metadata, name, value)
 
         # Create resource.
-        resource = cls(parent)
+        resource = cls(packageName, parent)
         resource.page = DocPage( # pylint: disable=attribute-defined-outside-init
             resource, initModule, metadata, content, errors
             )
@@ -494,12 +493,36 @@ class DocResource(Resource):
 
         return resource
 
-    def __init__(self, parent: Optional['DocResource']):
+    def __init__(self, packageName: str, parent: Optional['DocResource']):
         super().__init__()
+        self.packageName = packageName
         self.parent = parent
+
+    def dataFile(self, path: bytes) -> Optional[Resource]:
+        """Tries to open a data file at a relative path.
+        Returns a static resource on success or None on failure.
+        """
+        try:
+            fileName = path.decode('ascii')
+        except UnicodeDecodeError:
+            # None of our data files have names with non-ASCII characters.
+            return None
+
+        packageName = self.packageName
+        if importlib_resources.is_resource(packageName, fileName):
+            data = importlib_resources.read_binary(packageName, fileName)
+            fileExt = fileName[fileName.index('.'):]
+            return Data(data, self.contentTypes[fileExt])
+        else:
+            return None
 
     def getChild(self, path: bytes, request: TwistedRequest) -> Resource:
         if path:
+            child = self.dataFile(path)
+            if child is not None:
+                self.putChild(path, child)
+                return child
+            # Will lead to a 404.
             return super().getChild(path, request)
         else:
             return self
