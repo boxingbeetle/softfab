@@ -6,9 +6,8 @@ from inspect import getmodulename
 from types import GeneratorType, ModuleType
 from typing import (
     Callable, Dict, Generator, Iterable, Iterator, List, Mapping, Optional,
-    Sequence, Tuple, Type, Union, cast
+    Sequence, Type, Union, cast
 )
-from xml.etree import ElementTree
 import logging
 
 from markdown import Markdown
@@ -46,7 +45,7 @@ from softfab.response import Response
 from softfab.schedulelib import ScheduleManager
 from softfab.shadowlib import startShadowRunCleanup
 from softfab.userlib import UnknownUser, User
-from softfab.xmlgen import XML, XMLContent, xhtml
+from softfab.xmlgen import XML, XMLContent, parseHTML, xhtml
 
 startupLogger = logging.getLogger('ControlCenter.startup')
 
@@ -308,26 +307,7 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
         # So unfortunately we have to parse the serialized output.
         markdownConverter.reset()
         xhtmlStr = markdownConverter.convert(content)
-        # TODO: Solve this in a cleaner way.
-        xhtmlStr = xhtmlStr.replace('&nbsp;', '&#xA0;')
-        try:
-            element = ElementTree.fromstring(xhtmlStr)
-        except ElementTree.ParseError as ex:
-            message = 'Markdown rendering produced invalid XHTML'
-            position = getattr(
-                        ex, 'position', None) # type: Optional[Tuple[int, int]]
-            if position is not None:
-                row, col = position
-                line = xhtmlStr.split('\n')[row - 1]
-                message = ''.join((
-                    message, '; offending line:\n',
-                    line, '\n',
-                    col * ' ', '^'
-                    ))
-            logging.exception(message)
-            self.errors.append('rendering')
-        else:
-            self.__rendered = xhtml[iter(element)]
+        self.__rendered = parseHTML(xhtmlStr)
 
     def getResponder(self,
                      path: Optional[str],
