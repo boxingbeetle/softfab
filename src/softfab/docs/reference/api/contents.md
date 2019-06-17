@@ -51,13 +51,13 @@ On success 'Abort' returns an XML structure tagged by `<abortedtasks>` with 0 or
 
 Examples:
 
-`http://factory.company.com/Abort?jobId=080910-1234-ABCD&amp;taskName=build`
+`http://factory.company.com/Abort?jobId=080910-1234-ABCD&taskName=build`
 :   Abort the "build" task in the specified job.
 
-`http://factory.company.com/Abort?jobId=080910-1234-ABCD&amp;jobId=080910-2345-BCDE`
+`http://factory.company.com/Abort?jobId=080910-1234-ABCD&jobId=080910-2345-BCDE`
 :   Abort all running and waiting tasks in two specified jobs.
 
-`http://factory.company.com/Abort?jobId=080910-2345-BCDE&amp;onlyWaiting=true`
+`http://factory.company.com/Abort?jobId=080910-2345-BCDE&onlyWaiting=true`
 :   Abort all waiting tasks in the specified job.
 
 ### GetFactoryInfo<a id="GetFactoryInfo"></a>
@@ -99,7 +99,7 @@ execState: (optional)
 
 Example:
 
-`http://factory.company.com/GetJobHistory?ctabove=2008-01-01&amp;ctbelow=2009-01-01&amp;configId=Regression+tests&amp;execState=completed`
+`http://factory.company.com/GetJobHistory?ctabove=2008-01-01&ctbelow=2009-01-01&configId=Regression+tests&execState=completed`
 :   Return the IDs of all jobs created in 2008 from the configuration "Regression tests" that ran to completion.
 
 ### GetJobInfo<a id="GetJobInfo"></a>
@@ -139,10 +139,10 @@ Examples:
 `http://factory.company.com/GetResourceInfo?name=myresource`
 :   Return information of all different kind of resources identified by the name "myresource".
 
-`http://factory.company.com/GetResourceInfo?type=sf.tr&amp;name=myresource`
+`http://factory.company.com/GetResourceInfo?type=sf.tr&name=myresource`
 :   Return just the information of resource "sf.tr" with name "myresource".
 
-`http://factory.company.com/GetResourceInfo?type=sf.tr&amp;type=mytype`
+`http://factory.company.com/GetResourceInfo?type=sf.tr&type=mytype`
 :   Return the information of all resources "sf.tr" and custom resource typed "mytype".
 
 ### GetTagged<a id="GetTagged"></a>
@@ -165,10 +165,10 @@ Examples:
 `http://factory.company.com/GetTagged?subject=config`
 :   List all tagged configurations and their keys and values. Configurations without any tags are omitted.
 
-`http://factory.company.com/GetTagged?subject=schedule&amp;key=sf.cmtrigger`
+`http://factory.company.com/GetTagged?subject=schedule&key=sf.cmtrigger`
 :   List all passive schedules that have a CM trigger filter.
 
-`http://factory.company.com/GetTagged?subject=taskdef&amp;key=sf.req&amp;value=R1&amp;value=R2`
+`http://factory.company.com/GetTagged?subject=taskdef&key=sf.req&value=R1&value=R2`
 :   List all task definitions that apply to requirement "R1" or requirement "R2".
 
 ### GetTaskDefParams<a id="GetTaskDefParams"></a>
@@ -185,7 +185,7 @@ Examples:
 `http://factory.company.com/GetTaskDefParams`
 :   Get all parameters and their values for all task definitions.
 
-`http://factory.company.com/GetTaskDefParams?param=sf.wrapper&amp;param=SOURCE_ROOT`
+`http://factory.company.com/GetTaskDefParams?param=sf.wrapper&param=SOURCE_ROOT`
 :   Get the wrapper names and the values of parameter "SOURCE_ROOT" for all task definitions.
 
 ### InspectDone<a id="InspectDone"></a>
@@ -215,7 +215,7 @@ Examples:
 
 <p class="todo">This API call is now POST-only; example needs updating.</p>
 
-`http://factory.company.com/InspectDone?jobId=080706-1234-ABCD&amp;taskName=inspect&amp;result=warning&amp;summary=Some+problems&amp;data.pass=8&amp;data.fail=2`
+`http://factory.company.com/InspectDone?jobId=080706-1234-ABCD&taskName=inspect&result=warning&summary=Some+problems&data.pass=8&data.fail=2`
 :   Mark the task "inspect" in job "080706-1234-ABCD" as done. The inspection found problems, hence the result being "warning" and the summary "Some problems". Two mid-level data pairs are stored: "pass=8" and "fail=2".
 
 ### LoadExecuteDefault<a id="LoadExecuteDefault"></a>
@@ -285,10 +285,10 @@ Examples:
 
 <p class="todo">This API call is now POST-only; example needs updating.</p>
 
-`http://factory.company.com/ResouceControl?name=toollicense&amp;action=suspend`
+`http://factory.company.com/ResouceControl?name=toollicense&action=suspend`
 :   Suspends the resource "toollicense".
 
-`http://factory.company.com/ResouceControl?name=runner1&amp;name=runner2&amp;action=resume`
+`http://factory.company.com/ResouceControl?name=runner1&name=runner2&action=resume`
 :   Resumes Task Runners "runner1" and "runner2".
 
 ### TaskAlert<a id="TaskAlert"></a>
