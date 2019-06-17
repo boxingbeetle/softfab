@@ -263,6 +263,7 @@ class PageResource(Resource):
 markdownConverter = Markdown(
     extensions=[FencedCodeExtension(), TableExtension()]
     )
+markdownConverter.stripTopLevelTags = False
 
 class DocMetadata:
     button = 'ERROR'
@@ -301,10 +302,12 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
             # Nothing to render.
             return
 
-        # TODO: Getting the ElementTree from Python-Markdown would be
-        #       far more efficient.
+        # While Python-Markdown uses ElementTree internally, there is
+        # no way to get the full output as a tree, since inline HTML
+        # is re-inserted after the tree has been serialized.
+        # So unfortunately we have to parse the serialized output.
         markdownConverter.reset()
-        xhtmlStr = '<body>%s</body>' % markdownConverter.convert(content)
+        xhtmlStr = markdownConverter.convert(content)
         # TODO: Solve this in a cleaner way.
         xhtmlStr = xhtmlStr.replace('&nbsp;', '&#xA0;')
         try:
