@@ -11,8 +11,11 @@ from typing import (
 import logging
 
 from markdown import Markdown
+from markdown.extensions import Extension
 from markdown.extensions.fenced_code import FencedCodeExtension
 from markdown.extensions.tables import TableExtension
+from markdown.treeprocessors import Treeprocessor
+from markdown.util import etree
 from twisted.cred.error import LoginFailed, Unauthorized
 from twisted.internet import reactor
 from twisted.internet.defer import Deferred, inlineCallbacks
@@ -259,8 +262,36 @@ class PageResource(Resource):
                 )
         return instance
 
+class ExtractionProcessor(Treeprocessor):
+
+    def run(self, root: etree.Element) -> None:
+        # pylint: disable=attribute-defined-outside-init
+
+        # Extract title from level 1 header.
+        title = root.find('./h1')
+        self.title = title.text
+        root.remove(title)
+
+class ExtractionExtension(Extension):
+    """Extracts title and abstract."""
+
+    @property
+    def title(self) -> str:
+        return self.__processor.title
+
+    def reset(self) -> None:
+        self.__processor.title = 'Untitled'
+
+    def extendMarkdown(self, md: Markdown) -> None:
+        md.registerExtension(self)
+        processor = ExtractionProcessor(md)
+        md.treeprocessors.register(processor, 'softfab.extract', 0)
+        # pylint: disable=attribute-defined-outside-init
+        self.__processor = processor
+
+extractor = ExtractionExtension()
 markdownConverter = Markdown(
-    extensions=[FencedCodeExtension(), TableExtension()]
+    extensions=[extractor, FencedCodeExtension(), TableExtension()]
     )
 markdownConverter.stripTopLevelTags = False
 
@@ -291,6 +322,7 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
         self.content = content
         self.errors = list(errors)
         self.__rendered = None # type: Optional[XML]
+        self.title = 'Error'
 
     def renderContent(self) -> None:
         if self.__rendered is not None or 'rendering' in self.errors:
@@ -308,6 +340,7 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
         markdownConverter.reset()
         xhtmlStr = markdownConverter.convert(content)
         self.__rendered = parseHTML(xhtmlStr)
+        self.title = extractor.title
 
     def getResponder(self,
                      path: Optional[str],
@@ -330,10 +363,7 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
         pass
 
     def pageTitle(self, proc: Processor) -> str:
-        if self.content:
-            return '(title)'
-        else:
-            return 'Error'
+        return self.title
 
     def createLinkBarButton(self, url: str) -> LinkBarButton:
         return LinkBarButton(
