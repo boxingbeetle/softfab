@@ -4,6 +4,7 @@ from enum import Enum
 from functools import partial
 from importlib import import_module
 from inspect import getmodulename
+from pathlib import Path
 from types import GeneratorType, ModuleType
 from typing import (
     Callable, Dict, Generator, Iterable, Iterator, List, Mapping, Optional,
@@ -355,25 +356,68 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
                  resource: 'DocResource',
                  module: Optional[ModuleType],
                  metadata: DocMetadata,
-                 content: Optional[str],
                  errors: Iterable[DocErrors]
                  ):
         super().__init__()
         self.resource = resource
         self.module = module
+        self.contentPath = (
+            None
+            if module is None
+            else Path(module.__file__).parent / 'contents.md'
+            )
+        self.contentMTime = None # type: Optional[int]
         self.metadata = metadata
-        self.content = content
         self.errors = set(errors)
         self.__rendered = None # type: Optional[XML]
         self.title = 'Error'
 
+    def getMTime(self, path: Path) -> Optional[int]:
+        """Returns the modification time of a source file,
+        or None if that time could not be determined.
+        """
+        try:
+            stats = path.stat()
+        except OSError:
+            # This happens when we're running from a ZIP.
+            return None
+        else:
+            return stats.st_mtime_ns
+
     def renderContent(self) -> None:
-        if self.__rendered is not None or DocErrors.RENDERING in self.errors:
+        contentPath = self.contentPath
+        if contentPath is None:
+            # If the init module fails to import, resources in the package
+            # are inaccessible. Don't try to load them, to avoid error spam.
+            return
+
+        # Check whether source was modified.
+        contentMTime = self.getMTime(contentPath)
+        if contentMTime != self.contentMTime:
+            self.contentMTime = contentMTime
+            self.__rendered = None
+            self.errors.discard(DocErrors.CONTENT)
+            self.errors.discard(DocErrors.RENDERING)
+
+        if self.__rendered is not None:
             # Already rendered.
             return
-        content = self.content
-        if content is None:
-            # Nothing to render.
+        if DocErrors.CONTENT in self.errors:
+            # Loading failed; nothing to render.
+            return
+        if DocErrors.RENDERING in self.errors:
+            # Rendering attempted and failed.
+            return
+
+        # Load content.
+        packageName = self.resource.packageName
+        try:
+            content = importlib_resources.read_text(packageName,
+                                                    contentPath.name)
+        except Exception:
+            logging.exception('Error loading documentation content "%s"',
+                              contentPath.name)
+            self.errors.add(DocErrors.CONTENT)
             return
 
         # While Python-Markdown uses ElementTree internally, there is
@@ -385,8 +429,7 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
             xhtmlStr = markdownConverter.convert(content)
             self.__rendered = parseHTML(xhtmlStr)
         except Exception:
-            logging.exception('Error rendering Markdown for %s',
-                              self.resource.packageName)
+            logging.exception('Error rendering Markdown for %s', packageName)
             self.errors.add(DocErrors.RENDERING)
             self.__rendered = None
         else:
@@ -492,24 +535,6 @@ class DocResource(Resource):
             errors.add(DocErrors.MODULE)
             initModule = None
 
-        # Load content.
-        if initModule is None:
-            # If the init module fails to import, resources in the package
-            # are inaccessible. Don't try to load them, to avoid error spam.
-            content = None
-        else:
-            contentName = 'contents.md'
-            try:
-                content = importlib_resources.read_text(
-                    packageName, contentName
-                    )
-            except Exception:
-                startupLogger.exception(
-                    'Error loading documentation content "%s"', contentName
-                    )
-                errors.add(DocErrors.CONTENT)
-                content = None
-
         # Collect metadata.
         metadata = DocMetadata()
         if initModule is not None:
@@ -529,7 +554,7 @@ class DocResource(Resource):
         # Create resource.
         resource = cls(packageName, parent)
         resource.page = DocPage( # pylint: disable=attribute-defined-outside-init
-            resource, initModule, metadata, content, errors
+            resource, initModule, metadata, errors
             )
 
         # Register children.
