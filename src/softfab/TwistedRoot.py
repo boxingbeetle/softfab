@@ -290,9 +290,33 @@ class ExtractionExtension(Extension):
         # pylint: disable=attribute-defined-outside-init
         self.__processor = processor
 
+class FixupProcessor(Treeprocessor):
+
+    def fixAlign(self, cell: etree.Element) -> None:
+        alignment = cell.attrib.pop('align')
+        cell.set('style', 'text-align: ' + alignment)
+
+    def run(self, root: etree.Element) -> None:
+        for cell in root.findall('.//th[@align]'):
+            self.fixAlign(cell)
+        for cell in root.findall('.//td[@align]'):
+            self.fixAlign(cell)
+
+class FixupExtension(Extension):
+    """Corrects invalid HTML5."""
+
+    def extendMarkdown(self, md: Markdown) -> None:
+        processor = FixupProcessor(md)
+        md.treeprocessors.register(processor, 'softfab.fixup', 5)
+
 extractor = ExtractionExtension()
 markdownConverter = Markdown(
-    extensions=[extractor, FencedCodeExtension(), TableExtension()]
+    extensions=[
+        extractor,
+        FixupExtension(),
+        FencedCodeExtension(),
+        TableExtension()
+        ]
     )
 markdownConverter.stripTopLevelTags = False
 
