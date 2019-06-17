@@ -338,10 +338,17 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
         # no way to get the full output as a tree, since inline HTML
         # is re-inserted after the tree has been serialized.
         # So unfortunately we have to parse the serialized output.
-        markdownConverter.reset()
-        xhtmlStr = markdownConverter.convert(content)
-        self.__rendered = parseHTML(xhtmlStr)
-        self.title = extractor.title
+        try:
+            markdownConverter.reset()
+            xhtmlStr = markdownConverter.convert(content)
+            self.__rendered = parseHTML(xhtmlStr)
+        except Exception:
+            logging.exception('Error rendering Markdown for %s',
+                              self.resource.packageName)
+            self.errors.append('rendering')
+            self.__rendered = None
+        else:
+            self.title = extractor.title
 
     def getResponder(self,
                      path: Optional[str],
