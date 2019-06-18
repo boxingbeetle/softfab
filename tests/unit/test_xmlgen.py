@@ -140,5 +140,81 @@ class TestHTMLParser(unittest.TestCase):
             '</p>'
             )
 
+    def testIgnorePI(self):
+        """Check parsing of processing instruction with no handlers."""
+        parsed = parseHTML('<p>A processing <?jump> instruction.</p>')
+        self.assertEqual(
+            parsed.flattenXML(),
+            '<p xmlns="http://www.w3.org/1999/xhtml">'
+            'A processing  instruction.'
+            '</p>'
+            )
+
+    def testUnknownPI(self):
+        """Check parsing of unknown processing instruction."""
+        with self.assertRaises(KeyError):
+            parsed = parseHTML(
+                '<p>A processing <?jump> instruction.</p>',
+                piHandlers={}
+                )
+
+    def testNoArgPI(self):
+        """Check parsing of processing instruction with no arguments."""
+        def jumpHandler(arg):
+            assert arg == '', arg
+            return xhtml.br
+        parsed = parseHTML(
+            '<p>A processing <?jump> instruction.</p>',
+            piHandlers=dict(jump=jumpHandler)
+            )
+        self.assertEqual(
+            parsed.flattenXML(),
+            '<p xmlns="http://www.w3.org/1999/xhtml">'
+            'A processing <br/> instruction.'
+            '</p>'
+            )
+
+    def testArgPI(self):
+        """Check parsing of processing instruction with an argument."""
+        parsed = parseHTML(
+            '<p>A processing <?jump a little higher> instruction.</p>',
+            piHandlers=dict(jump=lambda arg: xhtml.span[arg])
+            )
+        self.assertEqual(
+            parsed.flattenXML(),
+            '<p xmlns="http://www.w3.org/1999/xhtml">'
+            'A processing <span>a little higher</span> instruction.'
+            '</p>'
+            )
+
+    def testIgnoreXMLDecl(self):
+        """Check parsing of XML declaration."""
+        parsed = parseHTML(
+            '<?xml version="1.0" encoding="UTF-8" ?>'
+            '<html><body><p>XHTML document.</p></body></html>',
+            piHandlers={}
+            )
+        self.assertEqual(
+            parsed.flattenXML(),
+            '<html xmlns="http://www.w3.org/1999/xhtml">'
+            '<body><p>XHTML document.</p></body>'
+            '</html>'
+            )
+
+    def testIgnoreXMLSyntax(self):
+        """Check parsing of a PI using XML syntax (question mark at end)."""
+        def jumpHandler(arg):
+            return arg.upper()
+        parsed = parseHTML(
+            '<p>A processing <?jump lazy fox?> instruction.</p>',
+            piHandlers=dict(jump=jumpHandler)
+            )
+        self.assertEqual(
+            parsed.flattenXML(),
+            '<p xmlns="http://www.w3.org/1999/xhtml">'
+            'A processing LAZY FOX instruction.'
+            '</p>'
+            )
+
 if __name__ == '__main__':
     unittest.main()
