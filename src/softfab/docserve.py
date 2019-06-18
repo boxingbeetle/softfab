@@ -79,18 +79,6 @@ class FixupExtension(Extension):
         processor = FixupProcessor(md)
         md.treeprocessors.register(processor, 'softfab.fixup', 5)
 
-extractor = ExtractionExtension()
-markdownConverter = Markdown(
-    extensions=[
-        extractor,
-        FixupExtension(),
-        DefListExtension(),
-        FencedCodeExtension(),
-        TableExtension()
-        ]
-    )
-markdownConverter.stripTopLevelTags = False
-
 # TODO: In Python 3.6, we could use IntFlag instead.
 class DocErrors(Enum):
     """Errors that can happen when processing documentation.
@@ -189,13 +177,27 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
             self.errors.add(DocErrors.CONTENT)
             return
 
+        # Create a private Markdown converter.
+        # Rendering a the table of content will trigger Markdown conversion
+        # of child pages, so we can't use a single shared instance.
+        extractor = ExtractionExtension()
+        md = Markdown(
+            extensions=[
+                extractor,
+                FixupExtension(),
+                DefListExtension(),
+                FencedCodeExtension(),
+                TableExtension()
+                ]
+            )
+        md.stripTopLevelTags = False
+
         # While Python-Markdown uses ElementTree internally, there is
         # no way to get the full output as a tree, since inline HTML
         # is re-inserted after the tree has been serialized.
         # So unfortunately we have to parse the serialized output.
         try:
-            markdownConverter.reset()
-            xhtmlStr = markdownConverter.convert(content)
+            xhtmlStr = md.convert(content)
             self.__rendered = parseHTML(
                 xhtmlStr,
                 piHandlers=dict(toc=self.__renderTableOfContents)
