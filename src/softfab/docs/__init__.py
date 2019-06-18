@@ -1,4 +1,4 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-button = 'Top'
+button = 'Docs'
 children = ('introduction', 'installation', 'reference')

@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Iterator
+from typing import Iterator, Optional
 
-from softfab.FabPage import FabPage
+from softfab.FabPage import FabPage, LinkBarButton
 from softfab.Page import PageProcessor
 from softfab.StyleResources import styleRoot
 from softfab.databaselib import RecordObserver
@@ -53,12 +53,19 @@ class Home_GET(FabPage['Home_GET.Processor', FabPage.Arguments]):
     feedIcon = styleRoot.addIcon('feed-icon')(
         alt='Feed', title='Atom feed', width=17, height=17
         )
+    docsButton = LinkBarButton('Docs', 'docs/', styleRoot.addIcon('IconHome'))
 
     class Processor(PageProcessor[FabPage.Arguments]):
         recentJobs = MostRecent(jobDB, 'recent', 50)
 
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'j/l')
+
+    def iterChildButtons(self,
+                         args: Optional[FabPage.Arguments]
+                         ) -> Iterator[LinkBarButton]:
+        yield from super().iterChildButtons(args)
+        yield self.docsButton
 
     def iterWidgets(self, proc: Processor) -> Iterator[Widget]:
         yield RecentJobsTable.instance
