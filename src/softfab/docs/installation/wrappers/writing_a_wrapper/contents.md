@@ -164,10 +164,10 @@ The Task Runner searches for a wrapper with one of the supported file name exten
 
 ### Shell Script Wrapper <a id="shell"></a>
 
- | Execution | Extraction
--|-----------|-----------
-File name | `wrapper.sh` | `extractor.sh`
-Available since | Task Runner | 3.0
+|                | Execution    | Extraction
+|----------------|--------------|-----------
+|File name       | `wrapper.sh` | `extractor.sh`
+|Available since | Task Runner  | 3.0
 
 The variables are available through the environment, for example: `$SF_REPORT_ROOT`. The variables are not exported by default.
 
@@ -205,10 +205,10 @@ Single level lists are represented as strings with the list elements space-separ
 
 ### Batch File Wrapper <a id="batch"></a>
 
- | Execution | Extraction
--|-----------|-----------
-File name | `wrapper.bat` | `extractor.bat`
-Available since | Task Runner | 3.0
+|                | Execution     | Extraction
+|----------------|---------------|-----------
+|File name       | `wrapper.bat` | `extractor.bat`
+|Available since | Task Runner   | 3.0
 
 The variables are available through the environment, for example: `%SF_REPORT_ROOT%`.
 
@@ -221,10 +221,10 @@ Dictionary values of the variables are represented in the same way as for [shell
 
 ### Makefile Wrapper <a id="make"></a>
 
- | Execution | Extraction
--|-----------|-----------
-File name | `wrapper.mk` | `extractor.mk`
-Available since | Task Runner | 3.0
+|                | Execution    | Extraction
+|----------------|--------------|-----------
+|File name       | `wrapper.mk` | `extractor.mk`
+|Available since | Task Runner  | 3.0
 
 The variables are available as Make variables, for example: `${SF_REPORT_ROOT}`. The variables are not exported by default.
 
@@ -245,10 +245,10 @@ Dictionary values of the variables are represented in the same way as for [shell
 
 ### Perl Wrapper <a id="perl"></a>
 
- | Execution | Extraction
--|-----------|-----------
-File name | `wrapper.pl` | `extractor.pl`
-Available since | Task Runner | 3.0
+|                | Execution    | Extraction
+|----------------|--------------|-----------
+|File name       | `wrapper.pl` | `extractor.pl`
+|Available since | Task Runner  | 3.0
 
 The variables are available as regular scalar variables in the global context of the Perl script, for example: `$SF_REPORT_ROOT`. Note: if the perl wrapper contains `use strict;` it is necessary to explicitly indicate that the variables provided by the Task Runner are in the global scope when accessing those variables. So instead of `$SF_REPORT_ROOT` one should use `$::SF_REPORT_ROOT`.
 
@@ -273,10 +273,10 @@ RESDATA
 ```
 ### Python Wrapper <a id="python"></a>
 
- | Execution | Extraction
--|-----------|-----------
-File name | `wrapper.py` | `extractor.py`
-Available since | Task Runner | 3.0
+|                | Execution    | Extraction
+|----------------|--------------|-----------
+|File name       | `wrapper.py` | `extractor.py`
+|Available since | Task Runner  | 3.0
 
 The variables are available as ordinary Python variables, for example: `SF_REPORT_ROOT`.
 
@@ -295,10 +295,10 @@ resultsFile.close()
 
 ### Ruby Wrapper <a id="ruby"></a>
 
- | Execution | Extraction
--|-----------|-----------
-File name | `wrapper.rb` | `extractor.rb`
-Available since | Task Runner | 3.0
+|                | Execution    | Extraction
+|----------------|--------------|-----------
+|File name       | `wrapper.rb` | `extractor.rb`
+|Available since | Task Runner  | 3.0
 
 The variables are available as global Ruby variables, for example: `$SF_REPORT_ROOT`.
 
@@ -317,12 +317,11 @@ out.close
 
 ### WSH Wrapper <a id="wsh"></a>
 
-<table>
-<tr><th colspan="2">&nbsp;</th><th>Execution</th><th>Extraction</th></tr>
-<tr><td rowspan="2">File name</td><td>VBScript</td><td><code>wrapper.vbs</code></td><td><code>extractor.vbs</code></td></tr>
-<tr><td>JScript</td><td><code>wrapper.js</code></td><td><code>extractor.js</code></td></tr>
-<tr><td colspan="2">Available since</td><td colspan="2">Task Runner 3.0</td></tr>
-</table>
+|                | Execution     | Extraction      | Language
+|----------------|---------------|-----------------|---------
+|File name       | `wrapper.js`  | `extractor.js`  | JScript
+|                | `wrapper.vbs` | `extractor.vbs` | VBScript
+|Available since | Task Runner   | 3.0
 
 The variables are available as regular variables in the global context of the script.
 
@@ -335,10 +334,10 @@ Dictionaries are represented as objects with the keys as properties. Since VBScr
 
 ### Ant <a id="ant"></a>
 
- | Execution | Extraction
--|-----------|-----------
-File name | `wrapper.xml` | `extractor.xml`
-Available since | Task Runner | 3.0
+|                | Execution     | Extraction
+|----------------|---------------|-----------
+|File name       | `wrapper.xml` | `extractor.xml`
+|Available since | Task Runner   | 3.0
 
 Portability:<br/>
 Ant is available on any platform that runs Java.
@@ -373,10 +372,10 @@ In this example, `SOURCE_ROOT` is an input product that contains the directory p
 
 ### NAnt <a id="nant"></a>
 
- | Execution | Extraction
--|-----------|-----------
-File name | `wrapper.build` | `extractor.build`
-Available since | Task Runner | 3.0
+|                | Execution       | Extraction
+|----------------|-----------------|-----------
+|File name       | `wrapper.build` | `extractor.build`
+|Available since | Task Runner     | 3.0
 
 Portability:<br/>
 NAnt is available on any platform that runs .NET: it works with Microsoft's .NET implementation and with Mono.
