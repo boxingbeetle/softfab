@@ -19,24 +19,18 @@ from markdown.extensions.fenced_code import FencedCodeExtension
 from markdown.extensions.tables import TableExtension
 from markdown.treeprocessors import Treeprocessor
 from markdown.util import etree
-from twisted.cred.error import LoginFailed, Unauthorized
 from twisted.internet import reactor
-from twisted.internet.defer import Deferred, inlineCallbacks
-from twisted.internet.error import ConnectionLost
-from twisted.python import log
+from twisted.internet.defer import Deferred
 from twisted.python.failure import Failure
 from twisted.python.urlpath import URLPath
 from twisted.web.http import Request as TwistedRequest
 from twisted.web.resource import Resource
-from twisted.web.server import NOT_DONE_YET
 from twisted.web.static import Data
 from twisted.web.util import redirectTo
 import importlib_resources
 
 from softfab.FabPage import BasePage, LinkBarButton
-from softfab.Page import (
-    FabResource, InternalError, PageProcessor, Redirect, Redirector, Responder
-)
+from softfab.Page import FabResource, PageProcessor, Responder
 from softfab.SplashPage import SplashPage, startupMessages
 from softfab.StyleResources import styleRoot
 from softfab.TwistedUtil import PageRedirect
@@ -44,14 +38,11 @@ from softfab.UIPage import UIResponder
 from softfab.authentication import DisabledAuthPage, NoAuthPage, TokenAuthPage
 from softfab.databases import iterDatabasesToPreload
 from softfab.pageargs import PageArgs
-from softfab.render import (
-    InternalErrorPage, NotFoundPage, parseAndProcess, present
-)
-from softfab.request import Request
+from softfab.render import NotFoundPage, renderAuthenticated
 from softfab.response import Response
 from softfab.schedulelib import ScheduleManager
 from softfab.shadowlib import startShadowRunCleanup
-from softfab.userlib import UnknownUser, User
+from softfab.userlib import User
 from softfab.xmlgen import XML, XMLContent, parseHTML, xhtml
 
 startupLogger = logging.getLogger('ControlCenter.startup')
@@ -643,74 +634,6 @@ class DocResource(Resource):
             return redirectTo(str(url).encode('ascii'), request)
 
         return renderAuthenticated(self.page, request)
-
-def renderAuthenticated(page: FabResource, request: TwistedRequest) -> object:
-    def done(result: object) -> None: # pylint: disable=unused-argument
-        request.finish()
-    def failed(fail: Failure) -> None:
-        request.processingFailed(fail)
-        # Returning None (implicitly) because the error is handled.
-        # Otherwise, it will be logged twice.
-    d = renderAsync(page, request)
-    d.addCallback(done).addErrback(failed) # pylint: disable=no-member
-    return NOT_DONE_YET
-
-class _PlainTextResponder(Responder):
-
-    def __init__(self, status: int, message: str):
-        self.__status = status
-        self.__message = message
-
-    def respond(self, response: Response) -> None:
-        response.setStatus(self.__status, self.__message)
-        response.setHeader('Content-Type', 'text/plain')
-        response.write(self.__message + '\n')
-
-@inlineCallbacks
-def renderAsync(
-        page: FabResource, request: TwistedRequest
-        ) -> Iterator[Deferred]:
-    req = Request(request) # type: Request
-    streaming = False
-    try:
-        authenticator = page.authenticator
-        try:
-            user = yield authenticator.authenticate(req)
-        except LoginFailed as ex:
-            responder = authenticator.askForAuthentication(
-                req, ex.args[0] if ex.args else None
-                )
-        except Unauthorized as ex:
-            responder = _PlainTextResponder(
-                403, ex.args[0] if ex.args else
-                        'You are not authorized to perform this operation'
-                )
-        else:
-            responder = yield parseAndProcess(page, req, user) # type: ignore
-            streaming = page.streaming
-    except Redirect as ex:
-        responder = Redirector(ex.url)
-    except InternalError as ex:
-        logging.error(
-            'Internal error processing %s: %s', page.name, str(ex)
-            )
-        responder = UIResponder(
-            InternalErrorPage[PageProcessor](str(ex)),
-            PageProcessor(page, req, FabResource.Arguments(), UnknownUser())
-            )
-
-    response = Response(request, req.userAgent, streaming)
-    try:
-        yield present(responder, response)
-    except ConnectionLost as ex:
-        subPath = req.getSubPath()
-        log.msg(
-            'Connection lost while presenting page %s%s: %s' % (
-                page.name,
-                '' if subPath is None else ' item "%s"' % subPath,
-                ex
-                )
-            )
 
 class ResourceNotFound(FabResource[FabResource.Arguments, PageProcessor]):
     authenticator = NoAuthPage.instance

@@ -5,20 +5,29 @@ Module to render the page
 '''
 
 from typing import ClassVar, Iterator, Optional, Type, cast
+# TODO: we're using both the standard library and Twisted for logging.
+#       We should probably just pick one.
+import logging
 
+from twisted.cred.error import LoginFailed, Unauthorized
 from twisted.internet.defer import Deferred, inlineCallbacks
+from twisted.internet.error import ConnectionLost
 from twisted.internet.interfaces import IProducer, IPullProducer, IPushProducer
+from twisted.python import log
+from twisted.python.failure import Failure
+from twisted.web.http import Request as TwistedRequest
+from twisted.web.server import NOT_DONE_YET
 
 from softfab.FabPage import FabPage
 from softfab.Page import (
-    FabResource, InvalidRequest, PageProcessor, PresentableError, ProcT,
-    Redirect, Redirector, Responder, logPageException
+    FabResource, InternalError, InvalidRequest, PageProcessor,
+    PresentableError, ProcT, Redirect, Redirector, Responder, logPageException
 )
 from softfab.UIPage import UIPage, UIResponder
 from softfab.pageargs import ArgsCorrected, ArgsInvalid, ArgsT, Query, dynamic
 from softfab.request import Request
 from softfab.response import Response
-from softfab.userlib import AccessDenied, User
+from softfab.userlib import AccessDenied, UnknownUser, User
 from softfab.utils import abstract
 from softfab.webgui import docLink
 from softfab.xmlgen import XMLContent, xhtml
@@ -112,6 +121,74 @@ class InternalErrorPage(ErrorPage[ProcT]):
             xhtml.p[ 'Internal error: %s.' % self.messageText ],
             xhtml.p[ 'Please ', docLink('/reference/contact/')[
                 'report this as a bug' ], '.' ]
+            )
+
+class _PlainTextResponder(Responder):
+
+    def __init__(self, status: int, message: str):
+        self.__status = status
+        self.__message = message
+
+    def respond(self, response: Response) -> None:
+        response.setStatus(self.__status, self.__message)
+        response.setHeader('Content-Type', 'text/plain')
+        response.write(self.__message + '\n')
+
+def renderAuthenticated(page: FabResource, request: TwistedRequest) -> object:
+    def done(result: object) -> None: # pylint: disable=unused-argument
+        request.finish()
+    def failed(fail: Failure) -> None:
+        request.processingFailed(fail)
+        # Returning None (implicitly) because the error is handled.
+        # Otherwise, it will be logged twice.
+    d = renderAsync(page, request)
+    d.addCallback(done).addErrback(failed) # pylint: disable=no-member
+    return NOT_DONE_YET
+
+@inlineCallbacks
+def renderAsync(
+        page: FabResource, request: TwistedRequest
+        ) -> Iterator[Deferred]:
+    req = Request(request) # type: Request
+    streaming = False
+    try:
+        authenticator = page.authenticator
+        try:
+            user = yield authenticator.authenticate(req)
+        except LoginFailed as ex:
+            responder = authenticator.askForAuthentication(
+                req, ex.args[0] if ex.args else None
+                )
+        except Unauthorized as ex:
+            responder = _PlainTextResponder(
+                403, ex.args[0] if ex.args else
+                        'You are not authorized to perform this operation'
+                )
+        else:
+            responder = yield parseAndProcess(page, req, user) # type: ignore
+            streaming = page.streaming
+    except Redirect as ex:
+        responder = Redirector(ex.url)
+    except InternalError as ex:
+        logging.error(
+            'Internal error processing %s: %s', page.name, str(ex)
+            )
+        responder = UIResponder(
+            InternalErrorPage[PageProcessor](str(ex)),
+            PageProcessor(page, req, FabResource.Arguments(), UnknownUser())
+            )
+
+    response = Response(request, req.userAgent, streaming)
+    try:
+        yield present(responder, response)
+    except ConnectionLost as ex:
+        subPath = req.getSubPath()
+        log.msg(
+            'Connection lost while presenting page %s%s: %s' % (
+                page.name,
+                '' if subPath is None else ' item "%s"' % subPath,
+                ex
+                )
             )
 
 def _checkActive(
