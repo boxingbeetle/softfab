@@ -9,6 +9,7 @@ import logging
 
 from markdown import Markdown
 from markdown.extensions import Extension
+from markdown.extensions.codehilite import CodeHiliteExtension
 from markdown.extensions.def_list import DefListExtension
 from markdown.extensions.fenced_code import FencedCodeExtension
 from markdown.extensions.tables import TableExtension
@@ -30,8 +31,29 @@ from softfab.pageargs import PageArgs
 from softfab.render import renderAuthenticated
 from softfab.response import Response
 from softfab.userlib import User
+from softfab.webgui import StyleSheet
 from softfab.xmlgen import XML, XMLContent, parseHTML, xhtml
 
+
+# Register pygments style sheet.
+try:
+    from pygments.formatters import HtmlFormatter
+except ImportError:
+    logging.warning(
+        "The pygments package is not installed; "
+        "code examples in the documentation will lack syntax highlighting"
+        )
+    pygmentsSheet = xhtml[None]
+else:
+    pygmentsFileName = 'pygments.css'
+    styleRoot.putChild(
+        pygmentsFileName.encode(),
+        Data(
+            HtmlFormatter().get_style_defs('.codehilite').encode(),
+            'text/css'
+            )
+        )
+    pygmentsSheet = StyleSheet(pygmentsFileName)
 
 class ExtractionProcessor(Treeprocessor):
 
@@ -187,6 +209,7 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
                 FixupExtension(),
                 DefListExtension(),
                 FencedCodeExtension(),
+                CodeHiliteExtension(guess_lang=False),
                 TableExtension()
                 ]
             )
@@ -260,6 +283,10 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
 
     def checkAccess(self, user: User) -> None:
         pass
+
+    def presentHeadParts(self, **kwargs: object) -> XMLContent:
+        yield pygmentsSheet.present(**kwargs)
+        yield super().presentHeadParts(**kwargs)
 
     def pageTitle(self, proc: Processor) -> str:
         return self.title
