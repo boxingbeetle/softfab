@@ -8,7 +8,7 @@ from pathlib import Path
 from types import GeneratorType, ModuleType
 from typing import (
     Callable, Dict, Generator, Iterable, Iterator, List, Mapping, Optional,
-    Sequence, Type, Union, cast
+    Sequence, Tuple, Type, Union, cast
 )
 import logging
 
@@ -372,7 +372,7 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
         self.metadata = metadata
         self.errors = set(errors)
         self.__rendered = None # type: Optional[XML]
-        self.title = 'Error'
+        self.__extractedTitle = None # type: Optional[str]
 
     def getMTime(self, path: Path) -> Optional[int]:
         """Returns the modification time of a source file,
@@ -429,13 +429,48 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
         try:
             markdownConverter.reset()
             xhtmlStr = markdownConverter.convert(content)
-            self.__rendered = parseHTML(xhtmlStr)
+            self.__rendered = parseHTML(
+                xhtmlStr,
+                piHandlers=dict(toc=self.__renderTableOfContents)
+                )
         except Exception:
             logging.exception('Error rendering Markdown for %s', packageName)
             self.errors.add(DocErrors.RENDERING)
             self.__rendered = None
         else:
-            self.title = extractor.title
+            self.__extractedTitle = extractor.title
+
+    @property
+    def title(self) -> str:
+        title = self.__extractedTitle
+        if title is None:
+            self.renderContent()
+            title = self.__extractedTitle
+            if title is None:
+                return 'Error'
+        return title
+
+    @property
+    def childPages(self) -> Iterator[Tuple[str, 'DocPage']]:
+        resource = self.resource
+        for childName in self.metadata.children:
+            childResource = resource.children[childName.encode()]
+            yield childName, childResource.page
+
+    def __renderTableOfContents(self, arg: str) -> XMLContent:
+        if arg:
+            raise ValueError('"toc" does not take any arguments')
+
+        return xhtml.div(class_='toc')[
+            xhtml.h2['Table of Contents'],
+            xhtml.ol[(
+                xhtml.li[
+                    xhtml.h3[xhtml.a(href=name + '/')[page.title]],
+                    xhtml.p['(abstract)']
+                    ]
+                for name, page in self.childPages
+                )]
+            ]
 
     def getResponder(self,
                      path: Optional[str],
@@ -488,10 +523,8 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
     def iterChildButtons(self,
                          args: Optional[Arguments]
                          ) -> Iterator[LinkBarButton]:
-        resource = self.resource
-        for childName in self.metadata.children:
-            childResource = resource.children[childName.encode()]
-            yield childResource.page.createLinkBarButton(childName + '/')
+        for name, page in self.childPages:
+            yield page.createLinkBarButton(name + '/')
 
     def presentContent(self, **kwargs: object) -> XMLContent:
         return self.__rendered

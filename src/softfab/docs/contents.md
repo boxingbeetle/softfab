@@ -6,9 +6,7 @@ Note that this is not the final way in which we like to present the SoftFab docu
 
 As an experienced SoftFab user you can use the buttons in the navigation bar above to get your desired document quickly. Novice users may navigate through the table of contents below.
 
-```sf
-toc
-```
+<?toc?>
 
 <div class="dev-plug">
   SoftFab is proudly brought to you by<br/>
