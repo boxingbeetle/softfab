@@ -32,7 +32,7 @@ from softfab.render import renderAuthenticated
 from softfab.response import Response
 from softfab.userlib import User
 from softfab.webgui import StyleSheet
-from softfab.xmlgen import XML, XMLContent, parseHTML, xhtml
+from softfab.xmlgen import XML, XMLContent, XMLPresentable, parseHTML, xhtml
 
 
 # Register pygments style sheet.
@@ -43,7 +43,7 @@ except ImportError:
         "The pygments package is not installed; "
         "code examples in the documentation will lack syntax highlighting"
         )
-    pygmentsSheet = xhtml[None]
+    pygmentsSheet = xhtml[None] # type: XMLPresentable
 else:
     pygmentsFileName = 'pygments.css'
     styleRoot.putChild(
