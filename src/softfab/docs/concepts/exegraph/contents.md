@@ -2,8 +2,6 @@
 
 This document describes the SoftFab way of modeling your build and test process.
 
-<p class="todo">TODO: The used images should be framed.</p>
-
 ## Introduction
 
 A project that is developing a piece of software typically keeps the source code in a configuration management system. There is a build that compiles the source code to create a binary. The binary is then subjected to a series of tests. Some projects also extract API documentation from the source code or run a static code analysis on it. Binaries are often packaged in a format that makes them easier to deploy (package or installshield). All these operations are part of the build and test process of a project.
@@ -20,7 +18,7 @@ A _framework_ is the smallest unit of work that can be done by the factory. The 
 
 The graphical presentation of a framework is the name of the framework inside an oval:
 
-![Execution graph containing a framework](task.png)
+<?graph task?>
 
 ### Product
 
@@ -28,7 +26,7 @@ A _product_ is the input or output of a framework. A framework cannot start unti
 
 The graphical presentation of a product is the name of the product inside a rectangle:
 
-![Execution graph containing a product](product.png)
+<?graph product?>
 
 Reports and log files produced while executing the wrapper defined by the framework are typically not modeled as a product, since there are no other tasks that depend on them; they are intended for human consumption. For every framework that runs in SoftFab there is at least one log: the Task Runner log. Which other reports and logs are available is determined by the wrapper.
 
@@ -38,7 +36,7 @@ The output product of one framework can be the input product for another framewo
 
 The graphical presentation of a framework producing or consuming a product is a double lined arrow:
 
-![Execution graph showing two tasks with a product as a dependency between them](dependency.png)
+<?graph dependency?>
 
 The execution graph specifies which output products a framework can potentially produce. It is not possible for a framework to produce an output that was not declared. It is possible though that a framework does not produce all of its declared outputs. For example if there is a compilation error in the build framework, no binary will be produced.
 
@@ -54,7 +52,7 @@ In some cases a product signals that a certain state has been reached, without a
 
 A token product is presented as the name of the product inside a dashed rectangle:
 
-![Execution graph containing a token product](token.png)
+<?graph token?>
 
 #### Local Product<a id="local_product"></a>
 
@@ -68,7 +66,7 @@ Sometimes a task has to gather the output of several other tasks, for example a 
 
 A combined product is presented as the name of the product inside a double rectangle:
 
-![Execution graph containing a combined product](combined.png)
+<?graph combined?>
 
 A combined product differs from a non-combined product in whether and when it is considered available to the frameworks consuming it:
 
