@@ -65,6 +65,12 @@ class ExtractionProcessor(Treeprocessor):
         self.title = title.text
         root.remove(title)
 
+        # Extract first paragraph to use as an abstract.
+        abstract = root[0]
+        assert abstract.tag == 'p', abstract.tag
+        self.abstract = xhtml[abstract] # type: XML
+        abstract.set('class', 'abstract')
+
 class ExtractionExtension(Extension):
     """Extracts title and abstract."""
 
@@ -72,8 +78,13 @@ class ExtractionExtension(Extension):
     def title(self) -> str:
         return self.__processor.title
 
+    @property
+    def abstract(self) -> XML:
+        return self.__processor.abstract
+
     def reset(self) -> None:
         self.__processor.title = 'Untitled'
+        self.__processor.abstract = xhtml.p['(no abstract)']
 
     def extendMarkdown(self, md: Markdown) -> None:
         md.registerExtension(self)
@@ -150,6 +161,7 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
         self.errors = set(errors)
         self.__rendered = None # type: Optional[XML]
         self.__extractedTitle = None # type: Optional[str]
+        self.__extractedAbstract = None # type: Optional[XML]
 
     def getMTime(self, path: Path) -> Optional[int]:
         """Returns the modification time of a source file,
@@ -231,6 +243,7 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
             self.__rendered = None
         else:
             self.__extractedTitle = extractor.title
+            self.__extractedAbstract = extractor.abstract
 
     @property
     def title(self) -> str:
@@ -241,6 +254,16 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
             if title is None:
                 return 'Error'
         return title
+
+    @property
+    def abstract(self) -> XML:
+        abstract = self.__extractedAbstract
+        if abstract is None:
+            self.renderContent()
+            abstract = self.__extractedAbstract
+            if abstract is None:
+                return xhtml.p(class_='notice')['Error']
+        return abstract
 
     @property
     def childPages(self) -> Iterator[Tuple[str, 'DocPage']]:
@@ -258,7 +281,7 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
             xhtml.ol[(
                 xhtml.li[
                     xhtml.h3[xhtml.a(href=name + '/')[page.title]],
-                    xhtml.p['(abstract)']
+                    page.abstract
                     ]
                 for name, page in self.childPages
                 )]
