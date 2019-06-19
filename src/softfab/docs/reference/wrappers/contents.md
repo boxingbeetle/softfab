@@ -2,15 +2,7 @@
 
 It describes the procedure for integrating a build or test framework into SoftFab. Among other topics are discussed: variables, passing the results and example wrappers in different languages.
 
-## Introduction
-
-### What is a Wrapper?
-
-A wrapper is a script that forms the glue between SoftFab and an arbitrary third party tool. A typical wrapper script takes a few variables that are defined by SoftFab and uses those to invoke the build or test tool. Afterwards, the wrapper looks at the results of the build or test tool and puts that information in a format that SoftFab understands.
-
-A wrapper executes on a Factory PC. The Task Runner is responsible for starting a wrapper, providing it with the right variables and passing the results to the Control Center.
-
-### Prerequisites
+## Prerequisites
 
 Before you can start writing a wrapper you should have a way to run the process you want to hook into SoftFab fully automatically (no manual actions required) from the command line. Many tools have a command line interface (read the manual of the tool), if it is a GUI tool without command line interface, a tool such as 'Auto-It' can be used to control the GUI tool.
 
