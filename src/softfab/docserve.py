@@ -379,12 +379,12 @@ class DocResource(Resource):
         errors = set()
 
         # Load module.
-        initName = packageName + '.__init__'
         try:
-            initModule = import_module(initName) # type: Optional[ModuleType]
+            initModule = import_module(packageName) # type: Optional[ModuleType]
         except Exception:
             logging.exception(
-                'Error importing documentation module "%s"', initName
+                'Error importing documentation module "%s"',
+                packageName
                 )
             errors.add(DocErrors.MODULE)
             initModule = None
@@ -399,7 +399,8 @@ class DocResource(Resource):
                     value = getattr(initModule, name)
                 except AttributeError:
                     logging.exception(
-                        'Missing metadata "%s" in module "%s"', name, initName
+                        'Missing metadata "%s" in module "%s"',
+                        name, packageName
                         )
                     errors.add(DocErrors.METADATA)
                 else:
