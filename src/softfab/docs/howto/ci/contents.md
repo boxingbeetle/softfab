@@ -1,4 +1,4 @@
-# CM-triggered Build and Test
+# Continuous Integration
 
 In a Continuous Integration (CI) development process, as used in Agile and DevOps environments, the build and tests are kicked off on a change in the Configuration Management (CM) system. To do so the CM system should trigger a SoftFab schedule which fires, in its turn, a specified configuration.
 
@@ -23,7 +23,7 @@ Now create a passive schedule that starts the configuration you prepared. A pass
 Triggering a Schedule
 --------------------
 
-You can trigger a passive schedule using the [TriggerSchedule](../api/#TriggerSchedule) API call. This means you request the following URL:
+You can trigger a passive schedule using the [TriggerSchedule](../../reference/api/#TriggerSchedule) API call. This means you request the following URL:
 
 <div class="cmd">
 http://<i>ControlCenterURL</i>/TriggerSchedule?scheduleId=<i>NameOfPassiveSchedule</i>

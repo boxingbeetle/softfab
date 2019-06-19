@@ -1,4 +1,4 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-button = 'Semi auto'
+button = 'Semi-auto'
 children = ()

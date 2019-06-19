@@ -76,7 +76,7 @@ class FrameworkIndex_GET(FabPage['FrameworkIndex_GET.Processor',
         yield xhtml.p[
             'For help about "Frameworks" or "Task Definitions" read the '
             'document: ',
-            docLink('/introduction/framework_and_task_definitions/')[
+            docLink('/concepts/taskdefs/')[
                 'Framework and Task Definitions'
                 ], '.'
             ]

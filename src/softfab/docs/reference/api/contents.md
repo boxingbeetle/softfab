@@ -197,10 +197,10 @@ Method: **POST**
 Arguments:
 
 jobId: (mandatory)
-:   The ID of the job that the inspected task is part of. See the `SF_JOB_ID` <a href="../../installation/wrappers/writing_a_wrapper/#variables">wrapper variable</a>.
+:   The ID of the job that the inspected task is part of. See the `SF_JOB_ID` <a href="../wrappers/#variables">wrapper variable</a>.
 
 taskName: (mandatory)
-:   The name of the inspected task. See the `SF_TASK_ID` <a href="../../installation/wrappers/writing_a_wrapper/#variables">wrapper variable</a>
+:   The name of the inspected task. See the `SF_TASK_ID` <a href="../wrappers/#variables">wrapper variable</a>
 
 result: (mandatory)
 :   The result of the inspection. Accepted values are "ok" (green), "warning" (orange) and "error" (red).
@@ -310,7 +310,7 @@ alert: (mandatory)
 
 In order to signal the end of the HIP the same API call should be made again with empty value for `alert`.
 
-More information on the HIP can be found in the document about [semi-automatic testing](../../introduction/semi_automatic_testing/#hip).
+More information on the HIP can be found in the document about [semi-automatic testing](../../concepts/semiauto/#hip).
 
 ### TaskRunnerExit<a id="TaskRunnerExit"></a>
 

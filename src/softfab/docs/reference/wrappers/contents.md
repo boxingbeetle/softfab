@@ -14,9 +14,9 @@ A wrapper executes on a Factory PC. The Task Runner is responsible for starting 
 
 Before you can start writing a wrapper you should have a way to run the process you want to hook into SoftFab fully automatically (no manual actions required) from the command line. Many tools have a command line interface (read the manual of the tool), if it is a GUI tool without command line interface, a tool such as 'Auto-It' can be used to control the GUI tool.
 
-Most tools generate an output file in a specific file format (e.g.: txt, xml, html). The wrapper has to post-process the output file(s) of the tool and convert it into browser suitable data, e.g. to create a summary string or a summary results file in HTML format. For examples of wrappers see section: [Shared wrappers](../shared_wrappers/).
+Most tools generate an output file in a specific file format (e.g.: txt, xml, html). The wrapper has to post-process the output file(s) of the tool and convert it into browser suitable data, e.g. to create a summary string or a summary results file in HTML format.
 
-You should have a PC ready with a working Task Runner on it. For the installation procedure of a Factory PC, please read the [Factory PC Installation](../../factory_pc_installation/) document. To start learning how the SoftFab TaskRunner works, you can also use your own development PC of course. Maybe at nights, your PC can also run tasks in the future! Why not use all idle CPU time to automatically run tasks (builds and tests)?
+You should have a PC ready with a working Task Runner on it. For the installation procedure of a Factory PC, please read the [Factory PC Installation](../../start/factory_pc_installation/) document. To start learning how the SoftFab TaskRunner works, you can also use your own development PC of course. Maybe at nights, your PC can also run tasks in the future! Why not use all idle CPU time to automatically run tasks (builds and tests)?
 
 ## Task Execution
 
@@ -118,7 +118,7 @@ Both execution and extraction wrappers can produce mid-level data. This means yo
 
 ### Controlling the flow through the Execution Graph
 
-Even with a successful completion, result=ok (green), of a task, the wrapper can decide to cut off a branch in the Execution Graph by **not** producing an output product locator. In this case it creates a `results.properties` file with `result=ok` but it does not create the product itself and does not specify the `output.<product name>.locator=<locator>` line. Tasks depending on this product will not be executed now and their status color will become grey. See also the [FAQ page](../../../introduction/faq) for more detailed info.
+Even with a successful completion, result=ok (green), of a task, the wrapper can decide to cut off a branch in the Execution Graph by **not** producing an output product locator. In this case it creates a `results.properties` file with `result=ok` but it does not create the product itself and does not specify the `output.<product name>.locator=<locator>` line. Tasks depending on this product will not be executed now and their status color will become grey. See also the [FAQ page](../../start/faq) for more detailed info.
 
 In some cases, even with an unsuccessful completion (red) of a task (not able to make a product), you still want to continue with the Execution Graph. Very often you like to 'undo' some work done in task A by task C independent of the results and status of the 'in between' task B. Say, after installation of a firmware binary code on a system under test (SUT) you run some tests that might fail completely but you still need to uninstall the SUT. An elegant way to implement this is defining the product, produced by the 'Test' task, as `combined`. Regardless the status of the 'Test' task the 'Uninstall' task will get executed. In this example you should specify the product of the 'Installer' task as well as the product of the 'Test' task as `local` to enforce the 'Test' and 'Uninstall' task to be executed by the same Task Runner. Note that in this example both `combined` and `local` properties are set of the product produced by the 'Test' task.
 

@@ -84,7 +84,7 @@ class ProductTable(PropertiesTable):
                 'Product is only accessible to the Task Runner that created it'
                 ],
             ' (',
-            docLink('/introduction/execution_graph/#local_product')[
+            docLink('/concepts/exegraph/#local_product')[
                 'documentation'
                 ],
             ')'
@@ -94,7 +94,7 @@ class ProductTable(PropertiesTable):
                 'Product is the combination of outputs from multiple tasks'
                 ],
             ' (',
-            docLink('/introduction/execution_graph/#combined_product')[
+            docLink('/concepts/exegraph/#combined_product')[
                 'documentation'
                 ],
             ')'

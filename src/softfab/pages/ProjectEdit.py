@@ -51,7 +51,7 @@ class ProjectEditBase(EditPage[ProjectEditArgs, Project]):
         yield ProjectTable.instance
         yield xhtml.p[
             'For help about above project values, please read the '
-            'document: ', docLink('/reference/user_manual/#configure')[
+            'document: ', docLink('/start/user_manual/#configure')[
                 'Configure project' ], '.'
             ]
 

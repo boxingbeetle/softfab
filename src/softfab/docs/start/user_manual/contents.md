@@ -58,7 +58,7 @@ In the project page operators can change project wide settings.
 
 **Task Runner selection**: It is possible to bind a job (with tasks) to one specific Task Runner. It can be used to troubleshoot a problem that only occurs on a specific Task Runner and to force a job to run on the chosen Task Runner. It is not intended to replace capabilities (see Task Definitions). To select a Task Runner has to be done when creating a new configuration (execute from scratch) or when you first load an existing configuration. By default, Task Runner selection is disabled.
 
-**Requirement tracing**: By default it is disabled. When enabled it will give an extra edit line in the Task Definition Edit Form called: requirements. Here you can fill in requirement ID's (e.g. ID's from a requirements database tool such as 'Doors'.) Later it is possible to retrieve an overview of all ID's and to see in what Task Definitions they are used. This way it can be possible to determine if all requirements where tested in the project. At the moment this feature is in an early stage of development. No real linking with a requirement database tool has been implemented. ID's have to be set manually. An API call is available to retrieve the Requirement ID's, see [GetTagged API call](../api/#GetTagged).
+**Requirement tracing**: By default it is disabled. When enabled it will give an extra edit line in the Task Definition Edit Form called: requirements. Here you can fill in requirement ID's (e.g. ID's from a requirements database tool such as 'Doors'.) Later it is possible to retrieve an overview of all ID's and to see in what Task Definitions they are used. This way it can be possible to determine if all requirements where tested in the project. At the moment this feature is in an early stage of development. No real linking with a requirement database tool has been implemented. ID's have to be set manually. An API call is available to retrieve the Requirement ID's, see [GetTagged API call](../../reference/api/#GetTagged).
 
 **Configuration tags**: These can be created to split the total list of configurations into two or more groups by tagging each configuration. Each group is tagged with an unique key. Specify the tag keys here (use strings) and in the Execute page you can click on a tag key and add configuration to a specific tag key. This improves the viewing and finding of a configuration in the total list of configurations. It is mostly used in projects with many configurations. By default, configuration tags are disabled.
 
@@ -67,9 +67,9 @@ In the project page operators can change project wide settings.
 Here you can create or extend the design of the SoftFab project by building an execution graph. The execution graph must contain at least one framework. If more than one framework is defined, these can be connected by products. The execution graph gives you a visual overview of all the different frameworks and what the order of these frameworks are, when executed. Try to split up an automatic job into several parts (frameworks), e.g.: prepare\_code, static\_code\_check, build, unit\_tests, coverage\_tests or report\_generation tasks.
 Hint: always try to automate as much as possible (e.g. creation of install packages, archiving or clean-up actions, create CM baseline, generate documentation, etc.).
 
-Read more about the concept of execution graphs in [this document](../../introduction/execution_graph/).
+Read more about the concept of execution graphs in [this document](../../concepts/exegraph/).
 
-To be able to create and run a new job configuration you must have or create at least the following items: one framework, a wrapper script for the framework (to execute your task) and one task definition (using the framework). Learn more about framework and task definitions in [this document](../../introduction/framework_and_task_definitions/).
+To be able to create and run a new job configuration you must have or create at least the following items: one framework, a wrapper script for the framework (to execute your task) and one task definition (using the framework). Learn more about framework and task definitions in [this document](../../concepts/taskdefs/).
 
 ### Users ![Users](/styles/UserList1.png)
 
@@ -440,7 +440,7 @@ Once a Schedule has been created, a record is placed in the 'Schedules' overview
 
 Important to know is that the synchronization of the Task Runner(s) is the actual trigger to initiate a scheduled job. If no Task Runners are active, no scheduled jobs will run.
 
-One very handy additional feature to launch a schedule is the 'Passive', so-called 'API-triggered', sequence. One can use this to build a Continuous Integration (CI) process. See [CM-triggered Build and Test](../cm_triggered_build_and_test) for detailed information.
+One very handy additional feature to launch a schedule is the 'Passive', so-called 'API-triggered', sequence. One can use this to build a Continuous Integration (CI) process. See [Continuous Integration](../../howto/ci) for detailed information.
 
 ## SoftFab API
-Besides the GUI, a growing set of functionality of the SoftFab can be accessed via the [SoftFab API](../api).
+Besides the GUI, a growing set of functionality of the SoftFab can be accessed via the [SoftFab API](../../reference/api).

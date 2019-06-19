@@ -35,7 +35,7 @@ A postponed inspection consists of the following steps:
 1.  **Record test results**
     The wrapper should record test results so they can be inspected later. This could be making a video or audio recording, writing a detailed log file or anything else depending on the test.
 2.  **Request postponed inspection**
-    The wrapper should tell the Control Center that postponed inspection is required to know the result of the executed task. This is done by passing the result code "inspect" in the results file; see the [Writing a Wrapper](../../installation/wrappers/writing_a_wrapper/#passing_results) document for details.
+    The wrapper should tell the Control Center that postponed inspection is required to know the result of the executed task. This is done by passing the result code "inspect" in the results file; see the [Writing a Wrapper](../../reference/wrappers/#passing_results) document for details.
 3.  **Offer the user an interface for inspecting the results**
     The user should be presented the recorded test results and given an interface to judge them. Typically this is done with a CGI script on the web server that serves the test reports. For example, the user might be presented a page with a form containing a series of screen captures with next to each capture a set of radio buttons to select "pass" or "fail".
 4.  **Report inspection result**
