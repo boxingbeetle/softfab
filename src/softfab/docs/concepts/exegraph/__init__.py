@@ -35,8 +35,8 @@ class TokenProductGraphBuilder(ExecutionGraphBuilder):
 
 class CombinedProductGraphBuilder(ExecutionGraphBuilder):
 
-    def populate(self): # pylint: disable=arguments-differ
-        self.addProduct(ProductDef.create('coverage_data', combined = True))
+    def populate(self, **kwargs: object) -> None:
+        self.addProduct(ProductDef.create('coverage_data', combined=True))
 
 graphBuilders = dict(
     task=TaskGraphBuilder,
