@@ -683,7 +683,7 @@ class _XHTMLParser(HTMLParser):
 
         # Call the registered handler for the target.
         handler = handlers[target]
-        result = handler(arg)
+        result = handler(arg.strip())
         self.stack[-1][-1].append(result)
 
 def parseHTML(
