@@ -1,4 +1,3 @@
-from itertools import chain
 from pathlib import Path
 from os import makedirs, remove
 from shutil import rmtree
@@ -14,10 +13,7 @@ mypy_report = 'mypy-report'
 def source_arg(pattern):
     """Converts a source pattern to a command line argument."""
     if pattern is None:
-        paths = chain(
-            (TOP_DIR / 'src' / 'softfab').glob('*.py'),
-            (TOP_DIR / 'src' / 'softfab' / 'pages').glob('*.py')
-            )
+        paths = (TOP_DIR / 'src' / 'softfab').glob('**/*.py')
     else:
         paths = Path.cwd().glob(pattern)
     return ' '.join(str(path) for path in paths)

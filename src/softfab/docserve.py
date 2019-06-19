@@ -4,8 +4,11 @@ from enum import Enum
 from importlib import import_module
 from pathlib import Path
 from types import ModuleType
-from typing import Iterable, Iterator, List, Optional, Sequence, Tuple, cast
+from typing import (
+    Callable, Dict, Iterable, Iterator, List, Optional, Sequence, Tuple, cast
+)
 import logging
+import sys
 
 from markdown import Markdown
 from markdown.extensions import Extension
@@ -34,7 +37,6 @@ from softfab.userlib import User
 from softfab.webgui import StyleSheet
 from softfab.xmlgen import XML, XMLContent, XMLPresentable, parseHTML, xhtml
 
-
 # Register pygments style sheet.
 try:
     from pygments.formatters import HtmlFormatter
@@ -54,6 +56,25 @@ else:
             )
         )
     pygmentsSheet = StyleSheet(pygmentsFileName)
+
+PI_Handler = Callable[[str], XMLContent]
+
+def piHandlerDict(module: ModuleType) -> Dict[str, PI_Handler]:
+    handlers = getattr(module, '__piHandlers', None)
+    if handlers is None:
+        handlers = {}
+        setattr(module, '__piHandlers', handlers)
+    return handlers
+
+def piHandler(handler: PI_Handler) -> PI_Handler:
+    """Decorator that marks a function as a processing instruction handler.
+    Marked functions will be called for processing instructions where the
+    target matches the function name.
+    """
+
+    module = sys.modules[handler.__module__]
+    piHandlerDict(module)[handler.__name__] = handler
+    return handler
 
 class ExtractionProcessor(Treeprocessor):
 
@@ -233,9 +254,10 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
         # So unfortunately we have to parse the serialized output.
         try:
             xhtmlStr = md.convert(content)
+            assert self.module is not None
             self.__rendered = parseHTML(
                 xhtmlStr,
-                piHandlers=dict(toc=self.__renderTableOfContents)
+                piHandlers=piHandlerDict(self.module)
                 )
         except Exception:
             logging.exception('Error rendering Markdown for %s', packageName)
@@ -272,7 +294,7 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
             childResource = resource.children[childName.encode()]
             yield childName, childResource.page
 
-    def __renderTableOfContents(self, arg: str) -> XMLContent:
+    def renderTableOfContents(self, arg: str) -> XMLContent:
         if arg:
             raise ValueError('"toc" does not take any arguments')
 
@@ -408,9 +430,12 @@ class DocResource(Resource):
 
         # Create resource.
         resource = cls(packageName, parent)
-        resource.page = DocPage( # pylint: disable=attribute-defined-outside-init
-            resource, initModule, metadata, errors
-            )
+        page = DocPage(resource, initModule, metadata, errors)
+        resource.page = page # pylint: disable=attribute-defined-outside-init
+
+        # Add global processing instruction handlers.
+        if initModule is not None:
+            piHandlerDict(initModule)['toc'] = page.renderTableOfContents
 
         # Register children.
         for childName in metadata.children:
