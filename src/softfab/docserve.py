@@ -76,36 +76,42 @@ def piHandler(handler: PI_Handler) -> PI_Handler:
     piHandlerDict(module)[handler.__name__] = handler
     return handler
 
+class ExtractedInfo:
+    """Fragments extracted from a documentation page."""
+
+    def __init__(self, title: str, abstract: XML):
+        self.title = title
+        self.abstract = abstract
+
+extractionFailedInfo = ExtractedInfo('Error', xhtml.p(class_='notice')['Error'])
+
 class ExtractionProcessor(Treeprocessor):
 
     def run(self, root: etree.Element) -> None:
         # pylint: disable=attribute-defined-outside-init
 
         # Extract title from level 1 header.
-        title = root.find('./h1')
-        self.title = title.text
-        root.remove(title)
+        titleElem = root.find('./h1')
+        title = titleElem.text
+        root.remove(titleElem)
 
         # Extract first paragraph to use as an abstract.
-        abstract = root[0]
-        assert abstract.tag == 'p', abstract.tag
-        self.abstract = xhtml[abstract] # type: XML
-        abstract.set('class', 'abstract')
+        abstractElem = root[0]
+        assert abstractElem.tag == 'p', abstractElem.tag
+        abstract = xhtml[abstractElem]
+        abstractElem.set('class', 'abstract')
+
+        self.extracted = ExtractedInfo(title, abstract)
 
 class ExtractionExtension(Extension):
     """Extracts title and abstract."""
 
     @property
-    def title(self) -> str:
-        return self.__processor.title
-
-    @property
-    def abstract(self) -> XML:
-        return self.__processor.abstract
+    def extracted(self) -> ExtractedInfo:
+        return self.__processor.extracted
 
     def reset(self) -> None:
-        self.__processor.title = 'Untitled'
-        self.__processor.abstract = xhtml.p['(no abstract)']
+        self.__processor.extracted = extractionFailedInfo
 
     def extendMarkdown(self, md: Markdown) -> None:
         md.registerExtension(self)
@@ -182,8 +188,7 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
         self.metadata = metadata
         self.errors = set(errors)
         self.__rendered = None # type: Optional[XML]
-        self.__extractedTitle = None # type: Optional[str]
-        self.__extractedAbstract = None # type: Optional[XML]
+        self.__extractedInfo = None # type: Optional[ExtractedInfo]
 
     def getMTime(self, path: Path) -> Optional[int]:
         """Returns the modification time of a source file,
@@ -265,28 +270,15 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
             self.errors.add(DocErrors.RENDERING)
             self.__rendered = None
         else:
-            self.__extractedTitle = extractor.title
-            self.__extractedAbstract = extractor.abstract
+            self.__extractedInfo = extractor.extracted
 
     @property
-    def title(self) -> str:
-        title = self.__extractedTitle
-        if title is None:
+    def extracted(self) -> ExtractedInfo:
+        info = self.__extractedInfo
+        if info is None:
             self.renderContent()
-            title = self.__extractedTitle
-            if title is None:
-                return 'Error'
-        return title
-
-    @property
-    def abstract(self) -> XML:
-        abstract = self.__extractedAbstract
-        if abstract is None:
-            self.renderContent()
-            abstract = self.__extractedAbstract
-            if abstract is None:
-                return xhtml.p(class_='notice')['Error']
-        return abstract
+            info = self.__extractedInfo or extractionFailedInfo
+        return info
 
     @property
     def childPages(self) -> Iterator[Tuple[str, 'DocPage']]:
@@ -303,10 +295,13 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
             xhtml.h2['Table of Contents'],
             xhtml.ol[(
                 xhtml.li[
-                    xhtml.h3[xhtml.a(href=name + '/')[page.title]],
-                    page.abstract
+                    xhtml.h3[xhtml.a(href=url)[extracted.title]],
+                    extracted.abstract
                     ]
-                for name, page in self.childPages
+                for url, extracted in (
+                    (name + '/', page.extracted)
+                    for name, page in self.childPages
+                    )
                 )]
             ]
 
@@ -335,7 +330,7 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
         yield super().presentHeadParts(**kwargs)
 
     def pageTitle(self, proc: Processor) -> str:
-        return self.title
+        return (self.__extractedInfo or extractionFailedInfo).title
 
     def createLinkBarButton(self, url: str) -> LinkBarButton:
         return LinkBarButton(
