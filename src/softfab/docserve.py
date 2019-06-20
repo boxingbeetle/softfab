@@ -193,6 +193,7 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
         self.__extractedInfo = None # type: Optional[ExtractedInfo]
         self.__renderedStr = None # type: Optional[str]
         self.__renderedXML = None # type: Optional[XML]
+        self.__toc = () # type: Sequence[Tuple[str, ExtractedInfo]]
 
     def getMTime(self, path: Path) -> Optional[int]:
         """Returns the modification time of a source file,
@@ -217,6 +218,7 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
             self.contentMTime = contentMTime
             self.__renderedStr = None
             self.__renderedXML = None
+            self.__extractedInfo = None
             self.errors.discard(DocErrors.CONTENT)
             self.errors.discard(DocErrors.RENDERING)
 
@@ -279,6 +281,17 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
         or None if no rendered content is available or post-processing failed.
         """
 
+        # Check whether table of contents needs updating.
+        toc = tuple(
+            (name + '/', page.extracted)
+            for name, page in self.childPages
+            )
+        # Note that ExtractedInfo doesn't define __eq__, but since it is
+        # cached, comparing object identity is good enough.
+        if toc != self.__toc:
+            self.__toc = toc
+            self.__renderedXML = None
+
         # Use cached version if available.
         renderedXML = self.__renderedXML
         if renderedXML is not None:
@@ -314,11 +327,8 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
 
     @property
     def extracted(self) -> ExtractedInfo:
-        info = self.__extractedInfo
-        if info is None:
-            self.renderContent()
-            info = self.__extractedInfo or extractionFailedInfo
-        return info
+        self.renderContent()
+        return self.__extractedInfo or extractionFailedInfo
 
     @property
     def childPages(self) -> Iterator[Tuple[str, 'DocPage']]:
@@ -338,10 +348,7 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
                     xhtml.h3[xhtml.a(href=url)[extracted.title]],
                     extracted.abstract
                     ]
-                for url, extracted in (
-                    (name + '/', page.extracted)
-                    for name, page in self.childPages
-                    )
+                for url, extracted in self.__toc
                 )]
             ]
 
