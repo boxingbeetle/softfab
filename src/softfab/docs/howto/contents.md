@@ -1,5 +1,5 @@
 # How To ...
 
-Describes how to implement common development processes in SoftFab.
+Step-by-step guides that teach you how to implement common development processes in SoftFab.
 
 <?toc?>

@@ -1,12 +1,11 @@
 # User Manual
 
-This document contains a global manual for SoftFab users. SoftFab users typically execute jobs (tasks) and view the results. They will probably also create configurations for jobs they frequently run and perhaps schedules to automatically start jobs.
-
-Note that this manual is not going into too much detail since the UI may vary a little from release to release. But this global explanation is enough to get started. Most details are more or less self-explanatory.
+A tour of the Control Center user interface.
 
 <p class="todo">
 TODO: Replace the old resource png in the resources section header by the windmill.<br/>
 TODO: The explanation of the Task Runner resource status table should be replaced and relocated by one covering other resources too.<br/>
+TODO: Perhaps it would be better to re-use the content of this document as per-page help text. While it is intended for new users, it is written in a reference style, not in a step-by-step style that better fits the needs of new users.
 </p>
 
 ##SoftFab Web GUI

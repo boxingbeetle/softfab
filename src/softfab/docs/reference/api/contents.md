@@ -1,6 +1,10 @@
-# SoftFab API
+# API Calls
 
-This document describes how the SoftFab API works.
+You can interface with SoftFab programmatically using API calls over HTTP.
+
+<p class="todo">
+The current API was created in an ad-hoc way. We intend to redesign it in proper REST style in a future major release. But in the mean time, you can use the API documented here.
+</p>
 
 If you are new to the SoftFab API, please read the section about the [call mechanism](#call) first.
 

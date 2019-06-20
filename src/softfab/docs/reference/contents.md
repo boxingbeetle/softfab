@@ -1,5 +1,5 @@
 # Reference
 
-This chapter gives you all information about the daily usage.
+Detailed information about a.o. wrappers and the SoftFab API.
 
 <?toc?>

@@ -1,6 +1,6 @@
 # Frequently Asked Questions
 
-Here you can find the answers on some frequently asked questions.
+Answers to common questions from new users.
 
 <p class="todo">TODO: Do we facilitate contacting the SoftFab team?</p>
 

@@ -1,6 +1,6 @@
 # Writing a Wrapper
 
-It describes the procedure for integrating a build or test framework into SoftFab. Among other topics are discussed: variables, passing the results and example wrappers in different languages.
+Wrappers are glue scripts to integrating a build or test framework into SoftFab. Among other topics are discussed: variables, passing the results and example wrappers in different languages.
 
 ## Prerequisites
 

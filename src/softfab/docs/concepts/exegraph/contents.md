@@ -1,6 +1,6 @@
 # ﻿Execution Graph
 
-This document describes the SoftFab way of modeling your build and test process.
+The flow of information between build and test tasks is described in a dependency graph.
 
 ## Introduction
 

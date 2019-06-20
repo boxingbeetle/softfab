@@ -1,8 +1,8 @@
 # Semi-automatic Testing
 
-Ideally, all build and test tasks in your factory run fully automatic. However, there are situations in which it is too difficult or too costly to automate a certain task. In those situations, it is often still possible to automate most of the task, so you can save time compared to doing everything manually. This document describes two strategies for tasks that cannot be fully automated.
+Ideally, all build and test tasks in your factory run fully automatic. However, there are situations in which it is too difficult or too costly to automate a certain task. In those situations, it is often still possible to automate most of the task, so you can save time compared to doing everything manually.
 
-The are two strategies for semi-automating tasks that cannot be fully automated:
+SoftFab offers two strategies for semi-automating tasks that cannot be fully automated:
 
 <a href="#postponed">Postponed Inspection</a>
 : This strategy is applicable if the execution of the task can be fully automated, but a human is required to tell whether the task has passed or failed. Execution can run unattended, but the results of the execution have to be inspected afterwards.

@@ -1,5 +1,5 @@
 # Concepts
 
-Explains the concepts behind SoftFab: the execution graph, resources etc.
+To model your build and test execution process, SoftFab uses various abstractions such as the execution graph and resources.
 
 <?toc?>

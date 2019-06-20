@@ -1,6 +1,6 @@
 # Framework and Task Definitions
 
-This document describes what framework and task definitions are and how you can create them. It builds on the concepts explained in the [Execution Graph](../exegraph/) document.
+The execution of a single task is configured using framework and task definitions.
 
 ## Inheritance
 
