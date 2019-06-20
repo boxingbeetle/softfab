@@ -27,6 +27,6 @@ class ResourceNew_GET(FabPage[FabPage.Processor, FabPage.Arguments]):
             ) # type: Sequence[Tuple[XMLContent, XMLContent]]
 
         yield xhtml.p['Choose the type of resource you want to create:']
-        yield xhtml.dl[(
+        yield xhtml.dl(class_='toc')[(
             ( xhtml.dt[name], xhtml.dd[descr] ) for name, descr in descriptions
             )]

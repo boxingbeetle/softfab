@@ -4,7 +4,6 @@ from typing import Sequence, Tuple
 
 from softfab.FabPage import FabPage
 from softfab.userlib import User
-from softfab.webgui import docLink
 from softfab.xmlgen import XMLContent, xhtml
 
 
@@ -20,32 +19,28 @@ class Configure_GET(FabPage[FabPage.Processor, FabPage.Arguments]):
 
     def presentContent(self, **kwargs: object) -> XMLContent:
         descriptions = (
-            ( 'Project',
+            ( 'Project', 'ProjectEdit',
                 'Change overall settings, such as the project name '
                 'and the list of targets.'
                 ),
-            ( 'Design',
+            ( 'Design', 'Design',
                 'Model the build and test process of your project: '
                 'define products, frameworks, tasks and resources.'
                 ),
-            ( 'Users',
+            ( 'Users', 'UserList',
                 'Add new users, change user passwords or '
                 'change user roles.'
                 ),
-            ( 'Notifications',
+            ( 'Notifications', 'Notifications',
                 'Configure ways to stay informed of the current status '
                 'of your project.'
                 ),
-            ( 'About',
+            ( 'About', 'About',
                 'Look up version information of your SoftFab installation '
                 'and web browser.'
                 ),
-            ( 'Documentation',
-                'Learn more details about the possibilities of SoftFab '
-                'on the general '
-                + docLink('/')[ 'documentation pages' ] + '.'
-                ),
-            ) # type: Sequence[Tuple[str, XMLContent]]
-        return xhtml.dl[(
-            ( xhtml.dt[name], xhtml.dd[descr] ) for name, descr in descriptions
+            ) # type: Sequence[Tuple[str, str, XMLContent]]
+        return xhtml.dl(class_='toc')[(
+            ( xhtml.dt[xhtml.a(href=url)[name]], xhtml.dd[descr] )
+            for name, url, descr in descriptions
             )]

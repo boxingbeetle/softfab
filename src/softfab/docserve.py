@@ -98,7 +98,9 @@ class ExtractionProcessor(Treeprocessor):
         # Extract first paragraph to use as an abstract.
         abstractElem = root[0]
         assert abstractElem.tag == 'p', abstractElem.tag
+        abstractElem.tag = 'dd'
         abstract = xhtml[abstractElem]
+        abstractElem.tag = 'p'
         abstractElem.set('class', 'abstract')
 
         self.extracted = ExtractedInfo(title, abstract)
@@ -341,16 +343,12 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
         if arg:
             raise ValueError('"toc" does not take any arguments')
 
-        return xhtml.div(class_='toc')[
-            xhtml.h2['Table of Contents'],
-            xhtml.ol[(
-                xhtml.li[
-                    xhtml.h3[xhtml.a(href=url)[extracted.title]],
-                    extracted.abstract
-                    ]
-                for url, extracted in self.__toc
-                )]
-            ]
+        yield xhtml.h2['Table of Contents']
+        yield xhtml.dl(class_='toc')[(
+            ( xhtml.dt[xhtml.a(href=url)[extracted.title]],
+              extracted.abstract )
+            for url, extracted in self.__toc
+            )]
 
     def getResponder(self,
                      path: Optional[str],

@@ -110,27 +110,27 @@ class Design_GET(
                     ]
                 yield xhtml.hr
                 descriptions = [
-                    ( 'Products',
+                    ( 'Products', 'ProductIndex',
                         'Lists all Products, Create new Products or '
                         'Edit existing Products.'
                         ),
-                    ( 'Frameworks',
+                    ( 'Frameworks', 'FrameworkIndex',
                         'Lists all Frameworks, Create new Frameworks or '
                         'Edit existing Frameworks.'
                         ),
-                    ( 'Task Definitions',
+                    ( 'Task Definitions', 'TaskIndex',
                         'Lists all Task Definitions, '
                         'Create new Task Definitions or '
                         'Edit existing Task Definitions.'
                         ),
-                    ( 'Resources',
-                        'Lists all Resources, Create new Resources and '
-                        'Resource Types or Edit existing Resources.'
+                    ( 'Resources Types', 'ResTypeIndex',
+                        'Lists all Resources Types, Create new Resource Types '
+                        'or Edit existing Resource Types.'
                         )
                     ]
-                yield xhtml.dl[(
-                    (xhtml.dt[name], xhtml.dd[descr])
-                    for name, descr in descriptions
+                yield xhtml.dl(class_='toc')[(
+                    (xhtml.dt[xhtml.a(href=url)[name]], xhtml.dd[descr])
+                    for name, url, descr in descriptions
                     )]
         else:
             yield xhtml.p(class_ = 'notice')[
