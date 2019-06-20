@@ -381,15 +381,15 @@ By default the user `api` does not have any access rights at all. If you want to
 
 When writing a wrapper as a batch file, shell script or Makefile, we recommend the command line tool [wget](http://www.gnu.org/software/wget/). This tool is easy to script and it displays the full HTTP status line, so you can see the error message if something goes wrong. A typical 'wget' command line looks like this:
 
-<pre class="cmd">
-wget -O <i>resultfile</i> http://<i>ControlCenterURL</i>/<i>FunctionWithArguments</i>
-</pre>
+```
+wget -O result.xml "https://example.com/sf/GetInfo?arg=test"
+```
 
-Or if you use authentication:
+Or if authentication is required for this API call:
 
-<pre class="cmd">
-wget -O <i>resultfile</i> --http-user=<i>name</i> --http-password=<i>pass</i> http://<i>ControlCenterURL</i>/<i>FunctionWithArguments</i>
-</pre>
+```
+wget -O result.xml --http-user=name --http-password=pass "https://example.com/sf/GetInfo?arg=test"
+```
 
 #### part of script language - HTTP library
 

@@ -84,11 +84,6 @@ form {
 .var {
 	font-family: monospace;
 }
-div.cmd {
-	font-family: monospace;
-	white-space: pre;
-	margin-left: 24pt;
-}
 img {
 	border: none;
 }
