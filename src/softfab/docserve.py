@@ -202,14 +202,12 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
         else:
             return stats.st_mtime_ns
 
-    def renderContent(self) -> None:
+    def checkModified(self) -> None:
+        """Check whether source was modified, discard cached info if it was.
+        """
         contentPath = self.contentPath
         if contentPath is None:
-            # If the init module fails to import, resources in the package
-            # are inaccessible. Don't try to load them, to avoid error spam.
             return
-
-        # Check whether source was modified.
         contentMTime = self.getMTime(contentPath)
         if contentMTime != self.contentMTime:
             self.contentMTime = contentMTime
@@ -217,8 +215,11 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
             self.errors.discard(DocErrors.CONTENT)
             self.errors.discard(DocErrors.RENDERING)
 
+    def renderContent(self) -> None:
+        self.checkModified()
+
         if self.__rendered is not None:
-            # Already rendered.
+            # Previous render is still valid.
             return
         if DocErrors.CONTENT in self.errors:
             # Loading failed; nothing to render.
@@ -228,6 +229,11 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
             return
 
         # Load content.
+        contentPath = self.contentPath
+        if contentPath is None:
+            # If the init module fails to import, resources in the package
+            # are inaccessible. Don't try to load them, to avoid error spam.
+            return
         packageName = self.resource.packageName
         try:
             content = importlib_resources.read_text(packageName,
