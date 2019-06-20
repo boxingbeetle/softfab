@@ -2,3 +2,4 @@
 
 button = 'Docs'
 children = ('start', 'concepts', 'howto', 'reference')
+icon = 'IconDocs'

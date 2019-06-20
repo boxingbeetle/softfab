@@ -2,3 +2,4 @@
 
 button = 'Reference'
 children = ('api', 'releases', 'wrappers')
+icon = 'IconDocs'

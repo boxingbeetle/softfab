@@ -2,3 +2,4 @@
 
 button = 'Task Defs'
 children = ()
+icon = 'TaskDef2'

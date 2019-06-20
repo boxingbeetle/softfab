@@ -2,3 +2,4 @@
 
 button = 'Start'
 children = ('user_manual', 'factory_pc_installation', 'faq')
+icon = 'IconExec'

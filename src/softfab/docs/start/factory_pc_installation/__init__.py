@@ -2,3 +2,4 @@
 
 button = 'Factory PC'
 children = ()
+icon = 'TaskRunStat1'

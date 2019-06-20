@@ -2,3 +2,4 @@
 
 button = 'Wrappers'
 children = ()
+icon = 'IconDocs'

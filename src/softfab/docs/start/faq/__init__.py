@@ -2,3 +2,4 @@
 
 button = 'FAQ'
 children = ()
+icon = 'IconDocs'

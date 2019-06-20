@@ -2,3 +2,4 @@
 
 button = 'CI'
 children = ()
+icon = 'IconDocs'

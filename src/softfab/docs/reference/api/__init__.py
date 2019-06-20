@@ -2,3 +2,4 @@
 
 button = 'API'
 children = ()
+icon = 'IconDocs'

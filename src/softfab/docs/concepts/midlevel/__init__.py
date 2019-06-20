@@ -2,3 +2,4 @@
 
 button = 'Mid-level'
 children = ()
+icon = 'Reports2'

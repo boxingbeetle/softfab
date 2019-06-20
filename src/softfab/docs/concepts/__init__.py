@@ -2,3 +2,4 @@
 
 button = 'Concepts'
 children = ('exegraph', 'taskdefs', 'midlevel', 'semiauto')
+icon = 'IconDocs'

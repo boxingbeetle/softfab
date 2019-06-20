@@ -2,3 +2,4 @@
 
 button = 'Semi-auto'
 children = ()
+icon = 'IconDocs'

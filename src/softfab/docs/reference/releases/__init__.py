@@ -2,3 +2,4 @@
 
 button = 'Releases'
 children = ()
+icon = 'IconDocs'

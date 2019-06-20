@@ -8,6 +8,7 @@ from softfab.xmlgen import XMLContent, xhtml
 
 button = 'Graph'
 children = ()
+icon = 'IconDesign'
 
 class TaskGraphBuilder(ExecutionGraphBuilder):
 

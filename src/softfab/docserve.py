@@ -153,6 +153,7 @@ class DocErrors(Enum):
 class DocMetadata:
     button = 'ERROR'
     children = () # type: Sequence[str]
+    icon = 'IconDocs'
 
 class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
     authenticator = NoAuthPage.instance
@@ -340,7 +341,7 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
         return LinkBarButton(
             label=self.metadata.button,
             url=url,
-            icon=styleRoot.addIcon('IconHome'),
+            icon=styleRoot.addIcon(self.metadata.icon),
             active=not url
             )
 
