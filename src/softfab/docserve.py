@@ -179,14 +179,17 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
         super().__init__()
         self.resource = resource
         self.module = module
-        self.contentPath = (
-            None
-            if module is None
-            else Path(module.__file__).parent / 'contents.md'
-            )
-        self.contentMTime = None # type: Optional[int]
         self.metadata = metadata
         self.errors = set(errors)
+
+        contentPath = None
+        if module is not None:
+            moduleFile = getattr(module, '__file__', None) # type: Optional[str]
+            if moduleFile is not None:
+                contentPath = Path(moduleFile).parent / 'contents.md'
+        self.contentPath = contentPath
+
+        self.contentMTime = None # type: Optional[int]
         self.__rendered = None # type: Optional[XML]
         self.__extractedInfo = None # type: Optional[ExtractedInfo]
 
