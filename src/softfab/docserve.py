@@ -190,8 +190,9 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
         self.contentPath = contentPath
 
         self.contentMTime = None # type: Optional[int]
-        self.__rendered = None # type: Optional[XML]
         self.__extractedInfo = None # type: Optional[ExtractedInfo]
+        self.__renderedStr = None # type: Optional[str]
+        self.__renderedXML = None # type: Optional[XML]
 
     def getMTime(self, path: Path) -> Optional[int]:
         """Returns the modification time of a source file,
@@ -214,14 +215,15 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
         contentMTime = self.getMTime(contentPath)
         if contentMTime != self.contentMTime:
             self.contentMTime = contentMTime
-            self.__rendered = None
+            self.__renderedStr = None
+            self.__renderedXML = None
             self.errors.discard(DocErrors.CONTENT)
             self.errors.discard(DocErrors.RENDERING)
 
     def renderContent(self) -> None:
         self.checkModified()
 
-        if self.__rendered is not None:
+        if self.__renderedStr is not None:
             # Previous render is still valid.
             return
         if DocErrors.CONTENT in self.errors:
@@ -263,23 +265,52 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
             )
         md.stripTopLevelTags = False
 
+        # Do the actual rendering.
+        try:
+            self.__renderedStr = md.convert(content)
+        except Exception:
+            logging.exception('Error rendering Markdown for %s', packageName)
+            self.errors.add(DocErrors.RENDERING)
+        else:
+            self.__extractedInfo = extractor.extracted
+
+    def postProcess(self) -> Optional[XML]:
+        """Returns a post-processed version of previously rendered content,
+        or None if no rendered content is available or post-processing failed.
+        """
+
+        # Use cached version if available.
+        renderedXML = self.__renderedXML
+        if renderedXML is not None:
+            return renderedXML
+
+        # Check whether we can post-process.
+        module = self.module
+        if module is None:
+            return None
+        renderedStr = self.__renderedStr
+        if renderedStr is None:
+            return None
+
         # While Python-Markdown uses ElementTree internally, there is
         # no way to get the full output as a tree, since inline HTML
         # is re-inserted after the tree has been serialized.
         # So unfortunately we have to parse the serialized output.
         try:
-            xhtmlStr = md.convert(content)
-            assert self.module is not None
-            self.__rendered = parseHTML(
-                xhtmlStr,
-                piHandlers=piHandlerDict(self.module)
+            renderedXML = parseHTML(
+                renderedStr,
+                piHandlers=piHandlerDict(module)
                 )
         except Exception:
-            logging.exception('Error rendering Markdown for %s', packageName)
+            logging.exception(
+                'Error post-processing content for %s',
+                self.resource.packageName
+                )
             self.errors.add(DocErrors.RENDERING)
-            self.__rendered = None
+            return None
         else:
-            self.__extractedInfo = extractor.extracted
+            self.__renderedXML = renderedXML
+            return renderedXML
 
     @property
     def extracted(self) -> ExtractedInfo:
@@ -373,7 +404,7 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
             yield page.createLinkBarButton(name + '/')
 
     def presentContent(self, **kwargs: object) -> XMLContent:
-        return self.__rendered
+        return self.postProcess()
 
     def presentError(self, message: XML, **kwargs: object) -> XMLContent:
         yield message
