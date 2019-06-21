@@ -28,7 +28,6 @@ def clean(c):
     """Clean up our output."""
     print('Cleaning up...')
     remove_dir(TOP_DIR / mypy_report)
-    remove_dir(TOP_DIR / 'docs' / 'output')
 
 @task
 def lint(c, src=None, rule=None):
@@ -69,19 +68,6 @@ def isort(c, src=None):
     print('Sorting imports...')
     with c.cd(str(TOP_DIR)):
         c.run('isort %s' % source_arg(src), pty=True)
-
-@task
-def livedocs(c, host='localhost', port=5000):
-    """Serve editable version of documentation."""
-    with c.cd(str(TOP_DIR / 'docs')):
-        c.run('lektor serve --host %s --port %d' % (host, port), pty=True)
-
-@task
-def docs(c):
-    """Build documentation."""
-    with c.cd(str(TOP_DIR / 'docs')):
-        c.run('lektor build --output-path output', pty=True)
-    print('Created documentation in: docs/output')
 
 @task
 def run(c, host='localhost', port=8180, auth=False):
