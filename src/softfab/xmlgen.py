@@ -645,7 +645,10 @@ class _XHTMLParser(HTMLParser):
             (cast(XMLNode, None), [])
             ] # type: List[Tuple[XMLNode, List[XMLContent]]]
 
-    def handle_starttag(self, tag: str, attrs: List[Tuple[str, str]]) -> None:
+    def handle_starttag(self,
+            tag: str,
+            attrs: List[Tuple[str, Optional[str]]]
+            ) -> None:
         node = xhtml(tag)(**dict(attrs))
         self.stack.append((node, []))
 
