@@ -431,14 +431,16 @@ class _Row(AttrContainer):
                                 )
                         rowSpans[index] = rowspan
                         index += 1
-                except IndexError:
-                    break
+                except IndexError as ex:
+                    raise ValueError(
+                        'Row cells extend past last column (%d)' % numCols
+                        ) from ex
                 cells.append(cellPresentation)
             index = applyRowSpans(index)
 
         if index != numCols:
             raise ValueError(
-                'Table with %d columns contains row with %d cells'% (
+                'Table with %d columns contains row with %d cells' % (
                     numCols, index
                     )
                 )
