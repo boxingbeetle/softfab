@@ -1,18 +1,23 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from softfab.webgui import Script
+from typing import Iterator, List, cast
+
+from softfab.Page import PageProcessor
+from softfab.webgui import Script, Widget
 
 
 class RefreshScript(Script):
 
-    def __init__(self, *widgets):
-        self.targetIds = tuple(
-            widget.widgetId for widget in widgets
-            )
-        assert all(targetId is not None for targetId in self.targetIds)
+    def __init__(self, *widgets: Widget):
+        self.targetIds = targetIds = [] # type: List[str]
+        for widget in widgets:
+            targetId = widget.widgetId
+            assert targetId is not None
+            targetIds.append(targetId)
         Script.__init__(self)
 
-    def iterLines(self, proc, **kwargs):
+    def iterLines(self, **kwargs: object) -> Iterator[str]:
+        proc = cast(PageProcessor, kwargs['proc'])
         args = dict(
             delayms = 2000,
             urls = ', '.join(
