@@ -4,7 +4,8 @@ from softfab.ControlPage import ControlPage
 from softfab.Page import InvalidRequest, PageProcessor
 from softfab.jobview import alertList
 from softfab.pageargs import StrArg
-from softfab.pagelinks import JobIdArgs
+from softfab.pagelinks import TaskIdArgs
+from softfab.request import Request
 from softfab.response import Response
 from softfab.tasktables import TaskProcessorMixin
 from softfab.userlib import User, checkPrivilege
@@ -14,22 +15,17 @@ from softfab.xmlgen import xml
 class TaskAlert_POST(ControlPage['TaskAlert_POST.Arguments',
                                  'TaskAlert_POST.Processor']):
 
-    class Arguments(JobIdArgs):
-        taskId = StrArg()
-        runId = StrArg('0')
+    class Arguments(TaskIdArgs):
         alert = StrArg()
 
     class Processor(TaskProcessorMixin,
                     PageProcessor['TaskAlert_POST.Arguments']):
 
-        def process(self, req, user):
+        def process(self,
+                    req: Request['TaskAlert_POST.Arguments'],
+                    user: User
+                    ) -> None:
             self.initTask(req)
-
-            runId = req.args.runId
-            if runId != '0':
-                # We do not support multiple runs of the same task and probably
-                # never will, but accept the run ID for backwards compatibility.
-                raise InvalidRequest('Invalid run ID "%s"' % runId)
 
             alert = req.args.alert
             if alert != '' and alert not in alertList:

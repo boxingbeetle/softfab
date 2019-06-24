@@ -306,13 +306,13 @@ Arguments:
 jobId: (mandatory)
 :   The job ID of the job that contains the task to suspend. You can use the SF_JOB_ID variable for this.
 
-taskId: (mandatory)
+taskName: (mandatory)
 :   The task ID of the task to suspend. You can use the SF_TASK_ID variable for this.
 
 alert: (mandatory)
-:   Alert type. Currently, the only supported type is `attention`.
+:   Alert type or empty string. Currently, the only supported type is `attention`. An empty string clears the alert status.
 
-In order to signal the end of the HIP the same API call should be made again with empty value for `alert`.
+To signal the end of the HIP the same API call should be made again with empty value for `alert`.
 
 More information on the HIP can be found in the document about [semi-automatic testing](../../concepts/semiauto/#hip).
 
