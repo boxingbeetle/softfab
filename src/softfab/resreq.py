@@ -4,11 +4,11 @@
 '''
 
 from typing import (
-    AbstractSet, Dict, FrozenSet, Iterable, Iterator, Mapping, cast
+    AbstractSet, Dict, FrozenSet, Iterable, Iterator, Mapping, MutableSet, cast
 )
 
 from softfab.xmlbind import XMLTag
-from softfab.xmlgen import xml
+from softfab.xmlgen import XMLContent, xml
 
 taskRunnerResourceRefName = 'SF_TR_HOST'
 
@@ -39,10 +39,10 @@ class ResourceSpec(XMLTag):
             self.reference, self.typeName, self.__capabilities
             )
 
-    def _addCapability(self, attributes):
-        self.__capabilities.add(attributes['name'])
+    def _addCapability(self, attributes: Mapping[str, str]) -> None:
+        cast(MutableSet, self.__capabilities).add(attributes['name'])
 
-    def _endParse(self):
+    def _endParse(self) -> None:
         self.__capabilities = frozenset(self.__capabilities)
 
     @property
@@ -63,7 +63,7 @@ class ResourceSpec(XMLTag):
         """
         return cast(FrozenSet[str], self.__capabilities)
 
-    def _getContent(self):
+    def _getContent(self) -> XMLContent:
         for cap in self.__capabilities:
             yield xml.capability(name = cap)
 

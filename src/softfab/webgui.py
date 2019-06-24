@@ -388,7 +388,7 @@ class _Row(AttrContainer):
         numCols = len(colStyles)
         assert len(rowSpans) == numCols
 
-        def applyRowSpans(index):
+        def applyRowSpans(index: int) -> int:
             while index < numCols:
                 rowspan = rowSpans[index]
                 if rowspan == 1:
