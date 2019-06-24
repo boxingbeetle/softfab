@@ -827,4 +827,4 @@ class ActionTable(RadioTable):
                      cells: Sequence[XMLContent]
                      ) -> XMLContent:
         label, rest = cells
-        return xhtml.label[box, ' ', label] + rest
+        return cell[xhtml.label[box, ' ', label], rest]
