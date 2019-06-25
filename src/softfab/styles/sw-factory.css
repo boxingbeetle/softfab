@@ -74,7 +74,8 @@ table {
 	margin: 8px 12px;
 	border-spacing: 0;
 }
-table a:link, table a:visited {
+table a:link, table a:visited,
+div.reporttabs a:link, div.reporttabs a:visited {
 	color: #1010E0;
 }
 th {
