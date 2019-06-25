@@ -51,7 +51,7 @@ class Response:
         """Relative URL from the requested page to the site root.
         Ends in a slash when non-empty.
         """
-        return '../' * (self.__request.path.count(b'/') - 1)
+        return '../' * (len(self.__request.prepath) - 1)
 
     def finish(self) -> None:
         request = self.__request
