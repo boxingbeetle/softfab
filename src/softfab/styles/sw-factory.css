@@ -74,11 +74,8 @@ table {
 	margin: 8px 12px;
 	border-spacing: 0;
 }
-table a:link {
+table a:link, table a:visited {
 	color: #1010E0;
-}
-table a:visited {
-	color: #080870;
 }
 th {
 	text-align: left;
