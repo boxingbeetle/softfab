@@ -267,7 +267,6 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
                 TableExtension()
                 ]
             )
-        md.stripTopLevelTags = False
 
         # Do the actual rendering.
         try:
