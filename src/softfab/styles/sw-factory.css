@@ -55,16 +55,13 @@ a[id] {
 a[id]:before {
 	content: "";
 }
-a:link {
-	color: #1010E0;
+a:link, a:visited {
+	color: #800000;
 	text-decoration: none;
 }
 a[href]:hover, a[xlink|href]:hover {
 	text-decoration: underline;
 	cursor: pointer;
-}
-a:visited {
-	color: #080870;
 }
 hr {
 	color: white; /* background color, hides default gray on IE 6.0 */
@@ -76,6 +73,12 @@ table {
 	background: white;
 	margin: 8px 12px;
 	border-spacing: 0;
+}
+table a:link {
+	color: #1010E0;
+}
+table a:visited {
+	color: #080870;
 }
 th {
 	text-align: left;
