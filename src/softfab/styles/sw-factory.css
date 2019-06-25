@@ -22,6 +22,9 @@ h2, h3, h4, h5, h6 {
 	margin: 1em 12px 0.5em 12px;
 	color: #800000;
 }
+p, pre, ol, ul, dl, div.dev-plug {
+	max-width: 42em;
+}
 ol, ul {
 	padding-inline-start: 36pt;
 }
@@ -30,6 +33,7 @@ p, pre {
 }
 p.abstract {
 	margin: 1.5em 12px 2em 36pt;
+    max-width: calc(42em - 36pt + 12px);
 	font-style: italic;
 }
 p.todo {
