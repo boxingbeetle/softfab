@@ -525,8 +525,6 @@ class DocResource(Resource):
     def render_GET(self, request: TwistedRequest) -> object:
         if not request.path.endswith(b'/'):
             # Redirect to directory, to make sure local assets will be found.
-            url = URLPath.fromBytes(request.uri)
-            url.path += b'/'
-            return redirectTo(str(url).encode('ascii'), request)
+            return redirectTo(request.prepath[-1] + b'/', request)
 
         return renderAuthenticated(self.page, request)
