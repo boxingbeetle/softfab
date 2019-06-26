@@ -83,17 +83,17 @@ class Design_GET(
         if show == 'yes':
             if len(proc.graphs) == 1: # only containing the Legend
                 yield xhtml.p[
-                    'This factory has no Product and Framework definitions yet.'
+                    'This factory has no product and framework definitions yet.'
                     ]
                 yield xhtml.p[
                     "Please start designing the factory "
-                    'by adding new Products and Frameworks. '
+                    'by adding new products and frameworks. '
                     'Select the "Products" or "Frameworks" button '
                     'from the navigation bar above.'
                     ]
             else:
                 yield xhtml.p[
-                    'Execution graph(s) of the Frameworks and Products:'
+                    'Execution graph(s) of the products and frameworks:'
                     ]
 
         if canCreateGraphs:
@@ -105,27 +105,27 @@ class Design_GET(
             else:
                 yield xhtml.p[
                     pageLink('Design', show='yes')[ 'Execution Graph(s)' ],
-                    ': Show the graph(s) of the Frameworks and Products and '
+                    ': Show the graph(s) of the products and frameworks and '
                     'their interconnections.'
                     ]
                 yield xhtml.hr
                 descriptions = [
                     ( 'Products', 'ProductIndex',
-                        'Lists all Products, Create new Products or '
-                        'Edit existing Products.'
+                        'Lists all products, create new products or '
+                        'edit existing products.'
                         ),
                     ( 'Frameworks', 'FrameworkIndex',
-                        'Lists all Frameworks, Create new Frameworks or '
-                        'Edit existing Frameworks.'
+                        'Lists all frameworks, create new frameworks or '
+                        'edit existing frameworks.'
                         ),
                     ( 'Task Definitions', 'TaskIndex',
-                        'Lists all Task Definitions, '
-                        'Create new Task Definitions or '
-                        'Edit existing Task Definitions.'
+                        'Lists all task definitions, '
+                        'create new task definitions or '
+                        'edit existing task definitions.'
                         ),
                     ( 'Resources Types', 'ResTypeIndex',
-                        'Lists all Resources Types, Create new Resource Types '
-                        'or Edit existing Resource Types.'
+                        'Lists all resources types, create new resource types '
+                        'or edit existing resource types.'
                         )
                     ]
                 yield xhtml.dl(class_='toc')[(
