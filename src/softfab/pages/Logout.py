@@ -8,6 +8,7 @@ from softfab.authentication import NoAuthPage
 from softfab.pageargs import ArgsCorrected
 from softfab.pagelinks import URLArgs
 from softfab.projectlib import project
+from softfab.request import Request
 from softfab.userlib import User
 from softfab.webgui import pageLink
 from softfab.xmlgen import XMLContent, xhtml
@@ -24,7 +25,10 @@ class Logout_GET(UIPage['Logout_GET.Processor'],
 
     class Processor(PageProcessor['Logout_GET.Arguments']):
 
-        def process(self, req, user):
+        def process(self,
+                    req: Request['Logout_GET.Arguments'],
+                    user: User
+                    ) -> None:
             url = req.args.url
             if url is not None and '/' in url:
                 # Only accept relative URLs.

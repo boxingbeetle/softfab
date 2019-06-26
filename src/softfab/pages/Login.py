@@ -1,9 +1,9 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Iterator, Tuple, cast
+from typing import Generator, Iterator, Tuple, cast
 
 from twisted.cred.error import LoginFailed
-from twisted.internet.defer import inlineCallbacks
+from twisted.internet.defer import Deferred, inlineCallbacks
 
 from softfab.Page import (
     FabResource, PageProcessor, PresentableError, ProcT, Redirect
@@ -15,8 +15,9 @@ from softfab.formlib import (
 )
 from softfab.pageargs import ArgsCorrected, ArgsT, StrArg
 from softfab.pagelinks import URLArgs
+from softfab.request import Request
 from softfab.userlib import (
-    PasswordMessage, User, authenticateUser, passwordQuality
+    PasswordMessage, User, UserInfo, authenticateUser, passwordQuality
 )
 from softfab.userview import LoginPassArgs, PasswordMsgArgs
 from softfab.webgui import pageURL
@@ -85,9 +86,12 @@ class Login_GET(LoginBase['Login_GET.Processor', 'Login_GET.Arguments']):
     class Arguments(URLArgs):
         pass
 
-    class Processor(PageProcessor[URLArgs]):
+    class Processor(PageProcessor['Login_GET.Arguments']):
 
-        def process(self, req, user):
+        def process(self,
+                    req: Request['Login_GET.Arguments'],
+                    user: User
+                    ) -> None:
             url = req.args.url
             if url is not None and '/' in url:
                 # Only accept relative URLs.
@@ -112,7 +116,10 @@ class Login_POST(LoginBase['Login_POST.Processor', 'Login_POST.Arguments']):
     class Processor(PageProcessor['Login_POST.Arguments']):
 
         @inlineCallbacks
-        def process(self, req, user):
+        def process(self,
+                    req: Request['Login_POST.Arguments'],
+                    user: User
+                    ) -> Generator[Deferred, UserInfo, None]:
             super().process(req, user)
 
             username = req.args.loginname
@@ -121,11 +128,15 @@ class Login_POST(LoginBase['Login_POST.Processor', 'Login_POST.Arguments']):
             try:
                 user = yield authenticateUser(username, password)
             except LoginFailed:
-                raise PresentableError('Login failed')
+                raise PresentableError(
+                    xhtml.p(class_='notice')['Login failed']
+                    )
             else:
                 # Inactive users are not allowed to log in.
                 if not user.isActive():
-                    raise PresentableError('User account inactive')
+                    raise PresentableError(
+                        xhtml.p(class_='notice')['User account inactive']
+                        )
                 # Remember logged in user.
                 # Starting a new session after login blocks session fixation
                 # attacks that inject a valid session cookie that was
@@ -148,5 +159,5 @@ class Login_POST(LoginBase['Login_POST.Processor', 'Login_POST.Arguments']):
                     raise Redirect('Home' if url is None else url)
 
     def presentError(self, message: XML, **kwargs: object) -> XMLContent:
-        yield xhtml.p(class_ = 'notice')[ message ]
+        yield message
         yield self.presentContent(**kwargs)
