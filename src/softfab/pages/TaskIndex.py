@@ -61,8 +61,8 @@ class TaskIndex_GET(FabPage['TaskIndex_GET.Processor',
             'parameters.'
             ]
         yield xhtml.p[
-            'For help about "Frameworks" or "Task Definitions" read the '
-            'document: ',
+            'For help about frameworks or task definitions read the '
+            'document ',
             docLink('/concepts/taskdefs/')[
                 'Framework and Task Definitions'
                 ],
