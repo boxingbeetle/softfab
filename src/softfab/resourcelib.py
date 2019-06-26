@@ -18,6 +18,7 @@ from softfab.shadowlib import ShadowRun, shadowDB
 from softfab.taskrunlib import RunInfo, TaskRun, taskRunDB
 from softfab.timelib import getTime
 from softfab.tokens import Token, TokenRole, TokenUser, tokenDB
+from softfab.userlib import TaskRunnerUser
 from softfab.utils import abstract, cachedProperty, parseVersion
 from softfab.xmlbind import XMLTag
 from softfab.xmlgen import XMLAttributeValue, XMLContent, xml
@@ -908,7 +909,11 @@ def runnerFromToken(user: TokenUser) -> TaskRunner:
     a Task Runner, for example because it represents a different
     type of resource.
     """
-    return getTaskRunner(user.name)
+    owner = user.token.owner
+    if isinstance(owner, TaskRunnerUser):
+        return getTaskRunner(owner.name)
+    else:
+        raise KeyError('Token does not represent a Task Runner')
 
 def recomputeRunning() -> None:
     '''Scan the task run and shadow databases for running tasks.
