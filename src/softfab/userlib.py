@@ -142,10 +142,9 @@ privileges = {
     'p/m': ('operator', ),
 #    'p/d': (),
 
-    # Non-standard privilege used by Task Runners.
-    # This is necessary to prevent anyone from messing with running tasks
-    # when anonymous guest access is enabled.
-    'tr/*': ('user', 'operator'),
+    # Privileges that are only granted by tokens:
+    # 'tr/*': Non-standard privilege used by Task Runners.
+
 } # type: Mapping[str, Sequence[str]]
 
 def rolesGrantPrivilege(roles: Iterable[str], priv: str) -> bool:
@@ -362,6 +361,20 @@ class User(ABC):
         '''Returns True iff this user has the given privilege.
         '''
         raise NotImplementedError
+
+class TaskRunnerUser(User):
+    '''Identifies a Task Runner making API calls.
+    '''
+
+    def __init__(self, runnerId: str):
+        self.__runnerId = runnerId
+
+    @property
+    def name(self) -> str:
+        return self.__runnerId
+
+    def hasPrivilege(self, priv: str) -> bool:
+        return priv == 'tr/*'
 
 class SuperUser(User):
     '''Anonymous user who has the combined privileges of all roles.

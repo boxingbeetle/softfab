@@ -908,9 +908,7 @@ def runnerFromToken(user: TokenUser) -> TaskRunner:
     a Task Runner, for example because it represents a different
     type of resource.
     """
-    token = user.token
-    resId = token.getParam('resourceId')
-    return getTaskRunner(resId)
+    return getTaskRunner(user.name)
 
 def recomputeRunning() -> None:
     '''Scan the task run and shadow databases for running tasks.

@@ -9,7 +9,7 @@ from softfab.config import dbDir
 from softfab.databaselib import Database, DatabaseElem, createUniqueId
 from softfab.timelib import getTime
 from softfab.userlib import (
-    SuperUser, UnknownUser, User, authenticate, initPasswordFile,
+    TaskRunnerUser, UnknownUser, User, authenticate, initPasswordFile,
     writePasswordFile
 )
 from softfab.xmlbind import XMLTag
@@ -56,10 +56,7 @@ class Token(XMLTag, DatabaseElem):
         self.__params = {} # type: Dict[str, str]
         XMLTag.__init__(self, properties)
         DatabaseElem.__init__(self)
-        if self.role is TokenRole.RESOURCE:
-            self.__owner = SuperUser() # type: User
-        else:
-            self.__owner = UnknownUser()
+        self.__owner = None # type: Optional[User]
 
     def getId(self) -> str:
         """Unique identification for this token."""
@@ -84,7 +81,15 @@ class Token(XMLTag, DatabaseElem):
         Operations authorized by this token will be performed
         as this user.
         """
-        return self.__owner
+        owner = self.__owner
+        if owner is None:
+            if self.role is TokenRole.RESOURCE:
+                runnerId = self.getParam('resourceId')
+                owner = TaskRunnerUser(runnerId)
+            else:
+                owner = UnknownUser()
+            self.__owner = owner
+        return owner
 
     def getParam(self, name: str) -> str:
         """Returns the value of a parameter.
