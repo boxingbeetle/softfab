@@ -159,5 +159,5 @@ class RecordDelete_POSTMixin:
                 self.recordName.capitalize(), ' ',
                 xhtml.b[ proc.args.id ], ' has been deleted.'
                 ],
-            self.backToReferer(proc.args)
+            self.backToParent(proc.args)
             )
