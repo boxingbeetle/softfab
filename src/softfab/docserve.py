@@ -26,10 +26,10 @@ from twisted.web.util import redirectTo
 import importlib_resources
 
 from softfab.FabPage import BasePage, LinkBarButton
-from softfab.Page import PageProcessor, Responder
+from softfab.Page import Authenticator, PageProcessor, Responder
 from softfab.StyleResources import styleRoot
 from softfab.UIPage import UIResponder
-from softfab.authentication import NoAuthPage
+from softfab.authentication import LoginAuthPage
 from softfab.pageargs import PageArgs
 from softfab.render import renderAuthenticated
 from softfab.response import Response
@@ -164,7 +164,7 @@ class DocMetadata:
     icon = 'IconDocs'
 
 class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
-    authenticator = NoAuthPage.instance
+    authenticator = LoginAuthPage.instance # type: Authenticator
 
     class Arguments(PageArgs):
         pass

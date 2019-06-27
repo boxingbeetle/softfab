@@ -23,7 +23,7 @@ from softfab.TwistedUtil import PageRedirect
 from softfab.UIPage import UIResponder
 from softfab.authentication import DisabledAuthPage, NoAuthPage, TokenAuthPage
 from softfab.databases import iterDatabasesToPreload
-from softfab.docserve import DocResource
+from softfab.docserve import DocPage, DocResource
 from softfab.pageargs import PageArgs
 from softfab.render import NotFoundPage, renderAuthenticated
 from softfab.schedulelib import ScheduleManager
@@ -288,6 +288,15 @@ class SoftFabRoot(Resource):
         self.debugSupport = debugSupport
         self.anonOperator = anonOperator
         self.secureCookie = secureCookie
+
+        if anonOperator:
+            # TODO: This monkey-patches the class to change all instances
+            #       at once, which is fine right now, but would be bad if
+            #       we'd want to support multiple roots with different
+            #       authentication settings in the future.
+            #       However, I expect the authentication approach to be
+            #       overhauled before we'll even consider multiple roots.
+            DocPage.authenticator = DisabledAuthPage.instance
 
         Resource.__init__(self)
         self.putChild(b'', PageRedirect('Home'))
