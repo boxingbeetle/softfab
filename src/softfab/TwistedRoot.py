@@ -21,7 +21,9 @@ from softfab.SplashPage import SplashPage, startupMessages
 from softfab.StyleResources import styleRoot
 from softfab.TwistedUtil import PageRedirect
 from softfab.UIPage import UIResponder
+from softfab.artifacts import createArtifactRoot
 from softfab.authentication import DisabledAuthPage, NoAuthPage, TokenAuthPage
+from softfab.config import dbDir
 from softfab.databases import iterDatabasesToPreload
 from softfab.docserve import DocPage, DocResource
 from softfab.pageargs import PageArgs
@@ -204,6 +206,9 @@ class PageLoader:
     def process(self) -> None:
         startupMessages.addMessage('Registering pages')
         self.root.putChild(b'docs', DocResource.registerDocs('softfab.docs'))
+        self.root.putChild(b'jobs', createArtifactRoot(
+            dbDir + '/artifacts/jobs', self.root.anonOperator
+            ))
         pagesPackage = 'softfab.pages'
         for fileName in importlib_resources.contents(pagesPackage):
             moduleName = getmodulename(fileName)
