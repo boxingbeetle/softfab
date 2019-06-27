@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from typing import Generator, Iterator, Tuple, cast
+from urllib.parse import urljoin
 
 from twisted.cred.error import LoginFailed
 from twisted.internet.defer import Deferred, inlineCallbacks
@@ -10,12 +11,13 @@ from softfab.Page import (
 )
 from softfab.UIPage import UIPage
 from softfab.authentication import NoAuthPage
+from softfab.config import rootURL
 from softfab.formlib import (
     FormTable, makeForm, passwordInput, submitButton, textInput
 )
 from softfab.pageargs import ArgsCorrected, ArgsT, StrArg
 from softfab.pagelinks import URLArgs
-from softfab.request import Request
+from softfab.request import Request, relativeURL
 from softfab.userlib import (
     PasswordMessage, User, UserInfo, authenticateUser, passwordQuality
 )
@@ -93,9 +95,11 @@ class Login_GET(LoginBase['Login_GET.Processor', 'Login_GET.Arguments']):
                     user: User
                     ) -> None:
             url = req.args.url
-            if url is not None and '/' in url:
+            if url is not None:
                 # Only accept relative URLs.
-                raise ArgsCorrected(req.args, url = None)
+                url = relativeURL(urljoin(rootURL, url))
+                if url is None:
+                    raise ArgsCorrected(req.args, url=None)
 
 _downloadURLs = {
     'MSIE':

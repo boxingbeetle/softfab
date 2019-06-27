@@ -22,6 +22,22 @@ sameSiteSupport = 'sameSite' in signature(TwistedRequest.addCookie).parameters
 class LongSession(Session):
     sessionTimeout = 60 * 60 * 24 * 7 # one week in seconds
 
+def relativeURL(absolute: str) -> Optional[str]:
+    """Returns the given absolute URL as a path relative to this site's root,
+    or None if no URL was given, it doesn't belong to this site or it points
+    to the Login page.
+    """
+    if not absolute.startswith(rootURL):
+        # URL belongs to a different site.
+        return None
+    relative = absolute[len(rootURL) : ]
+    page = urlparse(relative).path
+    if page == 'Login':
+        # The Login page was the previously requested page, but it is not
+        # the actual referer (that information is lost).
+        return None
+    return relative
+
 class RequestBase:
     '''Contains the request information that is available during all request
     handling steps.
@@ -43,20 +59,8 @@ class RequestBase:
         '''The Control Center page plus query that the user visited
         before the current page, or None if not applicable.
         '''
-        refererURL = self._request.getHeader('referer')
-        if refererURL is None:
-            # No referer header.
-            return None
-        if not refererURL.startswith(rootURL):
-            # Referer is a different site.
-            return None
-        referer = refererURL[len(rootURL) : ]
-        page = urlparse(referer).path
-        if page == 'Login':
-            # The Login page was the previously requested page, but it is not
-            # the actual referer (that information is lost).
-            return None
-        return referer
+        url = self._request.getHeader('referer')
+        return None if url is None else relativeURL(url)
 
     @cachedProperty
     def refererPage(self) -> Optional[str]:
