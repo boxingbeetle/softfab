@@ -55,7 +55,7 @@ class ResTypeDelete_GET(RecordDelete_GET):
 class ResTypeDelete_POST(RecordDelete_POSTMixin, ResTypeDelete_GET):
 
     class Arguments(RecordDelete_POSTMixin.ArgumentsMixin,
-                    RecordDelete_GET.Arguments):
+                    ResTypeDelete_GET.Arguments):
         pass
 
     class Processor(RecordDelete_POSTMixin.ProcessorMixin,
