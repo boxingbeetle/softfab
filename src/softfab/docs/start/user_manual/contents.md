@@ -439,7 +439,7 @@ Once a Schedule has been created, a record is placed in the 'Schedules' overview
 
 Important to know is that the synchronization of the Task Runner(s) is the actual trigger to initiate a scheduled job. If no Task Runners are active, no scheduled jobs will run.
 
-One very handy additional feature to launch a schedule is the 'Passive', so-called 'API-triggered', sequence. One can use this to build a Continuous Integration (CI) process. See [Continuous Integration](../../howto/ci) for detailed information.
+One very handy additional feature to launch a schedule is the 'Passive', so-called 'API-triggered', sequence. One can use this to build a Continuous Integration (CI) process. See [Continuous Integration](../../howto/ci/) for detailed information.
 
 ## SoftFab API
-Besides the GUI, a growing set of functionality of the SoftFab can be accessed via the [SoftFab API](../../reference/api).
+Besides the GUI, a growing set of functionality of the SoftFab can be accessed via the [SoftFab API](../../reference/api/).
