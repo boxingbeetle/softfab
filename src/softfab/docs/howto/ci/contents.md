@@ -26,7 +26,7 @@ Triggering a Schedule
 You can trigger a passive schedule using the [TriggerSchedule](../../reference/api/#TriggerSchedule) API call. This means you request the following URL:
 
 ```
-https://example.com/sf/TriggerSchedule?scheduleId=NameOfPassiveSchedule/
+https://example.com/sf/TriggerSchedule?scheduleId=NameOfPassiveSchedule
 ```
 
 This API call should be made when relevant commits are made in your CM system. How this works is described in the documentation of your CM system.
