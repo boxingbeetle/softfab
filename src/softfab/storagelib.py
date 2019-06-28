@@ -228,7 +228,11 @@ class StorageURLMixin:
             return url # '' or None
         storage = self.__getStorage()
         if storage is None:
-            return None
+            storageId = cast(Optional[str], self._properties.get('storage'))
+            if storageId == 'sf.cc':
+                return urljoin('jobs/', url)
+            else:
+                return None
         return storage.joinURL(url)
 
     def getExportURL(self) -> Optional[str]:
