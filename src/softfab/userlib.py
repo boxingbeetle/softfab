@@ -385,7 +385,7 @@ class SuperUser(User):
         return None
 
     def hasPrivilege(self, priv: str) -> bool:
-        return bool(privileges[priv])
+        return bool(privileges.get(priv))
 
 class AnonGuestUser(User):
     '''Anonymous user who has guest privileges.
