@@ -15,7 +15,8 @@ from softfab.taskrunlib import TaskRun
 from softfab.tokens import TokenRole, TokenUser, authenticateToken
 from softfab.typing import NoReturn
 from softfab.userlib import (
-    AccessDenied, AnonGuestUser, SuperUser, User, checkPrivilege
+    AccessDenied, AnonGuestUser, SuperUser, UnauthorizedLogin, User,
+    checkPrivilege
 )
 
 
@@ -47,7 +48,7 @@ class ClientErrorResource:
     def render(self, request: TwistedRequest) -> bytes:
         request.setResponseCode(self.code)
         request.setHeader(b'Content-Type', b'text/plain; charset=UTF-8')
-        return self.message.encode()
+        return self.message.encode() + b'\n'
 
 class UnauthorizedResource(ClientErrorResource):
     code = 401
@@ -157,6 +158,10 @@ class ArtifactAuthWrapper:
                 except KeyError:
                     return AccessDeniedResource(
                         'Token "%s" does not exist' % tokenId
+                        )
+                except UnauthorizedLogin as ex:
+                    return AccessDeniedResource(
+                        'Token authentication failed: %s' % ex.args[0]
                         )
                 if token.role is not TokenRole.RESOURCE:
                     return AccessDeniedResource(
