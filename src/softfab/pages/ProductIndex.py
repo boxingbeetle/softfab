@@ -61,8 +61,8 @@ class ProductIndex_GET(FabPage['ProductIndex_GET.Processor',
     def presentContent(self, **kwargs: object) -> XMLContent:
         yield ProductDefTable.instance.present(**kwargs)
         yield xhtml.p[
-            'For help about "Products", please read the following document: ',
-            docLink('/concepts/execgraph/')[
-                'Products in the Execution Graph'
+            'For help about products, please read the following document: ',
+            docLink('/concepts/exegraph/')[
+                'Execution Graph'
                 ], '.'
             ]
