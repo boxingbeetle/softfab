@@ -44,4 +44,4 @@ def taskSummary(task: Task) -> XML:
     return pageLink(
         'Task',
         TaskIdArgs(jobId=task.getJob().getId(), taskName=task.getName())
-        )[ task.getLatestRun().getSummary() ]
+        )[ task.getLatestRun().getSummary() or '(empty summary)' ]
