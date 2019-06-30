@@ -308,40 +308,17 @@ class _TaskRunnerData(XMLTag):
         '''
         return self.__run is not None
 
-    def getExecutionRun(self) -> Optional[TaskRun]:
-        '''Returns the execution run the Task Runner reported it is currently
-        running, or None if it is not running an execution run.
-        If the run it reports to be running does not exist, KeyError is raised.
-        '''
-        if self.__run is None:
-            # Not running anything.
-            return None
-        else:
-            return self.__run.getTaskRun()
-
     def getExecutionRunId(self) -> Optional[str]:
         '''Returns ID corresponding to the execution run the Task Runner
         reported it is currently running, or None if it is not running an
         execution run.
         If the run it reports to be running does not exist, KeyError is raised.
         '''
-        taskRun = self.getExecutionRun()
-        if taskRun is None:
+        runInfo = self.__run
+        if runInfo is None:
             return None
         else:
-            return taskRun.getId()
-
-    def getShadowRun(self) -> Optional[ShadowRun]:
-        '''Returns the shadow run the Task Runner reported it is currently
-        running, or None if it is not running a shadow run.
-        If the shadow run it reports to be running does not exist, KeyError
-        is raised.
-        '''
-        if self.__shadowRunId is None:
-            # Not running anything.
-            return None
-        else:
-            return shadowDB[self.__shadowRunId]
+            return runInfo.getTaskRun().getId()
 
     def getShadowRunId(self) -> Optional[str]:
         '''Returns ID corresponding to the shadow run the Task Runner reported
