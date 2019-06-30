@@ -40,10 +40,6 @@ class StateColumn(DataColumn[ResourceBase]):
         return getResourceStatus(record)
 
 def _getResourceReservedBy(resource: ResourceBase) -> str:
-    if resource.isSuspended():
-        userName = resource.getChangedUser()
-        assert userName is not None
-        return userName
     if isinstance(resource, TaskRunner):
         taskRun = resource.getRun()
         if taskRun is not None:
@@ -54,6 +50,10 @@ def _getResourceReservedBy(resource: ResourceBase) -> str:
     else:
         if resource.isReserved():
             return cast(str, resource['reserved'])
+    if resource.isSuspended():
+        userName = resource.getChangedUser()
+        assert userName is not None
+        return 'Z-' + userName
     return ''
 
 class ReservedByColumn(DataColumn[ResourceBase]):
@@ -63,7 +63,7 @@ class ReservedByColumn(DataColumn[ResourceBase]):
             if isinstance(record, TaskRunner):
                 return createTaskLink(record)
             else:
-                return _getResourceReservedBy(record)
+                return cast(str, record['reserved'])
         elif record.isSuspended():
             return record.getChangedUser()
         else:
