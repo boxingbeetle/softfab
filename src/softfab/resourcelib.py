@@ -211,7 +211,7 @@ class Resource(ResourceBase):
         return resource
 
     def __getitem__(self, key: str) -> object:
-        if key == 'user':
+        if key == 'reserved':
             return self._properties.get('reserved', '')
         else:
             return super().__getitem__(key)
@@ -554,7 +554,7 @@ class TaskRunner(ResourceBase):
                 return (0, 0, 0)
             else:
                 return data.version
-        elif key == 'user':
+        elif key == 'reserved':
             if self.isSuspended():
                 return self.getChangedUser()
             taskRun = self.__executionObserver.getRun()

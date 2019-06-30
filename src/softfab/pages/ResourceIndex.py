@@ -45,7 +45,7 @@ class ReservedByColumn(DataColumn[ResourceBase]):
             if record.typeName == taskRunnerResourceTypeName:
                 return createTaskLink(record)
             else:
-                return record['user']
+                return record['reserved']
         elif record.isSuspended():
             return record['changeduser']
         else:
@@ -77,7 +77,7 @@ class ResourcesTable(DataTable[ResourceBase]):
         DataColumn[ResourceBase](keyName = 'locator'),
         CapabilitiesColumn(keyName = 'capabilities'),
         StateColumn(keyName = 'state', cellStyle = 'strong'),
-        ReservedByColumn('Reserved By', 'user'),
+        ReservedByColumn('Reserved By', 'reserved'),
         ) # type: Sequence[DataColumn[ResourceBase]]
     reserveColumn = ReserveColumn('Action')
     # TODO: These can be used again when the TR-specific pages have been
