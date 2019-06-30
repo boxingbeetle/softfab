@@ -11,6 +11,7 @@ from zope.interface import implementer
 from softfab.joblib import Job, jobDB
 from softfab.projectlib import project
 from softfab.request import Request
+from softfab.resourcelib import runnerFromToken
 from softfab.taskrunlib import TaskRun
 from softfab.tokens import TokenRole, TokenUser, authenticateToken
 from softfab.typing import NoReturn
@@ -67,13 +68,34 @@ class AccessDeniedResource(ClientErrorResource):
 
     @classmethod
     def fromException(cls, ex: AccessDenied) -> 'AccessDeniedResource':
-        message = 'Access denied: you do not have the necessary permissions'
+        message = 'Access denied'
         if ex.args:
-            message += ' to ' + cast(str, ex.args[0])
+            message += ': ' + cast(str, ex.args[0])
         return cls(message)
 
 class NotFoundResource(ClientErrorResource):
     code = 404
+
+def _runForRunnerUser(user: User) -> TaskRun:
+    """Returns the task run accessible to the given user.
+    Raises AccessDenied if the user does not represent a Task Runner
+    or the Task Runner is not running any task.
+    """
+
+    # Get Task Runner.
+    if not isinstance(user, TokenUser):
+        raise AccessDenied('This operation is exclusive to Task Runners')
+    try:
+        runner = runnerFromToken(user)
+    except KeyError as ex:
+        raise AccessDenied(*ex.args) from ex
+
+    # Get active task from Task Runner.
+    run = runner.getRun()
+    if run is None:
+        raise AccessDenied('Idle Task Runner cannot access jobs')
+    else:
+        return run
 
 class FactoryResource(Resource):
 
@@ -194,7 +216,14 @@ class ArtifactRoot(FactoryResource):
         self.user = user
 
     def checkAccess(self) -> None:
-        checkPrivilege(self.user, 'j/l', 'list jobs')
+        user = self.user
+        if user.hasPrivilege('tr/*'):
+            return
+        else:
+            checkPrivilege(
+                user, 'j/l',
+                'You do not have the necessary permissions to list jobs'
+                )
 
     def childForSegment(self, segment: str) -> Resource:
         return JobDayResource(self.baseDir.child(segment), self.user, segment)
@@ -242,9 +271,21 @@ class JobResource(FactoryResource):
         self.job = job
 
     def checkAccess(self) -> None:
-        # TODO: Our privilege system is too fine grained.
-        checkPrivilege(self.user, 'j/a', 'access jobs')
-        checkPrivilege(self.user, 't/l', 'list tasks')
+        user = self.user
+        if user.hasPrivilege('tr/*'):
+            job = _runForRunnerUser(user).getJob()
+            if self.job.getId() != job.getId():
+                raise AccessDenied('Task Runner is running a different job')
+        else:
+            # TODO: Our privilege system is too fine grained.
+            checkPrivilege(
+                user, 'j/a',
+                'You do not have the necessary permissions to access jobs'
+                )
+            checkPrivilege(
+                user, 't/l',
+                'You do not have the necessary permissions to list tasks'
+                )
 
     def childForSegment(self, segment: str) -> Resource:
         task = self.job.getTask(segment)
@@ -271,7 +312,16 @@ class TaskResource(FactoryResource):
         self.run = run
 
     def checkAccess(self) -> None:
-        checkPrivilege(self.user, 't/a', 'access tasks')
+        user = self.user
+        if user.hasPrivilege('tr/*'):
+            run = _runForRunnerUser(user)
+            if self.run.getId() != run.getId():
+                raise AccessDenied('Task Runner is running a different task')
+        else:
+            checkPrivilege(
+                user, 't/a',
+                'You do not have the necessary permissions to access tasks'
+                )
 
     def childForSegment(self, segment: str) -> Resource:
         gzipPath = self.baseDir.child(segment + '.gz')
