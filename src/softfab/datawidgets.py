@@ -332,14 +332,14 @@ class DataTable(Table, Generic[Record]):
         '''
         return iter(())
 
-    def process(self, proc: PageProcessor) -> TableData:
+    def process(self, proc: PageProcessor) -> TableData[Record]:
         '''Runs the queries necessary to populate the this table with data.
         Raises ArgsCorrected if the sort order was invalid or incomplete.
         '''
         return TableData(self, proc)
 
     def iterColumns(self, **kwargs: object) -> Iterator[DataColumn[Record]]:
-        data = cast(Optional[TableData], kwargs['data'])
+        data = cast(Optional[TableData[Record]], kwargs['data'])
         if data is None:
             return cast(Iterator[DataColumn], super().iterColumns(**kwargs))
         else:
