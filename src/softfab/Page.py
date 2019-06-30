@@ -11,7 +11,7 @@ import logging
 from twisted.internet.defer import Deferred
 from twisted.internet.interfaces import IProducer
 
-from softfab.datawidgets import DataTable
+from softfab.datawidgets import DataTable, TableData
 from softfab.pageargs import ArgsT, PageArgs
 from softfab.response import Response
 from softfab.userlib import User
@@ -20,7 +20,6 @@ from softfab.webgui import Widget, pageURL
 from softfab.xmlgen import XML
 
 if TYPE_CHECKING:
-    from softfab.datawidgets import _TableData
     from softfab.request import Request
 else:
     Request = Generic
@@ -108,9 +107,9 @@ class PageProcessor(Generic[ArgsT]):
         self.req = req
         self.args = args
         self.user = user
-        self.__tables = {} # type: Dict[int, '_TableData']
+        self.__tables = {} # type: Dict[int, TableData]
 
-    def getTableData(self, table: DataTable) -> '_TableData':
+    def getTableData(self, table: DataTable) -> TableData:
         return self.__tables[id(table)]
 
     def process(self, req: Request[ArgsT], user: User) -> Optional[Deferred]:

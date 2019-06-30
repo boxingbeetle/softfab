@@ -162,7 +162,7 @@ class DurationColumn(DataColumn[Record]):
             formatDuration(cast(Optional[int], record[key]))
             ]
 
-class _TableData(Generic[Record]):
+class TableData(Generic[Record]):
 
     def __init__(self, table: 'DataTable[Record]', proc: PageProcessor):
         columns = tuple(table.iterColumns(proc=proc, data=None))
@@ -332,14 +332,14 @@ class DataTable(Table, Generic[Record]):
         '''
         return iter(())
 
-    def process(self, proc: PageProcessor) -> _TableData:
+    def process(self, proc: PageProcessor) -> TableData:
         '''Runs the queries necessary to populate the this table with data.
         Raises ArgsCorrected if the sort order was invalid or incomplete.
         '''
-        return _TableData(self, proc)
+        return TableData(self, proc)
 
     def iterColumns(self, **kwargs: object) -> Iterator[DataColumn[Record]]:
-        data = cast(Optional[_TableData], kwargs['data'])
+        data = cast(Optional[TableData], kwargs['data'])
         if data is None:
             return cast(Iterator[DataColumn], super().iterColumns(**kwargs))
         else:
@@ -356,7 +356,7 @@ class DataTable(Table, Generic[Record]):
         return iter(())
 
     def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
-        data = cast(_TableData[Record], kwargs['data'])
+        data = cast(TableData[Record], kwargs['data'])
         columns = data.columns
         for rowNr, record in enumerate(data.records):
             style = self.joinStyles(
@@ -367,7 +367,7 @@ class DataTable(Table, Generic[Record]):
                 for column in columns
                 )]
 
-    def __presentNrRecords(self, data: _TableData[Record]) -> XMLContent:
+    def __presentNrRecords(self, data: TableData[Record]) -> XMLContent:
         '''Generate a piece of text displaying the total record count.
         '''
         if not self.printRecordCount:
@@ -392,7 +392,7 @@ class DataTable(Table, Generic[Record]):
 
     def __presentTabs(self,
                       proc: PageProcessor,
-                      data: _TableData[Record]
+                      data: TableData[Record]
                       ) -> XMLContent:
         '''Generate tabs to switch pages of a long record set.
         '''
@@ -461,11 +461,11 @@ class DataTable(Table, Generic[Record]):
         return super().present(data=data, table=self, **kwargs)
 
     def presentCaptionParts(self, **kwargs: object) -> XMLContent:
-        data = cast(_TableData[Record], kwargs['data'])
+        data = cast(TableData[Record], kwargs['data'])
         yield self.__presentNrRecords(data)
 
     def presentHeadParts(self, **kwargs: object) -> XMLContent:
         proc = cast(PageProcessor, kwargs['proc'])
-        data = cast(_TableData[Record], kwargs['data'])
+        data = cast(TableData[Record], kwargs['data'])
         yield self.__presentTabs(proc, data)
         yield super().presentHeadParts(**kwargs)
