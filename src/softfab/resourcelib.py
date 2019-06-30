@@ -210,12 +210,6 @@ class Resource(ResourceBase):
         resource._capabilities = frozenset(capabilities)
         return resource
 
-    def __getitem__(self, key: str) -> object:
-        if key == 'reserved':
-            return self._properties.get('reserved', '')
-        else:
-            return super().__getitem__(key)
-
     @property
     def typeName(self) -> str:
         return cast(str, self._properties['type'])
@@ -531,16 +525,6 @@ class TaskRunner(ResourceBase):
                 return (0, 0, 0)
             else:
                 return data.version
-        elif key == 'reserved':
-            if self.isSuspended():
-                return self.getChangedUser()
-            taskRun = self.__executionObserver.getRun()
-            if taskRun is not None:
-                return 'T-' + taskRun.getId()
-            shadowRun = self.__shadowObserver.getRun()
-            if shadowRun is not None:
-                return 'S-' + shadowRun.getId()
-            return ''
         elif key in ('host', 'runnerVersion'):
             data = self.__data
             if data is None:

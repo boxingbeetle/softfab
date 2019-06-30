@@ -104,7 +104,7 @@ class GetResourceInfo_GET(ControlPage['GetResourceInfo_GET.Arguments',
                         ]
             else:
                 # Resource is of a custom type.
-                if not resource.isFree():
+                if resource.isReserved():
                     yield xml.reservedby[
                         xml.userref(
                             userid = resource['reserved']

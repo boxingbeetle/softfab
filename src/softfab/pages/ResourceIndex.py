@@ -39,13 +39,31 @@ class StateColumn(DataColumn[ResourceBase]):
     def presentCell(self, record: ResourceBase, **kwargs: object) -> XMLContent:
         return getResourceStatus(record)
 
+def _getResourceReservedBy(resource: ResourceBase) -> str:
+    if resource.isSuspended():
+        userName = resource.getChangedUser()
+        assert userName is not None
+        return userName
+    if isinstance(resource, TaskRunner):
+        taskRun = resource.getRun()
+        if taskRun is not None:
+            return 'T-' + taskRun.getId()
+        shadowRunId = resource.getShadowRunId()
+        if shadowRunId is not None:
+            return 'S-' + shadowRunId
+    else:
+        if resource.isReserved():
+            return cast(str, resource['reserved'])
+    return ''
+
 class ReservedByColumn(DataColumn[ResourceBase]):
+    sortKey = cast(Retriever, staticmethod(_getResourceReservedBy))
     def presentCell(self, record: ResourceBase, **kwargs: object) -> XMLContent:
         if record.isReserved():
             if isinstance(record, TaskRunner):
                 return createTaskLink(record)
             else:
-                return cast(str, record['reserved'])
+                return _getResourceReservedBy(record)
         elif record.isSuspended():
             return record.getChangedUser()
         else:
