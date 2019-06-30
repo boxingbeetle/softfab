@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from mimetypes import guess_type
+from gzip import GzipFile
+from os import fsync, replace
 from typing import cast
 
 from twisted.python.filepath import FilePath, InsecurePath
@@ -111,7 +113,7 @@ class FactoryResource(Resource):
             return ClientErrorResource('Path is not valid UTF-8')
 
         try:
-            return self.childForSegment(segment)
+            return self.childForSegment(segment, request)
         except InsecurePath:
             return AccessDeniedResource(
                 'Access denied: insecure path segment "%s"' % segment
@@ -128,7 +130,10 @@ class FactoryResource(Resource):
     def checkAccess(self) -> None:
         raise NotImplementedError
 
-    def childForSegment(self, segment: str) -> Resource:
+    def childForSegment(self,
+                        segment: str,
+                        request: TwistedRequest
+                        ) -> Resource:
         raise NotImplementedError
 
     def renderIndex(self, request: TwistedRequest) -> bytes:
@@ -225,7 +230,10 @@ class ArtifactRoot(FactoryResource):
                 'You do not have the necessary permissions to list jobs'
                 )
 
-    def childForSegment(self, segment: str) -> Resource:
+    def childForSegment(self,
+                        segment: str,
+                        request: TwistedRequest
+                        ) -> Resource:
         return JobDayResource(self.baseDir.child(segment), self.user, segment)
 
     def renderIndex(self, request: TwistedRequest) -> bytes:
@@ -249,7 +257,10 @@ class JobDayResource(FactoryResource):
     def checkAccess(self) -> None:
         pass
 
-    def childForSegment(self, segment: str) -> Resource:
+    def childForSegment(self,
+                        segment: str,
+                        request: TwistedRequest
+                        ) -> Resource:
         jobId = '%s-%s' % (self.day, segment)
         try:
             job = jobDB[jobId]
@@ -287,7 +298,10 @@ class JobResource(FactoryResource):
                 'You do not have the necessary permissions to list tasks'
                 )
 
-    def childForSegment(self, segment: str) -> Resource:
+    def childForSegment(self,
+                        segment: str,
+                        request: TwistedRequest
+                        ) -> Resource:
         task = self.job.getTask(segment)
         if task is None:
             return NotFoundResource(
@@ -323,14 +337,17 @@ class TaskResource(FactoryResource):
                 'You do not have the necessary permissions to access tasks'
                 )
 
-    def childForSegment(self, segment: str) -> Resource:
+    def childForSegment(self,
+                        segment: str,
+                        request: TwistedRequest
+                        ) -> Resource:
         gzipPath = self.baseDir.child(segment + '.gz')
         if gzipPath.isfile():
             return GzippedArtifact(gzipPath, asIs=False)
 
         if segment.endswith('.gz'):
             gzipPath = self.baseDir.child(segment)
-            if gzipPath.isfile():
+            if request.method == b'PUT' or gzipPath.isfile():
                 return GzippedArtifact(gzipPath, asIs=True)
 
         return NotFoundResource(
@@ -350,7 +367,7 @@ class GzippedArtifact(Resource):
 
     def getChild(self, path: bytes, request: TwistedRequest) -> Resource:
         return NotFoundResource(
-            'Artifact "%s" does not contain subitems'
+            'Artifact "%s" cannot not contain subitems'
             % request.prepath[-2].decode()
             )
 
@@ -372,6 +389,67 @@ class GzippedArtifact(Resource):
 
         # TODO: Supply the data using a producer instead of all at once.
         return path.getContent()
+
+    def render_PUT(self, request: TwistedRequest) -> bytes:
+        path = self.path
+        if path.isfile():
+            request.setResponseCode(409)
+            request.setHeader(b'Content-Type', b'text/plain; charset=UTF-8')
+            return b'Artifacts cannot be overwritten\n'
+
+        # We currently only support upload of already-compressed files.
+        assert self.asIs
+
+        # Note: Twisted buffers the entire upload into 'request.content'
+        #       prior to calling our render method.
+        #       There doesn't seem to be a clean way to handle streaming
+        #       uploads in Twisted; we'd have to set site.requestFactory
+        #       to a request implementation that overrides gotLength() or
+        #       handleContentChunk(), both of which are documented as
+        #       "not intended for users".
+
+        # Process large files in chunks.
+        # TODO: Return control to the Twisted reactor inbetween chunks.
+        #       Or maybe deferToThread() is a better approach, since that
+        #       also deals with fsync() potentially taking a long time.
+        blockSize = 16384
+
+        # Verify that the uploaded file is a valid gzip file.
+        # This will also catch truncated uploads.
+        content = request.content
+        try:
+            with GzipFile(fileobj=content) as gz:
+                while True:
+                    data = gz.read(blockSize)
+                    if not data:
+                        break
+        except (OSError, EOFError) as ex:
+            request.setResponseCode(415)
+            request.setHeader(b'Content-Type', b'text/plain; charset=UTF-8')
+            return b'Uploaded data is not a valid gzip file: %s\n' % (
+                str(ex).encode()
+                )
+
+        # Copy content.
+        content.seek(0, 0)
+        uploadPath = path.siblingExtension('.part')
+        inp = request.content
+        out = uploadPath.open('wb')
+        try:
+            while True:
+                data = inp.read(blockSize)
+                if not data:
+                    break
+                out.write(data)
+            out.flush()
+            fsync(out.fileno())
+        finally:
+            out.close()
+        replace(uploadPath.path, path.path)
+        path.changed()
+
+        request.setResponseCode(201)
+        return b'Artifact stored\n'
 
 def createArtifactRoot(baseDir: str, anonOperator: bool) -> IResource:
     path = FilePath(baseDir, alwaysCreate=True)
