@@ -326,9 +326,15 @@ class TaskResource(FactoryResource):
     def childForSegment(self, segment: str) -> Resource:
         gzipPath = self.baseDir.child(segment + '.gz')
         if gzipPath.isfile():
-            return GzippedArtifact(gzipPath)
+            return GzippedArtifact(gzipPath, asIs=False)
+
+        if segment.endswith('.gz'):
+            gzipPath = self.baseDir.child(segment)
+            if gzipPath.isfile():
+                return GzippedArtifact(gzipPath, asIs=True)
+
         return NotFoundResource(
-            'No "%s" subitem exists for tasks' % segment
+            'No artifact named "%s" exists for this task' % segment
             )
 
     def renderIndex(self, request: TwistedRequest) -> bytes:
@@ -337,9 +343,10 @@ class TaskResource(FactoryResource):
 class GzippedArtifact(Resource):
     """Single-file artifact stored as gzip file."""
 
-    def __init__(self, path: FilePath):
+    def __init__(self, path: FilePath, *, asIs: bool):
         super().__init__()
         self.path = path
+        self.asIs = asIs
 
     def getChild(self, path: bytes, request: TwistedRequest) -> Resource:
         return NotFoundResource(
@@ -349,14 +356,20 @@ class GzippedArtifact(Resource):
 
     def render_GET(self, request: TwistedRequest) -> bytes:
         path = self.path
-        contentType, contentEncoding = guess_type(path.basename(), strict=False)
-        if contentType is None:
-            contentType = 'application/octet-stream'
-        request.setHeader(b'Content-Type', contentType.encode())
-        if contentEncoding is not None:
-            # TODO: Check for gzip in the Accept-Encoding header.
-            #       In practice though, gzip is accepted universally.
-            request.setHeader(b'Content-Encoding', contentEncoding.encode())
+
+        if self.asIs:
+            request.setHeader(b'Content-Type', b'application/gzip')
+        else:
+            contentType, contentEncoding = guess_type(path.basename(),
+                                                      strict=False)
+            if contentType is None:
+                contentType = 'application/octet-stream'
+            request.setHeader(b'Content-Type', contentType.encode())
+            if contentEncoding is not None:
+                # TODO: Check for gzip in the Accept-Encoding header.
+                #       In practice though, gzip is accepted universally.
+                request.setHeader(b'Content-Encoding', contentEncoding.encode())
+
         # TODO: Supply the data using a producer instead of all at once.
         return path.getContent()
 
