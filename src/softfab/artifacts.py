@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from mimetypes import guess_type
 from gzip import GzipFile
+from mimetypes import guess_type
 from os import fsync, replace
 from typing import cast
 
