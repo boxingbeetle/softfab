@@ -2,18 +2,20 @@
 
 from collections import defaultdict
 from enum import Enum
-from typing import Iterator, Sequence, cast
+from typing import DefaultDict, Iterator, List, Sequence, cast
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor, PresentableError, Redirect
 from softfab.RecordDelete import DeleteArgs
+from softfab.databaselib import Retriever
 from softfab.datawidgets import (
-    DataColumn, DataTable, LinkColumn, ListDataColumn
+    DataColumn, DataTable, LinkColumn, ListDataColumn, TableData
 )
 from softfab.formlib import makeForm, submitButton
 from softfab.pageargs import EnumArg, IntArg, PageArgs, SortArg, StrArg
 from softfab.pagelinks import createTaskLink, createTaskRunnerDetailsLink
-from softfab.resourcelib import ResourceBase, resourceDB
+from softfab.request import Request
+from softfab.resourcelib import ResourceBase, TaskRunner, resourceDB
 from softfab.resourceview import getResourceStatus, presentCapabilities
 from softfab.restypelib import resTypeDB, taskRunnerResourceTypeName
 from softfab.userlib import User, checkPrivilege
@@ -22,37 +24,36 @@ from softfab.xmlgen import XML, XMLContent, xhtml
 
 
 class NameColumn(DataColumn[ResourceBase]):
-    def presentCell(self, record, **kwargs):
-        if record.typeName == taskRunnerResourceTypeName:
+    def presentCell(self, record: ResourceBase, **kwargs: object) -> XMLContent:
+        if isinstance(record, TaskRunner):
             return createTaskRunnerDetailsLink(record.getId())
         else:
             return record.getId()
 
 class CapabilitiesColumn(ListDataColumn[ResourceBase]):
-    def presentCell(self, record, **kwargs):
+    def presentCell(self, record: ResourceBase, **kwargs: object) -> XMLContent:
         return presentCapabilities(record.capabilities, record.typeName)
 
 class StateColumn(DataColumn[ResourceBase]):
-    @staticmethod
-    def sortKey(record):
-        return getResourceStatus(record)
-    def presentCell(self, record, **kwargs):
+    sortKey = cast(Retriever, staticmethod(getResourceStatus))
+    def presentCell(self, record: ResourceBase, **kwargs: object) -> XMLContent:
         return getResourceStatus(record)
 
 class ReservedByColumn(DataColumn[ResourceBase]):
-    def presentCell(self, record, **kwargs):
+    def presentCell(self, record: ResourceBase, **kwargs: object) -> XMLContent:
         if record.isReserved():
-            if record.typeName == taskRunnerResourceTypeName:
+            if isinstance(record, TaskRunner):
                 return createTaskLink(record)
             else:
-                return record['reserved']
+                return cast(str, record['reserved'])
         elif record.isSuspended():
-            return record['changeduser']
+            return record.getChangedUser()
         else:
             return '-'
 
 class ReserveColumn(DataColumn[ResourceBase]):
-    def presentCell(self, record, *, proc, **kwargs):
+    def presentCell(self, record: ResourceBase, **kwargs: object) -> XMLContent:
+        proc = cast(PageProcessor[PageArgs], kwargs['proc'])
         action = Actions.RESUME if record.isSuspended() else Actions.SUSPEND
         return makeForm(
             args=PostArgs(proc.args, resource=record.getId()),
@@ -60,10 +61,10 @@ class ReserveColumn(DataColumn[ResourceBase]):
             )[ submitButton(name='action', value=action) ]
 
 class EditColumn(DataColumn[ResourceBase]):
-    def presentCell(self, record, **kwargs):
+    def presentCell(self, record: ResourceBase, **kwargs: object) -> XMLContent:
         pageName = (
             'TaskRunnerEdit'
-            if record.typeName == taskRunnerResourceTypeName
+            if isinstance(record, TaskRunner)
             else 'ResourceEdit'
             )
         return pageLink(pageName, DeleteArgs(id=record.getId()))[ 'Edit' ]
@@ -99,8 +100,10 @@ class ResourcesTable(DataTable[ResourceBase]):
         if user.hasPrivilege('r/d'):
             yield self.deleteColumn
 
-    def iterRows(self, *, data, **kwargs):
-        recordsByType = defaultdict(list)
+    def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
+        data = cast(TableData[ResourceBase], kwargs['data'])
+        recordsByType = \
+                defaultdict(list) # type: DefaultDict[str, List[ResourceBase]]
         for record in data.records:
             recordsByType[record.typeName].append(record)
 
@@ -117,7 +120,7 @@ class ResourcesTable(DataTable[ResourceBase]):
                     ]]
                 for record in recordsByType[resTypeName]:
                     yield row(class_=getResourceStatus(record))[(
-                        column.presentCell(record, data=data, **kwargs)
+                        column.presentCell(record, **kwargs)
                         for column in columns
                         )]
 
@@ -169,14 +172,20 @@ class ResourceIndex_POST(FabPage['ResourceIndex_POST.Processor',
 
     class Processor(PageProcessor['ResourceIndex_POST.Arguments']):
 
-        def process(self, req, user):
+        def process(self,
+                    req: Request['ResourceIndex_POST.Arguments'],
+                    user: User
+                    ) -> None:
             args = req.args
 
             # Get resource record.
             resource = self.getResource(args.resource)
 
             # Update suspend state.
-            resource.setSuspend(args.action is Actions.SUSPEND, user.name)
+            resource.setSuspend(
+                args.action is Actions.SUSPEND,
+                user.name or 'anonymous'
+                )
 
             # Show new status, forget commands.
             raise Redirect(pageURL(
@@ -184,7 +193,7 @@ class ResourceIndex_POST(FabPage['ResourceIndex_POST.Processor',
                 ResourceIndex_GET.Arguments.subset(args)
                 ))
 
-        def getResource(self, resourceId):
+        def getResource(self, resourceId: str) -> ResourceBase:
             try:
                 return resourceDB[resourceId]
             except KeyError:
