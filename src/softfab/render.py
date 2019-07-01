@@ -135,6 +135,14 @@ class _PlainTextResponder(Responder):
         response.write(self.__message + '\n')
 
 def renderAuthenticated(page: FabResource, request: TwistedRequest) -> object:
+    # Override Twisted's traceback setting.
+    # While there is an option in the 'web' subcommand of 'twist' to disable
+    # tracebacks, this is easy for the user to overlook and the default is
+    # not the most secure setting.
+    # TODO: This should be done soon after the site instance is created,
+    #       but that happens out of our reach, inside 'twist'.
+    request.site.displayTracebacks = page.debugSupport
+
     def done(result: object) -> None: # pylint: disable=unused-argument
         request.finish()
     def failed(fail: Failure) -> None:
