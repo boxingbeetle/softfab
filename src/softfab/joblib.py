@@ -1037,7 +1037,7 @@ def _reserveResources(claim: ResourceClaim,
     #       It's close enough, but I'd rather not cheat the type system.
     resources = cast(Mapping[str, Resource], resourceDB)
     assignment = pickResources(claim, resources, whyNot)
-    if assignment is not None:
+    if assignment is not None and whyNot is None:
         for resource in assignment.values():
             resource.reserve(reservedBy)
     return assignment
