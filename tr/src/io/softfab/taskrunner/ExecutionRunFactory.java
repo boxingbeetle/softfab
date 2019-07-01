@@ -97,14 +97,6 @@ class ExecutionRunFactory extends RunFactory {
             );
     }
 
-    protected void writeNavigation(File outputDir)
-    throws TaskRunException {
-        final NavigationHTML navigationHTML = new NavigationHTML(
-            outputDir, this, runInfo.task.getFrameworkSummary()
-            );
-        navigationHTML.writeNavigation();
-    }
-
     protected String getWrapperFileNameBase() {
         return "wrapper";
     }

@@ -125,9 +125,6 @@ final class TaskRunThread implements Runnable {
         // TODO: Make SEVERE messages fall through to main task runner log?
         runLogger.info("Task Runner version " + Version.getVersion());
 
-        // Write navigation HTML.
-        factory.writeNavigation(outputDir);
-
         // Log file is available, so now it makes sense to publish URL.
         factory.reportURL();
 

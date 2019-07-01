@@ -39,10 +39,6 @@ class AbortRunFactory extends RunFactory {
         return null;
     }
 
-    protected void writeNavigation(File outputDir) {
-        // Nothing to write
-    }
-
     protected String getWrapperFileNameBase() {
         return factory.getWrapperFileNameBase() + "_abort";
     }

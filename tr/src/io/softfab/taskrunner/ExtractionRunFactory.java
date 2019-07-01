@@ -71,10 +71,6 @@ class ExtractionRunFactory extends RunFactory {
             );
     }
 
-    protected void writeNavigation(File outputDir) {
-        // Extraction does not need navigation HTML.
-    }
-
     protected String getWrapperFileNameBase() {
         return "extractor";
     }

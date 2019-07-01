@@ -62,9 +62,6 @@ abstract public class RunFactory {
      */
     abstract protected String getResultFileName();
 
-    abstract protected void writeNavigation(File outputDir)
-    throws TaskRunException;
-
     /**
      * Gets the part of the file name that defines wrappers of this type.
      * For example, if wrappers are called "wrapper.sh", "wrapper.bat" etc,
