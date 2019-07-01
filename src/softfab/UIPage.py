@@ -149,12 +149,14 @@ class UIPage(Generic[ProcT]):
                            response: Response,
                            **kwargs: object
                            ) -> XMLContent:
+        proc = cast(ProcT, kwargs['proc'])
         yield self.presentHeader(**kwargs)
         try:
             yield xhtml.div(class_='body')[
                 self.__presentBody(**kwargs)
                 ]
-            yield self.presentBackgroundScripts(**kwargs)
+            if proc.processingError is None:
+                yield self.presentBackgroundScripts(**kwargs)
         except Exception as ex:
             logPageException(req, 'Error presenting page')
             response.setStatus(500, 'Error presenting page')
