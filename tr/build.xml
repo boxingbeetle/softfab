@@ -1,6 +1,13 @@
 <!-- Build configuration for Ant -->
 <project name="TaskRunner" default="all">
 
+    <path id="java8.runtime.path">
+        <fileset dir="/usr" erroronmissingdir="false">
+            <include name="lib*/jvm/java-8-*/jre/lib/rt.jar"/>
+            <include name="lib*/jvm/java-1.8.0-*/jre/lib/rt.jar"/>
+        </fileset>
+    </path>
+
     <target name="all" depends="jar"/>
 
     <target name="clean">
@@ -9,11 +16,15 @@
 
     <target name="classes">
         <mkdir dir="derived/classes"/>
+        <property name="java8.runtime.path" refid="java8.runtime.path"/>
+        <echo message="Building against runtime: ${java8.runtime.path}"/>
         <javac
             srcdir="src"
             destdir="derived/classes"
             debug="true"
             source="8"
+            target="8"
+            bootclasspathref="java8.runtime.path"
             deprecation="true"
             includeantruntime="false"
         />
