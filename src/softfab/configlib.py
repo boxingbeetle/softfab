@@ -195,13 +195,13 @@ class Input(XMLTag):
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, Input):
-            return self.getName() == self.getName()
+            return self.getName() == other.getName()
         else:
             return NotImplemented
 
     def __lt__(self, other: object) -> bool:
         if isinstance(other, Input):
-            return self.getName() < self.getName()
+            return self.getName() < other.getName()
         else:
             return NotImplemented
 
