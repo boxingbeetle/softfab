@@ -13,11 +13,15 @@ from softfab.datawidgets import (
 )
 from softfab.formlib import makeForm, submitButton
 from softfab.pageargs import EnumArg, IntArg, PageArgs, SortArg, StrArg
-from softfab.pagelinks import createTaskLink, createTaskRunnerDetailsLink
+from softfab.pagelinks import (
+    createJobLink, createTaskInfoLink, createTaskLink,
+    createTaskRunnerDetailsLink
+)
 from softfab.request import Request
 from softfab.resourcelib import ResourceBase, TaskRunner, resourceDB
 from softfab.resourceview import getResourceStatus, presentCapabilities
 from softfab.restypelib import resTypeDB, taskRunnerResourceTypeName
+from softfab.taskrunlib import taskRunDB
 from softfab.userlib import User, checkPrivilege
 from softfab.webgui import Widget, docLink, header, pageLink, pageURL, row
 from softfab.xmlgen import XML, XMLContent, xhtml
@@ -60,10 +64,23 @@ class ReservedByColumn(DataColumn[ResourceBase]):
     sortKey = cast(Retriever, staticmethod(_getResourceReservedBy))
     def presentCell(self, record: ResourceBase, **kwargs: object) -> XMLContent:
         if record.isReserved():
+            # TODO: Create a generic reserved-by system that works for all
+            #       resources types.
             if isinstance(record, TaskRunner):
                 return createTaskLink(record)
             else:
-                return cast(str, record['reserved'])
+                reservedBy = cast(str, record['reserved'])
+                reservedType, reservedId = reservedBy.split('-', 1)
+                if reservedType == 'J': # job
+                    return createJobLink(reservedId)
+                elif reservedType == 'T': # task
+                    run = taskRunDB[reservedId]
+                    return createTaskInfoLink(
+                        run.getJob().getId(), run.getName()
+                        )
+                else:
+                    assert False, reservedBy
+                    return '?'
         elif record.isSuspended():
             return record.getChangedUser()
         else:
