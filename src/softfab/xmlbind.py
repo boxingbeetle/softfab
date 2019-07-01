@@ -172,6 +172,12 @@ class XMLTag(ABC):
                 else:
                     raise TypeError(type(value))
 
+    def __str__(self) -> str:
+        return self.toXML().flattenXML()
+
+    def __repr__(self) -> str:
+        return '%s(%r)' % (self.__class__.__name__, self._properties)
+
     def __getitem__(self, key: str) -> object:
         return self._properties[key]
 
