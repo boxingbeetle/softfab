@@ -25,7 +25,7 @@ if TYPE_CHECKING:
     from softfab.joblib import Job, Task, jobDB
     from softfab.productlib import Product
     from softfab.resourcelib import Resource, ResourceDB, TaskRunner
-    from softfab.shadowrun import ExtractionRun
+    from softfab.shadowlib import ExtractionRun
     from softfab.userlib import User
 else:
     Job = object
@@ -87,6 +87,8 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
         if 'extractionRun' in self._properties:
             extractionRunId = cast(str, self._properties['extractionRun'])
             extractionRun = shadowlib.shadowDB.get(extractionRunId)
+            # There is currently only one type of shadow run.
+            assert isinstance(extractionRun, ExtractionRun), extractionRun
             self.__setExtractionRun(extractionRun)
             # Even if the extraction run has been deleted already, keep the ID
             # around as a marker that this run was once extracted.
