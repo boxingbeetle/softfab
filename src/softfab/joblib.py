@@ -424,9 +424,6 @@ class Task(
     def cancelled(self, summary: str) -> None:
         self.getLatestRun().cancelled(summary)
 
-    def setURL(self, url: str) -> None:
-        self.getLatestRun().setURL(url)
-
     def getURL(self) -> Optional[str]:
         return self.getLatestRun().getURL()
 
