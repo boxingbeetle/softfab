@@ -21,31 +21,6 @@ class ExtractionRunFactory extends RunFactory {
         return "extraction_log.txt";
     }
 
-    protected void reportURL() {
-        // TODO: this is mostly a copy/paste from ExecutionRunFactory
-        final URL outputURL;
-        try {
-            outputURL = new URL(
-                outputConfig.reportBaseURL,
-                runInfo.run.getJobPath() + "/" + runInfo.run.taskId +
-                    "/" + getLogFileName()
-                );
-        } catch (IOException e) {
-            logger.severe("Error constructing report URL: " + e);
-            return;
-        }
-
-        final ServerFormRequest request = new ServerFormRequest("TaskReport");
-        request.addQueryParam("shadowId",
-                ((ExtractRunInfo)runInfo).shadowrun.shadowId
-                );
-        request.addBodyParam("url", outputURL.toExternalForm());
-        ControlCenter.INSTANCE.submitRequest(
-            request,
-            new APIReplyListener(logger, "submit extraction log URL")
-            );
-    }
-
     protected void reportResult(Result result) {
         final ServerFormRequest request = new ServerFormRequest("TaskDone");
         request.addQueryParam("shadowId",

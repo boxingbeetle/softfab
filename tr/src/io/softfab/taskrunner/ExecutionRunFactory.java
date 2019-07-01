@@ -53,30 +53,6 @@ class ExecutionRunFactory extends RunFactory {
         return "wrapper_log.txt";
     }
 
-    protected void reportURL() {
-        final String taskName = runInfo.run.taskId;
-        final URL outputURL;
-        try {
-            outputURL = new URL(
-                outputConfig.reportBaseURL,
-                runInfo.run.getJobPath() + "/" + taskName + "/"
-                );
-        } catch (MalformedURLException e) {
-            logger.severe("Error constructing report URL: " + e);
-            return;
-        }
-
-        final ServerFormRequest request =
-            new ServerFormRequest("TaskReport");
-        request.addQueryParam("id", runInfo.run.jobId);
-        request.addQueryParam("name", taskName);
-        request.addBodyParam("url", outputURL.toExternalForm());
-        ControlCenter.INSTANCE.submitRequest(
-            request,
-            new APIReplyListener(logger, "submit report URL")
-            );
-    }
-
     protected void reportResult(Result result) {
         // Create request and send it to Control Center.
         final ServerFormRequest request = new ServerFormRequest("TaskDone");

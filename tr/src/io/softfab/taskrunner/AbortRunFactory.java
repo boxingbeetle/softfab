@@ -22,10 +22,6 @@ class AbortRunFactory extends RunFactory {
         return factory.getLogFileName();
     }
 
-    protected void reportURL() {
-        // Nothing to report
-    }
-
     protected void reportResult(Result result) {
         // Nothing to report
     }

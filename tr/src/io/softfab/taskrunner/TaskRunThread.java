@@ -125,9 +125,6 @@ final class TaskRunThread implements Runnable {
         // TODO: Make SEVERE messages fall through to main task runner log?
         runLogger.info("Task Runner version " + Version.getVersion());
 
-        // Log file is available, so now it makes sense to publish URL.
-        factory.reportURL();
-
         final TaskRun run;
         try {
             run = factory.createWrapper(outputDir, runLogger);

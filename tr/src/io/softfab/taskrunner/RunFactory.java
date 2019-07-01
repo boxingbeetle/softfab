@@ -45,11 +45,6 @@ abstract public class RunFactory {
     abstract protected String getLogFileName();
 
     /**
-     * Reports the URL where task logs can be found to the web server.
-     */
-    abstract protected void reportURL();
-
-    /**
      * Reports a task result to the web server.
      */
     abstract protected void reportResult(Result result);

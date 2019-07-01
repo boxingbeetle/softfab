@@ -79,7 +79,6 @@ final class RunStatus {
             runInfo = null;
             // TODO: Try to remove duplication between reportResult
             //       implementations by moving code here or to TaskRunThread.
-            //       Try the same for reportURL.
             factory.reportResult(result);
             trigger.notifyAll();
         }
