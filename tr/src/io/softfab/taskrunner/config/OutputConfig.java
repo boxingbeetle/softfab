@@ -44,75 +44,8 @@ public class OutputConfig implements DataObject {
     */
     public File productBaseDir = DEFAULT_FILE;
 
-    /**
-    Old name for "reportBaseURL", kept for backwards compatibility.
-    */
-    public URL outputBaseURL = DEFAULT_URL;
-
-    /**
-    Old name for "reportBaseDir", kept for backwards compatibility.
-    */
-    public File outputBaseDir = DEFAULT_FILE;
-
-    /**
-    Old name for "productBaseURL", kept for backwards compatibility.
-    */
-    public URL imageBaseURL = DEFAULT_URL;
-
-    /**
-    Old name for "productBaseDir", kept for backwards compatibility.
-    */
-    public File imageBaseDir = DEFAULT_FILE;
-
     public void verify()
     throws ParseException {
-        // Backwards compatibility with the time the term "output" was used
-        // instead of "report".
-        if (reportBaseURL == DEFAULT_URL) { // NOPMD
-            if (outputBaseURL == DEFAULT_URL) { // NOPMD
-                throw new ParseException(
-                    "No value specified for \"reportBaseURL\""
-                    );
-            } else {
-                reportBaseURL = outputBaseURL;
-            }
-        }
-        if (reportBaseDir == DEFAULT_FILE) { // NOPMD
-            if (outputBaseDir == DEFAULT_FILE) { // NOPMD
-                throw new ParseException(
-                    "No value specified for \"reportBaseDir\""
-                    );
-            } else {
-                DataChecker.checkExistingDirectory(
-                    outputBaseDir, "outputBaseDir"
-                    );
-                reportBaseDir = outputBaseDir;
-            }
-        }
-        // Backwards compatibility with the time the term "image" was used
-        // instead of "product".
-        if (productBaseURL == DEFAULT_URL) { // NOPMD
-            if (imageBaseURL == DEFAULT_URL) { // NOPMD
-                throw new ParseException(
-                    "No value specified for \"productBaseURL\""
-                    );
-            } else {
-                productBaseURL = imageBaseURL;
-            }
-        }
-        if (productBaseDir == DEFAULT_FILE) { // NOPMD
-            if (imageBaseDir == DEFAULT_FILE) { // NOPMD
-                throw new ParseException(
-                    "No value specified for \"productBaseDir\""
-                    );
-            } else {
-                DataChecker.checkExistingDirectory(
-                    imageBaseDir, "imageBaseDir"
-                    );
-                productBaseDir = imageBaseDir;
-            }
-        }
-
         DataChecker.checkExistingDirectory(reportBaseDir, "reportBaseDir");
         DataChecker.checkExistingDirectory(productBaseDir, "productBaseDir");
     }
