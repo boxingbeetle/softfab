@@ -958,7 +958,7 @@ class Job(TaskRunnerSet, TaskSet[Task], XMLTag, DatabaseElem):
 
     def reserveResources(self,
                          claim: ResourceClaim,
-                         user: str,
+                         reservedBy: str,
                          whyNot: Optional[List[ReasonForWaiting]]
                          ) -> Optional[Dict[str, Resource]]:
         if self.__resources:
@@ -993,9 +993,9 @@ class Job(TaskRunnerSet, TaskSet[Task], XMLTag, DatabaseElem):
                         # TODO: report multiple resources at the same time
                         whyNot.append(ResourceMissingReason(resId))
                     return None
-            user = 'J-' + self.getId()
+            reservedBy = 'J-' + self.getId()
             resources = _reserveResources(
-                ResourceClaim.create(toReserve), user, whyNot
+                ResourceClaim.create(toReserve), reservedBy, whyNot
                 )
             if resources is not None:
                 for ref in keepPerJob:
@@ -1003,7 +1003,7 @@ class Job(TaskRunnerSet, TaskSet[Task], XMLTag, DatabaseElem):
                 resources.update(reservedPerJob)
             return resources
         else:
-            return _reserveResources(claim, user, whyNot)
+            return _reserveResources(claim, reservedBy, whyNot)
 
     def releaseResources(self,
                          task: Task,
@@ -1030,7 +1030,7 @@ class Job(TaskRunnerSet, TaskSet[Task], XMLTag, DatabaseElem):
             _releaseResources(reserved.values())
 
 def _reserveResources(claim: ResourceClaim,
-                      user: str,
+                      reservedBy: str,
                       whyNot: Optional[List[ReasonForWaiting]] = None
                       ) -> Optional[Dict[str, Resource]]:
     # TODO: Database is not actually a Mapping.
@@ -1039,7 +1039,7 @@ def _reserveResources(claim: ResourceClaim,
     assignment = pickResources(claim, resources, whyNot)
     if assignment is not None:
         for resource in assignment.values():
-            resource.reserve(user)
+            resource.reserve(reservedBy)
     return assignment
 
 def _releaseResources(reserved: Iterable[str]) -> None:

@@ -233,14 +233,14 @@ class Resource(ResourceBase):
     def isReserved(self) -> bool:
         return 'reserved' in self._properties
 
-    def reserve(self, user: str) -> None:
+    def reserve(self, reservedBy: str) -> None:
         if 'reserved' in self._properties:
             logging.error(
                 'Attempt to reserve resource "%s" that is already reserved',
                 self.getId()
                 )
         else:
-            self._properties['reserved'] = user
+            self._properties['reserved'] = reservedBy
             self._notify()
 
     def free(self) -> None:
