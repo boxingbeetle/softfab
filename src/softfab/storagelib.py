@@ -213,6 +213,15 @@ class StorageURLMixin:
         else:
             self._properties.pop('url', None)
 
+    def setInternalStorage(self, path: str) -> None:
+        """Use the Control Center's internal storage pool.
+        """
+        assert 'storage' not in self._properties
+        assert 'url' not in self._properties
+        self._properties['storage'] = 'sf.cc'
+        self._properties['url'] = path
+        self._notify()
+
     def setURL(self, url: str) -> None:
         if self._properties.get('url'):
             # TODO: Consider raising an exception instead of ignoring of the

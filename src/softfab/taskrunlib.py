@@ -576,6 +576,10 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
 
         self.__setState(result, 'done', summary, outputs)
 
+        # Remember reports.
+        artifactsPaths = self.__getJobId().split('-', 1)
+        artifactsPaths += (self.getName(), '')
+        self.setInternalStorage('/'.join(artifactsPaths))
         self.__reports += reports
 
         # TODO: Mark as freed, but remember which resources were used.
