@@ -350,9 +350,12 @@ class TaskResource(FactoryResource):
             if request.method == b'PUT' or gzipPath.isfile():
                 return GzippedArtifact(gzipPath, asIs=True)
 
-        return NotFoundResource(
-            'No artifact named "%s" exists for this task' % segment
-            )
+        if request.method == b'PUT':
+            return ClientErrorResource('Uploads must use gzip format')
+        else:
+            return NotFoundResource(
+                'No artifact named "%s" exists for this task' % segment
+                )
 
     def renderIndex(self, request: TwistedRequest) -> bytes:
         return b'Listing task subresources is not implemented yet'
