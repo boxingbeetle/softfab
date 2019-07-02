@@ -14,20 +14,7 @@ from softfab.utils import IllegalStateError
 
 from datageneratorlib import removeRec, DataGenerator
 
-TARGET = 'piano_player'
 OWNER = 'Maggy'
-
-def locatorForTask(taskId):
-    return 'dummylocator@' + taskId
-
-def taskDone(job, taskId, result = ResultCode.OK):
-    """Marks a task as done, including all required locators.
-    """
-    locators = {}
-    if result is not ResultCode.ERROR:
-        for out in job.getTask(taskId).getOutputs():
-            locators[out] = locatorForTask(taskId)
-    job.taskDone(taskId, result, 'summary text', (), locators)
 
 class TestResourceRequirements(unittest.TestCase):
     """Test resource requirements functionality.
