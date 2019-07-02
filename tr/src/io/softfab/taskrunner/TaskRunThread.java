@@ -4,6 +4,7 @@ package io.softfab.taskrunner;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -23,6 +24,11 @@ final class TaskRunThread implements Runnable {
     private final TaskRunInfo runInfo;
 
     /**
+     * Output directory for this task.
+     */
+    private File outputDir;
+
+    /**
      * Log of the Task Runner itself.
      */
     private final Logger logger;
@@ -31,6 +37,11 @@ final class TaskRunThread implements Runnable {
      * Log of the task run and its external processes.
      */
     private Logger runLogger;
+
+    /**
+     * File to which the task run log is written.
+     */
+    private File runLogFile;
 
     /**
      * Handler which writes the messages of runLogger to file.
@@ -95,7 +106,7 @@ final class TaskRunThread implements Runnable {
 
     private void startHelper()
     throws TaskRunException {
-        final File outputDir = new File(
+        outputDir = new File(
             ConfigFactory.getConfig().output.reportBaseDir,
             runInfo.run.getJobPath() + "/" + runInfo.run.taskId + "/"
             );
@@ -115,8 +126,8 @@ final class TaskRunThread implements Runnable {
 
         // Send logger output to file.
         try {
-            final File logFile = new File(outputDir, factory.getLogFileName());
-            fileHandler = new FileHandler(logFile.getAbsolutePath());
+            runLogFile = new File(outputDir, factory.getLogFileName());
+            fileHandler = new FileHandler(runLogFile.getAbsolutePath());
         } catch (IOException e) {
             throw new TaskRunException("Could not create log file", e);
         }
@@ -191,6 +202,14 @@ final class TaskRunThread implements Runnable {
     }
 
     private void finish(Result result) {
+        // Upload artifacts.
+        // Log errors to both the task run and root logger, since both the
+        // tester and the operator may want to be informed.
+        runLogger.setUseParentHandlers(true);
+        for (final String report : result.getReports()) {
+            uploadArtifact(outputDir.toPath().resolve(report), runLogger);
+        }
+
         // First, set taskRun field to null to indicate run is finished and can
         // no longer be aborted.
         final TaskRun run;
@@ -205,13 +224,40 @@ final class TaskRunThread implements Runnable {
             run.waitForCompletion();
         }
 
-        // Close log file, if it was opened.
+        // Close and upload log file, if it was opened.
         if (fileHandler != null) {
             fileHandler.close();
+            uploadArtifact(runLogFile.toPath(), logger);
         }
 
         // Inform Control Center and sync thread.
         runStatus.runFinished(factory, result);
+    }
+
+    private void uploadArtifact(Path artifact, Logger log) {
+        try {
+            int tryCount;
+            for (tryCount = 0; tryCount < 3; tryCount++) {
+                try {
+                    ControlCenter.INSTANCE.uploadArtifact(artifact);
+                    return;
+                } catch (IOException e) {
+                    log.warning(
+                        "Attempt " + (tryCount + 1) +
+                        " to upload artifact \"" + artifact + "\" failed: " +
+                        e.getMessage()
+                        );
+                }
+            }
+            throw new PermanentRequestFailure(
+                "giving up after " + tryCount + " tries"
+                );
+        } catch (PermanentRequestFailure e) {
+            log.severe(
+                "Upload of artifact \"" + artifact + "\" failed: " +
+                e.getMessage()
+                );
+        }
     }
 
 }

@@ -9,6 +9,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -343,6 +344,11 @@ implements Runnable {
             }
         }
 
+    }
+
+    public void uploadArtifact(Path artifact)
+    throws IOException, PermanentRequestFailure {
+        throw new IOException("not implemented");
     }
 
 }
