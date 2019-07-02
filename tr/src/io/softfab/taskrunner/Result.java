@@ -222,8 +222,7 @@ public class Result {
 
     /**
     Get locators of the outputs produced by the task.
-    @return A (possibly empty) set of key-value pairs containing the locators.
-        Keys and values are both of type String.
+    @return A (possibly empty) mapping from output product name to locator.
     */
     public Map<String, String> getOutputLocators() {
         return locators;
@@ -239,8 +238,7 @@ public class Result {
 
     /**
     Get mid-level data.
-    @return A (possibly empty) set of key-value pairs containing the locators.
-        Keys and values are both of type String.
+    @return A (possibly empty) mapping from data key to value.
     */
     public Map<String, String> getExtractedData() {
         return extracted;
