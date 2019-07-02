@@ -65,6 +65,8 @@ class ExecutionRunFactory extends RunFactory {
         if (summary != null) {
             request.addBodyParam("summary", summary);
         }
+        request.addBodyParam("report", result.getReports());
+        request.addBodyParam("report", getLogFileName());
         request.addBodyParams(result.getOutputLocators());
         request.addBodyParams(result.getExtractedData());
         ControlCenter.INSTANCE.submitRequest(
