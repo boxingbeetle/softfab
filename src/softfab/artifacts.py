@@ -437,6 +437,7 @@ class GzippedArtifact(Resource):
         content.seek(0, 0)
         uploadPath = path.siblingExtension('.part')
         inp = request.content
+        path.parent().makedirs(ignoreExistingDirectory=True)
         out = uploadPath.open('wb')
         try:
             while True:
