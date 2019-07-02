@@ -53,12 +53,12 @@ class Task_GET(FabPage['Task_GET.Processor', 'Task_GET.Arguments']):
     class Processor(TaskProcessorMixin, PageProcessor[Arguments]):
         def process(self, req: Request[TaskReportArgs], user: User) -> None:
             self.initTask(req)
-            task = self.task
+            run = self.task.getLatestRun()
 
             reports = OrderedDict() # type: Dict[str, Optional[str]]
             reports['Overview'] = None
             reports['Data'] = None
-            taskReports = tuple(task.iterReports())
+            taskReports = tuple(run.reports)
             reports.update(taskReports)
 
             # Find report to display.

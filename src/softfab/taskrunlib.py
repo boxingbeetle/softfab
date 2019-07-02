@@ -1,6 +1,9 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import TYPE_CHECKING, Dict, List, Mapping, Optional, Tuple, cast
+from typing import (
+    TYPE_CHECKING, Dict, Iterator, List, Mapping, Optional, Tuple, cast
+)
+from urllib.parse import urljoin
 import logging
 
 from softfab import shadowlib
@@ -316,6 +319,15 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
                 return summary
             else:
                 return 'no summary available'
+
+    @property
+    def reports(self) -> Iterator[Tuple[str, str]]:
+        """The reports that currently exist for this task.
+        Each report is a pair consisting of name (label) and URL.
+        """
+        url = self.getURL()
+        if url is not None:
+            yield 'Wrapper', urljoin(url, 'wrapper_log.txt')
 
     @cachedProperty
     def timeoutMins(self) -> Optional[int]:
