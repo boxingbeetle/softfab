@@ -237,55 +237,8 @@ implements Runnable {
             output.close();
         }
         // This implicitly connects.
-        final int responseCode = connection.getResponseCode();
-        String responseMessage = connection.getResponseMessage();
-        if (responseMessage == null) {
-            responseMessage = "(no message)";
-        }
-        switch (responseCode) {
-        case HttpURLConnection.HTTP_INTERNAL_ERROR:
-            // It is very likely that repeating this request will trigger
-            // the same error over and over again, so give up now.
-            throw new PermanentRequestFailure(
-                "Server encountered an internal error processing " +
-                "the request"
-                );
-        case HttpURLConnection.HTTP_BAD_REQUEST:
-            // The HTTP spec says we SHOULD NOT repeat the same request.
-            throw new PermanentRequestFailure(
-                "Server rejected the request as bad: " + responseMessage
-                );
-        case HttpURLConnection.HTTP_UNAUTHORIZED:
-            // It is unlikely that retrying will get us in.
-            throw new PermanentRequestFailure(
-                "Server requires authentication: " + responseMessage
-                );
-        case HttpURLConnection.HTTP_PROXY_AUTH:
-            // It is unlikely that retrying will get us in.
-            throw new PermanentRequestFailure(
-                "Proxy requires authentication: " + responseMessage
-                );
-        case HttpURLConnection.HTTP_FORBIDDEN:
-            // The HTTP spec says we SHOULD NOT repeat the same request.
-            throw new PermanentRequestFailure(
-                "Server disallowed access: " + responseMessage
-                );
-        case HttpURLConnection.HTTP_LENGTH_REQUIRED:
-            // Trying again will most likely trigger the same error.
-            // I doubt this error will ever occur in practice, but I have
-            // been surprised before.
-            throw new PermanentRequestFailure(
-                "Server requires Content-Length header"
-                );
-        default:
-            if (responseCode >= 400) {
-                throw new IOException(
-                    "Response code " + responseCode + ": " + responseMessage
-                    );
-            } else {
-                return connection.getInputStream();
-            }
-        }
+        handleHTTPResponse(connection);
+        return connection.getInputStream();
     }
 
     private class QueuedRequest {
@@ -349,6 +302,65 @@ implements Runnable {
     public void uploadArtifact(Path artifact)
     throws IOException, PermanentRequestFailure {
         throw new IOException("not implemented");
+    }
+
+    /**
+     * Checks an HTTP response and throws exceptions if it's not OK.
+     * @param connection An HTTP connection that is either established
+     #   or ready to connect.
+     * @throws IOException If a transient error happens.
+     * @throws PermanentRequestFailure If this request failed and has little
+     *   chance of succeeding by retrying.
+     */
+    private void handleHTTPResponse(HttpURLConnection connection)
+    throws IOException, PermanentRequestFailure {
+        final int responseCode = connection.getResponseCode();
+        String responseMessage = connection.getResponseMessage();
+        if (responseMessage == null) {
+            responseMessage = "(no message)";
+        }
+        switch (responseCode) {
+        case HttpURLConnection.HTTP_INTERNAL_ERROR:
+            // It is very likely that repeating this request will trigger
+            // the same error over and over again, so give up now.
+            throw new PermanentRequestFailure(
+                "Server encountered an internal error processing " +
+                "the request"
+                );
+        case HttpURLConnection.HTTP_BAD_REQUEST:
+            // The HTTP spec says we SHOULD NOT repeat the same request.
+            throw new PermanentRequestFailure(
+                "Server rejected the request as bad: " + responseMessage
+                );
+        case HttpURLConnection.HTTP_UNAUTHORIZED:
+            // It is unlikely that retrying will get us in.
+            throw new PermanentRequestFailure(
+                "Server requires authentication: " + responseMessage
+                );
+        case HttpURLConnection.HTTP_PROXY_AUTH:
+            // It is unlikely that retrying will get us in.
+            throw new PermanentRequestFailure(
+                "Proxy requires authentication: " + responseMessage
+                );
+        case HttpURLConnection.HTTP_FORBIDDEN:
+            // The HTTP spec says we SHOULD NOT repeat the same request.
+            throw new PermanentRequestFailure(
+                "Server disallowed access: " + responseMessage
+                );
+        case HttpURLConnection.HTTP_LENGTH_REQUIRED:
+            // Trying again will most likely trigger the same error.
+            // I doubt this error will ever occur in practice, but I have
+            // been surprised before.
+            throw new PermanentRequestFailure(
+                "Server requires Content-Length header"
+                );
+        default:
+            if (responseCode >= 400) {
+                throw new IOException(
+                    "Response code " + responseCode + ": " + responseMessage
+                    );
+            }
+        }
     }
 
 }
