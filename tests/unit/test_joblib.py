@@ -22,7 +22,7 @@ def taskDone(job, taskId, result = ResultCode.OK):
     if result is not ResultCode.ERROR:
         for out in job.getTask(taskId).getOutputs():
             locators[out] = locatorForTask(taskId)
-    job.taskDone(taskId, result, 'summary text', locators)
+    job.taskDone(taskId, result, 'summary text', (), locators)
 
 class TestJobs(unittest.TestCase):
     """Test job functionality.

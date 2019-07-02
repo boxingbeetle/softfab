@@ -27,7 +27,7 @@ def taskDone(job, taskId, result = ResultCode.OK):
     if result is not ResultCode.ERROR:
         for out in job.getTask(taskId).getOutputs():
             locators[out] = locatorForTask(taskId)
-    job.taskDone(taskId, result, 'summary text', locators)
+    job.taskDone(taskId, result, 'summary text', (), locators)
 
 class TestResourceRequirements(unittest.TestCase):
     """Test resource requirements functionality.
@@ -227,7 +227,7 @@ class TestResourceRequirements(unittest.TestCase):
             self.assertFalse(resourcelib.resourceDB[resA].isFree())
             self.assertFalse(resourcelib.resourceDB[resB].isFree())
             self.assertTrue(resourcelib.resourceDB[resC].isFree())
-            job.taskDone('task', ResultCode.OK, 'summary text', {})
+            job.taskDone('task', ResultCode.OK, 'summary text', (), {})
             self.assertTrue(resourcelib.resourceDB[resA].isFree())
             self.assertTrue(resourcelib.resourceDB[resB].isFree())
             self.assertTrue(resourcelib.resourceDB[resC].isFree())
@@ -268,7 +268,7 @@ class TestResourceRequirements(unittest.TestCase):
             task = job.assignTask(taskRunner)
             self.assertIsNotNone(task)
             self.assertTrue(resourcelib.resourceDB[res].isFree())
-            job.taskDone('task', ResultCode.OK, 'summary text', {})
+            job.taskDone('task', ResultCode.OK, 'summary text', (), {})
             self.assertTrue(resourcelib.resourceDB[res].isFree())
 
         gen = DataGenerator()

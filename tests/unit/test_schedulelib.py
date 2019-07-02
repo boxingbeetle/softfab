@@ -75,7 +75,7 @@ class ScheduleFixtureMixin:
             )
 
     def __taskDone(self, job, taskName):
-        job.taskDone(taskName, ResultCode.OK, 'Summary text', {})
+        job.taskDone(taskName, ResultCode.OK, 'Summary text', (), {})
 
     def added(self, job):
         self.assertEqual(job['timestamp'], self.__currentTime)
