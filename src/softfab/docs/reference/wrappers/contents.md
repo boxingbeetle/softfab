@@ -57,9 +57,6 @@ SF_RESOURCES
 _resource reference_
 :    For each reserved resource, a variable is defined with the resource reference as the name and the locator of the resource as its value.
 
-SF_SUMMARY
-:    Full path name of the file to which the Task Runner links the "Summary" navigation tab.
-
 SF_RESULTS
 :    Full path name of the file to which the wrapper should write the results of the task.
 
@@ -377,7 +374,7 @@ Example Ant wrapper:
     <target name="run">
         <!-- run build -->
         <ant dir="${SOURCE_ROOT}" target="jar"
-            output="${SF_SUMMARY}" inheritAll="false"/>
+            output="${SF_REPORT_ROOT}/build_log.txt" inheritAll="false"/>
         <!-- make product dir -->
         <mkdir dir="${SF_PRODUCT_ROOT}"/>
         <!-- move output files to product dir -->
@@ -388,6 +385,7 @@ Example Ant wrapper:
         <echo file="${SF_RESULTS}">
 result=ok
 summary=build successful
+report=${SF_REPORT_ROOT}/build_log.txt
 output.JAR_DIR.locator=${SF_PRODUCT_ROOT}
         </echo>
     </target>
@@ -427,7 +425,7 @@ Below is an elaborate example showing how to run unit tests in the MSTest tool a
     </nant>
 
     <!-- Generate a report in HTML format. -->
-    <style style="${xsldir}\MsTestReport2008.xsl" in="${trxfile}" out="${SF_SUMMARY}"/>
+    <style style="${xsldir}\MsTestReport2008.xsl" in="${trxfile}" out="${SF_REPORT_ROOT}\report.html"/>
 
     <!-- Extract test result counters. -->
     <foreach item="String" in="${resultcounters}" delim=" " property="counter">

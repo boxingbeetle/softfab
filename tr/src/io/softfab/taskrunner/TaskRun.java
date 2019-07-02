@@ -433,12 +433,6 @@ public abstract class TaskRun {
                 new File(outputDir, resultFileName).getAbsolutePath()
                 );
         }
-        final String frameworkSummary = runInfo.task.getFrameworkSummary();
-        final String summaryFile =
-              frameworkSummary.length() > 0
-            ? new File(outputDir, frameworkSummary).getAbsolutePath()
-            : "";
-        ret.put("SF_SUMMARY", summaryFile);
         ret.put("SF_CC_URL",
             config.controlCenter.serverBaseURL.toExternalForm());
         ret.putAll(config.parameters);

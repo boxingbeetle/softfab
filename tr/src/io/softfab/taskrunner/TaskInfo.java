@@ -34,18 +34,4 @@ public class TaskInfo implements DataObject {
         // likely to cause more trouble than it solves.
     }
 
-    /**
-     * Get file name of framework specific report file.
-     */
-    public final String getFrameworkSummary() {
-        String summary = parameters.get("sf.summary");
-        if (summary == null) {
-            // Control Center version 2.13.0 and later will always send
-            // the "sf.summary" parameter, but older versions only send it
-            // if the user has overridden the parameter.
-            summary = "log.txt";
-        }
-        return summary;
-    }
-
 }
