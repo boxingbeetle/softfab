@@ -323,11 +323,11 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
     @property
     def reports(self) -> Iterator[Tuple[str, str]]:
         """The reports that currently exist for this task.
-        Each report is a pair consisting of name (label) and URL.
+        Each report is a pair consisting of file name and full URL.
         """
         url = self.getURL()
         if url is not None:
-            yield 'Wrapper', urljoin(url, 'wrapper_log.txt')
+            yield 'wrapper_log.txt', urljoin(url, 'wrapper_log.txt')
 
     @cachedProperty
     def timeoutMins(self) -> Optional[int]:

@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from collections import OrderedDict
+from os.path import splitext
 from typing import Dict, Iterable, Iterator, Optional, Sequence, cast
 
 from softfab.FabPage import FabPage
@@ -42,6 +43,12 @@ REPORT_SANDBOX = ' '.join('allow-' + perm for perm in (
 This probably needs to be tweaked over time; please submit an issue
 if you find this too restrictive or not restrictive enough.
 """
+
+def presentLabel(label: str) -> str:
+    """Compute a good-looking tab label from the technical label.
+    """
+    root, ext_ = splitext(label)
+    return root.replace('_', ' ').replace('-', ' ').title()
 
 class Task_GET(FabPage['Task_GET.Processor', 'Task_GET.Arguments']):
     icon = 'IconReport'
@@ -105,7 +112,7 @@ class Task_GET(FabPage['Task_GET.Processor', 'Task_GET.Arguments']):
             xhtml.div(class_='active' if active == label else None)[
                 pageLink(self.name,
                             proc.args.override(report=label.casefold())
-                            )[ label ]
+                            )[ presentLabel(label) ]
                 ]
             for label in reports
             )]
