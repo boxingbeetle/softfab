@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -49,6 +50,11 @@ public class Result {
     @see #getSummary
     */
     private String summary;
+
+    /**
+    @see #getReports
+    */
+    private Map<Integer, String> reports;
 
     /**
     @see #getOutputLocators
@@ -111,6 +117,7 @@ public class Result {
         checkResultCode(extractCode);
         this.code = code;
         this.summary = summary;
+        this.reports = new TreeMap<>();
         this.locators = new HashMap<>();
         this.extracted = new HashMap<>();
         this.extractCode = extractCode;
@@ -156,6 +163,7 @@ public class Result {
         }
 
         // Parse properties.
+        reports = new TreeMap<>();
         locators = new HashMap<>();
         extracted = new HashMap<>();
         for (final Map.Entry<String, String> entry : resultProp.entrySet()) {
@@ -175,6 +183,20 @@ public class Result {
             // We don't remove "data." here, because it would have to be added
             // later anyway when posting the data to the Control Center
             extracted.put(name, value);
+        } else if (name == "report") {
+            // Just "report" is a shortcut for "report.0".
+            reports.put(0, value);
+        } else if (name.startsWith("report.")) {
+            final String priorityStr = name.substring(7);
+            int priority;
+            try {
+                priority = Integer.parseUnsignedInt(priorityStr);
+            } catch (NumberFormatException e) {
+                throw new TaskRunException(
+                    "Invalid report priority: \"" + value + "\""
+                    );
+            }
+            reports.put(priority, value);
         } else {
             final Matcher matcher = OUTPUT_PATTERN.matcher(name);
             if (matcher.matches()) {
@@ -218,6 +240,14 @@ public class Result {
     */
     public String getSummary() {
         return summary;
+    }
+
+    /**
+    Get the reports produced by the task.
+    @return A (possibly empty) sequence of report file paths.
+    */
+    public Iterable<String> getReports() {
+        return reports.values();
     }
 
     /**
