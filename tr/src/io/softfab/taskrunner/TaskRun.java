@@ -373,21 +373,10 @@ public abstract class TaskRun {
     throws TaskRunException {
         final TaskRunnerConfig config = ConfigFactory.getConfig();
         final Map<String, Object> ret = new HashMap<>();
-        // TODO: In the future, storage pools will be used. Then instead of
-        //       storing the URL, it will be queried from the CC using
-        //       the task run identification (job, task, run).
         ret.put("SF_REPORT_ROOT", outputDir.getAbsolutePath());
-        ret.put("SF_REPORT_URL",
-            config.output.reportBaseURL.toExternalForm() +
-            runInfo.run.getJobPath() + "/" + runInfo.run.taskId + "/"
-            );
         ret.put("SF_PRODUCT_ROOT",
             new File(config.output.productBaseDir,
                 runInfo.run.getJobPath() + "/").getAbsolutePath()
-            );
-        ret.put("SF_PRODUCT_URL",
-            config.output.productBaseURL.toExternalForm() +
-            runInfo.run.getJobPath() + "/"
             );
         ret.put("SF_WRAPPER_ROOT",
             wrapperFile.getParentFile().getAbsolutePath());

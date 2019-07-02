@@ -21,14 +21,8 @@ A set of variables is defined that can be used by the wrapper to execute the tas
 SF_REPORT_ROOT
 :    Absolute directory path of the directory where the report for this task is be written. You can also use this directory as a private workspace for this task run. This directory is created by the Task Runner before the wrapper is invoked.
 
-SF_REPORT_URL
-:    URL under which the directory in `SF_REPORT_ROOT` is available.
-
 SF_PRODUCT_ROOT
 :    Directory reserved for products created by this task run. Since a task run is not required to produce any (file-based) outputs, this directory is not created automatically. This directory will be a unique-per-job subdirectory of the directory specified with `productBaseDir` in the Task Runner configuration (`config.xml`).
-
-SF_PRODUCT_URL
-:    URL under which the directory in `SF_PRODUCT_ROOT` is available.
 
 SF_WRAPPER_ROOT
 :    Absolute directory path of the directory where the executed wrapper script is located. Support files for the wrapper, such as report templates and tool configuration files, can be stored here.
@@ -273,7 +267,7 @@ Example code for generating a results file:<br/>
 all: image
 	echo "result=ok" > ${SF_RESULTS}
 	echo "summary=build successful" >> ${SF_RESULTS}
-	echo "output.image.locator=${SF_PRODUCT_URL}/image/" >> ${SF_RESULTS}
+	echo "output.image.locator=${SF_PRODUCT_ROOT}/image/" >> ${SF_RESULTS}
 ```
 
 Dictionary values of the variables are represented in the same way as for [shell scripts](#dict). Single level lists are represented as strings with the list elements space-separated. More complex structures containing lists are currently not supported.
@@ -299,7 +293,7 @@ if (open(RESULT, '>', $::SF_RESULTS)) {
     print RESULT <<"RESDATA";
 result=ok
 summary=task successful
-output.image.locator=$::SF_PRODUCT_URL/image/
+output.image.locator=$::SF_PRODUCT_ROOT/image/
 RESDATA
     close(RESULT);
 } else {
@@ -324,7 +318,7 @@ Example code for generating a results.properties file:
 resultsFile = file(SF_RESULTS, 'w')
 print('result=ok', file=resultsFile)
 print('summary=task successful', file=resultsFile)
-print('output.TESTREPORT.locator=' + SF_PRODUCT_URL + '/testreport.html', file=resultsFile)
+print('output.TESTREPORT.locator=' + SF_PRODUCT_ROOT + '/testreport.html', file=resultsFile)
 resultsFile.close()
 ```
 
@@ -346,7 +340,7 @@ Example code for generating a results.properties file:
 out = File.new($SF_RESULTS, 'w')
 out << "result=ok\n"
 out << "summary=task successful\n"
-out << "output.image.locator=#{$SF_PRODUCT_URL}/image/\n"
+out << "output.image.locator=#{$SF_PRODUCT_ROOT}/image/\n"
 out.close
 ```
 
@@ -397,13 +391,13 @@ Example Ant wrapper:
         <echo file="${SF_RESULTS}">
 result=ok
 summary=build successful
-output.JAR_URL.locator=${SF_PRODUCT_URL}
+output.JAR_DIR.locator=${SF_PRODUCT_ROOT}
         </echo>
     </target>
 </project>
 ```
 
-In this example, `SOURCE_ROOT` is an input product that contains the directory path of the source tree to build. The build is done by running Ant on the source tree with the `"jar"` target. The build creates a number of JAR files in the directory `generated/bin` under the source tree. These JARs are moved to the products directory, so they can be served by the web server. The URL of the JARs on this web server becomes the locator of the `JAR_URL` output product.
+In this example, `SOURCE_ROOT` is an input product that contains the directory path of the source tree to build. The build is done by running Ant on the source tree with the `"jar"` target. The build creates a number of JAR files in the directory `generated/bin` under the source tree. These JARs are moved to the products directory, which could be a directory on the local file system or on a network drive.
 
 ### NAnt <a id="nant"></a>
 
