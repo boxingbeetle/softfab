@@ -114,7 +114,7 @@ class FrameworkEdit_GET(FrameworkEditBase):
             return overrides
 
         def _validateState(self) -> None:
-            # Add 'sf.summary' and put parameters in the right order.
+            # Put parameters in the right order.
             validateParamState(self, paramTop)
 
 class FrameworkEdit_POST(FrameworkEditBase):

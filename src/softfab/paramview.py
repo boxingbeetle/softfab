@@ -1,6 +1,5 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from enum import Enum
 from typing import (
     TYPE_CHECKING, Dict, Iterable, Iterator, Mapping, Optional, Set, Tuple,
     cast
@@ -9,7 +8,7 @@ import re
 
 from softfab.Page import PageProcessor, PresentableError
 from softfab.formlib import RadioTable, checkBox, hiddenInput, textInput
-from softfab.pageargs import BoolArg, DictArg, EnumArg, PageArgs, StrArg
+from softfab.pageargs import BoolArg, DictArg, PageArgs, StrArg
 from softfab.paramlib import ParamMixin, specialParameters
 from softfab.taskdeflib import TaskDef
 from softfab.webgui import Table, cell, rowManagerInstanceScript, script
@@ -17,10 +16,6 @@ from softfab.xmlgen import XMLContent, xhtml
 
 reParamName = re.compile(r'^(?:sf\.|[A-Za-z_])[A-Za-z_0-9]*$')
 '''Regular expression which defines valid parameter names.
-'''
-
-SummaryType = Enum('SummaryType', 'INHERIT NONE FILE DIR')
-'''Available ways to provide a report summary.
 '''
 
 class ParamArgsMixin:
@@ -31,12 +26,6 @@ class ParamArgsMixin:
     final = DictArg(BoolArg())
     poverride = DictArg(BoolArg())
 
-    # These are the fields for the user-friendly report summary input.
-    # In validateParamState() we translate this into "sf.summary".
-    summary = EnumArg(SummaryType, SummaryType.INHERIT)
-    summaryfile = StrArg('')
-    summarydir = StrArg('')
-
 class _ParamArgs:
     """Helper class for type checking."""
     if TYPE_CHECKING:
@@ -44,29 +33,19 @@ class _ParamArgs:
         values = Dict[str, str]()
         final = Dict[str, bool]()
         poverride = Dict[str, bool]()
-        summary = SummaryType.INHERIT
-        summaryfile = ''
-        summarydir = ''
+
+# Note: We have the ability to present certain reserved parameters
+#       in a special way. The only parameter that used this was removed,
+#       but the mechanism going to stay for the time being, under the
+#       assumption we might need it again.
 
 def _namePresentation(name: str) -> str:
-    if name == 'sf.summary':
-        return 'Summary report'
-    else:
-        return name
+    return name
 
-def _valuePresentation(name: str, value: str) -> str:
-    if name == 'sf.summary':
-        return _summaryValuePresentation(value)
-    else:
-        return value
-
-def _summaryValuePresentation(value: str) -> str:
-    if value == '':
-        return 'none'
-    elif value.endswith('/'):
-        return 'directory: ' + value
-    else:
-        return 'file: ' + value
+def _valuePresentation(name: str, # pylint: disable=unused-argument
+                       value: str
+                       ) -> str:
+    return value
 
 class ParamCell(RadioTable):
     style = 'hollow'
@@ -100,7 +79,7 @@ class ParamCell(RadioTable):
 class ParamOverrideTable(Table):
     columns = 'Task', 'Parameter', 'Value'
     hideWhenEmpty = True
-    suppressedParams = 'sf.summary',
+    suppressedParams = ()
 
     def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
         # Sort tasks by name (first element in tuple).
@@ -138,48 +117,6 @@ class ParamOverrideTable(Table):
                      ) -> XMLContent:
         raise NotImplementedError
 
-class SummaryParamCell(RadioTable):
-    style = 'hollow summaryparam'
-    columns = None, None
-
-    def __init__(self, key: str, value: str, parentValue: str):
-        RadioTable.__init__(self)
-        self.__key = key
-        self.__value = value
-        self.__parentValue = parentValue
-        self.name = 'summary'
-
-    def getActive(self, **kwargs: object) -> SummaryType:
-        args = cast(_ParamArgs, kwargs['formArgs'])
-        if not args.poverride.get(self.__key, False):
-            return SummaryType.INHERIT
-        elif self.__value == '':
-            return SummaryType.NONE
-        elif self.__value.endswith('/'):
-            return SummaryType.DIR
-        else:
-            return SummaryType.FILE
-
-    def iterOptions(self, **kwargs: object
-                    ) -> Iterator[Tuple[SummaryType, str, XMLContent]]:
-        if self.__value.endswith('/'):
-            fileValue = ''
-            dirValue = self.__value
-        else:
-            fileValue = self.__value
-            dirValue = ''
-        yield SummaryType.INHERIT, '\u00A0Inherit\u00A0', \
-            _summaryValuePresentation(self.__parentValue)
-        yield SummaryType.NONE, '\u00A0None\u00A0', '(no Report Summary tab)'
-        yield SummaryType.FILE, '\u00A0File\u00A0', textInput(
-            name='summaryfile', value=fileValue, size=72,
-            onchange="form['%s'][2].checked=true" % self.name
-            )
-        yield SummaryType.DIR, '\u00A0Directory\u00A0', textInput(
-            name='summarydir', value=dirValue, size=72,
-            onchange="form['%s'][3].checked=true" % self.name
-            )
-
 class ParamDefTable(Table):
     columns = 'Parameter', 'Value', 'Final'
     bodyId = 'paramList'
@@ -206,13 +143,11 @@ function initRowIndices(node, index) {
             value = args.values.get(index, '')
             final = args.final.get(index, False)
             if name in parentParams:
-                valueWidget = SummaryParamCell if name == 'sf.summary' \
-                                               else ParamCell
                 nameField = (
                     _namePresentation(name),
                     hiddenInput(name='params.' + index, value=name)
                     ) # type: XMLContent
-                valueField = valueWidget(
+                valueField = ParamCell(
                     index, value, parentParams[name]
                     ).present(**kwargs)
                 # The value text box for new parameters that will follow the
@@ -304,16 +239,6 @@ def initParamArgs(element: ParamMixin) -> Mapping[str, object]:
     finalParams = element.getFinalSelf()
     names = (set(overriddenParams) | finalParams) - specialParameters
 
-    summaryVal = overriddenParams.get('sf.summary')
-    if summaryVal is None:
-        summaryType = SummaryType.INHERIT
-    elif summaryVal == '':
-        summaryType = SummaryType.NONE
-    elif summaryVal.endswith('/'):
-        summaryType = SummaryType.DIR
-    else:
-        summaryType = SummaryType.FILE
-
     # We rely on validateParamState to put everything in the right order.
     return dict(
         params = { str(index): name for index, name in enumerate(names) },
@@ -323,9 +248,6 @@ def initParamArgs(element: ParamMixin) -> Mapping[str, object]:
             for index, name in enumerate(names) },
         poverride = { str(index): name in overriddenParams
             for index, name in enumerate(names) },
-        summary = summaryType,
-        summaryfile = summaryVal if summaryType is SummaryType.FILE else '',
-        summarydir = summaryVal if summaryType is SummaryType.DIR else '',
         )
 
 def checkParamState(args: ParamArgsMixin, parent: ParamMixin) -> None:
@@ -377,21 +299,6 @@ def validateParamState(proc: PageProcessor, parent: ParamMixin) -> None:
             if name in parentParams and not args.poverride.get(indexStr):
                 value = None # inherited
             data[name] = (value, final)
-
-    if 'sf.summary' in data:
-        summaryType = args.summary
-        if summaryType is SummaryType.NONE:
-            summary = '' # type: Optional[str]
-        elif summaryType is SummaryType.FILE:
-            summary = args.summaryfile
-        elif summaryType is SummaryType.DIR:
-            summary = args.summarydir.rstrip('/') + '/'
-        elif summaryType is SummaryType.INHERIT:
-            summary = None
-        else:
-            assert False, summaryType
-        final = data['sf.summary'][1]
-        data['sf.summary'] = ( summary, final )
 
     # Create new ordering:
     # - first parent params, then new params;

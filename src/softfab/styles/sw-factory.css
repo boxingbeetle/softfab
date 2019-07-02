@@ -477,10 +477,6 @@ table.graphbarnoval > tbody > tr,
 table.graphbarnoval > tbody > tr > td {
 	background: #E8C0C0;
 }
-table.summaryparam > tbody > tr > td {
-	vertical-align: bottom;
-	height: 1.75em;
-}
 
 div.graph {
 	border: 1px solid #C0C0C0;

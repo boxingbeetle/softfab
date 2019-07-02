@@ -134,7 +134,6 @@ class _ParamTop(ParamMixin, metaclass=SingletonMeta):
     def __init__(self) -> None:
         ParamMixin.__init__(self)
         self._properties = {} # type: Mapping[str, str]
-        self.addParameter('sf.summary', 'log.txt', False)
 
     def getParameter(self,
                      name: str,

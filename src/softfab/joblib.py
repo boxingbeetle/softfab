@@ -339,9 +339,6 @@ class Task(
         run = self.getLatestRun()
         url = run.getURL()
         if url is not None:
-            summary = self.getParameter('sf.summary')
-            if summary:
-                yield 'Main', urljoin(url, summary)
             yield 'Wrapper', urljoin(url, 'wrapper_log.txt')
 
     def assign(self, taskRunner: TaskRunner) -> Optional[TaskRun]:
