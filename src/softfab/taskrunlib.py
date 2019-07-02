@@ -334,7 +334,14 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
         """
         url = self.getURL()
         if url is not None:
-            for report in self.__reports:
+            reports = list(self.__reports)
+            if not reports:
+                # COMPAT: Backwards compatibility with reports on Factory PC.
+                summary = self.getTask().getParameter('sf.summary')
+                if summary:
+                    reports.append(summary)
+                reports.append('wrapper_log.txt')
+            for report in reports:
                 yield report, urljoin(url, report)
 
     @cachedProperty
