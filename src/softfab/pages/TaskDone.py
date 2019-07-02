@@ -1,17 +1,21 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from typing import Mapping, cast
 import logging
 
 from softfab.ControlPage import ControlPage
 from softfab.Page import InvalidRequest, PageProcessor
 from softfab.authentication import TokenAuthPage
 from softfab.joblib import jobDB
-from softfab.pageargs import DictArg, EnumArg, PageArgs, StrArg
+from softfab.pageargs import (
+    DictArg, DictArgInstance, EnumArg, PageArgs, StrArg
+)
+from softfab.request import Request
 from softfab.resourcelib import runnerFromToken
 from softfab.response import Response
 from softfab.resultcode import ResultCode
 from softfab.resultlib import putData
-from softfab.shadowlib import shadowDB
+from softfab.shadowlib import ExtractionRun, shadowDB
 from softfab.taskrunlib import defaultSummaries
 from softfab.tokens import TokenRole, TokenUser
 from softfab.userlib import User, checkPrivilege
@@ -34,7 +38,10 @@ class TaskDone_POST(ControlPage['TaskDone_POST.Arguments',
 
     class Processor(PageProcessor['TaskDone_POST.Arguments']):
 
-        def process(self, req, user):
+        def process(self,
+                    req: Request['TaskDone_POST.Arguments'],
+                    user: User
+                    ) -> None:
             # Verify arguments.
             try:
                 result = req.args.result
@@ -43,7 +50,7 @@ class TaskDone_POST(ControlPage['TaskDone_POST.Arguments',
                         'Result code "%s" is for internal use only' % result
                         )
                 summary = req.args.summary
-                outputs = req.args.output
+                outputs = cast(Mapping[str, str], req.args.output)
 
                 # Find Task Runner.
                 assert isinstance(user, TokenUser), user
@@ -82,7 +89,7 @@ class TaskDone_POST(ControlPage['TaskDone_POST.Arguments',
                         raise InvalidRequest(
                             'No task "%s" in job "%s"' % (taskName, jobId)
                             )
-                    runId = task['run']
+                    runId = cast(str, task['run'])
                     if runningTask.getId() != runId:
                         raise InvalidRequest(
                             'Task Runner "%s" is running task %s '
@@ -97,13 +104,15 @@ class TaskDone_POST(ControlPage['TaskDone_POST.Arguments',
                             )
 
                     try:
-                        extResult = req.args.extraction['result']
+                        extResultStr = cast(str, cast(
+                            DictArgInstance[str], req.args.extraction
+                            )['result'])
                     except KeyError:
                         raise InvalidRequest(
                             'Missing extraction result code'
                             )
                     try:
-                        extResult = ResultCode.__members__[extResult.upper()]
+                        extResult = ResultCode[extResultStr.upper()]
                         if extResult not in defaultSummaries:
                             raise ValueError('Internal-only result code')
                     except ValueError as ex:
@@ -130,11 +139,12 @@ class TaskDone_POST(ControlPage['TaskDone_POST.Arguments',
                         raise InvalidRequest(
                             'Shadow run "%s" does not exist' % shadowId
                             )
+                    assert isinstance(shadowRun, ExtractionRun), shadowRun
                     taskRun = shadowRun.taskRun
                     taskName = taskRun.getName()
                     runId = taskRun.getId()
 
-                extracted = req.args.data
+                extracted = cast(Mapping[str, str], req.args.data)
 
             except InvalidRequest as ex:
                 logging.warning('Invalid TaskDone request: %s', ex)
