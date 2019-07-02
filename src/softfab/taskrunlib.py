@@ -1,7 +1,8 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from typing import (
-    TYPE_CHECKING, Dict, Iterator, List, Mapping, Optional, Tuple, cast
+    TYPE_CHECKING, Dict, Iterable, Iterator, List, Mapping, Optional, Tuple,
+    cast
 )
 from urllib.parse import urljoin
 import logging
@@ -73,6 +74,7 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
         if 'state' not in self._properties:
             # Initial state.
             self._properties['state'] = 'waiting'
+        self.__reports = [] # type: List[str]
         self.__reserved = {} # type: Dict[str, str]
         self.__reasonForWaiting = None # type: Optional[ReasonForWaiting]
 
@@ -149,6 +151,9 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
             return self.__jobId
         else:
             return self.__job.getId()
+
+    def _addReport(self, attributes: Mapping[str, str]) -> None:
+        self.__reports.append(attributes['name'])
 
     def _addResource(self, attributes: Mapping[str, str]) -> None:
         self.__reserved[attributes['ref']] = attributes['id']
@@ -255,6 +260,8 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
             return self.__task.getName()
 
     def _getContent(self) -> XMLContent:
+        for report in self.__reports:
+            yield xml.report(name = report)
         for ref, resId in self.__reserved.items():
             yield xml.resource(ref = ref, id = resId)
         yield xml.task(name = self.getName(), job = self.__getJobId())
@@ -327,7 +334,8 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
         """
         url = self.getURL()
         if url is not None:
-            yield 'wrapper_log.txt', urljoin(url, 'wrapper_log.txt')
+            for report in self.__reports:
+                yield report, urljoin(url, report)
 
     @cachedProperty
     def timeoutMins(self) -> Optional[int]:
@@ -533,6 +541,7 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
     def done(self,
              result: Optional[ResultCode],
              summary: Optional[str],
+             reports: Iterable[str],
              outputs: Mapping[str, str]
              ) -> None:
         task = self.getTask()
@@ -559,6 +568,8 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
             result = ResultCode.ERROR
 
         self.__setState(result, 'done', summary, outputs)
+
+        self.__reports += reports
 
         # TODO: Mark as freed, but remember which resources were used.
         #       Maybe do this when we start modeling Task Runners as resources.
@@ -607,7 +618,9 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
         Used when a Task Runner is not behaving like it should, for example
         the Task Runner is lost.
         '''
-        self.getJob().taskDone(self.getName(), ResultCode.ERROR, message, {})
+        self.getJob().taskDone(
+            self.getName(), ResultCode.ERROR, message, (), {}
+            )
 
     def setResult(self,
                   result: Optional[ResultCode],

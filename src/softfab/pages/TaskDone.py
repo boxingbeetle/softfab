@@ -8,7 +8,7 @@ from softfab.Page import InvalidRequest, PageProcessor
 from softfab.authentication import TokenAuthPage
 from softfab.joblib import jobDB
 from softfab.pageargs import (
-    DictArg, DictArgInstance, EnumArg, PageArgs, StrArg
+    DictArg, DictArgInstance, EnumArg, ListArg, PageArgs, StrArg
 )
 from softfab.request import Request
 from softfab.resourcelib import runnerFromToken
@@ -29,6 +29,7 @@ class TaskDone_POST(ControlPage['TaskDone_POST.Arguments',
     class Arguments(PageArgs):
         result = EnumArg(ResultCode, None)
         summary = StrArg(None)
+        report = ListArg()
         id = StrArg(None)
         name = StrArg(None)
         output = DictArg(StrArg())
@@ -50,6 +51,7 @@ class TaskDone_POST(ControlPage['TaskDone_POST.Arguments',
                         'Result code "%s" is for internal use only' % result
                         )
                 summary = req.args.summary
+                reports = req.args.report
                 outputs = cast(Mapping[str, str], req.args.output)
 
                 # Find Task Runner.
@@ -98,6 +100,10 @@ class TaskDone_POST(ControlPage['TaskDone_POST.Arguments',
                             )
                 else:
                     # Shadow run.
+                    if reports:
+                        raise InvalidRequest(
+                            'Defining reports in extraction is not supported'
+                            )
                     if outputs:
                         raise InvalidRequest(
                             'Defining outputs in extraction is not supported'
@@ -154,7 +160,7 @@ class TaskDone_POST(ControlPage['TaskDone_POST.Arguments',
             if extracted:
                 putData(taskName, runId, extracted)
             if shadowId is None:
-                job.taskDone(taskName, result, summary, outputs)
+                job.taskDone(taskName, result, summary, reports, outputs)
             else:
                 if extResult is not ResultCode.ERROR:
                     taskRun.setResult(result, summary)

@@ -401,9 +401,10 @@ class Task(
     def done(self,
              result: Optional[ResultCode],
              summary: Optional[str],
+             reports: Iterable[str],
              outputs: Mapping[str, str]
              ) -> None:
-        self.getLatestRun().done(result, summary, outputs)
+        self.getLatestRun().done(result, summary, reports, outputs)
 
     def inspectDone(self, result: ResultCode, summary: Optional[str]) -> None:
         self.getLatestRun().inspectDone(result, summary)
@@ -869,6 +870,7 @@ class Job(TaskRunnerSet, TaskSet[Task], XMLTag, DatabaseElem):
                  name: str,
                  result: Optional[ResultCode],
                  summary: Optional[str],
+                 reports: Iterable[str],
                  outputs: Mapping[str, str]
                  ) -> None:
         """Marks a task as done and stores the result.
@@ -876,7 +878,7 @@ class Job(TaskRunnerSet, TaskSet[Task], XMLTag, DatabaseElem):
         if not self.isExecutionFinished():
             self.__lockNotify()
             try:
-                self._tasks[name].done(result, summary, outputs)
+                self._tasks[name].done(result, summary, reports, outputs)
             finally:
                 self.__unlockNotify()
 
