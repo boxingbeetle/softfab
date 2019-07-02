@@ -382,7 +382,6 @@ public abstract class TaskRun {
             wrapperFile.getParentFile().getAbsolutePath());
         ret.put("SF_JOB_ID", runInfo.run.jobId);
         ret.put("SF_TASK_ID", runInfo.run.taskId);
-        ret.put("SF_RUN_ID", runInfo.run.runId);
         ret.put("SF_TARGET", runInfo.task.target);
         ret.put("SF_INPUTS", runInfo.inputs.keySet());
         final Map<String, Map<String, Map<String, String>>> combined = new HashMap<>();

@@ -36,9 +36,6 @@ SF_JOB_ID
 SF_TASK_ID
 :    Task ID (name) of the task this task run belongs to.
 
-SF_RUN_ID
-:    Run ID used to identify an individual run of the same task. Currently it is always "0".
-
 SF_TARGET
 :    Name of the target for which this task is executing.
 
