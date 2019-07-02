@@ -9,12 +9,14 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.zip.GZIPOutputStream;
 
 import io.softfab.taskrunner.config.ConfigFactory;
 import io.softfab.taskrunner.config.ControlCenterConfig;
@@ -299,9 +301,40 @@ implements Runnable {
 
     }
 
-    public void uploadArtifact(Path artifact)
+    public void uploadArtifact(RunInfo runInfo, Path artifact)
     throws IOException, PermanentRequestFailure {
-        throw new IOException("not implemented");
+        // Construct URL.
+        final URL url;
+        try {
+            url = new URL(
+                serverBaseURL,
+                runInfo.getArtifactPath() + "/" + artifact.getFileName() + ".gz"
+                );
+        } catch (MalformedURLException e) {
+            throw new PermanentRequestFailure(
+                "Artifact URL is invalid: " + e.getMessage(), e
+                );
+        }
+
+        // Initiate the connection.
+        // Note: It is not documented exactly what happens in openConnection,
+        //       so we don't know whether to treat it like a transient or
+        //       permanent error. We treat it as transient.
+        final HttpURLConnection connection =
+            (HttpURLConnection)url.openConnection();
+        connection.setRequestMethod("PUT");
+        // Pass token credentials using HTTP Basic authentication.
+        connection.setRequestProperty("Authorization", authorization);
+        connection.setDoOutput(true);
+        connection.setDoInput(true);
+        final OutputStream output = connection.getOutputStream();
+        final GZIPOutputStream gzipOutput = new GZIPOutputStream(output);
+        Files.copy(artifact, gzipOutput);
+        gzipOutput.close();
+        output.flush();
+        output.close();
+
+        handleHTTPResponse(connection);
     }
 
     /**

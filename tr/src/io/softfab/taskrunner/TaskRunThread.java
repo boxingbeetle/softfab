@@ -239,7 +239,9 @@ final class TaskRunThread implements Runnable {
             int tryCount;
             for (tryCount = 0; tryCount < 3; tryCount++) {
                 try {
-                    ControlCenter.INSTANCE.uploadArtifact(artifact);
+                    ControlCenter.INSTANCE.uploadArtifact(
+                        runInfo.run, artifact
+                        );
                     return;
                 } catch (IOException e) {
                     log.warning(

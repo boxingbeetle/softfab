@@ -26,6 +26,7 @@ public class RunInfo implements DataObject {
 
     // Derived fields:
     private String jobPath; // NOPMD
+    private String artifactPath; // NOPMD
 
     public void verify() {
         // This data is provided by the Control Center; validating it here is
@@ -41,6 +42,20 @@ public class RunInfo implements DataObject {
                 : jobId;
         }
         return jobPath;
+    }
+
+    public String getArtifactPath() {
+        if (artifactPath == null) {
+            final Matcher matcher = JOB_ID.matcher(jobId);
+            if (matcher.matches()) {
+                artifactPath = "jobs/"
+                        + matcher.group(1) + "/" + matcher.group(2) + "/"
+                        + taskId;
+            } else {
+                artifactPath = "ERROR_BAD_JOB_ID_" + jobId;
+            }
+        }
+        return artifactPath;
     }
 
 }
