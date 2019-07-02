@@ -143,7 +143,7 @@ privileges = {
 #    'p/d': (),
 
     # Privileges that are only granted by tokens:
-    # 'tr/*': Non-standard privilege used by Task Runners.
+    'tr/*': (), # Non-standard privilege used by Task Runners.
 
 } # type: Mapping[str, Sequence[str]]
 
@@ -385,7 +385,7 @@ class SuperUser(User):
         return None
 
     def hasPrivilege(self, priv: str) -> bool:
-        return bool(privileges.get(priv))
+        return bool(privileges[priv])
 
 class AnonGuestUser(User):
     '''Anonymous user who has guest privileges.
