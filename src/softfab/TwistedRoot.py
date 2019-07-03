@@ -16,6 +16,7 @@ from twisted.web.http import Request as TwistedRequest
 from twisted.web.resource import Resource
 import importlib_resources
 
+from softfab import static
 from softfab.Page import FabResource, PageProcessor, Responder
 from softfab.SplashPage import SplashPage, startupMessages
 from softfab.StyleResources import styleRoot
@@ -209,6 +210,9 @@ class PageLoader:
         self.root.putChild(b'jobs', createArtifactRoot(
             dbDir + '/artifacts/jobs', self.root.anonOperator
             ))
+        self.root.putChild(b'taskrunner.jar', StaticResource(
+            'taskrunner.jar', 'application/java-archive'
+            ))
         pagesPackage = 'softfab.pages'
         for fileName in importlib_resources.contents(pagesPackage):
             moduleName = getmodulename(fileName)
@@ -264,6 +268,21 @@ class ResourceNotFound(FabResource[FabResource.Arguments, PageProcessor]):
         # No processing errors can happen because we use the default processor
         # which does nothing.
         assert False, ex
+
+class StaticResource(Resource):
+    """A resource that is included inside the `softfab.static` module.
+    """
+
+    def __init__(self, fileName: str, contentType: str):
+        super().__init__()
+        self.fileName = fileName
+        self.contentType = contentType.encode()
+
+    def render_GET(self, request: TwistedRequest) -> bytes:
+        data = importlib_resources.read_binary(static, self.fileName)
+        request.setHeader(b'Content-Type', self.contentType)
+        request.setHeader(b'Content-Length', str(len(data)).encode())
+        return data
 
 # Twisted.web paths are bytes.
 stylePrefix = styleRoot.urlPrefix.encode()

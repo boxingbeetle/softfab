@@ -191,6 +191,11 @@ class ResourceIndex_GET(FabPage['ResourceIndex_GET.Processor',
             docLink('/start/user_manual/#resources')[ 'User Manual' ],
             '.'
             ]
+        yield xhtml.p[
+            'Download the ',
+            xhtml.a(href='taskrunner.jar')['Task Runner JAR'],
+            '.'
+            ]
 
 class PostArgs(ResourceIndex_GET.Arguments):
     resource = StrArg()
