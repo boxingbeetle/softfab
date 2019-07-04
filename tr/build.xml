@@ -59,7 +59,9 @@
             private="true"
             windowtitle="SoftFab Task Runner"
             source="8"
-        />
+        >
+            <arg value="-html5"/>
+        </javadoc>
     </target>
 
 </project>
