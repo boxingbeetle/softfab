@@ -456,5 +456,5 @@ class GzippedArtifact(Resource):
         return b'Artifact stored\n'
 
 def createArtifactRoot(baseDir: str, anonOperator: bool) -> IResource:
-    path = FilePath(baseDir, alwaysCreate=True)
+    path = FilePath(baseDir)
     return ArtifactAuthWrapper(path, anonOperator)
