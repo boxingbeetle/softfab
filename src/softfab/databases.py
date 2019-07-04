@@ -5,8 +5,8 @@ from typing import Iterator
 
 from softfab import (
     configlib, databaselib, frameworklib, joblib, productdeflib, productlib,
-    projectlib, resourcelib, restypelib, schedulelib, shadowlib, storagelib,
-    taskdeflib, taskrunlib, tokens, userlib
+    projectlib, resourcelib, restypelib, schedulelib, shadowlib, taskdeflib,
+    taskrunlib, tokens, userlib
 )
 
 
@@ -20,7 +20,6 @@ def iterDatabases() -> Iterator[databaselib.Database]:
     yield productdeflib.productDefDB
     yield frameworklib.frameworkDB
     yield taskdeflib.taskDefDB
-    yield storagelib.storageDB
     yield shadowlib.shadowDB
     yield resourcelib.resourceDB
     yield productlib.productDB
@@ -43,7 +42,6 @@ def reloadDatabases() -> None:
     reload(tokens)
     reload(userlib)
     reload(restypelib)
-    reload(storagelib)
     reload(productdeflib)
     reload(frameworklib)
     reload(taskdeflib)
