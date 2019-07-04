@@ -3,11 +3,14 @@
 from gzip import GzipFile
 from mimetypes import guess_type
 from os import fsync, replace
-from typing import cast
+from typing import IO, cast
+import logging
 
+from twisted.internet.interfaces import IPullProducer
 from twisted.python.filepath import FilePath, InsecurePath
 from twisted.web.http import Request as TwistedRequest
 from twisted.web.resource import IResource, Resource
+from twisted.web.server import NOT_DONE_YET
 from zope.interface import implementer
 
 from softfab.joblib import Job, jobDB
@@ -360,6 +363,50 @@ class TaskResource(FactoryResource):
     def renderIndex(self, request: TwistedRequest) -> bytes:
         return b'Listing task subresources is not implemented yet'
 
+@implementer(IPullProducer)
+class FileProducer:
+    blockSize = 16384
+
+    @classmethod
+    def writeFile(cls,
+                  path: FilePath,
+                  request: TwistedRequest
+                  ) -> 'FileProducer':
+        inp = path.open()
+        producer = cls(inp, request)
+        request.registerProducer(producer, False)
+        return producer
+
+    def __init__(self, inp: IO[bytes], request: TwistedRequest):
+        self.inp = inp
+        self.request = request
+
+    def resumeProducing(self) -> None:
+        # Read one block of data.
+        inp = self.inp
+        try:
+            data = inp.read(self.blockSize)
+        except OSError as ex:
+            logging.error('Read error serving artifact "%s": %s', inp.name, ex)
+            # We don't have any way to communicate the error to the user
+            # agent, so treat read errors like end-of-file.
+            data = bytes()
+
+        request = self.request
+        if data:
+            request.write(data)
+        else:
+            # End of file.
+            try:
+                inp.close()
+            except OSError:
+                pass
+            request.unregisterProducer()
+            request.finish()
+
+    def stopProducing(self) -> None:
+        pass
+
 class GzippedArtifact(Resource):
     """Single-file artifact stored as gzip file."""
 
@@ -374,7 +421,7 @@ class GzippedArtifact(Resource):
             % request.prepath[-2].decode()
             )
 
-    def render_GET(self, request: TwistedRequest) -> bytes:
+    def render_GET(self, request: TwistedRequest) -> object:
         path = self.path
 
         if self.asIs:
@@ -390,8 +437,8 @@ class GzippedArtifact(Resource):
                 #       In practice though, gzip is accepted universally.
                 request.setHeader(b'Content-Encoding', contentEncoding.encode())
 
-        # TODO: Supply the data using a producer instead of all at once.
-        return path.getContent()
+        FileProducer.writeFile(path, request)
+        return NOT_DONE_YET
 
     def render_PUT(self, request: TwistedRequest) -> bytes:
         path = self.path
