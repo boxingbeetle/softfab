@@ -42,7 +42,7 @@ def getData(taskName: str, runIds: Sequence[str], key: str) \
             with open(valueDir + run) as inp:
                 value = inp.readline()
             yield run, value
-        except IOError:
+        except OSError:
             # Not all runs are guaranteed to have values stored.
             pass
 

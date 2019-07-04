@@ -21,7 +21,7 @@ def _readUInt32(inp: IO[bytes]) -> int:
 
 def getPNGDimensions(inp: IO[bytes]) -> Tuple[int, int]:
     '''Examines a PNG stream and returns the dimensions (x, y) of the image.
-    If there is an error reading the file, IOError is raised.
+    If there is an error reading the file, OSError is raised.
     If there is an error decoding the PNG data, ValueError is raised.
     '''
     # Check signature.

@@ -51,7 +51,7 @@ def _guessSystemTimezone() -> str:
     # Debian stores the timezone in /etc/timezone.
     try:
         lines = open('/etc/timezone').readlines()
-    except IOError:
+    except OSError:
         pass
     else:
         if lines:
@@ -62,7 +62,7 @@ def _guessSystemTimezone() -> str:
     # SUSE and Red Hat configure the timezone using /etc/sysconfig/clock.
     try:
         lines = open('/etc/sysconfig/clock').readlines()
-    except IOError:
+    except OSError:
         pass
     else:
         reTimezone = re.compile(

@@ -22,7 +22,7 @@ from softfab.webgui import Image, ShortcutIcon, StyleSheet, pngIcon, svgIcon
 def _load(fileName: str) -> Optional[bytes]:
     try:
         return read_binary(styles, fileName)
-    except IOError as ex:
+    except OSError as ex:
         logging.error('Error reading style resource "%s": %s', fileName, ex)
         return None
 
