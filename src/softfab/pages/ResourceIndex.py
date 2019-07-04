@@ -165,7 +165,7 @@ class ResourceIndex_GET(FabPage['ResourceIndex_GET.Processor',
     description = 'Resources'
     children = [
         'ResourceNew', 'ResourceEdit', 'TaskRunnerEdit', 'ResourceDelete',
-        'StorageIndex', 'Capabilities', 'TaskRunnerDetails', 'TaskRunnerHistory'
+        'Capabilities', 'TaskRunnerDetails', 'TaskRunnerHistory'
         ]
 
     class Arguments(PageArgs):
