@@ -7,6 +7,8 @@ from typing import IO, cast
 import logging
 
 from twisted.internet.interfaces import IPullProducer
+from twisted.internet.threads import deferToThread
+from twisted.python.failure import Failure
 from twisted.python.filepath import FilePath, InsecurePath
 from twisted.web.http import Request as TwistedRequest
 from twisted.web.resource import IResource, Resource
@@ -440,7 +442,7 @@ class GzippedArtifact(Resource):
         FileProducer.writeFile(path, request)
         return NOT_DONE_YET
 
-    def render_PUT(self, request: TwistedRequest) -> bytes:
+    def render_PUT(self, request: TwistedRequest) -> object:
         path = self.path
         if path.isfile():
             request.setResponseCode(409)
@@ -450,57 +452,82 @@ class GzippedArtifact(Resource):
         # We currently only support upload of already-compressed files.
         assert self.asIs
 
-        # Note: Twisted buffers the entire upload into 'request.content'
-        #       prior to calling our render method.
-        #       There doesn't seem to be a clean way to handle streaming
-        #       uploads in Twisted; we'd have to set site.requestFactory
-        #       to a request implementation that overrides gotLength() or
-        #       handleContentChunk(), both of which are documented as
-        #       "not intended for users".
+        _handleArtifactPUT(request, path)
+        return NOT_DONE_YET
 
-        # Process large files in chunks.
-        # TODO: Return control to the Twisted reactor inbetween chunks.
-        #       Or maybe deferToThread() is a better approach, since that
-        #       also deals with fsync() potentially taking a long time.
-        blockSize = 16384
 
-        # Verify that the uploaded file is a valid gzip file.
-        # This will also catch truncated uploads.
-        content = request.content
-        try:
-            with GzipFile(fileobj=content) as gz:
-                while True:
-                    data = gz.read(blockSize)
-                    if not data:
-                        break
-        except (OSError, EOFError) as ex:
+def _handleArtifactPUT(request: TwistedRequest, path: FilePath) -> None:
+    """Store an uploaded artifact from a PUT request at the given path
+    and complete the request.
+    """
+
+    # Note: Twisted buffers the entire upload into 'request.content'
+    #       prior to calling our render method.
+    #       There doesn't seem to be a clean way to handle streaming
+    #       uploads in Twisted; we'd have to set site.requestFactory
+    #       to a request implementation that overrides gotLength() or
+    #       handleContentChunk(), both of which are documented as
+    #       "not intended for users".
+
+    def done(result: None) -> None: # pylint: disable=unused-argument
+        request.setResponseCode(201)
+        request.setHeader(b'Content-Type', b'text/plain; charset=UTF-8')
+        request.write(b'Artifact stored\n')
+        request.finish()
+
+    def failed(fail: Failure) -> None:
+        ex = fail.value
+        if isinstance(ex, ValueError):
             request.setResponseCode(415)
             request.setHeader(b'Content-Type', b'text/plain; charset=UTF-8')
-            return b'Uploaded data is not a valid gzip file: %s\n' % (
-                str(ex).encode()
-                )
+            request.write(('%s\n' % ex).encode())
+            request.finish()
+        else:
+            request.processingFailed(fail)
+        # Returning None (implicitly) because the error is handled.
+        # Otherwise, it will be logged twice.
 
-        # Copy content.
-        content.seek(0, 0)
-        uploadPath = path.siblingExtension('.part')
-        inp = request.content
-        path.parent().makedirs(ignoreExistingDirectory=True)
-        out = uploadPath.open('wb')
-        try:
+    # Do the actual store in a separate thread, so we don't have to worry
+    # about slow operations hogging the reactor thread.
+    deferToThread(_storeArtifact, request.content, path
+                  ).addCallback(done).addErrback(failed)
+
+def _storeArtifact(content: IO[bytes], path: FilePath) -> None:
+    """Verify and store an artifact from a temporary file.
+    If the file is valid, store it at the given path.
+    If the file is not valid, raise ValueError.
+    """
+
+    # Process large files in chunks.
+    blockSize = 65536
+
+    # Verify that the uploaded file is a valid gzip file.
+    # This will also catch truncated uploads.
+    try:
+        with GzipFile(fileobj=content) as gz:
             while True:
-                data = inp.read(blockSize)
+                data = gz.read(blockSize)
                 if not data:
                     break
-                out.write(data)
-            out.flush()
-            fsync(out.fileno())
-        finally:
-            out.close()
-        replace(uploadPath.path, path.path)
-        path.changed()
+    except (OSError, EOFError) as ex:
+        raise ValueError(
+            'Uploaded data is not a valid gzip file: %s' % ex
+            ) from ex
 
-        request.setResponseCode(201)
-        return b'Artifact stored\n'
+    # Copy content.
+    content.seek(0, 0)
+    uploadPath = path.siblingExtension('.part')
+    path.parent().makedirs(ignoreExistingDirectory=True)
+    with uploadPath.open('wb') as out:
+        while True:
+            data = content.read(blockSize)
+            if not data:
+                break
+            out.write(data)
+        out.flush()
+        fsync(out.fileno())
+    replace(uploadPath.path, path.path)
+    path.changed()
 
 def createArtifactRoot(baseDir: str, anonOperator: bool) -> IResource:
     path = FilePath(baseDir)
