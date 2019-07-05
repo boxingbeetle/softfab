@@ -4,6 +4,7 @@ from gzip import GzipFile
 from mimetypes import guess_type
 from os import fsync, replace
 from typing import Callable, IO, cast
+from zipfile import BadZipFile, ZipFile
 import logging
 
 from twisted.internet.interfaces import IPullProducer
@@ -346,17 +347,20 @@ class TaskResource(FactoryResource):
                         segment: str,
                         request: TwistedRequest
                         ) -> Resource:
-        gzipPath = self.baseDir.child(segment + '.gz')
-        if gzipPath.isfile():
-            return GzippedArtifact(gzipPath, asIs=False)
-
-        if segment.endswith('.gz'):
-            gzipPath = self.baseDir.child(segment)
-            if request.method == b'PUT' or gzipPath.isfile():
-                return GzippedArtifact(gzipPath, asIs=True)
+        for ext, resourceClass in (('.gz', GzippedArtifact),
+                                   ('.zip', ZippedArtifact)):
+            # Serve the archive's contents.
+            path = self.baseDir.child(segment + ext)
+            if path.isfile():
+                return resourceClass(path, asIs=False)
+            # Serve the archive itself.
+            if segment.endswith(ext):
+                path = self.baseDir.child(segment)
+                if request.method == b'PUT' or path.isfile():
+                    return resourceClass(path, asIs=True)
 
         if request.method == b'PUT':
-            return ClientErrorResource('Uploads must use gzip format')
+            return ClientErrorResource('Uploads must use gzip or ZIP format')
         else:
             return NotFoundResource(
                 'No artifact named "%s" exists for this task' % segment
@@ -469,6 +473,60 @@ def _verifyGzip(compressed: IO[bytes]) -> None:
     except (OSError, EOFError) as ex:
         raise ValueError(
             'Uploaded data is not a valid gzip file: %s' % ex
+            ) from ex
+
+class ZippedArtifact(Resource):
+    """Directory of artifacts stored as ZIP file."""
+
+    def __init__(self, path: FilePath, *, asIs: bool):
+        super().__init__()
+        self.path = path
+        self.asIs = asIs
+
+    def getChild(self, path: bytes, request: TwistedRequest) -> Resource:
+        return NotFoundResource('ZIP directory not implemented yet')
+
+    def render_GET(self, request: TwistedRequest) -> object:
+        path = self.path
+
+        if self.asIs:
+            request.setHeader(b'Content-Type', b'application/zip')
+        else:
+            request.setResponseCode(400)
+            request.setHeader(b'Content-Type', b'text/plain; charset=UTF-8')
+            return b'ZIP contents serving not yet implemented\n'
+
+        FileProducer.writeFile(path, request)
+        return NOT_DONE_YET
+
+    def render_PUT(self, request: TwistedRequest) -> bytes:
+        path = self.path
+        if path.isfile():
+            request.setResponseCode(409)
+            request.setHeader(b'Content-Type', b'text/plain; charset=UTF-8')
+            return b'Artifacts cannot be overwritten\n'
+
+        # We currently only support upload of already-compressed files.
+        assert self.asIs
+
+        _handleArtifactPUT(request, _verifyZip, path)
+        return NOT_DONE_YET
+
+def _verifyZip(compressed: IO[bytes]) -> None:
+    """Verify that the uploaded file is a valid ZIP file.
+    This will also catch truncated uploads.
+    Returns nothing if the file is valid, raises ValueError otherwise.
+    """
+    try:
+        with ZipFile(compressed) as zipFile:
+            badFileName = zipFile.testzip()
+            if badFileName is not None:
+                raise ValueError(
+                    'ZIP file entry "%s" is corrupted' % badFileName
+                    )
+    except BadZipFile as ex:
+        raise ValueError(
+            'Uploaded data is not a valid ZIP file: %s' % ex
             ) from ex
 
 _PUT_BLOCK_SIZE = 65536
