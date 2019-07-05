@@ -3,7 +3,7 @@
 from gzip import GzipFile
 from mimetypes import guess_type
 from os import fsync, replace
-from typing import IO, cast
+from typing import Callable, IO, cast
 import logging
 
 from twisted.internet.interfaces import IPullProducer
@@ -452,11 +452,35 @@ class GzippedArtifact(Resource):
         # We currently only support upload of already-compressed files.
         assert self.asIs
 
-        _handleArtifactPUT(request, path)
+        _handleArtifactPUT(request, _verifyGzip, path)
         return NOT_DONE_YET
 
+def _verifyGzip(compressed: IO[bytes]) -> None:
+    """Verify that the uploaded file is a valid gzip file.
+    This will also catch truncated uploads.
+    Returns nothing if the file is valid, raises ValueError otherwise.
+    """
+    try:
+        with GzipFile(fileobj=compressed) as gz:
+            while True:
+                data = gz.read(_PUT_BLOCK_SIZE)
+                if not data:
+                    break
+    except (OSError, EOFError) as ex:
+        raise ValueError(
+            'Uploaded data is not a valid gzip file: %s' % ex
+            ) from ex
 
-def _handleArtifactPUT(request: TwistedRequest, path: FilePath) -> None:
+_PUT_BLOCK_SIZE = 65536
+"""Process files from PUT in chunks of this many bytes.
+Since PUT is handled on a separate thread, the limit is there only
+to avoid hogging memory, not the CPU.
+"""
+
+def _handleArtifactPUT(request: TwistedRequest,
+                       verifier: Callable[[IO[bytes]], None],
+                       path: FilePath
+                       ) -> None:
     """Store an uploaded artifact from a PUT request at the given path
     and complete the request.
     """
@@ -489,30 +513,19 @@ def _handleArtifactPUT(request: TwistedRequest, path: FilePath) -> None:
 
     # Do the actual store in a separate thread, so we don't have to worry
     # about slow operations hogging the reactor thread.
-    deferToThread(_storeArtifact, request.content, path
+    deferToThread(_storeArtifact, request.content, verifier, path
                   ).addCallback(done).addErrback(failed)
 
-def _storeArtifact(content: IO[bytes], path: FilePath) -> None:
+def _storeArtifact(content: IO[bytes],
+                   verifier: Callable[[IO[bytes]], None],
+                   path: FilePath
+                   ) -> None:
     """Verify and store an artifact from a temporary file.
     If the file is valid, store it at the given path.
     If the file is not valid, raise ValueError.
     """
 
-    # Process large files in chunks.
-    blockSize = 65536
-
-    # Verify that the uploaded file is a valid gzip file.
-    # This will also catch truncated uploads.
-    try:
-        with GzipFile(fileobj=content) as gz:
-            while True:
-                data = gz.read(blockSize)
-                if not data:
-                    break
-    except (OSError, EOFError) as ex:
-        raise ValueError(
-            'Uploaded data is not a valid gzip file: %s' % ex
-            ) from ex
+    verifier(content)
 
     # Copy content.
     content.seek(0, 0)
@@ -520,7 +533,7 @@ def _storeArtifact(content: IO[bytes], path: FilePath) -> None:
     path.parent().makedirs(ignoreExistingDirectory=True)
     with uploadPath.open('wb') as out:
         while True:
-            data = content.read(blockSize)
+            data = content.read(_PUT_BLOCK_SIZE)
             if not data:
                 break
             out.write(data)
