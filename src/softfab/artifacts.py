@@ -3,7 +3,7 @@
 from gzip import GzipFile
 from mimetypes import guess_type
 from os import fsync, replace
-from typing import Callable, IO, cast
+from typing import IO, cast
 from zipfile import BadZipFile, ZipFile
 import logging
 
@@ -347,17 +347,19 @@ class TaskResource(FactoryResource):
                         segment: str,
                         request: TwistedRequest
                         ) -> Resource:
-        for ext, resourceClass in (('.gz', GzippedArtifact),
-                                   ('.zip', ZippedArtifact)):
+        for ext, contentClass, plainClass in (
+                ('.gz', GzippedArtifact, PlainGzipArtifact),
+                ('.zip', ZippedArtifact, PlainZipArtifact)
+                ):
             # Serve the archive's contents.
             path = self.baseDir.child(segment + ext)
             if path.isfile():
-                return resourceClass(path, asIs=False)
+                return contentClass(path)
             # Serve the archive itself.
             if segment.endswith(ext):
                 path = self.baseDir.child(segment)
                 if request.method == b'PUT' or path.isfile():
-                    return resourceClass(path, asIs=True)
+                    return plainClass(path)
 
         if request.method == b'PUT':
             return ClientErrorResource('Uploads must use gzip or ZIP format')
@@ -413,151 +415,64 @@ class FileProducer:
     def stopProducing(self) -> None:
         pass
 
-class GzippedArtifact(Resource):
-    """Single-file artifact stored as gzip file."""
+class PlainArtifact(Resource):
+    """Base class for accessing an artifact's archive file directly."""
 
-    def __init__(self, path: FilePath, *, asIs: bool):
+    contentType = b'application/octet-stream'
+
+    putBlockSize = 65536
+    """Process files from PUT in chunks of this many bytes.
+    Since PUT is handled on a separate thread, the limit is there only
+    to avoid hogging memory, not the CPU.
+    """
+
+    def __init__(self, path: FilePath):
         super().__init__()
         self.path = path
-        self.asIs = asIs
 
     def getChild(self, path: bytes, request: TwistedRequest) -> Resource:
-        return NotFoundResource(
-            'Artifact "%s" cannot not contain subitems'
-            % request.prepath[-2].decode()
-            )
+        return NotFoundResource('Cannot access subitems from full archive')
 
     def render_GET(self, request: TwistedRequest) -> object:
-        path = self.path
-
-        if self.asIs:
-            request.setHeader(b'Content-Type', b'application/gzip')
-        else:
-            contentType, contentEncoding = guess_type(path.basename(),
-                                                      strict=False)
-            if contentType is None:
-                contentType = 'application/octet-stream'
-            request.setHeader(b'Content-Type', contentType.encode())
-            if contentEncoding is not None:
-                # TODO: Check for gzip in the Accept-Encoding header.
-                #       In practice though, gzip is accepted universally.
-                request.setHeader(b'Content-Encoding', contentEncoding.encode())
-
-        FileProducer.writeFile(path, request)
+        request.setHeader(b'Content-Type', self.contentType)
+        FileProducer.writeFile(self.path, request)
         return NOT_DONE_YET
 
     def render_PUT(self, request: TwistedRequest) -> object:
         path = self.path
+
         if path.isfile():
             request.setResponseCode(409)
             request.setHeader(b'Content-Type', b'text/plain; charset=UTF-8')
             return b'Artifacts cannot be overwritten\n'
 
-        # We currently only support upload of already-compressed files.
-        assert self.asIs
+        # Note: Twisted buffers the entire upload into 'request.content'
+        #       prior to calling our render method.
+        #       There doesn't seem to be a clean way to handle streaming
+        #       uploads in Twisted; we'd have to set site.requestFactory
+        #       to a request implementation that overrides gotLength() or
+        #       handleContentChunk(), both of which are documented as
+        #       "not intended for users".
 
-        _handleArtifactPUT(request, _verifyGzip, path)
+        # Do the actual store in a separate thread, so we don't have to worry
+        # about slow operations hogging the reactor thread.
+        deferToThread(self._storeArtifact, request.content, path) \
+            .addCallback(self.putDone, request) \
+            .addErrback(self.putFailed, request)
         return NOT_DONE_YET
 
-def _verifyGzip(compressed: IO[bytes]) -> None:
-    """Verify that the uploaded file is a valid gzip file.
-    This will also catch truncated uploads.
-    Returns nothing if the file is valid, raises ValueError otherwise.
-    """
-    try:
-        with GzipFile(fileobj=compressed) as gz:
-            while True:
-                data = gz.read(_PUT_BLOCK_SIZE)
-                if not data:
-                    break
-    except (OSError, EOFError) as ex:
-        raise ValueError(
-            'Uploaded data is not a valid gzip file: %s' % ex
-            ) from ex
-
-class ZippedArtifact(Resource):
-    """Directory of artifacts stored as ZIP file."""
-
-    def __init__(self, path: FilePath, *, asIs: bool):
-        super().__init__()
-        self.path = path
-        self.asIs = asIs
-
-    def getChild(self, path: bytes, request: TwistedRequest) -> Resource:
-        return NotFoundResource('ZIP directory not implemented yet')
-
-    def render_GET(self, request: TwistedRequest) -> object:
-        path = self.path
-
-        if self.asIs:
-            request.setHeader(b'Content-Type', b'application/zip')
-        else:
-            request.setResponseCode(400)
-            request.setHeader(b'Content-Type', b'text/plain; charset=UTF-8')
-            return b'ZIP contents serving not yet implemented\n'
-
-        FileProducer.writeFile(path, request)
-        return NOT_DONE_YET
-
-    def render_PUT(self, request: TwistedRequest) -> bytes:
-        path = self.path
-        if path.isfile():
-            request.setResponseCode(409)
-            request.setHeader(b'Content-Type', b'text/plain; charset=UTF-8')
-            return b'Artifacts cannot be overwritten\n'
-
-        # We currently only support upload of already-compressed files.
-        assert self.asIs
-
-        _handleArtifactPUT(request, _verifyZip, path)
-        return NOT_DONE_YET
-
-def _verifyZip(compressed: IO[bytes]) -> None:
-    """Verify that the uploaded file is a valid ZIP file.
-    This will also catch truncated uploads.
-    Returns nothing if the file is valid, raises ValueError otherwise.
-    """
-    try:
-        with ZipFile(compressed) as zipFile:
-            badFileName = zipFile.testzip()
-            if badFileName is not None:
-                raise ValueError(
-                    'ZIP file entry "%s" is corrupted' % badFileName
-                    )
-    except BadZipFile as ex:
-        raise ValueError(
-            'Uploaded data is not a valid ZIP file: %s' % ex
-            ) from ex
-
-_PUT_BLOCK_SIZE = 65536
-"""Process files from PUT in chunks of this many bytes.
-Since PUT is handled on a separate thread, the limit is there only
-to avoid hogging memory, not the CPU.
-"""
-
-def _handleArtifactPUT(request: TwistedRequest,
-                       verifier: Callable[[IO[bytes]], None],
-                       path: FilePath
-                       ) -> None:
-    """Store an uploaded artifact from a PUT request at the given path
-    and complete the request.
-    """
-
-    # Note: Twisted buffers the entire upload into 'request.content'
-    #       prior to calling our render method.
-    #       There doesn't seem to be a clean way to handle streaming
-    #       uploads in Twisted; we'd have to set site.requestFactory
-    #       to a request implementation that overrides gotLength() or
-    #       handleContentChunk(), both of which are documented as
-    #       "not intended for users".
-
-    def done(result: None) -> None: # pylint: disable=unused-argument
+    @classmethod
+    def putDone(cls,
+                result: None, # pylint: disable=unused-argument
+                request: TwistedRequest
+                ) -> None:
         request.setResponseCode(201)
         request.setHeader(b'Content-Type', b'text/plain; charset=UTF-8')
         request.write(b'Artifact stored\n')
         request.finish()
 
-    def failed(fail: Failure) -> None:
+    @classmethod
+    def putFailed(cls, fail: Failure, request: TwistedRequest) -> None:
         ex = fail.value
         if isinstance(ex, ValueError):
             request.setResponseCode(415)
@@ -569,36 +484,116 @@ def _handleArtifactPUT(request: TwistedRequest,
         # Returning None (implicitly) because the error is handled.
         # Otherwise, it will be logged twice.
 
-    # Do the actual store in a separate thread, so we don't have to worry
-    # about slow operations hogging the reactor thread.
-    deferToThread(_storeArtifact, request.content, verifier, path
-                  ).addCallback(done).addErrback(failed)
+    @classmethod
+    def _storeArtifact(cls, content: IO[bytes], path: FilePath) -> None:
+        """Verify and store an artifact from a temporary file.
+        If the file is valid, store it at the given path.
+        If the file is not valid, raise ValueError.
+        """
 
-def _storeArtifact(content: IO[bytes],
-                   verifier: Callable[[IO[bytes]], None],
-                   path: FilePath
-                   ) -> None:
-    """Verify and store an artifact from a temporary file.
-    If the file is valid, store it at the given path.
-    If the file is not valid, raise ValueError.
-    """
+        cls.verify(content)
 
-    verifier(content)
+        # Copy content.
+        content.seek(0, 0)
+        uploadPath = path.siblingExtension('.part')
+        path.parent().makedirs(ignoreExistingDirectory=True)
+        with uploadPath.open('wb') as out:
+            while True:
+                data = content.read(cls.putBlockSize)
+                if not data:
+                    break
+                out.write(data)
+            out.flush()
+            fsync(out.fileno())
+        replace(uploadPath.path, path.path)
+        path.changed()
 
-    # Copy content.
-    content.seek(0, 0)
-    uploadPath = path.siblingExtension('.part')
-    path.parent().makedirs(ignoreExistingDirectory=True)
-    with uploadPath.open('wb') as out:
-        while True:
-            data = content.read(_PUT_BLOCK_SIZE)
-            if not data:
-                break
-            out.write(data)
-        out.flush()
-        fsync(out.fileno())
-    replace(uploadPath.path, path.path)
-    path.changed()
+    @classmethod
+    def verify(cls, archive: IO[bytes]) -> None:
+        """Verify the integrity of the archive file.
+        Return nothing if the file is valid, raise ValueError otherwise.
+        """
+        raise NotImplementedError
+
+class PlainGzipArtifact(PlainArtifact):
+    """Single-file artifact stored as a gzip file."""
+
+    contentType = b'application/gzip'
+
+    @classmethod
+    def verify(cls, archive: IO[bytes]) -> None:
+        try:
+            with GzipFile(fileobj=archive) as gz:
+                while True:
+                    data = gz.read(cls.putBlockSize)
+                    if not data:
+                        break
+        except (OSError, EOFError) as ex:
+            raise ValueError(
+                'Uploaded data is not a valid gzip file: %s' % ex
+                ) from ex
+
+class GzippedArtifact(Resource):
+    """Single-file artifact stored as gzip file."""
+
+    def __init__(self, path: FilePath):
+        super().__init__()
+        self.path = path
+
+    def getChild(self, path: bytes, request: TwistedRequest) -> Resource:
+        return NotFoundResource(
+            'Artifact "%s" cannot not contain subitems'
+            % request.prepath[-2].decode()
+            )
+
+    def render_GET(self, request: TwistedRequest) -> object:
+        path = self.path
+
+        contentType, contentEncoding = guess_type(path.basename(), strict=False)
+        if contentType is None:
+            contentType = 'application/octet-stream'
+        request.setHeader(b'Content-Type', contentType.encode())
+        if contentEncoding is not None:
+            # TODO: Check for gzip in the Accept-Encoding header.
+            #       In practice though, gzip is accepted universally.
+            request.setHeader(b'Content-Encoding', contentEncoding.encode())
+
+        FileProducer.writeFile(path, request)
+        return NOT_DONE_YET
+
+class PlainZipArtifact(PlainArtifact):
+    """Single-file artifact stored as a ZIP file."""
+
+    contentType = b'application/zip'
+
+    @classmethod
+    def verify(cls, archive: IO[bytes]) -> None:
+        try:
+            with ZipFile(archive) as zipFile:
+                badFileName = zipFile.testzip()
+                if badFileName is not None:
+                    raise ValueError(
+                        'ZIP file entry "%s" is corrupted' % badFileName
+                        )
+        except BadZipFile as ex:
+            raise ValueError(
+                'Uploaded data is not a valid ZIP file: %s' % ex
+                ) from ex
+
+class ZippedArtifact(Resource):
+    """Directory of artifacts stored as ZIP file."""
+
+    def __init__(self, path: FilePath):
+        super().__init__()
+        self.path = path
+
+    def getChild(self, path: bytes, request: TwistedRequest) -> Resource:
+        return NotFoundResource('ZIP directory not implemented yet')
+
+    def render_GET(self, request: TwistedRequest) -> object:
+        request.setResponseCode(400)
+        request.setHeader(b'Content-Type', b'text/plain; charset=UTF-8')
+        return b'ZIP contents serving not yet implemented\n'
 
 def createArtifactRoot(baseDir: str, anonOperator: bool) -> IResource:
     path = FilePath(baseDir)
