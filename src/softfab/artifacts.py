@@ -3,17 +3,19 @@
 from gzip import GzipFile
 from mimetypes import guess_type
 from os import fsync, replace
-from typing import IO, cast
-from zipfile import BadZipFile, ZipFile
+from typing import Dict, IO, Iterable, Iterator, Tuple, Union, cast
+from zipfile import BadZipFile, ZipInfo, ZipFile
 import logging
 
-from twisted.internet.interfaces import IPullProducer
+from twisted.internet import reactor
+from twisted.internet.interfaces import IDelayedCall, IPullProducer
 from twisted.internet.threads import deferToThread
 from twisted.python.failure import Failure
 from twisted.python.filepath import FilePath, InsecurePath
 from twisted.web.http import Request as TwistedRequest
 from twisted.web.resource import IResource, Resource
 from twisted.web.server import NOT_DONE_YET
+from twisted.web.util import redirectTo
 from zope.interface import implementer
 
 from softfab.joblib import Job, jobDB
@@ -376,11 +378,7 @@ class FileProducer:
     blockSize = 16384
 
     @classmethod
-    def writeFile(cls,
-                  path: FilePath,
-                  request: TwistedRequest
-                  ) -> 'FileProducer':
-        inp = path.open()
+    def serve(cls, inp: IO[bytes], request: TwistedRequest) -> 'FileProducer':
         producer = cls(inp, request)
         request.registerProducer(producer, False)
         return producer
@@ -435,7 +433,7 @@ class PlainArtifact(Resource):
 
     def render_GET(self, request: TwistedRequest) -> object:
         request.setHeader(b'Content-Type', self.contentType)
-        FileProducer.writeFile(self.path, request)
+        FileProducer.serve(self.path.open(), request)
         return NOT_DONE_YET
 
     def render_PUT(self, request: TwistedRequest) -> object:
@@ -558,7 +556,7 @@ class GzippedArtifact(Resource):
             #       In practice though, gzip is accepted universally.
             request.setHeader(b'Content-Encoding', contentEncoding.encode())
 
-        FileProducer.writeFile(path, request)
+        FileProducer.serve(path.open(), request)
         return NOT_DONE_YET
 
 class PlainZipArtifact(PlainArtifact):
@@ -575,6 +573,8 @@ class PlainZipArtifact(PlainArtifact):
                     raise ValueError(
                         'ZIP file entry "%s" is corrupted' % badFileName
                         )
+                # Raise ValueError on name clashes.
+                ZipTreeNode.build(zipFile)
         except BadZipFile as ex:
             raise ValueError(
                 'Uploaded data is not a valid ZIP file: %s' % ex
@@ -583,17 +583,154 @@ class PlainZipArtifact(PlainArtifact):
 class ZippedArtifact(Resource):
     """Directory of artifacts stored as ZIP file."""
 
-    def __init__(self, path: FilePath):
-        super().__init__()
-        self.path = path
+    isLeaf = True
 
-    def getChild(self, path: bytes, request: TwistedRequest) -> Resource:
-        return NotFoundResource('ZIP directory not implemented yet')
+    def __init__(self, zipPath: FilePath):
+        super().__init__()
+        self.zipPath = zipPath
 
     def render_GET(self, request: TwistedRequest) -> object:
-        request.setResponseCode(400)
-        request.setHeader(b'Content-Type', b'text/plain; charset=UTF-8')
-        return b'ZIP contents serving not yet implemented\n'
+        # Convert path to Unicode.
+        try:
+            segments = [segment.decode() for segment in request.postpath]
+        except UnicodeDecodeError:
+            return ClientErrorResource('Path is not valid UTF-8')
+
+        # Look up path in ZIP directory tree.
+        tree = ZipTree.get(self.zipPath.path)
+        try:
+            node = tree.find(segments)
+        except KeyError:
+            return NotFoundResource(
+                'No ZIP entry matches path "%s"' % '/'.join(segments)
+                )
+
+        if isinstance(node, ZipTreeNode):
+            # Path ends at a directory.
+            if not request.path.endswith(b'/'):
+                return redirectTo(request.postpath[-1] + b'/', request)
+            request.setResponseCode(500)
+            request.setHeader(b'Content-Type', b'text/plain; charset=UTF-8')
+            return b'ZIP directory listing not yet implemented\n'
+        else:
+            # Path ends at a file.
+            return self.renderFile(request, tree.zipFile, node)
+
+    def renderFile(self,
+                   request: TwistedRequest,
+                   zipFile: ZipFile,
+                   info: ZipInfo
+                   ) -> object:
+        """Serve a file entry from a ZIP file.
+        """
+
+        # Determine content type.
+        contentType, encoding = guess_type(info.filename, strict=False)
+        if encoding is not None:
+            # We want contents to be served as-is, not automatically
+            # decoded by the browser.
+            contentType = 'application/' + encoding
+        if contentType is None:
+            contentType = 'application/octet-stream'
+        request.setHeader(b'Content-Type', contentType.encode())
+
+        # Decompress and send to user agent.
+        FileProducer.serve(zipFile.open(info), request)
+        return NOT_DONE_YET
+
+class ZipTreeNode:
+
+    @classmethod
+    def build(cls, zipFile: ZipFile) -> 'ZipTreeNode':
+        root = cls()
+        for info in zipFile.infolist():
+            segments = iter(info.filename.split('/'))
+            root.add(next(segments), segments, info)
+        return root
+
+    def __init__(self) -> None:
+        self.children = {} # type: Dict[str, Union[ZipTreeNode, ZipInfo]]
+
+    def add(self, name: str, remainder: Iterator[str], info: ZipInfo) -> None:
+        children = self.children
+        child = children.get(name)
+        try:
+            nextName = next(remainder)
+        except StopIteration:
+            if name:
+                if child is None:
+                    # File entry.
+                    children[name] = info
+                elif isinstance(child, ZipInfo):
+                    raise ValueError('Duplicate file: "%s"' % info.filename)
+                else:
+                    raise ValueError(
+                        'File overlaps with directory: "%s"' % info.filename
+                        )
+            else:
+                # Directory entry.
+                pass
+        else:
+            if child is None:
+                children[name] = child = ZipTreeNode()
+            elif isinstance(child, ZipInfo):
+                raise ValueError(
+                    'File overlaps with directory: "%s"' % child.filename
+                    )
+            child.add(nextName, remainder, info)
+
+class ZipTree:
+    cache = {} # type: Dict[str, Tuple[ZipTree, IDelayedCall]]
+    timeout = 30
+
+    @classmethod
+    def get(cls, zipPath: str) -> 'ZipTree':
+        cache = cls.cache
+        try:
+            tree, closeCall = cache[zipPath]
+        except KeyError:
+            # Note: When reading a very large file or serving it to a very
+            #       slow client, the cache timeout could happen while a read
+            #       stream is still open. It is important that we construct
+            #       the ZipFile from a path rather than a file-like object,
+            #       since the former makes it use a refcount and not close
+            #       the underlying file until the read stream is done with it.
+            zipFile = ZipFile(zipPath)
+            tree = cls(zipFile)
+            closeCall = reactor.callLater(cls.timeout, cls.close, zipFile)
+            cache[zipPath] = tree, closeCall
+        else:
+            closeCall.reset(cls.timeout)
+        return tree
+
+    @classmethod
+    def close(cls, zipFile: ZipFile) -> None:
+        path = zipFile.filename
+        assert path is not None
+        del cls.cache[path]
+        try:
+            zipFile.close()
+        except OSError as ex:
+            logging.warning('Error closing ZIP file "%s": %s', path, ex)
+
+    def __init__(self, zipFile: ZipFile):
+        self.zipFile = zipFile
+        self.root = ZipTreeNode.build(zipFile)
+
+    def find(self, segments: Iterable[str]) -> Union[ZipInfo, ZipTreeNode]:
+        """Look up a file path in this ZIP directory tree.
+        Return a ZipInfo if a file is found.
+        Return a ZipTreeNode if a directory is found.
+        Raise KeyError if no match is found.
+        """
+        node = self.root # type: Union[ZipInfo, ZipTreeNode]
+        for segment in segments:
+            if isinstance(node, ZipTreeNode):
+                if segment:
+                    node = node.children[segment]
+            else:
+                raise KeyError(segment)
+        return node
 
 def createArtifactRoot(baseDir: str, anonOperator: bool) -> IResource:
     path = FilePath(baseDir)
