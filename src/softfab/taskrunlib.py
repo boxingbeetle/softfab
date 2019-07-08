@@ -342,7 +342,7 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
                     reports.append(summary)
                 reports.append('wrapper_log.txt')
             for report in reports:
-                yield report, urljoin(url, report)
+                yield report.rstrip('/'), urljoin(url, report)
 
     @cachedProperty
     def timeoutMins(self) -> Optional[int]:
