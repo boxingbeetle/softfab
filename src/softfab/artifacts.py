@@ -607,15 +607,43 @@ class ZippedArtifact(Resource):
 
         if isinstance(node, ZipTreeNode):
             # Path ends at a directory.
-            if not request.path.endswith(b'/'):
-                path = (request.postpath or request.prepath)[-1]
-                return redirectTo(path + b'/', request)
-            request.setResponseCode(500)
-            request.setHeader(b'Content-Type', b'text/plain; charset=UTF-8')
-            return b'ZIP directory listing not yet implemented\n'
+            return self.renderDirectory(request, tree.zipFile, node)
         else:
             # Path ends at a file.
             return self.renderFile(request, tree.zipFile, node)
+
+    def renderDirectory(self,
+                        request: TwistedRequest,
+                        zipFile: ZipFile,
+                        node: 'ZipTreeNode'
+                        ) -> object:
+        """Serve a directory from a ZIP file.
+        """
+
+        # URLs for directory entries should end with a slash.
+        if not request.path.endswith(b'/'):
+            path = (request.postpath or request.prepath)[-1]
+            return redirectTo(path + b'/', request)
+
+        # Serve index.html at directory URL.
+        entries = node.children
+        index = entries.get('index.html')
+        if isinstance(index, ZipInfo):
+            return self.renderFile(request, zipFile, index)
+
+        # If a ZIP contains a single file or single top-level directory,
+        # redirect to that.
+        if len(request.postpath) == 1:
+            if len(entries) == 1:
+                (name, entry), = entries.items()
+                path = name.encode()
+                if isinstance(entry, ZipTreeNode):
+                    path += b'/'
+                return redirectTo(path, request)
+
+        request.setResponseCode(500)
+        request.setHeader(b'Content-Type', b'text/plain; charset=UTF-8')
+        return b'ZIP directory listing not yet implemented\n'
 
     def renderFile(self,
                    request: TwistedRequest,
