@@ -603,7 +603,7 @@ class ZippedArtifact(Resource):
         except KeyError:
             return NotFoundResource(
                 'No ZIP entry matches path "%s"' % '/'.join(segments)
-                )
+                ).render(request)
 
         if isinstance(node, ZipTreeNode):
             # Path ends at a directory.
