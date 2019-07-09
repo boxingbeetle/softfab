@@ -608,7 +608,8 @@ class ZippedArtifact(Resource):
         if isinstance(node, ZipTreeNode):
             # Path ends at a directory.
             if not request.path.endswith(b'/'):
-                return redirectTo(request.postpath[-1] + b'/', request)
+                path = (request.postpath or request.prepath)[-1]
+                return redirectTo(path + b'/', request)
             request.setResponseCode(500)
             request.setHeader(b'Content-Type', b'text/plain; charset=UTF-8')
             return b'ZIP directory listing not yet implemented\n'
