@@ -22,7 +22,7 @@ from softfab.SplashPage import SplashPage, startupMessages
 from softfab.StyleResources import styleRoot
 from softfab.TwistedUtil import PageRedirect
 from softfab.UIPage import UIResponder
-from softfab.artifacts import createArtifactRoot
+from softfab.artifacts import createArtifactRoots
 from softfab.authentication import DisabledAuthPage, NoAuthPage, TokenAuthPage
 from softfab.config import dbDir
 from softfab.databases import iterDatabasesToPreload
@@ -207,9 +207,8 @@ class PageLoader:
     def process(self) -> None:
         startupMessages.addMessage('Registering pages')
         self.root.putChild(b'docs', DocResource.registerDocs('softfab.docs'))
-        self.root.putChild(b'jobs', createArtifactRoot(
-            dbDir + '/artifacts/jobs', self.root.anonOperator
-            ))
+        createArtifactRoots(self.root, dbDir + '/artifacts',
+                            self.root.anonOperator)
         self.root.putChild(b'taskrunner.jar', StaticResource(
             'taskrunner.jar', 'application/java-archive'
             ))

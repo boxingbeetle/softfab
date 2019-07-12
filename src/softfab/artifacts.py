@@ -3,10 +3,11 @@
 from gzip import GzipFile
 from mimetypes import guess_type
 from os import fsync, replace
-from typing import Dict, IO, Iterable, Iterator, Tuple, Union, cast
-from zipfile import BadZipFile, ZipInfo, ZipFile
+from typing import IO, Dict, Iterable, Iterator, Tuple, Union, cast
+from zipfile import BadZipFile, ZipFile, ZipInfo
 import logging
 
+from passlib.pwd import genword
 from twisted.internet import reactor
 from twisted.internet.interfaces import IDelayedCall, IPullProducer
 from twisted.internet.threads import deferToThread
@@ -15,7 +16,7 @@ from twisted.python.filepath import FilePath, InsecurePath
 from twisted.web.http import Request as TwistedRequest
 from twisted.web.resource import IResource, Resource
 from twisted.web.server import NOT_DONE_YET
-from twisted.web.util import redirectTo
+from twisted.web.util import Redirect, redirectTo
 from zope.interface import implementer
 
 from softfab.joblib import Job, jobDB
@@ -85,6 +86,134 @@ class AccessDeniedResource(ClientErrorResource):
 
 class NotFoundResource(ClientErrorResource):
     code = 404
+
+class SandboxedPath:
+    """A file path within an artifact sandbox."""
+
+    def __init__(self,
+                 sandbox: 'ArtifactSandbox',
+                 filePath: FilePath,
+                 path: Iterable[str]
+                 ):
+        self.sandbox = sandbox
+        self.filePath = filePath
+        self.path = tuple(path)
+
+    def child(self, name: str) -> 'SandboxedPath':
+        """Return a sandboxed path that is a child of this path."""
+        return SandboxedPath(self.sandbox,
+                             self.filePath.child(name),
+                             self.path + (name,))
+
+    def createURL(self) -> str:
+        """Return a relative URL with a random key under which
+        this sandboxed path is temporarily available.
+        """
+        key = self.sandbox.keyFor(self)
+        return '/'.join(('sandbox', key) + self.path)
+
+@implementer(IResource)
+class ArtifactSandbox:
+    """Serves the actual artifacts in a sandbox.
+    """
+    isLeaf = False
+
+    keyTimeout = 30
+    keyLength = 6
+
+    def __init__(self, baseDir: FilePath):
+        self.baseDir = baseDir
+        self._activeKeys = {} # type: Dict[str, SandboxedPath]
+
+    @property
+    def rootPath(self) -> SandboxedPath:
+        return SandboxedPath(self, self.baseDir, [])
+
+    def keyFor(self, path: SandboxedPath) -> str:
+        """Return a key for accessing the given sandbox path.
+        """
+
+        # Skip key generation if artifacts are public.
+        if project['anonguest']:
+            return 'anon'
+
+        key = genword(length=self.keyLength)
+        self._activeKeys[key] = path
+        reactor.callLater(self.keyTimeout, self.keyExpired, key)
+        return key
+
+    def keyExpired(self, key: str) -> None:
+        del self._activeKeys[key]
+
+    def render(self, request: TwistedRequest) -> bytes:
+        return AccessDeniedResource('Missing key').render(request)
+
+    def getChildWithDefault(self,
+                            name: bytes,
+                            request: TwistedRequest
+                            ) -> IResource:
+        # Prevent leaking sandbox key to external sites.
+        request.setHeader(b'Referrer-Policy', b'origin-when-cross-origin')
+
+        if name == b'anon' and project['anonguest']:
+            return SandboxedResource(self.baseDir, [])
+
+        try:
+            key = name.decode('ascii')
+        except UnicodeDecodeError:
+            return ClientErrorResource('Key contains invalid characters')
+
+        try:
+            path = self._activeKeys[key]
+        except KeyError:
+            # Key does not exist or is no longer valid.
+            # Redirect to non-sandboxed path to acquire new key.
+            return Redirect(b'/'.join(
+                [b'..'] * (len(request.postpath) + 1) + request.postpath
+                ))
+        else:
+            return SandboxedResource(self.baseDir, path.path)
+
+@implementer(IResource)
+class SandboxedResource:
+    """An intermediate directory in a sandboxed path."""
+
+    isLeaf = False
+
+    def __init__(self, dirPath: FilePath, rightPath: Iterable[str]):
+        self.dirPath = dirPath
+        self.rightPath = tuple(rightPath)
+
+    def render(self, request: TwistedRequest) -> bytes:
+        return AccessDeniedResource('Incomplete path').render(request)
+
+    def getChildWithDefault(
+            self,
+            name: bytes,
+            request: TwistedRequest # pylint: disable=unused-argument
+            ) -> IResource:
+        try:
+            nameStr = name.decode()
+        except UnicodeDecodeError:
+            return ClientErrorResource('Path is not valid UTF-8')
+
+        # Take one step along the prescribed path.
+        rightPath = self.rightPath
+        if rightPath:
+            if rightPath[0] != nameStr:
+                return AccessDeniedResource('You have strayed from the path')
+            rightPath = rightPath[1:]
+
+        dirPath = self.dirPath
+        subDirPath = dirPath.child(nameStr)
+        if subDirPath.isdir():
+            return SandboxedResource(subDirPath, rightPath)
+        for ext, contentClass in (('.gz', GzippedArtifact),
+                                  ('.zip', ZippedArtifact)):
+            filePath = dirPath.child(nameStr + ext)
+            if filePath.isfile():
+                return contentClass(filePath)
+        return NotFoundResource('Artifact not found')
 
 def _runForRunnerUser(user: User) -> TaskRun:
     """Returns the task run accessible to the given user.
@@ -156,8 +285,8 @@ class ArtifactAuthWrapper:
     """
     isLeaf = False
 
-    def __init__(self, baseDir: FilePath, anonOperator: bool):
-        self.baseDir = baseDir
+    def __init__(self, path: SandboxedPath, anonOperator: bool):
+        self.path = path
         self.anonOperator = anonOperator
 
     def _authorizedResource(self, request: TwistedRequest) -> IResource:
@@ -208,7 +337,7 @@ class ArtifactAuthWrapper:
         if user is None:
             return UnauthorizedResource('Please provide an access token')
 
-        return ArtifactRoot(self.baseDir, user)
+        return ArtifactRoot(self.path, user)
 
     def render(self, request: TwistedRequest) -> bytes:
         return self._authorizedResource(request).render(request)
@@ -223,9 +352,9 @@ class ArtifactAuthWrapper:
 class ArtifactRoot(FactoryResource):
     """Top-level job artifact resource."""
 
-    def __init__(self, path: FilePath, user: User):
+    def __init__(self, path: SandboxedPath, user: User):
         super().__init__()
-        self.baseDir = path
+        self.path = path
         self.user = user
 
     def checkAccess(self) -> None:
@@ -242,7 +371,7 @@ class ArtifactRoot(FactoryResource):
                         segment: str,
                         request: TwistedRequest
                         ) -> Resource:
-        return JobDayResource(self.baseDir.child(segment), self.user, segment)
+        return JobDayResource(self.path.child(segment), self.user, segment)
 
     def renderIndex(self, request: TwistedRequest) -> bytes:
         return b'Top-level index not implemented yet'
@@ -256,9 +385,9 @@ class JobDayResource(FactoryResource):
     are reached.
     """
 
-    def __init__(self, path: FilePath, user: User, day: str):
+    def __init__(self, path: SandboxedPath, user: User, day: str):
         super().__init__()
-        self.baseDir = path
+        self.path = path
         self.user = user
         self.day = day
 
@@ -275,7 +404,7 @@ class JobDayResource(FactoryResource):
         except KeyError:
             return NotFoundResource('Job "%s" does not exist' % jobId)
         else:
-            return JobResource(self.baseDir.child(segment), self.user, job)
+            return JobResource(self.path.child(segment), self.user, job)
 
     def renderIndex(self, request: TwistedRequest) -> bytes:
         return b'Job day index not implemented yet'
@@ -283,9 +412,9 @@ class JobDayResource(FactoryResource):
 class JobResource(FactoryResource):
     """Resource that represents one job."""
 
-    def __init__(self, path: FilePath, user: User, job: Job):
+    def __init__(self, path: SandboxedPath, user: User, job: Job):
         super().__init__()
-        self.baseDir = path
+        self.path = path
         self.user = user
         self.job = job
 
@@ -315,11 +444,8 @@ class JobResource(FactoryResource):
             return NotFoundResource(
                 'Task "%s" does not exist in this job' % segment
                 )
-        return TaskResource(
-            self.baseDir.child(segment),
-            self.user,
-            task.getLatestRun()
-            )
+        run = task.getLatestRun()
+        return TaskResource(self.path.child(segment), self.user, run)
 
     def renderIndex(self, request: TwistedRequest) -> bytes:
         return b'Job index not implemented yet'
@@ -327,9 +453,9 @@ class JobResource(FactoryResource):
 class TaskResource(FactoryResource):
     """Resource that represents one task run."""
 
-    def __init__(self, path: FilePath, user: User, run: TaskRun):
+    def __init__(self, path: SandboxedPath, user: User, run: TaskRun):
         super().__init__()
-        self.baseDir = path
+        self.path = path
         self.user = user
         self.run = run
 
@@ -349,19 +475,22 @@ class TaskResource(FactoryResource):
                         segment: str,
                         request: TwistedRequest
                         ) -> Resource:
-        for ext, contentClass, plainClass in (
-                ('.gz', GzippedArtifact, PlainGzipArtifact),
-                ('.zip', ZippedArtifact, PlainZipArtifact)
-                ):
-            # Serve the archive's contents.
-            path = self.baseDir.child(segment + ext)
-            if path.isfile():
-                return contentClass(path)
+        path = self.path.child(segment)
+        dirPath = self.path.filePath
+        for ext, plainClass in (('.gz', PlainGzipArtifact),
+                                ('.zip', PlainZipArtifact)):
+            # Serve the archive's contents, in the sandbox.
+            filePath = dirPath.child(segment + ext)
+            if filePath.isfile():
+                urlPath = [b'..'] * (len(request.postpath) - 1 + len(path.path))
+                urlPath.append(path.createURL().encode())
+                urlPath += request.postpath
+                return Redirect(b'/'.join(urlPath))
             # Serve the archive itself.
             if segment.endswith(ext):
-                path = self.baseDir.child(segment)
-                if request.method == b'PUT' or path.isfile():
-                    return plainClass(path)
+                filePath = path.filePath
+                if request.method == b'PUT' or filePath.isfile():
+                    return plainClass(filePath)
 
         if request.method == b'PUT':
             return ClientErrorResource('Uploads must use gzip or ZIP format')
@@ -761,6 +890,12 @@ class ZipTree:
                 raise KeyError(segment)
         return node
 
-def createArtifactRoot(baseDir: str, anonOperator: bool) -> IResource:
+def createArtifactRoots(parent: Resource,
+                        baseDir: str,
+                        anonOperator: bool
+                        ) -> None:
     path = FilePath(baseDir)
-    return ArtifactAuthWrapper(path, anonOperator)
+    sandbox = ArtifactSandbox(path)
+    parent.putChild(b'sandbox', sandbox)
+    auth = ArtifactAuthWrapper(sandbox.rootPath.child('jobs'), anonOperator)
+    parent.putChild(b'jobs', auth)
