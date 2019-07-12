@@ -562,6 +562,7 @@ class PlainArtifact(Resource):
 
     def render_GET(self, request: TwistedRequest) -> object:
         request.setHeader(b'Content-Type', self.contentType)
+        request.setHeader(b'Content-Disposition', b'attachment')
         FileProducer.serve(self.path.open(), request)
         return NOT_DONE_YET
 
@@ -680,6 +681,7 @@ class GzippedArtifact(Resource):
         if contentType is None:
             contentType = 'application/octet-stream'
         request.setHeader(b'Content-Type', contentType.encode())
+        request.setHeader(b'Content-Disposition', b'inline')
         if contentEncoding is not None:
             # TODO: Check for gzip in the Accept-Encoding header.
             #       In practice though, gzip is accepted universally.
@@ -791,6 +793,7 @@ class ZippedArtifact(Resource):
         if contentType is None:
             contentType = 'application/octet-stream'
         request.setHeader(b'Content-Type', contentType.encode())
+        request.setHeader(b'Content-Disposition', b'inline')
 
         # Decompress and send to user agent.
         FileProducer.serve(zipFile.open(info), request)
