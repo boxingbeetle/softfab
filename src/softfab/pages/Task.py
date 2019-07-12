@@ -7,6 +7,7 @@ from typing import Dict, Iterable, Iterator, Optional, Sequence, cast
 from softfab.FabPage import FabPage
 from softfab.Page import InvalidRequest, PageProcessor
 from softfab.ReportMixin import ReportTaskArgs
+from softfab.artifacts import SANDBOX_RULES
 from softfab.datawidgets import DataTable
 from softfab.frameworklib import frameworkDB
 from softfab.joblib import Task
@@ -35,14 +36,6 @@ from softfab.webgui import (
 )
 from softfab.xmlgen import XMLContent, txt, xhtml
 
-REPORT_SANDBOX = ' '.join('allow-' + perm for perm in (
-    'forms', 'modals', 'popups', 'popups-to-escape-sandbox', 'scripts'
-    ))
-"""Browser permissions granted to reports.
-
-This probably needs to be tweaked over time; please submit an issue
-if you find this too restrictive or not restrictive enough.
-"""
 
 def presentLabel(label: str) -> str:
     """Compute a good-looking tab label from the technical label.
@@ -123,7 +116,7 @@ class Task_GET(FabPage['Task_GET.Processor', 'Task_GET.Arguments']):
             yield self.presentData(**kwargs)
         else:
             yield xhtml.iframe(
-                class_='report', src=reports[active], sandbox=REPORT_SANDBOX
+                class_='report', src=reports[active], sandbox=SANDBOX_RULES
                 )
 
     def presentOverview(self, **kwargs: object) -> XMLContent:

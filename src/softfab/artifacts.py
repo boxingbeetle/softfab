@@ -87,6 +87,15 @@ class AccessDeniedResource(ClientErrorResource):
 class NotFoundResource(ClientErrorResource):
     code = 404
 
+SANDBOX_RULES = ' '.join('allow-' + perm for perm in (
+    'forms', 'modals', 'popups', 'scripts'
+    ))
+"""Browser permissions granted to sandboxed documents.
+
+This probably needs to be tweaked over time; please submit an issue
+if you find this too restrictive or not restrictive enough.
+"""
+
 class SandboxedPath:
     """A file path within an artifact sandbox."""
 
@@ -154,6 +163,9 @@ class ArtifactSandbox:
                             ) -> IResource:
         # Prevent leaking sandbox key to external sites.
         request.setHeader(b'Referrer-Policy', b'origin-when-cross-origin')
+        # Repeat sandbox rules, in case artifact is viewed outside iframe.
+        request.setHeader(b'Content-Security-Policy',
+                          b'sandbox %s;' % SANDBOX_RULES.encode())
 
         if name == b'anon' and project['anonguest']:
             return SandboxedResource(self.baseDir, [])
