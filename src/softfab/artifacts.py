@@ -168,8 +168,22 @@ class ArtifactSandbox:
         request.setHeader(b'Content-Security-Policy',
                           b'sandbox %s;' % SANDBOX_RULES.encode())
 
+        origin = request.getHeader(b'Origin')
+
+        # Handle anonymous guest access.
         if name == b'anon' and project['anonguest']:
+            if origin is not None:
+                request.setHeader(b'Access-Control-Allow-Origin', b'*')
             return SandboxedResource(self.baseDir, [])
+
+        # Verify that request came from null origin.
+        if origin is not None:
+            if origin == b'null':
+                request.setHeader(b'Access-Control-Allow-Origin', b'null')
+            else:
+                return AccessDeniedResource(
+                    'Sandboxed content requested from non-null origin'
+                    )
 
         try:
             key = name.decode('ascii')
@@ -795,6 +809,30 @@ class ZippedArtifact(Resource):
     def __init__(self, zipPath: FilePath):
         super().__init__()
         self.zipPath = zipPath
+
+    def render_OPTIONS(self, request: TwistedRequest) -> bytes:
+        # Generic HTTP options.
+        request.setHeader(b'Allow', b'GET, HEAD, OPTIONS')
+
+        # CORS options.
+        origin = request.getHeader(b'Origin')
+        if origin is not None:
+            # Grant all requested headers.
+            requestedHeaders = request.getHeader(
+                    b'Access-Control-Request-Headers') or b''
+            request.setHeader(b'Access-Control-Allow-Headers',
+                              requestedHeaders)
+
+            # The information returned does not expire, but the sanboxed URL
+            # to which it applies does, so caching it beyond the sanbox key
+            # timeout is pointless.
+            request.setHeader(b'Access-Control-Max-Age',
+                              b'%d' % ArtifactSandbox.keyTimeout)
+
+        # Reply without content.
+        request.setResponseCode(204)
+        request.setHeader(b'Content-Length', b'0')
+        return b''
 
     def render_GET(self, request: TwistedRequest) -> object:
         # Convert path to Unicode.
