@@ -3,8 +3,9 @@
 from gzip import GzipFile
 from mimetypes import guess_type
 from os import fsync, replace
-from typing import IO, Dict, Iterable, Iterator, Tuple, Union, cast
-from zipfile import BadZipFile, ZipFile, ZipInfo
+from struct import Struct
+from typing import IO, Dict, Iterable, Iterator, Optional, Tuple, Union, cast
+from zipfile import ZIP_DEFLATED, BadZipFile, ZipFile, ZipInfo
 import logging
 
 from passlib.pwd import genword
@@ -518,38 +519,101 @@ class TaskResource(FactoryResource):
 class FileProducer:
     blockSize = 16384
 
+    _variableHeaderLengths = Struct('<2H')
+    _gzipFooter = Struct('<2I')
+
     @classmethod
-    def serve(cls, inp: IO[bytes], request: TwistedRequest) -> 'FileProducer':
-        producer = cls(inp, request)
+    def servePlain(cls,
+                   inp: IO[bytes],
+                   request: TwistedRequest
+                   ) -> 'FileProducer':
+        """Serves an input stream as-is."""
+        return cls._serve(cls.ioBlockGen(inp), request)
+
+    @classmethod
+    def serveZipEntry(cls,
+                      inp: IO[bytes],
+                      info: ZipInfo,
+                      request: TwistedRequest
+                      ) -> 'FileProducer':
+        """Serves a deflate-compressed ZIP file entry as a gzip file."""
+
+        request.setHeader(b'Content-Encoding', b'gzip')
+
+        # Seek to start of deflate stream.
+        offset = info.header_offset
+        inp.seek(offset + 26)
+        nameLen, extraLen = cls._variableHeaderLengths.unpack(inp.read(4))
+        inp.seek(offset + 30 + nameLen + extraLen)
+
+        size = info.compress_size
+        footer = cls._gzipFooter.pack(info.CRC, info.file_size)
+        return cls._serve(cls.gzipBlockGen(inp, size, footer), request)
+
+    @classmethod
+    def _serve(cls,
+               blockGen: Iterator[bytes],
+               request: TwistedRequest
+               ) -> 'FileProducer':
+        producer = cls(blockGen, request)
         request.registerProducer(producer, False)
         return producer
 
-    def __init__(self, inp: IO[bytes], request: TwistedRequest):
-        self.inp = inp
+    @classmethod
+    def ioBlockGen(cls,
+                   inp: IO[bytes],
+                   size: Optional[int] = None
+                   ) -> Iterator[bytes]:
+        numBytes = cls.blockSize
+        while True:
+            if size is not None:
+                numBytes = min(numBytes, size)
+            try:
+                data = inp.read(numBytes)
+            except OSError as ex:
+                logging.error('Read error serving artifact "%s": %s',
+                              inp.name, ex)
+                # We don't have any way to communicate the error to the user
+                # agent, so treat read errors like end-of-file.
+                break
+            else:
+                if data:
+                    yield data
+                    if size is not None:
+                        size -= len(data)
+                        if size == 0:
+                            break
+                else:
+                    break
+        try:
+            inp.close()
+        except OSError as ex:
+            logging.error('Close error serving artifact "%s": %s',
+                          inp.name, ex)
+
+    @classmethod
+    def gzipBlockGen(cls,
+                     inp: IO[bytes],
+                     size: int,
+                     footer: bytes
+                     ) -> Iterator[bytes]:
+        yield b'\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\x03'
+        yield from cls.ioBlockGen(inp, size)
+        yield footer
+
+    def __init__(self, blockGen: Iterator[bytes], request: TwistedRequest):
+        self.blockGen = blockGen
         self.request = request
 
     def resumeProducing(self) -> None:
-        # Read one block of data.
-        inp = self.inp
-        try:
-            data = inp.read(self.blockSize)
-        except OSError as ex:
-            logging.error('Read error serving artifact "%s": %s', inp.name, ex)
-            # We don't have any way to communicate the error to the user
-            # agent, so treat read errors like end-of-file.
-            data = bytes()
-
         request = self.request
-        if data:
-            request.write(data)
-        else:
-            # End of file.
-            try:
-                inp.close()
-            except OSError:
-                pass
+        try:
+            data = next(self.blockGen)
+        except StopIteration:
             request.unregisterProducer()
             request.finish()
+        else:
+            request.write(data)
 
     def stopProducing(self) -> None:
         pass
@@ -575,7 +639,7 @@ class PlainArtifact(Resource):
     def render_GET(self, request: TwistedRequest) -> object:
         request.setHeader(b'Content-Type', self.contentType)
         request.setHeader(b'Content-Disposition', b'attachment')
-        FileProducer.serve(self.path.open(), request)
+        FileProducer.servePlain(self.path.open(), request)
         return NOT_DONE_YET
 
     def render_PUT(self, request: TwistedRequest) -> object:
@@ -674,7 +738,7 @@ class PlainGzipArtifact(PlainArtifact):
                 ) from ex
 
 class GzippedArtifact(Resource):
-    """Single-file artifact stored as gzip file."""
+    """Single-file artifact stored as a gzip file."""
 
     def __init__(self, path: FilePath):
         super().__init__()
@@ -699,7 +763,7 @@ class GzippedArtifact(Resource):
             #       In practice though, gzip is accepted universally.
             request.setHeader(b'Content-Encoding', contentEncoding.encode())
 
-        FileProducer.serve(path.open(), request)
+        FileProducer.servePlain(path.open(), request)
         return NOT_DONE_YET
 
 class PlainZipArtifact(PlainArtifact):
@@ -807,9 +871,15 @@ class ZippedArtifact(Resource):
         request.setHeader(b'Content-Type', contentType.encode())
         request.setHeader(b'Content-Disposition', b'inline')
 
-        # Decompress and send to user agent.
-        FileProducer.serve(zipFile.open(info), request)
-        return NOT_DONE_YET
+        if info.compress_type == ZIP_DEFLATED:
+            # Send compressed data to user agent.
+            # TODO: Check for gzip in the Accept-Encoding header.
+            FileProducer.serveZipEntry(self.zipPath.open(), info, request)
+            return NOT_DONE_YET
+        else:
+            # Decompress and send to user agent.
+            FileProducer.servePlain(zipFile.open(info), request)
+            return NOT_DONE_YET
 
 class ZipTreeNode:
 
