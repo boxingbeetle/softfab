@@ -6,13 +6,13 @@ from typing import Dict, Optional
 import logging
 import re
 
-from importlib_resources import is_resource, read_binary
 from twisted.web.http import datetimeToString
 from twisted.web.iweb import IRequest
 from twisted.web.resource import Resource
 from twisted.web.static import Data
 
 from softfab import styles
+from softfab.compat import importlib_resources
 from softfab.databaselib import createInternalId
 from softfab.timelib import getTime, secondsPerDay
 from softfab.useragent import AcceptedEncodings
@@ -21,7 +21,7 @@ from softfab.webgui import Image, ShortcutIcon, StyleSheet, pngIcon, svgIcon
 
 def _load(fileName: str) -> Optional[bytes]:
     try:
-        return read_binary(styles, fileName)
+        return importlib_resources.read_binary(styles, fileName)
     except OSError as ex:
         logging.error('Error reading style resource "%s": %s', fileName, ex)
         return None
@@ -107,7 +107,7 @@ class _StyleRoot(Resource):
 
     def __addIcon(self, name: str) -> Image:
         fileName = name + '.svg'
-        if is_resource(styles, fileName):
+        if importlib_resources.is_resource(styles, fileName):
             data = self.__addFile(fileName, 'image/svg+xml')
             if data is not None:
                 return svgIcon(fileName, data)

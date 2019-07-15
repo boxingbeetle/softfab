@@ -23,13 +23,13 @@ from twisted.web.http import Request as TwistedRequest
 from twisted.web.resource import Resource
 from twisted.web.static import Data
 from twisted.web.util import redirectTo
-import importlib_resources
 
 from softfab.FabPage import BasePage, LinkBarButton
 from softfab.Page import Authenticator, PageProcessor, Responder
 from softfab.StyleResources import styleRoot
 from softfab.UIPage import UIResponder
 from softfab.authentication import LoginAuthPage
+from softfab.compat import importlib_resources
 from softfab.pageargs import PageArgs
 from softfab.render import renderAuthenticated
 from softfab.response import Response

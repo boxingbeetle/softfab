@@ -14,7 +14,6 @@ from twisted.internet.defer import Deferred
 from twisted.python.failure import Failure
 from twisted.web.http import Request as TwistedRequest
 from twisted.web.resource import Resource
-import importlib_resources
 
 from softfab import static
 from softfab.Page import FabResource, PageProcessor, Responder
@@ -24,6 +23,7 @@ from softfab.TwistedUtil import PageRedirect
 from softfab.UIPage import UIResponder
 from softfab.artifacts import createArtifactRoots
 from softfab.authentication import DisabledAuthPage, NoAuthPage, TokenAuthPage
+from softfab.compat import importlib_resources
 from softfab.config import dbDir
 from softfab.databases import iterDatabasesToPreload
 from softfab.docserve import DocPage, DocResource

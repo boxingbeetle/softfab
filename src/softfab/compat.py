@@ -22,4 +22,13 @@ if TYPE_CHECKING:
 else:
     NoReturn = None
 
-__all__ = ['Collection', 'NoReturn', 'Protocol']
+
+# On Python 3.7+, use importlib.resources from the standard library.
+# On older versions, a compatibility package can be installed from PyPI.
+try:
+    import importlib.resources as importlib_resources
+except ImportError:
+    import importlib_resources # type: ignore
+
+
+__all__ = ['Collection', 'NoReturn', 'Protocol', 'importlib_resources']
