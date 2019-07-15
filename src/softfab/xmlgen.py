@@ -50,7 +50,7 @@ from xml.etree import ElementTree
 from xml.sax.saxutils import escape
 import re
 
-from softfab.typing import NoReturn, Protocol
+from softfab.compat import NoReturn, Protocol
 from softfab.utils import cachedProperty
 
 

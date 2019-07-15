@@ -8,8 +8,8 @@ from typing import (
     Union, cast
 )
 
+from softfab.compat import Protocol
 from softfab.setcalc import UnionFind, categorizedLists, union
-from softfab.typing import Protocol
 from softfab.utils import Heap, ResultKeeper
 from softfab.waiting import (
     BoundReason, ReasonForWaiting, checkBoundGroupRunner, checkGroupRunners

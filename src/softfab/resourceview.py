@@ -6,6 +6,7 @@ from typing import (
 )
 
 from softfab.Page import PageProcessor, PresentableError
+from softfab.compat import Collection
 from softfab.connection import ConnectionStatus
 from softfab.databaselib import checkWrapperVarName
 from softfab.formlib import dropDownList, emptyOption, hiddenInput, textInput
@@ -17,7 +18,6 @@ from softfab.resreq import (
     ResourceClaim, ResourceSpec, taskRunnerResourceRefName
 )
 from softfab.restypelib import resTypeDB, taskRunnerResourceTypeName
-from softfab.typing import Collection
 from softfab.webgui import Panel, Table, rowManagerInstanceScript
 from softfab.xmlgen import XMLContent, txt, xhtml
 

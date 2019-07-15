@@ -6,8 +6,8 @@ from typing import (
     Sequence, Set, Tuple, Type, Union, cast
 )
 
+from softfab.compat import Collection, NoReturn
 from softfab.pageargs import PageArgs, dynamic, mandatory
-from softfab.typing import Collection, NoReturn
 from softfab.utils import abstract, iterable
 from softfab.webgui import (
     AttrContainer, Column, Table, Widget, cell, row, script

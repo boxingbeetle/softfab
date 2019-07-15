@@ -15,9 +15,9 @@ from typing import (
 from xml.etree import ElementTree
 import logging
 
+from softfab.compat import NoReturn
 from softfab.pageargs import PageArgs, Query
 from softfab.pnglib import getPNGDimensions
-from softfab.typing import NoReturn
 from softfab.utils import SharedInstance, iterable
 from softfab.xmlgen import (
     XML, XMLContent, XMLNode, XMLPresentable, XMLSubscriptable, adaptToXML,

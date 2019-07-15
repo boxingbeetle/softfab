@@ -5,11 +5,11 @@ from typing import Callable, ClassVar, Generic, cast
 
 from softfab.FabPage import FabPage, IconModifier
 from softfab.Page import PageProcessor, PresentableError, Redirect
+from softfab.compat import Collection
 from softfab.databaselib import DBRecord, Database
 from softfab.formlib import actionButtons, makeForm
 from softfab.pageargs import EnumArg, PageArgs, StrArg
 from softfab.request import Request
-from softfab.typing import Collection
 from softfab.userlib import User, checkPrivilegeForOwned
 from softfab.utils import abstract, pluralize
 from softfab.webgui import unorderedList

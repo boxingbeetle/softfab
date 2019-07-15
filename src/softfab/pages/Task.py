@@ -8,6 +8,7 @@ from softfab.FabPage import FabPage
 from softfab.Page import InvalidRequest, PageProcessor
 from softfab.ReportMixin import ReportTaskArgs
 from softfab.artifacts import SANDBOX_RULES
+from softfab.compat import Collection
 from softfab.datawidgets import DataTable
 from softfab.frameworklib import frameworkDB
 from softfab.joblib import Task
@@ -29,7 +30,6 @@ from softfab.shadowview import getShadowRunStatus
 from softfab.taskdeflib import taskDefDB
 from softfab.taskdefview import formatTimeout
 from softfab.tasktables import JobTaskRunsTable, TaskProcessorMixin
-from softfab.typing import Collection
 from softfab.userlib import User, checkPrivilege
 from softfab.webgui import (
     PropertiesTable, Table, Widget, cell, maybeLink, pageLink

@@ -15,8 +15,8 @@ import os.path
 import re
 import time
 
+from softfab.compat import Protocol
 from softfab.config import dbAtomicWrites, logChanges
-from softfab.typing import Protocol
 from softfab.utils import abstract, atomicWrite, cachedProperty
 from softfab.xmlbind import parse
 from softfab.xmlgen import XML

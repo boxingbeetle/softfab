@@ -9,9 +9,9 @@ from typing import (
 )
 from urllib.parse import parse_qs
 
+from softfab.compat import Collection, NoReturn
 from softfab.timelib import stringToTime
 from softfab.timeview import formatDate, formatTime
-from softfab.typing import Collection, NoReturn
 from softfab.utils import cachedProperty, escapeURL, iterable
 
 # Avoid circular import.

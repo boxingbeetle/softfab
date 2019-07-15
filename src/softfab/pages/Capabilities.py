@@ -4,6 +4,7 @@ from typing import Iterator, MutableSet, cast
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
+from softfab.compat import Collection
 from softfab.datawidgets import DataColumn, DataTable
 from softfab.pageargs import ArgsCorrected, IntArg
 from softfab.pagelinks import (
@@ -17,7 +18,6 @@ from softfab.resourceview import presentCapabilities
 from softfab.restypelib import resTypeDB
 from softfab.restypeview import ResTypeTableMixin
 from softfab.taskdeflib import taskDefDB
-from softfab.typing import Collection
 from softfab.userlib import User, checkPrivilege
 from softfab.utils import ResultKeeper
 from softfab.webgui import Table, pageLink, row, vgroup

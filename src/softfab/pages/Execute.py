@@ -8,6 +8,7 @@ from typing import (
 
 from softfab.FabPage import IconModifier
 from softfab.Page import InternalError, InvalidRequest, PageProcessor, Redirect
+from softfab.compat import NoReturn
 from softfab.configlib import Config, Input, Task, TaskSetWithInputs, configDB
 from softfab.configview import InputTable
 from softfab.dialog import (
@@ -31,7 +32,6 @@ from softfab.resourcelib import TaskRunner, getTaskRunner, iterTaskRunners
 from softfab.selectview import TagValueEditTable, textToValues, valuesToText
 from softfab.taskdeflib import taskDefDB
 from softfab.taskgroup import LocalGroup, TaskGroup
-from softfab.typing import NoReturn
 from softfab.userlib import (
     AccessDenied, User, checkPrivilege, checkPrivilegeForOwned
 )

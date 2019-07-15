@@ -5,13 +5,13 @@ from typing import (
     Mapping, Optional, Sequence, Tuple, Union, cast
 )
 
+from softfab.compat import Collection
 from softfab.databaselib import DBRecord, Database, Retriever
 from softfab.pageargs import ArgsCorrected
 from softfab.querylib import (
     KeySorter, Record, RecordFilter, RecordProcessor, runQuery
 )
 from softfab.timeview import formatDuration, formatTime
-from softfab.typing import Collection
 from softfab.utils import abstract, escapeURL, pluralize
 from softfab.webgui import Column, Table, cell, pageLink, pageURL, row
 from softfab.xmlgen import XMLContent, XMLNode, xhtml

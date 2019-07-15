@@ -3,6 +3,7 @@
 from typing import Iterator, cast
 
 from softfab.Page import InvalidRequest, PageProcessor
+from softfab.compat import Collection
 from softfab.datawidgets import (
     DataColumn, DataTable, DurationColumn, TimeColumn
 )
@@ -15,7 +16,6 @@ from softfab.projectlib import project
 from softfab.request import Request
 from softfab.resourcelib import iterTaskRunners
 from softfab.taskview import getTaskStatus, taskSummary
-from softfab.typing import Collection
 from softfab.userview import OwnerColumn
 from softfab.webgui import pageLink
 from softfab.xmlgen import XMLContent, xhtml

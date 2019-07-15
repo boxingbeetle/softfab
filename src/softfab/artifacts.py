@@ -20,13 +20,13 @@ from twisted.web.server import NOT_DONE_YET
 from twisted.web.util import Redirect, redirectTo
 from zope.interface import implementer
 
+from softfab.compat import NoReturn
 from softfab.joblib import Job, jobDB
 from softfab.projectlib import project
 from softfab.request import Request
 from softfab.resourcelib import runnerFromToken
 from softfab.taskrunlib import TaskRun
 from softfab.tokens import TokenRole, TokenUser, authenticateToken
-from softfab.typing import NoReturn
 from softfab.userlib import (
     AccessDenied, AnonGuestUser, SuperUser, UnauthorizedLogin, User,
     checkPrivilege

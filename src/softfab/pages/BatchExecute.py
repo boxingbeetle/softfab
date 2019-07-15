@@ -9,6 +9,7 @@ from typing import (
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor, Redirect
+from softfab.compat import Collection
 from softfab.configlib import Config, Input, TaskSetWithInputs, configDB
 from softfab.configview import (
     InputTable, SelectConfigsMixin, SimpleConfigTable, presentMissingConfigs
@@ -23,7 +24,6 @@ from softfab.request import Request
 from softfab.resourcelib import TaskRunner
 from softfab.selectview import SelectArgs
 from softfab.taskgroup import LocalGroup
-from softfab.typing import Collection
 from softfab.userlib import User, checkPrivilege
 from softfab.webgui import decoration
 from softfab.xmlgen import XMLContent, xhtml
