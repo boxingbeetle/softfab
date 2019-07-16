@@ -20,8 +20,9 @@ public class PythonRun extends TaskRun {
     protected void writeStartupScript(PrintWriter out)
     throws TaskRunException {
         generateWrapperVariables(new PythonStartupScriptWriter(out));
-        // this works for both python v2 and v3:
-        out.println("exec(open(" + quoteParameter(scriptPath) + ").read())");
+        out.println("import runpy");
+        out.println("runpy.run_path(" + quoteParameter(scriptPath) +
+            ", init_globals=locals())");
     }
 
     private class PythonStartupScriptWriter
