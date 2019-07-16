@@ -40,6 +40,7 @@ public class ScriptRun extends ScalarRun {
             runLogger.warning(
                 "Could not open wrapper to detect shell used: " + e);
         }
+        String shell;
         if (firstLine != null && firstLine.startsWith("#!")) {
             shell = firstLine.substring(2).trim();
         } else {
@@ -47,6 +48,14 @@ public class ScriptRun extends ScalarRun {
             runLogger.info("Wrapper script does not start with \"#!\", "
                 + "using default shell \"" + shell + "\"");
         }
+        final boolean windows = File.separatorChar == '\\';
+        if (windows) {
+            // Absolute paths will only work within MSYS or other shell ports,
+            // not when started from Java. As a workaround, use the shell name
+            // only, so it will be looked up in the PATH.
+            shell = shell.substring(shell.lastIndexOf('/') + 1);
+        }
+        this.shell = shell;
     }
 
     protected String quoteParameter(String value) {
