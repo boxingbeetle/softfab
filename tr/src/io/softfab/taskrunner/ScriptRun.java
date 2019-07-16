@@ -63,7 +63,7 @@ public class ScriptRun extends ScalarRun {
     }
 
     protected void printEpilog(PrintWriter out) {
-        out.println(". " + scriptPath);
+        out.println(". " + quoteParameter(scriptPath));
     }
 
     protected String[] getStartupCommand(String startupScriptPath) {
