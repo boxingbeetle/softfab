@@ -44,18 +44,10 @@ class LoginBase(UIPage[ProcT], FabResource[ArgsT, ProcT]):
 
     def presentContent(self, **kwargs: object) -> XMLContent:
         proc = cast(ProcT, kwargs['proc'])
-        if self.secureCookie and not proc.req.secure:
-            yield xhtml.p(class_='notice')[
-                'Login is not possible over insecure channel.'
-                ]
-            yield xhtml.p[
-                'Please connect over HTTPS instead.'
-                ]
-        else:
-            yield makeForm(args = proc.args)[
-                LoginTable.instance,
-                xhtml.p[ submitButton[ 'Log In' ] ]
-                ].present(**kwargs)
+        yield makeForm(args = proc.args)[
+            LoginTable.instance,
+            xhtml.p[ submitButton[ 'Log In' ] ]
+            ].present(**kwargs)
 
         userAgent = proc.req.userAgent
         if userAgent.family == 'MSIE':

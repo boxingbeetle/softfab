@@ -106,10 +106,6 @@ class RequestBase:
     def rawInput(self) -> IO[bytes]:
         return self._request.content
 
-    @property
-    def secure(self) -> bool:
-        return self._request.isSecure()
-
     @cachedProperty
     def method(self) -> str:
         return self._request.method.decode()
