@@ -4,7 +4,7 @@ from softfab.docserve import piHandler
 from softfab.frameworklib import Framework
 from softfab.graphview import ExecutionGraphBuilder, GraphPanel
 from softfab.productdeflib import ProductDef, ProductType
-from softfab.xmlgen import XMLContent, xhtml
+from softfab.xmlgen import XMLContent
 
 button = 'Graph'
 children = ()
