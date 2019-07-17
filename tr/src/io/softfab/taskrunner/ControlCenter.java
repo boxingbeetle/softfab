@@ -8,6 +8,7 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -303,13 +304,17 @@ implements Runnable {
 
     public void uploadArtifact(RunInfo runInfo, Path artifact)
     throws IOException, PermanentRequestFailure {
+        // Escape path.
+        final String urlPath = runInfo.getArtifactPath() + "/" +
+            artifact.getFileName() + ".gz";
+        final String[] segments = urlPath.split("/");
+        for (int i = 0; i < segments.length; i++) {
+            segments[i] = URLEncoder.encode(segments[i], "UTF-8");
+        }
         // Construct URL.
         final URL url;
         try {
-            url = new URL(
-                serverBaseURL,
-                runInfo.getArtifactPath() + "/" + artifact.getFileName() + ".gz"
-                );
+            url = new URL(serverBaseURL, String.join("/", segments));
         } catch (MalformedURLException e) {
             throw new PermanentRequestFailure(
                 "Artifact URL is invalid: " + e.getMessage(), e
