@@ -5,6 +5,7 @@ from mimetypes import guess_type
 from os import fsync, replace
 from struct import Struct
 from typing import IO, Dict, Iterable, Iterator, Optional, Tuple, Union, cast
+from urllib.parse import unquote_plus
 from zipfile import ZIP_DEFLATED, BadZipFile, ZipFile, ZipInfo
 import logging
 
@@ -272,9 +273,9 @@ class FactoryResource(Resource):
             return AccessDeniedResource.fromException(ex)
 
         try:
-            segment = path.decode()
-        except UnicodeDecodeError:
-            return ClientErrorResource('Path is not valid UTF-8')
+            segment = unquote_plus(path.decode(), errors='strict')
+        except UnicodeError:
+            return ClientErrorResource('Path is not valid')
 
         try:
             return self.childForSegment(segment, request)
