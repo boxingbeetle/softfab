@@ -3,6 +3,7 @@
 from functools import partial
 from importlib import import_module
 from inspect import getmodulename
+from mimetypes import guess_type
 from types import GeneratorType, ModuleType
 from typing import (
     Callable, Dict, Generator, Iterator, Mapping, Optional, Type, Union, cast
@@ -206,12 +207,16 @@ class PageLoader:
 
     def process(self) -> None:
         startupMessages.addMessage('Registering pages')
-        self.root.putChild(b'docs', DocResource.registerDocs('softfab.docs'))
+        root = self.root
+        root.putChild(b'docs', DocResource.registerDocs('softfab.docs'))
         createArtifactRoots(self.root, dbDir + '/artifacts',
                             self.root.anonOperator)
-        self.root.putChild(b'taskrunner.jar', StaticResource(
-            'taskrunner.jar', 'application/java-archive'
-            ))
+
+        # Add files from the 'softfab.static' package.
+        for resource in importlib_resources.contents(static):
+            if not resource.startswith('_'):
+                root.putChild(resource.encode(), StaticResource(resource))
+
         pagesPackage = 'softfab.pages'
         for fileName in importlib_resources.contents(pagesPackage):
             moduleName = getmodulename(fileName)
@@ -272,10 +277,15 @@ class StaticResource(Resource):
     """A resource that is included inside the `softfab.static` module.
     """
 
-    def __init__(self, fileName: str, contentType: str):
+    def __init__(self, fileName: str):
         super().__init__()
         self.fileName = fileName
-        self.contentType = contentType.encode()
+        self.contentType, contentEncoding = guess_type(fileName, strict=False)
+        # We don't support serving with Content-Encoding yet: we'd have to
+        # check the accepted types and possibly decode it before serving.
+        # And if there is an encoding reported, the content type will be
+        # wrong, so we can't use that either.
+        assert contentEncoding is None, contentEncoding
 
     def render_GET(self, request: TwistedRequest) -> bytes:
         data = importlib_resources.read_binary(static, self.fileName)
