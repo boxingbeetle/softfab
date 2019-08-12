@@ -183,7 +183,7 @@ public class Result {
             // We don't remove "data." here, because it would have to be added
             // later anyway when posting the data to the Control Center
             extracted.put(name, value);
-        } else if (name == "report") {
+        } else if (name.equals("report")) {
             // Just "report" is a shortcut for "report.0".
             reports.put(0, value);
         } else if (name.startsWith("report.")) {
