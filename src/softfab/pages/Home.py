@@ -92,7 +92,7 @@ class Home_GET(FabPage['Home_GET.Processor', FabPage.Arguments]):
         if len(jobDB) < 20:
             yield xhtml.p[
                 'For help to get started, please read the ',
-                docLink('/reference/user_manual/')[ 'User Manual' ],
+                docLink('/start/user_manual/')[ 'User Manual' ],
                 ' or go to the general ',
                 docLink('/')[ 'Documentation page' ], '.'
                 ]
