@@ -219,6 +219,13 @@ def parseAndProcess(page: FabResource[ArgsT, PageProcessor[ArgsT]],
     Returns a `Deferred` which has a `Responder` as its result.
     '''
     try:
+        # We might hit an error before argument parsing completes, for example
+        # if access is denied at the page level or if the argument parsing
+        # itself raises an exception.
+        # TODO: There should be a way to respond without having a processing
+        #       result, or to construct a processing result without arguments.
+        args = cast(ArgsT, None)
+
         # Page-level authorization.
         # It is possible for additional access checks to fail during the
         # processing step.
@@ -282,9 +289,6 @@ def parseAndProcess(page: FabResource[ArgsT, PageProcessor[ArgsT]],
                     )]
                 )
             ) # type: ErrorPage[PageProcessor[ArgsT]]
-        # TODO: We don't have an arguments object because we're reporting
-        #       that creating one failed.
-        args = cast(ArgsT, None)
         proc = PageProcessor(page, req, args, user)
         responder = UIResponder(badRequestPage, proc)
     except InvalidRequest as ex:
