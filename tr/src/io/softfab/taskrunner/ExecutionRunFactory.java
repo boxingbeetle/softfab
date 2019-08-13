@@ -5,6 +5,8 @@ package io.softfab.taskrunner;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import java.util.logging.Logger;
 
@@ -65,8 +67,12 @@ class ExecutionRunFactory extends RunFactory {
         if (summary != null) {
             request.addBodyParam("summary", summary);
         }
-        request.addBodyParam("report", result.getReports());
-        request.addBodyParam("report", getLogFileName());
+        final List<String> reports = new ArrayList();
+        for (final String report : result.getReports()) {
+            reports.add(report);
+        }
+        reports.add(getLogFileName());
+        request.addBodyParam("report", reports);
         request.addBodyParams(result.getOutputLocators());
         request.addBodyParams(result.getExtractedData());
         ControlCenter.INSTANCE.submitRequest(
