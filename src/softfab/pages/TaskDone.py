@@ -98,6 +98,15 @@ class TaskDone_POST(ControlPage['TaskDone_POST.Arguments',
                             'but wants to set %s as done'
                             % (taskRunner.getId(), runningTask.getId(), runId)
                             )
+
+                    for report in reports:
+                        # Reject anything that looks like a path separator.
+                        for tabooChar in ('/', '\\', ':'):
+                            if tabooChar in report:
+                                raise InvalidRequest(
+                                    f'Invalid character "{tabooChar}" in '
+                                    f'report name "{report}"'
+                                    )
                 else:
                     # Shadow run.
                     if reports:
