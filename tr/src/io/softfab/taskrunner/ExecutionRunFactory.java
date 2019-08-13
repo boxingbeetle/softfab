@@ -69,7 +69,7 @@ class ExecutionRunFactory extends RunFactory {
         }
         final List<String> reports = new ArrayList();
         for (final String report : result.getReports()) {
-            reports.add(report);
+            reports.add(new File(report).getName());
         }
         reports.add(getLogFileName());
         request.addBodyParam("report", reports);
