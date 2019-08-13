@@ -4,26 +4,35 @@ package io.softfab.taskrunner;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.util.HashMap;
-import java.util.Iterator;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 public class ServerFormRequest extends ServerRequest {
 
-    private static String paramString(Map<String, String> params) {
+    private class Param {
+        final String name;
+        final String value;
+        Param(String name, String value) {
+            this.name = name;
+            this.value = value;
+        }
+    }
+
+    private static String paramString(List<Param> params) {
         final StringBuffer buf = new StringBuffer();
         try {
             boolean first = true;
-            for (final Map.Entry<String, String> entry : params.entrySet()) {
+            for (final Param param : params) {
                 if (first) {
                     first = false;
                 } else {
                     buf.append('&');
                 }
                 buf.append(
-                        URLEncoder.encode(entry.getKey(), "UTF-8")).
+                        URLEncoder.encode(param.name, "UTF-8")).
                     append('=').append(
-                        URLEncoder.encode(entry.getValue(), "UTF-8"));
+                        URLEncoder.encode(param.value, "UTF-8"));
             }
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException( // NOPMD
@@ -33,13 +42,13 @@ public class ServerFormRequest extends ServerRequest {
         return buf.toString();
     }
 
-    private final Map<String, String> queryParams;
-    private final Map<String, String> bodyParams;
+    private final List<Param> queryParams;
+    private final List<Param> bodyParams;
 
     public ServerFormRequest(String page) {
         super(page);
-        queryParams = new HashMap<>();
-        bodyParams = new HashMap<>();
+        queryParams = new ArrayList<>();
+        bodyParams = new ArrayList<>();
     }
 
     /**
@@ -48,7 +57,7 @@ public class ServerFormRequest extends ServerRequest {
      * @param value Parameter value.
      */
     public void addQueryParam(String name, String value) {
-        queryParams.put(name, value);
+        queryParams.add(new Param(name, value));
     }
 
     /**
@@ -57,7 +66,7 @@ public class ServerFormRequest extends ServerRequest {
      * @param value Parameter value.
      */
     public void addBodyParam(String name, String value) {
-        bodyParams.put(name, value);
+        bodyParams.add(new Param(name, value));
     }
 
     /**
@@ -67,7 +76,7 @@ public class ServerFormRequest extends ServerRequest {
      */
     public void addBodyParam(String name, Iterable<String> values) {
         for (final String value : values) {
-            bodyParams.put(name, value);
+            bodyParams.add(new Param(name, value));
         }
     }
 
@@ -76,7 +85,9 @@ public class ServerFormRequest extends ServerRequest {
      * @param map Parameters to add.
      */
     public void addBodyParams(Map<String, String> map) {
-        bodyParams.putAll(map);
+        for (final Map.Entry<String, String> entry : map.entrySet()) {
+            addBodyParam(entry.getKey(), entry.getValue());
+        }
     }
 
     public String getQuery() {
