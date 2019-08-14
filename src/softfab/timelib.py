@@ -69,6 +69,7 @@ def stringToTime(text: str, up: bool = False) -> int:
     match = _timePattern.match(text)
     if match is None:
         raise ValueError('Invalid date: "%s"' % text)
+    assert match.lastindex is not None, text
     if match.lastindex >= 6:
         pieces = [ int(num) for num in match.group(1, 3, 4, 5, 6) ]
         if up:
