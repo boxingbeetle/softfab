@@ -1025,15 +1025,19 @@ def _reserveResources(claim: ResourceClaim,
     assignment = pickResources(claim, resources, whyNot)
     if assignment is not None and whyNot is None:
         for resource in assignment.values():
-            resource.reserve(reservedBy)
+            resType = resTypeDB[resource.typeName]
+            if resType['perjob'] or resType['pertask']:
+                resource.reserve(reservedBy)
     return assignment
 
 def _releaseResources(reserved: Iterable[str]) -> None:
     for resId in reserved:
-        res = resourceDB.get(resId)
-        if res is not None:
-            assert isinstance(res, Resource), resId
-            res.free()
+        resource = resourceDB.get(resId)
+        if resource is not None:
+            assert isinstance(resource, Resource), resId
+            resType = resTypeDB[resource.typeName]
+            if resType['perjob'] or resType['pertask']:
+                resource.free()
 
 JobDB.keyRetrievers = {
     'recent': Job.getRecent,
