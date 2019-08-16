@@ -313,17 +313,9 @@ class Database(Generic[DBRecord], RecordSubjectMixin[DBRecord], ABC):
         for colKey, values in self.__uniqueValuesFor.items():
             values.add(value[colKey])
 
-    def _unregister(self,
-                    key: str,
-                    value: DBRecord,
-                    notify: bool = True
-                    ) -> None:
+    def _unregister(self, key: str, value: DBRecord) -> None:
         value.removeObserver(self.__updateFunc)
         del self._cache[key]
-        if notify:
-            # pylint: disable=protected-access
-            value._retired()
-            value._unload()
 
     def _update(self, value: DBRecord) -> None:
         assert self.get(value.getId()) is value, 'ID "%s"' % value.getId()
@@ -461,7 +453,7 @@ class Database(Generic[DBRecord], RecordSubjectMixin[DBRecord], ABC):
             del self._cache[key]
         else:
             # Unregister object.
-            self._unregister(key, cachedValue, False)
+            self._unregister(key, cachedValue)
 
         # Tell observers.
         _changeLogger.info('datachange/%s/remove/%s', self.name, key)
@@ -483,7 +475,10 @@ class Database(Generic[DBRecord], RecordSubjectMixin[DBRecord], ABC):
         # Store new version in database.
         self._write(key, value)
         if oldValue is not value:
+             # pylint: disable=protected-access
             self._unregister(key, oldValue)
+            oldValue._retired()
+            oldValue._unload()
             self._register(key, value)
 
         # Tell observers.
