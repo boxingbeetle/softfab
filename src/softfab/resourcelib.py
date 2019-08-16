@@ -1,14 +1,16 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from abc import ABC
+from collections import defaultdict
 from typing import (
-    TYPE_CHECKING, AbstractSet, Callable, ClassVar, Iterable, Iterator,
-    Mapping, Optional, Set, Tuple, TypeVar, cast
+    TYPE_CHECKING, AbstractSet, Callable, ClassVar, DefaultDict, Iterable,
+    Iterator, Mapping, Optional, Set, Tuple, TypeVar, cast
 )
 import logging
 
 from twisted.internet import reactor
 
+from softfab.compat import Collection
 from softfab.config import dbDir, syncDelay
 from softfab.connection import ConnectionStatus
 from softfab.databaselib import Database, DatabaseElem, RecordObserver
@@ -832,6 +834,36 @@ class ResourceDB(Database[ResourceBase]):
     privilegeObject = 'r'
     description = 'resource'
     uniqueKeys = ( 'id', )
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.__resourcesByType = \
+                defaultdict(set) # type: DefaultDict[str, Set[str]]
+
+    def _register(self, key: str, value: ResourceBase) -> None:
+        self.__resourcesByType[value.typeName].add(key)
+        super()._register(key, value)
+
+    def _unregister(self, key: str, value: ResourceBase) -> None:
+        self.__resourcesByType[value.typeName].remove(key)
+        super()._unregister(key, value)
+
+    def _update(self, value: ResourceBase) -> None:
+        resourcesByType = self.__resourcesByType
+        resId = value.getId()
+        newType = value.typeName
+        if resId not in resourcesByType[newType]:
+            # Resource type changed.
+            # We don't know the old type, so we have to remove the resource
+            # from all sets.
+            for resources in resourcesByType.values():
+                resources.discard(resId)
+            resourcesByType[newType].add(resId)
+        super()._update(value)
+
+    def resourcesOfType(self, typeName: str) -> Collection[str]:
+        """Return the IDs of all resources of the given type."""
+        return self.__resourcesByType[typeName]
 
     def remove(self, value: ResourceBase) -> None:
         super().remove(value)
