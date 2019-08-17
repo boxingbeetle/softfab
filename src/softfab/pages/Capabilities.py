@@ -162,12 +162,8 @@ class Capabilities_GET(FabPage['Capabilities_GET.Processor',
                             capMap[rcap].taskDefIds.add(taskDefId)
 
             # Determine which resources are necessary for each task.
-            for resource in (
-                    resource for resource in resourceDB
-                    if resource.typeName == typeName
-                    ):
-                resourceId = resource.getId()
-                for cap in resource.capabilities:
+            for resourceId in resourceDB.resourcesOfType(typeName):
+                for cap in resourceDB[resourceId].capabilities:
                     capMap[cap].resourceIds.add(resourceId)
 
             cap = args.cap

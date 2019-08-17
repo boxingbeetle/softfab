@@ -36,11 +36,7 @@ class ResTypeDelete_GET(RecordDelete_GET):
         name = record.getId()
 
         # Check for resources of this type.
-        resourcesIds = set(
-            resourceId
-            for resourceId, resource in resourceDB.items()
-            if name == resource.typeName
-            )
+        resourcesIds = resourceDB.resourcesOfType(name)
         if resourcesIds:
             # Note: There is currently no details page for resources,
             #       so we present just the name.

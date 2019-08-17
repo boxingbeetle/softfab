@@ -875,9 +875,8 @@ resourceDB = ResourceDB()
 def iterTaskRunners() -> Iterator[TaskRunner]:
     """Iterates through all Task Runner records.
     """
-    for resource in resourceDB:
-        if resource.typeName == taskRunnerResourceTypeName:
-            yield cast(TaskRunner, resource)
+    for resourceId in resourceDB.resourcesOfType(taskRunnerResourceTypeName):
+        yield cast(TaskRunner, resourceDB[resourceId])
 
 def getTaskRunner(runnerID: str) -> TaskRunner:
     """Returns a Task Runner record for the given ID.
