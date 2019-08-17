@@ -53,3 +53,4 @@ mypy = '>=0.670'
 mypy-zope = '^0.1.1'
 typing_extensions = '^3.7'
 lxml = "^4.3"
+pyflakes = "^2.1"
