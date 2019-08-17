@@ -14,7 +14,7 @@ from softfab.querylib import (
 from softfab.timeview import formatDuration, formatTime
 from softfab.utils import abstract, escapeURL, pluralize
 from softfab.webgui import Column, Table, cell, pageLink, pageURL, row
-from softfab.xmlgen import XMLContent, XMLNode, xhtml
+from softfab.xmlgen import XMLContent, XMLNode, XMLSubscriptable, xhtml
 
 if TYPE_CHECKING:
     from softfab.Page import PageProcessor
@@ -126,10 +126,14 @@ class LinkColumn(DataColumn[DBRecord]):
             idArg + '='
             )
 
+    def presentLink(self,
+                    record: DBRecord,
+                    **kwargs: object
+                    ) -> XMLSubscriptable:
+        return xhtml.a(href = self.__urlBase + escapeURL(record.getId()))
+
     def presentCell(self, record: DBRecord, **kwargs: object) -> XMLContent:
-        return xhtml.a(href = self.__urlBase + escapeURL(record.getId()))[
-            self.label
-            ]
+        return self.presentLink(record, **kwargs)[ self.label ]
 
 class TimeColumn(DataColumn[Record]):
     cellStyle = 'nobreak'
