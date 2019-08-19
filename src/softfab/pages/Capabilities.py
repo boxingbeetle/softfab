@@ -14,7 +14,7 @@ from softfab.projectlib import project
 from softfab.querylib import CustomFilter, RecordFilter
 from softfab.request import Request
 from softfab.resourcelib import ResourceBase, resourceDB
-from softfab.resourceview import presentCapabilities
+from softfab.resourceview import ResourceNameColumn, presentCapabilities
 from softfab.restypelib import resTypeDB
 from softfab.restypeview import ResTypeTableMixin
 from softfab.taskdeflib import taskDefDB
@@ -37,12 +37,6 @@ class ResTypeTable(ResTypeTableMixin, Table):
                 desc
                 ]
 
-class NameColumn(DataColumn[ResourceBase]):
-    cellStyle = 'nobreak'
-
-    def presentCell(self, record: ResourceBase, **kwargs: object) -> XMLContent:
-        return createTaskRunnerDetailsLink(record.getId())
-
 class CapabilitiesColumn(DataColumn[ResourceBase]):
     keyName = 'capabilities'
 
@@ -58,7 +52,7 @@ class CapabilitiesColumn(DataColumn[ResourceBase]):
 class ResourcesTable(DataTable[ResourceBase]):
     db = resourceDB
     columns = (
-        NameColumn('Name', 'id'),
+        ResourceNameColumn.instance,
         CapabilitiesColumn('Capabilities'),
         )
     tabOffsetField = 'first_tr'

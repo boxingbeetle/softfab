@@ -13,26 +13,18 @@ from softfab.datawidgets import (
 )
 from softfab.formlib import makeForm, submitButton
 from softfab.pageargs import EnumArg, IntArg, PageArgs, SortArg, StrArg
-from softfab.pagelinks import (
-    createJobLink, createTaskInfoLink, createTaskLink,
-    createTaskRunnerDetailsLink
-)
+from softfab.pagelinks import createJobLink, createTaskInfoLink, createTaskLink
 from softfab.request import Request
 from softfab.resourcelib import ResourceBase, TaskRunner, resourceDB
-from softfab.resourceview import getResourceStatus, presentCapabilities
+from softfab.resourceview import (
+    ResourceNameColumn, getResourceStatus, presentCapabilities
+)
 from softfab.restypelib import resTypeDB, taskRunnerResourceTypeName
 from softfab.taskrunlib import taskRunDB
 from softfab.userlib import User, checkPrivilege
 from softfab.webgui import Widget, docLink, header, pageLink, pageURL, row
 from softfab.xmlgen import XML, XMLContent, xhtml
 
-
-class NameColumn(DataColumn[ResourceBase]):
-    def presentCell(self, record: ResourceBase, **kwargs: object) -> XMLContent:
-        if isinstance(record, TaskRunner):
-            return createTaskRunnerDetailsLink(record.getId())
-        else:
-            return record.getId()
 
 class CapabilitiesColumn(ListDataColumn[ResourceBase]):
     def presentCell(self, record: ResourceBase, **kwargs: object) -> XMLContent:
@@ -109,7 +101,7 @@ class ResourcesTable(DataTable[ResourceBase]):
     autoUpdate = True
     db = resourceDB
     fixedColumns = (
-        NameColumn('Name', 'id'),
+        ResourceNameColumn.instance,
         DataColumn[ResourceBase](keyName = 'locator'),
         CapabilitiesColumn(keyName = 'capabilities'),
         StateColumn(keyName = 'state', cellStyle = 'strong'),

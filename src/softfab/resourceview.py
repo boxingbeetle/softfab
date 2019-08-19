@@ -9,11 +9,12 @@ from softfab.Page import PageProcessor, PresentableError
 from softfab.compat import Collection
 from softfab.connection import ConnectionStatus
 from softfab.databaselib import checkWrapperVarName
+from softfab.datawidgets import DataColumn
 from softfab.formlib import dropDownList, emptyOption, hiddenInput, textInput
 from softfab.frameworklib import TaskDefBase
 from softfab.pageargs import ListArg, PageArgs
-from softfab.pagelinks import createCapabilityLink
-from softfab.resourcelib import ResourceBase
+from softfab.pagelinks import createCapabilityLink, createTaskRunnerDetailsLink
+from softfab.resourcelib import ResourceBase, TaskRunner
 from softfab.resreq import (
     ResourceClaim, ResourceSpec, taskRunnerResourceRefName
 )
@@ -21,6 +22,17 @@ from softfab.restypelib import resTypeDB, taskRunnerResourceTypeName
 from softfab.webgui import Panel, Table, rowManagerInstanceScript
 from softfab.xmlgen import XMLContent, txt, xhtml
 
+
+class ResourceNameColumn(DataColumn[ResourceBase]):
+    label = 'Name'
+    keyName = 'id'
+    cellStyle = 'nobreak'
+
+    def presentCell(self, record: ResourceBase, **kwargs: object) -> XMLContent:
+        if isinstance(record, TaskRunner):
+            return createTaskRunnerDetailsLink(record.getId())
+        else:
+            return record.getId()
 
 def getResourceStatus(resource: ResourceBase) -> str:
     """Returns a status summary string for `resource`."""
