@@ -10,14 +10,19 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.GZIPOutputStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import io.softfab.taskrunner.config.ConfigFactory;
 import io.softfab.taskrunner.config.ControlCenterConfig;
@@ -304,9 +309,11 @@ implements Runnable {
 
     public void uploadArtifact(RunInfo runInfo, Path artifact)
     throws IOException, PermanentRequestFailure {
+        // Upload a file or directory?
+        boolean uploadDir = Files.isDirectory(artifact);
         // Escape path.
         final String urlPath = runInfo.getArtifactPath() + "/" +
-            artifact.getFileName() + ".gz";
+            artifact.getFileName() + (uploadDir ? ".zip" : ".gz");
         final String[] segments = urlPath.split("/");
         for (int i = 0; i < segments.length; i++) {
             segments[i] = URLEncoder.encode(segments[i], "UTF-8");
@@ -333,9 +340,28 @@ implements Runnable {
         connection.setDoOutput(true);
         connection.setDoInput(true);
         final OutputStream output = connection.getOutputStream();
-        final GZIPOutputStream gzipOutput = new GZIPOutputStream(output);
-        Files.copy(artifact, gzipOutput);
-        gzipOutput.close();
+        if (uploadDir) {
+            final ZipOutputStream zipOutput = new ZipOutputStream(output);
+            Files.walkFileTree(artifact, new SimpleFileVisitor<Path>() {
+                @Override
+                public FileVisitResult visitFile(
+                    Path file, BasicFileAttributes attrs)
+                throws IOException {
+                    ZipEntry entry = new ZipEntry(
+                        artifact.relativize(file).toString()
+                        ).setLastModifiedTime(Files.getLastModifiedTime(file));
+                    zipOutput.putNextEntry(entry);
+                    Files.copy(file, zipOutput);
+                    zipOutput.closeEntry();
+                    return FileVisitResult.CONTINUE;
+                }
+            });
+            zipOutput.close();
+        } else {
+            final GZIPOutputStream gzipOutput = new GZIPOutputStream(output);
+            Files.copy(artifact, gzipOutput);
+            gzipOutput.close();
+        }
         output.flush();
         output.close();
 
