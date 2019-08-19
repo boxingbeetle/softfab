@@ -335,7 +335,7 @@ class ParamTable(ParamOverrideTable):
                 if taskParameters is not None:
                     taskParams = taskParameters.get(taskName)
                 if taskParams is None:
-                    taskParams = task.getParameters()
+                    taskParams = task.getVisibleParameters()
                 tasks.append(( taskName, task.getDef(), taskParams ))
             table = super().present(
                 indexStr=str(index), tasks=tasks, **kwargs
