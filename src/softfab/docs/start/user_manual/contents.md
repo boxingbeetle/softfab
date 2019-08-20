@@ -3,12 +3,11 @@
 A tour of the Control Center user interface.
 
 <p class="todo">
-TODO: Replace the old resource png in the resources section header by the windmill.<br/>
 TODO: The explanation of the Task Runner resource status table should be replaced and relocated by one covering other resources too.<br/>
 TODO: Perhaps it would be better to re-use the content of this document as per-page help text. While it is intended for new users, it is written in a reference style, not in a step-by-step style that better fits the needs of new users.
 </p>
 
-##SoftFab Web GUI
+## SoftFab Web GUI
 
 Every page has a title bar, a navigation bar and the main content.
 
@@ -31,17 +30,17 @@ If the browser page gets very narrow the logo and button text may disappear.
 ### Main content
 This is the part where you can make your actions or read the information from.
 
-## Home ![Home](/styles/SoftFabLogoMono1.png)
+<h2><?icon IconHome?> Home</h2>
 
 The "Home" page is the default SoftFab page. From here you have access to all functionalities and locations. A table occupies the largest part where you can see the most recent 'jobs' that have run in the SoftFab. A 'job' is represented by a row in the table and its status is represented by a color.
 
 More about jobs in the section titled [History](#history).
 
-## Configure ![Configure](/styles/Configure.png)<a id="configure"></a>
+<h2 id="configure"><?icon IconConfig?> Configure</h2>
 
 This is the starting point where you have to define the project settings, create or extend the design of the SoftFab project by building an executation graph including frameworks and products and where you can create new task definitions and resources.
 
-### Project ![Project](/styles/Project1.png)
+<h3><?icon Project1?> Project</h3>
 
 In the project page operators can change project wide settings.
 
@@ -61,7 +60,7 @@ In the project page operators can change project wide settings.
 
 **Configuration tags**: These can be created to split the total list of configurations into two or more groups by tagging each configuration. Each group is tagged with an unique key. Specify the tag keys here (use strings) and in the Execute page you can click on a tag key and add configuration to a specific tag key. This improves the viewing and finding of a configuration in the total list of configurations. It is mostly used in projects with many configurations. By default, configuration tags are disabled.
 
-### Design ![Design](/styles/Graph.png)
+<h3><?icon IconDesign?> Design</h3>
 
 Here you can create or extend the design of the SoftFab project by building an execution graph. The execution graph must contain at least one framework. If more than one framework is defined, these can be connected by products. The execution graph gives you a visual overview of all the different frameworks and what the order of these frameworks are, when executed. Try to split up an automatic job into several parts (frameworks), e.g.: prepare\_code, static\_code\_check, build, unit\_tests, coverage\_tests or report\_generation tasks.
 Hint: always try to automate as much as possible (e.g. creation of install packages, archiving or clean-up actions, create CM baseline, generate documentation, etc.).
@@ -70,11 +69,11 @@ Read more about the concept of execution graphs in [this document](../../concept
 
 To be able to create and run a new job configuration you must have or create at least the following items: one framework, a wrapper script for the framework (to execute your task) and one task definition (using the framework). Learn more about framework and task definitions in [this document](../../concepts/taskdefs/).
 
-### Users ![Users](/styles/UserList1.png)
+<h3><?icon IconUser?> Users</h3>
 
 On this page you can see all the SoftFab users for this factory. You can add a new user, change password(s) and change the user roles (inactive, guest, user or operator). It is not possible to delete a user. Set the user role to inactive this such case (this is done for traceability; the job history of all users are kept).
 
-## Execute ![Execute](/styles/ExecConf2.png)<a id="execute"></a>
+<h2 id="execute"><?icon IconExec?> Execute</h2>
 
 From this page you are able to start remotely one or more builds, one or more tests or any other type of task an operator has integrated into the SoftFab tool. A 'task' in SoftFab terminology is the smallest unit of execution. A task runs on exactly one (available) Task Runner. It is possible that the tasks of a multi task job configuration run on many different, possibly globally distributed, Task Runners in parallel. In this way a job can complete in shorter time.
 
@@ -87,7 +86,7 @@ The latter one means that somebody in the past already has walked the 'Execute F
 
 A Job configuration is represented by a row in the table.
 
-### Execute From Scratch ![Execute from Scratch](/styles/ExecScra1.png)
+<h3><?icon IconExec new?> Execute from Scratch</h3>
 
 This part of the GUI is a succession of pages, all equipped with 'back' and 'next' buttons. On each page you have to make some choices and proceed via the 'next' button.
 
@@ -105,7 +104,7 @@ On the latest 'Execute' page you have the possibility to either execute or save 
 
 On the same page there is a field where you can fill in your email address. You will receive an automated email on this address when the job is finished. If you select "On failure only" you will only receive an email in case the finished job has tasks with result: not OK (not green). You may enter a by comma separated list of addresses.
 
-## History ![History](/styles/Reports1.png)<a id="history"></a>
+<h2 id="history"><?icon IconReport?> History</h2>
 
 On this page a table is visible with all jobs ever executed, currently executing or waiting for execution. Sorting and filtering this table is possible by making use of the filter box (on top of the page) and by clicking on the sorting links.
 
@@ -259,17 +258,17 @@ Click on the description of a job to see all underlying tasks. Click on the summ
 
 A zip file with all results, all logs and some extra navigation `.html` files can be downloaded if 'Export' is clicked.
 
-## Task History ![Task History](/styles/Reports2.png)
+<h3><?icon IconReport?> Task History</h3>
 
 This is another representation of the history of tasks that have been run. Unless the main History page, the tasks are displayed independent from the jobs they were in. This makes it easier to compare results between different runs of the same task. Multiple tasks can be selected.
 
-## Task Matrix ![Task Matrix](/styles/TaskMatrix1.png)
+<h3><?icon IconMatrix?> Task Matrix</h3>
 
 Task Matrix is again another new way of displaying which tasks have run and their results. After you select a week, you will be presented with a matrix of all tasks and on which days of the selected week they were run. Tasks, which were not run but are configured in your SoftFab are also shown.
 
 Filtering on (Job) configuration means: show only tasks that occur in this/these particular configuration(s).
 
-## Resources![Resources](/styles/Resources1.png)<a id="resources"></a>
+<h2 id="resources"><?icon IconResources?> Resources</h2>
 
 In this section all resources instances, ordered by their type, and their status are presented.
 
@@ -384,7 +383,7 @@ The Task Runner status is also represented by a color.
 
 Deleting a Task Runner record is only possible in the status 'lost'. Note that it doesn't mean that the Task Runner itself is deleted, that is not possible within the SoftFab GUI. Deleting a Task Runner record means that the SoftFab GUI doesn't display the status of this Task Runner anymore until it syncs again.
 
-## Scheduling ![Schedules](/styles/Schedule1.png)
+<h2><?icon IconSchedule?> Schedules</h2>
 
 It is possible to schedule a job in the future via the web interface. In order to schedule a job, first a job configuration should be created. Both one-time scheduling and sequentially scheduling are possible. In case of a weekly sequence, more days of the week can be chosen.
 

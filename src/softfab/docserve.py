@@ -338,6 +338,31 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
             childResource = resource.children[childName.encode()]
             yield childName, childResource.page
 
+    def renderIcon(self, arg: str) -> XMLContent:
+        # Parse arguments.
+        iconStyle = ['navicon']
+        args = arg.split()
+        if len(args) == 1:
+            icon, = args
+        elif len(args) == 2:
+            icon, modifier = args
+            iconStyle.append(modifier + 'icon')
+        else:
+            raise ValueError(arg)
+
+        # Determine relative URL to style resources.
+        depth = 0
+        resource = self.resource # type: Optional[DocResource]
+        while resource is not None:
+            resource = resource.parent
+            depth += 1
+        styleURL = '../' * depth + styleRoot.relativeURL
+
+        # Render.
+        yield xhtml.span(class_=' '.join(iconStyle))[
+            styleRoot.addIcon(icon).present(styleURL=styleURL)
+            ]
+
     def renderTableOfContents(self, arg: str) -> XMLContent:
         if arg:
             raise ValueError('"toc" does not take any arguments')
@@ -477,7 +502,9 @@ class DocResource(Resource):
 
         # Add global processing instruction handlers.
         if initModule is not None:
-            piHandlerDict(initModule)['toc'] = page.renderTableOfContents
+            handlers = piHandlerDict(initModule)
+            handlers['toc'] = page.renderTableOfContents
+            handlers['icon'] = page.renderIcon
 
         # Register children.
         for childName in metadata.children:
