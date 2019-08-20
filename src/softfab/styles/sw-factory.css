@@ -46,6 +46,7 @@ h2 {
 	margin-bottom: 0.75em;
 	padding-bottom: 2px;
 	border-bottom: 1px solid #800000;
+	width: -moz-max-content;
 	width: max-content;
 }
 h3, dl.toc > dt {
