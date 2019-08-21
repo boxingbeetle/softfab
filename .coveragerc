@@ -1,0 +1,19 @@
+[run]
+branch = True
+
+[report]
+exclude_lines =
+    # Intended to be unreachable:
+    raise NotImplementedError$
+    assert False$
+    assert False, $
+
+    # Debug-only code:
+    def __repr__\(
+
+    # Exclusive to mypy:
+    if TYPE_CHECKING:$
+    .\.\.$
+
+    # Hard to test:
+    except ImportError:$
