@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from enum import Enum, auto
 from typing import Generator, Iterator, Tuple, cast
 from urllib.parse import urljoin
 
@@ -13,10 +14,11 @@ from softfab.UIPage import UIPage
 from softfab.authentication import NoAuthPage
 from softfab.config import rootURL
 from softfab.formlib import (
-    FormTable, makeForm, passwordInput, submitButton, textInput
+    FormTable, actionButtons, makeForm, passwordInput, textInput
 )
-from softfab.pageargs import ArgsCorrected, ArgsT, StrArg
+from softfab.pageargs import ArgsCorrected, ArgsT, EnumArg, StrArg
 from softfab.pagelinks import URLArgs
+from softfab.projectlib import project
 from softfab.request import Request, relativeURL
 from softfab.userlib import (
     PasswordMessage, User, UserInfo, authenticateUser, passwordQuality
@@ -32,6 +34,10 @@ class LoginTable(FormTable):
         yield 'User name', textInput(name = 'loginname')
         yield 'Password', passwordInput(name = 'loginpass')
 
+class Actions(Enum):
+    LOG_IN = auto()
+    CANCEL = auto()
+
 class LoginBase(UIPage[ProcT], FabResource[ArgsT, ProcT]):
     authenticator = NoAuthPage.instance
     secureCookie = True
@@ -42,11 +48,16 @@ class LoginBase(UIPage[ProcT], FabResource[ArgsT, ProcT]):
     def pageTitle(self, proc: ProcT) -> str:
         return 'Log In'
 
+    def iterActions(self) -> Iterator[Actions]:
+        yield Actions.LOG_IN
+        if project['anonguest']:
+            yield Actions.CANCEL
+
     def presentContent(self, **kwargs: object) -> XMLContent:
         proc = cast(ProcT, kwargs['proc'])
         yield makeForm(args = proc.args)[
             LoginTable.instance,
-            xhtml.p[ submitButton[ 'Log In' ] ]
+            xhtml.p[ actionButtons(*self.iterActions()) ]
             ].present(**kwargs)
 
         userAgent = proc.req.userAgent
@@ -108,6 +119,7 @@ class Login_POST(LoginBase['Login_POST.Processor', 'Login_POST.Arguments']):
 
     class Arguments(Login_GET.Arguments, LoginPassArgs):
         loginname = StrArg()
+        action = EnumArg(Actions)
 
     class Processor(PageProcessor['Login_POST.Arguments']):
 
@@ -117,6 +129,9 @@ class Login_POST(LoginBase['Login_POST.Processor', 'Login_POST.Arguments']):
                     user: User
                     ) -> Generator[Deferred, UserInfo, None]:
             super().process(req, user)
+
+            if req.args.action is not Actions.LOG_IN:
+                raise Redirect(req.args.url or 'Home')
 
             username = req.args.loginname
             password = req.args.loginpass
@@ -151,8 +166,7 @@ class Login_POST(LoginBase['Login_POST.Processor', 'Login_POST.Arguments']):
                             )
                         ))
                 else:
-                    url = req.args.url
-                    raise Redirect('Home' if url is None else url)
+                    raise Redirect(req.args.url or 'Home')
 
     def presentError(self, message: XML, **kwargs: object) -> XMLContent:
         yield message
