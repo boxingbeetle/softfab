@@ -41,12 +41,12 @@ class ValueFilter(RecordFilter[Record], Generic[Record, Comparable]):
 
     @overload
     def __init__(self, key: str, value: Comparable, db: None = None):
-        pass
+        ...
 
     @overload
     def __init__(self: 'ValueFilter[DBRecord, Comparable]',
                  key: str, value: Comparable, db: Database[DBRecord]):
-        pass
+        ...
 
     def __init__(self: 'ValueFilter',
                  key: str,
@@ -74,12 +74,12 @@ class WildcardFilter(RecordFilter[Record]):
 
     @overload
     def __init__(self, key: str, pattern: str, db: None = None):
-        pass
+        ...
 
     @overload
     def __init__(self: 'WildcardFilter[DBRecord]',
                  key: str, pattern: str, db: Database[DBRecord]):
-        pass
+        ...
 
     def __init__(self: 'WildcardFilter',
                  key: str,
@@ -127,7 +127,7 @@ class SetFilter(RecordFilter[Record], Generic[Record, Comparable]):
                choices: AbstractSet[Comparable],
                db: None = None
                ) -> RecordFilter[Record]:
-        pass
+        ...
 
     @overload
     @classmethod
@@ -137,7 +137,7 @@ class SetFilter(RecordFilter[Record], Generic[Record, Comparable]):
                choices: AbstractSet[Comparable],
                db: Database[DBRecord]
                ) -> RecordFilter[DBRecord]:
-        pass
+        ...
 
     @classmethod
     def create(cls: Type['SetFilter'],
@@ -230,14 +230,14 @@ class KeySorter(RecordSorter[Record]):
                  keyOrder: Iterable[Union[str, Retriever]],
                  db: None = None,
                  uniqueKeys: Optional[Collection[str]] = None):
-        pass
+        ...
 
     @overload
     def __init__(self: 'KeySorter[DBRecord]',
                  keyOrder: Iterable[Union[str, Retriever]],
                  db: Database[DBRecord],
                  uniqueKeys: Optional[Collection[str]] = None):
-        pass
+        ...
 
     def __init__(self: 'KeySorter',
                  keyOrder: Iterable[Union[str, Retriever]],
