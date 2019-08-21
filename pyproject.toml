@@ -43,7 +43,6 @@ importlib_resources = "^1.0"
 "zope.interface" = '^4.4.2'
 markdown = "^3.1"
 pygments = "^2.2"
-coverage = "^4.5"
 
 [tool.poetry.dev-dependencies]
 pytest = '^4.0'
@@ -55,3 +54,4 @@ mypy-zope = '^0.1.1'
 typing_extensions = '^3.7'
 lxml = "^4.3"
 pyflakes = "^2.1"
+coverage = "^4.5"
