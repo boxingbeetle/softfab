@@ -20,7 +20,6 @@ class GetResourceInfo_GET(ControlPage['GetResourceInfo_GET.Arguments',
         name = SetArg()
 
     def checkAccess(self, user: User) -> None:
-        checkPrivilege(user, 'r/a')
         checkPrivilege(user, 'r/l')
 
     class Processor(PageProcessor['GetResourceInfo_GET.Arguments']):

@@ -35,7 +35,7 @@ class TaskRunnerDetails_GET(FabPage['TaskRunnerDetails_GET.Processor',
                 self.taskRunner = None
 
     def checkAccess(self, user: User) -> None:
-        checkPrivilege(user, 'r/a')
+        checkPrivilege(user, 'r/l')
 
     def iterWidgets(self, proc: Processor) -> Iterator[Widget]:
         yield DetailsTable.instance

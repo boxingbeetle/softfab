@@ -101,6 +101,8 @@ privileges = {
     'rt/m': ('operator', ),
     'rt/d': ('operator', ),
 
+    # Note: Reservation is controlled by the 'r/a' privilege;
+    #       'r/m' controls the resource definition.
     'r/l': ('guest', 'user', 'operator'),
     'r/c': ('operator', ),
     'r/a': ('user', 'operator'),
