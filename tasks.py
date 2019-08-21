@@ -8,8 +8,6 @@ TOP_DIR = Path(__file__).parent
 SRC_ENV = {'PYTHONPATH': '{}/src'.format(TOP_DIR)}
 PYLINT_ENV = {'PYTHONPATH': '{0}/src:{0}/tests/pylint'.format(TOP_DIR)}
 
-TR_INSTALL_PATH = TOP_DIR / 'src' / 'softfab' / 'static' / 'taskrunner.jar'
-
 mypy_report = 'mypy-report'
 
 def source_arg(pattern):
@@ -31,18 +29,16 @@ def clean(c):
     print('Cleaning up...')
     remove_dir(TOP_DIR / mypy_report)
     remove_dir(TOP_DIR / 'tr' / 'derived')
-    TR_INSTALL_PATH.unlink()
 
 @task
-def build_tr(c, lazy=False):
+def build_tr(c):
     """Build Task Runner."""
-    if not (lazy and TR_INSTALL_PATH.exists()):
-        with c.cd(str(TOP_DIR / 'tr')):
-            c.run('ant jar', pty=True)
-        copyfile(
-            str(TOP_DIR / 'tr' / 'derived' / 'bin' / 'taskrunner.jar'),
-            str(TR_INSTALL_PATH)
-            )
+    with c.cd(str(TOP_DIR / 'tr')):
+        c.run('ant jar', pty=True)
+    copyfile(
+        str(TOP_DIR / 'tr' / 'derived' / 'bin' / 'taskrunner.jar'),
+        str(TOP_DIR / 'src' / 'softfab' / 'static' / 'taskrunner.jar')
+        )
 
 @task
 def lint(c, src=None, rule=None):
@@ -84,7 +80,7 @@ def isort(c, src=None):
     with c.cd(str(TOP_DIR)):
         c.run('isort %s' % source_arg(src), pty=True)
 
-@task(pre=[call(build_tr, lazy=True)])
+@task
 def run(c, host='localhost', port=8180, auth=False):
     """Run a Control Center instance."""
     print('Starting Control Center at: http://%s:%d/' % (host, port))
