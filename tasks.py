@@ -81,13 +81,18 @@ def isort(c, src=None):
         c.run('isort %s' % source_arg(src), pty=True)
 
 @task
-def run(c, host='localhost', port=8180, auth=False):
+def run(c, host='localhost', port=8180, auth=False, coverage=False):
     """Run a Control Center instance."""
-    print('Starting Control Center at: http://%s:%d/' % (host, port))
+    print(f'Starting Control Center at: http://{host}:{port}/')
     root = 'debugAuth' if auth else 'debug'
     makedirs('run/', exist_ok=True)
+    cmd = [
+        'twist', 'web',
+        f'--listen tcp:interface={host}:port={port}',
+        f'--class softfab.TwistedApp.{root}'
+        ]
+    if coverage:
+        runner = TOP_DIR / 'tests' / 'tools' / 'run_console_script.py'
+        cmd = ['coverage', 'run', '--source=../src', str(runner)] + cmd
     with c.cd(str(TOP_DIR / 'run')):
-        c.run('twist web'
-                ' --listen tcp:interface=%s:port=%d'
-                ' --class softfab.TwistedApp.%s' % (host, port, root),
-                env=SRC_ENV, pty=True)
+        c.run(' '.join(cmd), env=SRC_ENV, pty=True)
