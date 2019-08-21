@@ -3,14 +3,13 @@
 from abc import ABC
 from collections import defaultdict
 from typing import (
-    TYPE_CHECKING, AbstractSet, Callable, ClassVar, DefaultDict, Iterable,
-    Iterator, Mapping, Optional, Set, Tuple, TypeVar, cast
+    TYPE_CHECKING, AbstractSet, Callable, ClassVar, Collection, DefaultDict,
+    Iterable, Iterator, Mapping, Optional, Set, Tuple, TypeVar, cast
 )
 import logging
 
 from twisted.internet import reactor
 
-from softfab.compat import Collection
 from softfab.config import dbDir, syncDelay
 from softfab.connection import ConnectionStatus
 from softfab.databaselib import Database, DatabaseElem, RecordObserver

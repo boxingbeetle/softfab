@@ -2,11 +2,11 @@
 
 from operator import itemgetter
 from typing import (
-    AbstractSet, Callable, Generic, Iterable, List, Optional, Type, TypeVar,
-    Union, cast, overload
+    AbstractSet, Callable, Collection, Generic, Iterable, List, Optional, Type,
+    TypeVar, Union, cast, overload
 )
 
-from softfab.compat import Collection, Protocol
+from softfab.compat import Protocol
 from softfab.databaselib import Comparable, DBRecord, Database, Retriever
 from softfab.utils import MissingValue, missing, wildcardMatcher
 

@@ -1,9 +1,8 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Iterator, cast
+from typing import Collection, Iterator, cast
 
 from softfab.Page import InvalidRequest, PageProcessor
-from softfab.compat import Collection
 from softfab.datawidgets import (
     DataColumn, DataTable, DurationColumn, TimeColumn
 )

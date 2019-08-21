@@ -8,14 +8,6 @@ if TYPE_CHECKING:
 else:
     Protocol = object
 
-# Collection was introduced in Python 3.6.
-try:
-    from typing import Collection
-except ImportError:
-    # Collection is a combination of Sized, Iterable and Container.
-    # Pick Iterable since it leads to the least false positives.
-    from typing import Iterable as Collection # type: ignore
-
 # NoReturn was introduced in Python 3.6.5.
 if TYPE_CHECKING:
     from typing_extensions import NoReturn
@@ -31,4 +23,4 @@ except ImportError:
     import importlib_resources # type: ignore
 
 
-__all__ = ['Collection', 'NoReturn', 'Protocol', 'importlib_resources']
+__all__ = ['NoReturn', 'Protocol', 'importlib_resources']

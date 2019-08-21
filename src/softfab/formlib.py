@@ -2,11 +2,11 @@
 
 from enum import Enum
 from typing import (
-    TYPE_CHECKING, ClassVar, Iterable, Iterator, List, Mapping, Optional,
-    Sequence, Set, Tuple, Type, Union, cast
+    TYPE_CHECKING, ClassVar, Collection, Iterable, Iterator, List, Mapping,
+    Optional, Sequence, Set, Tuple, Type, Union, cast
 )
 
-from softfab.compat import Collection, NoReturn
+from softfab.compat import NoReturn
 from softfab.pageargs import PageArgs, dynamic, mandatory
 from softfab.utils import abstract, iterable
 from softfab.webgui import (

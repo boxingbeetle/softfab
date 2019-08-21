@@ -2,13 +2,14 @@
 
 from collections import OrderedDict
 from os.path import splitext
-from typing import Dict, Iterable, Iterator, Optional, Sequence, cast
+from typing import (
+    Collection, Dict, Iterable, Iterator, Optional, Sequence, cast
+)
 
 from softfab.FabPage import FabPage
 from softfab.Page import InvalidRequest, PageProcessor
 from softfab.ReportMixin import ReportTaskArgs
 from softfab.artifacts import SANDBOX_RULES
-from softfab.compat import Collection
 from softfab.datawidgets import DataTable
 from softfab.frameworklib import frameworkDB
 from softfab.joblib import Task

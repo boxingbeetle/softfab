@@ -3,13 +3,12 @@
 from collections import defaultdict
 from enum import Enum
 from typing import (
-    AbstractSet, DefaultDict, Dict, Iterator, List, Mapping, Optional, Set,
-    cast
+    AbstractSet, Collection, DefaultDict, Dict, Iterator, List, Mapping,
+    Optional, Set, cast
 )
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor, Redirect
-from softfab.compat import Collection
 from softfab.configlib import Config, Input, TaskSetWithInputs, configDB
 from softfab.configview import (
     InputTable, SelectConfigsMixin, SimpleConfigTable, presentMissingConfigs

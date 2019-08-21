@@ -1,11 +1,10 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from enum import Enum
-from typing import Callable, ClassVar, Generic, cast
+from typing import Callable, ClassVar, Collection, Generic, cast
 
 from softfab.FabPage import FabPage, IconModifier
 from softfab.Page import PageProcessor, PresentableError, Redirect
-from softfab.compat import Collection
 from softfab.databaselib import DBRecord, Database
 from softfab.formlib import actionButtons, makeForm
 from softfab.pageargs import EnumArg, PageArgs, StrArg

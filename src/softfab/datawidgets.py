@@ -1,11 +1,10 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from typing import (
-    TYPE_CHECKING, Any, ClassVar, Dict, Generic, Iterable, Iterator, List,
-    Mapping, Optional, Sequence, Tuple, Union, cast
+    TYPE_CHECKING, Any, ClassVar, Collection, Dict, Generic, Iterable,
+    Iterator, List, Mapping, Optional, Sequence, Tuple, Union, cast
 )
 
-from softfab.compat import Collection
 from softfab.databaselib import DBRecord, Database, Retriever
 from softfab.pageargs import ArgsCorrected
 from softfab.querylib import (

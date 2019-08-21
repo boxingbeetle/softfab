@@ -2,11 +2,11 @@
 
 from collections import defaultdict
 from typing import (
-    Callable, DefaultDict, Iterator, List, Mapping, Optional, Set, Tuple, cast
+    Callable, Collection, DefaultDict, Iterator, List, Mapping, Optional, Set,
+    Tuple, cast
 )
 
 from softfab.Page import PageProcessor, PresentableError
-from softfab.compat import Collection
 from softfab.connection import ConnectionStatus
 from softfab.databaselib import checkWrapperVarName
 from softfab.datawidgets import DataColumn

@@ -1,10 +1,9 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Iterator, MutableSet, cast
+from typing import Collection, Iterator, MutableSet, cast
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
-from softfab.compat import Collection
 from softfab.datawidgets import DataColumn, DataTable
 from softfab.pageargs import ArgsCorrected, IntArg
 from softfab.pagelinks import (

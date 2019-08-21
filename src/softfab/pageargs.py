@@ -3,13 +3,13 @@
 from enum import Enum
 from re import compile as re_compile
 from typing import (
-    TYPE_CHECKING, AbstractSet, Any, Callable, Dict, Generic, Iterable,
-    Iterator, Mapping, Match, Optional, Sequence, Set, Tuple, Type, TypeVar,
-    Union, cast, overload
+    TYPE_CHECKING, AbstractSet, Any, Callable, Collection, Dict, Generic,
+    Iterable, Iterator, Mapping, Match, Optional, Sequence, Set, Tuple, Type,
+    TypeVar, Union, cast, overload
 )
 from urllib.parse import parse_qs
 
-from softfab.compat import Collection, NoReturn
+from softfab.compat import NoReturn
 from softfab.timelib import stringToTime
 from softfab.timeview import formatDate, formatTime
 from softfab.utils import cachedProperty, escapeURL, iterable
