@@ -284,4 +284,4 @@ class EmbeddingWidget(RadioTable):
             )
 
     def formatOption(self, box, cells):
-        yield xhtml.label[box, ' \u00A0', cells[0]] + cells[1:]
+        yield xhtml.label[box, ' ', cells[0]] + cells[1:]

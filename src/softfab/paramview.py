@@ -67,8 +67,8 @@ class ParamCell(RadioTable):
         parentValue = self.__parentValue
         if parentValue == '':
             parentValue = '(empty)'
-        yield 'false', '\u00A0Inherit\u00A0', parentValue
-        yield 'true', '\u00A0Override\u00A0', textInput(
+        yield 'false', 'Inherit\u00A0', parentValue
+        yield 'true', 'Override\u00A0', textInput(
             name='values.' + self.__key, value=self.__value, size=72,
             # The onchange event handler is there to make sure the right
             # radio button is activated when text is pasted into the edit
