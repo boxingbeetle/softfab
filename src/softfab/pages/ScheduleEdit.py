@@ -65,7 +65,7 @@ class ScheduleEditBase(EditPage[ScheduleEditArgs, Scheduled]):
     def getFormContent(self, proc):
         args = proc.args
         if args.id != '':
-            yield xhtml.h2[ 'Schedule: ', xhtml.b[ args.id ]]
+            yield xhtml.h3[ 'Schedule: ', xhtml.b[ args.id ]]
         yield vgroup[
             (ConfigTagTable if project.getTagKeys() else ConfigTable).instance,
             TimeTable.instance,

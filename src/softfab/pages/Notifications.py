@@ -56,7 +56,7 @@ def presentEmailForm():
     yield xhtml.p[ actionButtons(Actions.TEST) ]
 
 def presentForm(args: MailConfigArgs, **kwargs: object) -> XMLContent:
-    yield xhtml.h2[ 'E-mail' ]
+    yield xhtml.h3[ 'E-mail' ]
     if sendmail is None:
         yield xhtml.p(class_='notice')[
             'Cannot send e-mail notifications.'

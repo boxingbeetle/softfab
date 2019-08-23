@@ -42,7 +42,7 @@ class TaskRunnerDetails_GET(FabPage['TaskRunnerDetails_GET.Processor',
 
     def presentContent(self, **kwargs: object) -> XMLContent:
         proc = cast(TaskRunnerDetails_GET.Processor, kwargs['proc'])
-        yield xhtml.h2[
+        yield xhtml.h3[
             'Details / ',
             pageLink('TaskRunnerHistory', TaskRunnerIdArgs.subset(proc.args))[
                 'History'

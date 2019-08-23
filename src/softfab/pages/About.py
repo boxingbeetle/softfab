@@ -35,14 +35,14 @@ class About_GET(FabPage[FabPage.Processor, FabPage.Arguments]):
         pass
 
     def presentContent(self, **kwargs: object) -> XMLContent:
-        yield xhtml.h2[ 'Status' ]
+        yield xhtml.h3[ 'Status' ]
         yield StatusTable.instance.present(**kwargs)
 
-        yield xhtml.h2[ 'Installation' ]
+        yield xhtml.h3[ 'Installation' ]
         yield InstallationTable.instance.present(**kwargs)
 
         proc = cast(FabPage.Processor, kwargs['proc'])
-        yield xhtml.h2[ 'Web Browser' ]
+        yield xhtml.h3[ 'Web Browser' ]
         yield BrowserTable.instance.present(**kwargs)
         yield (
             xhtml.p[ 'Raw user agent string:' ],
@@ -51,7 +51,7 @@ class About_GET(FabPage[FabPage.Processor, FabPage.Arguments]):
                 ]
             )
 
-        yield xhtml.h2[ 'Documentation' ]
+        yield xhtml.h3[ 'Documentation' ]
         yield (
             xhtml.p[
                 'The complete set of SoftFab documentation can be found '

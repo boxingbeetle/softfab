@@ -55,6 +55,6 @@ class SplashPage(UIPage[PageProcessor],
 
     def presentContent(self, **kwargs: object) -> XMLContent:
         return (
-            xhtml.h2[ 'Server starting:' ],
+            xhtml.h3[ 'Server starting:' ],
             unorderedList[ startupMessages ].present(**kwargs)
             )

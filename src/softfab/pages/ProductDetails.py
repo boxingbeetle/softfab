@@ -99,7 +99,7 @@ class ProductDetails_GET(
                 'ProductDelete', DeleteArgs(id = productDefId)
                 )[ 'Delete this Product' ]
 
-        yield xhtml.h2[ 'Details of product ', xhtml.b[ productDefId ], ':' ]
+        yield xhtml.h3[ 'Details of product ', xhtml.b[ productDefId ], ':' ]
         yield hgroup[
             DetailsTable.instance,
             GraphPanel.instance.present(graph=proc.graph, **kwargs)

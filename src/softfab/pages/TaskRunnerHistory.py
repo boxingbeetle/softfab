@@ -74,7 +74,7 @@ class TaskRunnerHistory_GET(FabPage['TaskRunnerHistory_GET.Processor',
         proc = cast(TaskRunnerHistory_GET.Processor, kwargs['proc'])
         runnerId = proc.args.runnerId
 
-        yield xhtml.h2[
+        yield xhtml.h3[
             pageLink(
                 'TaskRunnerDetails',
                 TaskRunnerIdArgs.subset(proc.args)

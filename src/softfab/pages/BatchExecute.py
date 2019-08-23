@@ -165,7 +165,7 @@ class BatchExecute_GET(FabPage['BatchExecute_GET.Processor',
             yield xhtml.p(class_ = 'notice')[ notice ]
         configs = proc.configs
         if configs:
-            yield xhtml.h2[ 'Selected configurations:' ]
+            yield xhtml.h3[ 'Selected configurations:' ]
             yield BatchConfigTable.instance.present(**kwargs)
 
             taskSet = proc.taskSet
@@ -186,7 +186,7 @@ class BatchExecute_GET(FabPage['BatchExecute_GET.Processor',
                     ].present(taskSet=taskSet, **kwargs)
                 return
         else:
-            yield xhtml.h2[ 'No configurations selected' ]
+            yield xhtml.h3[ 'No configurations selected' ]
 
         yield xhtml.p[
             xhtml.a(href=proc.args.refererURL or parentPage)[
@@ -294,7 +294,7 @@ class BatchInputTable(InputTable):
     def present(self, **kwargs: object) -> XMLContent:
         tablePresentation = super().present(**kwargs)
         if tablePresentation:
-            yield xhtml.h2[ 'Inputs for the jobs:' ]
+            yield xhtml.h3[ 'Inputs for the jobs:' ]
             yield tablePresentation
             taskSet = cast(FakeTaskSet, kwargs['taskSet'])
             if taskSet.hasLocalInputs():
@@ -341,7 +341,7 @@ class ParamTable(ParamOverrideTable):
                 )
             if table:
                 presentation += (
-                    xhtml.h2[ 'Parameters for "%s":' % configId ],
+                    xhtml.h3[ 'Parameters for "%s":' % configId ],
                     table
                     )
         return presentation

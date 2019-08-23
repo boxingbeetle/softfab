@@ -44,7 +44,7 @@ class ResourceEditBase(EditPage[ResourceEditArgs, Resource]):
                        ) -> XMLContent:
         args = proc.args
         if args.id != '':
-            yield xhtml.h2[ 'Resource: ', xhtml.b[ args.id ]]
+            yield xhtml.h3[ 'Resource: ', xhtml.b[ args.id ]]
         yield vgroup[
             CustomResTypeTable.instance,
             xhtml.p[

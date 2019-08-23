@@ -86,7 +86,7 @@ class Home_GET(FabPage['Home_GET.Processor', FabPage.Arguments]):
         atomFeedLink = pageLink('Feed')[
             self.feedIcon.present(**kwargs)
             ]
-        yield xhtml.h2[ 'Recent Jobs ', atomFeedLink ]
+        yield xhtml.h3[ 'Recent Jobs ', atomFeedLink ]
         yield RecentJobsTable.instance.present(**kwargs)
 
         if len(jobDB) < 20:

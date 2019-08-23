@@ -105,7 +105,7 @@ class FrameworkDetails_GET(
                 'FrameworkDelete', DeleteArgs(id = frameworkId)
                 )[ 'Delete this framework' ]
 
-        yield xhtml.h2[ 'Details of framework ', xhtml.b[ frameworkId ], ':' ]
+        yield xhtml.h3[ 'Details of framework ', xhtml.b[ frameworkId ], ':' ]
         yield hgroup[
             DetailsTable.instance,
             GraphPanel.instance.present(graph=proc.graph, **kwargs)

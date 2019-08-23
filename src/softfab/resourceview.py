@@ -171,7 +171,7 @@ def checkResourceRequirementsState(args: ResourceRequirementsArgsMixin) -> None:
 
 def resourceRequirementsWidget(parentClaim: Optional[ResourceClaim] = None
                                ) -> XMLContent:
-    yield xhtml.h2[ 'Resource Requirements' ]
+    yield xhtml.h3[ 'Resource Requirements' ]
     yield ResourceRequirementsTable(parentClaim)
     yield xhtml.ul[
         xhtml.li[

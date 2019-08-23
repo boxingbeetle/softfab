@@ -60,10 +60,10 @@ class ConfigTagsBase(FabPage['ConfigTagsBase.Processor', FabPage.Arguments]):
             yield xhtml.p(class_ = 'notice')[ notice ]
         configs = proc.configs
         if configs:
-            yield xhtml.h2[ 'Selected Configurations:' ]
+            yield xhtml.h3[ 'Selected Configurations:' ]
             yield TagConfigTable.instance.present(**kwargs)
 
-            yield xhtml.h2[ 'Common Selection Tags:' ]
+            yield xhtml.h3[ 'Common Selection Tags:' ]
             tagKeys = project.getTagKeys()
             commonTags = getCommonTags(tagKeys, configs)
             yield makeForm(
@@ -83,7 +83,7 @@ class ConfigTagsBase(FabPage['ConfigTagsBase.Processor', FabPage.Arguments]):
                     )
         else:
             yield (
-                xhtml.h2[ 'No configurations selected' ],
+                xhtml.h3[ 'No configurations selected' ],
                 xhtml.p[ xhtml.a(href=proc.args.refererURL or parentPage)[
                     'Back to Configurations'
                     ] ]

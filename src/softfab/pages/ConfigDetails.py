@@ -206,7 +206,7 @@ class ConfigDetails_GET(
                 ]
             return
 
-        yield xhtml.h2[ 'Details of configuration ', xhtml.b[ configId ], ':' ]
+        yield xhtml.h3[ 'Details of configuration ', xhtml.b[ configId ], ':' ]
         yield xhtml.p[
             'Execution graph of frameworks and products in this configuration:'
             ]

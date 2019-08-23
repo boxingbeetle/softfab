@@ -123,7 +123,7 @@ class ScheduleDetails_GET(FabPage['ScheduleDetails_GET.Processor',
                 ]
             return
 
-        yield xhtml.h2[ 'Details of schedule ', xhtml.b[ scheduleId ], ':' ]
+        yield xhtml.h3[ 'Details of schedule ', xhtml.b[ scheduleId ], ':' ]
         yield DetailsTable.instance.present(**kwargs)
         yield xhtml.p[
             xhtml.br.join((

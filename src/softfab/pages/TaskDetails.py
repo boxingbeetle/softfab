@@ -79,7 +79,7 @@ class TaskDetails_GET(FabPage['TaskDetails_GET.Processor',
                 'Task Definition ', xhtml.b[ taskDefId ], ' does not exist.'
                 ]
             return
-        yield xhtml.h2[
+        yield xhtml.h3[
             'Details of task definition ', xhtml.b[ taskDefId ], ':'
             ]
         yield DetailsTable.instance.present(**kwargs)

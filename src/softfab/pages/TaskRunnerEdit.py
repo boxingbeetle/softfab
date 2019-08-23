@@ -70,7 +70,7 @@ class TaskRunnerEditBase(EditPage[TaskRunnerEditArgs, TaskRunner]):
     def getFormContent(self, proc: EditProcessorBase) -> XMLContent:
         args = proc.args
         if args.id != '':
-            yield xhtml.h2[ 'Task Runner: ', xhtml.b[ args.id ]]
+            yield xhtml.h3[ 'Task Runner: ', xhtml.b[ args.id ]]
         yield vgroup[
             CapabilitiesPanel.instance,
             CommentPanel.instance,

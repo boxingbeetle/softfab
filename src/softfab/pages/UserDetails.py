@@ -76,7 +76,7 @@ class UserDetails_GET(FabPage['UserDetails_GET.Processor',
                 ]
             return
 
-        yield xhtml.h2[ 'Details of user ', xhtml.b[ infoUserName ], ':' ]
+        yield xhtml.h3[ 'Details of user ', xhtml.b[ infoUserName ], ':' ]
         yield DetailsTable.instance.present(**kwargs)
 
         if infoUserName == requestUserName:
@@ -88,7 +88,7 @@ class UserDetails_GET(FabPage['UserDetails_GET.Processor',
                         )[ 'Change your password' ]
                     ]
 
-        yield xhtml.h2[ 'Recent jobs:' ]
+        yield xhtml.h3[ 'Recent jobs:' ]
         yield OwnedJobsTable.instance.present(**kwargs)
 
         reportOwnerArgs = ReportArgs(owner = set([ infoUserName ]))

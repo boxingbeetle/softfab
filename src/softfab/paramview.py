@@ -176,7 +176,7 @@ function initRowIndices(node, index) {
         numParams = len(
             set(args.params.values()) & set(self.__parentParams)
             )
-        yield xhtml.h2[ 'Parameters' ]
+        yield xhtml.h3[ 'Parameters' ]
         yield super().present(**kwargs)
         yield self.initRowIndicesScript.present(**kwargs)
         yield rowManagerInstanceScript(

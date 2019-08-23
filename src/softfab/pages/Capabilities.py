@@ -178,7 +178,7 @@ class Capabilities_GET(FabPage['Capabilities_GET.Processor',
         resType = resTypeDB[proc.args.restype]
         yield vgroup[
             ResTypeTable.instance,
-            xhtml.h2[
+            xhtml.h3[
                 'Resources of type ',
                 xhtml.b[resType.presentationName], ':'
                 ],

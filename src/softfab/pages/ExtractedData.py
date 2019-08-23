@@ -62,7 +62,7 @@ def visualizeBarCharts(proc):
         yield visualizeBarChart(key, tasks, dataByRunId)
 
 def visualizeBarChart(key, tasks, dataByRunId):
-    yield xhtml.h2[ 'Chart for %s:' % key ]
+    yield xhtml.h3[ 'Chart for %s:' % key ]
 
     dataPoints = []
     for task in tasks:
