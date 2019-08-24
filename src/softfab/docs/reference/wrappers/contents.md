@@ -155,7 +155,7 @@ It is also possible to use an abort wrapper to abort (mid-level data) extraction
 The Task Runner supports the following different script languages for writing a wrapper:
 
 <a href="#shell">Shell Script</a>
-:   Unix shell script, also available under Windows by using Cygwin. Powerful and portable way of writing a wrapper.
+:   Unix shell script, also available under Windows by using git-bash, MSYS or Cygwin. Powerful and portable way of writing a wrapper.
 
 <a href="#batch">Batch File</a>
 :   Windows batch file. This is a very straightforward way of writing a wrapper script. For complex scripts it is not the best choice though because it has limited functionality.
@@ -197,13 +197,18 @@ The variables are available through the environment, for example: `$SF_REPORT_RO
 Hint: to spot errors in shell scripts, you can use `set -u` to treat the use of undefined variables as an error and use `set -e` to exit the shell script if a command in it returns a non-zero exit code (like the default behaviour of Make). I'm not sure how portable these `set` commands are, but they work in bash and ksh.
 
 Portability:<br/>
-Runs on every Unix-like OS (Linux, BSD, Solaris, Mac OS X etc.) and on Windows using Cygwin. Beware that each shell is a little different and some command line utilities have subtle differences between platforms as well.
+Runs on every Unix-like OS (Linux, BSD, Solaris, Mac OS X etc.) and on Windows using git-bash, MSYS or Cygwin. Beware that each shell is a little different and some command line utilities have subtle differences between platforms as well.
 
-On Windows/Cygwin the wrapper shell script may not start correctly. In that case a simple workaround can be used. A batch file wrapper containing the following line can be used to call Cygwin shell and execute the shell script (this will start the shell script with the same base name as the batch file itself and located in the same directory):
+If you're using Git on Windows, you can add the `bin` directory of the Git installation (for example `C:\Program Files\Git\bin`) to your `PATH` environment variable and the Task Runner should automatically pick up the `sh` and `bash` shells that are included with Git.
 
-`@start /b /wait %~dpns0.sh`
+If the wrapper shell script does not start correctly, a simple workaround can be used. A batch file wrapper containing the following line can be used to call Cygwin shell and execute the shell script (this will start the shell script with the same base name as the batch file itself and located in the same directory):
+
+```batch
+@start /b /wait %~dpns0.sh
+```
 
 <a id="dict"></a>
+
 Dictionary values of the variables are represented as several simple variables with names constructed based on the dictionary keys. The following example shows how the value of `SF_PROD` (from the example [above](#SF_PROD)) is represented:
 
 ```shell
