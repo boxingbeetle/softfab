@@ -192,11 +192,8 @@ The Task Runner searches for a wrapper with one of the supported file name exten
 |File name       | `wrapper.sh` | `extractor.sh`
 |Available since | Task Runner  | 3.0
 
-The variables are available through the environment, for example: `$SF_REPORT_ROOT`. The variables are not exported by default.
+#### Portability
 
-Hint: to spot errors in shell scripts, you can use `set -u` to treat the use of undefined variables as an error and use `set -e` to exit the shell script if a command in it returns a non-zero exit code (like the default behaviour of Make). I'm not sure how portable these `set` commands are, but they work in bash and ksh.
-
-Portability:<br/>
 Runs on every Unix-like OS (Linux, BSD, Solaris, Mac OS X etc.) and on Windows using git-bash, MSYS or Cygwin. Beware that each shell is a little different and some command line utilities have subtle differences between platforms as well.
 
 If you're using Git on Windows, you can add the `bin` directory of the Git installation (for example `C:\Program Files\Git\bin`) to your `PATH` environment variable and the Task Runner should automatically pick up the `sh` and `bash` shells that are included with Git.
@@ -206,6 +203,12 @@ If the wrapper shell script does not start correctly, a simple workaround can be
 ```batch
 @start /b /wait %~dpns0.sh
 ```
+
+#### Wrapper Variables
+
+The variables are available through the environment, for example: `$SF_REPORT_ROOT`. The variables are not exported by default.
+
+Hint: to spot errors in shell scripts, you can use `set -u` to treat the use of undefined variables as an error and use `set -e` to exit the shell script if a command in it returns a non-zero exit code (like the default behaviour of Make). I'm not sure how portable these `set` commands are, but they work in bash and ksh.
 
 <a id="dict"></a>
 
@@ -238,12 +241,15 @@ Single level lists are represented as strings with the list elements space-separ
 |File name       | `wrapper.bat` | `extractor.bat`
 |Available since | Task Runner   | 3.0
 
-The variables are available through the environment, for example: `%SF_REPORT_ROOT%`.
+#### Portability
 
-Portability:<br/>
 Runs only on Windows.
 
 If in a wrapper directory both `wrapper.bat` and `wrapper.sh` exist, the batch file is used on Windows and the shell script is used on all other platforms.
+
+#### Wrapper Variables
+
+The variables are available through the environment, for example: `%SF_REPORT_ROOT%`.
 
 Dictionary values of the variables are represented in the same way as for [shell scripts](#dict). Single level lists are represented as strings with the list elements space-separated. More complex structures containing lists are currently not supported.
 
@@ -254,13 +260,19 @@ Dictionary values of the variables are represented in the same way as for [shell
 |File name       | `wrapper.mk` | `extractor.mk`
 |Available since | Task Runner  | 3.0
 
-The variables are available as Make variables, for example: `${SF_REPORT_ROOT}`. The variables are not exported by default.
+#### Portability
 
-Portability:<br/>
 We only tested with GNU Make, but probably other versions of Make will work as well. GNU Make is available on many platforms, but typically a Makefile runs shell commands, which might not be available on all platforms or might have small variations in functionality.
 
+#### Wrapper Variables
+
+The variables are available as Make variables, for example: `${SF_REPORT_ROOT}`. The variables are not exported by default.
+
+Dictionary values of the variables are represented in the same way as for [shell scripts](#dict). Single level lists are represented as strings with the list elements space-separated. More complex structures containing lists are currently not supported.
+
+#### Example
+
 Example code for generating a results file:<br/>
-(make sure indenting is done with tabs)
 
 ```make
 all: image
@@ -269,7 +281,7 @@ all: image
 	echo "output.image.locator=${SF_PRODUCT_ROOT}/image/" >> ${SF_RESULTS}
 ```
 
-Dictionary values of the variables are represented in the same way as for [shell scripts](#dict). Single level lists are represented as strings with the list elements space-separated. More complex structures containing lists are currently not supported.
+Make sure all indenting in Makefiles is done with tabs.
 
 ### Perl Wrapper <a id="perl"></a>
 
@@ -278,10 +290,15 @@ Dictionary values of the variables are represented in the same way as for [shell
 |File name       | `wrapper.pl` | `extractor.pl`
 |Available since | Task Runner  | 3.0
 
+#### Portability
+
+The same wrapper script should work on any platform where Perl is available. Although to ensure full portability one must not make assumptions about path syntax and use dedicated perl modules to manipulate paths in a portable way.
+
+#### Wrapper Variables
+
 The variables are available as regular scalar variables in the global context of the Perl script, for example: `$SF_REPORT_ROOT`. Note: if the perl wrapper contains `use strict;` it is necessary to explicitly indicate that the variables provided by the Task Runner are in the global scope when accessing those variables. So instead of `$SF_REPORT_ROOT` one should use `$::SF_REPORT_ROOT`.
 
-Portability:<br/>
-The same wrapper script should work on any platform where Perl is available. Although to ensure full portability one must not make assumptions about path syntax and use dedicated perl modules to manipulate paths in a portable way.
+#### Example
 
 Example code for generating a results file:
 
@@ -299,6 +316,7 @@ RESDATA
     die "Failed to open the results file '$::SF_RESULTS': $!\n";
 }
 ```
+
 ### Python Wrapper <a id="python"></a>
 
 |                | Execution    | Extraction
@@ -306,10 +324,15 @@ RESDATA
 |File name       | `wrapper.py` | `extractor.py`
 |Available since | Task Runner  | 3.0
 
+#### Portability
+
+The same wrapper script should work on any platform where Python is available. It is best if you use slashes ('/') in your file paths, since that works both on Windows and Unix-like systems. For complex path operations, use the `os.path` module.
+
+#### Wrapper Variables
+
 The variables are available as ordinary Python variables, for example: `SF_REPORT_ROOT`.
 
-Portability:<br/>
-The same wrapper script should work on any platform where Python is available. It is best if you use slashes ('/') in your file paths, since that works both on Windows and Unix-like systems. For complex path operations, use the `os.path` module.
+#### Example
 
 Example code for generating a results.properties file:
 
@@ -328,10 +351,15 @@ resultsFile.close()
 |File name       | `wrapper.rb` | `extractor.rb`
 |Available since | Task Runner  | 3.0
 
+#### Portability
+
+The same wrapper script should work on any platform where Ruby is available.
+
+#### Wrapper Variables
+
 The variables are available as global Ruby variables, for example: `$SF_REPORT_ROOT`.
 
-Portability:<br/>
-The same wrapper script should work on any platform where Ruby is available.
+#### Example
 
 Example code for generating a results.properties file:
 
@@ -351,12 +379,15 @@ out.close
 |                | `wrapper.vbs` | `extractor.vbs` | VBScript
 |Available since | Task Runner   | 3.0
 
-The variables are available as regular variables in the global context of the script.
+#### Portability
 
-Portability:<br/>
 Available only on Windows. On older versions of Windows it may be necessary to install redistributable Windows Scripting Engine.
 
 It is possible to reuse JScript or VBScript functions in all your wrappers. In the wrappers directory, create a subdirectory named `common` and put your common code there. All script files named `*.js` or `*.vbs` which are located in the `common` directory will be automatically included in the WSH interpreter when your wrapper is executed.
+
+#### Wrapper Variables
+
+The variables are available as regular variables in the global context of the script.
 
 Dictionaries are represented as objects with the keys as properties. Since VBScript does not have a built-in mechanism for enumerating object properties the objects representing dictionaries contain two additional methods. `size()` returns the number of the properties (dictionary keys). `get(key)` returns the value of the property given it's key, which can be the name of the property or an integer (property index that can be used to enumerate property values).
 
@@ -367,10 +398,15 @@ Dictionaries are represented as objects with the keys as properties. Since VBScr
 |File name       | `wrapper.xml` | `extractor.xml`
 |Available since | Task Runner   | 3.0
 
-Portability:<br/>
+#### Portability
+
 Ant is available on any platform that runs Java.
 
+#### Wrapper Variables
+
 The variables are available as Ant properties. By default these properties are passed down to Ant subtasks, but you can suppress this by adding `inheritAll="false"` to the `<ant>` task tag. List values are represented as space-separated strings. Dictionary values are represented by a dot-separated property name, for example "SF_PROD.SOURCE_ROOT.export.RESULT".
+
+#### Example
 
 Example Ant wrapper:
 
@@ -406,10 +442,15 @@ In this example, `SOURCE_ROOT` is an input product that contains the directory p
 |File name       | `wrapper.build` | `extractor.build`
 |Available since | Task Runner     | 3.0
 
-Portability:<br/>
+#### Portability
+
 NAnt is available on any platform that runs .NET: it works with Microsoft's .NET implementation and with Mono.
 
+#### Wrapper Variables
+
 The variables are available as NAnt properties. By default these properties are passed down to NAnt subtasks, but you can suppress this by adding `inheritall="false"` to the `<nant>` task tag. List values are represented as space-separated strings. Dictionary values are represented by a dot-separated property name, for example "SF_PROD.SOURCE_ROOT.export.RESULT".
+
+#### Example
 
 Below is an elaborate example showing how to run unit tests in the MSTest tool and extract mid-level data from the results file (.trx):
 
