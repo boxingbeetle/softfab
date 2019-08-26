@@ -10,7 +10,7 @@ from typing import (
 from softfab.xmlbind import XMLTag
 from softfab.xmlgen import XMLContent, xml
 
-taskRunnerResourceRefName = 'SF_TR_HOST'
+taskRunnerResourceRefName = 'SF_TR'
 
 class ResourceSpec(XMLTag):
     '''Resource requirement specification.
