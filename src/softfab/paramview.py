@@ -9,7 +9,7 @@ import re
 from softfab.Page import PageProcessor, PresentableError
 from softfab.formlib import RadioTable, checkBox, hiddenInput, textInput
 from softfab.pageargs import BoolArg, DictArg, PageArgs, StrArg
-from softfab.paramlib import ParamMixin, specialParameters
+from softfab.paramlib import ParamMixin, Parameterized, specialParameters
 from softfab.taskdeflib import TaskDef
 from softfab.webgui import Table, cell, rowManagerInstanceScript, script
 from softfab.xmlgen import XMLContent, xhtml
@@ -130,7 +130,7 @@ function initRowIndices(node, index) {
 }
 ''']
 
-    def __init__(self, parent: ParamMixin):
+    def __init__(self, parent: Parameterized):
         super().__init__()
         self.__parentParams = parent.getParameters()
 
@@ -207,7 +207,7 @@ class ParametersTable(Table):
         self.__fieldName = fieldName
 
     def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
-        obj = cast(ParamMixin, getattr(kwargs['proc'], self.__fieldName))
+        obj = cast(Parameterized, getattr(kwargs['proc'], self.__fieldName))
         parameters = set(obj.getParameters()) - specialParameters
         reservedParameters = set(
             param for param in parameters if param.startswith('sf.')
@@ -250,7 +250,7 @@ def initParamArgs(element: ParamMixin) -> Mapping[str, object]:
             for index, name in enumerate(names) },
         )
 
-def checkParamState(args: ParamArgsMixin, parent: ParamMixin) -> None:
+def checkParamState(args: ParamArgsMixin, parent: Parameterized) -> None:
     usedParams = set() # type: Set[str]
     for param in cast(_ParamArgs, args).params.values():
         if param == '':
@@ -273,7 +273,7 @@ def checkParamState(args: ParamArgsMixin, parent: ParamMixin) -> None:
                 ])
         usedParams.add(param)
 
-def validateParamState(proc: PageProcessor, parent: ParamMixin) -> None:
+def validateParamState(proc: PageProcessor, parent: Parameterized) -> None:
     args = cast(_ParamArgs, proc.args)
 
     parentParams = dict(

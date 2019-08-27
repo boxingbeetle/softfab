@@ -10,7 +10,7 @@ from softfab.Page import PresentableError
 from softfab.formlib import dropDownList, emptyOption, textArea, textInput
 from softfab.frameworklib import Framework, frameworkDB
 from softfab.pageargs import IntArg, StrArg
-from softfab.paramlib import ParamMixin, paramTop
+from softfab.paramlib import Parameterized, paramTop
 from softfab.paramview import (
     ParamArgsMixin, ParamDefTable, addParamsToElement, checkParamState,
     initParamArgs, validateParamState
@@ -61,7 +61,7 @@ class TaskEditBase(EditPage[TaskEditArgs, TaskDef]):
             else cast(Framework, parent).resourceClaim
             )
 
-def getParent(args: TaskEditArgs) -> ParamMixin:
+def getParent(args: TaskEditArgs) -> Parameterized:
     framework = args.framework
     if framework == '':
         return paramTop
