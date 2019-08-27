@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Callable, ClassVar, Dict, Mapping, Optional, Set
+from typing import Callable, Dict, Mapping, Optional, Set
 
-from softfab.utils import ResultKeeper, SharedInstance, SingletonMeta
+from softfab.utils import ResultKeeper
 from softfab.xmlgen import XMLAttributeValue, XMLContent, xml
 
 specialParameters = set([ 'sf.wrapper', 'sf.extractor', 'sf.timeout' ])
@@ -122,10 +122,9 @@ class ParamMixin:
         for param in params.values():
             yield xml.parameter(**param)
 
-class _ParamTop(ParamMixin, metaclass=SingletonMeta):
-    '''Singleton for object at the top of the parameter inheritance hierarchy.
+class _ParamTop(ParamMixin):
+    '''Object at the top of a parameter inheritance hierarchy.
     '''
-    instance = SharedInstance() # type: ClassVar[SharedInstance]
 
     @staticmethod
     def getParent(key: str) -> 'ParamMixin':
@@ -152,4 +151,4 @@ class _ParamTop(ParamMixin, metaclass=SingletonMeta):
                 ) -> bool:
         return name in self.getFinalSelf()
 
-paramTop = _ParamTop.instance
+paramTop = _ParamTop()
