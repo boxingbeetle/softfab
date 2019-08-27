@@ -811,7 +811,7 @@ function isEmptyRow(rowNode) {
             return false;
         }
     }
-    return inputNodes.length != 0;
+    return (selectNodes.length + inputNodes.length) != 0;
 }
 
 // If there are no empty rows then add one by copying the empty template row.
