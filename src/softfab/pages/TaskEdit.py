@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Dict, Mapping, Optional, cast
+from typing import Dict, Iterator, Mapping, Optional, cast
 
 from softfab.EditPage import (
     EditArgs, EditPage, EditProcessor, EditProcessorBase, InitialEditArgs,
@@ -158,8 +158,9 @@ class TaskEdit_POST(TaskEditBase):
 
 class TaskPropertiesTable(PropertiesTable):
 
-    def iterRows(self, *, proc, **kwargs):
-        yield 'Task ID', proc.args.id or '(untitled)'
+    def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
+        args = cast(EditProcessor[TaskEditArgs, TaskDef], kwargs['proc']).args
+        yield 'Task ID', args.id or '(untitled)'
         yield 'Title', textInput(name='title', size=80)
         yield 'Description', textArea(name='descr', cols=80, rows=3)
         yield 'Framework', dropDownList(
