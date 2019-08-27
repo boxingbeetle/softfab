@@ -870,8 +870,7 @@ class _RowManagerInstanceScript(AttrContainer):
         bodyId = cast(str, attributes['bodyId'])
         rowStart = cast(int, attributes['rowStart'])
         lines = [
-            "var rowManager = new RowManager('%s', %d);" % (bodyId, rowStart),
-            'document.rowManager = rowManager;'
+            "var rowManager = new RowManager('%s', %d);" % (bodyId, rowStart)
             ]
 
         initRowFunc = attributes.get('initRow')
