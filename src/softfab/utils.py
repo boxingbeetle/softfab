@@ -1,6 +1,5 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from abc import ABCMeta
 from codecs import getencoder
 from contextlib import contextmanager
 from itertools import islice
@@ -341,25 +340,6 @@ class SharedInstance:
 
     def __delete__(self, obj: Type[T]) -> None:
         raise AttributeError('Shared instances cannot be deleted')
-
-class SingletonMeta(ABCMeta):
-    '''A metaclass to turn a shared instance into a full singleton.
-
-    Usage:
-    class SomeSingleton(metaclass=SingletonMeta):
-        instance = SharedInstance()
-        def __init__(self):
-            ...
-        def method(self):
-            ...
-    SomeSingleton.instance.method()
-    '''
-
-    def __call__(cls):
-        raise TypeError(
-            'Direct instantiation of a singleton is not allowed; '
-            'use the "instance" class variable instead.'
-            )
 
 class _CachedProperty(Generic[C, T]):
     '''Descriptor that implements the `cachedProperty` decorator.
