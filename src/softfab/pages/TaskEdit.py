@@ -96,8 +96,11 @@ class TaskEdit_GET(TaskEditBase):
             return overrides
 
         def _validateState(self) -> None:
+            parent = getParent(self.args)
+            # Add parent parameters and put them all in the right order.
+            validateParamState(self, parent)
             # pylint: disable=attribute-defined-outside-init
-            self.parent = getParent(self.args)
+            self.parent = parent
 
 class TaskEdit_POST(TaskEditBase):
 
