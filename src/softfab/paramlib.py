@@ -48,10 +48,7 @@ class ParamMixin:
                      final: bool = False
                      ) -> None:
         if value is not None:
-            if isinstance(value, str):
-                self.__parameters[name] = value
-            else:
-                raise TypeError(type(value))
+            self.__parameters[name] = value
         if final:
             self.__finalParameters.add(name)
 
