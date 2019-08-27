@@ -1,7 +1,9 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from abc import ABC
-from typing import ClassVar, Dict, Mapping, Optional, cast
+from typing import (
+    ClassVar, Dict, Iterable, Iterator, List, Mapping, Optional, cast
+)
 
 from softfab.EditPage import (
     EditArgs, EditPage, EditProcessor, EditProcessorBase, InitialEditArgs,
@@ -179,8 +181,11 @@ class FrameworkEdit_POST(FrameworkEditBase):
 
 class FrameworkPropertiesTable(PropertiesTable):
 
-    def iterRows(self, *, proc, **kwargs):
-        yield 'Name', proc.args.id or '(untitled)'
+    def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
+        args = cast(
+            EditProcessor[FrameworkEditArgs, Framework], kwargs['proc']
+            ).args
+        yield 'Name', args.id or '(untitled)'
         yield 'Wrapper', textInput(name='wrapper', size=40)
         yield 'Extractor', checkBox(name='extractor')[
             'Extract mid-level data from reports using separate '
@@ -190,15 +195,18 @@ class FrameworkPropertiesTable(PropertiesTable):
 class ProductSetTable(Table, ABC):
     argName = abstract # type: ClassVar[str]
 
-    def iterRows(self, *, proc, **kwargs):
+    def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
+        args = cast(
+            EditProcessor[FrameworkEditArgs, Framework], kwargs['proc']
+            ).args
         name = self.argName
-        options = [
-            emptyOption[ '(none)' ]
-            ] + sorted(productDefDB.uniqueValues('id'))
-        for prod in sorted(getattr(proc.args, name)) + [ '' ]:
+        options: List[XMLContent] = [emptyOption[ '(none)' ]]
+        options += sorted(cast(Iterable[str], productDefDB.uniqueValues('id')))
+        products: Iterable[str] = getattr(args, name)
+        for prod in sorted(products) + [ '' ]:
             yield dropDownList(name=name, selected=prod)[ options ],
 
-    def present(self, **kwargs):
+    def present(self, **kwargs: object) -> XMLContent:
         yield super().present(**kwargs)
         yield rowManagerInstanceScript(bodyId=self.bodyId).present(**kwargs)
 
