@@ -91,29 +91,14 @@ class ParamMixin(Parameterized):
     '''Reuseable implementation of inheritable parameters.
     '''
 
-    @staticmethod
-    def getParent(key: str) -> Parameterized:
-        raise NotImplementedError
-
     def __init__(self) -> None:
         self.__parameters = {} # type: Dict[str, str]
         self.__finalParameters = set() # type: Set[str]
 
-    def getParentName(self) -> Optional[str]:
-        '''Returns the name of the parent of this task definition,
-        or None is this object has paramTop as its parent.
+    def getParent(self, getFunc: Optional[GetParent]) -> Parameterized:
+        '''Returns the parameterized record one level above this one.
         '''
-        properties: Mapping[str, str] = getattr(self, '_properties')
-        return properties.get('parent')
-
-    def __getParent(self, getFunc: Optional[GetParent]) -> Parameterized:
-        parentName = self.getParentName()
-        if parentName is None:
-            return paramTop
-        else:
-            if getFunc is None:
-                getFunc = self.getParent
-            return getFunc(parentName)
+        raise NotImplementedError
 
     def _addParameter(self, attributes: Mapping[str, str]) -> None:
         name = attributes['name']
@@ -137,14 +122,14 @@ class ParamMixin(Parameterized):
                      ) -> Optional[str]:
         value = self.__parameters.get(name)
         if value is None:
-            return self.__getParent(getParent).getParameter(name, getParent)
+            return self.getParent(getParent).getParameter(name, getParent)
         else:
             return value
 
     def getParameters(self,
                       getParent: Optional[GetParent] = None
                       ) -> Dict[str, str]:
-        params = self.__getParent(getParent).getParameters(getParent)
+        params = self.getParent(getParent).getParameters(getParent)
         params.update(self.getParametersSelf())
         return params
 
@@ -156,7 +141,7 @@ class ParamMixin(Parameterized):
                 getParent: Optional[GetParent] = None
                 ) -> bool:
         return name in self.__finalParameters \
-            or self.__getParent(getParent).isFinal(name, getParent)
+            or self.getParent(getParent).isFinal(name, getParent)
 
     def getFinalSelf(self) -> Set[str]:
         return set(self.__finalParameters)

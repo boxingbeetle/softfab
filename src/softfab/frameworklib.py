@@ -6,7 +6,7 @@ from typing import (
 
 from softfab.config import dbDir
 from softfab.databaselib import VersionedDatabase
-from softfab.paramlib import GetParent, ParamMixin
+from softfab.paramlib import GetParent, ParamMixin, Parameterized, paramTop
 from softfab.resreq import (
     ResourceClaim, ResourceSpec, taskRunnerResourceRefName
 )
@@ -33,10 +33,6 @@ frameworkDB = FrameworkDB()
 class TaskDefBase(ParamMixin, XMLTag, SelectableRecordABC):
     tagName = 'taskdef'
     cache = abstract # type: ClassVar[TagCache]
-
-    @staticmethod
-    def getParent(key: str) -> 'Framework':
-        return frameworkDB[key]
 
     def __init__(self, properties: Mapping[str, XMLAttributeValue]):
         ParamMixin.__init__(self)
@@ -74,6 +70,9 @@ class TaskDefBase(ParamMixin, XMLTag, SelectableRecordABC):
 
     def getId(self) -> str:
         return cast(str, self['id'])
+
+    def getParent(self, getFunc: Optional[GetParent]) -> Parameterized:
+        raise NotImplementedError
 
     @property
     def resourceClaim(self) -> ResourceClaim:
@@ -126,6 +125,9 @@ class Framework(TaskDefBase):
 
     def _addOutput(self, attributes: Dict[str, str]) -> None:
         self.__outputs.add(attributes['name'])
+
+    def getParent(self, getFunc: Optional[GetParent]) -> Parameterized:
+        return paramTop
 
     def getParametersSelf(self) -> Dict[str, str]:
         params = super().getParametersSelf()

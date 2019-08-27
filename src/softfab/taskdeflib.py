@@ -5,7 +5,7 @@ from typing import Mapping, Optional, cast
 from softfab import frameworklib
 from softfab.config import dbDir
 from softfab.databaselib import VersionedDatabase
-from softfab.paramlib import GetParent
+from softfab.paramlib import GetParent, Parameterized, paramTop
 from softfab.selectlib import ObservingTagCache
 from softfab.xmlgen import XMLAttributeValue, XMLContent, xml
 
@@ -61,11 +61,29 @@ class TaskDef(frameworklib.TaskDefBase):
     def _textDescription(self, text: str) -> None:
         self.__description = text
 
+    @property
+    def frameworkId(self) -> Optional[str]:
+        return cast(Optional[str], self._properties.get('parent'))
+
     def getFramework(self,
             getParent: GetParent = frameworklib.frameworkDB.__getitem__
             ) -> frameworklib.Framework:
-        frameworkId = cast(str, self['parent'])
-        return cast(frameworklib.Framework, getParent(frameworkId))
+        frameworkId = self.frameworkId
+        if frameworkId is None:
+            # The framework can be undefined in records that are still being
+            # edited; records in the DB must have a framework.
+            raise ValueError('getFramework() called on parentless taskdef')
+        else:
+            return cast(frameworklib.Framework, getParent(frameworkId))
+
+    def getParent(self, getFunc: Optional[GetParent]) -> Parameterized:
+        frameworkId = self.frameworkId
+        if frameworkId is None:
+            return paramTop
+        elif getFunc is None:
+            return frameworklib.frameworkDB[frameworkId]
+        else:
+            return getFunc(frameworkId)
 
     def getTitle(self) -> str:
         return self.__title

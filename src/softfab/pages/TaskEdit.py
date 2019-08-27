@@ -87,7 +87,7 @@ class TaskEdit_GET(TaskEditBase):
                 overrides = dict(
                     title = element.getTitle(),
                     descr = element.getDescription(),
-                    framework = element.getParentName() or '',
+                    framework = element.frameworkId or '',
                     timeout = element.timeoutMins or 0,
                     requirements = valuesToText(element.getTagValues('sf.req')),
                     )
