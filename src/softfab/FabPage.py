@@ -43,8 +43,8 @@ class BasePage(UIPage[ProcT], FabResource[ArgsT, ProcT], ABC):
         raise NotImplementedError
 
     def iterChildButtons(self,
-                        args: Optional[ArgsT]
-                        ) -> Iterator['LinkBarButton']:
+                         args: Optional[ArgsT]
+                         ) -> Iterator['LinkBarButton']:
         """Yields the link bar buttons for child pages of this page.
         """
         raise NotImplementedError
