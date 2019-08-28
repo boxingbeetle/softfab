@@ -72,7 +72,9 @@ class EditPhase(AbstractPhase['EditProcessorBase[EditArgsT, DBRecord]',
         proc = cast(EditProcessorBase[EditArgsT, DBRecord], kwargs['proc'])
         page = self.page
 
-        buttons = ['save']
+        buttons = []
+        if proc.args.id:
+            buttons.append('save')
         if page.autoName is None:
             buttons.append('save_as')
         buttons.append('cancel')
