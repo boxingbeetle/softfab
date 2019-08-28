@@ -403,7 +403,7 @@ class EditProcessor(EditProcessorBase[EditArgsT, DBRecord]):
 class EditPage(FabPage[EditProcessorBase[EditArgsT, DBRecord], EditArgsT], ABC):
     description = abstract # type: ClassVar[str]
     icon = abstract # type: ClassVar[str]
-    iconModifier = IconModifier.EDIT
+    iconModifier = IconModifier.NEW
 
     # TODO: It seems 'record' and 'element' are used for the same thing.
     #       Pick one term and stick with it.
@@ -442,7 +442,19 @@ class EditPage(FabPage[EditProcessorBase[EditArgsT, DBRecord], EditArgsT], ABC):
                 ConfirmOverwritePhase[EditArgsT, DBRecord](self)
 
     def pageTitle(self, proc: EditProcessorBase[EditArgsT, DBRecord]) -> str:
-        return 'Edit ' + self.elemTitle
+        return self.activeDescription(proc.args)
+
+    def activeDescription(self, args: Optional[EditArgsT]) -> str:
+        if args is not None and args.id:
+            return 'Edit ' + self.elemTitle
+        else:
+            return 'New ' + self.elemTitle
+
+    def activeIconModifier(self, args: Optional[EditArgsT]) -> IconModifier:
+        if args is not None and args.id:
+            return IconModifier.EDIT
+        else:
+            return IconModifier.NEW
 
     def presentHeadParts(self, **kwargs: object) -> XMLContent:
         yield super().presentHeadParts(**kwargs)

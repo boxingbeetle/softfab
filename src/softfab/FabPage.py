@@ -199,6 +199,22 @@ class FabPage(BasePage[ProcT, ArgsT]):
     def pageTitle(self, proc: ProcT) -> str:
         return self.description
 
+    def activeDescription(self, args: Optional[ArgsT]) -> str:
+        """Gets the label for the current page's link bar button.
+        The default implementation returns the `description` field.
+        This is only called for the current page; for other pages the
+        `linkDescription` field is always used.
+        """
+        return self.description
+
+    def activeIconModifier(self, args: Optional[ArgsT]) -> IconModifier:
+        """Gets the modifier to apply to the current page's icon.
+        The default implementation returns the `iconModifier` field.
+        This is only called for the current page; for other pages the
+        `iconModifier` field is always used.
+        """
+        return self.iconModifier
+
     def __createLinkButton(self,
             pageName: str, infoKey: str, args: Optional[ArgsT]
             ) -> Optional['LinkBarButton']:
@@ -212,12 +228,14 @@ class FabPage(BasePage[ProcT, ArgsT]):
         if url is None:
             return None
 
+        active = pageName == self.name
         return LinkBarButton(
-            label=description,
+            label=self.activeDescription(args) if active else description,
             url=url,
             icon=pageInfo['icon'],
-            modifier=pageInfo['iconModifier'],
-            active=pageName == self.name
+            modifier=self.activeIconModifier(args)
+                     if active else pageInfo['iconModifier'],
+            active=active
             )
 
     def __createLinkButtons(self,
@@ -325,26 +343,24 @@ class LinkBar(Widget):
     styleRoot.addIcon('IconEdit')
     styleRoot.addIcon('IconDelete')
 
+    __iconModifierStyle = {
+        IconModifier.NEW: 'newicon',
+        IconModifier.EDIT: 'editicon',
+        IconModifier.DELETE: 'delicon',
+        }
+
     __levelSep = xhtml.div(class_ = 'level')[ '\u25B8' ]
 
     def __presentLinkButton(self,
                             button: LinkBarButton,
                             **kwargs: object
                             ) -> XMLNode:
-        active = button.active
-
-        iconModifier = button.modifier
         iconStyle = ['navicon']
-        if iconModifier is IconModifier.NEW:
-            iconStyle.append('newicon')
-        elif iconModifier is IconModifier.EDIT:
-            iconStyle.append('editicon' if active else 'newicon')
-        elif iconModifier is IconModifier.DELETE:
-            iconStyle.append('delicon')
-        else:
-            assert iconModifier is IconModifier.NONE, iconModifier
+        iconModifier = button.modifier
+        if iconModifier is not IconModifier.NONE:
+            iconStyle.append(self.__iconModifierStyle[button.modifier])
 
-        return xhtml.div(class_='navthis' if active else None)[
+        return xhtml.div(class_='navthis' if button.active else None)[
             xhtml.a(href=button.url)[
                 xhtml.span(class_=' '.join(iconStyle))[
                     button.icon.present(**kwargs)
