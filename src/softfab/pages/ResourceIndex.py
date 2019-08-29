@@ -141,7 +141,7 @@ class ResourcesTable(DataTable[ResourceBase]):
 
         columns = data.columns
         numColumns = sum(column.colSpan for column in columns)
-        for resType in iterResourceTypes(reserved=True):
+        for resType in iterResourceTypes():
             resTypeName = resType.getId()
             if resTypeName in recordsByType:
                 yield row[header(colspan=numColumns, class_='section')[

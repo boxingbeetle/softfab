@@ -30,7 +30,7 @@ reservedTypes = (
         ),
     )
 
-def iterResourceTypes(reserved: bool) -> Iterator[ResType]:
+def iterResourceTypes(reserved: bool = True) -> Iterator[ResType]:
     """The resource types in this factory, in presentation order.
     """
     if reserved:
