@@ -378,6 +378,9 @@ dd {
 div.hgroup, div.vgroup {
 	display: table;
 }
+div.vgroup {
+	margin-right: 24px;
+}
 div.hgroup > div {
 	display: table-cell;
 	vertical-align: top;
