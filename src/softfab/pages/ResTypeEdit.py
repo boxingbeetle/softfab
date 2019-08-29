@@ -9,6 +9,7 @@ from softfab.EditPage import (
 from softfab.formlib import CheckBoxesTable, textInput
 from softfab.pageargs import SetArg, StrArg
 from softfab.restypelib import ResType, resTypeDB
+from softfab.userlib import AccessDenied
 from softfab.webgui import Column, PropertiesTable, cell
 from softfab.xmlgen import XMLContent
 
@@ -72,6 +73,10 @@ class ResTypeEdit_POST(ResTypeEditBase):
                           args: ResTypeEditArgs,
                           oldElement: Optional[ResType]
                           ) -> ResType:
+            if recordId.startswith('sf.'):
+                raise AccessDenied(
+                    'modify built-in resource types (they are immutable)'
+                    )
             return ResType.create(
                 name = recordId,
                 pertask = 'pertask' in args.type,
