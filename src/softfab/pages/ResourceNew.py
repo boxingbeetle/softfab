@@ -3,10 +3,13 @@
 from typing import Sequence, Tuple
 
 from softfab.FabPage import FabPage, IconModifier
+from softfab.restypelib import resTypeDB, taskRunnerResourceTypeName
 from softfab.userlib import User, checkPrivilege
 from softfab.webgui import pageLink
 from softfab.xmlgen import XMLContent, xhtml
 
+
+taskRunnerType = resTypeDB[taskRunnerResourceTypeName]
 
 class ResourceNew_GET(FabPage[FabPage.Processor, FabPage.Arguments]):
     icon = 'IconResources'
@@ -18,8 +21,8 @@ class ResourceNew_GET(FabPage[FabPage.Processor, FabPage.Arguments]):
 
     def presentContent(self, **kwargs: object) -> XMLContent:
         descriptions = (
-            ( pageLink('TaskRunnerEdit')['Task Runner'],
-                'SoftFab task execution agent.'
+            ( pageLink('TaskRunnerEdit')[taskRunnerType.presentationName],
+                f'{taskRunnerType.getDescription()}.'
                 ),
             ( pageLink('ResourceEdit')['Custom'],
                 'A user-defined resource type.'
