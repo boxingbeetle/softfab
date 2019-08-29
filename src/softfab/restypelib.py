@@ -72,7 +72,8 @@ class ResType(XMLTag, DatabaseElem):
     def getId(self) -> str:
         return cast(str, self._properties['name'])
 
-    def getDescription(self) -> str:
+    @property
+    def description(self) -> str:
         return self.__description
 
     def _getContent(self) -> XMLContent:

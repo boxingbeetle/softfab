@@ -51,7 +51,7 @@ class ResTypeEdit_GET(ResTypeEditBase):
                 return { 'type': ('pertask',) }
             else:
                 return {
-                    'description': element.getDescription(),
+                    'description': element.description,
                     'type': (
                         name for name in ('pertask', 'perjob') if element[name]
                         )

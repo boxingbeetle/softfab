@@ -27,4 +27,4 @@ class ResTypeTableMixin:
             resTypeNames.insert(0, taskRunnerResourceTypeName)
         for name in resTypeNames:
             resType = resTypeDB[name]
-            yield name, resType.presentationName, resType.getDescription()
+            yield name, resType.presentationName, resType.description

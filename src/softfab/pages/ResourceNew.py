@@ -22,7 +22,7 @@ class ResourceNew_GET(FabPage[FabPage.Processor, FabPage.Arguments]):
     def presentContent(self, **kwargs: object) -> XMLContent:
         descriptions = (
             ( pageLink('TaskRunnerEdit')[taskRunnerType.presentationName],
-                f'{taskRunnerType.getDescription()}.'
+                f'{taskRunnerType.description}.'
                 ),
             ( pageLink('ResourceEdit')['Custom'],
                 'A user-defined resource type.'
