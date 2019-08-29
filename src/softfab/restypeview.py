@@ -2,10 +2,38 @@
 
 from typing import Iterator, Tuple
 
-from softfab.restypelib import resTypeDB, taskRunnerResourceTypeName
+import attr
+
+from softfab.restypelib import ResType, resTypeDB, taskRunnerResourceTypeName
 from softfab.webgui import Column
 from softfab.xmlgen import XMLContent, XMLNode
 
+
+@attr.s(auto_attribs=True, frozen=True, kw_only=True)
+class ResourceTypeInfo:
+    name: str
+    editPage: str
+    record: ResType = attr.ib(init=False)
+    def __attrs_post_init__(self):
+        object.__setattr__(self, 'record', resTypeDB[self.name])
+
+reservedTypes = (
+    ResourceTypeInfo(
+        name=taskRunnerResourceTypeName,
+        editPage='TaskRunnerEdit'
+        ),
+    )
+
+def iterResourceTypes(reserved: bool) -> Iterator[ResType]:
+    """The resource types in this factory, in presentation order.
+    """
+    if reserved:
+        for resType in reservedTypes:
+            yield resType.record
+    for recordId in sorted(recordId
+                           for recordId in resTypeDB.keys()
+                           if not recordId.startswith('sf.')):
+        yield resTypeDB[recordId]
 
 class DescriptionColumn(Column):
     label = 'Description'
@@ -21,10 +49,5 @@ class ResTypeTableMixin:
     def iterOptions(self,
                     **_kwargs: object
                     ) -> Iterator[Tuple[str, XMLContent, XMLContent]]:
-        resTypeNames = sorted(resTypeDB.keys())
-        resTypeNames.remove(taskRunnerResourceTypeName)
-        if self.reserved:
-            resTypeNames.insert(0, taskRunnerResourceTypeName)
-        for name in resTypeNames:
-            resType = resTypeDB[name]
-            yield name, resType.presentationName, resType.description
+        for resType in iterResourceTypes(self.reserved):
+            yield resType.getId(), resType.presentationName, resType.description

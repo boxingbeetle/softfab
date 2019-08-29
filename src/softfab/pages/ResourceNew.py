@@ -1,15 +1,13 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Sequence, Tuple
+from typing import Iterator, Tuple
 
 from softfab.FabPage import FabPage, IconModifier
-from softfab.restypelib import resTypeDB, taskRunnerResourceTypeName
+from softfab.restypeview import reservedTypes
 from softfab.userlib import User, checkPrivilege
 from softfab.webgui import pageLink
 from softfab.xmlgen import XMLContent, xhtml
 
-
-taskRunnerType = resTypeDB[taskRunnerResourceTypeName]
 
 class ResourceNew_GET(FabPage[FabPage.Processor, FabPage.Arguments]):
     icon = 'IconResources'
@@ -20,16 +18,20 @@ class ResourceNew_GET(FabPage[FabPage.Processor, FabPage.Arguments]):
         checkPrivilege(user, 'rt/l')
 
     def presentContent(self, **kwargs: object) -> XMLContent:
-        descriptions = (
-            ( pageLink('TaskRunnerEdit')[taskRunnerType.presentationName],
-                f'{taskRunnerType.description}.'
-                ),
-            ( pageLink('ResourceEdit')['Custom'],
-                'A user-defined resource type.'
-                ),
-            ) # type: Sequence[Tuple[XMLContent, XMLContent]]
-
         yield xhtml.p['Choose the type of resource you want to create:']
         yield xhtml.dl(class_='toc')[(
-            ( xhtml.dt[name], xhtml.dd[descr] ) for name, descr in descriptions
+            (xhtml.dt[name], xhtml.dd[descr])
+            for name, descr in self.iterOptions()
             )]
+
+    def iterOptions(self) -> Iterator[Tuple[XMLContent, XMLContent]]:
+        for resType in reservedTypes:
+            record = resType.record
+            yield (
+                pageLink(resType.editPage)[record.presentationName],
+                f'{record.description}.'
+                )
+        yield (
+            pageLink('ResourceEdit')['Custom'],
+            'A user-defined resource type.'
+            )

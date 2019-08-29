@@ -19,7 +19,7 @@ from softfab.resourcelib import ResourceBase, TaskRunner, resourceDB
 from softfab.resourceview import (
     ResourceNameColumn, getResourceStatus, presentCapabilities
 )
-from softfab.restypelib import resTypeDB, taskRunnerResourceTypeName
+from softfab.restypeview import iterResourceTypes, reservedTypes
 from softfab.taskrunlib import taskRunDB
 from softfab.userlib import User, checkPrivilege
 from softfab.webgui import Widget, docLink, header, pageLink, pageURL, row
@@ -89,11 +89,16 @@ class ReserveColumn(DataColumn[ResourceBase]):
 
 class EditColumn(DataColumn[ResourceBase]):
     def presentCell(self, record: ResourceBase, **kwargs: object) -> XMLContent:
-        pageName = (
-            'TaskRunnerEdit'
-            if isinstance(record, TaskRunner)
-            else 'ResourceEdit'
-            )
+        typeName = record.typeName
+        if typeName.startswith('sf.'):
+            for resType in reservedTypes:
+                if resType.name == typeName:
+                    pageName = resType.editPage
+                    break
+            else:
+                return '-'
+        else:
+            pageName = 'ResourceEdit'
         return pageLink(pageName, DeleteArgs(id=record.getId()))[ 'Edit' ]
 
 class ResourcesTable(DataTable[ResourceBase]):
@@ -136,12 +141,9 @@ class ResourcesTable(DataTable[ResourceBase]):
 
         columns = data.columns
         numColumns = sum(column.colSpan for column in columns)
-        resTypeNames = sorted(resTypeDB.keys())
-        resTypeNames.remove(taskRunnerResourceTypeName)
-        resTypeNames.insert(0, taskRunnerResourceTypeName)
-        for resTypeName in resTypeNames:
+        for resType in iterResourceTypes(reserved=True):
+            resTypeName = resType.getId()
             if resTypeName in recordsByType:
-                resType = resTypeDB[resTypeName]
                 yield row[header(colspan=numColumns, class_='section')[
                     resType.presentationName
                     ]]
