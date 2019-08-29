@@ -4,7 +4,7 @@
 '''
 
 from typing import (
-    AbstractSet, Dict, FrozenSet, Iterable, Iterator, Mapping, MutableSet, cast
+    AbstractSet, FrozenSet, Iterable, Iterator, Mapping, MutableSet, cast
 )
 
 from softfab.xmlbind import XMLTag
@@ -75,7 +75,7 @@ class ResourceClaim:
         """Returns a ResourceClaim containing the given specs."""
         return cls({spec.reference: spec for spec in specs})
 
-    def __init__(self, specsByRef: Dict[str, ResourceSpec]):
+    def __init__(self, specsByRef: Mapping[str, ResourceSpec]):
         """Do not call directly; use `create` instead."""
         self.__specsByRef = specsByRef
 
