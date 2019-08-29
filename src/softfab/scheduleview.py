@@ -64,7 +64,7 @@ def describeNextRun(schedule: Scheduled) -> XMLContent:
     # Compute some useful predicates.
     sequence = schedule['sequence']
     waiting = sequence in (
-        ScheduleRepeat.CONTINUOUSLY, ScheduleRepeat.PASSIVE
+        ScheduleRepeat.CONTINUOUSLY, ScheduleRepeat.TRIGGERED
         ) and schedule.isRunning()
     suspended = schedule.isSuspended()
 
@@ -77,7 +77,7 @@ def describeNextRun(schedule: Scheduled) -> XMLContent:
             )
 
     # Schedule should start ASAP; tell user why it hasn't started yet.
-    if sequence is ScheduleRepeat.PASSIVE and not schedule['trigger']:
+    if sequence is ScheduleRepeat.TRIGGERED and not schedule['trigger']:
         return 'not triggered'
     if waiting:
         return 'waiting for last run to finish'

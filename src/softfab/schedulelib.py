@@ -5,7 +5,7 @@ A schedule should run when:
 - once: time >= start_time && !done
 - daily/weekly: time >= start_time
 - continuous: time >= start_time && !running
-- passive: time >= start_time && flag && !running
+- triggered: time >= start_time && flag && !running
 There is a feature request to make continuous schedules run only in specified
 time slots. Although this does not have to be implemented yet, the design
 should leave this option open.
@@ -15,7 +15,7 @@ New start time is calculated like this:
 - daily/weekly: start_time + N
   (actually it is slightly more complex because of daylight saving time)
 - continuous: start_time + minimum_delay
-- passive: asap
+- triggered: asap
 
 Q&A:
 Q: Should "never" and "asap" be visible on the UI, or use just "-" for both?
@@ -24,15 +24,15 @@ A: When sorting by next run, it would be useful to have "asap" at the start of
    would be strange that one "-" is at the start and another "-" is at the end.
 Q: Should minimum delay for continuous schedule increase the start time?
 A: If we start presenting tentative start times (>=), doing this makes sense.
-Q: Should passive schedule have a minimum delay?
-A: Passive schedules are an alternative to LoadExecuteDefault, which is not
-   limited either. Actually, passive schedules are already better protected
+Q: Should triggered schedule have a minimum delay?
+A: Triggered schedules are an alternative to LoadExecuteDefault, which is not
+   limited either. Actually, triggered schedules are already better protected
    against overflowing the job queue since the previous job has to be finished
    before a new one is created.
-Q: Should passive schedule have a start time? (other than asap)
+Q: Should triggered schedule have a start time? (other than asap)
 A: It should be consistent with continuous schedules. For continuous we
    eventually want to execute them in time slots; a start time is a primitive
-   precursor to that. Passive schedule + time slot could be used for a
+   precursor to that. Triggered schedule + time slot could be used for a
    conditional daily test: at night a test is started if the API call was made
    during the day, otherwise the test is skipped.
 Q: Should daily/weekly schedules run if the previous one was not finished yet?
@@ -84,7 +84,7 @@ class ScheduleRepeat(Enum):
     DAILY = 2
     WEEKLY = 3
     CONTINUOUSLY = 4
-    PASSIVE = 5
+    TRIGGERED = 5
 
 class ScheduledFactory:
     @staticmethod
@@ -224,6 +224,9 @@ class Scheduled(XMLTag, SelectableRecordABC):
         if 'paused' in properties:
             properties = dict(properties, suspended=properties['paused'])
             del properties['paused']
+        # COMPAT 2.x.x: Rename 'passive' to 'triggered'.
+        if properties['sequence'] == 'passive':
+            properties = dict(properties, sequence='triggered')
 
         XMLTag.__init__(self, properties)
         SelectableRecordABC.__init__(self)
@@ -238,7 +241,7 @@ class Scheduled(XMLTag, SelectableRecordABC):
             self._properties['done'] = self._properties.get('done') == 'True'
         else:
             assert 'done' not in self._properties
-        if sequence is ScheduleRepeat.PASSIVE:
+        if sequence is ScheduleRepeat.TRIGGERED:
             self._properties['trigger'] = (
                 self._properties.get('trigger') == 'True'
                 )
@@ -358,7 +361,7 @@ class Scheduled(XMLTag, SelectableRecordABC):
             return self.isDone() or self.isSuspended()
         elif sequence is ScheduleRepeat.CONTINUOUSLY:
             return self.isRunning() or self.isSuspended()
-        elif sequence is ScheduleRepeat.PASSIVE:
+        elif sequence is ScheduleRepeat.TRIGGERED:
             return not self._properties['trigger'] or self.isRunning() \
                 or self.isSuspended()
         else:
@@ -399,11 +402,11 @@ class Scheduled(XMLTag, SelectableRecordABC):
             self._notify()
 
     def setTrigger(self) -> None:
-        '''Sets the trigger on a passive schedule.
-        Raises ValueError if this is not a passive schedule.
+        '''Sets the trigger on a triggered schedule.
+        Raises ValueError if this is not a triggered schedule.
         '''
-        if self._properties['sequence'] is not ScheduleRepeat.PASSIVE:
-            raise ValueError('Not a passive schedule')
+        if self._properties['sequence'] is not ScheduleRepeat.TRIGGERED:
+            raise ValueError('Not a triggered schedule')
         if not self._properties['trigger']:
             self._properties['trigger'] = True
             self._notify()
@@ -465,7 +468,7 @@ class Scheduled(XMLTag, SelectableRecordABC):
                     ) * 60
             else:
                 nextTime = None
-        elif sequence is ScheduleRepeat.PASSIVE:
+        elif sequence is ScheduleRepeat.TRIGGERED:
             nextTime = None
         else:
             if sequence is ScheduleRepeat.WEEKLY:
@@ -524,7 +527,7 @@ class Scheduled(XMLTag, SelectableRecordABC):
                 sequence = self._properties['sequence']
                 if sequence is ScheduleRepeat.ONCE:
                     self._properties['done'] = True
-                elif sequence is ScheduleRepeat.PASSIVE:
+                elif sequence is ScheduleRepeat.TRIGGERED:
                     self._properties['trigger'] = False
                 self.__createJobs()
         finally:

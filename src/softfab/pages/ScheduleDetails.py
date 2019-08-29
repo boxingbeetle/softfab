@@ -81,7 +81,7 @@ class DetailsTable(PropertiesTable):
             yield 'Minimum delay', '%d %s' % (
                 minDelay, pluralize('minute', minDelay)
                 )
-        elif scheduled['sequence'] is ScheduleRepeat.PASSIVE:
+        elif scheduled['sequence'] is ScheduleRepeat.TRIGGERED:
             yield 'Triggered', 'yes' if scheduled['trigger'] else 'no'
             yield 'CM triggers', xhtml.br.join(
                 sorted(scheduled.getTagValues('sf.cmtrigger'))

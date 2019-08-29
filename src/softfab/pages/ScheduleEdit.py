@@ -76,7 +76,7 @@ class ScheduleEditBase(EditPage[ScheduleEditArgs, Scheduled]):
             _createGroupItem(args.sequence is ScheduleRepeat.CONTINUOUSLY)[
                 DelayPanel.instance
                 ],
-            _createGroupItem(args.sequence is ScheduleRepeat.PASSIVE)[
+            _createGroupItem(args.sequence is ScheduleRepeat.TRIGGERED)[
                 CMTriggerPanel.instance
                 ],
             CommentPanel.instance,
@@ -124,7 +124,7 @@ class ScheduleEdit_GET(ScheduleEditBase):
                         )
                 elif sequence is ScheduleRepeat.CONTINUOUSLY:
                     overrides['minDelay'] = element.minDelay
-                elif sequence is ScheduleRepeat.PASSIVE:
+                elif sequence is ScheduleRepeat.TRIGGERED:
                     overrides['cmtrigger'] = '\n'.join(
                         sorted(element.getTagValues('sf.cmtrigger'))
                         )
@@ -188,7 +188,7 @@ class ScheduleEdit_POST(ScheduleEditBase):
             elif sequence is ScheduleRepeat.CONTINUOUSLY:
                 parameters['minDelay'] = args.minDelay
             element = Scheduled(parameters, args.comment, True)
-            if sequence is ScheduleRepeat.PASSIVE:
+            if sequence is ScheduleRepeat.TRIGGERED:
                 element.setTag(
                     'sf.cmtrigger',
                     ( value.strip()
@@ -201,8 +201,8 @@ class ScheduleEdit_POST(ScheduleEditBase):
                 for jobId in oldElement.getLastJobs():
                     element._addLastJob(jobId) # pylint: disable=protected-access
                 # Remember whether schedule was triggered.
-                if sequence is ScheduleRepeat.PASSIVE \
-                and oldElement['sequence'] is ScheduleRepeat.PASSIVE:
+                if sequence is ScheduleRepeat.TRIGGERED \
+                and oldElement['sequence'] is ScheduleRepeat.TRIGGERED:
                     if oldElement['trigger']:
                         element.setTrigger()
             return element
@@ -260,9 +260,8 @@ class SequenceTable(RadioTable):
 
     def iterOptions(self, **kwargs):
         for repeat in ScheduleRepeat:
-            if repeat is ScheduleRepeat.PASSIVE:
-                desc = 'Passive (', docLink('/reference/api/#TriggerSchedule')[
-                    'API-triggered' ], ')'
+            if repeat is ScheduleRepeat.TRIGGERED:
+                desc = 'Triggered, by API call or webhook'
             else:
                 desc = repeat.name.capitalize()
             yield repeat, desc

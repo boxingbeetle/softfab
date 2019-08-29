@@ -170,7 +170,7 @@ Examples:
 :   List all tagged configurations and their keys and values. Configurations without any tags are omitted.
 
 `http://factory.company.com/GetTagged?subject=schedule&key=sf.cmtrigger`
-:   List all passive schedules that have a CM trigger filter.
+:   List all triggered schedules that have a CM trigger filter.
 
 `http://factory.company.com/GetTagged?subject=taskdef&key=sf.req&value=R1&value=R2`
 :   List all task definitions that apply to requirement "R1" or requirement "R2".
@@ -329,14 +329,14 @@ runnerId: (mandatory)
 
 ### TriggerSchedule<a id="TriggerSchedule"></a>
 
-Sets a flag that will cause a specified passive schedule to activate.
+Sets a flag that will cause a specified triggered schedule to activate.
 
 Method: **POST**
 
 Arguments:
 
 scheduleId: (mandatory)
-:   The ID of the schedule to set the trigger flag for. This schedule has to be a passive schedule.
+:   The ID of the schedule to set the trigger flag for. This schedule has to be a triggered schedule.
 
 ##Call Mechanism<a id="call"></a>
 
