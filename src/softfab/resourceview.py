@@ -10,7 +10,9 @@ from softfab.Page import PageProcessor, PresentableError
 from softfab.connection import ConnectionStatus
 from softfab.databaselib import checkWrapperVarName
 from softfab.datawidgets import DataColumn
-from softfab.formlib import dropDownList, emptyOption, hiddenInput, textInput
+from softfab.formlib import (
+    dropDownList, emptyOption, hiddenInput, option, textInput
+)
 from softfab.frameworklib import TaskDefBase
 from softfab.pageargs import ListArg, PageArgs
 from softfab.pagelinks import createCapabilityLink, createTaskRunnerDetailsLink
@@ -19,6 +21,7 @@ from softfab.resreq import (
     ResourceClaim, ResourceSpec, taskRunnerResourceRefName
 )
 from softfab.restypelib import resTypeDB, taskRunnerResourceTypeName
+from softfab.restypeview import iterResourceTypes
 from softfab.webgui import Panel, Table, rowManagerInstanceScript
 from softfab.xmlgen import XMLContent, txt, xhtml
 
@@ -169,6 +172,15 @@ def checkResourceRequirementsState(args: ResourceRequirementsArgsMixin) -> None:
                 'Resource type "%s" does not exist (anymore).' % resType
                 ])
 
+NONE_TEXT = '(none)'
+
+def resTypeOptions() -> Iterator[XMLContent]:
+    yield emptyOption[NONE_TEXT]
+    for resType in iterResourceTypes():
+        resTypeName = resType.getId()
+        if resTypeName != taskRunnerResourceTypeName:
+            yield option(value=resTypeName)[resType.presentationName]
+
 def resourceRequirementsWidget(parentClaim: Optional[ResourceClaim] = None
                                ) -> XMLContent:
     yield xhtml.h3[ 'Resource Requirements' ]
@@ -176,7 +188,7 @@ def resourceRequirementsWidget(parentClaim: Optional[ResourceClaim] = None
     yield xhtml.ul[
         xhtml.li[
             'To delete a resource requirement, '
-            'set its type to "%s".' % ResourceRequirementsTable.NONE_TEXT
+            'set its type to "%s".' % NONE_TEXT
             ],
         xhtml.li[
             'The "reference" field contains the name of the wrapper '
@@ -196,21 +208,13 @@ class ResourceRequirementsTable(Table):
     columns = 'Type', 'Reference', 'Capabilities'
     bodyId = 'reslist'
 
-    NONE_TEXT = '(none)'
-
     def __init__(self, parentClaim: Optional[ResourceClaim] = None):
         super().__init__()
         self.__parentClaim = parentClaim
 
     def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
         proc = cast(PageProcessor, kwargs['proc'])
-        nonFixedResTypeNames = sorted(
-            set(resTypeDB.keys()) - {taskRunnerResourceTypeName}
-            )
-        resWidget = dropDownList(name='type')[
-            emptyOption[ self.NONE_TEXT ],
-            nonFixedResTypeNames
-            ]
+        resWidget = dropDownList(name='type')[resTypeOptions()]
 
         # pylint: disable=line-too-long
         reqMap = defaultdict(
@@ -221,27 +225,28 @@ class ResourceRequirementsTable(Table):
         if parentClaim is not None:
             for spec in parentClaim:
                 ref = spec.reference
-                resType = spec.typeName
-                reqMap[resType][ref].append(
+                resTypeName = spec.typeName
+                reqMap[resTypeName][ref].append(
                     (True, sorted(spec.capabilities))
                     )
         args = cast(_ResourceRequirementsArgs, proc.args)
-        for ref, resType, caps in zip(args.ref, args.type, args.caps):
-            reqMap[resType][ref].append(
+        for ref, resTypeName, caps in zip(args.ref, args.type, args.caps):
+            reqMap[resTypeName][ref].append(
                 (False, sorted(caps.split()))
                 )
 
-        for resType in [taskRunnerResourceTypeName] + nonFixedResTypeNames:
-            refMap = reqMap[resType]
+        for resType in iterResourceTypes():
+            resTypeName = resType.getId()
+            refMap = reqMap[resTypeName]
 
             for ref in sorted(refMap.keys()):
                 capMap = dict(refMap[ref])
                 inherited = True in capMap
-                if inherited or resType == taskRunnerResourceTypeName:
+                if inherited or resTypeName == taskRunnerResourceTypeName:
                     # Type and reference are fixed.
                     typeControl = (
-                        resTypeDB[resType].presentationName,
-                        hiddenInput(name='type', value=resType)
+                        resType.presentationName,
+                        hiddenInput(name='type', value=resTypeName)
                         ) # type: XMLContent
                     refControl = (
                         xhtml.span(class_='var')[ref],
@@ -249,12 +254,12 @@ class ResourceRequirementsTable(Table):
                         ) # type: XMLContent
                 else:
                     # User can edit type and reference.
-                    typeControl = resWidget(selected=resType)
+                    typeControl = resWidget(selected=resTypeName)
                     refControl = _refInput(value=ref)
 
                 if inherited:
                     capsControl = _CapabilitiesTable.instance.present(
-                        resType=resType, capMap=capMap, **kwargs
+                        resType=resTypeName, capMap=capMap, **kwargs
                         )
                 else:
                     capsControl = _capsInput(value=' '.join(capMap[False]))
