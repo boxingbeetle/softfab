@@ -37,6 +37,7 @@ class ResType(XMLTag, DatabaseElem):
         if name.startswith('sf.'):
             description = {
                 taskRunnerResourceTypeName: 'SoftFab task execution agent',
+                repoResourceTypeName: 'Version control repository',
                 }[name]
         resType = ResType(dict(
             name=name, pertask=pertask, perjob=perjob
@@ -65,6 +66,7 @@ class ResType(XMLTag, DatabaseElem):
         if name.startswith('sf.'):
             return {
                 taskRunnerResourceTypeName: 'Task Runner',
+                repoResourceTypeName: 'Repository',
                 }[name]
         else:
             return name
@@ -85,4 +87,11 @@ taskRunnerResourceTypeName = 'sf.tr'
 if taskRunnerResourceTypeName not in resTypeDB:
     resTypeDB.add(ResType.create(
         taskRunnerResourceTypeName, pertask=True, perjob=False
+        ))
+
+repoResourceTypeName = 'sf.repo'
+
+if repoResourceTypeName not in resTypeDB:
+    resTypeDB.add(ResType.create(
+        repoResourceTypeName, pertask=False, perjob=False
         ))

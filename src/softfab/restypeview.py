@@ -4,7 +4,9 @@ from typing import Iterator, Tuple
 
 import attr
 
-from softfab.restypelib import ResType, resTypeDB, taskRunnerResourceTypeName
+from softfab.restypelib import (
+    ResType, repoResourceTypeName, resTypeDB, taskRunnerResourceTypeName
+)
 from softfab.webgui import Column
 from softfab.xmlgen import XMLContent, XMLNode
 
@@ -21,6 +23,10 @@ reservedTypes = (
     ResourceTypeInfo(
         name=taskRunnerResourceTypeName,
         editPage='TaskRunnerEdit'
+        ),
+    ResourceTypeInfo(
+        name=repoResourceTypeName,
+        editPage='RepoEdit'
         ),
     )
 
