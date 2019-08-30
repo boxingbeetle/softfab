@@ -23,7 +23,7 @@ from softfab.xmlgen import XMLContent, xhtml
 
 
 def gatherData(taskFilter, tasks, activeKeys):
-    taskRunIdsByName = dict( ( taskName, [] ) for taskName in taskFilter )
+    taskRunIdsByName = {taskName: [] for taskName in taskFilter}
     for task in tasks:
         taskRunIdsByName[task.getName()].append(task.getLatestRun().getId())
     dataByRunId = defaultdict(dict)

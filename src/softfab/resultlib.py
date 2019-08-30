@@ -75,7 +75,7 @@ def getKeys(taskName: str) -> Set[str]:
     The existance of a key means that at least one record contains that key;
     it is not guaranteed all records will contain that key.
     '''
-    keys = set(('sf.duration',))
+    keys = {'sf.duration'}
     path = _dbDir + '/' + taskName
     if os.path.exists(path):
         keys.update(os.listdir(path))

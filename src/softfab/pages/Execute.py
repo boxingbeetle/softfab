@@ -316,10 +316,7 @@ class TagsStep(DialogStep):
         tagkeys = cast(DictArgInstance[str], proc.args.tagkeys)
         tagvalues = cast(DictArgInstance[str], proc.args.tagvalues)
         yield xhtml.p[ 'Selection tags:' ]
-        tags = dict(
-            ( key, tagvalues.get(index, '') )
-            for index, key in tagkeys.items()
-            )
+        tags = {key: tagvalues.get(index, '') for index, key in tagkeys.items()}
         yield ConfigTagValueEditTable.instance.present(
             getValues=lambda key: tags.get(key, ''),
             **kwargs
@@ -605,19 +602,19 @@ class Execute_POST(ExecuteBase):
                     task['name']
                     for task in tasks
                     ),
-                prio = dict(
-                    ( task['name'], task['priority'] )
+                prio = {
+                    task['name']: task['priority']
                     for task in tasks
-                    ),
-                prod = dict(
-                    ( prod['name'], prod.get('locator') or '' )
+                    },
+                prod = {
+                    prod['name']: prod.get('locator') or ''
                     for prod in config.getInputs()
-                    ),
-                local = dict(
-                    ( prod['name'], prod['localAt'] )
+                    },
+                local = {
+                    prod['name']: prod['localAt']
                     for prod in config.getInputs()
                     if prod.get('localAt') is not None
-                    ),
+                    },
                 values = values,
                 poverride = poverride,
                 runnerspt = runnerspt,

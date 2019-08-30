@@ -290,17 +290,17 @@ class Task(
         getParent = lambda key: framework
         parameters = taskDef.getParameters(getParent)
         parameters.update(self._parameters)
-        return dict(
-            ( key, value )
+        return {
+            key: value
             for key, value in parameters.items()
             if not key.startswith('sf.') and not taskDef.isFinal(key, getParent)
-            )
+            }
 
     def getNeededCaps(self) -> AbstractSet[str]:
         caps = super().getNeededCaps()
         target = self.__job.getTarget()
         if target is not None:
-            caps |= set([target])
+            caps |= {target}
         return caps
 
     def canRunOn(self, runner: str) -> bool:

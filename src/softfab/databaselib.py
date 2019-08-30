@@ -261,9 +261,9 @@ class Database(Generic[DBRecord], RecordSubjectMixin[DBRecord], ABC):
             if fileName.endswith('.xml'):
                 cache[self._keyForFileName(fileName)] = None
         self._cache = cache
-        self.__uniqueValuesFor = dict(
-            ( key, set() ) for key in self.cachedUniqueValues
-            ) # type: Dict[str, Set[object]]
+        self.__uniqueValuesFor = {
+            key: set() for key in self.cachedUniqueValues
+            } # type: Dict[str, Set[object]]
         # Every time you use "self._update", another "instancemethod" object is
         # created. Storing it per database avoids one instance per record.
         self.__updateFunc = self._update

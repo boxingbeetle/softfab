@@ -94,14 +94,14 @@ class ProductTable(Table, Generic[ProcT]):
         hasLocal = any(prod.isLocal() for prod in products)
         for product in products:
             productName = product.getName()
-            potentialProducers = set(
+            potentialProducers = {
                 task.getName()
                 for task in job.getProducers(productName)
-                )
-            actualProducers = set(
+                }
+            actualProducers = {
                 taskName
                 for taskName, locator_ in product.getProducers()
-                )
+                }
             # For user inputs, actualProducers includes tasks that are not
             # in potentialProducers.
             producers = sorted(

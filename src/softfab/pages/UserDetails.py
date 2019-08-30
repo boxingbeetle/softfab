@@ -91,7 +91,7 @@ class UserDetails_GET(FabPage['UserDetails_GET.Processor',
         yield xhtml.h3[ 'Recent jobs:' ]
         yield OwnedJobsTable.instance.present(**kwargs)
 
-        reportOwnerArgs = ReportArgs(owner = set([ infoUserName ]))
+        reportOwnerArgs = ReportArgs(owner={infoUserName})
         yield xhtml.p[
             pageLink('ReportIndex', reportOwnerArgs)[
                 'Show all jobs owned by %s' % infoUserName

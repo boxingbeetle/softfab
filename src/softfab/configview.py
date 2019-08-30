@@ -283,7 +283,7 @@ class ConfigJobModelGroup(StatusModel, RecordObserver):
     def __init__(self, modelId, parent):
         RecordObserver.__init__(self)
         StatusModel.__init__(self, modelId, parent)
-        self.__keys = jobDB.uniqueValues('configId') - set([ None ])
+        self.__keys = jobDB.uniqueValues('configId') - {None}
 
     def _createModel(self, key):
         return ConfigJobModel(key, self)

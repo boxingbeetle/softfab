@@ -76,10 +76,10 @@ class TaskSet(Generic[TaskT]):
                 tasks = [ self._tasks[name] for name in nodesByType['task'] ]
                 productNames = nodesByType['prod']
                 if productNames:
-                    locations = set(
+                    locations = {
                         self.getProductLocation(prodName)
                         for prodName in productNames
-                        )
+                        }
                     locations.discard(None)
                     assert len(locations) <= 1
                     localAt = locations.pop() if locations else None

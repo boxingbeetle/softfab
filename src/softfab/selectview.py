@@ -31,11 +31,11 @@ class TagArgs(PageArgs):
 def textToValues(text: str) -> MutableSet[str]:
     '''Splits a comma separated text into a value set.
     '''
-    return set(
+    return {
         value
         for value in ( value.strip() for value in text.split(',') )
         if value
-        )
+        }
 
 def valuesToText(values: Iterable[str]) -> str:
     return ', '.join(sorted(values))
@@ -136,7 +136,7 @@ class SelectProcMixin(Generic[BasketArgsT, SelectableRecord]):
         args = self.args
         tagCache = self.tagCache
         action = args.action
-        selected = set(recordId for recordId in args.sel if recordId in db)
+        selected = {recordId for recordId in args.sel if recordId in db}
 
         if action == 'remove':
             selected -= args.bsk
@@ -191,7 +191,7 @@ class SelectProcMixin(Generic[BasketArgsT, SelectableRecord]):
 
         self.selected = selected
         self.selectedRecords = [ db[recordId] for recordId in selected ]
-        self.filtered = set( record.getId() for record in filteredRecords )
+        self.filtered = {record.getId() for record in filteredRecords}
         self.filteredRecords = filteredRecords
 
     def __filterRecords(self, tagKey: Optional[str], tagValue: Optional[str]

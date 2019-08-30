@@ -209,9 +209,9 @@ class ParametersTable(Table):
     def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
         obj = cast(Parameterized, getattr(kwargs['proc'], self.__fieldName))
         parameters = set(obj.getParameters()) - specialParameters
-        reservedParameters = set(
+        reservedParameters = {
             param for param in parameters if param.startswith('sf.')
-            )
+            }
         customParameters = parameters - reservedParameters
         for name in sorted(reservedParameters) + sorted(customParameters):
             value = obj.getParameter(name)
@@ -276,14 +276,14 @@ def checkParamState(args: ParamArgsMixin, parent: Parameterized) -> None:
 def validateParamState(proc: PageProcessor, parent: Parameterized) -> None:
     args = cast(_ParamArgs, proc.args)
 
-    parentParams = dict(
-        ( name, value )
+    parentParams = {
+        name: value
         for name, value in parent.getParameters().items()
         # Only consider overridable parameters.
         # Note that checkParamState() has already rejected attempts
         # to override final parameters.
         if not parent.isFinal(name)
-        )
+        }
 
     # Extract the essential data:
     # - maps parameter name to (value, final) pair

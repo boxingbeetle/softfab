@@ -207,11 +207,11 @@ def getCommonTags(tagKeys: Iterable[str],
     commonTags = None # type: Optional[Dict[str, Dict[str, str]]]
     for item in items:
         if commonTags is None:
-            commonTags = dict(
+            commonTags = {
                 # pylint: disable=protected-access
-                ( tagKey, dict(item._getTag(tagKey) or {}) )
+                tagKey: dict(item._getTag(tagKey) or {})
                 for tagKey in tagKeys
-                )
+                }
         else:
             for tagKey in tagKeys:
                 values = item._getTag(tagKey) # pylint: disable=protected-access

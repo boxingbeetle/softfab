@@ -17,10 +17,10 @@ def filterTasks(tag, owner):
     # definitions that have that particular tag.
     selected = {}
     for tagKey, tagValues in tag.items():
-        selected[tagKey] = dict(
-            ( TaskDef.cache.toCanonical(tagKey, value)[0], [] )
+        selected[tagKey] = {
+            TaskDef.cache.toCanonical(tagKey, value)[0]: []
             for value in tagValues
-            )
+            }
 
     def createDefRunPair(taskDef):
         taskId = taskDef.getId()

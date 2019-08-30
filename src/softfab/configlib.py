@@ -147,10 +147,10 @@ class Task(PriorityMixin, ResourceRequirementsMixin, XMLTag, TaskRunnerSet):
     def getParameters(self) -> Dict[str, str]:
         '''Returns a new dictionary containing the parameters of this task.
         '''
-        return dict(
-            ( name, cast(str, param.get('value')) )
+        return {
+            name: cast(str, param.get('value'))
             for name, param in self.__params.items()
-            )
+            }
 
     def getVisibleParameters(self) -> Dict[str, str]:
         '''Returns a new dictionary of parameters to be shown to the user:
@@ -159,11 +159,11 @@ class Task(PriorityMixin, ResourceRequirementsMixin, XMLTag, TaskRunnerSet):
         taskDef = self.getDef()
         parameters = taskDef.getParameters()
         parameters.update(self.getParameters())
-        return dict(
-            ( key, value )
+        return {
+            key: value
             for key, value in parameters.items()
             if not key.startswith('sf.') and not taskDef.isFinal(key)
-            )
+            }
 
     def getInputs(self) -> AbstractSet[str]:
         return self.getFramework().getInputs()
@@ -306,7 +306,7 @@ class TaskSetWithInputs(TaskSet[TaskT]):
                 if inpName in inputSet:
                     inpObj = self._inputs.get(inpName)
                     if inpObj is None:
-                        inpObj = Input({ 'name': inpName })
+                        inpObj = Input({'name': inpName})
                     if group is not None and inpObj.isLocal():
                         group.add(inpObj)
                     else:
@@ -377,10 +377,10 @@ class Config(TaskRunnerSet, TaskSetWithInputs[Task], XMLTag,
         '''This should be called after tasks are added, to recompute which
         inputs this configuration has.
         '''
-        self._inputs = dict(
-            ( item, self._inputs.get(item, Input({ 'name': item })) )
+        self._inputs = {
+            item: self._inputs.get(item, Input({'name': item}))
             for item in self.getInputSet()
-            )
+            }
 
     def getId(self) -> str:
         return cast(str, self._properties['name'])

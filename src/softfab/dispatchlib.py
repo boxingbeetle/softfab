@@ -87,11 +87,11 @@ def findMatch(matrix: List[List[int]]) -> Optional[List[int]]:
             reinit = False
 
             # Step 2.1: Cover rows that contain an assignment.
-            uncoveredRowIdxs = set(
+            uncoveredRowIdxs = {
                 ri
                 for ri, ci in enumerate(rowAssigned)
                 if ci is None
-                )
+                }
             # Step 2.2: Terminate when we have a full assignment.
             if not uncoveredRowIdxs:
                 return cast(List[int], rowAssigned)

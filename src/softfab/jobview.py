@@ -41,12 +41,12 @@ statusList = (
     'ok', 'warning', 'error', 'cancelled', 'inspect', 'busy', 'unknown'
     ) + alertList + ( 'idle', )
 
-_resultOrder = dict(
-    ( statusCode, order )
+_resultOrder = {
+    statusCode: order
     for order, statusCode in enumerate(
         cast(Tuple[Optional[str]], ( None, )) + _resultList + alertList
         )
-    )
+    }
 def combinedStatus(statuses: Iterable[Optional[str]]) -> Optional[str]:
     '''Find the most urgent of the given statuses.
     Returns a status name (string), or None if statuses was empty or all of

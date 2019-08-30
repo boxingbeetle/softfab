@@ -407,9 +407,7 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
         if resources is None:
             return None
 
-        self.__reserved = dict(
-            ( ref, res.getId() ) for ref, res in resources.items()
-            )
+        self.__reserved = {ref: res.getId() for ref, res in resources.items()}
         self._properties['state'] = 'running'
         self._properties['starttime'] = getTime()
         self._properties['runner'] = taskRunner.getId()

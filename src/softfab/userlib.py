@@ -37,7 +37,7 @@ class UIRoleNames(Enum):
             # https://github.com/PyCQA/pylint/issues/2757
             return self.value < cast(Enum, other).value
         return NotImplemented
-assert set(elem.name.lower() for elem in list(UIRoleNames)[1 : ]) == roleNames
+assert {elem.name.lower() for elem in list(UIRoleNames)[1:]} == roleNames
 
 # Privileges are designated as '<object>/<action>' where object can be:
 #   j(job), t(task), c(config), td(task definition),

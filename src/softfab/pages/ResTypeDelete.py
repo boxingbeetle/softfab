@@ -13,11 +13,11 @@ from softfab.taskdeflib import taskDefDB
 
 
 def checkRequirements(db, typeName, linkFunc):
-    usedBy = set(
+    usedBy = {
         record.getId()
         for record in db
         if list(record.resourceClaim.iterSpecsOfType(typeName))
-        )
+        }
     if usedBy:
         raise RecordInUseError(db.description, linkFunc, usedBy)
 
