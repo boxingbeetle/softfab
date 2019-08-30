@@ -318,7 +318,7 @@ class Database(Generic[DBRecord], RecordSubjectMixin[DBRecord], ABC):
         del self._cache[key]
 
     def _update(self, value: DBRecord) -> None:
-        assert self.get(value.getId()) is value, 'ID "%s"' % value.getId()
+        assert self.get(value.getId()) is value, value.getId()
         self.update(value)
 
     def _write(self, key: str, value: DBRecord) -> None:
@@ -634,11 +634,11 @@ class VersionedDatabase(Database[DBRecord]):
         return versionStr
 
     def _fileNameForKey(self, key: str) -> str:
-        assert '|' in key, '"%s"' % key
+        assert '|' in key, key
         return self.baseDir + '/' + key.replace('|', '.') + '.xml'
 
     def _fileNameForRemovedKey(self, key: str) -> str:
-        assert '|' not in key, '"%s"' % key
+        assert '|' not in key, key
         return self.baseDir + '/' + key + '.removed'
 
     def _keyForFileName(self, fileName: str) -> str:
@@ -652,7 +652,7 @@ class VersionedDatabase(Database[DBRecord]):
 
     def get(self, key: str) -> Optional[DBRecord]:
         # Lookups with versioned keys should be done with getVersion.
-        assert '|' not in key, '"%s"' % key
+        assert '|' not in key, key
 
         # Get versioned key of latest version.
         versionedKey = self.__latestVersionOf.get(key)
@@ -666,7 +666,7 @@ class VersionedDatabase(Database[DBRecord]):
         """Get a specific version of a record.
         Raises KeyError if the key does not exist.
         """
-        assert '|' in versionedKey, '"%s"' % versionedKey
+        assert '|' in versionedKey, versionedKey
         value = self._cache[versionedKey]
         if value is None:
             # Key exists, but was not cached yet.
