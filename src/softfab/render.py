@@ -192,11 +192,8 @@ def renderAsync(
     except ConnectionLost as ex:
         subPath = req.getSubPath()
         log.msg(
-            'Connection lost while presenting page %s%s: %s' % (
-                page.name,
-                '' if subPath is None else ' item "%s"' % subPath,
-                ex
-                )
+            'Connection lost while presenting page %s%s: %s',
+            page.name, '' if subPath is None else ' item "%s"' % subPath, ex
             )
 
 def _checkActive(
