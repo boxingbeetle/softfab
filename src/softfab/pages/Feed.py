@@ -34,7 +34,8 @@ from softfab.xmlgen import atom, xhtml
 factoryId = basename(dbDir)
 
 class MostRecent(RecordObserver):
-    '''Keeps a list of the N (N=50) most recent jobs.
+    '''Keeps a list of the N (N=50) most recent completed jobs.
+    Unlike the Home page, we only care about jobs with have a final result.
     '''
 
     def __init__(self, db, key, number):
@@ -94,7 +95,6 @@ class Feed_GET(ControlPage[ControlPage.Arguments, 'Feed_GET.Processor']):
         checkPrivilege(user, 'j/a')
 
     class Processor(PageProcessor[ControlPage.Arguments]):
-        # N (where N=50) MostRecent & Completed Jobs
         recentJobs = MostRecent(jobDB, 'recent', 50)
 
         def process(self, req, user):
