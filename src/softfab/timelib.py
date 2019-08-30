@@ -68,7 +68,7 @@ def stringToTime(text: str, up: bool = False) -> int:
     '''
     match = _timePattern.match(text)
     if match is None:
-        raise ValueError('Invalid date: "%s"' % text)
+        raise ValueError(f'Invalid date: "{text}"')
     assert match.lastindex is not None, text
     if match.lastindex >= 6:
         pieces = [ int(num) for num in match.group(1, 3, 4, 5, 6) ]
@@ -85,16 +85,12 @@ def stringToTime(text: str, up: bool = False) -> int:
     pieces += [ 0, 0, -1 ]
     if pieces[2] > _numOfDays[pieces[1]]:
         if pieces[1] != 2 or pieces[2] > 29:
-            raise ValueError(
-                'Invalid date: "%s" (month does not have %d days)'
-                % ( text, pieces[2] )
-                )
+            raise ValueError(f'Invalid date: "{text}" '
+                             f'(month does not have {pieces[2]:d} days)')
         year = pieces[0]
         if (year % 4) != 0 or ((year % 100) == 0 and (year % 400) != 0):
-            raise ValueError(
-                'Invalid date: "%s" (%d is not a leap year)'
-                % ( text, year )
-                )
+            raise ValueError(f'Invalid date: "{text}" '
+                             f'({year:d} is not a leap year)')
     return _intsToTime(pieces)
 
 def getWeekNr(localTime: struct_time) -> int:

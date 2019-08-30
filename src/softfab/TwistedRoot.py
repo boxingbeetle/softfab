@@ -70,7 +70,8 @@ class ChunkCaller:
                         return
                 elif ret is not None:
                     self.__deferred.errback(Failure(
-                        TypeError('Cannot handle chunk of type %s' % type(ret))
+                        TypeError(f'Cannot handle chunk '
+                                  f'of type {type(ret).__name__}')
                         ))
                     return
                 self.scheduleNext()
@@ -103,7 +104,7 @@ class DatabaseLoader:
         for db in iterDatabasesToPreload():
             description = db.description
             failedRecordCount = 0
-            startupMessages.addMessage('Loading %s database' % description)
+            startupMessages.addMessage(f'Loading {description} database')
             # Sorting the keys makes it more likely that records that will be
             # used around the same time are close together in memory as well.
             keys = sorted(db.keys())
@@ -130,8 +131,8 @@ class DatabaseLoader:
                         failedRecordCount += 1
                 recordIndex = recordEnd
                 startupMessages.replaceMessage(
-                    'Loading %s database, record %d / %d'
-                    % (description, recordIndex, dbLen)
+                    f'Loading {description} database, '
+                    f'record {recordIndex:d} / {dbLen:d}'
                     )
                 yield None
             if failedRecordCount != 0:

@@ -73,7 +73,7 @@ class Task_GET(FabPage['Task_GET.Processor', 'Task_GET.Arguments']):
                         active = label
                         break
                 else:
-                    raise InvalidRequest('unknown report: "%s"' % report)
+                    raise InvalidRequest(f'unknown report: "{report}"')
             if report != active.casefold():
                 raise ArgsCorrected(req.args.override(report=active.casefold()))
 
@@ -95,7 +95,7 @@ class Task_GET(FabPage['Task_GET.Processor', 'Task_GET.Arguments']):
             yield SelfTaskRunsTable.instance
 
     def pageTitle(self, proc: Processor) -> str:
-        return 'Task: %s' % proc.task.getName()
+        return 'Task: ' + proc.task.getName()
 
     def presentContent(self, **kwargs: object) -> XMLContent:
         proc = cast(Task_GET.Processor, kwargs['proc'])
@@ -226,7 +226,7 @@ class DetailsTable(PropertiesTable):
         # selection enabled even if the setting is disabled.
         if selectedRunners:
             yield 'Task Runner selection', (
-                'selected for %s: ' % level,
+                f'selected for {level}: ',
                 txt(', ').join(
                     createTaskRunnerDetailsLink(runner)
                     for runner in sorted(selectedRunners)

@@ -66,7 +66,7 @@ class _FormPresenter:
     def __iterScriptFragments(self) -> Iterator[str]:
         if self.hasClearButton:
             yield 'function clearForm() {'
-            yield '\tinputs = document.forms.%s.elements;' % self.__id
+            yield f'\tinputs = document.forms.{self.__id}.elements;'
             for line in self.__clearCode:
                 yield '\t' + line
             yield '}'
@@ -313,7 +313,7 @@ class _TextInput(AttrContainer, XMLPresentable):
         focus = form.addControl(name, not attributes.get('disabled', False))
 
         if name is not None:
-            form.addClearCode('inputs.%s.value = "";' % name)
+            form.addClearCode(f'inputs.{name}.value = "";')
 
             if 'value' not in attributes:
                 formArgs = kwargs['formArgs']
@@ -373,7 +373,7 @@ class _Select(AttrContainer, XMLPresentable):
             yield cast(XMLPresentable, element)
         else:
             raise TypeError(
-                'Cannot adapt "%s" to selection option' % type(element).__name__
+                f'Cannot adapt "{type(element).__name__}" to selection option'
                 )
 
     def present(self, **kwargs: object) -> XMLContent:
@@ -389,7 +389,7 @@ class _Select(AttrContainer, XMLPresentable):
         if name is not None:
             if multiple:
                 form.addClearCode(
-                    'var options = inputs.%s.options;' % name,
+                    f'var options = inputs.{name}.options;',
                     'for (var i = 0; i < options.length; i++) {',
                     '\toptions[i].selected = false;',
                     '}'
@@ -404,7 +404,7 @@ class _Select(AttrContainer, XMLPresentable):
                     else:
                         value = option.adaptAttributeValue(cast(str, default))
                     form.addClearCode(
-                        'inputs.%s.value = "%s";' % (name, value)
+                        f'inputs.{name}.value = "{value}";'
                         )
 
         if 'selected' in attributes:
@@ -420,8 +420,8 @@ class _Select(AttrContainer, XMLPresentable):
             if multiple:
                 if not iterable(selected):
                     raise TypeError(
-                        'singular (%s) "selected" attribute for multi-select'
-                        % type(selected)
+                        f'singular ({type(selected).__name__}) '
+                        f'"selected" attribute for multi-select'
                         )
             else:
                 selected = (selected, )
@@ -438,7 +438,7 @@ class _Select(AttrContainer, XMLPresentable):
                     node = node(selected = True)
                 optionsPresentation.append(node)
             else:
-                raise ValueError('Expected <option>, got %s' % content)
+                raise ValueError(f'Expected <option>, got {content}')
 
         return xhtml.select(autofocus=focus, **attributes)[
             optionsPresentation
@@ -484,13 +484,9 @@ class DropDownList(Widget):
         if name is not None:
             default = self.getDefault(**kwargs)
             if default is not None and default is not mandatory:
-                form.addClearCode(
-                    'inputs.%s.value = "%s";' % (
-                        name, option.adaptAttributeValue(
-                            cast(XMLAttributeValue, default)
-                            )
-                        )
-                    )
+                value = option.adaptAttributeValue(
+                                    cast(XMLAttributeValue, default))
+                form.addClearCode(f'inputs.{name}.value = "{value}";')
 
         extraAttribs = self.extraAttribs or {}
         return xhtml.select(
@@ -658,8 +654,8 @@ class SingleCheckBoxTable(CheckBoxesTable):
         active = getattr(kwargs['formArgs'], self.name)
         if not isinstance(active, bool):
             raise TypeError(
-                'Invalid page argument value type: expected "bool", got "%s"'
-                % type(active).__name__
+                f'Invalid page argument value type: expected "bool", '
+                f'got "{type(active).__name__}"'
                 )
         return active
 
@@ -704,9 +700,9 @@ class RadioTable(Table):
             yield row(
                 # Note: While clicking the label will activate the button,
                 #       the JavaScript reacts to the entire row.
-                onclick = 'document.forms.%s[\'%s\'][%d].checked=true'
-                    % (formId, name, index),
-                class_ = 'clickable'
+                onclick=f"document.forms.{formId}['{name}'][{index:d}]"
+                                                            '.checked=true',
+                class_='clickable'
                 )[ self.formatOption(box, item[1:]) ]
 
     def getActive(self, **kwargs: object) -> Union[None, str, Enum]:

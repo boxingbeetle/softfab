@@ -94,11 +94,11 @@ class UserDetails_GET(FabPage['UserDetails_GET.Processor',
         reportOwnerArgs = ReportArgs(owner={infoUserName})
         yield xhtml.p[
             pageLink('ReportIndex', reportOwnerArgs)[
-                'Show all jobs owned by %s' % infoUserName
+                f'Show all jobs owned by {infoUserName}'
                 ]
             ]
         yield xhtml.p[
             pageLink('ReportTasks', reportOwnerArgs)[
-                'Show tasks owned by %s' % infoUserName
+                f'Show tasks owned by {infoUserName}'
                 ]
             ]

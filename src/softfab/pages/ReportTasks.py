@@ -19,6 +19,7 @@ from softfab.setcalc import intersection, union
 from softfab.taskdeflib import taskDefDB
 from softfab.tasktables import TaskRunsTable
 from softfab.userlib import User, checkPrivilege
+from softfab.utils import pluralize
 from softfab.webgui import pageLink
 from softfab.xmlgen import XMLContent, xhtml
 
@@ -90,9 +91,7 @@ class ReportTasks_GET(FabPage['ReportTasks_GET.Processor', 'ReportTasks_GET.Argu
                     pageLink('ExtractedData', ReportTaskArgs.subset(proc.args))[
                         'Visualize mid-level data'
                         ],
-                    ' (%d %s)' % (
-                        numCommonKeys, 'key' if numCommonKeys == 1 else 'keys'
-                        )
+                    f" ({numCommonKeys:d} {pluralize('key', numCommonKeys)})"
                     ]
             else:
                 yield xhtml.p[

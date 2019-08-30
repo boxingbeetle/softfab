@@ -129,14 +129,14 @@ class AddUser_POST(AddUserBase['AddUser_POST.Processor',
                         userName, password, uiRoleToSet(role)
                         )
                 except ValueError as ex:
-                    raise PresentableError('%s.' % str(ex))
+                    raise PresentableError(f'{ex}.')
             else:
                 assert False, req.args.action
 
     def presentContent(self, **kwargs: object) -> XMLContent:
         proc = cast(AddUser_POST.Processor, kwargs['proc'])
         yield xhtml.p[ xhtml.b[
-            'User "%s" has been added successfully.' % proc.args.user
+            f'User "{proc.args.user}" has been added successfully.'
             ] ]
         yield xhtml.p[
             'You can use the form below to add another user, or ',

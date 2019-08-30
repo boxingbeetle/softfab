@@ -179,7 +179,7 @@ class InputTable(ProductTable):
     def presentCaptionParts(self, *, proc, **kwargs):
         numInputs = len(proc.job.getInputs())
         yield 'Job consumes the following %s:' % (
-            'input' if numInputs == 1 else '%d inputs' % numInputs
+            'input' if numInputs == 1 else f'{numInputs:d} inputs'
             )
 
 class OutputTable(ProductTable):
@@ -196,7 +196,7 @@ class OutputTable(ProductTable):
     def presentCaptionParts(self, *, proc, **kwargs):
         numOutputs = len(proc.job.getProduced())
         yield 'Job produces the following %s:' % (
-            'output' if numOutputs == 1 else '%d outputs' % numOutputs
+            'output' if numOutputs == 1 else f'{numOutputs:d} outputs'
             )
 
 def presentTaskRunner(runnerId):

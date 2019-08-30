@@ -95,7 +95,7 @@ class UIPage(Generic[ProcT]):
             name='viewport',
             content='width=device-width, initial-scale=1, minimum-scale=1'
             )
-        yield xhtml.title[ '%s - %s' % (project.name, self.pageTitle(proc)) ]
+        yield xhtml.title[ f'{project.name} - {self.pageTitle(proc)}' ]
         for sheet in iterStyleSheets(proc.req):
             yield sheet.present(**kwargs)
         customStyleDefs = '\n'.join(self.iterStyleDefs())
@@ -187,7 +187,7 @@ class UIPage(Generic[ProcT]):
                 formatTime(getTime())
                 ],
             xhtml.div(class_ = 'logo')[
-                xhtml.a(href=ccURL + 'About', title='SoftFab %s' % VERSION)[
+                xhtml.a(href=ccURL + 'About', title=f'SoftFab {VERSION}')[
                     _logoIcon.present(**kwargs)
                     ]
                 ]

@@ -50,7 +50,7 @@ class ReportTaskCSVArgs(ReportTaskArgs, CSVPage.Arguments):
 
 def executionStateBox(objectName: str) -> XMLPresentable:
     return dropDownList(name='execState', style='width:20ex')[(
-        option(value=state)['%s %s' % (state.name.lower(), objectName)]
+        option(value=state)[f'{state.name.lower()} {objectName}']
         for state in ExecutionState
         )]
 
@@ -177,7 +177,7 @@ class ReportFilterForm:
 
         def columns1() -> XMLContent:
             yield xhtml.td(colspan=4)[
-                'Select %s to display reports for:' % objectName
+                f'Select {objectName} to display reports for:'
                 ]
             if len(targets) > 1:
                 yield xhtml.td[ 'Targets:' ]

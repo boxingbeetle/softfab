@@ -90,12 +90,11 @@ class TokenAuthPage(Authenticator):
                 token = authenticateToken(tokenId, password)
             except KeyError:
                 return fail(LoginFailed(
-                    'Token "%s" does not exist' % tokenId
+                    f'Token "{tokenId}" does not exist'
                     ))
             if token.role is not self.__role:
                 return fail(Unauthorized(
-                    'Token "%s" is of the wrong type for this operation'
-                    % tokenId
+                    f'Token "{tokenId}" is of the wrong type for this operation'
                     ))
             return succeed(TokenUser(token))
         elif project['anonguest']:

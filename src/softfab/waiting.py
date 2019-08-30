@@ -52,7 +52,7 @@ class ReasonForWaiting:
     """
 
     def __str__(self) -> str:
-        return '%s(%s)' % (self.__class__.__name__, self.description)
+        return f'{self.__class__.__name__}({self.description})'
 
     @property
     def priority(self) -> Sequence[int]:
@@ -97,7 +97,7 @@ class ResourceMissingReason(ReasonForWaiting):
 
     @property
     def description(self) -> str:
-        return 'resource was deleted: %s' % self.__resourceId
+        return f'resource was deleted: {self.__resourceId}'
 
 class ResourceReason(ReasonForWaiting, ABC):
     prioMinor = abstract # type: ClassVar[int]
@@ -161,7 +161,7 @@ class ResourceTypeReason(ResourceReason):
                 self.__type
                 )
         else:
-            return 'not enough resources: %s' % self.__type
+            return f'not enough resources: {self.__type}'
 
 class BoundReason(ReasonForWaiting):
 
@@ -175,7 +175,7 @@ class BoundReason(ReasonForWaiting):
 
     @property
     def description(self) -> str:
-        return 'waiting for bound Task Runner: %s' % self.__boundRunnerId
+        return f'waiting for bound Task Runner: {self.__boundRunnerId}'
 
 class _CapabilitiesReason(ReasonForWaiting, ABC):
     selectorMajor = abstract # type: ClassVar[int]
@@ -225,7 +225,7 @@ class TRStateReason(ReasonForWaiting):
 
     @property
     def description(self) -> str:
-        return 'all suitable Task Runners are %s' % _describeLevel(self.__level)
+        return 'all suitable Task Runners are ' + _describeLevel(self.__level)
 
 class UnboundGroupCapsReason(_CapabilitiesReason):
     selectorMajor = 1
@@ -267,9 +267,8 @@ class BoundGroupTargetReason(ReasonForWaiting):
 
     @property
     def description(self) -> str:
-        return "bound Task Runner '%s' does not support target '%s'" % (
-            self.__boundRunnerId, self.__target
-            )
+        return f'bound Task Runner "{self.__boundRunnerId}" ' \
+               f'does not support target "{self.__target}"'
 
 class BoundGroupCapsReason(_CapabilitiesReason):
     selectorMajor = 3
@@ -282,7 +281,7 @@ class BoundGroupCapsReason(_CapabilitiesReason):
     @property
     def description(self) -> str:
         assert self._missingOnAll == self._missingOnAny
-        return "bound Task Runner '%s' does not have group capabilities: %s" % (
+        return 'bound Task Runner "%s" does not have group capabilities: %s' % (
             self.__boundRunnerId,
             ', '.join(sorted(self._missingOnAll or self._missingOnAny))
             )
@@ -300,10 +299,8 @@ class BoundGroupStateReason(ReasonForWaiting):
 
     @property
     def description(self) -> str:
-        return "bound Task Runner '%s' is %s" % (
-            self.__boundRunnerId,
-            _describeLevel(self.__level)
-            )
+        return f'bound Task Runner "{self.__boundRunnerId}" ' \
+               f'is {_describeLevel(self.__level)}'
 
 def topWhyNot(whyNot: Iterable[ReasonForWaiting]) -> ReasonForWaiting:
     """Returns the highest priority reason for waiting from `whyNot`.

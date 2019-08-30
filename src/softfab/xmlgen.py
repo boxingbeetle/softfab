@@ -224,7 +224,7 @@ def _adaptElementTreeRec(
                         prefix = prefixMap[namespace]
                     except KeyError:
                         prefix = _commonAttribNamespaces.get(
-                            namespace, 'ns%d' % len(prefixMap)
+                            namespace, f'ns{len(prefixMap):d}'
                             )
                         prefixMap[namespace] = prefix
                     name = prefix + ':' + name[index + 1:]
@@ -301,7 +301,7 @@ class _PresentationWrapper(_XMLSerializable):
         if isinstance(wrapped, MethodType):
             if wrapped.__func__.__name__ == 'present':
                 wrapped = wrapped.__self__.__class__.__name__
-        raise ValueError('Unresolved presenter in XML tree: %s' % wrapped)
+        raise ValueError(f'Unresolved presenter in XML tree: {wrapped}')
 
     def present(self, **kwargs: object) -> XML:
         return adaptToXML(self.__func(**kwargs))
@@ -474,16 +474,16 @@ class XMLNode(_XMLSerializable):
         if namespace is not defaultNamespace and namespace is not None:
             attribs = dict(attribs, xmlns = namespace)
         attribStr = ''.join(
-            ' %s="%s"' % (key, _escapeXMLAttributeValue(value))
+            f' {key}="{_escapeXMLAttributeValue(value)}"'
             for key, value in attribs.items()
             )
 
         if self._useEmptyTag():
-            yield '<%s%s/>' % (name, attribStr)
+            yield f'<{name}{attribStr}/>'
         else:
-            yield '<%s%s>' % (name, attribStr)
+            yield f'<{name}{attribStr}>'
             yield from self._contentToFragments()
-            yield '</%s>' % name
+            yield f'</{name}>'
 
     def _useEmptyTag(self) -> bool:
         '''Returns True iff this node should be flattened using
@@ -528,7 +528,7 @@ class _XHTMLVoidNode(_XHTMLNode):
             attrs: Mapping[str, str], children: _XMLSequence
             ):
         if children:
-            raise ValueError('Void element <%s> cannot have children' % name)
+            raise ValueError(f'Void element <{name}> cannot have children')
         super().__init__(namespace, name, attrs, children)
 
     def _useEmptyTag(self) -> bool:
@@ -552,7 +552,7 @@ class _XHTMLRawTextNode(_XHTMLNode):
             ):
         for child in children:
             if not isinstance(child, (_Text, _PresentationWrapper)):
-                raise ValueError('Element <%s> can only contain text' % name)
+                raise ValueError(f'Element <{name}> can only contain text')
         super().__init__(namespace, name, attrs, children)
 
     def _contentToFragments(self) -> Iterator[str]:
@@ -561,7 +561,7 @@ class _XHTMLRawTextNode(_XHTMLNode):
             if isinstance(child, _Text):
                 texts.append(child.text)
             elif isinstance(child, _PresentationWrapper):
-                raise ValueError('Unresolved presenter in <%s>' % self._name)
+                raise ValueError(f'Unresolved presenter in <{self._name}>')
             else:
                 assert False, child
 

@@ -375,7 +375,7 @@ class Database(Generic[DBRecord], RecordSubjectMixin[DBRecord], ABC):
         # Check generic restrictions.
         name = self.description + ' name'
         if len(key) == 0:
-            raise KeyError('Empty %s is not allowed' % name)
+            raise KeyError(f'Empty {name} is not allowed')
         elif len(key) > 120:
             # Most modern hard disk file systems seem to have file names of
             # 255 characters maximum. However, for CD-ROMs (which may be used
@@ -385,21 +385,21 @@ class Database(Generic[DBRecord], RecordSubjectMixin[DBRecord], ABC):
             # Note that for example database records will have ".xml" appended,
             # so we cannot use 128.
             raise KeyError(
-                '%s too long (%d characters)' % (name.capitalize(), len(key))
+                f'{name.capitalize()} too long ({len(key):d} characters)'
                 )
         elif '  ' in key:
             # Processing of paths containing two consecutive spaces can
             # cause troubles on the Factory PC and it is unlikely that the
             # user really wants two spaces anyway.
             raise KeyError(
-                '%s contains two consecutive spaces' % name.capitalize()
+                f'{name.capitalize()} contains two consecutive spaces'
                 )
         elif key[-1] == ' ':
             # Just like double spaces, a space and the end is confusing and
             # unlikely to be what the user wants.
-            raise KeyError('%s ends with a space' % name.capitalize())
+            raise KeyError(f'{name.capitalize()} ends with a space')
         elif self.__reKey.match(key) is None:
-            raise KeyError('Invalid character in %s "%s"' % (name, key))
+            raise KeyError(f'Invalid character in {name} "{key}"')
 
     def _customCheckId(self, key: str) -> None:
         '''This method can be overridden to provide additional restrictions
@@ -430,7 +430,7 @@ class Database(Generic[DBRecord], RecordSubjectMixin[DBRecord], ABC):
         key = value.getId()
         self.checkId(key)
         if self.get(key) is not None:
-            raise KeyError('duplicate ID "%s"' % key)
+            raise KeyError(f'duplicate ID "{key}"')
         self._write(key, value)
         self._register(key, value)
 
@@ -470,7 +470,7 @@ class Database(Generic[DBRecord], RecordSubjectMixin[DBRecord], ABC):
         key = value.getId()
         oldValue = self.get(key)
         if oldValue is None:
-            raise KeyError('unknown ID "%s"' % key)
+            raise KeyError(f'unknown ID "{key}"')
 
         # Store new version in database.
         self._write(key, value)
@@ -697,7 +697,7 @@ class VersionedDatabase(Database[DBRecord]):
         key = value.getId()
         self.checkId(key)
         if key in self.__latestVersionOf:
-            raise KeyError('duplicate ID "%s"' % key)
+            raise KeyError(f'duplicate ID "{key}"')
 
         # Determine latest existing version.
         latest = self.__removedRecords.get(key)
@@ -719,7 +719,7 @@ class VersionedDatabase(Database[DBRecord]):
     def remove(self, value: DBRecord) -> None:
         key = value.getId()
         if key not in self.__latestVersionOf:
-            raise KeyError('unknown ID "%s"' % key)
+            raise KeyError(f'unknown ID "{key}"')
         versionedKey = self.__latestVersionOf[key]
 
         with open(self._fileNameForRemovedKey(key), 'w'):
@@ -911,7 +911,7 @@ def checkWrapperVarName(name: str) -> None:
                     illegalChars.append(char)
         raise KeyError(
             'name contains illegal characters: ' + ', '.join(
-                '"%s"' % char for char in illegalChars
+                f'"{char}"' for char in illegalChars
                 )
             )
     if name.upper().startswith('SF_'):

@@ -21,7 +21,7 @@ class RefreshScript(Script):
         args = dict(
             delayms = 2000,
             urls = ', '.join(
-                '"%s"' % proc.subItemRelURL(targetId)
+                f'"{proc.subItemRelURL(targetId)}"'
                 for targetId in self.targetIds
                 ),
             )

@@ -38,7 +38,7 @@ def pageURL(
     assert page
     query = Query({}) if args is None else Query.fromArgs(args)
     query = query.override(**kwargs)
-    return '%s?%s' % (page, query.toURL()) if query else page
+    return f'{page}?{query.toURL()}' if query else page
 
 def pageLink(
         page: str,
@@ -410,40 +410,31 @@ class _Row(AttrContainer):
                 attrs = cellPresentation.attrs
                 rowspan = int(attrs.get('rowspan', '1'))
                 if rowspan < 0:
-                    raise ValueError(
-                        'Illegal value %d for "rowspan" in column %d'
-                        % (rowspan, index)
-                        )
+                    raise ValueError(f'Illegal value {rowspan:d} for "rowspan" '
+                                     f'in column {index:d}')
                 colspan = int(attrs.get('colspan', '1'))
                 if colspan < 1:
-                    raise ValueError(
-                        'Illegal value %d for "colspan" in column %d'
-                        % (colspan, index)
-                        )
+                    raise ValueError(f'Illegal value {colspan:d} for "colspan" '
+                                     f'in column {index:d}')
                 try:
                     for _ in range(colspan):
                         style = colStyles[index]
                         cellPresentation = cellPresentation.addClass(style)
                         if rowSpans[index] != 1:
-                            raise ValueError(
-                                'Overlapping row and column span in column %d'
-                                % index
-                                )
+                            raise ValueError(f'Overlapping row and column span '
+                                             f'in column {index:d}')
                         rowSpans[index] = rowspan
                         index += 1
                 except IndexError as ex:
                     raise ValueError(
-                        'Row cells extend past last column (%d)' % numCols
+                        f'Row cells extend past last column ({numCols:d})'
                         ) from ex
                 cells.append(cellPresentation)
             index = applyRowSpans(index)
 
         if index != numCols:
-            raise ValueError(
-                'Table with %d columns contains row with %d cells' % (
-                    numCols, index
-                    )
-                )
+            raise ValueError(f'Table with {numCols:d} columns contains row '
+                             f'with {index:d} cells')
 
         return xhtml.tr(**self._attributes)[cells]
 
@@ -534,7 +525,7 @@ class Table(Widget):
         if max(rowSpans) > 1:
             raise ValueError(
                 'Row span beyond last row: %s' % ', '.join(
-                    '%s row(s) left in column %d' % (span - 1, index)
+                    f'{span - 1:d} row(s) left in column {index:d}'
                     for index, span in enumerate(rowSpans)
                     if span > 1
                     )
@@ -639,7 +630,7 @@ class Image(AttrContainer):
 
     def present(self, **kwargs: object) -> XMLContent: # pylint: disable=unused-argument
         styleURL = cast(str, kwargs['styleURL'])
-        url = '%s/%s' % (styleURL, self.fileName)
+        url = f'{styleURL}/{self.fileName}'
         return xhtml.img(src=url, **self._attributes)
 
 def pngIcon(fileName: str, data: Optional[bytes]) -> Image:
@@ -688,7 +679,7 @@ class ShortcutIcon(Widget):
         for fileName, mediaType in self.iterFiles():
             yield xhtml.link(
                 rel = 'icon',
-                href = '%s/%s' % (styleURL, fileName),
+                href = f'{styleURL}/{fileName}',
                 type = mediaType,
                 )
 
@@ -704,7 +695,7 @@ class StyleSheet(Widget):
         styleURL = cast(str, kwargs['styleURL'])
         yield xhtml.link(
             rel = 'stylesheet',
-            href = '%s/%s' % (styleURL, self.fileName),
+            href = f'{styleURL}/{self.fileName}',
             type = 'text/css',
             )
 
@@ -712,7 +703,7 @@ class Script(Widget):
 
     def present(self, **kwargs: object) -> XMLContent:
         body = '\n'.join(line for line in self.iterLines(**kwargs))
-        return xhtml.script['\n%s\n' % body] if body else None
+        return xhtml.script[f'\n{body}\n'] if body else None
 
     def iterLines(self, **kwargs: object) -> Iterator[str]:
         raise NotImplementedError
@@ -870,12 +861,12 @@ class _RowManagerInstanceScript(AttrContainer):
         bodyId = cast(str, attributes['bodyId'])
         rowStart = cast(int, attributes['rowStart'])
         lines = [
-            "var rowManager = new RowManager('%s', %d);" % (bodyId, rowStart)
+            f"var rowManager = new RowManager('{bodyId}', {rowStart:d});"
             ]
 
         initRowFunc = attributes.get('initRow')
         if initRowFunc:
-            lines.append('rowManager.initRowCustom = %s;' % initRowFunc)
+            lines.append(f'rowManager.initRowCustom = {initRowFunc};')
 
         return xhtml.script['\n'.join(lines)]
 

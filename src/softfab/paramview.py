@@ -73,7 +73,7 @@ class ParamCell(RadioTable):
             # The onchange event handler is there to make sure the right
             # radio button is activated when text is pasted into the edit
             # box from the context menu (right mouse button).
-            onchange="form['%s'][1].checked=true" % self.name
+            onchange=f"form['{self.name}'][1].checked=true"
             )
 
 class ParamOverrideTable(Table):
@@ -257,19 +257,19 @@ def checkParamState(args: ParamArgsMixin, parent: Parameterized) -> None:
             continue
         elif reParamName.match(param) is None:
             raise PresentableError(xhtml.p[
-                'Invalid parameter name: "%s"' % param
+                f'Invalid parameter name: "{param}"'
                 ])
         elif param in specialParameters:
             raise PresentableError(xhtml.p[
-                'Reserved parameter name: "%s"' % param
+                f'Reserved parameter name: "{param}"'
                 ])
         elif param in usedParams:
             raise PresentableError(xhtml.p[
-                'Duplicate parameter name: "%s"' % param
+                f'Duplicate parameter name: "{param}"'
                 ])
         elif parent.isFinal(param):
             raise PresentableError(xhtml.p[
-                'Cannot override final parameter "%s"' % param
+                f'Cannot override final parameter "{param}"'
                 ])
         usedParams.add(param)
 

@@ -138,11 +138,11 @@ class Notifications_POST(FabPage['Notifications_POST.Processor',
                         )
                 except Exception as ex:
                     raise PresentableError(xhtml.p(class_='notice')[
-                        'Sending test mail failed: %s' % ex
+                        f'Sending test mail failed: {ex}'
                         ])
                 self.mailTestResult = tuple(
                     ( address.decode(errors='replace'),
-                      '%s (%d)' % (resp.decode(errors='replace'), code) )
+                      f"{resp.decode(errors='replace')} ({code:d})" )
                     for address, code, resp in addresses
                     )
             elif action is Actions.SAVE:

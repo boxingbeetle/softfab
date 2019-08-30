@@ -126,8 +126,8 @@ def checkResourceRequirementsState(args: ResourceRequirementsArgsMixin) -> None:
         # Even though the UI can only produce one Task Runner entry,
         # we should never trust the client to enforce that.
         raise PresentableError(xhtml.p[
-            'There must be exactly one Task Runner '
-            '(resource type "%s").' % taskRunnerResourceTypeName
+            f'There must be exactly one Task Runner '
+            f'(resource type "{taskRunnerResourceTypeName}").'
             ])
 
     if not len(args.ref) == len(args.type) == len(args.caps):
@@ -147,29 +147,29 @@ def checkResourceRequirementsState(args: ResourceRequirementsArgsMixin) -> None:
         if resType == taskRunnerResourceTypeName:
             if ref != taskRunnerResourceRefName:
                 raise PresentableError(xhtml.p[
-                    'The Task Runner resource reference must be '
-                    'named "%s", got "%s" instead.'
-                    % (taskRunnerResourceRefName, ref)
+                    f'The Task Runner resource reference must be '
+                    f'named "{taskRunnerResourceRefName}", '
+                    f'got "{ref}" instead.'
                     ])
         else:
             try:
                 checkWrapperVarName(ref)
             except KeyError as ex:
                 raise PresentableError(xhtml.p[
-                    'Invalid resource reference name "%s": ' % ref,
+                    f'Invalid resource reference name "{ref}": ',
                     xhtml.b[ str(ex.args[0]) ], '.'
                     ])
 
         # Check whether reference name is unique.
         if ref in usedRefs:
             raise PresentableError(xhtml.p[
-                'Duplicate resource reference name "%s".' % ref
+                f'Duplicate resource reference name "{ref}".'
                 ])
         usedRefs.add(ref)
 
         if resType not in resTypeDB:
             raise PresentableError(xhtml.p[
-                'Resource type "%s" does not exist (anymore).' % resType
+                f'Resource type "{resType}" does not exist (anymore).'
                 ])
 
 NONE_TEXT = '(none)'
@@ -187,8 +187,7 @@ def resourceRequirementsWidget(parentClaim: Optional[ResourceClaim] = None
     yield ResourceRequirementsTable(parentClaim)
     yield xhtml.ul[
         xhtml.li[
-            'To delete a resource requirement, '
-            'set its type to "%s".' % NONE_TEXT
+            f'To delete a resource requirement, set its type to "{NONE_TEXT}".'
             ],
         xhtml.li[
             'The "reference" field contains the name of the wrapper '

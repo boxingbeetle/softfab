@@ -65,7 +65,7 @@ class Design_GET(
             graphs = []
             if req.args.show == 'yes':
                 for index, (productIds, frameworkIds) in enumerate(graphNodes):
-                    graphs.append( createExecutionGraph( 'graph%d' % index,
+                    graphs.append( createExecutionGraph( f'graph{index:d}',
                         productIds, frameworkIds, export)
                         )
             graphs.append(createLegend(export))

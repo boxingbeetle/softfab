@@ -40,8 +40,8 @@ class ResourceControl_POST(ControlPage['ResourceControl_POST.Arguments',
                     invalidNames.append(name)
             if invalidNames:
                 raise InvalidRequest(
-                    'Non-existing resource names: %s'
-                    % ', '.join(sorted(invalidNames))
+                    'Non-existing resource names: ' +
+                    ', '.join(sorted(invalidNames))
                     )
 
             userName = user.name

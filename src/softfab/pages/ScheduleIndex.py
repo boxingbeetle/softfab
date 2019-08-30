@@ -55,7 +55,8 @@ class SuspendColumn(DataColumn[Scheduled]):
         else:
             suspend = not record.isSuspended()
             return xhtml.button(
-                name = 'action.%s' % record.getId(), type = 'submit',
+                name = f'action.{record.getId()}',
+                type = 'submit',
                 value = Actions.SUSPEND if suspend else Actions.RESUME
                 )[ 'Suspend' if suspend else 'Resume' ]
 

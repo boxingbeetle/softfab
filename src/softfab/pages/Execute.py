@@ -258,7 +258,7 @@ class ActionStep(DialogStep):
                     )
             if proc.args.multi > multiMax:
                 raise VerificationError((
-                    'Multiple jobs limit (%d) exceeded.' % multiMax,
+                    f'Multiple jobs limit ({multiMax:d}) exceeded.',
                     xhtml.br,
                     'If you want to have a higher multiple jobs limit, '
                     'please ask your SoftFab operator to  increase it. See ',
@@ -272,7 +272,7 @@ class ActionStep(DialogStep):
                 raise VerificationError(ex.args[0])
             return TagsStep
         else:
-            raise InternalError('Unknown action "%s"' % action)
+            raise InternalError(f'Unknown action "{action}"')
 
 class StartStep(DialogStep):
     name = 'start'
@@ -557,7 +557,7 @@ class Execute_POST(ExecuteBase):
                 config = configDB[args.config]
             except KeyError:
                 raise InvalidRequest(
-                    'Configuration "%s" does not exist' % args.config
+                    f'Configuration "{args.config}" does not exist'
                     )
 
             checkPrivilege(user, 'c/a', 'access configurations')
@@ -813,7 +813,7 @@ class ActionTable(RadioTable):
             ', ',
             textInput(
                 name = 'multi', size = 3,
-                onchange = "form['%s'][0].checked=true" % self.name
+                onchange = f"form['{self.name}'][0].checked=true"
                 ).present(**kwargs),
             ' times (configuration will not be saved).'
             )

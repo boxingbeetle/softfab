@@ -53,7 +53,7 @@ def putData(taskName: str, runId: str, data: Mapping[str, str]) -> None:
     # Check all keys before committing anything.
     for key in data.keys():
         if _reKey.match(key) is None:
-            raise KeyError('Invalid character in key "%s".' % key)
+            raise KeyError(f'Invalid character in key "{key}".')
 
     taskDir = _dbDir + '/' + taskName + '/'
     # Remove old data.

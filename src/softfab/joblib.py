@@ -833,13 +833,13 @@ class Job(TaskRunnerSet, TaskSet[Task], XMLTag, DatabaseElem):
         Raises ValueError if `taskRunnerId` is None for a local product.
         '''
         assert name in self.getInputSet(), \
-            '%s not in %s' % ( name, self.getInputSet() )
+            f'{name} not in {self.getInputSet()}'
         assert locator is not None
         product = self.getProduct(name)
         localProduct = product.isLocal()
         if taskRunnerId is None and localProduct:
             raise ValueError(
-                'No Task Runner specified for local product "%s"' % name
+                f'No Task Runner specified for local product "{name}"'
                 )
         product.done()
         product.storeLocator(locator, taskName)

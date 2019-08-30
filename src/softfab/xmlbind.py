@@ -73,7 +73,7 @@ class _XMLHandler(ContentHandler):
                 self.__parsed = newObj
                 self.__push(name, newObj, False)
             else:
-                raise ParseError('no factory for tag "%s"' %  name)
+                raise ParseError(f'no factory for tag "{name}"')
         else:
             method = self.__getMethod('_add', name) \
                 or self.__getMethod('_set', name)
@@ -86,8 +86,8 @@ class _XMLHandler(ContentHandler):
                 objClass = self.__peek().__class__
                 className = objClass.__module__ + '.' + objClass.__name__
                 raise ParseError(
-                    'class "%s" has no parse method for tag "%s" (in %s)'
-                    % ( className, name, self.__getContext() )
+                    f'class "{className}" has no parse method '
+                    f'for tag "{name}" (in {self.__getContext()})'
                     )
 
     def endElement(self, name: str) -> None:
@@ -105,8 +105,8 @@ class _XMLHandler(ContentHandler):
     def characters(self, content: str) -> None:
         if content and not self.__text and not content.isspace():
             raise ParseError(
-                'node %s is not supposed to contain text but contains "%s"'
-                % ( self.__getContext(), content )
+                f'node {self.__getContext()} is not supposed to '
+                f'contain text but contains "{content}"'
                 )
         self.__content += content
 
@@ -149,8 +149,7 @@ class XMLTag(ABC):
                     value = False
                 else:
                     raise ValueError(
-                        'cannot convert value for "%s" to bool: "%s"'
-                        % ( name, value )
+                        f'cannot convert value for "{name}" to bool: "{value}"'
                         )
                 self._properties[name] = value
 
@@ -176,7 +175,7 @@ class XMLTag(ABC):
         return self.toXML().flattenXML()
 
     def __repr__(self) -> str:
-        return '%s(%r)' % (self.__class__.__name__, self._properties)
+        return f'{self.__class__.__name__}({self._properties!r})'
 
     def __getitem__(self, key: str) -> object:
         return self._properties[key]
@@ -251,7 +250,7 @@ class XMLProperty(Generic[Host, Value]):
                     return cast(Value, obj._properties[name])
                 except KeyError as ex:
                     raise AttributeError(
-                        'property "%s" not in dictionary' % name
+                        f'property "{name}" not in dictionary'
                         ) from ex
             self.__fget = fget
         # Let get function retrieve the actual value.

@@ -649,7 +649,7 @@ class TaskRunner(ResourceBase):
                     'because its Task Runner "%s" is %s',
                     observer.runType, run.getId(), self.getId(), reason
                     )
-                run.failed('Task Runner is %s' % reason)
+                run.failed(f'Task Runner is {reason}')
 
     def getWarnTimeout(self) -> int:
         """Returns the maximum time that may elapse until the
@@ -887,12 +887,12 @@ def getTaskRunner(runnerID: str) -> TaskRunner:
         resource = resourceDB[runnerID]
     except KeyError as ex:
         raise KeyError(
-            'Task Runner "%s" does not exist (anymore?)' % runnerID
+            f'Task Runner "{runnerID}" does not exist (anymore?)'
             ) from ex
     if isinstance(resource, TaskRunner):
         return resource
     else:
-        raise KeyError('resource "%s" is not a Task Runner' % runnerID)
+        raise KeyError(f'resource "{runnerID}" is not a Task Runner')
 
 def runnerFromToken(user: TokenUser) -> TaskRunner:
     """Returns the Task Runner associated with a token user.

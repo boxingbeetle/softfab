@@ -46,7 +46,7 @@ class InspectDone_POST(ControlPage['InspectDone_POST.Arguments',
             if result not in (
                 ResultCode.OK, ResultCode.WARNING, ResultCode.ERROR
                 ):
-                raise InvalidRequest('Invalid inspection result "%s"' % result)
+                raise InvalidRequest(f'Invalid inspection result "{result}"')
             summary = req.args.summary
 
             # Check store permissions.

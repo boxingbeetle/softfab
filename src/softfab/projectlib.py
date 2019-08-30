@@ -141,7 +141,7 @@ class Project(XMLTag, SingletonElem):
         if 'smtprelay' not in self._properties:
             self._properties['smtprelay'] = 'localhost'
         if 'mailsender' not in self._properties:
-            self._properties['mailsender'] = '%s@%s' % (getuser(), getfqdn())
+            self._properties['mailsender'] = f'{getuser()}@{getfqdn()}'
 
         self.__targets = set() # type: MutableSet[str]
         # Note: tag keys should be kept in a list rather than a set,

@@ -30,7 +30,7 @@ class LoadExecuteDefault_POST(ControlPage['LoadExecuteDefault_POST.Arguments',
                 jobConfig = configDB[args.config]
             except KeyError:
                 raise InvalidRequest(
-                    'Configuration "%s" does not exist' % args.config
+                    f'Configuration "{args.config}" does not exist'
                     )
             else:
                 for job in jobConfig.createJobs(

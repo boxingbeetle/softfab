@@ -237,7 +237,7 @@ class PageArgs:
         '''
         if not isinstance(args, PageArgs):
             raise TypeError(
-                '"%s" does not inherit from PageArgs' % type(args).__name__
+                f'"{type(args).__name__}" does not inherit from PageArgs'
                 )
         return cls(**{
             name: args.__dict__[name]
@@ -340,20 +340,20 @@ class PageArgs:
                         value = member.convert(value)
                     except TypeError as ex:
                         raise TypeError(
-                            'bad value type "%s" for argument "%s": %s'
-                            % (type(value).__name__, name, ex)
+                            f'bad value type "{type(value).__name__}" '
+                            f'for argument "{name}": {ex}'
                             ) from ex
             else:
                 # No value in request: use default.
                 if default is mandatory:
-                    raise KeyError('missing argument: %s' % name)
+                    raise KeyError(f'missing argument: {name}')
                 else:
                     value = default
             self.__dict__[name] = value
 
         # Any unclaimed key is an error.
         for key in kwargs:
-            raise KeyError('no such argument: %s' % key)
+            raise KeyError(f'no such argument: {key}')
 
     def __repr__(self) -> str:
         cls = self.__class__
@@ -366,7 +366,7 @@ class PageArgs:
             else:
                 return value
         return '%s(%s)' % (cls.__name__, ', '.join(
-            '%s=%s' % (key, presentValue(key, value))
+            f'{key}={presentValue(key, value)}'
             for key, value in sorted(self.items())
             ))
 
@@ -421,10 +421,8 @@ class PageArgs:
                         sharedName: values[sharedName]
                         for sharedName in member.shared
                         }
-                    return '%s?%s' % (
-                        member.getPage(),
-                        query.override(**sharedValues).toURL()
-                        )
+                    return f'{member.getPage()}?' \
+                           f'{query.override(**sharedValues).toURL()}'
         return None
 
 class _MandatoryValue:
@@ -699,7 +697,7 @@ class _EnumArg(SingularArgument[EnumT, DefaultT]):
                 raise ValueError('got "%s", expected one of %s' % (
                     strValue.lower(),
                     ', '.join(
-                        '"%s"' % name.lower()
+                        f'"{name.lower()}"'
                         for name in self.__enumType.__members__
                         ),
                     )) from ex
@@ -714,8 +712,9 @@ class _EnumArg(SingularArgument[EnumT, DefaultT]):
             return value
         elif isinstance(value, Enum):
             raise TypeError(
-                'value is of the wrong Enum type: expected "%s", got "%s"'
-                % ( self.__enumType.__name__, type(value).__name__ )
+                f'value is of the wrong Enum type: '
+                f'expected "{self.__enumType.__name__}", '
+                f'got "{type(value).__name__}"'
                 )
         else:
             raise TypeError('value is not an Enum')
@@ -977,7 +976,7 @@ class DictArg(Argument[DictValue[ValueT], DictValue[ValueT]]):
         self.__separators = separators
         pattern = ''
         for separator in separators:
-            pattern += '([^%s]*)[%s]' % ( separator, separator )
+            pattern += f'([^{separator}]*)[{separator}]'
         pattern += '(.*)'
         self.__pattern = re_compile(pattern)
 
@@ -1083,7 +1082,7 @@ class Query:
         return self.toURL()
 
     def __repr__(self) -> str:
-        return '%s(%r)' % (self.__class__.__name__, self._data)
+        return f'{self.__class__.__name__}({self._data!r})'
 
     def override(self,
             *args: PageArgs,
@@ -1119,7 +1118,7 @@ class Query:
         """Encodes this query to a string that can be appened to a URL.
         """
         return '&'.join(
-            '%s=%s' % (escapeURL(key), escapeURL(value))
+            f'{escapeURL(key)}={escapeURL(value)}'
             for key, values in self._data.items()
             for value in values
             )

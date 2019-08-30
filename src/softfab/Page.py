@@ -157,7 +157,7 @@ class PageProcessor(Generic[ArgsT]):
     def subItemRelURL(self, subPath: str) -> str:
         '''Gets a relative URL to the given item subpath.
         '''
-        return pageURL('%s/%s' % ( self.page.name, subPath ), self.args)
+        return pageURL(f'{self.page.name}/{subPath}', self.args)
 
 ProcT = TypeVar('ProcT', bound=PageProcessor)
 
@@ -192,9 +192,7 @@ class HTTPAuthenticator(Responder):
 
     def respond(self, response: Response) -> None:
         response.setStatus(401, self.__message)
-        response.setHeader(
-            'WWW-Authenticate', 'Basic realm="%s"' % self.__realm
-            )
+        response.setHeader('WWW-Authenticate', f'Basic realm="{self.__realm}"')
 
 class FabResource(ABC, Generic[ArgsT, ProcT]):
     '''Abstract base class for Control Center pages.

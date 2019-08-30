@@ -116,7 +116,7 @@ class JobDBObserver(RecordObserver[Job]):
         self.updated(record)
 
     def removed(self, record: Job) -> None:
-        assert False, 'job %s removed' % record.getId()
+        assert False, f'job {record.getId()} removed'
 
     def updated(self, record: Job) -> None:
         schedId = record.getScheduledBy()
@@ -394,8 +394,8 @@ class Scheduled(XMLTag, SelectableRecordABC):
         '''
         if not isinstance(suspended, bool):
             raise TypeError(
-                'Expected bool for "suspended" argument, got "%s"'
-                % type(suspended).__name__
+                f'Expected bool for "suspended" argument, '
+                f'got "{type(suspended).__name__}"'
                 )
         if self._properties['suspended'] != suspended:
             self._properties['suspended'] = suspended

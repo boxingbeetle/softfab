@@ -35,9 +35,8 @@ class ResourceSpec(XMLTag):
         self.__capabilities = set() # type: AbstractSet[str]
 
     def __repr__(self) -> str:
-        return 'ResourceSpec(%r, %r, %r)' % (
-            self.reference, self.typeName, self.__capabilities
-            )
+        return f'ResourceSpec({self.reference!r}, {self.typeName!r}, ' \
+                            f'{self.__capabilities!r})'
 
     def _addCapability(self, attributes: Mapping[str, str]) -> None:
         cast(MutableSet, self.__capabilities).add(attributes['name'])

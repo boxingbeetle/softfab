@@ -50,7 +50,7 @@ class TagsTable(Table):
             pageLink('LoadExecute', tagArgs)[ 'view' ],
             ' or ',
             pageLink('FastExecute', tagArgs)[ 'execute' ],
-            ' %d matching configurations' % numMatches,
+            f' {numMatches:d} matching configurations',
             ],
 
 class DetailsTable(PropertiesTable):
@@ -69,7 +69,7 @@ class DetailsTable(PropertiesTable):
                 pageLink('FastExecute', ConfigIdArgs(configId = configId))[
                     'execute'
                     ],
-                ' configuration "%s"' % configId
+                f' configuration "{configId}"'
                 )
         yield 'Last run', createLastJobLink(scheduled)
         yield 'Next run', describeNextRun(scheduled)
@@ -78,9 +78,8 @@ class DetailsTable(PropertiesTable):
             yield 'Days', ', '.join(stringToListDays(scheduled['days']))
         elif scheduled['sequence'] is ScheduleRepeat.CONTINUOUSLY:
             minDelay = scheduled['minDelay']
-            yield 'Minimum delay', '%d %s' % (
-                minDelay, pluralize('minute', minDelay)
-                )
+            yield 'Minimum delay', \
+                f"{minDelay:d} {pluralize('minute', minDelay)}"
         elif scheduled['sequence'] is ScheduleRepeat.TRIGGERED:
             yield 'Triggered', 'yes' if scheduled['trigger'] else 'no'
             yield 'CM triggers', xhtml.br.join(

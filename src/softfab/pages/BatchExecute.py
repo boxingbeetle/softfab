@@ -181,7 +181,7 @@ class BatchExecute_GET(FabPage['BatchExecute_GET.Processor',
                         # Second set of submit buttons after parameter tables.
                         submitButtons
                         ],
-                    ( hiddenInput(name='config.%d' % i, value=cfg.getId())
+                    ( hiddenInput(name=f'config.{i:d}', value=cfg.getId())
                       for i, cfg in enumerate(configs) ),
                     ].present(taskSet=taskSet, **kwargs)
                 return
@@ -270,7 +270,7 @@ class BatchExecute_POST(BatchExecute_GET):
                             taskParameters = params.get(config.getId(), empty)
                             )
                     except ValueError as ex:
-                        notices.append('%s: %s' % (config.getId(), ex))
+                        notices.append(f'{config.getId()}: {ex}')
 
                 if not notices:
                     # Commit created jobs to database and show them to user.
@@ -341,7 +341,7 @@ class ParamTable(ParamOverrideTable):
                 )
             if table:
                 presentation += (
-                    xhtml.h3[ 'Parameters for "%s":' % configId ],
+                    xhtml.h3[ f'Parameters for "{configId}":' ],
                     table
                     )
         return presentation

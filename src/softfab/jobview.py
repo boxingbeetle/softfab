@@ -112,8 +112,8 @@ def createStatusBar(tasks: Sequence[Task], length: int = 10) -> XMLContent:
                 freq = statusFreq[status]
                 if freq != 0:
                     yield xhtml.td(
-                        style = 'width:%d%%' % int(100 * freq / len(tasks)),
-                        class_ = status
+                        style=f'width:{100 * freq // len(tasks):d}%',
+                        class_=status
                         )[ str(freq) ]
         return xhtml.table(class_ = 'statusmany')[
             xhtml.tbody[
@@ -231,9 +231,7 @@ class _JobOverviewPresenter(NotificationPresenter):
     @property
     def singleLineSummary(self) -> str:
         job = self.__job
-        return 'Job Complete: %s (%s)' % (
-            getJobStatus(job), job.getDescription()
-            )
+        return f'Job Complete: {getJobStatus(job)} ({job.getDescription()})'
 
     def keyValue(self) -> Iterator[Tuple[str, str]]:
         '''Generates key-value pairs which give an overview of the most
@@ -249,7 +247,7 @@ class _JobOverviewPresenter(NotificationPresenter):
             if key not in ( 'notify', 'notify-mode' ):
                 yield 'param.' + key, value
         for index, taskRun in enumerate(job.getTaskSequence()):
-            prefix = 'task.%d.' % (index + 1)
+            prefix = f'task.{index + 1:d}.'
             for prop in ( 'name', 'state', 'result', 'summary' ):
                 yield prefix + prop, str(taskRun[prop] or 'unknown')
 

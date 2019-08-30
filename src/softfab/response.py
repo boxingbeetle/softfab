@@ -78,12 +78,12 @@ class Response:
 
         request.setHeader(
             'Content-Security-Policy',
-            "default-src 'self'; "
-            "form-action 'self'; "
-            "frame-src http: https:; "
-            "script-src 'self' 'unsafe-inline'; "
-            "style-src 'self' 'unsafe-inline'; "
-            "frame-ancestors %s" % project.frameAncestors
+            f"default-src 'self'; "
+            f"form-action 'self'; "
+            f"frame-src http: https:; "
+            f"script-src 'self' 'unsafe-inline'; "
+            f"style-src 'self' 'unsafe-inline'; "
+            f"frame-ancestors {project.frameAncestors}"
             )
 
         body = self.__buffer.getvalue()
@@ -262,7 +262,8 @@ class Response:
                 continue
             else:
                 raise TypeError(
-                    'Cannot handle document output of type "%s"' % type(text)
+                    f'Cannot handle document output '
+                    f'of type "{type(text).__name__}"'
                     )
 
     def writeXML(self, xml: XMLContent) -> None:

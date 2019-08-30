@@ -172,7 +172,7 @@ class ShadowRun(XMLTag, DatabaseElem, StorageURLMixin):
         if result not in (
             ResultCode.OK, ResultCode.WARNING, ResultCode.ERROR
             ):
-            raise ValueError('"%s" is not a valid result code' % result)
+            raise ValueError(f'"{result}" is not a valid result code')
 
         # State validation.
         if self._properties['state'] != 'running':
@@ -221,7 +221,7 @@ class ExtractionRun(ShadowRun):
         return cast(str, self._properties['taskRun']) not in taskRunDB
 
     def getDescription(self) -> str:
-        return 'Extract %s' % self.taskRun.getName()
+        return 'Extract ' + self.taskRun.getName()
 
     def getLocation(self) -> str:
         return cast(str, self._properties['runner'])

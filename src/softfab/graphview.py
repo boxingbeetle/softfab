@@ -312,7 +312,7 @@ class GraphPanel(SVGPanel):
             'export: ', txt(', ').join(
                 xhtml.a(
                     href = proc.subItemRelURL(
-                        '%s.%s' % (graph.getName(), fmt.ext)
+                        f'{graph.getName()}.{fmt.ext}'
                         ),
                     title = fmt.description,
                     )[ fmt.ext ]
@@ -331,7 +331,7 @@ class _GraphResponder(Responder):
     def respond(self, response: Response) -> None:
         fmt = self.__format
         response.setHeader('Content-Type', fmt.mediaType)
-        response.setFileName('%s.%s' % ( self.__fileName, fmt.ext ))
+        response.setFileName(f'{self.__fileName}.{fmt.ext}')
         response.write(self.__graph.export(fmt))
 
 class GraphPageMixin:
@@ -350,11 +350,11 @@ class GraphPageMixin:
         try:
             graph = self.__getGraph(proc, name)
         except KeyError as ex:
-            raise KeyError('Unknown graph "%s"' % name) from ex
+            raise KeyError(f'Unknown graph "{name}"') from ex
         try:
             fmt = GraphFormat[formatStr.upper()]
         except ValueError as ex:
-            raise KeyError('Unknown file format "%s"' % formatStr) from ex
+            raise KeyError(f'Unknown file format "{formatStr}"') from ex
         return _GraphResponder(graph, name, fmt)
 
     def __getGraph(self, proc: PageProcessor, name: str) -> Graph:

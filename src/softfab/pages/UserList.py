@@ -39,7 +39,7 @@ class RoleColumn(DataColumn[UserInfo]):
         if proc.canChangeRoles:
             userName = record.getId()
             return makeForm(
-                formId = 'role_%s' % userName,
+                formId = f'role_{userName}',
                 args = proc.args,
                 setFocus = False
                 )[
@@ -203,7 +203,7 @@ class UserList_POST(FabPage['UserList_POST.Processor',
             except KeyError:
                 raise PresentableError(
                     xhtml.p(class_ = 'notice')[
-                        'There is no user named "%s"' % userName
+                        f'There is no user named "{userName}"'
                         ]
                     )
 
@@ -219,9 +219,9 @@ class UserList_POST(FabPage['UserList_POST.Processor',
                         'a situation from which recovery is impossible.'
                         ],
                     xhtml.p[
-                        'If you want to change the role of user "%s", '
-                        'please log in as another user with operator '
-                        'privileges.' % userName
+                        f'If you want to change the role of user "{userName}", '
+                        f'please log in as another user with operator '
+                        f'privileges.'
                         ],
                     ))
 

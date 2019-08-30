@@ -472,9 +472,9 @@ class Config(TaskRunnerSet, TaskSetWithInputs[Task], XMLTag,
             pd = self.getProductDef(inputName)
             inp = self._inputs.get(inputName)
             if pd['type'] != ProductType.TOKEN and inp is None:
-                yield 'missing locator for input "%s"' % inputName
+                yield f'missing locator for input "{inputName}"'
             if pd.isLocal() and (inp is None or inp.get('localAt') is None):
-                yield 'missing \'local at\' for input "%s"' % inputName
+                yield f'missing \'local at\' for input "{inputName}"'
 
     def hasValidInputs(self) -> bool:
         """Returns True iff this configuration can be instantiated without
@@ -532,7 +532,7 @@ class Config(TaskRunnerSet, TaskSetWithInputs[Task], XMLTag,
                     localAt.get(item) or (
                         None if inp is None else inp.getLocalAt()
                         ),
-                    'SF_USER_INPUT_%d' % index
+                    f'SF_USER_INPUT_{index:d}'
                     )
 
             yield job

@@ -71,7 +71,7 @@ def sendNotification(locator: str, presenter: NotificationPresenter) -> None:
                 if key is None:
                     yield ''
                 else:
-                    yield '%s:\t%s' % ( key, value )
+                    yield f'{key}:\t{value}'
             yield '\n' # force a new-line at end of file
 
         def createHTMLContent() -> Iterator[str]:
@@ -79,22 +79,22 @@ def sendNotification(locator: str, presenter: NotificationPresenter) -> None:
             yield '<HEAD></HEAD>'
             yield '<BODY>'
             yield '<H3>SoftFab notification email</H3>'
-            yield '<B>%s</B>' % presenter.singleLineSummary
+            yield f'<B>{presenter.singleLineSummary}</B>'
             for key, value in presenter.keyValue():
                 if key is None:
                     yield ''
                 elif key == 'URL':
-                    yield '<P>%s</P>' % value
+                    yield f'<P>{value}</P>'
             yield '<TABLE border="1" style="margin:4px 10px;" summary="tasks">'
             for key, value in presenter.keyValue():
                 if key is None:
                     yield ''
                 elif key.endswith('name'):
-                    yield '<TR><TD>%s</TD>' % value
+                    yield f'<TR><TD>{value}</TD>'
                 elif key.endswith('result'):
-                    yield '<TD>%s</TD>' % value
+                    yield f'<TD>{value}</TD>'
                 elif key.endswith('summary'):
-                    yield '<TD>%s</TD></TR>' % value
+                    yield f'<TD>{value}</TD></TR>'
             yield '</TABLE>'
             yield '</BODY></HTML> '
 

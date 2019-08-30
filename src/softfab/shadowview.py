@@ -55,9 +55,9 @@ class ShadowTable(DataTable[ShadowRun]):
 trimPolicy = xhtml.p[
     xhtml.br.join((
         'Automatic cleanup policy:',
-        'Finished shadow runs exceeding the number of %d are removed;'
-        % maxDoneRecords,
-        'Successful (green) shadow runs exceeding the number of %d are removed.'
-        % maxOKRecords
+        'Finished shadow runs exceeding '
+            f'the number of {maxDoneRecords:d} are removed;',
+        'Successful (green) shadow runs exceeding '
+            f'the number of {maxOKRecords:d} are removed.'
         ))
     ]

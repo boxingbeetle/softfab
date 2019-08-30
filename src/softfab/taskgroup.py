@@ -433,8 +433,8 @@ class LocalGroup(TaskGroup[TaskT]):
             # TODO: make it impossible to enter conflicting parameters
             # and then replace this with a simple assertion
             raise ValueError(
-                'Conflicting local inputs in group "%s": "%s" and "%s"'
-                 % ( self.getName(), self.__runnerId, runnerId )
+                f'Conflicting local inputs in group "{self.getName()}": '
+                f'"{self.__runnerId}" and "{runnerId}"'
                 )
 
     def getName(self) -> str:

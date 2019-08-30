@@ -27,7 +27,7 @@ class GetJobInfo_GET(ControlPage['GetJobInfo_GET.Arguments',
                 # pylint: disable=attribute-defined-outside-init
                 self.job = jobDB[jobId]
             except KeyError:
-                raise InvalidRequest('Job "%s" does not exist' % jobId)
+                raise InvalidRequest(f'Job "{jobId}" does not exist')
 
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'j/a')

@@ -154,8 +154,8 @@ class ScheduleEdit_POST(ScheduleEditBase):
 
             if args.minDelay <= 0:
                 raise PresentableError(xhtml.p[
-                    'Minimal delay (%d) must be a positive integer'
-                    % args.minDelay
+                    f'Minimal delay ({args.minDelay:d}) must be '
+                    'a positive integer'
                     ])
 
         def createElement(self,

@@ -78,7 +78,7 @@ class ResourceEdit_GET(ResourceEditBase):
                     )
             else:
                 raise InvalidRequest(
-                    'Resource "%s" is of a pre-defined type' % element.getId()
+                    f'Resource "{element.getId()}" is of a pre-defined type'
                     )
 
 class ResourceEdit_POST(ResourceEditBase):

@@ -268,7 +268,7 @@ def _checkPassword(password: str) -> None:
     if invalidCodes:
         raise ValueError(
             'The password contains invalid character codes: ' +
-            ', '.join('%d' % code for code in sorted(invalidCodes))
+            ', '.join(f'{code:d}' for code in sorted(invalidCodes))
             )
 
 def addUserAccount(userName: str, password: str, roles: Iterable[str]) -> None:
@@ -285,7 +285,7 @@ def addUserAccount(userName: str, password: str, roles: Iterable[str]) -> None:
     except KeyError as ex:
         raise ValueError(str(ex)) from ex
     if userName in userDB:
-        raise ValueError('User "%s" already exists' % userName)
+        raise ValueError(f'User "{userName}" already exists')
 
     # Check password.
     _checkPassword(password)
@@ -317,7 +317,7 @@ def changePassword(userInfo: 'UserInfo', password: str) -> None:
 
     # Sanity check on user name.
     if userName not in userDB:
-        raise ValueError('User "%s" does not exist' % userName)
+        raise ValueError(f'User "{userName}" does not exist')
 
     # Check password.
     _checkPassword(password)
@@ -463,7 +463,7 @@ class UserInfo(XMLTag, DatabaseElem, User):
         roles = frozenset(roles)
         if roles - roleNames:
             raise ValueError('Unknown role(s): ' + ', '.join(
-                '"%s"' % role for role in sorted(roles - roleNames)
+                f'"{role}"' for role in sorted(roles - roleNames)
                 ))
         if roles != self.__roles:
             self.__roles = roles

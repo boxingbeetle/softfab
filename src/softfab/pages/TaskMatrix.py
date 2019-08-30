@@ -125,7 +125,7 @@ class Matrix(Table):
             if taskName is None:
                 return bar
             url = makeURL(taskName, beginTime, endTime)
-            return cell(onclick = "document.location='%s'" % url)[
+            return cell(onclick = f"document.location='{url}'")[
                 xhtml.a(href = url)[ bar ]
                 ]
 

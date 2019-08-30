@@ -223,9 +223,8 @@ class SelectProcMixin(Generic[BasketArgsT, SelectableRecord]):
 def _scriptButton(select: bool, inputName: str = 'sel') -> XMLNode:
     return xhtml.button(
         type = 'button', tabindex = 1,
-        onclick = "setSelection(form, '%s', %s);" % (
-            inputName, 'true' if select else 'false'
-            )
+        onclick = f"setSelection(form, '{inputName}', "
+                               f"{'true' if select else 'false'});"
         )
 
 def selectDialog(formAction: str,
@@ -249,8 +248,8 @@ def selectDialog(formAction: str,
         )
 
     yield xhtml.p[
-        'Number of %ss shown: %d of %d'
-        % ( proc.db.description, len(filtered), len(proc.db) )
+        f'Number of {proc.db.description}s shown: '
+        f'{len(filtered):d} of {len(proc.db):d}'
         ]
 
     def actionButtons() -> List[XMLContent]:
@@ -373,8 +372,8 @@ def selectDialog(formAction: str,
         yield xhtml.hr
         yield xhtml.h2[ title ]
         yield xhtml.p[
-            'Number of %ss in basket: %d'
-             % ( proc.db.description, len(proc.selectedRecords) )
+            f'Number of {proc.db.description}s in basket: '
+            f'{len(proc.selectedRecords):d}'
             ]
         yield makeForm(
             formId = 'selform2', action = formAction, method = 'get',

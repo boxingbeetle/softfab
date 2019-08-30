@@ -29,7 +29,7 @@ class TaskAlert_POST(ControlPage['TaskAlert_POST.Arguments',
 
             alert = req.args.alert
             if alert != '' and alert not in alertList:
-                raise InvalidRequest('Invalid alert status "%s"' % alert)
+                raise InvalidRequest(f'Invalid alert status "{alert}"')
 
             self.task.setAlert(alert)
 

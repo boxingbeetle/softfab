@@ -121,7 +121,7 @@ class JobProcessorMixin:
         try:
             job = jobDB[jobId]
         except KeyError:
-            raise InvalidRequest('No job exists with ID "%s"' % jobId)
+            raise InvalidRequest(f'No job exists with ID "{jobId}"')
         job.updateSummaries(tuple(iterTaskRunners()))
 
         self.job = job
@@ -135,8 +135,7 @@ class TaskProcessorMixin(JobProcessorMixin):
         task = self.job.getTask(taskName)
         if task is None:
             raise InvalidRequest(
-                'There is no task named "%s" in job %s'
-                % (taskName, req.args.jobId)
+                f'There is no task named "{taskName}" in job {req.args.jobId}'
                 )
 
         self.task = task

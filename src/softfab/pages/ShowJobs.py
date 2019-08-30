@@ -9,6 +9,7 @@ from softfab.joblib import jobDB
 from softfab.jobview import JobsSubTable
 from softfab.pagelinks import JobIdSetArgs
 from softfab.userlib import User, checkPrivilege
+from softfab.utils import pluralize
 from softfab.webgui import Widget, unorderedList
 from softfab.xmlgen import XMLContent, xhtml
 
@@ -56,13 +57,10 @@ class ShowJobs_GET(FabPage['ShowJobs_GET.Processor', 'ShowJobs_GET.Arguments']):
     def presentContent(self, **kwargs: object) -> XMLContent:
         proc = cast(ShowJobs_GET.Processor, kwargs['proc'])
         if len(proc.jobs) != 0:
-            if proc.req.refererPage in (
-                'BatchExecute', 'Execute', 'FastExecute'
-                ):
-                yield xhtml.p[
-                    'Created the following %s:'
-                    % ( 'jobs', 'job' )[ len(proc.jobs) == 1 ]
-                    ]
+            if proc.req.refererPage in ('BatchExecute', 'Execute',
+                                        'FastExecute'):
+                yield xhtml.p['Created the following ',
+                              pluralize('job', len(proc.jobs)), ':']
             yield ShowJobsTable.instance.present(**kwargs)
         if len(proc.invalidJobIds) != 0:
             yield (

@@ -97,7 +97,7 @@ class TaskRunnerEdit_GET(TaskRunnerEditBase):
                     )
             else:
                 raise InvalidRequest(
-                    'Resource "%s" is not a Task Runner' % element.getId()
+                    f'Resource "{element.getId()}" is not a Task Runner'
                     )
 
 class TaskRunnerEdit_POST(TaskRunnerEditBase):

@@ -309,7 +309,7 @@ class ConfigJobModelGroup(StatusModel, RecordObserver):
                 child.jobModified(record)
 
     def removed(self, record):
-        assert False, 'job %s removed' % record.getId()
+        assert False, f'job {record.getId()} removed'
 
     def updated(self, record):
         configId = record.getConfigId()

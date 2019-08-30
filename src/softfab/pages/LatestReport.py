@@ -45,4 +45,4 @@ class LatestReport_GET(
 
     def presentContent(self, **kwargs: object) -> XMLContent:
         proc = cast(LatestReport_GET.Processor, kwargs['proc'])
-        return xhtml.p[ 'No reports found for task "%s".' % proc.args.id ]
+        return xhtml.p[ f'No reports found for task "{proc.args.id}".' ]

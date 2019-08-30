@@ -281,7 +281,7 @@ class FactoryResource(Resource):
             return self.childForSegment(segment, request)
         except InsecurePath:
             return AccessDeniedResource(
-                'Access denied: insecure path segment "%s"' % segment
+                f'Access denied: insecure path segment "{segment}"'
                 )
 
     def render_GET(self, request: TwistedRequest) -> bytes:
@@ -349,16 +349,16 @@ class ArtifactAuthWrapper:
                     token = authenticateToken(tokenId, password)
                 except KeyError:
                     return AccessDeniedResource(
-                        'Token "%s" does not exist' % tokenId
+                        f'Token "{tokenId}" does not exist'
                         )
                 except UnauthorizedLogin as ex:
                     return AccessDeniedResource(
-                        'Token authentication failed: %s' % ex.args[0]
+                        f'Token authentication failed: {ex.args[0]}'
                         )
                 if token.role is not TokenRole.RESOURCE:
                     return AccessDeniedResource(
-                        'Token "%s" is of the wrong type for this operation'
-                        % tokenId
+                        f'Token "{tokenId}" is of the wrong type '
+                        f'for this operation'
                         )
                 user = TokenUser(token)
 
@@ -426,11 +426,11 @@ class JobDayResource(FactoryResource):
                         segment: str,
                         request: TwistedRequest
                         ) -> Resource:
-        jobId = '%s-%s' % (self.day, segment)
+        jobId = f'{self.day}-{segment}'
         try:
             job = jobDB[jobId]
         except KeyError:
-            return NotFoundResource('Job "%s" does not exist' % jobId)
+            return NotFoundResource(f'Job "{jobId}" does not exist')
         else:
             return JobResource(self.path.child(segment), self.user, job)
 
@@ -470,7 +470,7 @@ class JobResource(FactoryResource):
         task = self.job.getTask(segment)
         if task is None:
             return NotFoundResource(
-                'Task "%s" does not exist in this job' % segment
+                f'Task "{segment}" does not exist in this job'
                 )
         run = task.getLatestRun()
         return TaskResource(self.path.child(segment), self.user, run)
@@ -524,7 +524,7 @@ class TaskResource(FactoryResource):
             return ClientErrorResource('Uploads must use gzip or ZIP format')
         else:
             return NotFoundResource(
-                'No artifact named "%s" exists for this task' % segment
+                f'No artifact named "{segment}" exists for this task'
                 )
 
     def renderIndex(self, request: TwistedRequest) -> bytes:
@@ -696,7 +696,7 @@ class PlainArtifact(Resource):
         if isinstance(ex, ValueError):
             request.setResponseCode(415)
             request.setHeader(b'Content-Type', b'text/plain; charset=UTF-8')
-            request.write(('%s\n' % ex).encode())
+            request.write((f'{ex}\n').encode())
             request.finish()
         else:
             request.processingFailed(fail)
@@ -749,7 +749,7 @@ class PlainGzipArtifact(PlainArtifact):
                         break
         except (OSError, EOFError) as ex:
             raise ValueError(
-                'Uploaded data is not a valid gzip file: %s' % ex
+                f'Uploaded data is not a valid gzip file: {ex}'
                 ) from ex
 
 class GzippedArtifact(Resource):
@@ -760,10 +760,8 @@ class GzippedArtifact(Resource):
         self.path = path
 
     def getChild(self, path: bytes, request: TwistedRequest) -> Resource:
-        return NotFoundResource(
-            'Artifact "%s" cannot not contain subitems'
-            % request.prepath[-2].decode()
-            )
+        name = request.prepath[-2].decode()
+        return NotFoundResource(f'Artifact "{name}" cannot contain subitems')
 
     def render_GET(self, request: TwistedRequest) -> object:
         path = self.path
@@ -793,13 +791,13 @@ class PlainZipArtifact(PlainArtifact):
                 badFileName = zipFile.testzip()
                 if badFileName is not None:
                     raise ValueError(
-                        'ZIP file entry "%s" is corrupted' % badFileName
+                        f'ZIP file entry "{badFileName}" is corrupted'
                         )
                 # Raise ValueError on name clashes.
                 ZipTreeNode.build(zipFile)
         except BadZipFile as ex:
             raise ValueError(
-                'Uploaded data is not a valid ZIP file: %s' % ex
+                f'Uploaded data is not a valid ZIP file: {ex}'
                 ) from ex
 
 class ZippedArtifact(Resource):
@@ -944,10 +942,10 @@ class ZipTreeNode:
                     # File entry.
                     children[name] = info
                 elif isinstance(child, ZipInfo):
-                    raise ValueError('Duplicate file: "%s"' % info.filename)
+                    raise ValueError(f'Duplicate file: "{info.filename}"')
                 else:
                     raise ValueError(
-                        'File overlaps with directory: "%s"' % info.filename
+                        f'File overlaps with directory: "{info.filename}"'
                         )
             else:
                 # Directory entry.
@@ -957,7 +955,7 @@ class ZipTreeNode:
                 children[name] = child = ZipTreeNode()
             elif isinstance(child, ZipInfo):
                 raise ValueError(
-                    'File overlaps with directory: "%s"' % child.filename
+                    f'File overlaps with directory: "{child.filename}"'
                     )
             child.add(nextName, remainder, info)
 

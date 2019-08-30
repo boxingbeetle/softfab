@@ -20,4 +20,4 @@ def formatTimeout(timeout: Optional[int]) -> str:
     if timeout is None:
         return 'never'
     else:
-        return '%d %s' % (timeout, pluralize('minute', timeout))
+        return f"{timeout:d} {pluralize('minute', timeout)}"

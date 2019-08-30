@@ -34,8 +34,8 @@ class GetResourceInfo_GET(ControlPage['GetResourceInfo_GET.Arguments',
                 )
             if invalidTypeNames:
                 raise InvalidRequest(
-                    'Non-existing resource types: %s'
-                    % ', '.join(invalidTypeNames)
+                    'Non-existing resource types: ' +
+                    ', '.join(invalidTypeNames)
                     )
 
             # Check validity of optional names
@@ -46,8 +46,8 @@ class GetResourceInfo_GET(ControlPage['GetResourceInfo_GET.Arguments',
                 ]
             if invalidNames:
                 raise InvalidRequest(
-                    'Non-existing resource names: %s'
-                    % ', '.join(sorted(invalidNames))
+                    'Non-existing resource names: ' +
+                    ', '.join(sorted(invalidNames))
                     )
 
             # Determine set of resource types

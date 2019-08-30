@@ -49,7 +49,7 @@ class MostRecent(RecordObserver):
         self.updated(record)
 
     def removed(self, record):
-        assert False, 'job %s removed' % record.getId()
+        assert False, f'job {record.getId()} removed'
 
     def updated(self, record):
         if record.hasFinalResult():
@@ -120,11 +120,11 @@ class Feed_GET(ControlPage[ControlPage.Arguments, 'Feed_GET.Processor']):
 
     def presentFeed(self, proc):
         projectName = project.name
-        yield atom.title[ '%s SoftFab - Recent Jobs' % projectName ]
+        yield atom.title[ f'{projectName} SoftFab - Recent Jobs' ]
         yield atom.subtitle[
-            'The most recent jobs running in the %s SoftFab' % projectName
+            f'The most recent jobs running in the {projectName} SoftFab'
             ]
-        yield atom.id[ 'urn:softfab:%s:jobs' % factoryId ]
+        yield atom.id[ f'urn:softfab:{factoryId}:jobs' ]
         yield atom.updated[ self.presentTime(getTime()) ]
         yield atom.generator(uri=homePage, version=VERSION)[ 'SoftFab' ]
         # TODO: Akregator for KDE4 won't show the icon, no matter what I try.
@@ -158,9 +158,9 @@ class Feed_GET(ControlPage[ControlPage.Arguments, 'Feed_GET.Processor']):
         tasksTable = TasksTable.instance
         jobComment = CommentPanel(job.comment)
         proc.job = job
-        yield atom.title[ '%s: %s' % ( job.getDescription(), jobResult ) ]
+        yield atom.title[ f'{job.getDescription()}: {jobResult}' ]
         yield atom.link(href = rootURL + createJobURL(jobId))
-        yield atom.id[ 'softfab:%s/jobs/%s' % ( factoryId, jobId ) ]
+        yield atom.id[ f'softfab:{factoryId}/jobs/{jobId}' ]
         yield atom.published[ self.presentTime(job.getCreateTime()) ]
         # TODO: More accurate last-modified time.
         yield atom.updated[ self.presentTime(job.getCreateTime()) ]
@@ -171,7 +171,7 @@ class Feed_GET(ControlPage[ControlPage.Arguments, 'Feed_GET.Processor']):
                 ]
         else:
             yield atom.author[
-                atom.name[ '%s SoftFab' % projectName ],
+                atom.name[ f'{projectName} SoftFab' ],
                 atom.uri[ rootURL + createJobURL(jobId) ],
                 ]
         # Note: The Atom spec requires all XHTML to be inside a single <div>.
@@ -180,7 +180,7 @@ class Feed_GET(ControlPage[ControlPage.Arguments, 'Feed_GET.Processor']):
         yield atom.summary(type = 'xhtml')[ xhtml.div[
             # TODO: Does xhtml.style work with other RSS readers too?
             xhtml.style[(
-                '@import url(%s/%s);' % (styleURL, sheet.fileName)
+                f'@import url({styleURL}/{sheet.fileName});'
                 for sheet in iterStyleSheets(proc.req)
                 )],
             jobTable.present(**presentationArgs),

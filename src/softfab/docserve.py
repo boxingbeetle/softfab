@@ -508,7 +508,7 @@ class DocResource(Resource):
         # Register children.
         for childName in metadata.children:
             childResource = cls.registerDocs(
-                '%s.%s' % (packageName, childName), resource
+                f'{packageName}.{childName}', resource
                 )
             resource.putChild(childName.encode(), childResource)
 

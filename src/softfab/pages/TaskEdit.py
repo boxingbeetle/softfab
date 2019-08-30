@@ -140,8 +140,7 @@ class TaskEdit_POST(TaskEditBase):
                     parent = frameworkDB[framework]
                 except KeyError:
                     raise PresentableError(xhtml.p[
-                        'Framework "%s" does not exist (anymore).'
-                        % framework
+                        f'Framework "{framework}" does not exist (anymore).'
                         ])
 
             checkParamState(args, parent)

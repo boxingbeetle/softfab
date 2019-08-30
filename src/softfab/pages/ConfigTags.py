@@ -73,7 +73,7 @@ class ConfigTagsBase(FabPage['ConfigTagsBase.Processor', FabPage.Arguments]):
                 )[
                 ConfigTagValueEditTable.instance,
                 xhtml.p[ actionButtons(Actions) ],
-                ( hiddenInput(name='commontags.%d' % index, value=tagName)
+                ( hiddenInput(name=f'commontags.{index:d}', value=tagName)
                   for index, tagKey in enumerate(tagKeys)
                   for tagName in commonTags[tagKey].keys() )
                 ].present(

@@ -68,7 +68,7 @@ class RepoEdit_GET(RepoEditBase):
                     )
             else:
                 raise InvalidRequest(
-                    'Resource "%s" is not a repository' % element.getId()
+                    f'Resource "{element.getId()}" is not a repository'
                     )
 
 class RepoEdit_POST(RepoEditBase):

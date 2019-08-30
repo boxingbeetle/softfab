@@ -65,7 +65,7 @@ class LoginBase(UIPage[ProcT], FabResource[ArgsT, ProcT]):
             version = userAgent.version
             if version and version[0] < 11:
                 yield xhtml.p[
-                    'Internet Explorer %d is ' % version[0],
+                    f'Internet Explorer {version[0]:d} is ',
                     xhtml.b['not supported'], ' by SoftFab. ',
                     'Please upgrade to ',
                     xhtml.a(href = _downloadURLs['MSIE'], target = '_blank')[

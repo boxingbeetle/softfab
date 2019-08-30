@@ -31,7 +31,7 @@ class MostRecent(RecordObserver):
         self.records[self.number : ] = []
 
     def removed(self, record):
-        assert False, 'job %s removed' % record.getId()
+        assert False, f'job {record.getId()} removed'
 
     def updated(self, record):
         pass

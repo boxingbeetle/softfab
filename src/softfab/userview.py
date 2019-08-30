@@ -13,8 +13,8 @@ from softfab.xmlgen import XMLContent, xhtml
 passwordStr = {
     PasswordMessage.SUCCESS  : 'The password has been changed successfully.',
     PasswordMessage.POOR     : 'This password is not secure.',
-    PasswordMessage.SHORT    : 'The password must be at least %d characters.'
-                                % minimumPasswordLength,
+    PasswordMessage.SHORT    : 'The password must be at least '
+                                    f'{minimumPasswordLength:d} characters.',
     PasswordMessage.EMPTY    : 'An empty password is not allowed.',
     PasswordMessage.MISMATCH : 'New password mismatch.',
     }

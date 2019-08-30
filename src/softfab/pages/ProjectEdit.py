@@ -120,8 +120,8 @@ class ProjectEdit_POST(ProjectEditBase):
             # Check max job count.
             if args.maxjobs <= 0:
                 raise PresentableError(xhtml.p[
-                    'The value for multiple jobs limit (%d) is invalid; '
-                    'it must be a positive integer.' % args.maxjobs
+                    f'The value for multiple jobs limit ({args.maxjobs:d}) '
+                    f'is invalid; it must be a positive integer.'
                     ])
 
             # Check timezone.
@@ -131,7 +131,7 @@ class ProjectEdit_POST(ProjectEditBase):
             knownZones = getKnownTimezones()
             if knownZones and timezone not in knownZones:
                 raise PresentableError(xhtml.p[
-                    'Unknown timezone "%s".' % timezone
+                    f'Unknown timezone "{timezone}".'
                     ])
 
             # Check site filters.
@@ -140,8 +140,7 @@ class ProjectEdit_POST(ProjectEditBase):
                 if ';' in siteFilter:
                     # Semicolon is used as a separator in the CSP header.
                     raise PresentableError(xhtml.p[
-                        'Illegal character ";" in site filter "%s"'
-                        % siteFilter
+                        f'Illegal character ";" in site filter "{siteFilter}"'
                         ])
                 try:
                     url = urlparse(siteFilter)
@@ -153,29 +152,28 @@ class ProjectEdit_POST(ProjectEditBase):
                     _ = url.port
                 except ValueError as ex:
                     raise PresentableError(xhtml.p[
-                        'Invalid site filter "%s": %s' % (siteFilter, ex)
+                        f'Invalid site filter "{siteFilter}": {ex}'
                         ])
                 for name in ('path', 'params', 'query', 'fragment',
                         'username', 'password'):
                     if getattr(url, name):
                         raise PresentableError(xhtml.p[
-                            'Site filter "%s" contains %s, '
-                            'which is not supported'
-                            % (siteFilter, name)
+                            f'Site filter "{siteFilter}" contains {name}, '
+                            f'which is not supported'
                             ])
                 scheme = url.scheme
                 netloc = url.netloc
                 if scheme and netloc:
-                    siteFilters.append('%s://%s' % (scheme, netloc))
+                    siteFilters.append(f'{scheme}://{netloc}')
                 elif scheme:
-                    siteFilters.append('%s:' % scheme)
+                    siteFilters.append(f'{scheme}:')
                 elif netloc:
                     siteFilters.append(netloc)
                 else:
                     # Note: I don't know what filter would parse like this,
                     #       but handle it just in case.
                     raise PresentableError(xhtml.p[
-                        'Site filter "%s" contains no information' % siteFilter
+                        f'Site filter "{siteFilter}" contains no information'
                         ])
             if not siteFilters and args.embed is EmbeddingPolicy.CUSTOM:
                 raise PresentableError(xhtml.p[
@@ -269,7 +267,7 @@ class EmbeddingWidget(RadioTable):
                 # The onchange event handler is there to make sure the right
                 # radio button is activated when text is pasted into the edit
                 # box from the context menu (right mouse button).
-                onchange="form['%s'][2].checked=true" % self.name
+                onchange=f"form['{self.name}'][2].checked=true"
                 ),
             xhtml.br,
             'You can enter one or more site filters, '

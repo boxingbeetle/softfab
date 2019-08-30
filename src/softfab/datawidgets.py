@@ -74,7 +74,7 @@ class DataColumn(Column, Generic[Record]):
         return pageLink(proc.page.name, proc.args.override(**override))(
             class_='sortorder'
             )[
-            content, ' ', xhtml.span(class_='sortorder')['%d' % (index + 1)]
+            content, ' ', xhtml.span(class_='sortorder')[f'{index + 1:d}']
             ]
 
     def presentCell(self, # pylint: disable=unused-argument
@@ -97,8 +97,7 @@ class BoolDataColumn(DataColumn[Record]):
             return '-'
         else:
             raise TypeError(
-                '"%s" is of type "%s"; expected bool'
-                % ( value, type(value).__name__ )
+                f'"{value}" is of type "{type(value).__name__}"; expected bool'
                 )
 
 class ListDataColumn(DataColumn[Record]):
@@ -116,14 +115,11 @@ class LinkColumn(DataColumn[DBRecord]):
                  **kwargs: Any
                  ):
         DataColumn.__init__(self, label, **kwargs)
-        self.__urlBase = (
-            page + '?' +
-            ''.join(
-                '%s=%s&' % ( name, escapeURL(value) )
-                for name, value in extraArgs
-                ) +
-            idArg + '='
+        extraArgsStr = ''.join(
+            f'{name}={escapeURL(value)}&'
+            for name, value in extraArgs
             )
+        self.__urlBase = f'{page}?{extraArgsStr}{idArg}='
 
     def presentLink(self,
                     record: DBRecord,
@@ -382,16 +378,11 @@ class DataTable(Table, Generic[Record]):
             )
         # Note: None (unknown) is treated the same as False (not filtered).
         if data.filtered and originalNrRecords is not None:
-            return 'Number of %s matching: %d of %d' % (
-                self.objectName,
-                data.totalNrRecords,
-                originalNrRecords
-                )
+            return f'Number of {self.objectName} matching: ' \
+                   f'{data.totalNrRecords:d} of {originalNrRecords:d}'
         else:
-            return 'Number of %s found: %d' % (
-                self.objectName,
-                data.totalNrRecords
-                )
+            return f'Number of {self.objectName} found: ' \
+                   f'{data.totalNrRecords:d}'
 
     def __presentTabs(self,
                       proc: PageProcessor,

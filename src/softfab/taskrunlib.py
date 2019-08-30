@@ -442,7 +442,7 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
         and False if this task cannot be aborted.
         '''
         whoAborted = ' by user%s at %s' % (
-            '' if user is None else ' "%s"' % user, formatTime(getTime())
+            '' if user is None else f' "{user}"', formatTime(getTime())
             )
         if self.isRunning():
             if 'abort' in self._properties:
@@ -604,8 +604,7 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
             raise ValueError(result)
         if not self.isWaitingForInspection():
             raise IllegalStateError(
-                'task "%s" received unexpected inspection result'
-                % self.getId()
+                f'task "{self.getId()}" received unexpected inspection result'
                 )
 
         self._properties['result'] = result
@@ -723,5 +722,5 @@ class RunInfo(XMLTag):
         runId = cast(str, self['runId'])
         task = jobDB[jobId].getTask(taskId)
         if task is None:
-            raise KeyError('no task named "%s" in job %s' % (taskId, jobId))
+            raise KeyError(f'no task named "{taskId}" in job {jobId}')
         return task.getRun(runId)

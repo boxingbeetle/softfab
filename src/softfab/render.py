@@ -92,7 +92,7 @@ class ForbiddenPage(ErrorPage[ProcT]):
     title = 'Access Denied'
 
     def presentContent(self, **kwargs: object) -> XMLContent:
-        return xhtml.p[ 'Access denied: %s.' % self.messageText ]
+        return xhtml.p[ f'Access denied: {self.messageText}.' ]
 
 class NotFoundPage(ErrorPage[ProcT]):
     '''404 error page.
@@ -118,7 +118,7 @@ class InternalErrorPage(ErrorPage[ProcT]):
 
     def presentContent(self, **kwargs: object) -> XMLContent:
         return (
-            xhtml.p[ 'Internal error: %s.' % self.messageText ],
+            xhtml.p[ f'Internal error: {self.messageText}.' ],
             xhtml.p[ 'Please ', docLink('/reference/contact/')[
                 'report this as a bug' ], '.' ]
             )
@@ -193,7 +193,7 @@ def renderAsync(
         subPath = req.getSubPath()
         log.msg(
             'Connection lost while presenting page %s%s: %s',
-            page.name, '' if subPath is None else ' item "%s"' % subPath, ex
+            page.name, '' if subPath is None else f' item "{subPath}"', ex
             )
 
 def _checkActive(
@@ -262,9 +262,7 @@ def parseAndProcess(page: FabResource[ArgsT, PageProcessor[ArgsT]],
             proc.processTables()
     except AccessDenied as ex:
         forbiddenPage = ForbiddenPage(
-            "You don't have permission to %s" % (
-                str(ex) or 'access this page'
-                )
+            f"You don't have permission to {str(ex) or 'access this page'}"
             ) # type: ErrorPage[PageProcessor[ArgsT]]
         proc = PageProcessor(page, req, args, user)
         responder = UIResponder(forbiddenPage, proc) # type: Responder
@@ -272,9 +270,9 @@ def parseAndProcess(page: FabResource[ArgsT, PageProcessor[ArgsT]],
         subPath = req.getSubPath()
         query = Query.fromArgs(ex.correctedArgs)
         if subPath is None:
-            url = '%s?%s' % (page.name, query.toURL())
+            url = f'{page.name}?{query.toURL()}'
         else:
-            url = '%s/%s?%s' % (page.name, subPath, query.toURL())
+            url = f'{page.name}/{subPath}?{query.toURL()}'
         responder = Redirector(url)
     except ArgsInvalid as ex:
         badRequestPage = BadRequestPage(

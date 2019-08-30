@@ -36,11 +36,11 @@ class GetTagged_GET(ControlPage['GetTagged_GET.Arguments',
                 db = subjectToDB[req.args.subject]
             except KeyError:
                 raise InvalidRequest(
-                    'Invalid subject type "%s"' % req.args.subject
+                    f'Invalid subject type "{req.args.subject}"'
                     )
             checkPrivilege(
                 user, db.privilegeObject + '/l',
-                'list %ss' % db.description
+                f'list {db.description}s'
                 )
 
             # Get tag cache from any record.

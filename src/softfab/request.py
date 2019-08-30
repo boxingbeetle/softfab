@@ -47,7 +47,7 @@ class RequestBase:
         self._request = request
 
     def __repr__(self) -> str:
-        return '%s(%r)' % (self.__class__.__name__, self._request)
+        return f'{self.__class__.__name__}({self._request!r})'
 
     @cachedProperty
     def userAgent(self) -> UserAgent:
@@ -162,7 +162,7 @@ class Request(RequestBase, Generic[ArgsT_co]):
                 key = keyBytes.decode('ascii')
             except UnicodeDecodeError as ex:
                 raise InvalidRequest(
-                    'Error decoding argument name %r: %s' % (keyBytes, ex)
+                    f'Error decoding argument name {keyBytes!r}: {ex}'
                     ) from ex
             fields[key] = values
 

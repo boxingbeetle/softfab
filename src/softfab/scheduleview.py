@@ -126,7 +126,7 @@ class ScheduleModel(StatusModel):
     def __init__(self, modelId, parent):
         #print 'create model:', modelId
         if modelId not in scheduleDB:
-            raise KeyError('There is no schedule named "%s"' % modelId)
+            raise KeyError(f'There is no schedule named "{modelId}"')
         #print 'create model - found'
         StatusModel.__init__(self, modelId, parent)
         #print 'create model - done'

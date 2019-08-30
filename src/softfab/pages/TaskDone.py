@@ -48,7 +48,7 @@ class TaskDone_POST(ControlPage['TaskDone_POST.Arguments',
                 result = req.args.result
                 if result is not None and result not in defaultSummaries:
                     raise InvalidRequest(
-                        'Result code "%s" is for internal use only' % result
+                        f'Result code "{result}" is for internal use only'
                         )
                 summary = req.args.summary
                 reports = req.args.report
@@ -72,14 +72,14 @@ class TaskDone_POST(ControlPage['TaskDone_POST.Arguments',
                     runningTask = taskRunner.getRun()
                     if runningTask is None:
                         raise InvalidRequest(
-                            'Task Runner "%s" is not running a task'
-                            % taskRunner.getId()
+                            f'Task Runner "{taskRunner.getId()}" '
+                            f'is not running a task'
                             )
                     try:
                         job = jobDB[jobId]
                     except KeyError:
                         raise InvalidRequest(
-                            'No job exists with ID "%s"' % jobId
+                            f'No job exists with ID "{jobId}"'
                             )
                     taskName = req.args.name
                     if taskName is None:
@@ -89,14 +89,14 @@ class TaskDone_POST(ControlPage['TaskDone_POST.Arguments',
                     task = job.getTask(taskName)
                     if task is None:
                         raise InvalidRequest(
-                            'No task "%s" in job "%s"' % (taskName, jobId)
+                            f'No task "{taskName}" in job "{jobId}"'
                             )
                     runId = cast(str, task['run'])
                     if runningTask.getId() != runId:
                         raise InvalidRequest(
-                            'Task Runner "%s" is running task %s '
-                            'but wants to set %s as done'
-                            % (taskRunner.getId(), runningTask.getId(), runId)
+                            f'Task Runner "{taskRunner.getId()}" '
+                            f'is running task {runningTask.getId()} '
+                            f'but wants to set {runId} as done'
                             )
 
                     for report in reports:
@@ -132,27 +132,27 @@ class TaskDone_POST(ControlPage['TaskDone_POST.Arguments',
                             raise ValueError('Internal-only result code')
                     except ValueError as ex:
                         raise InvalidRequest(
-                            'Invalid result code "%s": %s' % (extResult, ex)
+                            f'Invalid result code "{extResult}": {ex}'
                             )
 
                     runningShadowId = taskRunner.getShadowRunId()
                     if runningShadowId is None:
                         raise InvalidRequest(
-                            'Task Runner "%s" is not running a shadow task'
-                            % taskRunner.getId()
+                            f'Task Runner "{taskRunner.getId()}" '
+                            f'is not running a shadow task'
                             )
                     elif runningShadowId != shadowId:
                         raise InvalidRequest(
-                            'Task Runner "%s" is running shadow task %s '
-                            'but wants to set %s as done'
-                            % (taskRunner.getId(), runningShadowId, shadowId)
+                            f'Task Runner "{taskRunner.getId()}" '
+                            f'is running shadow task {runningShadowId} '
+                            f'but wants to set {shadowId} as done'
                             )
 
                     try:
                         shadowRun = shadowDB[shadowId]
                     except KeyError:
                         raise InvalidRequest(
-                            'Shadow run "%s" does not exist' % shadowId
+                            f'Shadow run "{shadowId}" does not exist'
                             )
                     assert isinstance(shadowRun, ExtractionRun), shadowRun
                     taskRun = shadowRun.taskRun

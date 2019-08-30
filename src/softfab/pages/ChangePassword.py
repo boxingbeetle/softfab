@@ -95,7 +95,7 @@ class ChangePassword_GET(FabPage['ChangePassword_GET.Processor',
             if userName not in userDB:
                 self.retry = False # pylint: disable=attribute-defined-outside-init
                 raise PresentableError(
-                    'User "%s" does not exist (anymore)' % userName
+                    f'User "{userName}" does not exist (anymore)'
                     )
 
             # Check if msg has been set and act upon accordingly
@@ -162,7 +162,7 @@ class ChangePassword_POST(FabPage['ChangePassword_POST.Processor',
                 except KeyError:
                     self.retry = False # pylint: disable=attribute-defined-outside-init
                     raise PresentableError(
-                        'User "%s" does not exist (anymore)' % userName
+                        f'User "{userName}" does not exist (anymore)'
                         )
 
                 password = req.args.password

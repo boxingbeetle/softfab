@@ -62,7 +62,7 @@ def visualizeBarCharts(proc):
         yield visualizeBarChart(key, tasks, dataByRunId)
 
 def visualizeBarChart(key, tasks, dataByRunId):
-    yield xhtml.h3[ 'Chart for %s:' % key ]
+    yield xhtml.h3[ f'Chart for {key}:' ]
 
     dataPoints = []
     for task in tasks:
@@ -88,9 +88,8 @@ def visualizeBarChart(key, tasks, dataByRunId):
     maxBars = graphWidth // (minBarWidth + 1)
     if len(dataPoints) > maxBars:
         yield xhtml.p[xhtml.i[
-            'To fit the chart on the page, only the last %d '
-            'data points of %d total could be displayed.'
-            % ( maxBars, len(dataPoints) )
+            f'To fit the chart on the page, only the last {maxBars:d} '
+            f'data points of {len(dataPoints):d} total could be displayed.'
             ]]
         dataPoints[ : -maxBars] = []
 
@@ -146,11 +145,11 @@ def visualizeBarChart(key, tasks, dataByRunId):
                 title = '%s - %s' % (
                     formatTime(run.getJob().getCreateTime()), valueDescription
                     ),
-                onclick = "document.location='%s'" % url
+                onclick = f"document.location='{url}'"
                 )[
                 xhtml.table(
                     class_ = barClass,
-                    style = 'width: %dpx; height: %dpx' % ( barWidth, height )
+                    style = f'width: {barWidth:d}px; height: {height:d}px'
                     )[ xhtml.tbody[ xhtml.tr[ xhtml.td ] ] ]
                 ]
         yield xhtml.td(class_ = 'raxis')[(
@@ -158,7 +157,7 @@ def visualizeBarChart(key, tasks, dataByRunId):
             for mark in range(numMarks, 0, -1)
             )]
     yield xhtml.table(
-        class_ = 'graph', style = 'height: %dpx' % graphHeight
+        class_ = 'graph', style = f'height: {graphHeight:d}px'
         )[ xhtml.tbody[ xhtml.tr[ generateBars() ] ] ]
 
 class ExtractedDataColumn(DataColumn[Task]):

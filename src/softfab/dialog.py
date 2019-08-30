@@ -131,13 +131,11 @@ class DialogProcessorBase(PageProcessor[DialogArgsT]):
         # safe to assume it has entered an infinite loop.
         boundObj = getattr(func, '__self__', None)
         if isinstance(boundObj, DialogStep):
-            funcDesc = '"%s" method' % boundObj.__class__.name
+            funcDesc = f'"{boundObj.__class__.name}" method'
         else:
             funcDesc = 'function'
-        raise RuntimeError(
-            'dialog step %s "%s" keeps raising ArgsCorrected'
-            % (funcDesc, func.__name__)
-            )
+        raise RuntimeError(f'dialog step {funcDesc} "{func.__name__}" '
+                           f'keeps raising ArgsCorrected')
 
     def process(self, req: Request, user: User) -> None:
         raise NotImplementedError
@@ -251,7 +249,7 @@ class ContinuedDialogProcessor(DialogProcessorBase[DialogArgsT]):
                 requestedPath.append(stepObjects[name])
             except KeyError as ex:
                 raise InvalidRequest(
-                    'non-existing dialog step "%s" in navigation path' % name
+                    f'non-existing dialog step "{name}" in navigation path'
                     ) from ex
         if not requestedPath:
             raise InvalidRequest('Dialog state was lost')

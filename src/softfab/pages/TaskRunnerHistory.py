@@ -84,6 +84,6 @@ class TaskRunnerHistory_GET(FabPage['TaskRunnerHistory_GET.Processor',
 
         if proc.reachedJobsLimit:
             yield xhtml.p[xhtml.i[
-                'Only tasks from the last %d jobs are shown.' % _jobsLimit
+                f'Only tasks from the last {_jobsLimit:d} jobs are shown.'
                 ]]
         yield HistoryTable.instance.present(**kwargs)

@@ -32,7 +32,7 @@ class BasePage(UIPage[ProcT], FabResource[ArgsT, ProcT], ABC):
         for widget in self.iterWidgets(cast(ProcT, proc)):
             if widget.widgetId == path:
                 return _WidgetResponder(self, widget, proc)
-        raise KeyError('Page does not contain a widget named "%s"' % path)
+        raise KeyError(f'Page does not contain a widget named "{path}"')
 
     def iterRootButtons(self,
                         args: Optional[ArgsT]

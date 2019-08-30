@@ -150,9 +150,7 @@ class SetFilter(RecordFilter[Record], Generic[Record, Comparable]):
         Use this method instead of the constructor to to have a sanity check
         performed on the arguments and get optimized filters for special cases.
         '''
-        assert selected <= choices, ', '.join(
-            '%s' % invalid for invalid in sorted(selected - choices)
-            )
+        assert selected <= choices, sorted(selected - choices)
         numSelected = len(selected)
         numChoices = len(choices)
         if numSelected == 0:

@@ -158,7 +158,7 @@ class ProductTable(Table, Generic[ProcT]):
                     locatorStyle = None
                 elif locator is None:
                     assert task is not None, \
-                        'input without locator: %s' % taskName
+                        f'input without locator: {taskName}'
                     if finishedTask:
                         locatorStyle = 'cancelled'
                     else:

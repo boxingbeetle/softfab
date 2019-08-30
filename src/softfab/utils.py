@@ -195,7 +195,7 @@ def atomicWrite(
 
     # Note: We could support more modes, but so far we didn't have a need to.
     if mode not in ('w', 'wb'):
-        raise ValueError('invalid mode: %r' % mode)
+        raise ValueError(f'invalid mode: {mode!r}')
 
     tempPath = path + '.tmp'
     try:
@@ -383,7 +383,7 @@ class _CachedProperty(Generic[C, T]):
                 if member is self:
                     # The use of "$" makes this invalid as a Python
                     # identifier, reducing the chance of name collisions.
-                    return '$%s$%s' % (container.__name__, name)
+                    return f'${container.__name__}${name}'
         raise AttributeError('Property does not belong to this object')
 
 def cachedProperty(method: Callable[[C], T]) -> _CachedProperty[C, T]:
@@ -436,7 +436,7 @@ def parseVersion(versionStr: str) -> Tuple[int, int, int]:
     '''
     match = _versionPattern.match(versionStr)
     if match is None:
-        raise ValueError('invalid version format: "%s"' % versionStr)
+        raise ValueError(f'invalid version format: "{versionStr}"')
     else:
         version = cast(Tuple[int, int, int], tuple(
             int(versionComponent)
@@ -453,9 +453,7 @@ def parseVersion(versionStr: str) -> Tuple[int, int, int]:
                 # previous series.
                 return ( version[0], version[1] - 1, 9900 + suffixVersion )
             else:
-                raise ValueError(
-                    'invalid prerelease version: "%s"' % versionStr
-                    )
+                raise ValueError(f'invalid prerelease version: "{versionStr}"')
         else:
             return version
 

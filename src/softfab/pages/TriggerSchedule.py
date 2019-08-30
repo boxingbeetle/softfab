@@ -27,11 +27,11 @@ class TriggerSchedule_POST(ControlPage['TriggerSchedule_POST.Arguments',
                 schedule = scheduleDB[scheduleId]
             except KeyError:
                 raise InvalidRequest(
-                    'Schedule "%s" does not exist' % scheduleId
+                    f'Schedule "{scheduleId}" does not exist'
                     )
             checkPrivilegeForOwned(
                 user, 's/m', schedule,
-                ( 'trigger schedule "%s" that is not owned by you' % scheduleId,
+                ( f'trigger schedule "{scheduleId}" that is not owned by you',
                   'trigger schedules' )
                 )
             try:

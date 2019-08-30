@@ -158,9 +158,9 @@ class FrameworkEdit_POST(FrameworkEditBase):
                         if task['parent'] == args.id and \
                                 name in task.getParametersSelf():
                             raise PresentableError(xhtml.p[
-                                'Cannot make parameter "%s" final, '
-                                'because it is overridden by task "%s".'
-                                % ( name, task.getId() )
+                                f'Cannot make parameter "{name}" final, '
+                                f'because it is overridden '
+                                f'by task "{task.getId()}".'
                                 ])
 
             if args.wrapper == '':
