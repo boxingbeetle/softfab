@@ -83,13 +83,12 @@ class ResType(XMLTag, DatabaseElem):
             yield xml.description[ self.__description ]
 
 taskRunnerResourceTypeName = 'sf.tr'
+repoResourceTypeName = 'sf.repo'
 
 if taskRunnerResourceTypeName not in resTypeDB:
     resTypeDB.add(ResType.create(
         taskRunnerResourceTypeName, pertask=True, perjob=False
         ))
-
-repoResourceTypeName = 'sf.repo'
 
 if repoResourceTypeName not in resTypeDB:
     resTypeDB.add(ResType.create(
