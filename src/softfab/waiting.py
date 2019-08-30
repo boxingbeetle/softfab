@@ -8,7 +8,7 @@ from abc import ABC
 from enum import IntEnum
 from typing import (
     TYPE_CHECKING, AbstractSet, Callable, ClassVar, Iterable, List, Optional,
-    Sequence, Union, cast
+    Sequence, Union
 )
 
 from softfab.connection import ConnectionStatus

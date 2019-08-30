@@ -18,7 +18,6 @@ from markdown.extensions.fenced_code import FencedCodeExtension
 from markdown.extensions.tables import TableExtension
 from markdown.treeprocessors import Treeprocessor
 from markdown.util import etree
-from twisted.python.urlpath import URLPath
 from twisted.web.http import Request as TwistedRequest
 from twisted.web.resource import Resource
 from twisted.web.static import Data

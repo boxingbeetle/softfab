@@ -2,7 +2,7 @@
 
 from cgi import parse_header
 from inspect import signature
-from typing import IO, Generic, Mapping, Optional, Sequence, Tuple, Type, cast
+from typing import IO, Generic, Mapping, Optional, Tuple, Type, cast
 from urllib.parse import parse_qs, urlparse
 
 from twisted.web.http import Request as TwistedRequest
