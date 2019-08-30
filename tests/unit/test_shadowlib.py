@@ -139,9 +139,9 @@ class TestResults(unittest.TestCase):
         "Test storing of logging URL."
         run = self.createRun()
         self.assertEqual(run.getURL(), None)
-        url = 'http://host/path/log.txt'
-        run.setURL(url)
-        self.assertEqual(run.getURL(), url)
+        url = 'path/to/log.txt'
+        run.setInternalStorage(url)
+        self.assertEqual(run.getURL(), 'jobs/' + url)
 
 if __name__ == '__main__':
     unittest.main()
