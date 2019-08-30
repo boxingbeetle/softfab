@@ -223,5 +223,4 @@ class ChangePassword_POST(FabPage['ChangePassword_POST.Processor',
             yield self.backToReferer(proc.args)
 
     def presentContent(self, **kwargs: object) -> XMLContent:
-        proc = cast(ChangePassword_POST.Processor, kwargs['proc'])
         assert False
