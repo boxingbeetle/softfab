@@ -292,6 +292,7 @@ div.titlebar > div.title {
 }
 div.titlebar > div.info {
 	text-align: right;
+	white-space: nowrap;
 }
 
 div.linkbar {
