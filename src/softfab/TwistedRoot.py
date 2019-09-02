@@ -32,6 +32,7 @@ from softfab.schedulelib import ScheduleManager
 from softfab.shadowlib import startShadowRunCleanup
 from softfab.userlib import User
 from softfab.utils import iterModules
+from softfab.webhooks import createWebhooks
 
 startupLogger = logging.getLogger('ControlCenter.startup')
 
@@ -211,6 +212,7 @@ class PageLoader:
         root.putChild(b'docs', DocResource.registerDocs('softfab.docs'))
         createArtifactRoots(self.root, dbDir + '/artifacts',
                             self.root.anonOperator)
+        root.putChild(b'webhook', createWebhooks(startupLogger))
 
         # Add files from the 'softfab.static' package.
         for resource in importlib_resources.contents(static):
