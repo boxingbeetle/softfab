@@ -2,7 +2,11 @@
 
 from codecs import getencoder
 from contextlib import contextmanager
+from importlib import import_module
+from inspect import getmodulename
 from itertools import islice
+from logging import Logger
+from types import ModuleType
 from typing import (
     IO, Any, Callable, Dict, Generic, Iterable, Iterator, List, Match,
     Optional, Pattern, Sized, Tuple, Type, TypeVar, Union, cast
@@ -11,6 +15,8 @@ from urllib.parse import quote_plus
 import os
 import os.path
 import re
+
+from softfab.compat import importlib_resources
 
 C = TypeVar('C')
 T = TypeVar('T')
@@ -471,3 +477,24 @@ def wildcardMatcher(pattern: str) -> Pattern[str]:
         re.sub(r'[.^$+?{}\\|()*]', _escapeRegExp, pattern)
         + '$'
         )
+
+def iterModules(packageName: str,
+                log: Logger
+                ) -> Iterable[Tuple[str, ModuleType]]:
+    """Yields pairs of module name and module object for each module in
+    `packageName`.
+    If any module fails to import, it is omitted from the result and the
+    error is logged to `log`.
+    The __init__ module is excluded from the results.
+    """
+    for fileName in importlib_resources.contents(packageName):
+        moduleName = getmodulename(fileName)
+        if moduleName is None or moduleName == '__init__':
+            continue
+        fullName = packageName + '.' + moduleName
+        try:
+            module = import_module(fullName)
+        except Exception:
+            log.exception('Error importing page module "%s"', fullName)
+        else:
+            yield moduleName, module

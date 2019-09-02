@@ -1,8 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from functools import partial
-from importlib import import_module
-from inspect import getmodulename
 from mimetypes import guess_type
 from types import GeneratorType, ModuleType
 from typing import (
@@ -33,6 +31,7 @@ from softfab.render import NotFoundPage, renderAuthenticated
 from softfab.schedulelib import ScheduleManager
 from softfab.shadowlib import startShadowRunCleanup
 from softfab.userlib import User
+from softfab.utils import iterModules
 
 startupLogger = logging.getLogger('ControlCenter.startup')
 
@@ -218,20 +217,9 @@ class PageLoader:
             if not resource.startswith('_'):
                 root.putChild(resource.encode(), StaticResource(resource))
 
-        pagesPackage = 'softfab.pages'
-        for fileName in importlib_resources.contents(pagesPackage):
-            moduleName = getmodulename(fileName)
-            if moduleName is None or moduleName == '__init__':
-                continue
-            fullName = pagesPackage + '.' + moduleName
-            try:
-                module = import_module(fullName)
-            except Exception:
-                startupLogger.exception(
-                    'Error importing page module "%s"', fullName
-                    )
-            else:
-                self.__addPage(module, moduleName)
+        # Add modules from the 'softfab.pages' package.
+        for moduleName, module in iterModules('softfab.pages', startupLogger):
+            self.__addPage(module, moduleName)
 
 class PageResource(Resource):
     '''Twisted Resource that serves Control Center pages.
