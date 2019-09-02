@@ -4,7 +4,7 @@ from gzip import GzipFile
 from mimetypes import guess_type
 from os import fsync, replace
 from struct import Struct
-from typing import IO, Dict, Iterable, Iterator, Optional, Tuple, Union, cast
+from typing import IO, Dict, Iterable, Iterator, Optional, Tuple, Union
 from urllib.parse import unquote_plus
 from zipfile import ZIP_DEFLATED, BadZipFile, ZipFile, ZipInfo
 import logging
@@ -21,7 +21,10 @@ from twisted.web.server import NOT_DONE_YET
 from twisted.web.util import Redirect, redirectTo
 from zope.interface import implementer
 
-from softfab.compat import NoReturn
+from softfab.TwistedUtil import (
+    AccessDeniedResource, ClientErrorResource, NotFoundResource,
+    UnauthorizedResource
+)
 from softfab.joblib import Job, jobDB
 from softfab.projectlib import project
 from softfab.request import Request
@@ -32,62 +35,6 @@ from softfab.userlib import (
     AccessDenied, AnonGuestUser, SuperUser, UnauthorizedLogin, User,
     checkPrivilege
 )
-
-
-@implementer(IResource)
-class ClientErrorResource:
-    isLeaf = True
-    code = 400
-
-    # PyLint doesn't understand Zope interfaces.
-    # pylint: disable=unused-argument
-
-    def __init__(self, message: str):
-        self.message = message
-
-    def getChildWithDefault(self,
-                            name: bytes,
-                            request: TwistedRequest
-                            ) -> NoReturn:
-        # Will not be called because isLeaf is true.
-        assert False
-
-    def putChild(self,
-                 path: bytes,
-                 child: IResource
-                 ) -> NoReturn:
-        # Error resources don't support children.
-        assert False
-
-    def render(self, request: TwistedRequest) -> bytes:
-        request.setResponseCode(self.code)
-        request.setHeader(b'Content-Type', b'text/plain; charset=UTF-8')
-        return self.message.encode() + b'\n'
-
-class UnauthorizedResource(ClientErrorResource):
-    code = 401
-    realm = 'artifacts'
-
-    def render(self, request: TwistedRequest) -> bytes:
-        body = super().render(request)
-        request.setHeader(
-            b'WWW-Authenticate',
-            b'Basic realm="%s"' % self.realm.encode('ascii')
-            )
-        return body
-
-class AccessDeniedResource(ClientErrorResource):
-    code = 403
-
-    @classmethod
-    def fromException(cls, ex: AccessDenied) -> 'AccessDeniedResource':
-        message = 'Access denied'
-        if ex.args:
-            message += ': ' + cast(str, ex.args[0])
-        return cls(message)
-
-class NotFoundResource(ClientErrorResource):
-    code = 404
 
 SANDBOX_RULES = ' '.join('allow-' + perm for perm in (
     'forms', 'modals', 'popups', 'scripts'
@@ -363,7 +310,8 @@ class ArtifactAuthWrapper:
                 user = TokenUser(token)
 
         if user is None:
-            return UnauthorizedResource('Please provide an access token')
+            return UnauthorizedResource('artifacts',
+                                        'Please provide an access token')
 
         return ArtifactRoot(self.path, user)
 
