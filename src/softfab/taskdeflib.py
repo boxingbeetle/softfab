@@ -7,7 +7,7 @@ from softfab.config import dbDir
 from softfab.databaselib import VersionedDatabase
 from softfab.paramlib import GetParent, Parameterized, paramTop
 from softfab.selectlib import ObservingTagCache
-from softfab.xmlgen import XMLAttributeValue, XMLContent, xml
+from softfab.xmlgen import XMLContent, xml
 
 
 class TaskDefFactory:
@@ -42,7 +42,7 @@ class TaskDef(frameworklib.TaskDefBase):
         taskDef.__description = description
         return taskDef
 
-    def __init__(self, properties: Mapping[str, XMLAttributeValue]):
+    def __init__(self, properties: Mapping[str, Optional[str]]):
         frameworklib.TaskDefBase.__init__(self, properties)
         self.__title = ''
         self.__description = ''

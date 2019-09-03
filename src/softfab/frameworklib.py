@@ -14,7 +14,7 @@ from softfab.restypelib import taskRunnerResourceTypeName
 from softfab.selectlib import ObservingTagCache, SelectableRecordABC, TagCache
 from softfab.utils import abstract
 from softfab.xmlbind import XMLTag
-from softfab.xmlgen import XMLAttributeValue, XMLContent, xml
+from softfab.xmlgen import XMLContent, xml
 
 
 class FrameworkFactory:
@@ -34,7 +34,7 @@ class TaskDefBase(ParamMixin, XMLTag, SelectableRecordABC):
     tagName = 'taskdef'
     cache = abstract # type: ClassVar[TagCache]
 
-    def __init__(self, properties: Mapping[str, XMLAttributeValue]):
+    def __init__(self, properties: Mapping[str, Optional[str]]):
         ParamMixin.__init__(self)
         XMLTag.__init__(self, properties)
         SelectableRecordABC.__init__(self)
@@ -105,7 +105,7 @@ class Framework(TaskDefBase):
         framework.__outputs = set(outputs)
         return framework
 
-    def __init__(self, properties: Mapping[str, XMLAttributeValue]):
+    def __init__(self, properties: Mapping[str, str]):
         TaskDefBase.__init__(self, properties)
         self.__inputs = set() # type: Set[str]
         self.__outputs = set() # type: Set[str]

@@ -23,7 +23,7 @@ from softfab.tokens import Token, TokenRole, TokenUser, tokenDB
 from softfab.userlib import TaskRunnerUser
 from softfab.utils import abstract, cachedProperty, parseVersion
 from softfab.xmlbind import XMLTag
-from softfab.xmlgen import XMLAttributeValue, XMLContent, xml
+from softfab.xmlgen import XMLContent, xml
 
 ResourceT = TypeVar('ResourceT', bound='ResourceBase')
 
@@ -34,7 +34,7 @@ class ResourceBase(ParamMixin, XMLTag, DatabaseElem):
     boolProperties = ('suspended',)
     intProperties = ('changedtime',)
 
-    def __init__(self, properties: Mapping[str, XMLAttributeValue]):
+    def __init__(self, properties: Mapping[str, str]):
         ParamMixin.__init__(self)
         XMLTag.__init__(self, properties)
         DatabaseElem.__init__(self)
@@ -266,7 +266,7 @@ class _TaskRunnerData(XMLTag):
     '''
     tagName = 'data'
 
-    def __init__(self, properties: Mapping[str, XMLAttributeValue]):
+    def __init__(self, properties: Mapping[str, str]):
         XMLTag.__init__(self, properties)
         self._properties.setdefault('host', '?')
         self.__run = cast(RunInfo, None)
@@ -487,7 +487,7 @@ class TaskRunner(ResourceBase):
         runner._capabilities = frozenset(capabilities)
         return runner
 
-    def __init__(self, properties: Mapping[str, XMLAttributeValue]):
+    def __init__(self, properties: Mapping[str, str]):
         # COMPAT 2.16: Rename 'paused' to 'suspended'.
         if 'paused' in properties:
             properties = dict(properties, suspended=properties['paused'])

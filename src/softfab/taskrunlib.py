@@ -23,7 +23,7 @@ from softfab.timeview import formatTime
 from softfab.utils import IllegalStateError, cachedProperty, pluralize
 from softfab.waiting import ReasonForWaiting, topWhyNot
 from softfab.xmlbind import XMLTag
-from softfab.xmlgen import XML, XMLAttributeValue, XMLContent, xml
+from softfab.xmlgen import XML, XMLContent, xml
 
 if TYPE_CHECKING:
     from softfab.joblib import Job, Task, jobDB
@@ -58,7 +58,7 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
     intProperties = ('runId', )
 
     def __init__(self,
-                 attributes: Mapping[str, XMLAttributeValue],
+                 attributes: Mapping[str, str],
                  task: Optional[Task] = None
                  ):
         XMLTag.__init__(self, attributes)

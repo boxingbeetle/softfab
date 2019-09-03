@@ -7,7 +7,7 @@ from softfab.config import dbDir
 from softfab.databaselib import Database, DatabaseElem, createInternalId
 from softfab.productdeflib import ProductDef, ProductType, productDefDB
 from softfab.xmlbind import XMLTag
-from softfab.xmlgen import XMLAttributeValue, XMLContent, xml
+from softfab.xmlgen import XMLContent, xml
 
 
 class ProductFactory:
@@ -39,7 +39,7 @@ class Product(XMLTag, DatabaseElem):
         productDB.add(product)
         return product
 
-    def __init__(self, attributes: Mapping[str, XMLAttributeValue]):
+    def __init__(self, attributes: Mapping[str, Optional[str]]):
         XMLTag.__init__(self, attributes)
         DatabaseElem.__init__(self)
         self.__producers = {} # type: Dict[str, str]
