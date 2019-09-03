@@ -13,6 +13,7 @@ from twisted.internet import reactor
 from softfab.config import dbDir, syncDelay
 from softfab.connection import ConnectionStatus
 from softfab.databaselib import Database, DatabaseElem, RecordObserver
+from softfab.paramlib import GetParent, ParamMixin, Parameterized, paramTop
 from softfab.projectlib import project
 from softfab.restypelib import taskRunnerResourceTypeName
 from softfab.shadowlib import ShadowRun, shadowDB
@@ -26,7 +27,7 @@ from softfab.xmlgen import XMLAttributeValue, XMLContent, xml
 
 ResourceT = TypeVar('ResourceT', bound='ResourceBase')
 
-class ResourceBase(XMLTag, DatabaseElem):
+class ResourceBase(ParamMixin, XMLTag, DatabaseElem):
     """Base class for Resource and TaskRunner.
     """
     tagName = abstract # type: ClassVar[str]
@@ -34,6 +35,7 @@ class ResourceBase(XMLTag, DatabaseElem):
     intProperties = ('changedtime',)
 
     def __init__(self, properties: Mapping[str, XMLAttributeValue]):
+        ParamMixin.__init__(self)
         XMLTag.__init__(self, properties)
         DatabaseElem.__init__(self)
         self._capabilities = set() # type: AbstractSet[str]
@@ -43,6 +45,7 @@ class ResourceBase(XMLTag, DatabaseElem):
         cast(Set[str], self._capabilities).add(attributes['name'])
 
     def _getContent(self) -> XMLContent:
+        yield self._paramsToXML()
         for cap in self._capabilities:
             yield xml.capability(name = cap)
 
@@ -65,6 +68,9 @@ class ResourceBase(XMLTag, DatabaseElem):
         yield 'suspended'
         yield 'changedtime'
         yield 'changeduser'
+
+    def getParent(self, getFunc: Optional[GetParent]) -> Parameterized:
+        return paramTop
 
     def copyState(self: ResourceT, resource: ResourceT) -> None:
         myProps = self._properties
