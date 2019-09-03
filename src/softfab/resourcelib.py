@@ -56,8 +56,6 @@ class ResourceBase(ParamMixin, XMLTag, DatabaseElem):
     def __getitem__(self, key: str) -> object:
         if key == 'type':
             return self.typeName
-        elif key == 'locator':
-            return self.locator
         elif key == 'capabilities':
             return sorted(self._capabilities)
         elif key == 'changedtime':

@@ -107,7 +107,6 @@ class ResourcesTable(DataTable[ResourceBase]):
     db = resourceDB
     fixedColumns = (
         ResourceNameColumn.instance,
-        DataColumn[ResourceBase](keyName = 'locator'),
         CapabilitiesColumn(keyName = 'capabilities'),
         StateColumn(keyName = 'state', cellStyle = 'strong'),
         ReservedByColumn('Reserved By', 'reserved'),
