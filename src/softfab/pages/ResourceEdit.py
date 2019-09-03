@@ -64,17 +64,15 @@ class ResourceEdit_GET(ResourceEditBase):
     class Processor(InitialEditProcessor[ResourceEditArgs, Resource]):
         argsClass = ResourceEditArgs
 
-        def _initArgs(self,
-                      element: Optional[Resource]
-                      ) -> Mapping[str, object]:
+        def _initArgs(self, element: Optional[Resource]) -> Mapping[str, str]:
             if element is None:
                 return {}
             elif isinstance(element, Resource):
                 return dict(
-                    restype = element['type'],
-                    capabilities = ' '.join(element.capabilities),
-                    description = element['description'],
-                    locator = element['locator']
+                    restype=element.typeName,
+                    capabilities=' '.join(element.capabilities),
+                    description=element.description,
+                    locator=element.locator
                     )
             else:
                 raise InvalidRequest(
