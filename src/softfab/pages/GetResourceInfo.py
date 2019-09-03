@@ -1,15 +1,18 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from typing import Iterator, List, Optional, cast
+
 from softfab.ControlPage import ControlPage
 from softfab.Page import InvalidRequest, PageProcessor
 from softfab.pageargs import PageArgs, SetArg
-from softfab.querylib import SetFilter, runQuery
-from softfab.resourcelib import resourceDB
+from softfab.querylib import RecordProcessor, SetFilter, runQuery
+from softfab.request import Request
+from softfab.resourcelib import ResourceBase, TaskRunner, resourceDB
 from softfab.response import Response
-from softfab.restypelib import resTypeDB, taskRunnerResourceTypeName
+from softfab.restypelib import resTypeDB
 from softfab.timeview import formatTimeAttr
 from softfab.userlib import User, checkPrivilege
-from softfab.xmlgen import xml
+from softfab.xmlgen import XML, xml
 
 
 class GetResourceInfo_GET(ControlPage['GetResourceInfo_GET.Arguments',
@@ -24,7 +27,10 @@ class GetResourceInfo_GET(ControlPage['GetResourceInfo_GET.Arguments',
 
     class Processor(PageProcessor['GetResourceInfo_GET.Arguments']):
 
-        def process(self, req, user):
+        def process(self,
+                    req: Request['GetResourceInfo_GET.Arguments'],
+                    user: User
+                    ) -> None:
             resTypeNames = req.args.type
             resNames = req.args.name
 
@@ -51,7 +57,7 @@ class GetResourceInfo_GET(ControlPage['GetResourceInfo_GET.Arguments',
                     )
 
             # Determine set of resource types
-            query = []
+            query: List[RecordProcessor] = []
             if resTypeNames:
                 # TODO: Use SetFilter.create().
                 query.append(SetFilter('type', resTypeNames, resourceDB))
@@ -72,17 +78,17 @@ class GetResourceInfo_GET(ControlPage['GetResourceInfo_GET.Arguments',
 
     def writeReply(self, response: Response, proc: Processor) -> None:
 
-        def iterChangedBy(resource):
-            user = resource['changeduser']
+        def iterChangedBy(resource: ResourceBase) -> Iterator[XML]:
+            user = resource.getChangedUser()
             if user:
                 # Currently 'user' is always 'None' for custom resources
                 yield xml.changedby(
                     name = user,
-                    time = formatTimeAttr(resource['changedtime']),
+                    time = formatTimeAttr(resource.getChangedTime()),
                     )
 
-        def iterReservedBy(resource):
-            if resource['type'] == taskRunnerResourceTypeName:
+        def iterReservedBy(resource: ResourceBase) -> Iterator[XML]:
+            if isinstance(resource, TaskRunner):
                 # Resource is a Task Runner.
                 runner = resource
                 run = runner.getRun()
@@ -106,38 +112,37 @@ class GetResourceInfo_GET(ControlPage['GetResourceInfo_GET.Arguments',
                 if resource.isReserved():
                     yield xml.reservedby[
                         xml.userref(
-                            userid = resource['reserved']
+                            userid = cast(str, resource['reserved'])
                             )
                         ]
 
-        def iterResourceContent(resource):
+        def iterResourceContent(resource: ResourceBase) -> Iterator[XML]:
             # Resource type independent information
-            for cap in resource['capabilities']:
+            for cap in resource.capabilities:
                 yield xml.capability(name = cap)
-            yield iterChangedBy(resource)
-            yield iterReservedBy(resource)
-            if resource['type'] == taskRunnerResourceTypeName:
+            yield from iterChangedBy(resource)
+            yield from iterReservedBy(resource)
+            if isinstance(resource, TaskRunner):
                 # Include Task Runner specific infomation.
-                runner = resource
                 yield xml.taskrunner(
-                    connectionstatus = runner.getConnectionStatus(),
-                    version = runner['runnerVersion'],
-                    exitonidle = str(runner.shouldExit()).lower(),
-                    lastsync = runner['lastSync'],
+                    connectionstatus = resource.getConnectionStatus(),
+                    version = cast(str, resource['runnerVersion']),
+                    exitonidle = str(resource.shouldExit()).lower(),
+                    lastsync = cast(Optional[int], resource['lastSync']),
                     )
             else:
                 # Include information on custom resource type.
                 yield xml.custom(
-                    description = resource['description']
+                    description = resource.description
                     )
 
         response.writeXML(xml.resources[(
             xml.resource(
                 # Resource type independent information
-                type = resource['type'],
+                type = resource.typeName,
                 name = resource.getId(),
                 suspended = str(resource.isSuspended()).lower(),
-                locator = resource['locator']
+                locator = resource.locator
                 )[iterResourceContent(resource)]
             for resource in proc.resources
             )])
