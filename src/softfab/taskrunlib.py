@@ -679,10 +679,9 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
             # TODO: When TRs are in the resource DB, they can be included
             #       as well.
             if spec.typeName != taskRunnerResourceTypeName:
-                yield xml.resource(
-                    ref=spec.reference,
-                    locator=resourceDB[self.__reserved[spec.reference]].locator
-                    )
+                resource = resourceDB[self.__reserved[spec.reference]]
+                locator = resource.getParameter('locator') or ''
+                yield xml.resource(ref=spec.reference, locator=locator)
 
 class TaskRunFactory:
     @staticmethod

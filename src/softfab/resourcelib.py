@@ -94,12 +94,6 @@ class ResourceBase(ParamMixin, XMLTag, DatabaseElem):
         raise NotImplementedError
 
     @property
-    def locator(self) -> str:
-        """String that can be used to access this resource.
-        """
-        raise NotImplementedError
-
-    @property
     def description(self) -> str:
         """String that describes this resource to the user.
         """
@@ -222,12 +216,6 @@ class Resource(ResourceBase):
     @property
     def typeName(self) -> str:
         return cast(str, self._properties['type'])
-
-    @property
-    def locator(self) -> str:
-        locator = self.getParameter('locator')
-        assert locator is not None
-        return locator
 
     def getConnectionStatus(self) -> ConnectionStatus:
         return ConnectionStatus.CONNECTED
@@ -562,14 +550,6 @@ class TaskRunner(ResourceBase):
     @property
     def typeName(self) -> str:
         return taskRunnerResourceTypeName
-
-    @property
-    def locator(self) -> str:
-        data = self.__data
-        if data is None:
-            return '?'
-        else:
-            return cast(str, data['host'])
 
     if not TYPE_CHECKING:
         # This construct isn't understood by mypy 0.701.

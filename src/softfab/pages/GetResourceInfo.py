@@ -142,7 +142,7 @@ class GetResourceInfo_GET(ControlPage['GetResourceInfo_GET.Arguments',
                 type = resource.typeName,
                 name = resource.getId(),
                 suspended = resource.isSuspended(),
-                locator = resource.locator
+                locator = resource.getParameter('locator')
                 )[iterResourceContent(resource)]
             for resource in proc.resources
             )])

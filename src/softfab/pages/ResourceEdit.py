@@ -68,11 +68,13 @@ class ResourceEdit_GET(ResourceEditBase):
             if element is None:
                 return {}
             elif isinstance(element, Resource):
+                locator = element.getParameter('locator')
+                assert locator is not None
                 return dict(
                     restype=element.typeName,
                     capabilities=' '.join(element.capabilities),
                     description=element.description,
-                    locator=element.locator
+                    locator=locator
                     )
             else:
                 raise InvalidRequest(

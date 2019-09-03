@@ -61,8 +61,10 @@ class RepoEdit_GET(RepoEditBase):
             if element is None:
                 return {}
             elif element.typeName == repoResourceTypeName:
+                locator = element.getParameter('locator')
+                assert locator is not None
                 return dict(
-                    locator = element.locator,
+                    locator = locator,
                     capabilities = ' '.join(element.capabilities),
                     description = element['description']
                     )
