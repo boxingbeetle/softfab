@@ -2,7 +2,7 @@
 
 from cgi import parse_header
 from inspect import signature
-from typing import IO, Generic, Mapping, Optional, Tuple, Type, cast
+from typing import IO, Generic, Mapping, Optional, Tuple, Type, Union, cast
 from urllib.parse import parse_qs, urlparse
 
 from twisted.web.http import Request as TwistedRequest
@@ -84,7 +84,8 @@ class RequestBase:
         return Query(parse_qs(query, keep_blank_values=True))
 
     @cachedProperty
-    def contentType(self) -> Tuple[Optional[str], Optional[Mapping[str, str]]]:
+    def contentType(self) -> Union[Tuple[str, Mapping[str, str]],
+                                   Tuple[None, None]]:
         '''A pair of the media type and a dictionary of parameters
         that describes the body of this request, or (None, None)
         if the request did not contain a Content-Type header.
