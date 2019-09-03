@@ -92,6 +92,12 @@ class RepoEdit_POST(RepoEditBase):
                 args.capabilities.split()
                 )
             resource.addParameter('locator', args.locator)
+            if oldElement is not None and oldElement.getId() == recordId:
+                # Preserve resource state.
+                # Do this only when a resource is overwritten by itself, not
+                # if one resource overwrites another or if a new resource is
+                # created using Save As.
+                resource.copyState(oldElement)
             return resource
 
 class LocatorPanel(Panel):
