@@ -127,7 +127,7 @@ class GetResourceInfo_GET(ControlPage['GetResourceInfo_GET.Arguments',
                 yield xml.taskrunner(
                     connectionstatus = resource.getConnectionStatus(),
                     version = cast(str, resource['runnerVersion']),
-                    exitonidle = str(resource.shouldExit()).lower(),
+                    exitonidle = resource.shouldExit(),
                     lastsync = cast(Optional[int], resource['lastSync']),
                     )
             else:
@@ -141,7 +141,7 @@ class GetResourceInfo_GET(ControlPage['GetResourceInfo_GET.Arguments',
                 # Resource type independent information
                 type = resource.typeName,
                 name = resource.getId(),
-                suspended = str(resource.isSuspended()).lower(),
+                suspended = resource.isSuspended(),
                 locator = resource.locator
                 )[iterResourceContent(resource)]
             for resource in proc.resources

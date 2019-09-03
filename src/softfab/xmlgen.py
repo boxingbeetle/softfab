@@ -115,6 +115,9 @@ def _escapeXMLAttributeValue(value: str) -> str:
     return value
 
 XMLAttributeValue = Union[str, int, Enum, None]
+"""Supported types for XML attribute values.
+Note that `bool` is a subclass of `int` and therefore also allowed.
+"""
 
 class _XMLSerializable:
     '''Base class for objects that can be serialized to XML.
@@ -375,6 +378,9 @@ class XMLNode(_XMLSerializable):
         '''
         if isinstance(value, str) or value is None:
             return value
+        elif isinstance(value, bool):
+            # Note: 'bool' is a subclass of 'int', so test it first.
+            return str(value).lower()
         elif isinstance(value, int):
             return str(value)
         elif isinstance(value, Enum):
