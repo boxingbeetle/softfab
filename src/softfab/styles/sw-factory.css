@@ -152,6 +152,13 @@ button {
 .rightalign {
 	text-align: right;
 }
+.obfuscate {
+	color: transparent;
+	text-shadow: 0 0 0.5em black;
+}
+.obfuscate::selection {
+	background: #98B4FF;
+}
 .overlay {
 	position: absolute;
 	z-index: 1;

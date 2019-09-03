@@ -9,7 +9,7 @@ from softfab.EditPage import (
 from softfab.Page import InvalidRequest
 from softfab.databaselib import Database
 from softfab.formlib import textInput
-from softfab.pageargs import StrArg
+from softfab.pageargs import PasswordArg, StrArg
 from softfab.resourcelib import Resource, resourceDB
 from softfab.resourceview import CommentPanel
 from softfab.restypelib import repoResourceTypeName
@@ -19,6 +19,7 @@ from softfab.xmlgen import XMLContent, xhtml
 
 class RepoEditArgs(EditArgs):
     locator = StrArg('')
+    secret = PasswordArg()
     capabilities = StrArg('')
     description = StrArg('')
 
@@ -43,6 +44,7 @@ class RepoEditBase(EditPage[RepoEditArgs, Resource]):
             yield xhtml.h3[ 'Repository: ', xhtml.b[ args.id ]]
         yield vgroup[
             LocatorPanel.instance,
+            SecretPanel.instance,
             CapabilitiesPanel.instance,
             CommentPanel.instance,
             ]
@@ -59,12 +61,11 @@ class RepoEdit_GET(RepoEditBase):
                       element: Optional[Resource]
                       ) -> Mapping[str, object]:
             if element is None:
-                return {}
+                return dict(secret='')
             elif element.typeName == repoResourceTypeName:
-                locator = element.getParameter('locator')
-                assert locator is not None
                 return dict(
-                    locator = locator,
+                    locator = element.getParameter('locator') or '',
+                    secret = element.getParameter('secret') or '',
                     capabilities = ' '.join(element.capabilities),
                     description = element['description']
                     )
@@ -92,6 +93,9 @@ class RepoEdit_POST(RepoEditBase):
                 args.capabilities.split()
                 )
             resource.addParameter('locator', args.locator)
+            secret = args.secret
+            if secret:
+                resource.addParameter('secret', secret)
             if oldElement is not None and oldElement.getId() == recordId:
                 # Preserve resource state.
                 # Do this only when a resource is overwritten by itself, not
@@ -106,6 +110,18 @@ class LocatorPanel(Panel):
         textInput(name='locator', size=80, style='width:100%'),
         'The locator, typically a URL, tells the version control system '
         'where it can find the repository.'
+        ))
+
+class SecretPanel(Panel):
+    label = 'Secret'
+    content = xhtml.br.join((
+        textInput(name='secret', size=80, style='width:100%',
+                  class_='obfuscate', autocomplete='off'),
+        'Webhooks can be used to report changes in this repository. '
+        'The same secret must be entered here and on the site hosting the '
+        'repository. '
+        'If no secret is entered here, webhooks will be inactive for this '
+        'repository.'
         ))
 
 class CapabilitiesPanel(Panel):
