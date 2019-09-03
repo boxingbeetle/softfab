@@ -661,25 +661,28 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
         self._notify()
 
     def externalize(self, resourceDB: ResourceDB) -> XML:
-        '''Returns an XMLNode which contains the information which
-        the Task Runner needs to perform this execution run.
-        '''
+        """Return the information which the Task Runner needs to perform
+        this execution run.
+        """
         return xml.start[
             self.createRunXML(),
             self.createTaskXML(),
             self.createInputXML(),
             self.createOutputXML(),
-            (
-                xml.resource(
+            self.createResourceXML(resourceDB),
+            ]
+
+    def createResourceXML(self, resourceDB: ResourceDB) -> Iterator[XML]:
+        """Return information about the resources used for executing this task.
+        """
+        for spec in self.getTask().resourceClaim:
+            # TODO: When TRs are in the resource DB, they can be included
+            #       as well.
+            if spec.typeName != taskRunnerResourceTypeName:
+                yield xml.resource(
                     ref=spec.reference,
                     locator=resourceDB[self.__reserved[spec.reference]].locator
                     )
-                for spec in self.getTask().resourceClaim
-                # TODO: When TRs are in the resource DB, they can be included
-                #       as well.
-                if spec.typeName != taskRunnerResourceTypeName
-            )
-            ]
 
 class TaskRunFactory:
     @staticmethod
