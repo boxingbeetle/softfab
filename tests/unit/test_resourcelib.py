@@ -33,10 +33,10 @@ class TestResources(unittest.TestCase):
     def test0100ResourcesOfType(self):
         """Test resourceDB.resourcesOfType() method."""
 
-        res1 = resourcelib.Resource.create('R1', 'TA', '', '', ())
-        res2 = resourcelib.Resource.create('R2', 'TA', '', '', ())
-        res3 = resourcelib.Resource.create('R3', 'TB', '', '', ())
-        res4 = resourcelib.Resource.create('R4', 'TB', '', '', ())
+        res1 = resourcelib.Resource.create('R1', 'TA', '', ())
+        res2 = resourcelib.Resource.create('R2', 'TA', '', ())
+        res3 = resourcelib.Resource.create('R3', 'TB', '', ())
+        res4 = resourcelib.Resource.create('R4', 'TB', '', ())
 
         # DB is empty.
         self.assertEqual(resourcesOfType('TA'), [])
@@ -62,7 +62,7 @@ class TestResources(unittest.TestCase):
         self.assertEqual(resourcesOfType('TB'), ['R3'])
 
         # Change type of record.
-        res1Bv2 = resourcelib.Resource.create('R2', 'TB', '', '', ())
+        res1Bv2 = resourcelib.Resource.create('R2', 'TB', '', ())
         resourcelib.resourceDB.update(res1Bv2)
         self.assertEqual(resourcesOfType('TA'), ['R1'])
         self.assertEqual(resourcesOfType('TB'), ['R2', 'R3'])

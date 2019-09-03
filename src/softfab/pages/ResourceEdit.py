@@ -96,10 +96,10 @@ class ResourceEdit_POST(ResourceEditBase):
             element = Resource.create(
                 recordId,
                 args.restype,
-                args.locator,
                 args.description,
                 args.capabilities.split()
                 )
+            element.addParameter('locator', args.locator)
             if isinstance(oldElement, Resource) \
                     and oldElement.getId() == recordId:
                 # Preserve resource state.

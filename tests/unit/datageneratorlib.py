@@ -91,8 +91,7 @@ class DataGenerator:
         if name is None:
             name = 'resource%d' % len(resourcelib.resourceDB)
         resource = resourcelib.Resource.create(
-            name, resType, 'location:%s/%s' % (resType, name),
-            'created by datageneratorlib', capabilities
+            name, resType, 'created by datageneratorlib', capabilities
             )
         resourcelib.resourceDB.add(resource)
         return name

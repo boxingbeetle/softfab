@@ -85,13 +85,14 @@ class RepoEdit_POST(RepoEditBase):
                           args: RepoEditArgs,
                           oldElement: Optional[Resource]
                           ) -> Resource:
-            return Resource.create(
+            resource = Resource.create(
                 recordId,
                 repoResourceTypeName,
-                args.locator,
                 args.description,
                 args.capabilities.split()
                 )
+            resource.addParameter('locator', args.locator)
+            return resource
 
 class LocatorPanel(Panel):
     label = 'Locator'

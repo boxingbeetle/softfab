@@ -200,7 +200,7 @@ class Resource(ResourceBase):
 
     @classmethod
     def create(
-            cls, resourceId: str, resType: str, locator: str, description: str,
+            cls, resourceId: str, resType: str, description: str,
             capabilities: Iterable[str]
             ) -> 'Resource':
         # pylint: disable=protected-access
@@ -209,7 +209,6 @@ class Resource(ResourceBase):
             'type': resType,
             'description': description,
             })
-        resource.addParameter('locator', locator)
         resource._capabilities = frozenset(capabilities)
         return resource
 
