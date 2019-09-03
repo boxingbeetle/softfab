@@ -36,6 +36,10 @@ class ResourceBase(ParamMixin, XMLTag, DatabaseElem):
 
     def __init__(self, properties: Mapping[str, str]):
         ParamMixin.__init__(self)
+        if 'locator' in properties:
+            # COMPAT 2.x.x: Make locator into a parameter.
+            properties = dict(properties)
+            self.addParameter('locator', properties.pop('locator'))
         XMLTag.__init__(self, properties)
         DatabaseElem.__init__(self)
         self._capabilities = set() # type: AbstractSet[str]
@@ -212,8 +216,8 @@ class Resource(ResourceBase):
             'id': resourceId,
             'type': resType,
             'description': description,
-            'locator': locator,
             })
+        resource.addParameter('locator', locator)
         resource._capabilities = frozenset(capabilities)
         return resource
 
@@ -223,7 +227,9 @@ class Resource(ResourceBase):
 
     @property
     def locator(self) -> str:
-        return cast(str, self._properties['locator'])
+        locator = self.getParameter('locator')
+        assert locator is not None
+        return locator
 
     def getConnectionStatus(self) -> ConnectionStatus:
         return ConnectionStatus.CONNECTED
