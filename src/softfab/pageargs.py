@@ -376,6 +376,42 @@ class PageArgs:
         for name, member_ in self._iterArguments():
             yield name, self.__dict__[name]
 
+    def valueForWidget(self, name: str) -> object:
+        """Return the argument value for widget `name`.
+        Raises KeyError if there is no argument that matches `name`
+        or it is a non-existing path in a dictionary argument.
+        """
+        argDecl = getattr(self.__class__, name, None)
+        if isinstance(argDecl, Argument):
+            return self.__dict__[name]
+        for argName, member in self._iterArguments():
+            if isinstance(member, DictArg):
+                match = member.match(name)
+                if match:
+                    groups = match.groups()
+                    if groups[0] == argName:
+                        value = self.__dict__[argName]
+                        for group in groups[1:]:
+                            if not isinstance(value, DictArgInstance):
+                                raise KeyError(name)
+                            value = value[group]
+                        if isinstance(value, DictArgInstance):
+                            raise KeyError(name)
+                        return value
+        raise KeyError(name)
+
+    def defaultForWidget(self, name: str) -> object:
+        """Return the default value for widget `name`.
+        Raises KeyError if there is no argument that matches `name`.
+        """
+        argDecl = getattr(self.__class__, name, None)
+        if isinstance(argDecl, Argument):
+            return argDecl.default
+        for argName_, member in self._iterArguments():
+            if isinstance(member, DictArg) and member.match(name):
+                return member.default
+        raise KeyError(name)
+
     def externalize(self) -> Iterator[Tuple[str, Sequence[str]]]:
         """Iterates through string representations of the non-default
         values of the arguments.

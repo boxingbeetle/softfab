@@ -149,11 +149,10 @@ def _argValue(args: Optional[PageArgs], name: str) -> object:
     """
     if args is None:
         return None
-    value = getattr(args, name, None)
-    if value is None or not args.isArgument(name):
+    try:
+        return args.valueForWidget(name)
+    except KeyError:
         return None
-    else:
-        return value
 
 def _argDefault(args: Optional[PageArgs], name: str) -> object:
     """Return the default value for the page argument `name`,
@@ -161,11 +160,10 @@ def _argDefault(args: Optional[PageArgs], name: str) -> object:
     """
     if args is None:
         return None
-    argDecl = getattr(args.__class__, name, None)
-    if argDecl is None or not args.isArgument(name):
+    try:
+        return args.defaultForWidget(name)
+    except KeyError:
         return None
-    else:
-        return argDecl.default
 
 class _SubmitButton(AttrContainer, XMLPresentable):
 
