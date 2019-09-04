@@ -82,8 +82,8 @@ class DetailsTable(PropertiesTable):
                 f"{minDelay:d} {pluralize('minute', minDelay)}"
         elif scheduled['sequence'] is ScheduleRepeat.TRIGGERED:
             yield 'Triggered', 'yes' if scheduled['trigger'] else 'no'
-            yield 'CM triggers', xhtml.br.join(
-                sorted(scheduled.getTagValues('sf.cmtrigger'))
+            yield 'Triggers', xhtml.br.join(
+                sorted(scheduled.getTagValues('sf.trigger'))
                 )
         if project.showOwners:
             yield 'Owner', scheduled.getOwner() or '-'

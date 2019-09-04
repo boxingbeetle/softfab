@@ -169,8 +169,8 @@ Examples:
 `http://factory.company.com/GetTagged?subject=config`
 :   List all tagged configurations and their keys and values. Configurations without any tags are omitted.
 
-`http://factory.company.com/GetTagged?subject=schedule&key=sf.cmtrigger`
-:   List all triggered schedules that have a CM trigger filter.
+`http://factory.company.com/GetTagged?subject=schedule&key=sf.trigger`
+:   List all triggered schedules that have a trigger filter.
 
 `http://factory.company.com/GetTagged?subject=taskdef&key=sf.req&value=R1&value=R2`
 :   List all task definitions that apply to requirement "R1" or requirement "R2".

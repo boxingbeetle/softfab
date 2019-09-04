@@ -41,7 +41,7 @@ class ScheduleEditArgs(EditArgs):
     sequence = EnumArg(ScheduleRepeat, ScheduleRepeat.ONCE)
     days = SetArg()
     minDelay = IntArg(10)
-    cmtrigger = StrArg('')
+    trigger = StrArg('')
     comment = StrArg('')
 
 class ScheduleEditBase(EditPage[ScheduleEditArgs, Scheduled]):
@@ -77,7 +77,7 @@ class ScheduleEditBase(EditPage[ScheduleEditArgs, Scheduled]):
                 DelayPanel.instance
                 ],
             _createGroupItem(args.sequence is ScheduleRepeat.TRIGGERED)[
-                CMTriggerPanel.instance
+                TriggerPanel.instance
                 ],
             CommentPanel.instance,
             ]
@@ -125,8 +125,8 @@ class ScheduleEdit_GET(ScheduleEditBase):
                 elif sequence is ScheduleRepeat.CONTINUOUSLY:
                     overrides['minDelay'] = element.minDelay
                 elif sequence is ScheduleRepeat.TRIGGERED:
-                    overrides['cmtrigger'] = '\n'.join(
-                        sorted(element.getTagValues('sf.cmtrigger'))
+                    overrides['trigger'] = '\n'.join(
+                        sorted(element.getTagValues('sf.trigger'))
                         )
                 overrides['comment'] = element.comment
                 return overrides
@@ -190,9 +190,9 @@ class ScheduleEdit_POST(ScheduleEditBase):
             element = Scheduled(parameters, args.comment, True)
             if sequence is ScheduleRepeat.TRIGGERED:
                 element.setTag(
-                    'sf.cmtrigger',
+                    'sf.trigger',
                     ( value.strip()
-                        for value in args.cmtrigger.split('\n')
+                        for value in args.trigger.split('\n')
                         if value.strip() )
                     )
             if oldElement is not None \
@@ -295,21 +295,21 @@ class DelayPanel(Panel):
         textInput(name='minDelay', size='4'), 'minutes'
         ))
 
-class CMTriggerPanel(Panel):
-    widgetId = 'cmTriggerPanel'
-    label = 'CM Trigger Filters'
+class TriggerPanel(Panel):
+    widgetId = 'triggerPanel'
+    label = 'Trigger Filters'
 
     def presentContent(self, **kwargs: object) -> XMLContent:
         yield textArea(
-            name = 'cmtrigger', cols = 40, rows = 3,
+            name = 'trigger', cols = 40, rows = 3,
             style = 'width:100%', spellcheck = 'false'
             ).present(**kwargs)
         yield xhtml.br
         yield (
-            'This sets the "', xhtml.code[ 'sf.cmtrigger' ], '" tag '
+            'This sets the "', xhtml.code[ 'sf.trigger' ], '" tag '
             'on this schedule, for use by a ',
             docLink('/howto/ci/')[
-                'CM trigger script'
+                'trigger script'
                 ], '.'
             )
 
@@ -413,7 +413,7 @@ function adjustControls() {
         document.forms.schedule.sequence[3].checked
         );
     setVisibility(
-        document.getElementById('cmTriggerPanel'),
+        document.getElementById('triggerPanel'),
         document.forms.schedule.sequence[4].checked
         );
 }

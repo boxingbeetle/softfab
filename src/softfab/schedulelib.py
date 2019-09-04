@@ -211,7 +211,7 @@ class Scheduled(XMLTag, SelectableRecordABC):
     tagName = 'scheduled'
     intProperties = ('startTime', 'minDelay')
     enumProperties = {'sequence': ScheduleRepeat}
-    cache = ObservingTagCache(scheduleDB, lambda: ('sf.cmtrigger',) )
+    cache = ObservingTagCache(scheduleDB, lambda: ('sf.trigger',) )
 
     def __init__(self,
                  properties: Mapping[str, XMLAttributeValue],
