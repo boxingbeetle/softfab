@@ -2,8 +2,8 @@
 
 from enum import Enum
 from typing import (
-    TYPE_CHECKING, ClassVar, Collection, Iterable, Iterator, List, Mapping,
-    Optional, Sequence, Set, Tuple, Type, Union, cast
+    TYPE_CHECKING, Any, ClassVar, Collection, Iterable, Iterator, List,
+    Mapping, Optional, Sequence, Set, Tuple, Type, Union, cast
 )
 
 from softfab.compat import NoReturn
@@ -142,6 +142,18 @@ def makeForm(formId: Optional[str] = None,
     '''
     attributes.setdefault('method', 'post')
     return _FormBuilder((formId, args, setFocus), (), attributes)
+
+def _argValue(args: Optional[PageArgs], name: str) -> object:
+    """Return the value for the page argument `name`,
+    or None if no match could be found in `args`.
+    """
+    if args is None:
+        return None
+    value = getattr(args, name, None)
+    if value is None or not args.isArgument(name):
+        return None
+    else:
+        return value
 
 def _getDefault(args: Optional[PageArgs], name: str) -> object:
     '''Returns the default value for the argument with the given `name`,
@@ -305,8 +317,8 @@ class _TextInput(AttrContainer, XMLPresentable):
             'use the "value" attribute instead'
             )
 
-    def present(self, **kwargs: object) -> XMLContent:
-        form = cast(_FormPresenter, kwargs['form'])
+    def present(self, **kwargs: Any) -> XMLContent:
+        form: _FormPresenter = kwargs['form']
         attributes = self._attributes
 
         name = cast(Optional[str], attributes.get('name'))
@@ -316,13 +328,11 @@ class _TextInput(AttrContainer, XMLPresentable):
             form.addClearCode(f'inputs.{name}.value = "";')
 
             if 'value' not in attributes:
-                formArgs = kwargs['formArgs']
-                if formArgs is not None:
-                    value = getattr(formArgs, name, None)
-                    if isinstance(value, (Enum, str, int)):
-                        attributes = dict(attributes, value = value)
-                    elif value is not None:
-                        raise TypeError(type(value))
+                value = _argValue(kwargs['formArgs'], name)
+                if isinstance(value, (Enum, str, int)):
+                    attributes = dict(attributes, value = value)
+                elif value is not None:
+                    raise TypeError(type(value))
 
         return xhtml.input(autofocus=focus, **attributes)
 
@@ -331,8 +341,8 @@ passwordInput = _TextInput((), dict(type = 'password', tabindex = 1))
 
 class _TextArea(AttrContainer, XMLPresentable):
 
-    def present(self, **kwargs: object) -> XMLContent:
-        form = cast(_FormPresenter, kwargs['form'])
+    def present(self, **kwargs: Any) -> XMLContent:
+        form: _FormPresenter = kwargs['form']
         attributes = self._attributes
 
         name = cast(Optional[str], attributes.get('name'))
@@ -340,13 +350,11 @@ class _TextArea(AttrContainer, XMLPresentable):
 
         contents = tuple(self._presentContents(**kwargs)) # type: XMLContent
         if not contents and name is not None:
-            formArgs = kwargs['formArgs']
-            if formArgs is not None:
-                value = getattr(formArgs, name, None)
-                if isinstance(value, str):
-                    contents = txt(value)
-                elif value is not None:
-                    raise TypeError(type(value))
+            value = _argValue(kwargs['formArgs'], name)
+            if isinstance(value, str):
+                contents = txt(value)
+            elif value is not None:
+                raise TypeError(type(value))
 
         return xhtml.textarea(autofocus=focus, **attributes)[contents]
 
@@ -376,9 +384,9 @@ class _Select(AttrContainer, XMLPresentable):
                 f'Cannot adapt "{type(element).__name__}" to selection option'
                 )
 
-    def present(self, **kwargs: object) -> XMLContent:
-        form = cast(_FormPresenter, kwargs['form'])
-        formArgs = cast(Optional[PageArgs], kwargs['formArgs'])
+    def present(self, **kwargs: Any) -> XMLContent:
+        form: _FormPresenter = kwargs['form']
+        formArgs: Optional[PageArgs] = kwargs['formArgs']
         attributes = self._attributes
 
         multiple = attributes.get('multiple', False)
@@ -413,7 +421,7 @@ class _Select(AttrContainer, XMLPresentable):
         elif name is None:
             selected = None
         else:
-            selected = getattr(formArgs, name, None)
+            selected = _argValue(formArgs, name)
 
         selectedSet = set()
         if selected is not None:
@@ -503,15 +511,14 @@ class DropDownList(Widget):
         '''
         raise NotImplementedError
 
-    def getDefault(self, **kwargs: object) -> object:
+    def getDefault(self, **kwargs: Any) -> object:
         '''Returns the default option, or None so skip the generation of
         the form clear code.
         The default implementation returns the default value of the form
         argument with the same name as this widget, or None if no default
         could be determined.
         '''
-        formArgs = cast(Optional[PageArgs], kwargs['formArgs'])
-        return _getDefault(formArgs, self.name)
+        return _getDefault(kwargs['formArgs'], self.name)
 
     def iterOptions(self, **kwargs: object) -> Options:
         '''Iterates through the multiple choice options.
@@ -562,25 +569,23 @@ def _presentOptions(options: Options,
 
 class _CheckBox(AttrContainer, XMLPresentable):
 
-    def present(self, **kwargs: object) -> XMLContent:
-        form = cast(_FormPresenter, kwargs['form'])
+    def present(self, **kwargs: Any) -> XMLContent:
+        form: _FormPresenter = kwargs['form']
         attributes = self._attributes
 
         name = cast(Optional[str], attributes.get('name'))
         focus = form.addControl(name, True)
 
         if 'checked' not in attributes and name is not None:
-            formArgs = kwargs['formArgs']
-            if formArgs is not None:
-                value = getattr(formArgs, name, False)
-                if isinstance(value, bool):
-                    checked = value
-                elif isinstance(value, frozenset):
-                    checked = attributes['value'] in value
-                else:
-                    raise TypeError(type(value))
-                if checked:
-                    attributes = dict(attributes, checked=True)
+            value = _argValue(kwargs['formArgs'], name)
+            if isinstance(value, bool):
+                checked = value
+            elif isinstance(value, frozenset):
+                checked = attributes['value'] in value
+            else:
+                raise TypeError(type(value))
+            if checked:
+                attributes = dict(attributes, checked=True)
 
         box = xhtml.input(type='checkbox', autofocus=focus, **attributes)
         label = tuple(self._presentContents(**kwargs))
@@ -618,12 +623,16 @@ class CheckBoxesTable(Table):
                 ] # type: XMLContent
             yield (boxCell,) + tuple(cells[1 : ])
 
-    def getActive(self, **kwargs: object) -> Collection[object]:
+    def getActive(self, **kwargs: Any) -> Collection[object]:
         '''Returns the active options.
         The default implementation returns the value of the argument that
         matches the submission name of this check boxes table.
         '''
-        return getattr(kwargs['formArgs'], self.name)
+        active = _argValue(kwargs['formArgs'], self.name)
+        if isinstance(active, Collection):
+            return active
+        else:
+            raise TypeError(type(active))
 
     def iterOptions(self, **kwargs: object
                     ) -> Iterator[Tuple[str, Sequence[XMLContent]]]:
@@ -646,12 +655,12 @@ class SingleCheckBoxTable(CheckBoxesTable):
                     ) -> Iterator[Tuple[str, Sequence[XMLContent]]]:
         yield 'true', ( self.label, )
 
-    def isActive(self, **kwargs: object) -> bool:
+    def isActive(self, **kwargs: Any) -> bool:
         '''Returns True iff the single check box is active.
         The default implementation returns the value of the argument that
         matches the submission name of this check boxes table.
         '''
-        active = getattr(kwargs['formArgs'], self.name)
+        active = _argValue(kwargs['formArgs'], self.name)
         if not isinstance(active, bool):
             raise TypeError(
                 f'Invalid page argument value type: expected "bool", '
@@ -705,12 +714,16 @@ class RadioTable(Table):
                 class_='clickable'
                 )[ self.formatOption(box, item[1:]) ]
 
-    def getActive(self, **kwargs: object) -> Union[None, str, Enum]:
+    def getActive(self, **kwargs: Any) -> Union[None, str, Enum]:
         '''Returns the active option, or None if no option is active.
         The default implementation returns the value of the page argument
         with the same name as this control.
         '''
-        return getattr(kwargs['formArgs'], self.name)
+        active = _argValue(kwargs['formArgs'], self.name)
+        if active is None or isinstance(active, (str, Enum)):
+            return active
+        else:
+            raise TypeError(type(active))
 
     def iterOptions(self, **kwargs: object) -> Iterator[Sequence[XMLContent]]:
         '''Iterates through the multiple choice options.
