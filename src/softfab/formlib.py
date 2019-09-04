@@ -155,10 +155,10 @@ def _argValue(args: Optional[PageArgs], name: str) -> object:
     else:
         return value
 
-def _getDefault(args: Optional[PageArgs], name: str) -> object:
-    '''Returns the default value for the argument with the given `name`,
+def _argDefault(args: Optional[PageArgs], name: str) -> object:
+    """Return the default value for the page argument `name`,
     or None if no default could be determined.
-    '''
+    """
     if args is None:
         return None
     argDecl = getattr(args.__class__, name, None)
@@ -403,7 +403,7 @@ class _Select(AttrContainer, XMLPresentable):
                     '}'
                     )
             else:
-                default = _getDefault(formArgs, name)
+                default = _argDefault(formArgs, name)
                 if default not in (None, dynamic, mandatory):
                     if iterable(default):
                         # Multiple drop-down lists are combined to populate
@@ -518,7 +518,7 @@ class DropDownList(Widget):
         argument with the same name as this widget, or None if no default
         could be determined.
         '''
-        return _getDefault(kwargs['formArgs'], self.name)
+        return _argDefault(kwargs['formArgs'], self.name)
 
     def iterOptions(self, **kwargs: object) -> Options:
         '''Iterates through the multiple choice options.
