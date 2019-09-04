@@ -13,10 +13,17 @@ def verifySignature(request: TwistedRequest,
                     payload: bytes,
                     secret: bytes
                     ) -> bool:
-    remoteSig = request.getHeader('X-Hub-Signature')
-    if not remoteSig:
+    sigHeader = request.getHeader('X-Hub-Signature')
+    if not sigHeader:
         return False
-    localSig = hmac.new(secret, payload, 'sha1').hexdigest()
+    try:
+        hashName, remoteSig = sigHeader.split('=', 1)
+    except ValueError:
+        return False
+    if hashName != 'sha1':
+        # Only accept the SHA1 hash function that GitHub currently uses.
+        return False
+    localSig = hmac.new(secret, payload, hashName).hexdigest()
     return hmac.compare_digest(localSig.casefold(), remoteSig.casefold())
 
 def findRepositoryURLs(json: Any) -> Iterator[str]:
