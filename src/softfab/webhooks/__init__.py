@@ -130,8 +130,8 @@ class WebhookResource(Resource):
                 schedule.setTrigger()
                 scheduleIds.append(scheduleId)
 
-        logging.info('Got update on "%s" webhook for branches: %s; '
-                     'triggered schedules: %s',
+        logging.info('Got update on "%s" webhook for branch: %s; '
+                     'triggered schedule: %s',
                      self.name, ', '.join(branches), ', '.join(scheduleIds))
         return b'Received\n'
 
