@@ -12,6 +12,7 @@ from twisted.web.resource import Resource
 from softfab.request import RequestBase
 from softfab.resourcelib import resourceDB
 from softfab.restypelib import repoResourceTypeName
+from softfab.schedulelib import scheduleDB
 from softfab.utils import iterModules
 
 
@@ -107,6 +108,7 @@ class WebhookResource(Resource):
             request.setResponseCode(403)
             return b'Could not authenticate this callback.\n' \
                    b'See Control Center log for details.\n'
+        assert repoMatch is not None
 
         # Find branches.
         try:
@@ -115,8 +117,22 @@ class WebhookResource(Resource):
             request.setResponseCode(400)
             return b'Missing key in JSON: %s\n' % str(ex).encode()
 
-        logging.info('Got update on "%s" webhook for branches: %s',
-                     self.name, ', '.join(branches))
+        # Trigger schedules.
+        # TODO: Our tags are case-insensitive while Git branches are
+        #       case-sensitive. We work around this by comparing the
+        #       display values, but it does mean that a user cannot
+        #       filters on two branches that only differ in case.
+        repoId = repoMatch.getId()
+        tagValues = {f'{repoId}/{branch}' for branch in branches}
+        scheduleIds = []
+        for scheduleId, schedule in scheduleDB.items():
+            if tagValues & schedule.getTagValues('sf.trigger'):
+                schedule.setTrigger()
+                scheduleIds.append(scheduleId)
+
+        logging.info('Got update on "%s" webhook for branches: %s; '
+                     'triggered schedules: %s',
+                     self.name, ', '.join(branches), ', '.join(scheduleIds))
         return b'Received\n'
 
 class WebhookIndexResource(Resource):
