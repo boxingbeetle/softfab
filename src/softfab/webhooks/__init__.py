@@ -101,6 +101,7 @@ class WebhookResource(Resource):
         if not self.verifySignature(request, contentBytes, secret.encode()):
             if errorMessage is None:
                 errorMessage = 'signature mismatch'
+        if errorMessage is not None:
             logging.warning('Ignoring callback on "%s" webhook: %s',
                             self.name, errorMessage)
             request.setResponseCode(403)
