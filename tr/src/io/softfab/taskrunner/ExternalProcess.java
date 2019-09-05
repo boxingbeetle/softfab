@@ -17,7 +17,7 @@ and logs the lines that are read.
 For every external process execution a new ExternalProcess object
 should be created.
 The life cycle is: construction ; ( start ; ( waitFor | abort ) )*,
-a state transition occurs if the associated method returns succesfully.
+a state transition occurs if the associated method returns successfully.
 This class was not designed for concurrent use by multiple threads.
 */
 public class ExternalProcess {
@@ -112,6 +112,9 @@ public class ExternalProcess {
         logger.info(
             "Starting wrapper with command line: [" + commandLineToLog + "]"
             );
+        logger.info(
+            "Hans was here 1"
+            );
         try {
             process = Runtime.getRuntime().exec(arguments);
         } catch (IOException e) {
@@ -134,6 +137,7 @@ public class ExternalProcess {
     public void abort() {
         checkRunning(true);
         logger.info("Aborting wrapper");
+        logger.info("Hans was here 7");
         process.destroy();
         // TODO: On POSIX-like systems abort is asynchronous, so when we
         //       immediately check it is very unlikely the process is already
@@ -164,12 +168,18 @@ public class ExternalProcess {
     throws InterruptedException {
         checkRunning(true);
         try {
+            logger.info(
+                "Hans was here 2a"
+                );
             final int exitValue = process.waitFor();
             errForwarder.waitFor();
             outForwarder.waitFor();
             running = false;
             logger.info(
                 "Finished wrapper, exit value: " + exitValue
+                );
+            logger.info(
+                "Hans was here 2b"
                 );
             return exitValue;
         } catch (InterruptedException e) {

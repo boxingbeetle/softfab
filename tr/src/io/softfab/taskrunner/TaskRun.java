@@ -281,6 +281,7 @@ public abstract class TaskRun {
      * Abort task execution in progress.
      */
     public final void abort() {
+        runLogger.log(Level.WARNING, "Hans was here 4a");
         synchronized (this) {
             if (aborted) {
                 // Abort already in progress.
@@ -295,7 +296,12 @@ public abstract class TaskRun {
             final Thread thread = new Thread(new Runnable() {
                 public void run() {
                     try {
-                        abortRun.execute();
+						runLogger.log(Level.WARNING, "Hans was here 4b");
+                        final Result result = abortRun.execute();
+						// TODO: Don't create a new one.
+						final AbortRunFactory abortRunFactory = new AbortRunFactory(factory);
+						abortRunFactory.reportResult(result);
+						runLogger.log(Level.WARNING, "Hans was here 4c");
                     } catch (TaskRunException e) {
                         runLogger.log(Level.WARNING,
                             "Exception during running abort wrapper", e
@@ -319,6 +325,7 @@ public abstract class TaskRun {
         }
         if (thread != null) {
             runLogger.info("Waiting for abort to complete");
+            runLogger.info("Hans was here 5");
             try {
                 thread.join();
             } catch (InterruptedException ex) {
@@ -337,6 +344,7 @@ public abstract class TaskRun {
         synchronized (this) {
             if (processes != null) {
                 runLogger.info("Aborting external processes");
+                runLogger.info("Hans was here 6");
                 for (final Iterator<ExternalProcess> iter = processes.keySet().iterator();
                     iter.hasNext();
                     ) {

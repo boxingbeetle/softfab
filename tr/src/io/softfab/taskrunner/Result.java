@@ -4,6 +4,7 @@ package io.softfab.taskrunner;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -21,12 +22,13 @@ public class Result {
     public final static int WARNING = 2;
     public final static int ERROR = 3;
     public final static int INSPECT = 4;
+    public final static int IGNORE = 5;
 
     /**
     Index i in this array contains the string representation of result code i.
     */
     private final static String[] CODE_STRINGS =
-        { "unknown", "ok", "warning", "error", "inspect" };
+        { "unknown", "ok", "warning", "error", "inspect", "ignore" };
 
     private static final Pattern PROPERTY_PATTERN = Pattern.compile(
         "\\s*([\\w.]+)\\s*=\\s*((?:.*\\S)?)\\s*"
@@ -247,7 +249,7 @@ public class Result {
     @return A (possibly empty) sequence of report file paths.
     */
     public Iterable<String> getReports() {
-        return reports.values();
+        return code == IGNORE ? Collections.EMPTY_LIST : reports.values();
     }
 
     /**

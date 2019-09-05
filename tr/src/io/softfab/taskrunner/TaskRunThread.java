@@ -174,7 +174,10 @@ final class TaskRunThread implements Runnable {
                 );
         } catch (AbortedException e) {
             runLogger.info("Task run aborted");
-            result = e.toResult();
+            runLogger.info("Hans was here 3");
+			// TODO: Set this only if abort wrapper was started.
+			boolean ignoreResult = true;
+            result = e.toResult(ignoreResult);
         } catch (TaskRunException e) {
             runLogger.log(Level.WARNING, "Task run terminated", e);
             result = e.toResult();

@@ -21,7 +21,15 @@ public class TaskRunException extends Exception {
     description (and cause, if any) of this TaskRunException.
     */
     public Result toResult() {
-        return new Result(Result.ERROR, toString());
+        return toResult(false);
+    }
+
+    /**
+    Create a Result object, with result code ERROR or IGNORE and a summary
+	based on the description (and cause, if any) of this TaskRunException.
+    */
+	public Result toResult(boolean ignore) {
+        return new Result(ignore ? Result.IGNORE : Result.ERROR, toString());
     }
 
     public String toString() {

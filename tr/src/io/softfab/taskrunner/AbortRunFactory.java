@@ -3,6 +3,8 @@
 package io.softfab.taskrunner;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 class AbortRunFactory extends RunFactory {
 
@@ -18,12 +20,33 @@ class AbortRunFactory extends RunFactory {
     }
 
     protected String getLogFileName() {
-        // The log file of the run to be abotrted is used
-        return factory.getLogFileName();
+        return "abort_log.txt";
     }
 
     protected void reportResult(Result result) {
-        // Nothing to report
+        // Create request and send it to Control Center.
+        final ServerFormRequest request = new ServerFormRequest("TaskDone");
+        request.addQueryParam("id", runInfo.run.jobId);
+        request.addQueryParam("name", runInfo.run.taskId);
+        if (result.getCode() != Result.UNKNOWN) {
+            request.addBodyParam("result", result.getCodeString());
+        }
+        final String summary = result.getSummary();
+        if (summary != null) {
+            request.addBodyParam("summary", summary);
+        }
+        final List<String> reports = new ArrayList();
+        for (final String report : result.getReports()) {
+            reports.add(new File(report).getName());
+        }
+        reports.add(getLogFileName());
+        request.addBodyParam("report", reports);
+        request.addBodyParams(result.getOutputLocators());
+        request.addBodyParams(result.getExtractedData());
+        ControlCenter.INSTANCE.submitRequest(
+            request,
+            new APIReplyListener(logger, "submit task done notice")
+            );
     }
 
     protected String getStartupFileBaseName() {
@@ -31,8 +54,7 @@ class AbortRunFactory extends RunFactory {
     }
 
     protected String getResultFileName() {
-        // No result file used
-        return null;
+        return "results_abort.properties";
     }
 
     protected String getWrapperFileNameBase() {
