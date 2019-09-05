@@ -1,8 +1,9 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from collections import defaultdict
 from enum import Enum
 from time import localtime
-from typing import Dict, Iterator, Mapping, Optional, cast
+from typing import DefaultDict, Dict, Iterator, List, Mapping, Optional, cast
 
 from softfab.EditPage import (
     EditArgs, EditPage, EditProcessor, InitialEditArgs, InitialEditProcessor
@@ -13,8 +14,10 @@ from softfab.formlib import (
     CheckBoxesTable, DropDownList, RadioTable, checkBox, dropDownList,
     textArea, textInput
 )
-from softfab.pageargs import BoolArg, EnumArg, IntArg, SetArg, StrArg
+from softfab.pageargs import BoolArg, DictArg, EnumArg, IntArg, SetArg, StrArg
 from softfab.projectlib import project
+from softfab.resourcelib import resourceDB
+from softfab.restypelib import repoResourceTypeName
 from softfab.schedulelib import (
     ScheduleRepeat, Scheduled, asap, endOfTime, scheduleDB
 )
@@ -23,7 +26,7 @@ from softfab.timelib import getTime, stringToTime
 from softfab.timeview import formatTime
 from softfab.webgui import (
     Column, Panel, Script, Table, addRemoveStyleScript, docLink, groupItem,
-    vgroup
+    pageLink, vgroup
 )
 from softfab.xmlgen import XMLAttributeValue, XMLContent, txt, xhtml
 
@@ -41,7 +44,7 @@ class ScheduleEditArgs(EditArgs):
     sequence = EnumArg(ScheduleRepeat, ScheduleRepeat.ONCE)
     days = SetArg()
     minDelay = IntArg(10)
-    trigger = StrArg('')
+    trigger = DictArg(StrArg(), separators = '/')
     comment = StrArg('')
 
 class ScheduleEditBase(EditPage[ScheduleEditArgs, Scheduled]):
@@ -125,9 +128,15 @@ class ScheduleEdit_GET(ScheduleEditBase):
                 elif sequence is ScheduleRepeat.CONTINUOUSLY:
                     overrides['minDelay'] = element.minDelay
                 elif sequence is ScheduleRepeat.TRIGGERED:
-                    overrides['trigger'] = '\n'.join(
-                        sorted(element.getTagValues('sf.trigger'))
-                        )
+                    branchesByRepo: DefaultDict[str, List[str]] = \
+                                    defaultdict(list)
+                    for trigger in element.getTagValues('sf.trigger'):
+                        repoId, branch = trigger.split('/', 1)
+                        branchesByRepo[repoId].append(branch)
+                    overrides['trigger'] = {
+                        repoId: '\n'.join(sorted(branches))
+                        for repoId, branches in branchesByRepo.items()
+                        }
                 overrides['comment'] = element.comment
                 return overrides
 
@@ -189,12 +198,12 @@ class ScheduleEdit_POST(ScheduleEditBase):
                 parameters['minDelay'] = args.minDelay
             element = Scheduled(parameters, args.comment, True)
             if sequence is ScheduleRepeat.TRIGGERED:
-                element.setTag(
-                    'sf.trigger',
-                    ( value.strip()
-                        for value in args.trigger.split('\n')
-                        if value.strip() )
-                    )
+                triggers = cast(Mapping[str, str], args.trigger)
+                tags = []
+                for repoId, branchesText in triggers.items():
+                    for branch in branchesText.split('\n'):
+                        tags.append(f'{repoId}/{branch.strip()}')
+                element.setTag('sf.trigger', tags)
             if oldElement is not None \
             and element.getId() == oldElement.getId():
                 # Remember last started jobs.
@@ -300,17 +309,30 @@ class TriggerPanel(Panel):
     label = 'Trigger Filters'
 
     def presentContent(self, **kwargs: object) -> XMLContent:
-        yield textArea(
-            name = 'trigger', cols = 40, rows = 3,
-            style = 'width:100%', spellcheck = 'false'
-            ).present(**kwargs)
-        yield xhtml.br
+        anyRepo = False
+        for repoId in sorted(resourceDB.resourcesOfType(repoResourceTypeName)):
+            anyRepo = True
+            yield 'Branches for repository ', xhtml.b[repoId], ':', xhtml.br
+            yield textArea(
+                name = f'trigger/{repoId}', cols = 40, rows = 3,
+                style = 'width:100%', spellcheck = 'false'
+                ).present(**kwargs)
+        if anyRepo:
+            yield (
+                'Enter the names of branches on which commits should trigger '
+                'this schedule, for example ', xhtml.code['master'], '. '
+                )
+        else:
+            yield (
+                'Please tell SoftFab about your repository by ',
+                pageLink('RepoEdit')['creating a repository resource'], ', '
+                'then come back here to select branches.'
+                )
         yield (
-            'This sets the "', xhtml.code[ 'sf.trigger' ], '" tag '
-            'on this schedule, for use by a ',
-            docLink('/howto/ci/')[
-                'trigger script'
-                ], '.'
+            xhtml.br,
+            'Read the documentation for a step-by-step description of ',
+            docLink('/howto/ci/')['setting up continuous integration'],
+            ' in SoftFab.'
             )
 
 class CommentPanel(Panel):
