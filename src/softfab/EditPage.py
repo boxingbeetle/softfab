@@ -73,7 +73,7 @@ class EditPhase(AbstractPhase['EditProcessorBase[EditArgsT, DBRecord]',
         page = self.page
 
         buttons = []
-        if proc.args.id:
+        if not page.isNew(proc.args):
             buttons.append('save')
         if page.autoName is None:
             buttons.append('save_as')
@@ -446,17 +446,17 @@ class EditPage(FabPage[EditProcessorBase[EditArgsT, DBRecord], EditArgsT], ABC):
     def pageTitle(self, proc: EditProcessorBase[EditArgsT, DBRecord]) -> str:
         return self.activeDescription(proc.args)
 
+    def isNew(self, args: Optional[EditArgsT]) -> bool:
+        return args is None or (self.autoName is None and not args.id)
+
     def activeDescription(self, args: Optional[EditArgsT]) -> str:
-        if args is not None and args.id:
-            return 'Edit ' + self.elemTitle
-        else:
+        if self.isNew(args):
             return 'New ' + self.elemTitle
+        else:
+            return 'Edit ' + self.elemTitle
 
     def activeIconModifier(self, args: Optional[EditArgsT]) -> IconModifier:
-        if args is not None and args.id:
-            return IconModifier.EDIT
-        else:
-            return IconModifier.NEW
+        return IconModifier.NEW if self.isNew(args) else IconModifier.EDIT
 
     def presentHeadParts(self, **kwargs: object) -> XMLContent:
         yield super().presentHeadParts(**kwargs)
