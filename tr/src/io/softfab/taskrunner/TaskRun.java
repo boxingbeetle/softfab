@@ -261,7 +261,7 @@ public abstract class TaskRun {
         writeParameters(startupScriptPath);
         final String[] command = getStartupCommand(startupScriptPath);
         return readResultFile(monitorProcess(
-            new ExternalProcess(command, runLogger)
+            new ExternalProcess(outputDir, command, runLogger)
             ));
     }
 

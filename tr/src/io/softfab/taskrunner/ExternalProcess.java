@@ -3,6 +3,7 @@
 package io.softfab.taskrunner;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -17,7 +18,7 @@ and logs the lines that are read.
 For every external process execution a new ExternalProcess object
 should be created.
 The life cycle is: construction ; ( start ; ( waitFor | abort ) )*,
-a state transition occurs if the associated method returns succesfully.
+a state transition occurs if the associated method returns successfully.
 This class was not designed for concurrent use by multiple threads.
 */
 public class ExternalProcess {
@@ -37,6 +38,8 @@ public class ExternalProcess {
     private final String[] arguments;
 
     private Process process;
+
+	private File workDir;
 
     /**
     Tracks whether the external process is running right now.
@@ -64,7 +67,8 @@ public class ExternalProcess {
      * @param args Command line arguments.
      * @param logger Logger to pass read lines to.
      */
-    public ExternalProcess(String[] args, Logger logger) {
+    public ExternalProcess(File workDir, String[] args, Logger logger) {
+        this.workDir = workDir;
         this.logger = logger;
         rawLogger = Logger.getAnonymousLogger();
         rawLogger.setUseParentHandlers(false);
@@ -113,7 +117,7 @@ public class ExternalProcess {
             "Starting wrapper with command line: [" + commandLineToLog + "]"
             );
         try {
-            process = Runtime.getRuntime().exec(arguments);
+            process = Runtime.getRuntime().exec(commandLineToLog, null, workDir);
         } catch (IOException e) {
             logger.severe("Wrapper execution failed: " + e);
             throw e;
