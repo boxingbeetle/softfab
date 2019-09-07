@@ -23,10 +23,10 @@ from softfab.xmlgen import XMLContent, txt, xhtml
 
 try:
     from pygraphviz import AGraph
-except ImportError:
-    canCreateGraphs = False
-else:
     canCreateGraphs = True
+except ImportError:
+    AGraph = object
+    canCreateGraphs = False
 
 
 class GraphFormat(Enum):
@@ -97,7 +97,7 @@ class Graph:
     Use a GraphBuilder subclass to construct graphs.
     '''
 
-    def __init__(self, name: str, graph: Optional['AGraph']):
+    def __init__(self, name: str, graph: Optional[AGraph]):
         self.__name = name
         self.__graph = graph
 
@@ -171,7 +171,7 @@ class GraphBuilder:
     '''Wrapper around GraphViz graphs that are under construction.
     '''
 
-    def __init__(self, graph: 'AGraph', export: bool, links: bool):
+    def __init__(self, graph: AGraph, export: bool, links: bool):
         '''Creates a graph.
         Iff "export" is True, the graph is optimized for use outside of the
         Control Center (mailing, printing).
