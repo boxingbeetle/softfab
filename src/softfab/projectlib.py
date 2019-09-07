@@ -228,6 +228,14 @@ class Project(XMLTag, SingletonElem):
         """
         return AnonGuestUser() if self['anonguest'] else UnknownUser()
 
+    @property
+    def anonguest(self) -> bool:
+        """Is anonymous guest access enabled?
+        When enabled, non-authenticated requests get guest privileges
+        rather than no privileges.
+        """
+        return cast(bool, self._properties['anonguest'])
+
     def setAnonGuestAccess(self, enabled: bool) -> None:
         """Changes the anonymous guest access setting.
 

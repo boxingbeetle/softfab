@@ -50,7 +50,7 @@ class LoginBase(UIPage[ProcT], FabResource[ArgsT, ProcT]):
 
     def iterActions(self) -> Iterator[Actions]:
         yield Actions.LOG_IN
-        if project['anonguest']:
+        if project.anonguest:
             yield Actions.CANCEL
 
     def presentContent(self, **kwargs: object) -> XMLContent:

@@ -105,7 +105,7 @@ class ProjectEdit_POST(ProjectEditBase):
                 'embed': args.embed,
                 'embedcustom': args.embedcustom,
                 'version': oldElement.dbVersion,
-                'anonguest': oldElement['anonguest'],
+                'anonguest': oldElement.anonguest,
                 } )
             element.setTargets(args.targets.split())
             element.setTagKeys(

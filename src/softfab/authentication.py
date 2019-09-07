@@ -30,7 +30,7 @@ class LoginAuthPage(Authenticator):
         if user is not None:
             # User has already authenticated.
             return succeed(user)
-        elif project['anonguest']:
+        elif project.anonguest:
             return succeed(AnonGuestUser())
         else:
             # User must log in.
@@ -61,7 +61,7 @@ class HTTPAuthPage(Authenticator):
 
         if userName:
             return authenticateUser(userName, password)
-        elif project['anonguest']:
+        elif project.anonguest:
             return succeed(AnonGuestUser())
         else:
             return fail(LoginFailed())
@@ -97,7 +97,7 @@ class TokenAuthPage(Authenticator):
                     f'Token "{tokenId}" is of the wrong type for this operation'
                     ))
             return succeed(TokenUser(token))
-        elif project['anonguest']:
+        elif project.anonguest:
             return succeed(AnonGuestUser())
         else:
             return fail(LoginFailed())

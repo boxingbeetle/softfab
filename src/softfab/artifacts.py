@@ -92,7 +92,7 @@ class ArtifactSandbox:
         """
 
         # Skip key generation if artifacts are public.
-        if project['anonguest']:
+        if project.anonguest:
             return 'anon'
 
         key = genword(length=self.keyLength)
@@ -119,7 +119,7 @@ class ArtifactSandbox:
         origin = request.getHeader(b'Origin')
 
         # Handle anonymous guest access.
-        if name == b'anon' and project['anonguest']:
+        if name == b'anon' and project.anonguest:
             if origin is not None:
                 request.setHeader(b'Access-Control-Allow-Origin', b'*')
             return SandboxedResource(self.baseDir, [])
@@ -280,7 +280,7 @@ class ArtifactAuthWrapper:
                 # Perform anonymous read access, if allowed.
                 if self.anonOperator:
                     user = SuperUser()
-                elif project['anonguest']:
+                elif project.anonguest:
                     user = AnonGuestUser()
 
         if user is None:

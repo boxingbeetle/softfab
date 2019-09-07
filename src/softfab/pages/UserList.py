@@ -176,7 +176,7 @@ class UserList_GET(FabPage['UserList_GET.Processor', 'UserList_GET.Arguments']):
                 formId='anonguest',
                 action='AnonGuest',
                 setFocus=False,
-                args=AnonGuestArgs(anonguest=project['anonguest'])
+                args=AnonGuestArgs(anonguest=project.anonguest)
                 )[ AnonGuestTable.instance ].present(**kwargs)
         else:
             yield presentAnonGuestSetting()

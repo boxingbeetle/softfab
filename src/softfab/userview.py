@@ -43,7 +43,7 @@ def uiRoleToSet(role: UIRoleNames) -> AbstractSet[str]:
 def presentAnonGuestSetting() -> XMLContent:
     return xhtml.p[
         'Anonymous guest access is ',
-        xhtml.b['enabled' if project['anonguest'] else 'disabled'], '.'
+        xhtml.b['enabled' if project.anonguest else 'disabled'], '.'
         ]
 
 class OwnerColumn(DataColumn[Record]):
