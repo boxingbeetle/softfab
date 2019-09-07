@@ -122,7 +122,7 @@ class CapabilitiesTable(DataTable[CapInfo]):
             yield 'match'
 
     def getRecordsToQuery(self, proc: PageProcessor) -> Collection[CapInfo]:
-        return cast('Capabilities_GET.Processor', proc).capMap
+        return cast(Capabilities_GET.Processor, proc).capMap
 
 class Capabilities_GET(FabPage['Capabilities_GET.Processor',
                                'Capabilities_GET.Arguments']):

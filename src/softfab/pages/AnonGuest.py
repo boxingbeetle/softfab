@@ -53,6 +53,6 @@ class AnonGuest_POST(AnonGuestBase['AnonGuest_POST.Processor',
         assert False
 
     def presentError(self, message: XML, **kwargs: object) -> XMLContent:
-        proc = cast('AnonGuest_POST.Processor', kwargs['proc'])
+        proc = cast(AnonGuest_POST.Processor, kwargs['proc'])
         yield message
         yield self.backToParent(proc.args)

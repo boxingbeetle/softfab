@@ -112,7 +112,7 @@ class RecordDelete_GET(FabPage['RecordDelete_GET.Processor',
             ].present(**kwargs)
 
     def presentError(self, message: XML, **kwargs: object) -> XMLContent:
-        proc = cast('RecordDelete_GET.Processor', kwargs['proc'])
+        proc = cast(RecordDelete_GET.Processor, kwargs['proc'])
         yield message
         yield self.backToReferer(proc.args)
 

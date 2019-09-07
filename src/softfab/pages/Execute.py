@@ -514,7 +514,7 @@ class Execute_GET(ExecuteBase, DialogPage):
                        args: PageArgs,
                        user: User
                        ) -> 'Execute_POST.Arguments':
-            argsGET = cast('Execute_GET.Arguments', args)
+            argsGET = cast(Execute_GET.Arguments, args)
             if argsGET.step is EntranceSteps.EDIT:
                 return Execute_POST.Arguments.load(argsGET, user)
             elif argsGET.config:

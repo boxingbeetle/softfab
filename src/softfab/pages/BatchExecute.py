@@ -207,7 +207,7 @@ class BatchExecute_POST(BatchExecute_GET):
     class Processor(BatchExecute_GET.Processor):
 
         def process(self, req: Request[ParentArgs], user: User) -> None:
-            args = cast('BatchExecute_POST.Arguments', req.args)
+            args = cast(BatchExecute_POST.Arguments, req.args)
             action = args.action
 
             if action is not Actions.EXECUTE:

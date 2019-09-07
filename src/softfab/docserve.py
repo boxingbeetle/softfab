@@ -386,7 +386,7 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
                 'Please check the Control Center log for details.'
                 ]
             return DocErrorResponder(
-                self, cast('DocPage.Processor', proc), message
+                self, cast(DocPage.Processor, proc), message
                 )
         else:
             return super().getResponder(path, proc)

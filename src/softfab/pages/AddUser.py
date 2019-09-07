@@ -147,7 +147,7 @@ class AddUser_POST(AddUserBase['AddUser_POST.Processor',
         yield self.presentForm(LoginPassArgs.subset(proc.args), **kwargs)
 
     def presentError(self, message: XML, **kwargs: object) -> XMLContent:
-        proc = cast('AddUser_POST.Processor', kwargs['proc'])
+        proc = cast(AddUser_POST.Processor, kwargs['proc'])
         yield xhtml.p(class_ = 'notice')[ message ]
         yield self.presentForm(proc.args, **kwargs)
 

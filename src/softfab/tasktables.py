@@ -25,7 +25,7 @@ class TaskColumn(DataColumn[Task]):
     keyName = 'name'
 
     def presentCell(self, record: Task, **kwargs: object) -> XMLContent:
-        table = cast('TaskRunsTable', kwargs['table'])
+        table = cast(TaskRunsTable, kwargs['table'])
         if table.taskNameLink:
             return createTaskInfoLink(record.getJob().getId(), record.getName())
         else:

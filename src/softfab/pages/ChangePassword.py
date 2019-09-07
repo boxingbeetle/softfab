@@ -115,7 +115,7 @@ class ChangePassword_GET(FabPage['ChangePassword_GET.Processor',
         return presentForm(**kwargs)
 
     def presentError(self, message: XML, **kwargs: object) -> XMLContent:
-        proc = cast('ChangePassword_GET.Processor', kwargs['proc'])
+        proc = cast(ChangePassword_GET.Processor, kwargs['proc'])
         yield xhtml.p(class_ = 'notice')[ message ]
         if proc.retry:
             yield presentForm(**kwargs)
@@ -215,7 +215,7 @@ class ChangePassword_POST(FabPage['ChangePassword_POST.Processor',
         return args.refererURL or self.getParentURL(args)
 
     def presentError(self, message: XML, **kwargs: object) -> XMLContent:
-        proc = cast('ChangePassword_POST.Processor', kwargs['proc'])
+        proc = cast(ChangePassword_POST.Processor, kwargs['proc'])
         yield xhtml.p(class_ = 'notice')[ message ]
         if proc.retry:
             yield presentForm(**kwargs)
