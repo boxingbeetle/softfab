@@ -18,7 +18,7 @@ from softfab.xmlgen import XMLContent, xhtml
 
 class FilteredJobsTable(JobsTable):
 
-    def showTargetColumn(self):
+    def showTargetColumn(self) -> bool:
         return super().showTargetColumn() or bool(jobDB.uniqueValues('target'))
 
     def iterFilters(self, proc):

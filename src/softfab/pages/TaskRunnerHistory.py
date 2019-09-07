@@ -25,7 +25,7 @@ class HistoryTable(TaskRunsTable):
     def getRecordsToQuery(self, proc):
         return proc.tasks
 
-    def showTargetColumn(self):
+    def showTargetColumn(self) -> bool:
         # Typically a Task Runner has the same target for all of its life,
         # so this column is not useful.
         return False
