@@ -922,10 +922,10 @@ def checkWrapperVarName(name: str) -> None:
 
 class _IdCreator:
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.__lastId = 0
 
-    def __call__(self, internal):
+    def __call__(self, internal: bool) -> str:
         newId = max(int(time.time() * 1000), self.__lastId + 1)
         self.__lastId = newId
         if internal:
