@@ -34,11 +34,11 @@ class _ObserverProxy(RecordObserver[DBRecord]):
     def __init__(self, subjectDb: Database[DBRecord]):
         RecordObserver.__init__(self)
         # Mapping from configId to set of keys observed by that config.
-        self.__subjects = \
-            defaultdict(set) # type: DefaultDict[str, MutableSet[str]]
+        self.__subjects: DefaultDict[str, MutableSet[str]] = \
+            defaultdict(set)
         # Mapping from key to dictionary of configs that observe that key.
-        self.__observers = \
-            defaultdict(dict) # type: DefaultDict[str, Dict[str, Config]]
+        self.__observers: DefaultDict[str, Dict[str, Config]] = \
+            defaultdict(dict)
         # Listen to all modifications on the given database.
         subjectDb.addObserver(self)
 
@@ -107,10 +107,10 @@ class Task(PriorityMixin, ResourceRequirementsMixin, XMLTag, TaskRunnerSet):
                priority: int,
                parameters: Mapping[str, str]
                ) -> 'Task':
-        properties = dict(
+        properties: Dict[str, XMLAttributeValue] = dict(
             name = name,
             priority = priority,
-            ) # type: Dict[str, XMLAttributeValue]
+            )
 
         task = Task(properties)
         # pylint: disable=protected-access
@@ -122,7 +122,7 @@ class Task(PriorityMixin, ResourceRequirementsMixin, XMLTag, TaskRunnerSet):
         XMLTag.__init__(self, attributes)
         TaskRunnerSet.__init__(self)
         self._properties.setdefault('priority', 0)
-        self.__params = {} # type: Dict[str, _Param]
+        self.__params: Dict[str, _Param] = {}
 
     def _addParam(self, attributes: Mapping[str, str]) -> None:
         param = _Param(attributes)
@@ -263,7 +263,7 @@ class TaskSetWithInputs(TaskSet[TaskT]):
 
     def __init__(self) -> None:
         TaskSet.__init__(self)
-        self._inputs = {} # type: Dict[str, Input]
+        self._inputs: Dict[str, Input] = {}
 
     # Mark class as abstract:
     def getRunners(self) -> AbstractSet[str]:
@@ -299,7 +299,7 @@ class TaskSetWithInputs(TaskSet[TaskT]):
         for task in self._getMainGroup().getChildren(): \
                 # type: Union[TaskGroup[TaskT], TaskT]
             if isinstance(task, TaskGroup):
-                group = set() # type: Optional[MutableSet[Input]]
+                group: Optional[MutableSet[Input]] = set()
             else:
                 group = None
             for inpName in task.getInputs():
@@ -368,10 +368,10 @@ class Config(TaskRunnerSet, TaskSetWithInputs[Task], XMLTag,
         TaskRunnerSet.__init__(self)
         XMLTag.__init__(self, attributes)
         SelectableRecordABC.__init__(self)
-        self.__targets = set() # type: MutableSet[str]
+        self.__targets: MutableSet[str] = set()
         self.__comment = ''
-        self.__params = {} # type: Dict[str, str]
-        self.__description = None # type: Optional[str]
+        self.__params: Dict[str, str] = {}
+        self.__description: Optional[str] = None
 
     def __updateInputs(self) -> None:
         '''This should be called after tasks are added, to recompute which
@@ -456,7 +456,7 @@ class Config(TaskRunnerSet, TaskSetWithInputs[Task], XMLTag,
         but become inconsistent due to definitions changing, for example
         due to conflicting resource requirements.
         """
-        refToType = {} # type: Dict[str, str]
+        refToType: Dict[str, str] = {}
         for task in self._tasks.values():
             for spec in task.resourceClaim:
                 typeName = spec.typeName
@@ -568,7 +568,7 @@ class Config(TaskRunnerSet, TaskSetWithInputs[Task], XMLTag,
             _tdObserver.addObserver(task.getName(), self)
             framework = task.getDef().getFramework()
             frameworks[framework.getId()] = framework
-        products = set() # type: MutableSet[str]
+        products: MutableSet[str] = set()
         for frameworkId, framework in frameworks.items():
             _fdObserver.addObserver(frameworkId, self)
             products |= framework.getInputs() | framework.getOutputs()

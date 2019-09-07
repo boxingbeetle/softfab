@@ -423,7 +423,7 @@ class ExecuteProcessorMixin:
         if self.__config is None:
             args = cast(Execute_POST.Arguments, getattr(self, 'args'))
 
-            jobParams = {} # type: Dict[str, str]
+            jobParams: Dict[str, str] = {}
             if args.notify:
                 jobParams['notify'] = 'mailto:' + args.notify
                 if args.onfail:
@@ -683,7 +683,7 @@ class TaskTable(CheckBoxesTable):
                 ):
             for taskId in taskIds:
                 task = taskDefDB[taskId]
-                cells = [ taskId, task.getTitle() ] # type: List[XMLContent]
+                cells: List[XMLContent] = [ taskId, task.getTitle() ]
                 if project['taskprio']:
                     cells.append(
                         textInput(

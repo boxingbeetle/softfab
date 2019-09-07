@@ -107,7 +107,7 @@ class ScheduleEdit_GET(ScheduleEditBase):
             if element is None:
                 return {}
             else:
-                overrides = {} # type: Dict[str, object]
+                overrides: Dict[str, object] = {}
                 configId = element['configId']
                 if configId is None:
                     overrides['selectBy'] = SelectBy.TAG
@@ -177,13 +177,13 @@ class ScheduleEdit_POST(ScheduleEditBase):
             except ValueError:
                 startTime = 0
             sequence = args.sequence
-            parameters = {
+            parameters: Dict[str, XMLAttributeValue] = {
                 'id': recordId,
                 'suspended': str(args.suspended),
                 'startTime': startTime,
                 'sequence': sequence.name,
                 'owner': self.user.name,
-                } # type: Dict[str, XMLAttributeValue]
+                }
             if args.selectBy is SelectBy.NAME:
                 parameters['configId'] = args.configId
             elif args.selectBy is SelectBy.TAG:

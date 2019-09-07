@@ -102,7 +102,7 @@ class FrameworkEdit_GET(FrameworkEditBase):
                       element: Optional[Framework]
                       ) -> Mapping[str, object]:
             if element is None:
-                overrides = {} # type: Dict[str, object]
+                overrides: Dict[str, object] = {}
             else:
                 params = element.getParametersSelf()
                 overrides = dict(
@@ -193,7 +193,7 @@ class FrameworkPropertiesTable(PropertiesTable):
             ]
 
 class ProductSetTable(Table, ABC):
-    argName = abstract # type: ClassVar[str]
+    argName: ClassVar[str] = abstract
 
     def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
         args = cast(

@@ -41,7 +41,7 @@ TaskElem = Union[TaskT, 'TaskGroup[TaskT]']
 class TaskSet(Generic[TaskT]):
 
     def __init__(self) -> None:
-        self._tasks = {} # type: Dict[str, TaskT]
+        self._tasks: Dict[str, TaskT] = {}
 
     def isEmpty(self) -> bool:
         return not self._tasks
@@ -49,18 +49,18 @@ class TaskSet(Generic[TaskT]):
     def getInputSet(self) -> AbstractSet[str]:
         # TODO: This is equivalent to TaskGroup.getInputs.
         #       Any chances for generalizing?
-        inputs = set() # type: MutableSet[str]
-        outputs = set() # type: MutableSet[str]
+        inputs: MutableSet[str] = set()
+        outputs: MutableSet[str] = set()
         for task in self._tasks.values():
             inputs |= task.getInputs()
             outputs |= task.getOutputs()
         return inputs - outputs
 
     def _getMainGroup(self) -> 'TaskGroup[TaskT]':
-        unionFind = UnionFind() # type: UnionFind[Tuple[str, str]]
-        local = ResultKeeper(
+        unionFind: UnionFind[Tuple[str, str]] = UnionFind()
+        local: ResultKeeper[str, bool] = ResultKeeper(
             lambda prodName: self.getProductDef(prodName).isLocal()
-            ) # type: ResultKeeper[str, bool]
+            )
         for taskName, task in self._tasks.items():
             taskNode = ( 'task', taskName )
             unionFind.add(taskNode)
@@ -232,27 +232,27 @@ class TaskGroup(PriorityMixin, Generic[TaskT]):
     def __init__(self, parent: TaskSet[TaskT], tasks: Iterable[TaskElem]):
         self._parent = parent
         self.__tasks = {task.getName(): task for task in tasks}
-        self.__inputs = None # type: Optional[FrozenSet[str]]
-        self.__outputs = None # type: Optional[FrozenSet[str]]
-        self.__priority = None # type: Optional[int]
-        self.__taskGroupSequence = None # type: Optional[Sequence[TaskElem]]
-        self.__taskSequence = None # type: Optional[Sequence[TaskT]]
-        self.__neededCaps = None # type: Optional[AbstractSet[str]]
+        self.__inputs: Optional[FrozenSet[str]] = None
+        self.__outputs: Optional[FrozenSet[str]] = None
+        self.__priority: Optional[int] = None
+        self.__taskGroupSequence: Optional[Sequence[TaskElem]] = None
+        self.__taskSequence: Optional[Sequence[TaskT]] = None
+        self.__neededCaps: Optional[AbstractSet[str]] = None
 
     def __computeSequences(self) -> None:
         # Precalculate which tasks produce which products.
         # Note: The tasks from _parent are flattened (no TaskGroups).
-        remainingProducers = \
-                defaultdict(set) # type: DefaultDict[str, MutableSet[str]]
+        remainingProducers: DefaultDict[str, MutableSet[str]] = \
+                defaultdict(set)
         for parentTask in self._parent.getTasks():
             for productName in parentTask.getOutputs():
                 remainingProducers[productName].add(parentTask.getName())
 
-        tasksLeft = dict(self.__tasks) # type: Dict[str, TaskElem]
+        tasksLeft: Dict[str, TaskElem] = dict(self.__tasks)
         availableProducts = set(self.getInputs())
-        readyTasks = Heap() # type: Heap[TaskElem]
+        readyTasks: Heap[TaskElem] = Heap()
         mainSequence = []
-        flatSequence = [] # type: List[TaskT]
+        flatSequence: List[TaskT] = []
         flattened = False
         while True:
             while True:
@@ -293,7 +293,7 @@ class TaskGroup(PriorityMixin, Generic[TaskT]):
             if not flattened:
                 mainSequence.extend(unreachableTasks)
                 flattened = True
-            innerTasks = {} # type: Dict[str, TaskT]
+            innerTasks: Dict[str, TaskT] = {}
             for unreachable in unreachableTasks:
                 if isinstance(unreachable, TaskGroup):
                     for inner in unreachable.getTaskSequence():
@@ -415,9 +415,9 @@ class LocalGroup(TaskGroup[TaskT]):
                  localAt: Optional[str]
                  ):
         TaskGroup.__init__(self, parent, tasks)
-        self.__name = None # type: Optional[str]
-        self.__runnerId = None # type: Optional[str]
-        self.__runners = None # type: Optional[AbstractSet[str]]
+        self.__name: Optional[str] = None
+        self.__runnerId: Optional[str] = None
+        self.__runners: Optional[AbstractSet[str]] = None
         if localAt is not None:
             self.__setRunnerId(localAt)
 

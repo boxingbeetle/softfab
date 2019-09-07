@@ -42,7 +42,7 @@ class Product(XMLTag, DatabaseElem):
     def __init__(self, attributes: Mapping[str, Optional[str]]):
         XMLTag.__init__(self, attributes)
         DatabaseElem.__init__(self)
-        self.__producers = {} # type: Dict[str, str]
+        self.__producers: Dict[str, str] = {}
 
     def __hash__(self) -> int:
         return hash(self.getName())

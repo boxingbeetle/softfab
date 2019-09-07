@@ -23,7 +23,7 @@ class LoginAuthPage(Authenticator):
     a session cookie.
     '''
 
-    instance = SharedInstance() # type: ClassVar[SharedInstance]
+    instance: ClassVar[SharedInstance] = SharedInstance()
 
     def authenticate(self, req: Request) -> Deferred:
         user = req.loggedInUser()
@@ -46,7 +46,7 @@ class HTTPAuthPage(Authenticator):
     '''Authenticator that performs HTTP authentication.
     '''
 
-    instance = SharedInstance() # type: ClassVar[SharedInstance]
+    instance: ClassVar[SharedInstance] = SharedInstance()
 
     def authenticate(self, req: Request) -> Deferred:
         # To avoid cross-site request forgery, we must authenticate every API
@@ -113,7 +113,7 @@ class NoAuthPage(Authenticator):
     a non-privileged user.
     '''
 
-    instance = SharedInstance() # type: ClassVar[SharedInstance]
+    instance: ClassVar[SharedInstance] = SharedInstance()
 
     def authenticate(self, req: Request) -> Deferred:
         return succeed(UnknownUser())
@@ -132,7 +132,7 @@ class DisabledAuthPage(Authenticator):
     This is for ease of development, not recommended for production.
     '''
 
-    instance = SharedInstance() # type: ClassVar[SharedInstance]
+    instance: ClassVar[SharedInstance] = SharedInstance()
 
     def authenticate(self, req: Request) -> Deferred:
         user = req.loggedInUser()

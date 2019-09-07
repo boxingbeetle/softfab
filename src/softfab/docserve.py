@@ -44,7 +44,7 @@ except ImportError:
         "The pygments package is not installed; "
         "code examples in the documentation will lack syntax highlighting"
         )
-    pygmentsSheet = xhtml[None] # type: XMLPresentable
+    pygmentsSheet: XMLPresentable = xhtml[None]
 else:
     pygmentsFileName = 'pygments.css'
     styleRoot.putChild(
@@ -159,11 +159,11 @@ class DocErrors(Enum):
 
 class DocMetadata:
     button = 'ERROR'
-    children = () # type: Sequence[str]
+    children: Sequence[str] = ()
     icon = 'IconDocs'
 
 class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
-    authenticator = LoginAuthPage.instance # type: Authenticator
+    authenticator: Authenticator = LoginAuthPage.instance
 
     class Arguments(PageArgs):
         pass
@@ -185,16 +185,16 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
 
         contentPath = None
         if module is not None:
-            moduleFile = getattr(module, '__file__', None) # type: Optional[str]
+            moduleFile: Optional[str] = getattr(module, '__file__', None)
             if moduleFile is not None:
                 contentPath = Path(moduleFile).parent / 'contents.md'
         self.contentPath = contentPath
 
-        self.contentMTime = None # type: Optional[int]
-        self.__extractedInfo = None # type: Optional[ExtractedInfo]
-        self.__renderedStr = None # type: Optional[str]
-        self.__renderedXML = None # type: Optional[XML]
-        self.__toc = () # type: Sequence[Tuple[str, ExtractedInfo]]
+        self.contentMTime: Optional[int] = None
+        self.__extractedInfo: Optional[ExtractedInfo] = None
+        self.__renderedStr: Optional[str] = None
+        self.__renderedXML: Optional[XML] = None
+        self.__toc: Sequence[Tuple[str, ExtractedInfo]] = ()
 
     def getMTime(self, path: Path) -> Optional[int]:
         """Returns the modification time of a source file,
@@ -351,7 +351,7 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
 
         # Determine relative URL to style resources.
         depth = 0
-        resource = self.resource # type: Optional[DocResource]
+        resource: Optional[DocResource] = self.resource
         while resource is not None:
             resource = resource.parent
             depth += 1
@@ -412,8 +412,8 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
     def iterRootButtons(self,
                         args: Optional[Arguments]
                         ) -> Iterator[LinkBarButton]:
-        parents = [] # type: List[LinkBarButton]
-        resource = self.resource # type: Optional[DocResource]
+        parents: List[LinkBarButton] = []
+        resource: Optional[DocResource] = self.resource
         url = ''
         while resource is not None:
             parents.append(resource.page.createLinkBarButton(url))
@@ -468,7 +468,7 @@ class DocResource(Resource):
 
         # Load module.
         try:
-            initModule = import_module(packageName) # type: Optional[ModuleType]
+            initModule: Optional[ModuleType] = import_module(packageName)
         except Exception:
             logging.exception(
                 'Error importing documentation module "%s"',

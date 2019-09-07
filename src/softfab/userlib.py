@@ -49,7 +49,7 @@ assert {elem.name.lower() for elem in list(UIRoleNames)[1:]} == roleNames
 # Action with 'o' suffix (e.g. 'mo') means that the object it is applied
 #   to is owned by the current user (thus different access rights may apply)
 
-privileges = {
+privileges: Mapping[str, Sequence[str]] = {
     'j/l': ('guest', 'user', 'operator'),
     'j/c': ('user', 'operator'),
     'j/a': ('guest', 'user', 'operator'),
@@ -147,7 +147,7 @@ privileges = {
     # Privileges that are only granted by tokens:
     'tr/*': (), # Non-standard privilege used by Task Runners.
 
-} # type: Mapping[str, Sequence[str]]
+}
 
 def rolesGrantPrivilege(roles: Iterable[str], priv: str) -> bool:
     return any(role in roles for role in privileges[priv])
@@ -438,7 +438,7 @@ class UserInfo(XMLTag, DatabaseElem, User):
     def __init__(self, properties: Mapping[str, str]):
         XMLTag.__init__(self, properties)
         DatabaseElem.__init__(self)
-        self.__roles = set() # type: Union[FrozenSet[str], Set[str]]
+        self.__roles: Union[FrozenSet[str], Set[str]] = set()
 
     def __getitem__(self, key: str) -> Any:
         if key == 'uirole':

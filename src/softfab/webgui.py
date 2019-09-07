@@ -263,9 +263,9 @@ class Widget(XMLPresentable):
     '''GUI element.
     Provides a shared instance to its subclasses: "SomeWidget.instance".
     '''
-    instance = SharedInstance() # type: ClassVar[SharedInstance]
+    instance: ClassVar[SharedInstance] = SharedInstance()
 
-    widgetId = None # type: Optional[str]
+    widgetId: Optional[str] = None
     '''Unique ID string that identifies this widget, or None.
     Corresponds to the "id" attribute in XML.
     '''
@@ -289,11 +289,11 @@ class Widget(XMLPresentable):
         raise NotImplementedError
 
 class Column:
-    instance = SharedInstance() # type: ClassVar[SharedInstance]
+    instance: ClassVar[SharedInstance] = SharedInstance()
 
-    label = None # type: XMLContent
+    label: XMLContent = None
     colSpan = 1
-    cellStyle = None # type: Optional[str]
+    cellStyle: Optional[str] = None
 
     @staticmethod
     def adapt(obj: Union['Column', XMLContent]) -> 'Column':
@@ -444,8 +444,8 @@ class Table(Widget):
     '''A generic abstract table.
     Subclass it to define the layout and provide contents.
     '''
-    bodyId = None # type: Optional[str]
-    style = None # type: Optional[str]
+    bodyId: Optional[str] = None
+    style: Optional[str] = None
     hideWhenEmpty = False
 
     def present(self, **kwargs: object) -> XMLContent:
@@ -515,13 +515,13 @@ class Table(Widget):
                 colStyles.append(colStyle)
 
         rowSpans = [1] * len(colStyles)
-        rowPresentations = [
+        rowPresentations: XMLContent = [
             row.adapt(r).present(
                 colStyles=colStyles, rowSpans=rowSpans, columns=columns,
                 **kwargs
                 )
             for r in self.iterRows(columns=columns, **kwargs)
-            ] # type: XMLContent
+            ]
         if max(rowSpans) > 1:
             raise ValueError(
                 'Row span beyond last row: %s' % ', '.join(
@@ -574,8 +574,8 @@ class Panel(Table):
     The panel is not presented if the content is empty.
     Subclasses should override either `content` or `presentContent()`.
     '''
-    label = None # type: Optional[str]
-    content = None # type: Optional[XMLPresentable]
+    label: Optional[str] = None
+    content: Optional[XMLPresentable] = None
     hideWhenEmpty = True
 
     def iterColumns(self, **kwargs: object) -> Iterator[Column]:
@@ -611,7 +611,7 @@ class Image(AttrContainer):
                width: Optional[int] = None,
                height: Optional[int] = None
                ) -> 'Image':
-        attributes = dict(alt='') # type: Dict[str, object]
+        attributes: Dict[str, object] = dict(alt='')
         if width is not None:
             attributes['width'] = width
         if height is not None:

@@ -143,13 +143,13 @@ class Project(XMLTag, SingletonElem):
         if 'mailsender' not in self._properties:
             self._properties['mailsender'] = f'{getuser()}@{getfqdn()}'
 
-        self.__targets = set() # type: MutableSet[str]
+        self.__targets: MutableSet[str] = set()
         # Note: tag keys should be kept in a list rather than a set,
         # because the order of tag keys everywhere in the UI should be the
         # same as specified in the project configuration (rather than sorted
         # alphabetically). This allows the project to choose which tag they
         # have as the first one (and thus the default and the mostly used one).
-        self.__tagKeys = [] # type: List[str]
+        self.__tagKeys: List[str] = []
 
     def _addTarget(self, attributes: Mapping[str, str]) -> None:
         self.__targets.add(attributes['name'])

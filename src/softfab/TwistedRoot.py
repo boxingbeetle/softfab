@@ -160,7 +160,7 @@ class PageLoader:
                 )
             return
 
-        pagesByMethod = {} # type: Dict[str, FabResource]
+        pagesByMethod: Dict[str, FabResource] = {}
         name = None
         root = self.root
         for pageClass in pageClasses:
@@ -256,7 +256,7 @@ class ResourceNotFound(FabResource[FabResource.Arguments, PageProcessor]):
                      path: Optional[str],
                      proc: PageProcessor
                      ) -> Responder:
-        notFoundPage = NotFoundPage() # type: NotFoundPage[PageProcessor]
+        notFoundPage: NotFoundPage[PageProcessor] = NotFoundPage()
         return UIResponder(notFoundPage, proc)
 
     def errorResponder(self, ex: Exception, proc: PageProcessor) -> Responder:

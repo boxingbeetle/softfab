@@ -17,7 +17,7 @@ upgradeInProgress = False
 def setConversionFlags() -> None:
     '''Sets all conversion flags to True.
     '''
-    variables = sys.modules[__name__].__dict__ # type: Dict[str, object]
+    variables: Dict[str, object] = sys.modules[__name__].__dict__
     for name in list(variables.keys()):
         if isinstance(variables[name], bool):
             variables[name] = True

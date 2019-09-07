@@ -21,7 +21,7 @@ ResOrSpec = TypeVar('ResOrSpec', Resource, ResourceSpec)
 
 def _groupByType(items: Iterable[ResOrSpec]
                  ) -> Mapping[str, Sequence[ResOrSpec]]:
-    grouped = defaultdict(list) # type: DefaultDict[str, List[ResOrSpec]]
+    grouped: DefaultDict[str, List[ResOrSpec]] = defaultdict(list)
     for item in items:
         grouped[item.typeName].append(item)
     return grouped
@@ -72,8 +72,8 @@ def findMatch(matrix: List[List[int]]) -> Optional[List[int]]:
     # More sophisticated algorithms can be used for the initial assignments,
     # but in my experiments the time won by having fewer refinement iterations
     # (step 2-5) was roughly equal to the extra time spent in step 1.
-    rowAssigned = [None] * numRows # type: List[Optional[int]]
-    colAssigned = [None] * numCols # type: List[Optional[int]]
+    rowAssigned: List[Optional[int]] = [None] * numRows
+    colAssigned: List[Optional[int]] = [None] * numCols
     for ri, row in enumerate(matrix):
         for ci in range(numCols):
             if row[ci] == 0 and colAssigned[ci] is None:
@@ -97,7 +97,7 @@ def findMatch(matrix: List[List[int]]) -> Optional[List[int]]:
                 return cast(List[int], rowAssigned)
 
             uncoveredColIdxs = set(range(numCols))
-            primed = [None] * numCols # type: List[Optional[int]]
+            primed: List[Optional[int]] = [None] * numCols
 
         # Step 3: Search for uncovered zero.
         for ri, ci in (
@@ -172,7 +172,7 @@ def pickResources(
     """
     if whyNot is None:
         # We're only interested in finding a match on free resources.
-        levels = (StatusLevel.FREE,) # type: Iterable[StatusLevel]
+        levels: Iterable[StatusLevel] = (StatusLevel.FREE,)
     else:
         # Start looking for a match using only free resources, but if we don't
         # find a match, add resources in other states, so we can report which
@@ -182,7 +182,7 @@ def pickResources(
     specsByType = _groupByType(claim)
     resourcesByType = _groupByType(resources.values())
 
-    reservation = {} # type: Dict[str, Resource]
+    reservation: Dict[str, Resource] = {}
     for typeName, specs in specsByType.items():
         resourcesByLevel = defaultdict(list) \
             # type: Mapping[StatusLevel, List[Resource]]
@@ -190,7 +190,7 @@ def pickResources(
             level = statusLevelForResource(res)
             resourcesByLevel[level].append(res)
 
-        capOfferedBy = defaultdict(set) # type: Mapping[str, Set[str]]
+        capOfferedBy: Mapping[str, Set[str]] = defaultdict(set)
         resourceIds = []
         costs = {}
         for level in levels:
@@ -241,7 +241,7 @@ def pickResources(
                 continue
 
             # Find an assignment.
-            assignment = {} # type: Dict[str, Resource]
+            assignment: Dict[str, Resource] = {}
             for ri, ci in enumerate(cast(List[int], findMatch(matrix))):
                 spec = specs[ri]
                 resId = resourceIds[ci]

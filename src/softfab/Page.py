@@ -91,10 +91,10 @@ class PageProcessor(Generic[ArgsT]):
     """Abstract base class for processors.
     """
 
-    error = None # type: Optional[XML]
+    error: Optional[XML] = None
     """Page-specific error."""
 
-    processingError = None # type: Optional[Exception]
+    processingError: Optional[Exception] = None
     """Exception caught during processing."""
 
     def __init__(self,
@@ -107,7 +107,7 @@ class PageProcessor(Generic[ArgsT]):
         self.req = req
         self.args = args
         self.user = user
-        self.__tables = {} # type: Dict[int, TableData]
+        self.__tables: Dict[int, TableData] = {}
 
     def getTableData(self, table: DataTable) -> TableData:
         return self.__tables[id(table)]
@@ -143,7 +143,7 @@ class PageProcessor(Generic[ArgsT]):
     def processTables(self) -> None:
         # While processing, perform a sanity check against multiple tables
         # using the same arguments.
-        fields = defaultdict(set) # type: DefaultDict[str, Set[str]]
+        fields: DefaultDict[str, Set[str]] = defaultdict(set)
         args = self.args
         for table in self.page.iterDataTables(self):
             for propName in 'sortField', 'tabOffsetField':
@@ -197,7 +197,7 @@ class HTTPAuthenticator(Responder):
 class FabResource(ABC, Generic[ArgsT, ProcT]):
     '''Abstract base class for Control Center pages.
     '''
-    authenticator = abstract # type: Authenticator
+    authenticator: Authenticator = abstract
     streaming = False
 
     debugSupport = False

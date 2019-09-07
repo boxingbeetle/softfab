@@ -22,9 +22,9 @@ else:
 
 
 class DataColumn(Column, Generic[Record]):
-    label = None # type: Optional[str]
-    keyName = None # type: Optional[str]
-    sortKey = None # type: Union[None, str, Retriever]
+    label: Optional[str] = None
+    keyName: Optional[str] = None
+    sortKey: Union[None, str, Retriever] = None
     '''Can be used to override the comparison key for sorting, using either
     the name of a record item or a static method that, when called with
     a record, returns the comparison key.
@@ -62,12 +62,12 @@ class DataColumn(Column, Generic[Record]):
             return content
 
         # Determine index in current sort order and compute new sort order.
-        sortOrder = list(getattr(proc.args, sortField)) # type: List[str]
+        sortOrder: List[str] = list(getattr(proc.args, sortField))
         index = sortOrder.index(keyName)
         del sortOrder[index]
         sortOrder.insert(0, keyName)
 
-        override = {sortField: sortOrder} # type: Dict[str, object]
+        override: Dict[str, object] = {sortField: sortOrder}
         tabOffsetField = table.tabOffsetField
         if tabOffsetField is not None:
             override[tabOffsetField] = 0
@@ -132,7 +132,7 @@ class LinkColumn(DataColumn[DBRecord]):
 
 class TimeColumn(DataColumn[Record]):
     cellStyle = 'nobreak'
-    keyDisplay = None # type: Optional[str]
+    keyDisplay: Optional[str] = None
 
     def __init__(self,
                  label: Optional[str] = None,
@@ -168,7 +168,7 @@ class TableData(Generic[Record]):
 
         records = table.getRecordsToQuery(proc)
         if hasattr(records, '__len__'):
-            unfilteredNrRecords = len(records) # type: Optional[int]
+            unfilteredNrRecords: Optional[int] = len(records)
         else:
             # We could store all records in a list or wrap a counting iterator
             # around it, but so far that has not been necessary.
@@ -192,20 +192,20 @@ class TableData(Generic[Record]):
                         ))
                 else:
                     setattr(proc.args, sortField, cleanSortOrder)
-            query = list(table.iterFilters(proc)) # type: List[RecordProcessor]
+            query: List[RecordProcessor] = list(table.iterFilters(proc))
             filtered = bool(query)
             keyMap = _buildKeyMap(columns)
-            sorter = KeySorter(
+            sorter: KeySorter[Record] = KeySorter(
                 (keyMap.get(key, key) for key in cleanSortOrder),
                 table.db, table.uniqueKeys
-                ) # type: KeySorter[Record]
+                )
             query.append(sorter)
             records = runQuery(query, records)
 
         totalNrRecords = len(records)
         tabOffsetField = table.tabOffsetField
         if tabOffsetField is not None:
-            tabOffset = getattr(proc.args, tabOffsetField) # type: int
+            tabOffset: int = getattr(proc.args, tabOffsetField)
             recordsPerPage = table.recordsPerPage
             newOffset = tabOffset
             if tabOffset < 0:
@@ -245,7 +245,7 @@ class TableData(Generic[Record]):
             if key is not None
             ]
 
-        cleanSortOrder = [] # type: List[str]
+        cleanSortOrder: List[str] = []
         # Add keys that exist and are not duplicates.
         for key in sortOrder:
             if key in colKeys and key not in cleanSortOrder:
@@ -276,27 +276,27 @@ class DataTable(Table, Generic[Record]):
     # Database to fetch records from.
     # This field is allowed to be None if getRecordsToQuery() is overridden,
     # but specifying a Database object allows more efficient sorting.
-    db = abstract # type: ClassVar[Optional[Database]]
+    db: ClassVar[Optional[Database]] = abstract
     # Keys for which the value will be unique for each record.
     # If None, the unique keys from the database will be used,
     # unless 'db' is None as well.
-    uniqueKeys = None # type: Optional[Sequence[str]]
+    uniqueKeys: Optional[Sequence[str]] = None
     # Name of field in Arguments that contains the sort order for this table,
     # or None to not sort the table. We never want to show records in random
     # order, so if this field is None, getRecordsToQuery() must return already
     # sorted records.
     # It is possible to refer to a non-argument member of Arguments if you want
     # a fixed sort order.
-    sortField = 'sort' # type: Optional[str]
+    sortField: Optional[str] = 'sort'
     # Name of field in Arguments that contains the record number to show
     # in the current tab, or None to not use tabs.
-    tabOffsetField = 'first' # type: Optional[str]
+    tabOffsetField: Optional[str] = 'first'
     # Maximum number of records to display at once.
     # Ignored if tabOffsetField is None.
     recordsPerPage = 100
     # Name of type (plural) of the records in this table. Used to display the
     # total record count. If None, it is based on "db.description".
-    objectName = None # type: Optional[str]
+    objectName: Optional[str] = None
     # Print total record count above this table?
     printRecordCount = True
     # Maximum number of tabs that can be put above a table.

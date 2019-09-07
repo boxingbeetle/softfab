@@ -60,7 +60,7 @@ class ArgsInvalid(Exception):
 
     def __init__(self) -> None:
         Exception.__init__(self)
-        self.errors = {} # type: Dict[str, str]
+        self.errors: Dict[str, str] = {}
 
     def addError(self, name: str, message: str) -> 'ArgsInvalid':
         '''Adds an error message about an invalid argument.
@@ -86,7 +86,7 @@ class _ArgumentFactory(Generic[ArgsT]):
             fields: Mapping[str, Iterable[bytes]]
             ):
         self.__argsClass = argsClass
-        self.__data = {} # type: Dict[str, object]
+        self.__data: Dict[str, object] = {}
         self.__unclaimedFields, self.__correctedArgs = \
             argsClass._renameArguments(fields) # pylint: disable=protected-access
         self.__invalidArgs = ArgsInvalid()
@@ -167,7 +167,7 @@ class PageArgs:
             cls, fields: Mapping[str, Iterable[bytes]]
             ) -> Tuple[Dict[str, Iterable[bytes]], bool]:
         # Compute mapping from old to new names.
-        nameMapping = {} # type: Dict[str, str]
+        nameMapping: Dict[str, str] = {}
         for container in cls.__mro__:
             for oldName, member in container.__dict__.items():
                 if isinstance(member, RenameToArg):
@@ -197,7 +197,7 @@ class PageArgs:
         '''Iterates through all arguments in this PageArgs class.
         Each item is a tuple of the argument name and its Argument subclass.
         '''
-        overridden = set() # type: Set[str]
+        overridden: Set[str] = set()
         for container in cls.__mro__:
             for name, member in container.__dict__.items():
                 if isinstance(member, Argument):
@@ -262,7 +262,7 @@ class PageArgs:
         factory = _ArgumentFactory(cls, fields)
         for argName, member in cls._iterArguments():
             if isinstance(member, DictArg):
-                topLevelItems = {} # type: Dict[str, object]
+                topLevelItems: Dict[str, object] = {}
                 # Filter out the fields that belong to the dictionary.
                 # We claim fields during iteration, which invalidates the
                 # unclaimed fields iterator, so make a copy.
@@ -280,7 +280,7 @@ class PageArgs:
                             items[groups[-1]] = factory.claimField(
                                 key, member.parse
                                 )
-                value = DictArgInstance(topLevelItems) # type: object
+                value: object = DictArgInstance(topLevelItems)
             else:
                 try:
                     value = factory.claimField(argName, member.parse)
@@ -508,7 +508,7 @@ class Argument(Generic[ValueT, DefaultT]):
         '''Creates a page argument with a given default value.
         '''
         self.__default = default
-        self.__name = None # type: Optional[str]
+        self.__name: Optional[str] = None
 
     def __eq__(self, other: object) -> bool:
         '''Arguments are considered equal if they are of the same type.
@@ -887,9 +887,9 @@ class CollectionArg(Argument[CollectionT, CollectionT],
             allowEmpty: bool = True
             ):
         self.__prototype = prototype
-        default = (
+        default: Union[CollectionT, _MandatoryValue] = (
             self._createValue(()) if allowEmpty else mandatory
-            ) # type: Union[CollectionT, _MandatoryValue]
+            )
         super().__init__(default)
 
     def _createValue(self, items: Iterable[ValueT]) -> CollectionT:
@@ -1006,7 +1006,7 @@ class DictArg(Argument[DictValue[ValueT], DictValue[ValueT]]):
             ):
         if isinstance(element, DictArg):
             raise TypeError('element type cannot be another dictionary')
-        empty = {} # type: Mapping[str, DictValue[ValueT]]
+        empty: Mapping[str, DictValue[ValueT]] = {}
         super().__init__(DictArgInstance(empty))
         self.__element = element
         self.__separators = separators
@@ -1134,7 +1134,7 @@ class Query:
         """
 
         # Merge overrides.
-        override = {} # type: Dict[str, Union[None, str, Sequence[str]]]
+        override: Dict[str, Union[None, str, Sequence[str]]] = {}
         for pageArgs in args:
             override.update(pageArgs.externalize())
         override.update(kwargs)
@@ -1178,7 +1178,7 @@ class QueryArg(SingularArgument[Query, None]):
             ):
         super().__init__(None)
         if shared is None:
-            sharedNames = () # type: Iterable[str]
+            sharedNames: Iterable[str] = ()
         elif isinstance(shared, type):
             if issubclass(shared, PageArgs):
                 sharedNames = shared.keys()

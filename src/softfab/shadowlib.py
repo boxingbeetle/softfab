@@ -56,7 +56,7 @@ class ShadowRun(XMLTag, DatabaseElem, StorageURLMixin):
     At some point, this class could be integrated with TaskRun, but I prefer
     to wait for this code to reach some level of maturity first.
     '''
-    tagName = abstract # type: ClassVar[str]
+    tagName: ClassVar[str] = abstract
     intProperties = ('createtime', 'starttime', 'stoptime')
     enumProperties = {'result': ResultCode}
 
@@ -64,11 +64,11 @@ class ShadowRun(XMLTag, DatabaseElem, StorageURLMixin):
     def _create(cls: Type[ShadowRunT],
                 **extraAttributes: XMLAttributeValue
                 ) -> ShadowRunT:
-        attributes = {
+        attributes: Dict[str, XMLAttributeValue] = {
             'shadowId': createUniqueId(),
             'createtime': getTime(),
             'state': 'waiting',
-            } # type: Dict[str, XMLAttributeValue]
+            }
         attributes.update(extraAttributes)
         return cls(attributes)
 

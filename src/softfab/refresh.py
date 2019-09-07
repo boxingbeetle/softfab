@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Iterator, List, cast
+from typing import Iterator, cast
 
 from softfab.Page import PageProcessor
 from softfab.webgui import Script, Widget
@@ -9,11 +9,12 @@ from softfab.webgui import Script, Widget
 class RefreshScript(Script):
 
     def __init__(self, *widgets: Widget):
-        self.targetIds = targetIds = [] # type: List[str]
+        targetIds = []
         for widget in widgets:
             targetId = widget.widgetId
             assert targetId is not None
             targetIds.append(targetId)
+        self.targetIds = targetIds
         Script.__init__(self)
 
     def iterLines(self, **kwargs: object) -> Iterator[str]:

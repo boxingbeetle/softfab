@@ -115,12 +115,12 @@ class Task(
                 cast(str, taskdeflib.taskDefDB.getVersion(tdKey)['parent'])
                 )
 
-        properties = dict(
+        properties: Mapping[str, XMLAttributeValue] = dict(
             name = name,
             priority = priority,
             tdKey = tdKey,
             fdKey = fdKey,
-            ) # type: Mapping[str, XMLAttributeValue]
+            )
         task = Task(properties, job)
         # pylint: disable=protected-access
         task._setRunners(runners)
@@ -134,8 +134,8 @@ class Task(
         TaskRunnerSet.__init__(self)
         TaskStateMixin.__init__(self)
         self._properties.setdefault('priority', 0)
-        self._parameters = {} # type: Dict[str, str]
-        self.__taskRun = None # type: Optional[TaskRun]
+        self._parameters: Dict[str, str] = {}
+        self.__taskRun: Optional[TaskRun] = None
         self.__job = job
 
         # COMPAT 2.x.x: Remove invalid time stamps cancelled tasks.
@@ -367,10 +367,10 @@ class Task(
         neededCaps = self.getNeededCaps()
         runners = self.getRunners() or self.__job.getRunners()
         if runners:
-            candidates = [
+            candidates: Sequence[TaskRunner] = [
                 runner for runner in taskRunners
                 if runner.getId() in runners
-                ] # type: Sequence[TaskRunner]
+                ]
             if not candidates:
                 whyNot.append(TRStateReason(StatusLevel.MISSING))
         else:
@@ -447,10 +447,10 @@ class Job(TaskRunnerSet, TaskSet[Task], XMLTag, DatabaseElem):
                runners: Iterable[str]
                ) -> 'Job':
         # TODO: Is validation needed?
-        properties = dict(
+        properties: Dict[str, XMLAttributeValue] = dict(
             jobId = createUniqueId(),
             timestamp = getTime(),
-            ) # type: Dict[str, XMLAttributeValue]
+            )
         if configId is not None:
             properties['configId'] = configId
         if target is not None:
@@ -473,24 +473,24 @@ class Job(TaskRunnerSet, TaskSet[Task], XMLTag, DatabaseElem):
         XMLTag.__init__(self, properties)
         DatabaseElem.__init__(self)
         self.__comment = ''
-        self.__inputSet = None # type: Optional[AbstractSet[str]]
-        self.__products = {} # type: Dict[str, str]
-        self.__params = {} # type: Dict[str, str]
-        self.__mainGroup = None # type: Optional[TaskGroup]
-        self.__description = None # type: Optional[str]
-        self.__result = None # type: Optional[ResultCode]
-        self.__leadTime = None # type: Optional[int]
-        self.__stopTime = None # type: Optional[int]
+        self.__inputSet: Optional[AbstractSet[str]] = None
+        self.__products: Dict[str, str] = {}
+        self.__params: Dict[str, str] = {}
+        self.__mainGroup: Optional[TaskGroup] = None
+        self.__description: Optional[str] = None
+        self.__result: Optional[ResultCode] = None
+        self.__leadTime: Optional[int] = None
+        self.__stopTime: Optional[int] = None
         self.__executionFinished = False
         self.__resultFinal = False
-        self.__inputs = None # type: Optional[Sequence[Product]]
-        self.__produced = None # type: Optional[List[Product]]
-        self.__notifyFlag = None # type: Optional[bool]
-        self.__taskSequence = [] # type: List[str]
+        self.__inputs: Optional[Sequence[Product]] = None
+        self.__produced: Optional[List[Product]] = None
+        self.__notifyFlag: Optional[bool] = None
+        self.__taskSequence: List[str] = []
         # __resources: { ref: [set(tasks), set(caps), id], ... }
-        self.__resources = defaultdict(
+        self.__resources: DefaultDict[str, List] = defaultdict(
             lambda: [ set(), set(), None ]
-            ) # type: DefaultDict[str, List]
+            )
 
         # Create a sort key which places the most recent jobs first.
         # This code ignores the fact that the job IDs converted from the old
@@ -808,8 +808,8 @@ class Job(TaskRunnerSet, TaskSet[Task], XMLTag, DatabaseElem):
         likely creation order.
         '''
         if self.__produced is None:
-            produced = [] # type: List[Product]
-            producedNames = set() # type: MutableSet[str]
+            produced: List[Product] = []
+            producedNames: MutableSet[str] = set()
             for task in self.getTaskSequence():
                 taskProduced = {}
                 for product in task.getProduced():
@@ -863,7 +863,7 @@ class Job(TaskRunnerSet, TaskSet[Task], XMLTag, DatabaseElem):
         You can get the new summaries using the TaskRun.getSummary().
         """
         if not self.isExecutionFinished():
-            whyNot = [] # type: List[ReasonForWaiting]
+            whyNot: List[ReasonForWaiting] = []
             self._getMainGroup().checkRunners(taskRunners, whyNot)
 
     def taskDone(self,
@@ -996,7 +996,7 @@ class Job(TaskRunnerSet, TaskSet[Task], XMLTag, DatabaseElem):
                          reserved: Optional[Mapping[str, str]]
                          ) -> None:
         if self.__resources:
-            toRelease = dict(reserved or ()) # type: Dict[str, str]
+            toRelease: Dict[str, str] = dict(reserved or ())
             for spec in task.resourceClaim:
                 ref = spec.reference
                 info = self.__resources.get(ref)
@@ -1054,7 +1054,7 @@ class _TaskToJobs(RecordObserver[Job]):
     '''
     def __init__(self) -> None:
         RecordObserver.__init__(self)
-        self.__taskToJobs = None # type: Optional[DefaultDict[str, List[str]]]
+        self.__taskToJobs: Optional[DefaultDict[str, List[str]]] = None
 
     def __call__(self, taskId: str) -> Iterator[Task]:
         '''Iterates through all task objects with the given task ID.

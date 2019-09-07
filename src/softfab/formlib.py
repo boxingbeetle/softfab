@@ -40,8 +40,8 @@ class _FormPresenter:
         #         (how do we guarantee uniqueness?)
         self.__id = formId
         self.__autoFocus = autoFocus
-        self.__controls = set() # type: Set[str]
-        self.__clearCode = [] # type: List[str]
+        self.__controls: Set[str] = set()
+        self.__clearCode: List[str] = []
         self.hasClearButton = False
 
     @property
@@ -179,7 +179,7 @@ class _SubmitButton(AttrContainer, XMLPresentable):
             value = 'submit'
             attributes = dict(attributes, value = value)
 
-        label = tuple(self._presentContents(**kwargs)) # type: XMLContent
+        label: XMLContent = tuple(self._presentContents(**kwargs))
         if not label:
             # Automatically create label.
             if isinstance(value, Enum):
@@ -199,7 +199,7 @@ submitButton = _SubmitButton((), dict(tabindex = 1, type = 'submit'))
 class _ResetButton(AttrContainer, XMLPresentable):
 
     def present(self, **kwargs: object) -> XMLContent:
-        label = tuple(self._presentContents(**kwargs)) # type: XMLContent
+        label: XMLContent = tuple(self._presentContents(**kwargs))
         if not label:
             label = 'Revert'
 
@@ -213,7 +213,7 @@ class _ClearButton(AttrContainer, XMLPresentable):
         form = cast(_FormPresenter, kwargs['form'])
         form.hasClearButton = True
 
-        label = tuple(self._presentContents(**kwargs)) # type: XMLContent
+        label: XMLContent = tuple(self._presentContents(**kwargs))
         if not label:
             label = 'Clear'
 
@@ -243,7 +243,7 @@ class _BackButton(AttrContainer, XMLPresentable):
         if name is None:
             attributes = dict(attributes, disabled = True)
 
-        label = tuple(self._presentContents(**kwargs)) # type: XMLContent
+        label: XMLContent = tuple(self._presentContents(**kwargs))
         if not label:
             label = '< Back'
 
@@ -346,7 +346,7 @@ class _TextArea(AttrContainer, XMLPresentable):
         name = cast(Optional[str], attributes.get('name'))
         focus = form.addControl(name, True)
 
-        contents = tuple(self._presentContents(**kwargs)) # type: XMLContent
+        contents: XMLContent = tuple(self._presentContents(**kwargs))
         if not contents and name is not None:
             value = _argValue(kwargs['formArgs'], name)
             if isinstance(value, str):
@@ -406,7 +406,7 @@ class _Select(AttrContainer, XMLPresentable):
                     if iterable(default):
                         # Multiple drop-down lists are combined to populate
                         # a single argument.
-                        value = '' # type: Optional[str]
+                        value: Optional[str] = ''
                     else:
                         value = option.adaptAttributeValue(cast(str, default))
                     form.addClearCode(
@@ -477,8 +477,8 @@ Options = Iterator[Union[
     ]]
 
 class DropDownList(Widget):
-    name = abstract # type: ClassVar[str]
-    extraAttribs = None # type: Optional[Mapping[str, str]]
+    name: ClassVar[str] = abstract
+    extraAttribs: Optional[Mapping[str, str]] = None
 
     def present(self, **kwargs: object) -> XMLContent:
         form = cast(_FormPresenter, kwargs['form'])
@@ -592,7 +592,7 @@ class _CheckBox(AttrContainer, XMLPresentable):
 checkBox = _CheckBox((), dict(value='true', tabindex=1))
 
 class CheckBoxesTable(Table):
-    name = abstract # type: ClassVar[str]
+    name: ClassVar[str] = abstract
 
     def present(self, **kwargs: object) -> XMLContent:
         yield super().present(**kwargs)
@@ -610,7 +610,7 @@ class CheckBoxesTable(Table):
                 first = False
             else:
                 focus = False
-            boxCell = cell(class_ = 'clickable', onclick = 'toggleRow(event)')[
+            boxCell: XMLContent = cell(class_ = 'clickable', onclick = 'toggleRow(event)')[
                 xhtml.label[
                     xhtml.input(
                         type = 'checkbox', tabindex = 1,
@@ -618,7 +618,7 @@ class CheckBoxesTable(Table):
                         checked = key in active, autofocus = focus
                         ), ' ', cells[0]
                     ]
-                ] # type: XMLContent
+                ]
             yield (boxCell,) + tuple(cells[1 : ])
 
     def getActive(self, **kwargs: Any) -> Collection[object]:
@@ -644,9 +644,9 @@ class CheckBoxesTable(Table):
 class SingleCheckBoxTable(CheckBoxesTable):
     '''Special check boxes table which offers only a single check box.
     '''
-    name = abstract # type: ClassVar[str]
+    name: ClassVar[str] = abstract
     columns = None,
-    label = abstract # type: ClassVar[str]
+    label: ClassVar[str] = abstract
     '''Label for the check box.'''
 
     def iterOptions(self, **kwargs: object
@@ -689,7 +689,7 @@ function toggleRow(event) {
 ''']
 
 class RadioTable(Table):
-    name = None # type: str
+    name = cast(str, None)
     '''Name is mandatory, but sometimes static and sometimes computed.'''
 
     def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
@@ -746,15 +746,15 @@ class RadioTable(Table):
         contains an input other than the radio box, you have to override this
         method.
         '''
-        boxCell = xhtml.label[box, ' ', cells[0]] # type: XMLContent
+        boxCell: XMLContent = xhtml.label[box, ' ', cells[0]]
         return (boxCell,) + tuple(cells[1:])
 
 class FormTable(Table):
     '''Presents a form as a table, where each row contains a form field.
     '''
-    labelStyle = None # type: Optional[str]
+    labelStyle: Optional[str] = None
     '''CSS class for field label cells.'''
-    fieldStyle = None # type: Optional[str]
+    fieldStyle: Optional[str] = None
     '''CSS class for field widget cells.'''
     style = 'properties'
 

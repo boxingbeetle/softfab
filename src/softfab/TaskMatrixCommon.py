@@ -95,9 +95,9 @@ def groupTasks(jobs: Iterable[Job],
     Each entry is a dictionary with task name as key and a list of
     corresponding tasks as the value.
     '''
-    taskData = [
+    taskData: List[DefaultDict[str, List[Task]]] = [
         defaultdict(list) for _ in range(7)
-        ] # type: List[DefaultDict[str, List[Task]]]
+        ]
     # In the transition from summer time to winter time,
     # the week is 1 hour longer.
     # By assigning the 7th day dictionary to the 8th day,

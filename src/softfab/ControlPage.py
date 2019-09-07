@@ -44,7 +44,7 @@ class ControlPage(FabResource[ArgsT, ProcT]):
     third party processes (through API calls).
     '''
     contentType = 'text/xml; charset=UTF-8'
-    authenticator = HTTPAuthPage.instance # type: Authenticator
+    authenticator: Authenticator = HTTPAuthPage.instance
 
     def getResponder(self, path: Optional[str], proc: ProcT) -> Responder:
         if path is None:

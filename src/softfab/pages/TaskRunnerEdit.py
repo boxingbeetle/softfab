@@ -138,8 +138,8 @@ class TokenTable(Table):
     columns = None, None
 
     def iterRows(self, *, proc, **kwargs):
-        tokenId = getattr(proc, 'tokenId') # type: str
-        password = getattr(proc, 'password') # type: Optional[str]
+        tokenId: str = getattr(proc, 'tokenId')
+        password: Optional[str] = getattr(proc, 'password')
         yield 'Access token ID: ', xhtml.code[tokenId]
         if password is not None:
             yield 'Access token password: ', xhtml.code[password]

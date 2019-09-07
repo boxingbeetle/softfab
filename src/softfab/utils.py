@@ -46,7 +46,7 @@ class Heap(Generic[T]):
             ):
         if size < 1:
             size = 1
-        self.__array = [ None ] * size # type: List[Optional[T]]
+        self.__array: List[Optional[T]] = [ None ] * size
         self.__count = 1
         self.__keyFunc = (lambda x: x) if key is None else key
 
@@ -262,7 +262,7 @@ class _AbstractField:
     def __repr__(self):
         return '<abstract field>'
 
-abstract = _AbstractField() # type: Any
+abstract: Any = _AbstractField()
 
 def iterable(obj: object) -> bool:
     '''Returns True iff the given object can be iterated through.
@@ -353,7 +353,7 @@ class _CachedProperty(Generic[C, T]):
 
     def __init__(self, method: Callable[[C], T]):
         self.__method = method
-        self.__name = None # type: Optional[str]
+        self.__name: Optional[str] = None
 
     def __get__(self, instance: C, owner: object) -> T:
         if instance is None:

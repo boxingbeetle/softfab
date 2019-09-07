@@ -102,11 +102,11 @@ scheduleDB = ScheduleDB()
 class JobDBObserver(RecordObserver[Job]):
     '''Send notifications if a job related to a schedule is new or changed.
     '''
-    instance = SharedInstance() # type: ClassVar[SharedInstance]
+    instance: ClassVar[SharedInstance] = SharedInstance()
 
     def __init__(self) -> None:
         RecordObserver.__init__(self)
-        self.__observers = [] # type: List[Callable[[Job, 'Scheduled'], None]]
+        self.__observers: List[Callable[[Job, 'Scheduled'], None]] = []
         jobDB.addObserver(self)
 
     def addObserver(self, observer: Callable[[Job, 'Scheduled'], None]) -> None:
@@ -230,7 +230,7 @@ class Scheduled(XMLTag, SelectableRecordABC):
 
         XMLTag.__init__(self, properties)
         SelectableRecordABC.__init__(self)
-        self.__lastJobIds = [] # type: List[str]
+        self.__lastJobIds: List[str] = []
         # Cached value: True means "might be running", False means "certainly
         # not running", since jobs can go from not fixed to fixed but not
         # vice versa.

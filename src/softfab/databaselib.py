@@ -55,7 +55,7 @@ class DatabaseElem:
     '''
 
     def __init__(self: DBRecord) -> None:
-        self.__observers = [] # type: List[Callable[[DBRecord], None]]
+        self.__observers: List[Callable[[DBRecord], None]] = []
 
     def __hash__(self) -> int:
         return hash(self.getId())
@@ -168,7 +168,7 @@ class RecordObserver(Generic[DBRecord]):
 class RecordSubjectMixin(Generic[DBRecord]):
 
     def __init__(self) -> None:
-        self._observers = [] # type: List[RecordObserver[DBRecord]]
+        self._observers: List[RecordObserver[DBRecord]] = []
 
     def _notifyAdded(self, record: DBRecord) -> None:
         for observer in self._observers:
@@ -197,17 +197,17 @@ class Database(Generic[DBRecord], RecordSubjectMixin[DBRecord], ABC):
     """
 
     # Directory in which the records of this database are kept.
-    baseDir = abstract # type: ClassVar[str]
+    baseDir: ClassVar[str] = abstract
 
     # Parser for the root XML tag.
-    factory = abstract # type: ClassVar[object]
+    factory: ClassVar[object] = abstract
 
     # The object part of privilege strings that apply to this database.
     # See userlib.privileges for details.
-    privilegeObject = abstract # type: ClassVar[str]
+    privilegeObject: ClassVar[str] = abstract
 
     # Describes the type of records contained in this database.
-    description = abstract # type: ClassVar[str]
+    description: ClassVar[str] = abstract
 
     # Indicates whether this database is kept in memory at all times.
     alwaysInMemory = True
@@ -218,7 +218,7 @@ class Database(Generic[DBRecord], RecordSubjectMixin[DBRecord], ABC):
 
     # Lists the column keys that are unique: every record will have a different
     # value for the listed keys.
-    uniqueKeys = () # type: Sequence[str]
+    uniqueKeys: Sequence[str] = ()
 
     # Cache the unique values for the given column keys.
     # The mechanism which does this is a bit limited: for every loaded record,
@@ -235,9 +235,9 @@ class Database(Generic[DBRecord], RecordSubjectMixin[DBRecord], ABC):
     # preloading (fixes 1).
     # Using weak references, 3 could be solved easily, 2 with some additional
     # effort, but 1 could never be solved, so I decided against it.
-    cachedUniqueValues = () # type: Sequence[str]
+    cachedUniqueValues: Sequence[str] = ()
 
-    keyRetrievers = {} # type: ClassVar[Mapping[str, Retriever]]
+    keyRetrievers: ClassVar[Mapping[str, Retriever]] = {}
     """Contains optimized value retriever functions for certain column keys.
     """
 
@@ -256,14 +256,14 @@ class Database(Generic[DBRecord], RecordSubjectMixin[DBRecord], ABC):
         super().__init__()
         if not os.path.exists(self.baseDir):
             os.makedirs(self.baseDir)
-        cache = {} # type: Dict[str, Optional[DBRecord]]
+        cache: Dict[str, Optional[DBRecord]] = {}
         for fileName in os.listdir(self.baseDir):
             if fileName.endswith('.xml'):
                 cache[self._keyForFileName(fileName)] = None
         self._cache = cache
-        self.__uniqueValuesFor = {
+        self.__uniqueValuesFor: Dict[str, Set[object]] = {
             key: set() for key in self.cachedUniqueValues
-            } # type: Dict[str, Set[object]]
+            }
         # Every time you use "self._update", another "instancemethod" object is
         # created. Storing it per database avoids one instance per record.
         self.__updateFunc = self._update
@@ -539,10 +539,10 @@ class VersionedDatabase(Database[DBRecord]):
     If you attempt to modify the record object (DatabaseElem) and
     call _notify() on it, you will get a RuntimeError.
     """
-    baseDir = abstract # type: ClassVar[str]
-    description = abstract # type: ClassVar[str]
-    factory = abstract # type: ClassVar[object]
-    privilegeObject = abstract # type: ClassVar[str]
+    baseDir: ClassVar[str] = abstract
+    description: ClassVar[str] = abstract
+    factory: ClassVar[object] = abstract
+    privilegeObject: ClassVar[str] = abstract
 
     # Implementation notes:
     #
@@ -581,7 +581,7 @@ class VersionedDatabase(Database[DBRecord]):
 
         Database.__init__(self)
 
-        latestVersionOf = {} # type: Dict[str, str]
+        latestVersionOf: Dict[str, str] = {}
         for versionedKey in self._cache:
             key, version = versionedKey.split('|')
             latest = latestVersionOf.get(key)
@@ -904,7 +904,7 @@ def checkWrapperVarName(name: str) -> None:
             raise KeyError('name must not be empty')
         if name[0].isdigit():
             raise KeyError('name must not start with a digit')
-        illegalChars = [] # type: List[str]
+        illegalChars: List[str] = []
         for char in name:
             if not (ord(char) < 128 and (char.isalnum() or char == '_')):
                 if char not in illegalChars:

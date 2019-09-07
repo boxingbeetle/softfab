@@ -100,7 +100,7 @@ class ResourceMissingReason(ReasonForWaiting):
         return f'resource was deleted: {self.__resourceId}'
 
 class ResourceReason(ReasonForWaiting, ABC):
-    prioMinor = abstract # type: ClassVar[int]
+    prioMinor: ClassVar[int] = abstract
 
     def __init__(self, level: StatusLevel):
         ReasonForWaiting.__init__(self)
@@ -178,7 +178,7 @@ class BoundReason(ReasonForWaiting):
         return f'waiting for bound Task Runner: {self.__boundRunnerId}'
 
 class _CapabilitiesReason(ReasonForWaiting, ABC):
-    selectorMajor = abstract # type: ClassVar[int]
+    selectorMajor: ClassVar[int] = abstract
 
     def __init__(self,
                  missingOnAll: AbstractSet[str],
@@ -321,8 +321,8 @@ def _checkCapabilities(
     '''Filter out Task Runners without the required capabilities.
     '''
     foundRunners = []
-    missingOnAny = set() # type: AbstractSet[str]
-    missingOnAll = None # type: Optional[AbstractSet[str]]
+    missingOnAny: AbstractSet[str] = set()
+    missingOnAll: Optional[AbstractSet[str]] = None
     for runner in runners:
         missingCaps = neededCaps - runner.capabilities
         if missingCaps:
@@ -380,7 +380,7 @@ def checkBoundGroupRunner(
         whyNot: List[ReasonForWaiting]
         ) -> Sequence[TaskRunner]:
     boundRunnerId = boundRunner.getId()
-    runners = [ boundRunner ] # type: Sequence[TaskRunner]
+    runners: Sequence[TaskRunner] = [ boundRunner ]
     runners = _checkCapabilities(
         runners, whyNot,
         lambda *args: BoundGroupCapsReason(boundRunnerId, *args),

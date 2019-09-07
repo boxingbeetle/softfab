@@ -36,16 +36,17 @@ class SelectConfigsMixin(Generic[SelectArgsT]):
     if TYPE_CHECKING:
         def __init__(self) -> None:
             self.args = cast(SelectArgsT, None)
-            self.notices = [] # type: List[str]
+            self.notices: List[str] = []
 
     def findConfigs(self) -> None:
-        self.configs = configs = [] # type: List[Config]
+        configs = []
         missingIds = []
         for configId in sorted(self.args.sel):
             try:
                 configs.append(configDB[configId])
             except KeyError:
                 missingIds.append(configId)
+        self.configs = configs
         if missingIds:
             self.notices.append(presentMissingConfigs(missingIds))
 
@@ -71,10 +72,10 @@ class InputTable(Table):
         localInputs = taskSet.hasLocalInputs()
         taskRunners = None
         for group, groupInputs in grouped:
-            first = None # type: Optional[str]
+            first: Optional[str] = None
             for inp in groupInputs:
                 inputName = inp.getName()
-                cells = [ inputName ] # type: List[XMLContent]
+                cells: List[XMLContent] = [ inputName ]
                 prodType = inp.getType()
                 local = inp.isLocal()
                 locator = inp.getLocator() or ''
@@ -101,7 +102,7 @@ class InputTable(Table):
                                     runner, taskSet, group, inp
                                     )
                                 )
-                        cellData = dropDownList(
+                        cellData: XMLContent = dropDownList(
                             name='local.' + inputName,
                             selected=inp.getLocalAt() or '',
                             required=True
@@ -110,7 +111,7 @@ class InputTable(Table):
                                 '(select Task Runner)'
                                 ],
                             taskRunners
-                            ] # type: XMLContent
+                            ]
                     else:
                         cellData = '-'
                     cells.append(cell(rowspan = len(groupInputs))[cellData])
@@ -165,11 +166,11 @@ class SimpleConfigTable(DataTable[Config]):
     if True, its visibility depends on project settings.
     """
 
-    fixedColumns = (
+    fixedColumns: Sequence[DataColumn[Config]] = (
         _NameColumn(),
         DataColumn[Config]('#', 'nrtasks', cellStyle = 'rightalign'),
         DataColumn[Config](keyName = 'description')
-        ) # type: Sequence[DataColumn[Config]]
+        )
           # Workaround for https://github.com/python/mypy/issues/4444
 
     def iterColumns(self, **kwargs: object) -> Iterator[DataColumn[Config]]:

@@ -53,10 +53,10 @@ class Token(XMLTag, DatabaseElem):
         return token
 
     def __init__(self, properties: Mapping[str, XMLAttributeValue]):
-        self.__params = {} # type: Dict[str, str]
+        self.__params: Dict[str, str] = {}
         XMLTag.__init__(self, properties)
         DatabaseElem.__init__(self)
-        self.__owner = None # type: Optional[User]
+        self.__owner: Optional[User] = None
 
     def getId(self) -> str:
         """Unique identification for this token."""

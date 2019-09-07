@@ -66,7 +66,7 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
         TaskStateMixin.__init__(self)
         self.__task = task
         if task is None:
-            self.__job = None # type: Optional[Job]
+            self.__job: Optional[Job] = None
         else:
             self.__job = task.getJob()
         # This will be set during XML parsing.
@@ -74,9 +74,9 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
         if 'state' not in self._properties:
             # Initial state.
             self._properties['state'] = 'waiting'
-        self.__reports = [] # type: List[str]
-        self.__reserved = {} # type: Dict[str, str]
-        self.__reasonForWaiting = None # type: Optional[ReasonForWaiting]
+        self.__reports: List[str] = []
+        self.__reserved: Dict[str, str] = {}
+        self.__reasonForWaiting: Optional[ReasonForWaiting] = None
 
         self._properties.setdefault('runId', 0)
         # 'abort' is either 'true' or doesn't exist
@@ -88,7 +88,7 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
         self._properties['state'] != 'running':
             del self._properties['alert']
 
-        self.__extractionRun = None # type: Optional[ExtractionRun]
+        self.__extractionRun: Optional[ExtractionRun] = None
         if 'extractionRun' in self._properties:
             extractionRunId = cast(str, self._properties['extractionRun'])
             extractionRun = shadowlib.shadowDB.get(extractionRunId)

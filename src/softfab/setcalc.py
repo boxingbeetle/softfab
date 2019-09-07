@@ -12,7 +12,7 @@ VT = TypeVar('VT')
 def union(seq: Iterable[AbstractSet[VT]]) -> Set[VT]:
     '''Calculate the union of multiple sets.
     '''
-    ret = set() # type: Set[VT]
+    ret: Set[VT] = set()
     for elem in seq:
         ret |= elem
     return ret
@@ -39,7 +39,7 @@ def categorizedLists(
     The returned defaultdict returns a new empty list if a non-existing key
     is looked up.
     '''
-    valuesByCategory = defaultdict(list) # type: DefaultDict[KT, List[VT]]
+    valuesByCategory: DefaultDict[KT, List[VT]] = defaultdict(list)
     for category, value in pairs:
         valuesByCategory[category].append(value)
     return valuesByCategory
@@ -53,7 +53,7 @@ def categorizedSets(
     The returned defaultdict returns a new empty set if a non-existing key
     is looked up.
     '''
-    valuesByCategory = defaultdict(set) # type: DefaultDict[KT, Set[VT]]
+    valuesByCategory: DefaultDict[KT, Set[VT]] = defaultdict(set)
     for category, value in pairs:
         valuesByCategory[category].add(value)
     return valuesByCategory
@@ -73,7 +73,7 @@ class UnionFind(Generic[VT]):
     # is done.
 
     def __init__(self) -> None:
-        self.__representants = {} # type: Dict[VT, VT]
+        self.__representants: Dict[VT, VT] = {}
 
     def add(self, elem: VT) -> None:
         '''Adds the given element.

@@ -246,7 +246,7 @@ class KeySorter(RecordSorter[Record]):
             uniqueKeys = db.uniqueKeys
 
         RecordSorter.__init__(self)
-        self.__retrievers = retrievers = [] # type: List[Retriever]
+        retrievers: List[Retriever] = []
         for key in keyOrder:
             retrievers.append(_substMissingForNone(
                 key if callable(key) else _getRetriever(db, key)
@@ -261,11 +261,12 @@ class KeySorter(RecordSorter[Record]):
                 Callable[[Record], Record],
                 lambda record: record
                 ))
+        self.__retrievers = retrievers
 
     def __call__(self, records: Iterable[Record]) -> List[Record]:
         # Radix sort: start with least important key and end with most
         # important key; Python's sort guarantees stability of equal elements.
-        sortList = None # type: Optional[List[Record]]
+        sortList: Optional[List[Record]] = None
         for retriever in reversed(self.__retrievers):
             if sortList is None:
                 sortList = sorted(records, key=retriever)

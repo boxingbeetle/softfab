@@ -50,8 +50,8 @@ if _profileRender:
 class ErrorPage(UIPage[ProcT]):
     """Abstract base class for error pages.
     """
-    status = abstract # type: ClassVar[int]
-    title = abstract # type: ClassVar[str]
+    status: ClassVar[int] = abstract
+    title: ClassVar[str] = abstract
 
     def __init__(self, messageText: Optional[str] = None):
         UIPage.__init__(self)
@@ -157,7 +157,7 @@ def renderAuthenticated(page: FabResource, request: TwistedRequest) -> object:
 def renderAsync(
         page: FabResource, request: TwistedRequest
         ) -> Iterator[Deferred]:
-    req = Request(request) # type: Request
+    req: Request = Request(request)
     streaming = False
     try:
         authenticator = page.authenticator
@@ -243,9 +243,9 @@ def parseAndProcess(page: FabResource[ArgsT, PageProcessor[ArgsT]],
         _checkActive(page, args)
 
         # Processing step.
-        proc = page.Processor(
+        proc: PageProcessor[ArgsT] = page.Processor(
             page, req, args, user
-            ) # type: PageProcessor[ArgsT]
+            )
         try:
             yield proc.process(req, user)
         except PresentableError as ex:
@@ -261,11 +261,11 @@ def parseAndProcess(page: FabResource[ArgsT, PageProcessor[ArgsT]],
                 )
             proc.processTables()
     except AccessDenied as ex:
-        forbiddenPage = ForbiddenPage(
+        forbiddenPage: ErrorPage[PageProcessor[ArgsT]] = ForbiddenPage(
             f"You don't have permission to {str(ex) or 'access this page'}"
-            ) # type: ErrorPage[PageProcessor[ArgsT]]
+            )
         proc = PageProcessor(page, req, args, user)
-        responder = UIResponder(forbiddenPage, proc) # type: Responder
+        responder: Responder = UIResponder(forbiddenPage, proc)
     except ArgsCorrected as ex:
         subPath = req.getSubPath()
         query = Query.fromArgs(ex.correctedArgs)
@@ -275,7 +275,7 @@ def parseAndProcess(page: FabResource[ArgsT, PageProcessor[ArgsT]],
             url = f'{page.name}/{subPath}?{query.toURL()}'
         responder = Redirector(url)
     except ArgsInvalid as ex:
-        badRequestPage = BadRequestPage(
+        badRequestPage: ErrorPage[PageProcessor[ArgsT]] = BadRequestPage(
             str(ex),
             (    xhtml.p[ 'Invalid arguments:' ],
                 xhtml.dl[(
@@ -283,7 +283,7 @@ def parseAndProcess(page: FabResource[ArgsT, PageProcessor[ArgsT]],
                     for name, message in ex.errors.items()
                     )]
                 )
-            ) # type: ErrorPage[PageProcessor[ArgsT]]
+            )
         proc = PageProcessor(page, req, args, user)
         responder = UIResponder(badRequestPage, proc)
     except InvalidRequest as ex:
@@ -299,8 +299,8 @@ def parseAndProcess(page: FabResource[ArgsT, PageProcessor[ArgsT]],
         try:
             responder = page.getResponder(req.getSubPath(), proc)
         except KeyError:
-            notFoundPage = NotFoundPage(
-                    ) # type: ErrorPage[PageProcessor[ArgsT]]
+            notFoundPage: ErrorPage[PageProcessor[ArgsT]] = NotFoundPage(
+                    )
             responder = UIResponder(notFoundPage, proc)
 
     req.processEnd()

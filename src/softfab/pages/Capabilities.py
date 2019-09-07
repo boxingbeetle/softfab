@@ -70,8 +70,8 @@ class CapInfo:
 
     def __init__(self, capability: str):
         self.capability = capability
-        self.taskDefIds = set() # type: MutableSet[str]
-        self.resourceIds = set() # type: MutableSet[str]
+        self.taskDefIds: MutableSet[str] = set()
+        self.resourceIds: MutableSet[str] = set()
 
     def __getitem__(self, key: str) -> object:
         return getattr(self, key)
@@ -141,7 +141,7 @@ class Capabilities_GET(FabPage['Capabilities_GET.Processor',
             args = req.args
             typeName = args.restype
 
-            capMap = ResultKeeper(CapInfo) # type: ResultKeeper[str, CapInfo]
+            capMap: ResultKeeper[str, CapInfo] = ResultKeeper(CapInfo)
 
             # Always include targets, even if there are no TRs for them.
             for target in project.getTargets():

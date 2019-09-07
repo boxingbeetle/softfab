@@ -48,8 +48,8 @@ class VerificationError(Exception):
         super().__init__(message)
 
 class DialogStep(ABC, Generic[DialogProcT]):
-    name = abstract # type: ClassVar[str]
-    title = abstract # type: ClassVar[str]
+    name: ClassVar[str] = abstract
+    title: ClassVar[str] = abstract
 
     def __init__(self, page: 'DialogPage'):
         self._page = page
@@ -203,9 +203,9 @@ class DialogProcessorBase(PageProcessor[DialogArgsT]):
             # pylint: disable=attribute-defined-outside-init
             self.step = step
             self.errorMessage = errorMessage
-            self.backName = (
+            self.backName: Optional[str] = (
                 'back' if len(visibleSteps) > 1 else None
-                ) # type: Optional[str]
+                )
             self.args = self.args.override(
                 path = ' '.join(actualPath), back = None, error = None
                 )
@@ -268,10 +268,10 @@ class ContinuedDialogProcessor(DialogProcessorBase[DialogArgsT]):
             self.walkSteps(requestedPath)
 
 class DialogPage(FabPage[DialogProcessorBase, 'DialogPage.Arguments'], ABC):
-    description = abstract # type: ClassVar[str]
-    icon = abstract # type: ClassVar[str]
+    description: ClassVar[str] = abstract
+    icon: ClassVar[str] = abstract
 
-    steps = abstract # type: ClassVar[Sequence[Type[DialogStep]]]
+    steps: ClassVar[Sequence[Type[DialogStep]]] = abstract
 
     class Arguments(PageArgs):
         path = StrArg('')

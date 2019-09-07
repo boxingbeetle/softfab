@@ -250,8 +250,8 @@ class AbsentModel(StatusModel):
 class DBStatusModelGroup(StatusModel, RecordObserver, ABC):
     '''A status model group based on a database.
     '''
-    childClass = abstract # type: ClassVar[Type[StatusModel]]
-    db = abstract # type: ClassVar[Database]
+    childClass: ClassVar[Type[StatusModel]] = abstract
+    db: ClassVar[Database] = abstract
 
     @classmethod
     def getChildClass(cls):
@@ -293,7 +293,7 @@ class StatusModelRegistry(StatusModel):
     '''A central location where status models can be registered and looked up.
     Acts as the root of the model tree.
     '''
-    instance = SharedInstance() # type: ClassVar[SharedInstance]
+    instance: ClassVar[SharedInstance] = SharedInstance()
 
     @classmethod
     def getChildClass(cls):

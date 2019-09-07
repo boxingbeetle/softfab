@@ -55,10 +55,10 @@ class ProductTable(Table, Generic[ProcT]):
     style = 'nostrong'
     hideWhenEmpty = True
 
-    label = abstract # type: ClassVar[str]
-    showProducers = abstract # type: ClassVar[bool]
-    showConsumers = abstract # type: ClassVar[bool]
-    showColors = abstract # type: ClassVar[bool]
+    label: ClassVar[str] = abstract
+    showProducers: ClassVar[bool] = abstract
+    showConsumers: ClassVar[bool] = abstract
+    showColors: ClassVar[bool] = abstract
 
     def getProducts(self, proc: ProcT) -> Sequence[Product]:
         raise NotImplementedError

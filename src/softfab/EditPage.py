@@ -106,7 +106,7 @@ class SavePhase(AbstractPhase['EditProcessor[EditArgsT, DBRecord]',
 
         if proc.replace:
             try:
-                existingElement = page.db[args.newId] # type: Optional[DBRecord]
+                existingElement: Optional[DBRecord] = page.db[args.newId]
             except KeyError:
                 # Record is no longer in DB; create instead of replace.
                 existingElement = None
@@ -256,7 +256,7 @@ class EditProcessorBase(PageProcessor[EditArgsT], Generic[EditArgsT, DBRecord]):
 
 class InitialEditProcessor(EditProcessorBase[EditArgsT, DBRecord]):
 
-    argsClass = abstract # type: ClassVar[Type[EditArgsT]]
+    argsClass: ClassVar[Type[EditArgsT]] = abstract
     """The argument class used for editing: a subclass of `EditArgs`,
     that contains all the values needed to construct a record.
     """
@@ -403,25 +403,25 @@ class EditProcessor(EditProcessorBase[EditArgsT, DBRecord]):
         '''
 
 class EditPage(FabPage[EditProcessorBase[EditArgsT, DBRecord], EditArgsT], ABC):
-    description = abstract # type: ClassVar[str]
-    icon = abstract # type: ClassVar[str]
+    description: ClassVar[str] = abstract
+    icon: ClassVar[str] = abstract
     iconModifier = IconModifier.NEW
 
     # TODO: It seems 'record' and 'element' are used for the same thing.
     #       Pick one term and stick with it.
-    elemTitle = abstract # type: ClassVar[str]
-    elemName = abstract # type: ClassVar[str]
-    db = abstract # type: Database[DBRecord]
-    privDenyText = abstract # type: ClassVar[str]
-    useScript = abstract # type: ClassVar[bool]
-    formId = abstract # type: ClassVar[str]
+    elemTitle: ClassVar[str] = abstract
+    elemName: ClassVar[str] = abstract
+    db: Database[DBRecord] = abstract
+    privDenyText: ClassVar[str] = abstract
+    useScript: ClassVar[bool] = abstract
+    formId: ClassVar[str] = abstract
     # Possible values for "autoName":
     # TODO: Can we simplify this? Maybe bool whether user can name the record;
     #       if False a method to provide the ID.
     # None: user must name the record
     # False: record already has been named, this name cannot be changed
     # non-empty string: record has a fixed name, which is this string
-    autoName = abstract # type: ClassVar[Union[None, bool, str]]
+    autoName: ClassVar[Union[None, bool, str]] = abstract
 
     def checkAccess(self, user: User) -> None:
         # Access will be checked later by Processor.

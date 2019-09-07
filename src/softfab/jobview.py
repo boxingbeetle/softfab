@@ -55,7 +55,7 @@ def combinedStatus(statuses: Iterable[Optional[str]]) -> Optional[str]:
     return max(statuses, key=_resultOrder.__getitem__, default=None)
 
 # Cache for getJobStatus().
-_finalJobStatus = {} # type: Dict[str, str]
+_finalJobStatus: Dict[str, str] = {}
 
 def getJobStatus(job: Job) -> str:
     '''Summarizes the current status of the given job by combining the task
@@ -178,7 +178,7 @@ class JobsTable(DataTable[Job]):
     objectName = 'jobs'
 
     leadTimeColumn = DurationColumn[Job](label='Lead Time', keyName='leadtime')
-    statusColumn = _StatusColumn.instance # type: ClassVar[DataColumn[Job]]
+    statusColumn: ClassVar[DataColumn[Job]] = _StatusColumn.instance
 
     def showTargetColumn(self) -> bool:
         return project.showTargets

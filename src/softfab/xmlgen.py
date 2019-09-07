@@ -176,7 +176,7 @@ class _XMLSerializable:
         with itself inserted between each sibling.
         This method is similar to str.join().
         '''
-        content = [] # type: List[_XMLSerializable]
+        content: List[_XMLSerializable] = []
         for sibling in siblings:
             content.extend(_adaptSequence(sibling))
             content.append(self)
@@ -206,7 +206,7 @@ def _adaptElementTreeRec(
     if isinstance(tag, str):
         if tag.startswith('{'):
             index = tag.rindex('}')
-            namespace = tag[1:index] # type: Optional[str]
+            namespace: Optional[str] = tag[1:index]
             tag = tag[index + 1:]
         else:
             namespace = None
@@ -249,7 +249,7 @@ def _adaptElementTreeRec(
 
 def _adaptElementTree(element: ElementTree.Element) -> Iterator[XML]:
     # Note: We only use prefixes for attributes.
-    prefixMap = {} # type: Dict[str, str]
+    prefixMap: Dict[str, str] = {}
 
     for obj in _adaptElementTreeRec(element, prefixMap):
         if prefixMap and isinstance(obj, XMLNode):
@@ -330,7 +330,7 @@ class _XMLSequence(_XMLSerializable):
         if that is not guaranteed, apply _adaptSequence() first.
         '''
         _XMLSerializable.__init__(self)
-        self._children = tuple(children) # type: Sequence[XML]
+        self._children: Sequence[XML] = tuple(children)
 
     def __bool__(self) -> bool:
         return bool(self._children)
@@ -597,7 +597,7 @@ class _XHTMLRawTextNode(_XHTMLNode):
             # Text can be output as-is.
             yield from texts
 
-_nodeFactories = {} # type: Dict[Optional[str], _XMLNodeFactory]
+_nodeFactories: Dict[Optional[str], '_XMLNodeFactory'] = {}
 
 class _XMLNodeFactory:
     '''Automatically creates XMLNode instances for any tag that is requested:
@@ -631,7 +631,7 @@ class _XHTMLNodeFactory(_XMLNodeFactory):
 
     def __getattr__(self, key: str) -> _XHTMLNode:
         if key in self._voidElements:
-            nodeClass = _XHTMLVoidNode # type: Type[_XHTMLNode]
+            nodeClass: Type[_XHTMLNode] = _XHTMLVoidNode
         elif key in self._rawTextElements:
             nodeClass = _XHTMLRawTextNode
         else:
@@ -647,9 +647,9 @@ class _XHTMLParser(HTMLParser):
             ) -> None:
         super().__init__()
         self.piHandlers = piHandlers
-        self.stack = [
+        self.stack: List[Tuple[XMLNode, List[XMLContent]]] = [
             (cast(XMLNode, None), [])
-            ] # type: List[Tuple[XMLNode, List[XMLContent]]]
+            ]
 
     def handle_starttag(self,
             tag: str,
@@ -718,4 +718,4 @@ def parseHTML(
 xml = _XMLNodeFactory(None)
 atom = _XMLNodeFactory('http://www.w3.org/2005/Atom')
 xhtml = _XHTMLNodeFactory('http://www.w3.org/1999/xhtml')
-txt = _Text.__call__ # type: Callable[[str], XML]
+txt: Callable[[str], XML] = _Text.__call__

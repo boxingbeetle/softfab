@@ -134,8 +134,8 @@ class UserAgent:
         if userAgent is None:
             return None
 
-        main = None # type: Optional[str]
-        compat = None # type: Optional[str]
+        main: Optional[str] = None
+        compat: Optional[str] = None
         for productOrComment in self.__parseUserAgent(userAgent):
             if isinstance(productOrComment, tuple):
                 comment = cast(Sequence[str], productOrComment)

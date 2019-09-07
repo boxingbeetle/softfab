@@ -121,8 +121,8 @@ class BasketArgs(TagArgs, SelectArgs):
 BasketArgsT = TypeVar('BasketArgsT', bound=BasketArgs)
 
 class SelectProcMixin(Generic[BasketArgsT, SelectableRecord]):
-    tagCache = abstract # type: ClassVar[TagCache]
-    db = abstract # type: Database[SelectableRecord]
+    tagCache: ClassVar[TagCache] = abstract
+    db: Database[SelectableRecord] = abstract
 
     if TYPE_CHECKING:
         def __init__(self, args: BasketArgsT) -> None:
@@ -319,13 +319,13 @@ def selectDialog(formAction: str,
                             )
                         )[ label ]
                     ]
-        valueTable = xhtml.table(class_ = 'nav')[
+        valueTable: XMLContent = xhtml.table(class_ = 'nav')[
             xhtml.tbody[
                 xhtml.tr[ xhtml.th[ 'Tag Values:' ] ],
                 ( xhtml.tr[ createTagCell(value) ]
                   for value in list(tagCache.getValues(tagKey)) + [''] )
                 ]
-            ] # type: XMLContent
+            ]
     else:
         valueTable = None
 
@@ -333,11 +333,11 @@ def selectDialog(formAction: str,
         sel = recordId in selected
         return sel, not sel
     if filtered - selected:
-        buttons = [
+        buttons: List[XMLContent] = [
             _scriptButton(True)[ _selButtonLabel ],
             resetButton[ _resButtonLabel ],
             submitButton(name = 'action', value = 'add')
-            ] # type: List[XMLContent]
+            ]
         if not selected:
             buttons += actionButtons()
         setFocus = True
@@ -397,7 +397,7 @@ def selectDialog(formAction: str,
 
 class TagValueEditTable(Table, ABC):
     valTitle = 'Tag Values'
-    tagCache = abstract # type: ClassVar[TagCache]
+    tagCache: ClassVar[TagCache] = abstract
 
     addTagValueScript = script[
         r'''

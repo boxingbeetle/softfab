@@ -56,7 +56,7 @@ class Task_GET(FabPage['Task_GET.Processor', 'Task_GET.Arguments']):
             self.initTask(req)
             run = self.task.getLatestRun()
 
-            reports = OrderedDict() # type: Dict[str, Optional[str]]
+            reports: Dict[str, Optional[str]] = OrderedDict()
             reports['Overview'] = None
             reports['Data'] = None
             taskReports = tuple(run.reports)

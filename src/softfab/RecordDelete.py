@@ -70,9 +70,9 @@ class RecordDelete_GET(FabPage['RecordDelete_GET.Processor',
         denyText = text that appears in the 'access denied' message
     You can define these at class scope (since they are constants).
     """
-    db = abstract # type: Database[DBRecord]
-    recordName = abstract # type: ClassVar[str]
-    denyText = abstract # type: ClassVar[str]
+    db: Database[DBRecord] = abstract
+    recordName: ClassVar[str] = abstract
+    denyText: ClassVar[str] = abstract
 
     description = abstract
     linkDescription = False

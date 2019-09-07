@@ -67,7 +67,7 @@ def iterConnectedExecutionGraphs() -> Iterator[Tuple[Set[str], Set[str]]]:
     For each execution graph, the collection contains a pair with the products
     and frameworks in that connected graph.
     '''
-    unionFind = UnionFind() # type: UnionFind[Tuple[str, str]]
+    unionFind: UnionFind[Tuple[str, str]] = UnionFind()
 
     # Add all products.
     for productId in productDefDB.keys():
@@ -137,7 +137,7 @@ class Graph:
 
         try:
             # Note: This catches exceptions from the rendering process
-            svgGraph = graph.draw(format='svg', prog='dot') # type: str
+            svgGraph: str = graph.draw(format='svg', prog='dot')
         except Exception:
             logging.exception(
                 'Execution graph rendering (pygraphviz) failed'
@@ -359,11 +359,11 @@ class GraphPageMixin:
 
     def __getGraph(self, proc: PageProcessor, name: str) -> Graph:
         if hasattr(proc, 'graphs'):
-            graphs = getattr(proc, 'graphs') # type: Optional[Iterable[Graph]]
+            graphs: Optional[Iterable[Graph]] = getattr(proc, 'graphs')
             if graphs is None:
                 graphs = ()
         elif hasattr(proc, 'graph'):
-            graph = getattr(proc, 'graph') # type: Optional[Graph]
+            graph: Optional[Graph] = getattr(proc, 'graph')
             graphs = () if graph is None else (graph, )
         else:
             raise AttributeError('Unable to find graphs in Processor')

@@ -18,7 +18,7 @@ class Configure_GET(FabPage[FabPage.Processor, FabPage.Arguments]):
         pass
 
     def presentContent(self, **kwargs: object) -> XMLContent:
-        descriptions = (
+        descriptions: Sequence[Tuple[str, str, XMLContent]] = (
             ( 'Project', 'ProjectEdit',
                 'Change overall settings, such as the project name '
                 'and the list of targets.'
@@ -39,7 +39,7 @@ class Configure_GET(FabPage[FabPage.Processor, FabPage.Arguments]):
                 'Look up version information of your SoftFab installation '
                 'and web browser.'
                 ),
-            ) # type: Sequence[Tuple[str, str, XMLContent]]
+            )
         return xhtml.dl(class_='toc')[(
             ( xhtml.dt[xhtml.a(href=url)[name]], xhtml.dd[descr] )
             for name, url, descr in descriptions

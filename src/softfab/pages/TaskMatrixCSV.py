@@ -48,7 +48,7 @@ class TaskMatrixCSV_GET(CSVPage['TaskMatrixCSV_GET.Processor']):
         yield ()
 
         if configFilter:
-            taskNames = set() # type: Set[str]
+            taskNames: Set[str] = set()
         else:
             # Get list of names of current task definitions.
             taskNames = set(taskDefDB.keys())
@@ -69,7 +69,7 @@ class TaskMatrixCSV_GET(CSVPage['TaskMatrixCSV_GET.Processor']):
             ]
         # Take the result of the most recent execution of each task, since that
         # is most likely to be representative.
-        sorter = KeySorter([ '-starttime' ]) # type: KeySorter[Task]
+        sorter: KeySorter[Task] = KeySorter([ '-starttime' ])
         for taskName in sorted(taskNames):
             resultCells = [ taskName ]
             for taskDict in taskData:
@@ -84,8 +84,8 @@ class TaskMatrixCSV_GET(CSVPage['TaskMatrixCSV_GET.Processor']):
                 resultCells.append(result)
             yield resultCells
 
-RESULT_MAP = {
+RESULT_MAP: Mapping[Optional[ResultCode], str] = {
     ResultCode.OK: 'P',
     ResultCode.WARNING: 'F',
     ResultCode.ERROR: 'F'
-} # type: Mapping[Optional[ResultCode], str]
+}

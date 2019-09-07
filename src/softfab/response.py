@@ -40,9 +40,9 @@ class Response:
             self.__buffer = BytesIO()
             self.__writeBytes = self.__buffer.write
 
-        self.__producerDone = None # type: Optional[Deferred]
+        self.__producerDone: Optional[Deferred] = None
 
-        self.__connectionLostFailure = None # type: Optional[Failure]
+        self.__connectionLostFailure: Optional[Failure] = None
         d = request.notifyFinish()
         d.addErrback(self.__connectionLost)
 

@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 class TaskRunnerSet:
 
     def __init__(self) -> None:
-        self._runners = set() # type: Set[str]
+        self._runners: Set[str] = set()
 
     def _addRunner(self, attributes: Mapping[str, str]) -> None:
         self._runners.add(attributes['id'])
@@ -35,13 +35,13 @@ class TaskRunnerSet:
             yield xml.runner(id = runner)
 
 class TaskStateMixin:
-    intProperties = ('starttime', 'stoptime') # type: ClassVar[Sequence[str]]
-    enumProperties = {
+    intProperties: ClassVar[Sequence[str]] = ('starttime', 'stoptime')
+    enumProperties: ClassVar[Mapping[str, Type[Enum]]] = {
         'result': ResultCode
-        } # type: ClassVar[Mapping[str, Type[Enum]]]
+        }
 
     if TYPE_CHECKING:
-        _properties = {} # type: Dict[str, Union[str, int, Enum]]
+        _properties: Dict[str, Union[str, int, Enum]] = {}
 
     def _getState(self) -> str:
         raise NotImplementedError

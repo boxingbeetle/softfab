@@ -37,7 +37,7 @@ def binarySearch(lst: Sequence[DBRecord],
 class SortedQueue(RecordSubjectMixin[DBRecord], RecordObserver[DBRecord], ABC):
     '''Base class for sorted subsets of databases.
     '''
-    compareField = abstract # type: ClassVar[str]
+    compareField: ClassVar[str] = abstract
 
     def __init__(self, db: Database[DBRecord]):
         RecordSubjectMixin.__init__(self)

@@ -76,16 +76,16 @@ class BasePage(UIPage[ProcT], FabResource[ArgsT, ProcT], ABC):
 class FabPage(BasePage[ProcT, ArgsT]):
     authenticator = LoginAuthPage.instance
 
-    __pageInfo = {} # type: ClassVar[Dict[str, Mapping[str, Any]]]
+    __pageInfo: ClassVar[Dict[str, Mapping[str, Any]]] = {}
 
-    icon = abstract # type: ClassVar[Optional[str]]
-    iconModifier = IconModifier.NONE # type: ClassVar[IconModifier]
-    description = abstract # type: ClassVar[str]
+    icon: ClassVar[Optional[str]] = abstract
+    iconModifier: ClassVar[IconModifier] = IconModifier.NONE
+    description: ClassVar[str] = abstract
     # Description used to link from the parent to this page.
     # If set to None (default), the value of the "description" field is used.
     # If set to False, the parent will not link to this page.
-    linkDescription = None # type: ClassVar[Union[str, bool, None]]
-    children = [] # type: ClassVar[Sequence[str]]
+    linkDescription: ClassVar[Union[str, bool, None]] = None
+    children: ClassVar[Sequence[str]] = []
 
     # TODO: Because this is a static method, it is not possible to disable
     #       pages (like AddUser) for certain roles.

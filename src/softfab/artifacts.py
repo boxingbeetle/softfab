@@ -81,7 +81,7 @@ class ArtifactSandbox:
 
     def __init__(self, baseDir: FilePath):
         self.baseDir = baseDir
-        self._activeKeys = {} # type: Dict[str, SandboxedPath]
+        self._activeKeys: Dict[str, SandboxedPath] = {}
 
     @property
     def rootPath(self) -> SandboxedPath:
@@ -265,7 +265,7 @@ class ArtifactAuthWrapper:
         self.anonOperator = anonOperator
 
     def _authorizedResource(self, request: TwistedRequest) -> IResource:
-        req = Request(request) # type: Request
+        req: Request = Request(request)
         user = None
 
         # There is currently no CC page that supports adding or removing
@@ -877,7 +877,7 @@ class ZipTreeNode:
         return root
 
     def __init__(self) -> None:
-        self.children = {} # type: Dict[str, Union[ZipTreeNode, ZipInfo]]
+        self.children: Dict[str, Union[ZipTreeNode, ZipInfo]] = {}
 
     def add(self, name: str, remainder: Iterator[str], info: ZipInfo) -> None:
         children = self.children
@@ -908,7 +908,7 @@ class ZipTreeNode:
             child.add(nextName, remainder, info)
 
 class ZipTree:
-    cache = {} # type: Dict[str, Tuple[ZipTree, IDelayedCall]]
+    cache: Dict[str, Tuple['ZipTree', IDelayedCall]] = {}
     timeout = 30
 
     @classmethod
@@ -951,7 +951,7 @@ class ZipTree:
         Return a ZipTreeNode if a directory is found.
         Raise KeyError if no match is found.
         """
-        node = self.root # type: Union[ZipInfo, ZipTreeNode]
+        node: Union[ZipInfo, ZipTreeNode] = self.root
         for segment in segments:
             if isinstance(node, ZipTreeNode):
                 if segment:

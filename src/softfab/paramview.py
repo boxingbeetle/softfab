@@ -137,16 +137,16 @@ function initRowIndices(node, index) {
     def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
         args = cast(_ParamArgs, kwargs['formArgs'])
         parentParams = self.__parentParams
-        valueFieldAttribs = {} # type: Mapping[str, str]
+        valueFieldAttribs: Mapping[str, str] = {}
         for index in [ str(i) for i in range(len(args.params) + 1) ]:
             name = args.params.get(index, '')
             value = args.values.get(index, '')
             final = args.final.get(index, False)
             if name in parentParams:
-                nameField = (
+                nameField: XMLContent = (
                     _namePresentation(name),
                     hiddenInput(name='params.' + index, value=name)
-                    ) # type: XMLContent
+                    )
                 valueField = ParamCell(
                     index, value, parentParams[name]
                     ).present(**kwargs)
@@ -251,7 +251,7 @@ def initParamArgs(element: ParamMixin) -> Mapping[str, object]:
         )
 
 def checkParamState(args: ParamArgsMixin, parent: Parameterized) -> None:
-    usedParams = set() # type: Set[str]
+    usedParams: Set[str] = set()
     for param in cast(_ParamArgs, args).params.values():
         if param == '':
             continue
@@ -291,10 +291,10 @@ def validateParamState(proc: PageProcessor, parent: Parameterized) -> None:
     #   an inherited parameter is omitted from the dictionary
     # - parameters with empty name are removed
     # - duplicate parameters are silently reduced to one
-    data = {} # type: Dict[str, Tuple[Optional[str], bool]]
+    data: Dict[str, Tuple[Optional[str], bool]] = {}
     for indexStr, name in args.params.items():
         if name != '':
-            value = args.values[indexStr] # type: Optional[str]
+            value: Optional[str] = args.values[indexStr]
             final = args.final.get(indexStr, False)
             if name in parentParams and not args.poverride.get(indexStr):
                 value = None # inherited

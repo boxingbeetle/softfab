@@ -134,7 +134,7 @@ def checkResourceRequirementsState(args: ResourceRequirementsArgsMixin) -> None:
         raise PresentableError(xhtml.p[
             'Unequal number of ref/type/caps args'
             ])
-    usedRefs = set() # type: Set[str]
+    usedRefs: Set[str] = set()
     for ref, resType in zip(args.ref, args.type):
         if resType == '':
             continue
@@ -216,9 +216,9 @@ class ResourceRequirementsTable(Table):
         resWidget = dropDownList(name='type')[resTypeOptions()]
 
         # pylint: disable=line-too-long
-        reqMap = defaultdict(
+        reqMap: DefaultDict[str, DefaultDict[str, List[Tuple[bool, List[str]]]]] = defaultdict(
             lambda: defaultdict(list)
-            ) # type: DefaultDict[str, DefaultDict[str, List[Tuple[bool, List[str]]]]]
+            )
               #       type -> ref -> (inherited, caps)*
         parentClaim = self.__parentClaim
         if parentClaim is not None:
@@ -243,14 +243,14 @@ class ResourceRequirementsTable(Table):
                 inherited = True in capMap
                 if inherited or resTypeName == taskRunnerResourceTypeName:
                     # Type and reference are fixed.
-                    typeControl = (
+                    typeControl: XMLContent = (
                         resType.presentationName,
                         hiddenInput(name='type', value=resTypeName)
-                        ) # type: XMLContent
-                    refControl = (
+                        )
+                    refControl: XMLContent = (
                         xhtml.span(class_='var')[ref],
                         hiddenInput(name='ref', value=ref)
-                        ) # type: XMLContent
+                        )
                 else:
                     # User can edit type and reference.
                     typeControl = resWidget(selected=resTypeName)

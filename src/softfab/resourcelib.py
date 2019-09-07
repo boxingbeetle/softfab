@@ -30,7 +30,7 @@ ResourceT = TypeVar('ResourceT', bound='ResourceBase')
 class ResourceBase(ParamMixin, XMLTag, DatabaseElem):
     """Base class for Resource and TaskRunner.
     """
-    tagName = abstract # type: ClassVar[str]
+    tagName: ClassVar[str] = abstract
     boolProperties = ('suspended',)
     intProperties = ('changedtime',)
 
@@ -42,8 +42,8 @@ class ResourceBase(ParamMixin, XMLTag, DatabaseElem):
             self.addParameter('locator', properties.pop('locator'))
         XMLTag.__init__(self, properties)
         DatabaseElem.__init__(self)
-        self._capabilities = set() # type: AbstractSet[str]
-        self.__token = None # type: Optional[Token]
+        self._capabilities: AbstractSet[str] = set()
+        self.__token: Optional[Token] = None
 
     def _addCapability(self, attributes: Mapping[str, str]) -> None:
         cast(Set[str], self._capabilities).add(attributes['name'])
@@ -261,7 +261,7 @@ class _TaskRunnerData(XMLTag):
         XMLTag.__init__(self, properties)
         self._properties.setdefault('host', '?')
         self.__run = cast(RunInfo, None)
-        self.__shadowRunId = None # type: Optional[str]
+        self.__shadowRunId: Optional[str] = None
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, _TaskRunnerData):
@@ -334,8 +334,8 @@ class RunObserver(RecordObserver[RunT], ABC):
     '''Base class for monitoring the task run or shadow DB to keep track of
     which run a particular Task Runner is expected to be working on.
     '''
-    db = abstract # type: ClassVar[Database]
-    runType = abstract # type: ClassVar[str]
+    db: ClassVar[Database] = abstract
+    runType: ClassVar[str] = abstract
 
     def __init__(self,
                  taskRunner: 'TaskRunner',
@@ -343,8 +343,8 @@ class RunObserver(RecordObserver[RunT], ABC):
                  ):
         RecordObserver.__init__(self)
         self.__taskRunner = taskRunner
-        self.__callback = callback # type: Callable[[Optional[RunT]], None]
-        self._run = None # type: Optional[RunT]
+        self.__callback: Callable[[Optional[RunT]], None] = callback
+        self._run: Optional[RunT] = None
         self.db.addObserver(self)
 
     def retired(self) -> None:
@@ -487,7 +487,7 @@ class TaskRunner(ResourceBase):
         ResourceBase.__init__(self, properties)
         self._properties.setdefault('description', '')
         self._properties.setdefault('status', ConnectionStatus.NEW)
-        self.__data = None # type: Optional[_TaskRunnerData]
+        self.__data: Optional[_TaskRunnerData] = None
         self.__hasBeenInSync = False
         self.__executionObserver = ExecutionObserver(
             self, self.__shouldBeExecuting
@@ -626,10 +626,10 @@ class TaskRunner(ResourceBase):
 
     def __failRun(self, reason: str) -> None:
         """Marks any task this Task Runner was running as failed."""
-        observers = (
+        observers: Iterable[RunObserver] = (
             self.__executionObserver,
             self.__shadowObserver
-            ) # type: Iterable[RunObserver]
+            )
         for observer in observers:
             run = observer.getRun()
             if run is not None:
@@ -826,8 +826,8 @@ class ResourceDB(Database[ResourceBase]):
 
     def __init__(self) -> None:
         super().__init__()
-        self.__resourcesByType = \
-                defaultdict(set) # type: DefaultDict[str, Set[str]]
+        self.__resourcesByType: DefaultDict[str, Set[str]] = \
+                defaultdict(set)
 
     def _register(self, key: str, value: ResourceBase) -> None:
         self.__resourcesByType[value.typeName].add(key)

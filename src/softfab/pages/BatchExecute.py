@@ -61,7 +61,7 @@ class FakeTaskSet(TaskSetWithInputs[FakeTask]):
 
     def __init__(self) -> None:
         TaskSetWithInputs.__init__(self)
-        self.__targets = defaultdict(set) # type: DefaultDict[str, Set[str]]
+        self.__targets: DefaultDict[str, Set[str]] = defaultdict(set)
         self.__index = 0
 
     def addConfig(self, config: Config) -> None:
@@ -148,7 +148,7 @@ class BatchExecute_GET(FabPage['BatchExecute_GET.Processor',
         def process(self, req: Request[ParentArgs], user: User) -> None:
             # pylint: disable=attribute-defined-outside-init
             self.notices = []
-            self.params = {} # type: Dict[str, Mapping[str, Mapping[str, str]]]
+            self.params: Dict[str, Mapping[str, Mapping[str, str]]] = {}
 
             self.findConfigs()
             self.initTaskSet()
@@ -214,8 +214,9 @@ class BatchExecute_POST(BatchExecute_GET):
                 assert action is Actions.CANCEL, action
                 raise Redirect(args.refererURL or parentPage)
 
+            notices: List[str] = []
             # pylint: disable=attribute-defined-outside-init
-            self.notices = notices = [] # type: List[str]
+            self.notices = notices
 
             # Parse inputs.
             local = cast(Mapping[str, str], args.local)
@@ -225,9 +226,8 @@ class BatchExecute_POST(BatchExecute_GET):
                 if location is not None:
                     locations[inpName] = location
             missingIds = []
-            self.params = params = \
-                        {} # type: Dict[str, Mapping[str, Mapping[str, str]]]
-            self.configs = configs = [] # type: List[Config]
+            params: Dict[str, Mapping[str, Mapping[str, str]]] = {}
+            configs = []
             for index, configId in cast(Mapping[str, str], args.config).items():
                 try:
                     config = configDB[configId]
@@ -241,6 +241,8 @@ class BatchExecute_POST(BatchExecute_GET):
                         ).get(index)
                     if taskParameters is not None:
                         params[configId] = taskParameters
+            self.params = params
+            self.configs = configs
             if missingIds:
                 notices.append(presentMissingConfigs(missingIds))
 
@@ -261,8 +263,8 @@ class BatchExecute_POST(BatchExecute_GET):
                 # Create jobs.
                 inputs = cast(Mapping[str, str], args.prod)
                 userName = user.name
-                jobs = [] # type: List[Job]
-                empty = {} # type: Mapping[str, Mapping[str, str]]
+                jobs: List[Job] = []
+                empty: Mapping[str, Mapping[str, str]] = {}
                 for config in configs:
                     try:
                         jobs += config.createJobs(userName,
@@ -323,14 +325,14 @@ class ParamTable(ParamOverrideTable):
 
         # Because we're wrapped in a decoration, the presentation should
         # evaluate to False if there are only empty tables.
-        presentation = [] # type: List[XMLContent]
+        presentation: List[XMLContent] = []
         for index, config in enumerate(proc.configs):
             configId = config.getId()
             taskParameters = proc.params.get(configId)
             tasks = []
             for task in config.getTasks():
                 taskName = task.getName()
-                taskParams = None # type: Optional[Mapping[str, str]]
+                taskParams: Optional[Mapping[str, str]] = None
                 if taskParameters is not None:
                     taskParams = taskParameters.get(taskName)
                 if taskParams is None:

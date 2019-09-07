@@ -20,10 +20,10 @@ class Selectable(Protocol):
         raise NotImplementedError
 
 class SelectableABC(Selectable, ABC):
-    cache = abstract # type: ClassVar[TagCache]
+    cache: ClassVar['TagCache'] = abstract
 
     def __init__(self) -> None:
-        self.__tags = {} # type: Dict[str, Dict[str, str]]
+        self.__tags: Dict[str, Dict[str, str]] = {}
 
     def _addTag(self, attributes: Mapping[str, str]) -> None:
         key = attributes['key']
@@ -105,7 +105,7 @@ class TagCache:
                  ):
         self.__getKeys = getKeys
         self.__items = items
-        self.__tags = defaultdict(dict) # type: Dict[str, Dict[str, str]]
+        self.__tags: Dict[str, Dict[str, str]] = defaultdict(dict)
 
     def __str__(self) -> str:
         return 'TagCache(%s)' % ', '.join(
@@ -170,7 +170,7 @@ class TagCache:
 class SelectableRecordABC(DatabaseElem, SelectableABC):
     """Abstract base class for database records that support tagging."""
 
-    cache = abstract # type: ClassVar[TagCache]
+    cache: ClassVar[TagCache] = abstract
 
     def __init__(self) -> None:
         DatabaseElem.__init__(self)
@@ -204,7 +204,7 @@ class ObservingTagCache(TagCache, RecordObserver[SelectableRecord]):
 def getCommonTags(tagKeys: Iterable[str],
                   items: Iterable[Selectable]
                   ) -> Mapping[str, Mapping[str, str]]:
-    commonTags = None # type: Optional[Dict[str, Dict[str, str]]]
+    commonTags: Optional[Dict[str, Dict[str, str]]] = None
     for item in items:
         if commonTags is None:
             commonTags = {

@@ -82,7 +82,7 @@ class TaskEdit_GET(TaskEditBase):
 
         def _initArgs(self, element: Optional[TaskDef]) -> Mapping[str, object]:
             if element is None:
-                overrides = {} # type: Dict[str, object]
+                overrides: Dict[str, object] = {}
             else:
                 overrides = dict(
                     title = element.getTitle(),

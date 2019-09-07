@@ -13,7 +13,7 @@ class StorageURLMixin:
 
     def __init__(self) -> None:
         if TYPE_CHECKING:
-            self._properties = {} # type: Dict[str, Union[str, int, Enum]]
+            self._properties: Dict[str, Union[str, int, Enum]] = {}
 
     def setInternalStorage(self, path: str) -> None:
         """Use the Control Center's internal storage pool.

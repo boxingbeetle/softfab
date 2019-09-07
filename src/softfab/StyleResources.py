@@ -85,7 +85,7 @@ class _StyleRoot(Resource):
 
     def __init__(self):
         Resource.__init__(self)
-        self.__icons = {} # type: Dict[str, Image]
+        self.__icons: Dict[str, Image] = {}
 
     def __addFile(self, fileName: str, mediaType: str) -> Optional[bytes]:
         data = _load(fileName)

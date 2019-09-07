@@ -92,8 +92,8 @@ class ParamMixin(Parameterized):
     '''
 
     def __init__(self) -> None:
-        self.__parameters = {} # type: Dict[str, str]
-        self.__finalParameters = set() # type: Set[str]
+        self.__parameters: Dict[str, str] = {}
+        self.__finalParameters: Set[str] = set()
 
     def getParent(self, getFunc: Optional[GetParent]) -> Parameterized:
         '''Returns the parameterized record one level above this one.

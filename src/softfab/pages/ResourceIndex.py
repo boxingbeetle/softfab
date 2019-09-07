@@ -105,12 +105,12 @@ class ResourcesTable(DataTable[ResourceBase]):
     widgetId = 'resourcesTable'
     autoUpdate = True
     db = resourceDB
-    fixedColumns = (
+    fixedColumns: Sequence[DataColumn[ResourceBase]] = (
         ResourceNameColumn.instance,
         CapabilitiesColumn(keyName = 'capabilities'),
         StateColumn(keyName = 'state', cellStyle = 'strong'),
         ReservedByColumn('Reserved By', 'reserved'),
-        ) # type: Sequence[DataColumn[ResourceBase]]
+        )
     reserveColumn = ReserveColumn('Action')
     # TODO: These can be used again when the TR-specific pages have been
     #       replaced.
@@ -133,8 +133,8 @@ class ResourcesTable(DataTable[ResourceBase]):
 
     def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
         data = cast(TableData[ResourceBase], kwargs['data'])
-        recordsByType = \
-                defaultdict(list) # type: DefaultDict[str, List[ResourceBase]]
+        recordsByType: DefaultDict[str, List[ResourceBase]] = \
+                defaultdict(list)
         for record in data.records:
             recordsByType[record.typeName].append(record)
 

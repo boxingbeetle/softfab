@@ -32,7 +32,7 @@ class ResourceSpec(XMLTag):
 
     def __init__(self, properties: Mapping[str, str]):
         XMLTag.__init__(self, properties)
-        self.__capabilities = set() # type: AbstractSet[str]
+        self.__capabilities: AbstractSet[str] = set()
 
     def __repr__(self) -> str:
         return f'ResourceSpec({self.reference!r}, {self.typeName!r}, ' \

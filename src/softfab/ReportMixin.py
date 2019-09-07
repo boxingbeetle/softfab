@@ -77,7 +77,7 @@ def emptyToNone(values: AbstractSet[str]) -> AbstractSet[Optional[str]]:
     """Replaces a None value with empty string.
     """
     if '' in values:
-        newValues = set(values) # type: Set[Optional[str]]
+        newValues: Set[Optional[str]] = set(values)
         newValues.remove('')
         newValues.add(None)
         return newValues
@@ -85,7 +85,7 @@ def emptyToNone(values: AbstractSet[str]) -> AbstractSet[Optional[str]]:
         return values
 
 class ReportProcessor(PageProcessor[ReportArgsT]):
-    db = None # type: Optional[Database]
+    db: Optional[Database] = None
 
     def process(self, req: Request[ReportArgsT], user: User) -> None:
         # Set of targets for which jobs have run.
@@ -155,8 +155,8 @@ class JobReportProcessor(ReportProcessor[ReportArgsT]):
             yield CustomFilter(lambda record: not record.hasFinalResult())
 
 class ReportFilterForm:
-    instance = SharedInstance() # type: ClassVar
-    objectName = abstract # type: ClassVar[str]
+    instance: ClassVar = SharedInstance()
+    objectName: ClassVar[str] = abstract
 
     def present(self, **kwargs: object) -> XMLContent:
         yield makeForm(method='get', formId='filters',

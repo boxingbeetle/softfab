@@ -32,14 +32,14 @@ frameworkDB = FrameworkDB()
 
 class TaskDefBase(ParamMixin, XMLTag, SelectableRecordABC):
     tagName = 'taskdef'
-    cache = abstract # type: ClassVar[TagCache]
+    cache: ClassVar[TagCache] = abstract
 
     def __init__(self, properties: Mapping[str, Optional[str]]):
         ParamMixin.__init__(self)
         XMLTag.__init__(self, properties)
         SelectableRecordABC.__init__(self)
-        self.__resources = [] # type: List[ResourceSpec]
-        self.__resourceClaim = None # type: Optional[ResourceClaim]
+        self.__resources: List[ResourceSpec] = []
+        self.__resourceClaim: Optional[ResourceClaim] = None
 
     def __getitem__(self, key: str) -> object:
         if key == 'extract':
@@ -107,8 +107,8 @@ class Framework(TaskDefBase):
 
     def __init__(self, properties: Mapping[str, str]):
         TaskDefBase.__init__(self, properties)
-        self.__inputs = set() # type: Set[str]
-        self.__outputs = set() # type: Set[str]
+        self.__inputs: Set[str] = set()
+        self.__outputs: Set[str] = set()
 
     def __getitem__(self, key: str) -> object:
         if key == 'inputs':

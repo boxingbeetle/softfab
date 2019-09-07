@@ -35,10 +35,10 @@ class _XMLHandler(ContentHandler):
         self.__text = False
         self.__content = ''
 
-        self.__nameStack = [] # type: List[str]
-        self.__objectStack = [] # type: List[object]
+        self.__nameStack: List[str] = []
+        self.__objectStack: List[object] = []
         self.__push('(root)', factory, False)
-        self.__parsed = None # type: object
+        self.__parsed: object = None
 
     def __peek(self) -> object:
         return self.__objectStack[-1]
@@ -112,15 +112,15 @@ class _XMLHandler(ContentHandler):
 
 _errorHandler = ErrorHandler()
 
-_interningDict = {} # type: Dict[str, str]
+_interningDict: Dict[str, str] = {}
 
 # XML tag class:
 
 class XMLTag(ABC):
-    tagName = abstract # type: ClassVar[str]
-    boolProperties = () # type: ClassVar[Sequence[str]]
-    intProperties = () # type: ClassVar[Sequence[str]]
-    enumProperties = {} # type: ClassVar[Mapping[str, Type[Enum]]]
+    tagName: ClassVar[str] = abstract
+    boolProperties: ClassVar[Sequence[str]] = ()
+    intProperties: ClassVar[Sequence[str]] = ()
+    enumProperties: ClassVar[Mapping[str, Type[Enum]]] = {}
 
     @classmethod
     def _findDeclarations(cls, name: str) -> Iterator:
