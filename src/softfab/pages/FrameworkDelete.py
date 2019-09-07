@@ -4,7 +4,7 @@ from softfab.Page import PageProcessor
 from softfab.RecordDelete import (
     RecordDelete_GET, RecordDelete_POSTMixin, RecordInUseError
 )
-from softfab.frameworklib import frameworkDB
+from softfab.frameworklib import Framework, frameworkDB
 from softfab.frameworkview import taskDefsUsingFramework
 from softfab.pageargs import RefererArg
 from softfab.pagelinks import createTaskDetailsLink
@@ -22,7 +22,7 @@ class FrameworkDelete_GET(RecordDelete_GET):
         indexQuery = RefererArg('FrameworkIndex')
         detailsQuery = RefererArg('FrameworkDetails')
 
-    def checkState(self, record):
+    def checkState(self, record: Framework) -> None:
         taskDefs = list(taskDefsUsingFramework(record.getId()))
         if taskDefs:
             raise RecordInUseError(

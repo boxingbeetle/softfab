@@ -7,7 +7,7 @@ from softfab.RecordDelete import (
 from softfab.frameworklib import frameworkDB
 from softfab.pageargs import RefererArg
 from softfab.pagelinks import createFrameworkDetailsLink
-from softfab.productdeflib import productDefDB
+from softfab.productdeflib import ProductDef, productDefDB
 
 
 class ProductDelete_GET(RecordDelete_GET):
@@ -22,7 +22,7 @@ class ProductDelete_GET(RecordDelete_GET):
         indexQuery = RefererArg('ProductIndex')
         detailsQuery = RefererArg('ProductDetails')
 
-    def checkState(self, record):
+    def checkState(self, record: ProductDef) -> None:
         # TODO: The following code partially duplicates FrameworkDelete
         name = record.getId()
         frameworksIds = [

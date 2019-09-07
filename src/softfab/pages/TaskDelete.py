@@ -6,7 +6,7 @@ from softfab.RecordDelete import (
 )
 from softfab.pageargs import RefererArg
 from softfab.pagelinks import createConfigDetailsLink
-from softfab.taskdeflib import taskDefDB
+from softfab.taskdeflib import TaskDef, taskDefDB
 from softfab.taskdefview import configsUsingTaskDef
 
 
@@ -25,7 +25,7 @@ class TaskDelete_GET(RecordDelete_GET):
     class Arguments(RecordDelete_GET.Arguments, ParentArgs):
         pass
 
-    def checkState(self, record):
+    def checkState(self, record: TaskDef) -> None:
         configs = list(configsUsingTaskDef(record.getId()))
         if configs:
             raise RecordInUseError(

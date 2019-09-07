@@ -8,7 +8,7 @@ from softfab.frameworklib import frameworkDB
 from softfab.pageargs import RefererArg
 from softfab.pagelinks import createFrameworkDetailsLink, createTaskDetailsLink
 from softfab.resourcelib import resourceDB
-from softfab.restypelib import resTypeDB
+from softfab.restypelib import ResType, resTypeDB
 from softfab.taskdeflib import taskDefDB
 
 
@@ -32,7 +32,7 @@ class ResTypeDelete_GET(RecordDelete_GET):
     class Arguments(RecordDelete_GET.Arguments):
         indexQuery = RefererArg('ResTypeIndex')
 
-    def checkState(self, record):
+    def checkState(self, record: ResType) ->  None:
         name = record.getId()
 
         # Check for resources of this type.
