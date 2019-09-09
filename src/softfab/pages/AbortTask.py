@@ -9,6 +9,7 @@ from softfab.formlib import actionButtons, makeForm
 from softfab.joblib import jobDB
 from softfab.pageargs import EnumArg
 from softfab.pagelinks import TaskIdArgs
+from softfab.request import Request
 from softfab.userlib import User, checkPrivilegeForOwned
 from softfab.xmlgen import XMLContent, xhtml
 
@@ -28,7 +29,7 @@ class AbortTask_GET(FabPage[FabPage.Processor, FabPage.Arguments]):
 
     def presentContent(self, **kwargs: object) -> XMLContent:
         # Ask for confirmation.
-        proc = cast(FabPage.Processor, kwargs['proc'])
+        proc = cast(FabPage.Processor[TaskIdArgs], kwargs['proc'])
         taskName = proc.args.taskName
         if taskName == '/all-waiting':
             yield xhtml.p[ 'Abort all waiting tasks?' ]
@@ -51,20 +52,25 @@ class AbortTask_POST(FabPage['AbortTask_POST.Processor',
 
     class Processor(PageProcessor['AbortTask_POST.Arguments']):
 
-        def process(self, req, user):
+        def process(self,
+                    req: Request['AbortTask_POST.Arguments'],
+                    user: User
+                    ) -> None:
             # pylint: disable=attribute-defined-outside-init
             jobId = req.args.jobId
             taskName = req.args.taskName
             action = req.args.action
 
             if action is Actions.CANCEL:
-                raise Redirect(self.page.getParentURL(req.args))
+                page = cast(AbortTask_POST, self.page)
+                raise Redirect(page.getParentURL(req.args))
             assert action is Actions.ABORT, action
 
             job = jobDB[jobId]
             checkPrivilegeForOwned(
                 user, 't/d', job, ('abort tasks in this job', 'abort tasks')
                 )
+            message: XMLContent
             if taskName == '/all-waiting':
                 aborted = job.abortAll(
                     lambda task: task.isWaiting(),
@@ -81,9 +87,8 @@ class AbortTask_POST(FabPage['AbortTask_POST.Processor',
                 else:
                     message = 'There were no unfinished tasks.'
             else:
-                message = taskName, job.abortTask(
-                    taskName, user.name
-                    )
+                result = job.abortTask(taskName, user.name)
+                message = 'Task ', xhtml.b[ taskName ], ' ', result, '.'
             self.message = message
 
     def checkAccess(self, user: User) -> None:
@@ -92,11 +97,5 @@ class AbortTask_POST(FabPage['AbortTask_POST.Processor',
 
     def presentContent(self, **kwargs: object) -> XMLContent:
         proc = cast(AbortTask_POST.Processor, kwargs['proc'])
-        message = proc.message
-        if isinstance(message, tuple):
-            yield xhtml.p[
-                'Task ', xhtml.b[ message[0] ], ' ', message[1], '.'
-                ]
-        else:
-            yield xhtml.p[ message ]
+        yield xhtml.p[ proc.message ]
         yield self.backToParent(proc.args)
