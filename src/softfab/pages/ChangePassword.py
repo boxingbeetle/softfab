@@ -1,10 +1,10 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from enum import Enum
-from typing import Iterator, Tuple, cast
+from typing import Generator, Iterator, Tuple, cast
 
 from twisted.cred.error import LoginFailed
-from twisted.internet.defer import inlineCallbacks
+from twisted.internet.defer import Deferred, inlineCallbacks
 
 from softfab.FabPage import FabPage, IconModifier
 from softfab.Page import PageProcessor, PresentableError, Redirect
@@ -12,9 +12,10 @@ from softfab.formlib import (
     FormTable, actionButtons, hiddenInput, makeForm, passwordInput
 )
 from softfab.pageargs import EnumArg, PasswordArg, RefererArg
+from softfab.request import Request
 from softfab.userlib import (
-    PasswordMessage, User, authenticateUser, changePassword, checkPrivilege,
-    passwordQuality, userDB
+    PasswordMessage, User, UserInfo, authenticateUser, changePassword,
+    checkPrivilege, passwordQuality, userDB
 )
 from softfab.userview import LoginPassArgs, PasswordMsgArgs, passwordStr
 from softfab.webgui import pageURL
@@ -22,7 +23,7 @@ from softfab.xmlgen import XML, XMLContent, xhtml
 
 
 def presentForm(**kwargs: object) -> XMLContent:
-    proc = cast(PageProcessor, kwargs['proc'])
+    proc = cast(PageProcessor[PasswordMsgArgs], kwargs['proc'])
     return makeForm(args = proc.args)[
         presentFormBody(**kwargs)
         ].present(**kwargs)
@@ -78,7 +79,10 @@ class ChangePassword_GET(FabPage['ChangePassword_GET.Processor',
 
     class Processor(PageProcessor['ChangePassword_GET.Arguments']):
 
-        def process(self, req, user):
+        def process(self,
+                    req: Request['ChangePassword_GET.Arguments'],
+                    user: User
+                    ) -> None:
             # Validate input.
             userName = req.args.user
             reqUserName = user.name # get current logged-in user
@@ -94,15 +98,15 @@ class ChangePassword_GET(FabPage['ChangePassword_GET.Processor',
             # Check if userName exists in the userDB.
             if userName not in userDB:
                 self.retry = False # pylint: disable=attribute-defined-outside-init
-                raise PresentableError(
+                raise PresentableError(xhtml[
                     f'User "{userName}" does not exist (anymore)'
-                    )
+                    ])
 
             # Check if msg has been set and act upon accordingly
             msg = req.args.msg
             if msg is not None:
                 self.retry = msg is not PasswordMessage.SUCCESS # pylint: disable=attribute-defined-outside-init
-                raise PresentableError(passwordStr[msg])
+                raise PresentableError(xhtml[passwordStr[msg]])
 
     def checkAccess(self, user: User) -> None:
         # Processor checks privileges.
@@ -141,9 +145,13 @@ class ChangePassword_POST(FabPage['ChangePassword_POST.Processor',
     class Processor(PageProcessor['ChangePassword_POST.Arguments']):
 
         @inlineCallbacks
-        def process(self, req, user):
+        def process(self,
+                    req: Request['ChangePassword_POST.Arguments'],
+                    user: User
+                    ) -> Generator[Deferred, UserInfo, None]:
             if req.args.action is Actions.CANCEL:
-                raise Redirect(self.page.getCancelURL(req.args))
+                page = cast(ChangePassword_POST, self.page)
+                raise Redirect(page.getCancelURL(req.args))
             elif req.args.action is Actions.CHANGE:
                 # Validate input.
                 userName = req.args.user
@@ -161,9 +169,9 @@ class ChangePassword_POST(FabPage['ChangePassword_POST.Processor',
                     userInfo = userDB[userName]
                 except KeyError:
                     self.retry = False # pylint: disable=attribute-defined-outside-init
-                    raise PresentableError(
+                    raise PresentableError(xhtml[
                         f'User "{userName}" does not exist (anymore)'
-                        )
+                        ])
 
                 password = req.args.password
                 if password == req.args.password2:
@@ -172,7 +180,7 @@ class ChangePassword_POST(FabPage['ChangePassword_POST.Processor',
                     quality = PasswordMessage.MISMATCH
                 if quality is not PasswordMessage.SUCCESS:
                     self.retry = True # pylint: disable=attribute-defined-outside-init
-                    raise PresentableError(passwordStr[quality])
+                    raise PresentableError(xhtml[passwordStr[quality]])
 
                 if reqUserName is not None:
                     try:
@@ -181,13 +189,13 @@ class ChangePassword_POST(FabPage['ChangePassword_POST.Processor',
                             )
                     except LoginFailed as ex:
                         self.retry = True # pylint: disable=attribute-defined-outside-init
-                        raise PresentableError(
+                        raise PresentableError(xhtml[
                             'Verification of %s password failed%s.' % (
                                 'old' if userName == reqUserName
                                     else 'operator',
                                 ': ' + str(ex) if str(ex) else ''
                                 )
-                            )
+                            ])
 
                 # Apply changes.
                 try:
@@ -195,7 +203,7 @@ class ChangePassword_POST(FabPage['ChangePassword_POST.Processor',
                 except ValueError as ex:
                     # Failed to changePassword
                     self.retry = True # pylint: disable=attribute-defined-outside-init
-                    raise PresentableError(str(ex))
+                    raise PresentableError(xhtml[str(ex)])
                 else:
                     # Successfully changed password
                     raise Redirect(pageURL(
