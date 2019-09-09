@@ -1,9 +1,9 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Iterable, Iterator, cast
+from typing import Iterable, Iterator, List, Set, cast
 
 from softfab.FabPage import FabPage
-from softfab.Page import PageProcessor
+from softfab.Page import PageProcessor, PresentableError
 from softfab.RecordDelete import DeleteArgs
 from softfab.configlib import configDB
 from softfab.graphview import GraphPageMixin, GraphPanel, createExecutionGraph
@@ -12,8 +12,10 @@ from softfab.pagelinks import (
     ConfigIdArgs, createTargetLink, createTaskDetailsLink,
     createTaskRunnerDetailsLink
 )
+from softfab.productlib import Product
 from softfab.productview import formatLocator
 from softfab.projectlib import project
+from softfab.request import Request
 from softfab.schedulelib import scheduleDB
 from softfab.schedulerefs import createScheduleDetailsLink
 from softfab.selectview import TagArgs
@@ -22,7 +24,7 @@ from softfab.utils import pluralize
 from softfab.webgui import (
     Column, PresenterFunction, Table, cell, decoration, pageLink, unorderedList
 )
-from softfab.xmlgen import XMLContent, txt, xhtml
+from softfab.xmlgen import XML, XMLContent, txt, xhtml
 
 # Note:
 # The following pieces of information are not included in this page:
@@ -37,7 +39,8 @@ class TagsTable(Table):
     columns = 'Key', 'Values'
     hideWhenEmpty = True
 
-    def iterRows(self, *, proc, **kwargs):
+    def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
+        proc = cast('ConfigDetails_GET.Processor', kwargs['proc'])
         config = proc.config
         for key in project.getTagKeys():
             values = config.getTagValues(key)
@@ -58,7 +61,8 @@ decoratedTagsTable = decoration[
 class TasksTable(Table):
     columns = 'Task', 'Parameter', 'Value'
 
-    def iterRows(self, *, proc, **kwargs):
+    def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
+        proc = cast('ConfigDetails_GET.Processor', kwargs['proc'])
         tasksByName = sorted(
             ( task.getName(), task )
             for task in proc.config.getTasks()
@@ -86,13 +90,18 @@ class InputTable(Table):
         if proc.config.hasLocalInputs():
             yield Column('Local at')
 
-    def iterRows(self, *, proc, **kwargs):
+    def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
+        proc = cast('ConfigDetails_GET.Processor', kwargs['proc'])
         config = proc.config
         hasLocal = config.hasLocalInputs()
         for product in sorted(config.getInputs()):
             cells = [
-                product['name'],
-                formatLocator(product, product['locator'], True)
+                product.getName(),
+                # TODO: Input objects are not actually instances of Product.
+                #       This is a candidate for refactoring; see TODOs in
+                #       docstring of configlib.Input.
+                formatLocator(cast(Product, product),
+                              product.getLocator(), True)
                 ]
             if hasLocal:
                 cells.append(
@@ -124,22 +133,25 @@ decoratedInputTable = decoration[
     InputTable.instance
     ]
 
+def presentInputConflicts(**kwargs: object) -> XMLContent:
+    proc = cast('ConfigDetails_GET.Processor', kwargs['proc'])
+    return unorderedList[
+        proc.config.iterInputConflicts()
+        ].present(**kwargs)
+
 decoratedConflictsList = decoration[
     xhtml.p(class_ = 'notice')[
         'The following problems exist with the stored inputs:'
         ],
-    PresenterFunction(lambda proc, **kwargs:
-        unorderedList[
-            proc.config.iterInputConflicts()
-            ].present(proc=proc, **kwargs)
-        )
+    PresenterFunction(presentInputConflicts)
     ]
 
 class SchedulesTable(Table):
     columns = 'Schedule',
     hideWhenEmpty = True
 
-    def iterRows(self, *, proc, **kwargs):
+    def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
+        proc = cast('ConfigDetails_GET.Processor', kwargs['proc'])
         for scheduleId in sorted(proc.scheduleIds):
             yield createScheduleDetailsLink(scheduleId),
 
@@ -160,33 +172,37 @@ class ConfigDetails_GET(
 
     class Processor(PageProcessor['ConfigDetails_GET.Arguments']):
 
-        def process(self, req, user):
+        def process(self,
+                    req: Request['ConfigDetails_GET.Arguments'],
+                    user: User
+                    ) -> None:
             configId = req.args.configId
-            config = configDB.get(configId)
+            try:
+                config = configDB[configId]
+            except KeyError:
+                raise PresentableError(xhtml[
+                    'Configuration ', xhtml.b[ configId ], ' does not exist.'
+                    ])
 
-            if config is None:
-                graph = None
-                scheduleIds = None
-            else:
-                frameworkIds = []
-                productIds = set()
-                for task in config.getTasks():
-                    framework = task.getFramework()
-                    if not framework.getId() in frameworkIds:
-                        frameworkIds.append(framework.getId())
-                    productIds |= framework.getInputs()
-                    productIds |= framework.getOutputs()
-                graph = createExecutionGraph(
-                    'graph',
-                    productIds,
-                    frameworkIds,
-                    req.getSubPath() is not None
-                    )
-                scheduleIds = tuple(
-                    scheduleId
-                    for scheduleId, schedule in scheduleDB.items()
-                    if configId in schedule.getMatchingConfigIds()
-                    )
+            frameworkIds: List[str] = []
+            productIds: Set[str] = set()
+            for task in config.getTasks():
+                framework = task.getFramework()
+                if not framework.getId() in frameworkIds:
+                    frameworkIds.append(framework.getId())
+                productIds |= framework.getInputs()
+                productIds |= framework.getOutputs()
+            graph = createExecutionGraph(
+                'graph',
+                productIds,
+                frameworkIds,
+                req.getSubPath() is not None
+                )
+            scheduleIds = tuple(
+                scheduleId
+                for scheduleId, schedule in scheduleDB.items()
+                if configId in schedule.getMatchingConfigIds()
+                )
 
             # pylint: disable=attribute-defined-outside-init
             self.config = config
@@ -200,12 +216,6 @@ class ConfigDetails_GET(
         proc = cast(ConfigDetails_GET.Processor, kwargs['proc'])
         config = proc.config
         configId = proc.args.configId
-        if config is None:
-            yield xhtml.p[
-                'Configuration ', xhtml.b[ configId ], ' does not exist.'
-                ]
-            return
-
         yield xhtml.h3[ 'Details of configuration ', xhtml.b[ configId ], ':' ]
         yield xhtml.p[
             'Execution graph of frameworks and products in this configuration:'
@@ -220,6 +230,9 @@ class ConfigDetails_GET(
         yield TasksTable.instance.present(**kwargs)
         yield decoratedSchedulesTable.present(**kwargs)
         yield xhtml.p[ xhtml.br.join(self.iterLinks(proc)) ]
+
+    def presentError(self, message: XML, **kwargs: object) -> XMLContent:
+        yield xhtml.p[ message ]
 
     def iterLinks(self, proc: Processor) -> Iterable[XMLContent]:
         yield pageLink('FastExecute', proc.args)[
