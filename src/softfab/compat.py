@@ -18,9 +18,10 @@ else:
 # On Python 3.7+, use importlib.resources from the standard library.
 # On older versions, a compatibility package can be installed from PyPI.
 try:
-    import importlib.resources as importlib_resources
+    if not TYPE_CHECKING:
+        import importlib.resources as importlib_resources
 except ImportError:
-    import importlib_resources # type: ignore
+    import importlib_resources
 
 
 __all__ = ['NoReturn', 'Protocol', 'importlib_resources']
