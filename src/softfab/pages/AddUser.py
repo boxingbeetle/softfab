@@ -1,10 +1,10 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from enum import Enum
-from typing import Iterator, Optional, Tuple, cast
+from typing import Generator, Iterator, Optional, Tuple, cast
 
 from twisted.cred.error import LoginFailed
-from twisted.internet.defer import inlineCallbacks
+from twisted.internet.defer import Deferred, inlineCallbacks
 
 from softfab.FabPage import FabPage, IconModifier
 from softfab.Page import PageProcessor, PresentableError, ProcT, Redirect
@@ -13,9 +13,10 @@ from softfab.formlib import (
     passwordInput, textInput
 )
 from softfab.pageargs import ArgsT, EnumArg, PageArgs, RefererArg, StrArg
+from softfab.request import Request
 from softfab.userlib import (
-    PasswordMessage, User, addUserAccount, authenticateUser, checkPrivilege,
-    passwordQuality
+    PasswordMessage, User, UserInfo, addUserAccount, authenticateUser,
+    checkPrivilege, passwordQuality
 )
 from softfab.userview import (
     LoginPassArgs, UIRoleNames, passwordStr, uiRoleToSet
@@ -69,7 +70,10 @@ class AddUser_GET(AddUserBase['AddUser_GET.Processor',
         indexQuery = RefererArg('UserList')
 
     class Processor(PageProcessor['AddUser_GET.Arguments']):
-        def process(self, req, user):
+        def process(self,
+                    req: Request['AddUser_GET.Arguments'],
+                    user: User
+                    ) -> None:
             pass
 
     def presentContent(self, **kwargs: object) -> XMLContent:
@@ -88,18 +92,22 @@ class AddUser_POST(AddUserBase['AddUser_POST.Processor',
     class Processor(PageProcessor['AddUser_POST.Arguments']):
 
         @inlineCallbacks
-        def process(self, req, user):
+        def process(self,
+                    req: Request['AddUser_POST.Arguments'],
+                    user: User
+                    ) -> Generator[Deferred, UserInfo, None]:
             if req.args.action is Actions.CANCEL:
-                raise Redirect(self.page.getCancelURL(req.args))
+                page = cast(AddUser_POST, self.page)
+                raise Redirect(page.getCancelURL(req.args))
             elif req.args.action is Actions.ADD:
                 # Validate input.
                 userName = req.args.user
                 if not userName:
-                    raise PresentableError('User name cannot be empty.')
+                    raise PresentableError(xhtml['User name cannot be empty.'])
                 role = req.args.role
                 if role is None:
                     # Not all browsers implement the 'required' attribute.
-                    raise PresentableError('No role assigned.')
+                    raise PresentableError(xhtml['No role assigned.'])
 
                 password = req.args.password
                 if password == req.args.password2:
@@ -107,7 +115,7 @@ class AddUser_POST(AddUserBase['AddUser_POST.Processor',
                 else:
                     quality = PasswordMessage.MISMATCH
                 if quality is not PasswordMessage.SUCCESS:
-                    raise PresentableError(passwordStr[quality])
+                    raise PresentableError(xhtml[passwordStr[quality]])
 
                 # Authentication of currently logged-in operator
                 reqUserName = user.name
@@ -117,11 +125,11 @@ class AddUser_POST(AddUserBase['AddUser_POST.Processor',
                             reqUserName, req.args.loginpass
                             )
                     except LoginFailed as ex:
-                        raise PresentableError(
+                        raise PresentableError(xhtml[
                             'Operator authentication failed%s.' % (
                                 ': ' + str(ex) if str(ex) else ''
                                 )
-                            )
+                            ])
 
                 # Create new user account.
                 try:
@@ -129,7 +137,7 @@ class AddUser_POST(AddUserBase['AddUser_POST.Processor',
                         userName, password, uiRoleToSet(role)
                         )
                 except ValueError as ex:
-                    raise PresentableError(f'{ex}.')
+                    raise PresentableError(xhtml[f'{ex}.'])
             else:
                 assert False, req.args.action
 
