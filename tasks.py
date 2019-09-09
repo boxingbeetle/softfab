@@ -66,9 +66,9 @@ def types(c, src=None, clean=False, report=False, results=None):
     if report:
         if report_dir is None:
             remove_dir(TOP_DIR / mypy_report)
-            args.append('--xml-report ' + mypy_report)
+            args.append('--html-report ' + mypy_report)
         else:
-            args.append('--xml-report ' + str(report_dir / 'mypy-coverage'))
+            args.append('--html-report ' + str(report_dir / 'mypy-coverage'))
     args.append(source_arg(src))
     out_path = None if report_dir is None else report_dir / 'mypy-log.txt'
     out_stream = None if out_path is None \
