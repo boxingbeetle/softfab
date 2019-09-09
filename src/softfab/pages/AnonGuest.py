@@ -7,6 +7,7 @@ from softfab.Page import PageProcessor, ProcT, Redirect
 from softfab.pageargs import ArgsT
 from softfab.pagelinks import AnonGuestArgs
 from softfab.projectlib import project
+from softfab.request import Request
 from softfab.userlib import User, checkPrivilege
 from softfab.userview import presentAnonGuestSetting
 from softfab.xmlgen import XML, XMLContent
@@ -45,7 +46,10 @@ class AnonGuest_POST(AnonGuestBase['AnonGuest_POST.Processor',
 
     class Processor(PageProcessor[Arguments]):
 
-        def process(self, req, user):
+        def process(self,
+                    req: Request['AnonGuest_POST.Arguments'],
+                    user: User
+                    ) -> None:
             project.setAnonGuestAccess(req.args.anonguest)
             raise Redirect('AnonGuest')
 
