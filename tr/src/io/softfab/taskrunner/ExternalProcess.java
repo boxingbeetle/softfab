@@ -39,7 +39,7 @@ public class ExternalProcess {
 
     private Process process;
 
-	private File workDir;
+    private File workingDir;
 
     /**
     Tracks whether the external process is running right now.
@@ -67,8 +67,8 @@ public class ExternalProcess {
      * @param args Command line arguments.
      * @param logger Logger to pass read lines to.
      */
-    public ExternalProcess(File workDir, String[] args, Logger logger) {
-        this.workDir = workDir;
+    public ExternalProcess(File workingDir, String[] args, Logger logger) {
+        this.workingDir = workingDir;
         this.logger = logger;
         rawLogger = Logger.getAnonymousLogger();
         rawLogger.setUseParentHandlers(false);
@@ -117,7 +117,7 @@ public class ExternalProcess {
             "Starting wrapper with command line: [" + commandLineToLog + "]"
             );
         try {
-            process = Runtime.getRuntime().exec(commandLineToLog, null, workDir);
+            process = Runtime.getRuntime().exec(arguments, null, workingDir);
         } catch (IOException e) {
             logger.severe("Wrapper execution failed: " + e);
             throw e;
