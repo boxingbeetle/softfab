@@ -1,7 +1,9 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from enum import Enum
-from typing import Iterator, cast
+from typing import (
+    Collection, Dict, FrozenSet, Iterator, Mapping, Optional, cast
+)
 
 from softfab.FabPage import FabPage, IconModifier
 from softfab.Page import PageProcessor, Redirect
@@ -9,8 +11,11 @@ from softfab.configlib import Config, configDB
 from softfab.configview import SelectConfigsMixin, SimpleConfigTable
 from softfab.datawidgets import DataTable
 from softfab.formlib import actionButtons, hiddenInput, makeForm
-from softfab.pageargs import DictArg, EnumArg, RefererArg, SetArg, StrArg
+from softfab.pageargs import (
+    ArgsT, DictArg, EnumArg, RefererArg, SetArg, StrArg
+)
 from softfab.projectlib import project
+from softfab.request import Request
 from softfab.selectlib import getCommonTags
 from softfab.selectview import (
     SelectArgs, TagValueEditTable, textToValues, valuesToText
@@ -24,8 +29,8 @@ class TagConfigTable(SimpleConfigTable):
     tabOffsetField = None
     sortField = None
 
-    def getRecordsToQuery(self, proc):
-        return proc.configs
+    def getRecordsToQuery(self, proc: PageProcessor) -> Collection[Config]:
+        return cast(ConfigTagsBase.Processor, proc).configs
 
 parentPage = 'LoadExecute'
 
@@ -34,15 +39,15 @@ class ParentArgs(SelectArgs):
 
 Actions = Enum('Actions', 'APPLY CANCEL')
 
-class ConfigTagsBase(FabPage['ConfigTagsBase.Processor', FabPage.Arguments]):
+class ConfigTagsBase(FabPage['ConfigTagsBase.Processor', ArgsT]):
     icon = 'IconExec'
     iconModifier = IconModifier.EDIT
     description = 'Configuration Tags'
     linkDescription = False
 
-    class Processor(SelectConfigsMixin[ParentArgs], PageProcessor[ParentArgs]):
+    class Processor(SelectConfigsMixin[ParentArgs], PageProcessor[ArgsT]):
 
-        def process(self, req, user):
+        def process(self, req: Request[ArgsT], user: User) -> None:
             # pylint: disable=attribute-defined-outside-init
             self.notices = []
 
@@ -89,12 +94,12 @@ class ConfigTagsBase(FabPage['ConfigTagsBase.Processor', FabPage.Arguments]):
                     ] ]
                 )
 
-class ConfigTags_GET(ConfigTagsBase):
+class ConfigTags_GET(ConfigTagsBase[ParentArgs]):
 
     class Arguments(ParentArgs):
         pass
 
-class ConfigTags_POST(ConfigTagsBase):
+class ConfigTags_POST(ConfigTagsBase['ConfigTags_POST.Arguments']):
 
     class Arguments(ParentArgs):
         action = EnumArg(Actions)
@@ -104,7 +109,10 @@ class ConfigTags_POST(ConfigTagsBase):
 
     class Processor(ConfigTagsBase.Processor):
 
-        def process(self, req, user):
+        def process(self,
+                    req: Request['ConfigTags_POST.Arguments'],
+                    user: User
+                    ) -> None:
             args = req.args
             action = args.action
             if action is not Actions.APPLY:
@@ -124,20 +132,21 @@ class ConfigTags_POST(ConfigTagsBase):
                     'change configuration tags' )
                 )
 
-            tagkeys = args.tagkeys
-            tagvalues = args.tagvalues
-            commontags = args.commontags
+            tagkeys = cast(Mapping[str, str], args.tagkeys)
+            tagvalues = cast(Mapping[str, str], args.tagvalues)
+            commontags = cast(Mapping[str, FrozenSet[str]], args.commontags)
 
             # Determine changes between the submitted tags and the stored
             # tags.
-            changes = {}
+            changes: Dict[str, Dict[str, Optional[str]]] = {}
             for index, tagKey in tagkeys.items():
+                assert isinstance(tagKey, str), tagKey
                 storedValues = commontags.get(index, frozenset())
                 values = dict(
                     Config.cache.toCanonical(tagKey, value)
                     for value in textToValues(tagvalues[index])
                     )
-                changes[tagKey] = chValues = {}
+                chValues: Dict[str, Optional[str]] = {}
                 # Look for deleted tags.
                 for cvalue in storedValues:
                     if cvalue not in values:
@@ -146,6 +155,7 @@ class ConfigTags_POST(ConfigTagsBase):
                 for cvalue, dvalue in values.items():
                     if cvalue not in storedValues:
                         chValues[cvalue] = dvalue
+                changes[tagKey] = chValues
 
             for config in configs:
                 config.updateTags(changes)
