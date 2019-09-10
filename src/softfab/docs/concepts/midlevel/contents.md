@@ -29,9 +29,9 @@ To be able to generate mid-level reports, useful mid-level data has to be extrac
 
 _Extraction_ is the process of getting the mid-level data out of a task run. Either the build or test framework can be modified to output the mid-level data key-value pairs, or a post processor can be made to extract the reporting from the framework's native format (the low-level reporting). For open source frameworks both approaches are possible, but for closed source frameworks post processing is the only option.
 
-Mid-level data extraction can be done either in the execution wrapper or in a separate extraction wrapper (shadow task). In the latter case, the existence of an extraction wrapper must be declared in the framework definition on the Control Center. In both cases the key-value pairs are written to the results file using the following syntax:
+Mid-level data extraction is done in the execution wrapper. The key-value pairs are written to the results file using the following syntax:
 
-```python
+```ini
 data.<key>=<value>
 ```
 

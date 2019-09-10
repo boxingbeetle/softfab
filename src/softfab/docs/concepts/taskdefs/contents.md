@@ -22,20 +22,6 @@ The implementation of a wrapper script is documented in [Writing a Wrapper](../.
 
 There is no wrapper configuration page on the Control Center: instead the inputs, output and parameters of a wrapper are defined as part of a framework.
 
-### Execution Wrapper versus Extraction Wrapper<a id="extract"></a>
-
-With SoftFab it is possible to store [mid-level data](../midlevel/) and to visualize this data by plotting trend graphs (number of lines of code, number of problems reported by a static code check tool etc.) This mid-level data has to be extracted from a low-level log report or from the executing environment and stored in the factory. The following two ways are available to send the extracted mid-level data to the Control Center:
-
-execution wrapper
-:   Mid-level data can extracted as part of the task execution; the data is included in the execution results file.
-
-extraction wrapper
-:   Mid-level data can be extracted by a separate extraction wrapper, which runs as a separate "shadow" task.
-
-It is possible to do task post-processing, such as extraction of mid-level data, as a separate "shadow" task. A "shadow" task always runs directly after the execution task when it finished and before a next execution task starts (if any). An "extraction" task (as opposed to "execution" task) does not appear in the list of tasks belonging to the job. The advantage of a separate "extraction wrapper" is mainly to split mid-level data extraction from the execution wrapper. Sometimes another more suitable script language is used (e.g. Perl or Python) to do the data extraction from low level (text) reports. The extraction task must produce a file called 'extracted.properties', containing the mid-level data fields and their values. It is not possible to extract mid-level data in both the wrapper script (execution task) and the extractor script (extraction task) for the same task (framework). It is strongly advised not to put 'data.<key\>=<value\>' in both the files: 'results.properties' and 'extracted.properties'.
-
-If the "Extract" checkbox is checked on the framework definition edit page, it means the tasks that use this framework will have a "shadow" task attached to them to perform mid-level data extraction. The wrapper for a shadow task is slightly different tough: they use different file names for the wrapper script and for the results file. The extraction wrapper file is called 'extractor._ext_', where the extension is specific for the chosen script language.
-
 ## Framework Definition<a id="frameworkdef"></a>
 
 You can [define frameworks](../../../FrameworkIndex) in the Control Center configuration.

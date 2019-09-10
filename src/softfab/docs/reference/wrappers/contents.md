@@ -105,8 +105,6 @@ The values of _`taskkey*`_ are generated from the corresponding tasks names by r
 
 When a product was not produced by another task but instead provided by the user as input to a job, SF_USER_INPUT_* is used for _`taskkey*`_ and _`task name*`_ in the SF_PROD dictionary. It gets a sequence number, starting at 0, for every unique user input.
 
-Extraction tasks receive all the same information as the corresponding execution tasks except for the resources, which are not available for extraction tasks.
-
 ### Passing Results<a id="passing-results"></a>
 
 The SoftFab Control Center must know the following things about a task run that has finished:
@@ -116,7 +114,7 @@ The SoftFab Control Center must know the following things about a task run that 
 *   Locators of the output products (if any).
 *   Mid-level Data extracted from the output reports (if any).
 
-This information is passed via the Task Runner to the Control Center using the `results.properties` file (or `extracted.properties` for extraction tasks). It should be written in the root of the report directory tree (see SoftFab variable `SF_REPORT_ROOT`). The full path of this file is available in variable `SF_RESULTS`. Its format is similar to Java property files and looks like this:
+This information is passed via the Task Runner to the Control Center using the `results.properties` file. It should be written in the root of the report directory tree (see SoftFab variable `SF_REPORT_ROOT`). The full path of this file is available in variable `SF_RESULTS`. Its format is similar to Java property files and looks like this:
 
 `result=<result code>`
 :   Possible values for `<result code>` are "`ok`", "`warning`", "`error`" and "`inspect`".
@@ -125,19 +123,12 @@ This information is passed via the Task Runner to the Control Center using the `
 :   Any human-readable string. If absent or empty it is automatically generated based on the result code.
 
 `output.<product name>.locator=<locator>`
-:   A machine-readable string that indicates the location where the by the task produced output product can be found, for example a file path or a URL. If the framework produces multiple outputs, you should specify a separate locator for each of them. Output locators are only relevant for execution tasks. An extraction task is not supposed to report any output locators and if it does they are ignored and a warning is written in the task runner log.
+:   A machine-readable string that indicates the location where the by the task produced output product can be found, for example a file path or a URL. If the framework produces multiple outputs, you should specify a separate locator for each of them.
 
 `data.<key>=<value>`
 :   A key-value pair containing some mid-level data relevant to this task run. The results file can contain any number of these pairs. The key name and its value are stored in the SoftFab Control Center database. If more tasks have run, a trend graph can be plotted (this can be used to monitor the software project progress and to take action if required). Here a some mid-level data examples: Size of code per module (lines of code), total number of unit tests, number of failed tests and coverage percentage. The data value has to be extracted by the wrapper from the output report (file).
 
-`extraction.result=<value>`
-:   The result of the extraction task. Possible values are the same as for `result`. This represents the result of the extraction itself, while `result` produced by the extraction task represents the result of the corresponding execution task calculated by the extraction task.
-
-If execution of a wrapper finishes with a non-zero exit code, the Task Runner will assume there was a problem executing the wrapper and report result "error" to the Control Center, without looking at the `results.properties` file. If the `results.properties` file is missing, the Task Runner will also report result "error" to the Control Center.
-
-If the execution task is followed by its corresponding extraction task the result code can be reported by either of them. If no result code has been reported after both execution and extraction tasks have completed the task result is automatically set to `error`. If the extraction task reports a result code and there is already one reported previously by the execution task the codes are compared and if they are equal the summary string is replaced by the new value, otherwise a conflict occurs and the old result code is not changed.
-
-Both execution and extraction wrappers can produce mid-level data. This means you can have mid-level data without having an extraction wrapper. If both the execution and extraction wrapper produce mid-level data (not recommended), than these will be merged by the Control Center (in such case maybe an extraction wrapper is not required at all).
+If execution of a wrapper finishes with a non-zero exit code, the Task Runner will assume there was a problem executing the wrapper and report result `error` to the Control Center, without looking at the `results.properties` file. If the `results.properties` file is missing or does not specify a valid result code, the Task Runner will also report result `error` to the Control Center.
 
 ### Controlling the flow through the Execution Graph
 
@@ -148,7 +139,6 @@ In some cases, even with an unsuccessful completion (red) of a task (not able to
 ### Abort Wrapper
 
 If you want more control over aborting a task run, you can use an abort wrapper. This is a wrapper which is run just before the execution process is aborted. There is no configuration required: just put a wrapper named <code>wrapper_abort.<i>ext</i></code> (where <code><i>ext</i></code> depends on the language the abort wrapper is written in) in the same directory as <code>wrapper.<i>ext</i></code>. The abort wrapper is passed the same set of variables as the execution wrapper. It can e.g. be used to nicely close low-level log files, so still the report can be read/used, to uninstall a firmware binary or to clean up generated intermediate or temporary files.
-It is also possible to use an abort wrapper to abort (mid-level data) extraction runs. In this case, you should use a file named <code>extractor_abort.<i>ext</i></code>.
 
 ## Wrapper Languages <a id="languages"></a>
 
@@ -187,10 +177,10 @@ The Task Runner searches for a wrapper with one of the supported file name exten
 
 ### Shell Script Wrapper <a id="shell"></a>
 
-|                | Execution    | Extraction
-|----------------|--------------|-----------
-|File name       | `wrapper.sh` | `extractor.sh`
-|Available since | Task Runner  | 3.0
+| File name    | Available since
+|--------------|-----------------
+| `wrapper.sh` | SoftFab 3.0
+
 
 #### Portability
 
@@ -236,10 +226,9 @@ Single level lists are represented as strings with the list elements space-separ
 
 ### Batch File Wrapper <a id="batch"></a>
 
-|                | Execution     | Extraction
-|----------------|---------------|-----------
-|File name       | `wrapper.bat` | `extractor.bat`
-|Available since | Task Runner   | 3.0
+| File name     | Available since
+|---------------|-----------------
+| `wrapper.bat` | SoftFab 3.0
 
 #### Portability
 
@@ -255,10 +244,9 @@ Dictionary values of the variables are represented in the same way as for [shell
 
 ### Makefile Wrapper <a id="make"></a>
 
-|                | Execution    | Extraction
-|----------------|--------------|-----------
-|File name       | `wrapper.mk` | `extractor.mk`
-|Available since | Task Runner  | 3.0
+| File name    | Available since
+|--------------|-----------------
+| `wrapper.mk` | SoftFab 3.0
 
 #### Portability
 
@@ -285,10 +273,9 @@ Make sure all indenting in Makefiles is done with tabs.
 
 ### Perl Wrapper <a id="perl"></a>
 
-|                | Execution    | Extraction
-|----------------|--------------|-----------
-|File name       | `wrapper.pl` | `extractor.pl`
-|Available since | Task Runner  | 3.0
+| File name    | Available since
+|--------------|-----------------
+| `wrapper.pl` | SoftFab 3.0
 
 #### Portability
 
@@ -319,10 +306,9 @@ RESDATA
 
 ### Python Wrapper <a id="python"></a>
 
-|                | Execution    | Extraction
-|----------------|--------------|-----------
-|File name       | `wrapper.py` | `extractor.py`
-|Available since | Task Runner  | 3.0
+| File name    | Available since
+|--------------|-----------------
+| `wrapper.py` | SoftFab 3.0
 
 #### Portability
 
@@ -346,10 +332,9 @@ resultsFile.close()
 
 ### Ruby Wrapper <a id="ruby"></a>
 
-|                | Execution    | Extraction
-|----------------|--------------|-----------
-|File name       | `wrapper.rb` | `extractor.rb`
-|Available since | Task Runner  | 3.0
+| File name    | Available since
+|--------------|-----------------
+| `wrapper.rb` | SoftFab 3.0
 
 #### Portability
 
@@ -373,11 +358,10 @@ out.close
 
 ### WSH Wrapper <a id="wsh"></a>
 
-|                | Execution     | Extraction      | Language
-|----------------|---------------|-----------------|---------
-|File name       | `wrapper.js`  | `extractor.js`  | JScript
-|                | `wrapper.vbs` | `extractor.vbs` | VBScript
-|Available since | Task Runner   | 3.0
+| File name     | Language | Available since
+|---------------|----------|-----------------
+| `wrapper.js`  | JScript  | SoftFab 3.0
+| `wrapper.vbs` | VBScript | SoftFab 3.0
 
 #### Portability
 
@@ -393,10 +377,9 @@ Dictionaries are represented as objects with the keys as properties. Since VBScr
 
 ### Ant <a id="ant"></a>
 
-|                | Execution     | Extraction
-|----------------|---------------|-----------
-|File name       | `wrapper.xml` | `extractor.xml`
-|Available since | Task Runner   | 3.0
+| File name     | Available since
+|---------------|-----------------
+| `wrapper.xml` | SoftFab 3.0
 
 #### Portability
 
@@ -437,10 +420,9 @@ In this example, `SOURCE_ROOT` is an input product that contains the directory p
 
 ### NAnt <a id="nant"></a>
 
-|                | Execution       | Extraction
-|----------------|-----------------|-----------
-|File name       | `wrapper.build` | `extractor.build`
-|Available since | Task Runner     | 3.0
+| File name       | Available since
+|-----------------|-----------------
+| `wrapper.build` | SoftFab 3.0
 
 #### Portability
 

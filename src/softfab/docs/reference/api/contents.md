@@ -36,8 +36,6 @@ If you would like to query or change a certain piece of information on the Contr
 
 Aborts one or more named (if they exist) or all tasks in a list of jobs. Multiple tasks can be aborted in multiple jobs. The existence of all mentioned tasks is not enforced in all the jobs. The API call should be interpreted as: abort these tasks in these jobs if they exist. This means that under certain conditions it is possible that after return not even one task is aborted.
 
-Possible associated waiting or running extraction tasks are **not** aborted.
-
 Arguments:
 
 jobId: (multiple, at least one)
