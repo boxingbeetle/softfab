@@ -29,7 +29,6 @@ from softfab.docserve import DocPage, DocResource
 from softfab.pageargs import PageArgs
 from softfab.render import NotFoundPage, renderAuthenticated
 from softfab.schedulelib import ScheduleManager
-from softfab.shadowlib import startShadowRunCleanup
 from softfab.userlib import User
 from softfab.utils import iterModules
 from softfab.webhooks import createWebhooks
@@ -333,7 +332,6 @@ class SoftFabRoot(Resource):
 
     def startup(self) -> Generator:
         yield DatabaseLoader(self).process()
-        yield startShadowRunCleanup
         yield PageLoader(self).process
         # Start schedule processing.
         yield ScheduleManager().trigger

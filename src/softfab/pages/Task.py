@@ -26,15 +26,11 @@ from softfab.request import Request
 from softfab.resourceview import InlineResourcesTable
 from softfab.resultlib import getData, getKeys
 from softfab.selectview import valuesToText
-from softfab.shadowlib import shadowDB
-from softfab.shadowview import getShadowRunStatus
 from softfab.taskdeflib import taskDefDB
 from softfab.taskdefview import formatTimeout
 from softfab.tasktables import JobTaskRunsTable, TaskProcessorMixin
 from softfab.userlib import User, checkPrivilege
-from softfab.webgui import (
-    PropertiesTable, Table, Widget, cell, maybeLink, pageLink
-)
+from softfab.webgui import PropertiesTable, Table, Widget, cell, pageLink
 from softfab.xmlgen import XMLContent, txt, xhtml
 
 
@@ -140,17 +136,6 @@ class Task_GET(FabPage['Task_GET.Processor', 'Task_GET.Arguments']):
             yield xhtml.p[ 'Task execution was cancelled.' ]
         else:
             yield xhtml.p[ 'No data yet.' ]
-
-        extractionRunId = cast(Optional[str], task['extractionRun'])
-        if extractionRunId is not None:
-            extractionRun = shadowDB.get(extractionRunId)
-            if extractionRun is not None:
-                yield xhtml.p[
-                    'Extraction run: ',
-                    maybeLink(extractionRun.getURL())[
-                        getShadowRunStatus(extractionRun)
-                        ]
-                    ]
 
         yield xhtml.p[
             pageLink('ExtractedData', ReportTaskArgs(task = ( taskName, )))[

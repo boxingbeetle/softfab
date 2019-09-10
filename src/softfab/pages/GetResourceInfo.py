@@ -99,14 +99,6 @@ class GetResourceInfo_GET(ControlPage['GetResourceInfo_GET.Arguments',
                             jobid = run.getJob().getId(),
                             )
                         ]
-                else:
-                    shadowRunId = runner.getShadowRunId()
-                    if shadowRunId:
-                        yield xml.reservedby[
-                            xml.shadowref(
-                                shadowid = shadowRunId,
-                            )
-                        ]
             else:
                 # Resource is of a custom type.
                 if resource.isReserved():

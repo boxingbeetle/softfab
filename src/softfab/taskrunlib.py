@@ -7,7 +7,6 @@ from typing import (
 from urllib.parse import urljoin
 import logging
 
-from softfab import shadowlib
 from softfab.config import dbDir
 from softfab.conversionflags import upgradeInProgress
 from softfab.databaselib import (
@@ -29,7 +28,6 @@ if TYPE_CHECKING:
     from softfab.joblib import Job, Task, jobDB
     from softfab.productlib import Product
     from softfab.resourcelib import Resource, ResourceDB, TaskRunner
-    from softfab.shadowlib import ExtractionRun
     from softfab.userlib import User
 else:
     Job = object
@@ -42,7 +40,6 @@ else:
     Resource = object
     ResourceDB = object
     TaskRunner = object
-    ExtractionRun = object
     User = object
 
 
@@ -88,17 +85,6 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
         self._properties['state'] != 'running':
             del self._properties['alert']
 
-        self.__extractionRun: Optional[ExtractionRun] = None
-        if 'extractionRun' in self._properties:
-            extractionRunId = cast(str, self._properties['extractionRun'])
-            extractionRun = shadowlib.shadowDB.get(extractionRunId)
-            # There is currently only one type of shadow run.
-            assert isinstance(extractionRun, ExtractionRun), extractionRun
-            self.__setExtractionRun(extractionRun)
-            # Even if the extraction run has been deleted already, keep the ID
-            # around as a marker that this run was once extracted.
-            # ShowReports uses this to decide whether or not to show the
-            # "view data" link.
         StorageURLMixin.__init__(self)
 
     def __getitem__(self, key: str) -> object:
@@ -117,8 +103,8 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
             return self.getStopTime()
         elif key == 'summary':
             return self.getSummary()
-        elif key in ( 'runner', 'extractionRun' ):
-            # It is perfectly legal for these keys not to exist.
+        elif key == 'runner':
+            # It is perfectly legal for this key not to exist.
             return self._properties.get(key)
         else:
             value = self._properties.get(key)
@@ -126,24 +112,6 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
                 return self.getJob()[key]
             else:
                 return value
-
-    def __setExtractionRun(self, extractionRun: ExtractionRun) -> None:
-        if self.__extractionRun is not None:
-            self.__extractionRun.removeObserver(self.__extractionRunChanged)
-        self.__extractionRun = extractionRun
-        if extractionRun is not None and not extractionRun.isDone():
-            extractionRun.addObserver(self.__extractionRunChanged)
-
-    def __extractionRunChanged(self, extractionRun: ExtractionRun) -> None:
-        if extractionRun.isDone():
-            if 'result' not in self._properties:
-                # Extraction is finished and we still don't have a result.
-                self.__setState(ResultCode.ERROR, 'done',
-                    'neither wrapper nor extractor specified result'
-                    )
-                self._notify()
-            # No further updates will come, so no point in listening.
-            extractionRun.removeObserver(self.__extractionRunChanged)
 
     def __getJobId(self) -> str:
         if self.__job is None:
@@ -231,7 +199,7 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
                 # No task produced this product, so it's a user input.
                 result = ResultCode.OK
             # It is possible for the result to be None if for example
-            # the task didn't finish yet or is awaiting extraction.
+            # the task didn't finish yet or is awaiting inspection.
             # The parser in the Task Runner will not accept a producer
             # without a result though, so use "notyet" instead.
             yield xml.producer(
@@ -314,12 +282,6 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
             result = self.getResult()
             if result is ResultCode.INSPECT:
                 return 'waiting for postponed inspection'
-            elif result is None:
-                if self.__extractionRun is not None \
-                and self.__extractionRun.isRunning():
-                    return 'extraction in progress'
-                else:
-                    return 'waiting for extraction'
             elif result in defaultSummaries:
                 summary = defaultSummaries[result]
                 assert summary is not None
@@ -461,9 +423,6 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
                 'postponed inspection cancelled' + whoAborted
                 )
             return True, 'had its postponed inspection cancelled'
-        elif self.isDone() and self.getResult() is None:
-            return False, 'cannot be aborted: ' \
-                'aborting extraction is not yet implemented'
         else:
             return False, 'was not waiting or running'
 
@@ -557,7 +516,7 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
         if self.isExecutionFinished():
             return
         assert self.isRunning()
-        if result is None and not task.hasExtractionWrapper():
+        if result is None:
             result = ResultCode.ERROR
             summary = 'wrapper did not specify result'
         if 'abort' in self._properties:
@@ -579,15 +538,6 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
         #       Maybe do this when we start modeling Task Runners as resources.
         self.getJob().releaseResources(task, self.__reserved)
         self.__reserved = {}
-
-        if self.getTask().hasExtractionWrapper() \
-                and result is not ResultCode.ERROR:
-            # Create extraction shadow run.
-            extractionRun = shadowlib.ExtractionRun.create(self)
-            shadowlib.shadowDB.add(extractionRun)
-            # Remember which extraction run belongs to this task run.
-            self._properties['extractionRun'] = extractionRun.getId()
-            self.__setExtractionRun(extractionRun)
 
         self._notify()
 
@@ -688,7 +638,6 @@ class TaskRunDB(Database[TaskRun]):
     description = 'task run'
     uniqueKeys = ( 'id', )
 taskRunDB = TaskRunDB()
-shadowlib.taskRunDB = taskRunDB
 
 def newTaskRun(task: Task) -> TaskRun:
     taskRun = TaskRun({'id': createInternalId()}, task)

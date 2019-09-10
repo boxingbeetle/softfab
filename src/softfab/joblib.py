@@ -226,10 +226,6 @@ class Task(
     def getPriority(self) -> int:
         return cast(int, self._properties['priority'])
 
-    def hasExtractionWrapper(self) -> bool:
-        # TODO: Extraction runs are being phased out.
-        return False
-
     def newRun(self) -> None:
         self.__taskRun = taskrunlib.newTaskRun(self)
         self._properties['run'] = self.__taskRun.getId()
@@ -675,7 +671,7 @@ class Job(TaskRunnerSet, TaskSet[Task], XMLTag, DatabaseElem):
     def isExecutionFinished(self) -> bool:
         '''Returns True iff execution of all tasks in this job is finished.
         Note that a job that has finished execution might not have its result
-        available yet if it is waiting for extraction or inspection.
+        available yet if it is waiting for inspection.
         '''
         if not self.__executionFinished:
             self.__executionFinished = all(

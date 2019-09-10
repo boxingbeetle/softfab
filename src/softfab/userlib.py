@@ -43,7 +43,7 @@ assert {elem.name.lower() for elem in list(UIRoleNames)[1:]} == roleNames
 #   j(job), t(task), c(config), td(task definition),
 #   fd(framework definition), pd(product definition), tk(token),
 #   tr(Task Runner), rt (resource type), r(resource), p(project), s(schedule),
-#   sh(shadow), sp(storage pool), u(user)
+#   sp(storage pool), u(user)
 # and action can be:
 #   l(list), c(create), a(access), m(modify), d(delete)
 # Action with 'o' suffix (e.g. 'mo') means that the object it is applied
@@ -116,12 +116,6 @@ privileges: Mapping[str, Sequence[str]] = {
     's/mo': ('user', 'operator'),
     's/d': ('operator', ),
     's/do': ('user', 'operator'),
-
-    'sh/l': ('guest', 'user', 'operator'),
-    'sh/a': ('guest', 'user', 'operator'),
-    #'sh/c': (),
-    #'sh/m': (),
-    #'sh/d': ('operator', ),
 
     'sp/l': ('guest', 'user', 'operator'),
     'sp/a': ('guest', 'user', 'operator'),

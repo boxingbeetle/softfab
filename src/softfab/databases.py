@@ -5,8 +5,8 @@ from typing import Iterator
 
 from softfab import (
     configlib, databaselib, frameworklib, joblib, productdeflib, productlib,
-    projectlib, resourcelib, restypelib, schedulelib, shadowlib, taskdeflib,
-    taskrunlib, tokens, userlib
+    projectlib, resourcelib, restypelib, schedulelib, taskdeflib, taskrunlib,
+    tokens, userlib
 )
 
 
@@ -20,7 +20,6 @@ def iterDatabases() -> Iterator[databaselib.Database]:
     yield productdeflib.productDefDB
     yield frameworklib.frameworkDB
     yield taskdeflib.taskDefDB
-    yield shadowlib.shadowDB
     yield resourcelib.resourceDB
     yield productlib.productDB
     yield joblib.jobDB # joblib must go before taskrunlib despite dependencies
@@ -46,7 +45,6 @@ def reloadDatabases() -> None:
     reload(frameworklib)
     reload(taskdeflib)
     reload(productlib)
-    reload(shadowlib)
     reload(taskrunlib)
     reload(resourcelib)
     reload(joblib)

@@ -6,31 +6,15 @@ from softfab.authentication import TokenAuthPage
 from softfab.jobview import unfinishedJobs
 from softfab.resourcelib import RequestFactory, resourceDB, runnerFromToken
 from softfab.response import Response
-from softfab.shadowlib import shadowDB
-from softfab.sortedqueue import SortedQueue
 from softfab.tokens import TokenRole, TokenUser
 from softfab.userlib import User, checkPrivilege
 from softfab.xmlbind import parse
 from softfab.xmlgen import XMLContent, xml
 
 
-class WaitingShadowRuns(SortedQueue):
-    compareField = 'createtime'
-
-    def _filter(self, record):
-        return record.isWaiting()
-
 class Synchronize_POST(ControlPage[ControlPage.Arguments,
                                    'Synchronize_POST.Processor']):
     authenticator = TokenAuthPage(TokenRole.RESOURCE)
-
-    waitingShadowRuns = WaitingShadowRuns(shadowDB)
-
-    def assignShadowRun(self, taskRunner):
-        for shadowRun in self.waitingShadowRuns:
-            if shadowRun.assign(taskRunner):
-                return shadowRun
-        return None
 
     def assignExecutionRun(self, taskRunner):
         # COMPAT 2.x.x: Refuse to assign to 2.x.x Task Runners.
@@ -84,8 +68,7 @@ class Synchronize_POST(ControlPage[ControlPage.Arguments,
                     self.exit = True
                     taskRunner.setExitFlag(False)
                 elif not taskRunner.isSuspended():
-                    self.newRun = self.page.assignShadowRun(taskRunner) \
-                        or self.page.assignExecutionRun(taskRunner)
+                    self.newRun = self.page.assignExecutionRun(taskRunner)
 
         def createResponse(self) -> XMLContent:
             taskRunner = self.taskRunner

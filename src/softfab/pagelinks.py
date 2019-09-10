@@ -7,9 +7,8 @@ from softfab.pageargs import BoolArg, PageArgs, SetArg, StrArg
 from softfab.request import Request
 from softfab.resourcelib import TaskRunner
 from softfab.restypelib import resTypeDB, taskRunnerResourceTypeName
-from softfab.shadowlib import shadowDB
 from softfab.webgui import pageLink, pageURL
-from softfab.xmlgen import XMLContent, XMLNode, txt, xhtml
+from softfab.xmlgen import XMLContent, XMLNode, xhtml
 
 
 class ProductDefIdArgs(PageArgs):
@@ -120,20 +119,10 @@ def createTaskInfoLink(jobId: str, taskName: str) -> XMLNode:
 
 def createTaskLink(taskrunner: TaskRunner) -> XMLContent:
     run = taskrunner.getRun()
-    if run is not None:
+    if run is None:
+        return '-'
+    else:
         return createTaskInfoLink(run.getJob().getId(), run.getName())
-
-    shadowId = taskrunner.getShadowRunId()
-    if shadowId is not None:
-        shadowRecord = shadowDB[shadowId]
-        url = shadowRecord.getURL()
-        description = shadowRecord.getDescription()
-        if url:
-            return xhtml.a(href = url)[ description ]
-        else:
-            return txt(description)
-
-    return '-'
 
 class TaskIdSetArgs(PageArgs):
     '''Identifies a set of tasks.

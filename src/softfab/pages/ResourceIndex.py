@@ -40,9 +40,6 @@ def _getResourceReservedBy(resource: ResourceBase) -> str:
         taskRun = resource.getRun()
         if taskRun is not None:
             return 'T-' + taskRun.getId()
-        shadowRunId = resource.getShadowRunId()
-        if shadowRunId is not None:
-            return 'S-' + shadowRunId
     else:
         if resource.isReserved():
             return cast(str, resource['reserved'])

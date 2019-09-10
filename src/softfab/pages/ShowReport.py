@@ -110,9 +110,8 @@ class ShowReport_GET(FabPage['ShowReport_GET.Processor',
         yield ParamTable.instance.present(**kwargs)
         if not job.hasFinalResult():
             # Note: We check hasFinalResult instead of isExecutionFinished
-            #       because the Task Runner binding applies to extraction too
-            #       and often postponed inspection is done on the Factory PC
-            #       that ran the task.
+            #       because for postponed inspection it can be useful to know
+            #       which Factory PC ran the task.
             yield TaskRunnerTable.instance.present(**kwargs)
 
         notify = job.getParams().get('notify')

@@ -36,7 +36,6 @@ class GetJobInfo_GET(ControlPage['GetJobInfo_GET.Arguments',
         taskprio = project['taskprio']
 
         def taskToXML(task):
-            # TODO: Include info about extraction run?
             return xml.task(
                 name = task['name'],
                 priority = task['priority'] if taskprio else None,

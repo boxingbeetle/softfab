@@ -64,7 +64,7 @@ class TaskStateMixin:
     def isExecutionFinished(self) -> bool:
         '''Returns True iff this task has finished running, or was cancelled.
         Note that a task that has finished execution might not have its result
-        available yet if it is waiting for extraction or inspection.
+        available yet if it is waiting for inspection.
         '''
         return self._getState() in ( 'done', 'cancelled' )
 

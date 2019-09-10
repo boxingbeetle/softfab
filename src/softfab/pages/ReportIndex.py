@@ -39,9 +39,7 @@ class FilterForm(ReportFilterForm):
 class ReportIndex_GET(FabPage['ReportIndex_GET.Processor', 'ReportIndex_GET.Arguments']):
     icon = 'IconReport'
     description = 'History'
-    children = [
-        'ShowReport', 'ShowJobs', 'ReportTasks', 'TaskMatrix', 'ShadowQueue'
-        ]
+    children = ['ShowReport', 'ShowJobs', 'ReportTasks', 'TaskMatrix']
 
     class Arguments(ReportArgs):
         first = IntArg(0)

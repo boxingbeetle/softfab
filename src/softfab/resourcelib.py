@@ -1,6 +1,5 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from abc import ABC
 from collections import defaultdict
 from typing import (
     TYPE_CHECKING, AbstractSet, Callable, ClassVar, Collection, DefaultDict,
@@ -16,7 +15,6 @@ from softfab.databaselib import Database, DatabaseElem, RecordObserver
 from softfab.paramlib import GetParent, ParamMixin, Parameterized, paramTop
 from softfab.projectlib import project
 from softfab.restypelib import taskRunnerResourceTypeName
-from softfab.shadowlib import ShadowRun, shadowDB
 from softfab.taskrunlib import RunInfo, TaskRun, taskRunDB
 from softfab.timelib import getTime
 from softfab.tokens import Token, TokenRole, TokenUser, tokenDB
@@ -258,15 +256,13 @@ class _TaskRunnerData(XMLTag):
         XMLTag.__init__(self, properties)
         self._properties.setdefault('host', '?')
         self.__run = cast(RunInfo, None)
-        self.__shadowRunId: Optional[str] = None
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, _TaskRunnerData):
             return (
                 # pylint: disable=protected-access
                 self._properties == other._properties and
-                self.__run == other.__run and
-                self.__shadowRunId == other.__shadowRunId
+                self.__run == other.__run
                 )
         else:
             return NotImplemented
@@ -288,9 +284,6 @@ class _TaskRunnerData(XMLTag):
     def _setRun(self, attributes: Mapping[str, str]) -> None:
         self.__run = RunInfo(attributes)
 
-    def _setShadowrun(self, attributes: Mapping[str, str]) -> None:
-        self.__shadowRunId = attributes['shadowId']
-
     def hasExecutionRun(self) -> bool:
         '''Returns True if the Task Runner reported it is running an execution
         run, False if it reported it is not running anything.
@@ -309,99 +302,81 @@ class _TaskRunnerData(XMLTag):
         else:
             return runInfo.getTaskRun().getId()
 
-    def getShadowRunId(self) -> Optional[str]:
-        '''Returns ID corresponding to the shadow run the Task Runner reported
-        it is currently running, or None if it is not running a shadow run.
-        '''
-        return self.__shadowRunId
-
     def _getContent(self) -> XMLContent:
         yield self.__run
-        if self.__shadowRunId is not None:
-            yield xml.shadowrun(shadowId = self.__shadowRunId)
 
 class RequestFactory:
     @staticmethod
     def createRequest(attributes: Mapping[str, str]) -> _TaskRunnerData:
         return _TaskRunnerData(attributes)
 
-RunT = TypeVar('RunT', TaskRun, ShadowRun)
-
-class RunObserver(RecordObserver[RunT], ABC):
-    '''Base class for monitoring the task run or shadow DB to keep track of
-    which run a particular Task Runner is expected to be working on.
+class ExecutionObserver(RecordObserver[TaskRun]):
+    '''Monitors the task run DB to keep track of which run a particular
+    Task Runner is expected to be working on.
     '''
-    db: ClassVar[Database] = abstract
-    runType: ClassVar[str] = abstract
 
     def __init__(self,
                  taskRunner: 'TaskRunner',
-                 callback: Callable[[Optional[RunT]], None]
+                 callback: Callable[[Optional[TaskRun]], None]
                  ):
         RecordObserver.__init__(self)
         self.__taskRunner = taskRunner
-        self.__callback: Callable[[Optional[RunT]], None] = callback
-        self._run: Optional[RunT] = None
-        self.db.addObserver(self)
+        self.__callback: Callable[[Optional[TaskRun]], None] = callback
+        self._run: Optional[TaskRun] = None
+        taskRunDB.addObserver(self)
 
     def retired(self) -> None:
-        self.db.removeObserver(self)
+        taskRunDB.removeObserver(self)
 
     def reset(self) -> None:
         self._run = None
 
-    def __shouldRun(self, run: RunT) -> bool:
+    def __shouldRun(self, run: TaskRun) -> bool:
         return (
             run.isRunning() and
             run.getTaskRunnerId() == self.__taskRunner.getId()
             )
 
-    def _changeRun(self, newRun: Optional[RunT]) -> None:
+    def _changeRun(self, newRun: Optional[TaskRun]) -> None:
         oldRun = self._run
         if oldRun is not None and newRun is not None:
             if oldRun.isRunning():
                 logging.warning(
-                    'Task Runner %s was running %s run %s and now '
-                    '%s run %s is run by it; marking old %s run '
-                    'as failed',
-                    self.__taskRunner.getId(),
-                    self.runType, oldRun.getId(),
-                    self.runType, newRun.getId(),
-                    self.runType
+                    'Task Runner %s was running %s and now %s is run by it; '
+                    'marking old run as failed',
+                    self.__taskRunner.getId(), oldRun.getId(), newRun.getId()
                     )
                 oldRun.failed('Task Runner switched to a different run')
             else:
                 logging.warning(
-                    'Missed transition to non-running state on %s run %s',
-                    self.runType, oldRun.getId()
+                    'Missed transition to non-running state on run %s',
+                    oldRun.getId()
                     )
         self._run = newRun
 
-    def getRun(self) -> Optional[RunT]:
+    def getRun(self) -> Optional[TaskRun]:
         return self._run
 
-    def setRun(self, run: RunT) -> None:
+    def setRun(self, run: TaskRun) -> None:
         '''Called by the Task Runner when it parses its stored state.
         '''
         if self.__shouldRun(run):
             self._changeRun(run)
         else:
             logging.warning(
-                'Task Runner %s thinks it is running %s run %s, '
-                'but the %s run thinks not; ignoring Task Runner',
-                self.__taskRunner.getId(),
-                self.runType, run.getId(),
-                self.runType
+                'Task Runner %s thinks it is running %s, '
+                'but the run thinks not; ignoring Task Runner',
+                self.__taskRunner.getId(), run.getId(),
                 )
 
-    def added(self, record: RunT) -> None:
+    def added(self, record: TaskRun) -> None:
         self.updated(record)
 
-    def removed(self, record: RunT) -> None:
+    def removed(self, record: TaskRun) -> None:
         if self._run is not None and record.getId() == self._run.getId():
             self._changeRun(None)
 
-    def updated(self, record: RunT) -> None:
+    def updated(self, record: TaskRun) -> None:
         if self.__shouldRun(record):
             if self._run is None or record.getId() != self._run.getId():
                 self._changeRun(record)
@@ -411,27 +386,12 @@ class RunObserver(RecordObserver[RunT], ABC):
                 self._changeRun(None)
                 self.__callback(None)
 
-class ExecutionObserver(RunObserver[TaskRun]):
-    db = taskRunDB
-    runType = 'execution'
-
     def toXML(self) -> XMLContent:
         run = self._run
         if run is None:
             return None
         else:
             return xml.executionrun(runId=run.getId())
-
-class ShadowObserver(RunObserver[ShadowRun]):
-    db = shadowDB
-    runType = 'shadow'
-
-    def toXML(self) -> XMLContent:
-        run = self._run
-        if run is None:
-            return None
-        else:
-            return xml.shadowrun(shadowId=run.getId())
 
 class TaskRunner(ResourceBase):
     '''This is a database record with information about a Task Runner.
@@ -489,9 +449,6 @@ class TaskRunner(ResourceBase):
         self.__executionObserver = ExecutionObserver(
             self, self.__shouldBeExecuting
             )
-        self.__shadowObserver = ShadowObserver(
-            self, self.__shouldBeRunningShadow
-            )
         self.__lastSyncTime = getTime()
         self.__markLostCall = None
         if self._properties['status'] is ConnectionStatus.CONNECTED:
@@ -540,9 +497,6 @@ class TaskRunner(ResourceBase):
         self.__executionObserver.retired()
         self.__executionObserver = cast(ExecutionObserver, None)
 
-        self.__shadowObserver.retired()
-        self.__shadowObserver = cast(ShadowObserver, None)
-
     @property
     def typeName(self) -> str:
         return taskRunnerResourceTypeName
@@ -576,26 +530,11 @@ class TaskRunner(ResourceBase):
         else:
             self.__executionObserver.setRun(run)
 
-    def _setShadowrun(self, attributes: Mapping[str, str]) -> None:
-        shadowId = attributes['shadowId']
-        shadowRun = shadowDB.get(shadowId)
-        if shadowRun is None:
-            logging.warning('Shadow run %s does not exist', shadowId)
-        else:
-            self.__shadowObserver.setRun(shadowRun)
-
     def __shouldBeExecuting(self, run: Optional[TaskRun]) -> None:
         '''Callback from ExecutionObserver.
         '''
         assert run is self.__executionObserver.getRun()
         # Write reference to current execution run to DB.
-        self._notify()
-
-    def __shouldBeRunningShadow(self, shadowRun: Optional[ShadowRun]) -> None:
-        '''Callback from ShadowObserver.
-        '''
-        assert shadowRun is self.__shadowObserver.getRun()
-        # Write reference to current shadow run to DB.
         self._notify()
 
     def __startLostCallback(self) -> None:
@@ -623,19 +562,14 @@ class TaskRunner(ResourceBase):
 
     def __failRun(self, reason: str) -> None:
         """Marks any task this Task Runner was running as failed."""
-        observers: Iterable[RunObserver] = (
-            self.__executionObserver,
-            self.__shadowObserver
-            )
-        for observer in observers:
-            run = observer.getRun()
-            if run is not None:
-                logging.warning(
-                    'Marking %s run %s as failed, '
-                    'because its Task Runner "%s" is %s',
-                    observer.runType, run.getId(), self.getId(), reason
-                    )
-                run.failed(f'Task Runner is {reason}')
+        run = self.__executionObserver.getRun()
+        if run is not None:
+            logging.warning(
+                'Marking run %s as failed, '
+                'because its Task Runner "%s" is %s',
+                run.getId(), self.getId(), reason
+                )
+            run.failed(f'Task Runner is {reason}')
 
     def getWarnTimeout(self) -> int:
         """Returns the maximum time that may elapse until the
@@ -685,13 +619,6 @@ class TaskRunner(ResourceBase):
     def getRun(self) -> Optional[TaskRun]:
         return self.__executionObserver.getRun()
 
-    def getShadowRunId(self) -> Optional[str]:
-        shadowRun = self.__shadowObserver.getRun()
-        if shadowRun is None:
-            return None
-        else:
-            return shadowRun.getId()
-
     def setExitFlag(self, flag: bool) -> None:
         self._properties['exit'] = flag
         self._notify()
@@ -705,8 +632,7 @@ class TaskRunner(ResourceBase):
     def isReserved(self) -> bool:
         '''Returns True iff something has been assigned to this Task Runner.
         '''
-        return self.__executionObserver.getRun() is not None \
-            or self.__shadowObserver.getRun() is not None
+        return self.__executionObserver.getRun() is not None
 
     def deactivate(self, reason: str) -> None:
         '''Suspends this Task Runner because it is misbehaving.
@@ -735,25 +661,12 @@ class TaskRunner(ResourceBase):
         self.__hasBeenInSync = True
         self.__cancelLostCallback()
         self.__startLostCallback()
-
-        if data.hasExecutionRun() and data.getShadowRunId() is not None:
-            self.deactivate(
-                'it claims to be running both an execution task and '
-                'a shadow task'
-                )
-            abort = True
-        else:
-            abort = False
-        abort |= self.__enforceSync(
+        return self.__enforceSync(
             self.__executionObserver, data.getExecutionRunId
             )
-        abort |= self.__enforceSync(
-            self.__shadowObserver, data.getShadowRunId
-            )
-        return abort
 
     def __enforceSync(self,
-                      observer: RunObserver[RunT],
+                      observer: ExecutionObserver,
                       getId: Callable[[], Optional[str]]
                       ) -> bool:
         '''Checks if the Control Center's and Task Runner's view of the
@@ -778,9 +691,9 @@ class TaskRunner(ResourceBase):
                 return ccRun.isToBeAborted()
             else:
                 logging.warning(
-                    'Execution of %s run %s failed: '
+                    'Execution of run %s failed: '
                     'Task Runner "%s" is no longer executing it',
-                    observer.runType, ccRun.getId(), self.getId()
+                    ccRun.getId(), self.getId()
                     )
                 ccRun.failed('Task Runner stopped executing this task')
                 return trRunId is not None
@@ -790,19 +703,14 @@ class TaskRunner(ResourceBase):
         if self.__data is not None:
             yield self.__data.toXML()
         yield self.__executionObserver.toXML()
-        yield self.__shadowObserver.toXML()
 
     # Used by recomputeRunning:
 
     def _resetRuns(self) -> None:
         self.__executionObserver.reset()
-        self.__shadowObserver.reset()
 
     def _initExecutionRun(self, run: TaskRun) -> None:
         self.__executionObserver.setRun(run)
-
-    def _initShadowRun(self, run: ShadowRun) -> None:
-        self.__shadowObserver.setRun(run)
 
 class ResourceFactory:
 
@@ -894,49 +802,46 @@ def runnerFromToken(user: TokenUser) -> TaskRunner:
         raise KeyError('Token does not represent a Task Runner')
 
 def recomputeRunning() -> None:
-    '''Scan the task run and shadow databases for running tasks.
+    '''Scan the task run database for running tasks.
     This is useful when:
     - jobs have been deleted manually
-    - the task/shadow and Task Runner databases have somehow gone out of sync
+    - the task and Task Runner databases have somehow gone out of sync
     '''
     # pylint: disable=protected-access
     # The methods are protected on purpose, because no-one else should use them.
     resourceDB.preload()
     for runner in iterTaskRunners():
         runner._resetRuns()
-    def checkRunners(db: Database[RunT],
-                     setter: Callable[[TaskRunner, RunT], None]
-                     ) -> None:
-        db.preload()
-        for run in db:
-            if run.isRunning():
-                runnerId = run.getTaskRunnerId()
-                if runnerId is None:
+
+    taskRunDB.preload()
+    for run in taskRunDB:
+        if run.isRunning():
+            runnerId = run.getTaskRunnerId()
+            if runnerId is None:
+                logging.warning(
+                    'No associated Task Runner for run %s',
+                    run.getId()
+                    )
+                run.failed('No associated Task Runner')
+                continue
+            try:
+                runner = getTaskRunner(runnerId)
+            except KeyError as ex:
+                message = ex.args[0]
+                logging.warning(
+                    'Task Runner for run %s disappeared: %s',
+                    run.getId(), message
+                    )
+                run.failed(message)
+            else:
+                if runner.getConnectionStatus() == ConnectionStatus.LOST:
                     logging.warning(
-                        'No associated Task Runner for run %s',
-                        run.getId()
+                        'Task Runner "%s" for run %s was already lost',
+                        runnerId, run.getId()
                         )
-                    run.failed('No associated Task Runner')
-                    continue
-                try:
-                    runner = getTaskRunner(runnerId)
-                except KeyError as ex:
-                    message = ex.args[0]
-                    logging.warning(
-                        'Task Runner for run %s disappeared: %s',
-                        run.getId(), message
-                        )
-                    run.failed(message)
+                    run.failed('Task Runner was lost')
                 else:
-                    if runner.getConnectionStatus() == ConnectionStatus.LOST:
-                        logging.warning(
-                            'Task Runner "%s" for run %s was already lost',
-                            runnerId, run.getId()
-                            )
-                        run.failed('Task Runner was lost')
-                    else:
-                        setter(runner, run)
-    checkRunners(taskRunDB, TaskRunner._initExecutionRun)
-    checkRunners(shadowDB, TaskRunner._initShadowRun)
+                    runner._initExecutionRun(run)
+
     for runner in iterTaskRunners():
         runner._notify()
