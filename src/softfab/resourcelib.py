@@ -153,10 +153,7 @@ class ResourceBase(ParamMixin, XMLTag, DatabaseElem):
 
     def setSuspend(self, suspended: bool, user: str) -> None:
         """Sets the (new) suspend state on request of `user`.
-        Raises TypeError if `suspended` is not a bool.
         """
-        if not isinstance(suspended, bool):
-            raise TypeError(type(suspended))
         if self._properties['suspended'] != suspended:
             self._properties['suspended'] = suspended
             self._properties['changedtime'] = getTime()

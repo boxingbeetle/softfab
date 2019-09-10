@@ -392,11 +392,6 @@ class Scheduled(XMLTag, SelectableRecordABC):
     def setSuspend(self, suspended: bool) -> None:
         '''Suspends or resumes a schedule.
         '''
-        if not isinstance(suspended, bool):
-            raise TypeError(
-                f'Expected bool for "suspended" argument, '
-                f'got "{type(suspended).__name__}"'
-                )
         if self._properties['suspended'] != suspended:
             self._properties['suspended'] = suspended
             self._notify()

@@ -481,9 +481,6 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
                    summary: Optional[str],
                    outputs: Optional[Mapping[str, str]] = None
                    ) -> None:
-        if result is not None and not isinstance(result, ResultCode):
-            raise TypeError('result must be a ResultCode or None')
-
         products = self.getProduced()
 
         # Check if non-existing output.PRODUCT.locators are set.
@@ -557,8 +554,6 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
         if isinstance(result, ResultCode):
             if result not in defaultSummaries:
                 raise ValueError(result)
-        elif result is not None:
-            raise TypeError('result must be a ResultCode or None')
         if self.isExecutionFinished():
             return
         assert self.isRunning()
@@ -637,8 +632,6 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
         if isinstance(result, ResultCode):
             if result not in defaultSummaries:
                 raise ValueError(result)
-        elif result is not None:
-            raise TypeError('result must be a ResultCode or None')
         if not self.isExecutionFinished():
             raise IllegalStateError('only finished tasks can have results')
 

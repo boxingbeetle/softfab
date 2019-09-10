@@ -235,10 +235,6 @@ class PageArgs:
         All mandatory arguments in this class must be present in the given
         arguments object.
         '''
-        if not isinstance(args, PageArgs):
-            raise TypeError(
-                f'"{type(args).__name__}" does not inherit from PageArgs'
-                )
         return cls(**{
             name: args.__dict__[name]
             for name, member_ in cls._iterArguments()
