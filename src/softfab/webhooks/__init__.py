@@ -1,8 +1,9 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from enum import Enum, auto
 from logging import Logger
 from types import ModuleType
-from typing import Callable, Iterator, Optional
+from typing import Any, Callable, Iterator, Optional
 import json
 import logging
 
@@ -16,13 +17,18 @@ from softfab.schedulelib import scheduleDB
 from softfab.utils import iterModules
 
 
+class WebhookEvents(Enum):
+    PING = auto()
+    PUSH = auto()
+    UNSUPPORTED = auto()
+
 class WebhookResource(Resource):
 
     def __init__(self, name: str, webhook: ModuleType):
         super().__init__()
         self.name = name
-        self.isRelevantEvent: Callable[[TwistedRequest], bool] = \
-                getattr(webhook, 'isRelevantEvent')
+        self.getEvent: Callable[[TwistedRequest], WebhookEvents] = \
+                getattr(webhook, 'getEvent')
         self.verifySignature: Callable[[TwistedRequest, bytes, bytes], bool] = \
                 getattr(webhook, 'verifySignature')
         self.findRepositoryURLs: Callable[[object], Iterator[str]] = \
@@ -34,8 +40,9 @@ class WebhookResource(Resource):
         request.setHeader(b'Content-Type', b'text/plain; charset=UTF-8')
 
         # Is this an event we're interested in?
-        if not self.isRelevantEvent(request):
-            return b'Irrelevant event ignored\n'
+        event = self.getEvent(request)
+        if event is WebhookEvents.UNSUPPORTED:
+            return b'Unsupported event ignored\n'
 
         # Parse Content-Type header.
         req = RequestBase(request)
@@ -110,6 +117,26 @@ class WebhookResource(Resource):
                    b'See Control Center log for details.\n'
         assert repoMatch is not None
 
+        if event is WebhookEvents.PING:
+            return self.handlePing()
+        elif event is WebhookEvents.PUSH:
+            return self.handlePush(request, repoMatch.getId(), parsed)
+        else:
+            assert False, event
+
+    def handlePing(self) -> bytes:
+        return (
+            b'Pong!\n'
+            b'\n'
+            b'Ping was received, parsed, matched to a repository '
+            b'and authenticated.\n'
+            )
+
+    def handlePush(self,
+                   request: TwistedRequest,
+                   repoId: str,
+                   parsed: Any
+                   ) -> bytes:
         # Find branches.
         try:
             branches = set(self.findBranches(parsed))
@@ -122,7 +149,6 @@ class WebhookResource(Resource):
         #       case-sensitive. We work around this by comparing the
         #       display values, but it does mean that a user cannot
         #       filters on two branches that only differ in case.
-        repoId = repoMatch.getId()
         tagValues = {f'{repoId}/{branch}' for branch in branches}
         scheduleIds = []
         for scheduleId, schedule in scheduleDB.items():

@@ -5,9 +5,15 @@ import hmac
 
 from twisted.web.http import Request as TwistedRequest
 
+from softfab.webhooks import WebhookEvents
 
-def isRelevantEvent(request: TwistedRequest) -> bool:
-    return request.getHeader('X-GitHub-Event') == 'push'
+
+def getEvent(request: TwistedRequest) -> WebhookEvents:
+    eventName = request.getHeader('X-GitHub-Event')
+    return {
+        'ping': WebhookEvents.PING,
+        'push': WebhookEvents.PUSH,
+        }.get(eventName, WebhookEvents.UNSUPPORTED)
 
 def verifySignature(request: TwistedRequest,
                     payload: bytes,
