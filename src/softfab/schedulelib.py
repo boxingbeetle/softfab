@@ -209,6 +209,7 @@ class Scheduled(XMLTag, SelectableRecordABC):
     '''A configuration that is scheduled for (repeated) execution.
     '''
     tagName = 'scheduled'
+    boolProperties = ('suspended',)
     intProperties = ('startTime', 'minDelay')
     enumProperties = {'sequence': ScheduleRepeat}
     cache = ObservingTagCache(scheduleDB, lambda: ('sf.trigger',) )
@@ -247,8 +248,6 @@ class Scheduled(XMLTag, SelectableRecordABC):
                 )
         else:
             assert 'trigger' not in self._properties
-        self._properties['suspended'] = \
-            self._properties.get('suspended') not in (None, '0', 'False')
         if sequence is ScheduleRepeat.CONTINUOUSLY:
             self._properties.setdefault('minDelay', 10)
         elif 'minDelay' in self._properties:
