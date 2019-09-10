@@ -41,7 +41,6 @@ class DetailsTable(PropertiesTable):
     def iterRows(self, *, proc, **kwargs):
         taskDef = proc.taskDef
         yield 'Wrapper', taskDef['wrapper']
-        yield 'Extractor', 'yes' if taskDef['extract'] else 'no'
         yield 'Inputs', formatProducts(taskDef.getInputs())
         yield 'Outputs', formatProducts(taskDef.getOutputs())
         yield 'Parameters', frameworkParametersTable.present(

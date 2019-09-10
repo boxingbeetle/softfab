@@ -42,9 +42,7 @@ class TaskDefBase(ParamMixin, XMLTag, SelectableRecordABC):
         self.__resourceClaim: Optional[ResourceClaim] = None
 
     def __getitem__(self, key: str) -> object:
-        if key == 'extract':
-            return self.getParameter('sf.extractor') in ('True', 'true')
-        elif key == 'parameters':
+        if key == 'parameters':
             return sorted(
                 param for param in self.getParameters()
                 if not param.startswith('sf.') and not self.isFinal(param)
@@ -143,8 +141,7 @@ class Framework(TaskDefBase):
                 name: str,
                 getParent: Optional[GetParent] = frameworkDB.__getitem__
                 ) -> bool:
-        return name in ('sf.wrapper', 'sf.extractor') \
-            or super().isFinal(name, getParent)
+        return name == 'sf.wrapper' or super().isFinal(name, getParent)
 
     def getInputs(self) -> AbstractSet[str]:
         """Gets a set of the names of all products
@@ -164,8 +161,3 @@ class Framework(TaskDefBase):
             yield xml.input(name=inp)
         for out in self.__outputs:
             yield xml.output(name=out)
-
-def anyExtract() -> bool:
-    '''Returns True iff there is any framework that requires extraction.
-    '''
-    return any(framework['extract'] for framework in frameworkDB)

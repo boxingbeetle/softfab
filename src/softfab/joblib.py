@@ -227,11 +227,8 @@ class Task(
         return cast(int, self._properties['priority'])
 
     def hasExtractionWrapper(self) -> bool:
-        # TODO: Getting the property from the task def would cause an
-        #       unversioned lookup of the framework, which is wrong in the
-        #       context of a job. As a workaround, we get the property directly
-        #       from the framework.
-        return cast(bool, self.getFramework()['extract'])
+        # TODO: Extraction runs are being phased out.
+        return False
 
     def newRun(self) -> None:
         self.__taskRun = taskrunlib.newTaskRun(self)

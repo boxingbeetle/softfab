@@ -10,9 +10,9 @@ from softfab.EditPage import (
     InitialEditProcessor
 )
 from softfab.Page import PresentableError
-from softfab.formlib import checkBox, dropDownList, emptyOption, textInput
+from softfab.formlib import dropDownList, emptyOption, textInput
 from softfab.frameworklib import Framework, frameworkDB
-from softfab.pageargs import BoolArg, DictArgInstance, SetArg, StrArg
+from softfab.pageargs import DictArgInstance, SetArg, StrArg
 from softfab.paramlib import paramTop
 from softfab.paramview import (
     ParamArgsMixin, ParamDefTable, addParamsToElement, checkParamState,
@@ -36,7 +36,6 @@ class FrameworkEditArgs(
         EditArgs, ParamArgsMixin, ResourceRequirementsArgsMixin
         ):
     wrapper = StrArg('')
-    extractor = BoolArg()
     input = SetArg()
     output = SetArg()
 
@@ -69,16 +68,6 @@ class FrameworkEditBase(EditPage[FrameworkEditArgs, Framework]):
                 )['the documentation'],
                 ' for details.'
                 ],
-            xhtml.li[
-                'The extractor field indicates that mid-level data extraction '
-                'should be performed for this framework. '
-                'This requires an extractor script to be written. '
-                'Read ',
-                docLink(
-                    '/concepts/taskdefs/#extract'
-                )['the documentation'],
-                ' for details.'
-                ]
             ]
 
         yield hgroup[
@@ -109,7 +98,6 @@ class FrameworkEdit_GET(FrameworkEditBase):
                     input = element.getInputs(),
                     output = element.getOutputs(),
                     wrapper = params.get('sf.wrapper', ''),
-                    extractor = params.get('sf.extractor') in ('True', 'true')
                     )
                 overrides.update(initParamArgs(element))
             overrides.update(initResourceRequirementsArgs(element))
@@ -138,7 +126,6 @@ class FrameworkEdit_POST(FrameworkEditBase):
             element = Framework.create(recordId, inputs, outputs)
             addParamsToElement(element, args)
             element.addParameter('sf.wrapper', args.wrapper, True)
-            element.addParameter('sf.extractor', str(args.extractor), True)
             addResourceRequirementsToElement(element, args)
             return element
 
@@ -187,10 +174,6 @@ class FrameworkPropertiesTable(PropertiesTable):
             ).args
         yield 'Name', args.id or '(untitled)'
         yield 'Wrapper', textInput(name='wrapper', size=40)
-        yield 'Extractor', checkBox(name='extractor')[
-            'Extract mid-level data from reports using separate '
-            'extraction wrapper'
-            ]
 
 class ProductSetTable(Table, ABC):
     argName: ClassVar[str] = abstract

@@ -5,9 +5,9 @@ from typing import Iterator
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
 from softfab.datawidgets import (
-    BoolDataColumn, DataColumn, DataTable, LinkColumn, ListDataColumn
+    DataColumn, DataTable, LinkColumn, ListDataColumn
 )
-from softfab.frameworklib import TaskDefBase, anyExtract, frameworkDB
+from softfab.frameworklib import TaskDefBase, frameworkDB
 from softfab.frameworkview import FrameworkColumn
 from softfab.pageargs import IntArg, PageArgs, SortArg
 from softfab.pagelinks import createProductDetailsLink
@@ -27,7 +27,6 @@ class FrameworksTable(DataTable[TaskDefBase]):
     db = frameworkDB
     nameColumn = FrameworkColumn('Framework ID', 'id')
     wrapperColumn = DataColumn[TaskDefBase]('Wrapper', 'wrapper')
-    extractColumn = BoolDataColumn[TaskDefBase]('Extract', 'extract')
     inputColumn = ProductColumn('Input Products', 'inputs')
     outputColumn = ProductColumn('Output Products', 'outputs')
     parameterColumn = ListDataColumn[TaskDefBase]('Parameters', 'parameters')
@@ -39,8 +38,6 @@ class FrameworksTable(DataTable[TaskDefBase]):
                     ) -> Iterator[DataColumn[TaskDefBase]]:
         yield self.nameColumn
         yield self.wrapperColumn
-        if anyExtract():
-            yield self.extractColumn
         yield self.inputColumn
         yield self.outputColumn
         yield self.parameterColumn

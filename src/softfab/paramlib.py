@@ -5,7 +5,7 @@ from typing import Callable, Dict, Mapping, Optional, Set
 from softfab.utils import ResultKeeper
 from softfab.xmlgen import XMLAttributeValue, XMLContent, xml
 
-specialParameters = {'sf.wrapper', 'sf.extractor', 'sf.timeout'}
+specialParameters = {'sf.wrapper', 'sf.timeout'}
 '''specialParameters will not be listed in the Parameters section
 '''
 
