@@ -239,12 +239,13 @@ class Scheduled(XMLTag, SelectableRecordABC):
 
         sequence = self._properties['sequence']
         if sequence is ScheduleRepeat.ONCE:
-            self._properties['done'] = self._properties.get('done') == 'True'
+            self._properties['done'] = \
+                cast(str, self._properties.get('done')).lower() == 'true'
         else:
             assert 'done' not in self._properties
         if sequence is ScheduleRepeat.TRIGGERED:
             self._properties['trigger'] = (
-                self._properties.get('trigger') == 'True'
+                cast(str, self._properties.get('trigger')).lower() == 'true'
                 )
         else:
             assert 'trigger' not in self._properties
