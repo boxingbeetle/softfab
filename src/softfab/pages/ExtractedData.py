@@ -217,7 +217,7 @@ class ExtractedData_GET(FabPage['ExtractedData_GET.Processor',
 
             # Query DB.
             query = list(self.iterFilters())
-            query.append(KeySorter([ 'starttime' ]))
+            query.append(KeySorter.forCustom(['starttime']))
             tasks = runQuery(query, iterDoneTasks(taskNames))
             dataByRunId = gatherData(taskNames, tasks, activeKeys)
 

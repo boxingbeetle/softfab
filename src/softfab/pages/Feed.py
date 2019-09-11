@@ -44,7 +44,7 @@ class MostRecent(RecordObserver[Job]):
         self.number = number
         query: List[RecordProcessor] = [
             CustomFilter(Job.hasFinalResult),
-            KeySorter([ key ], db)
+            KeySorter.forDB([key], db)
             ]
         self.records = runQuery(query, db)[ : number]
         db.addObserver(self)

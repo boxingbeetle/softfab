@@ -69,7 +69,7 @@ class TaskMatrixCSV_GET(CSVPage['TaskMatrixCSV_GET.Processor']):
             ]
         # Take the result of the most recent execution of each task, since that
         # is most likely to be representative.
-        sorter: KeySorter[Task] = KeySorter([ '-starttime' ])
+        sorter: KeySorter[Task] = KeySorter.forCustom(['-starttime'])
         for taskName in sorted(taskNames):
             resultCells = [ taskName ]
             for taskDict in taskData:

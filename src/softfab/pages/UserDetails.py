@@ -56,7 +56,7 @@ class UserDetails_GET(FabPage['UserDetails_GET.Processor',
 
             jobs = runQuery(
                 [ ValueFilter('owner', infoUserName, jobDB),
-                  KeySorter([ 'recent' ], jobDB)
+                  KeySorter.forDB(['recent'], jobDB)
                   ],
                 jobDB
                 )[ : self.visibleJobs]

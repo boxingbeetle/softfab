@@ -22,7 +22,7 @@ class MostRecent(RecordObserver):
     def __init__(self, db: JobDB, key: str, number: int):
         RecordObserver.__init__(self)
         self.number = number
-        query: List[RecordProcessor] = [ KeySorter([ key ], db) ]
+        query: List[RecordProcessor] = [ KeySorter.forDB([key], db) ]
         self.records = runQuery(query, db)[ : number]
         db.addObserver(self)
 

@@ -195,11 +195,17 @@ class TableData(Generic[Record]):
             query: List[RecordProcessor] = list(table.iterFilters(proc))
             filtered = bool(query)
             keyMap = _buildKeyMap(columns)
-            sorter: KeySorter[Record] = KeySorter(
-                (keyMap.get(key, key) for key in cleanSortOrder),
-                table.db, table.uniqueKeys
-                )
-            query.append(sorter)
+            sortKeys = (keyMap.get(key, key) for key in cleanSortOrder)
+            # TODO: Maybe we should have a class (RecordCollection?) for
+            #       records that are not DBRecords or to keep track of
+            #       a subset of a full DB. Then 'uniqueKeys' could be moved
+            #       from DataTable to RecordCollection.
+            db = table.db
+            if db is None:
+                query.append(KeySorter.forCustom(sortKeys, table.uniqueKeys))
+            else:
+                assert table.uniqueKeys is None, "table's uniqueKeys is ignored"
+                query.append(KeySorter.forDB(sortKeys, db))
             records = runQuery(query, records)
 
         totalNrRecords = len(records)

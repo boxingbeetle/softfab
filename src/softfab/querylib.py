@@ -223,35 +223,32 @@ class KeySorter(RecordSorter[Record]):
     optimizations.
     '''
 
-    @overload
+    @classmethod
+    def forCustom(cls: Type['KeySorter[Record]'],
+                  keyOrder: Iterable[Union[str, Retriever]],
+                  uniqueKeys: Optional[Collection[str]] = None
+                  ) -> 'KeySorter[Record]':
+        return KeySorter(keyOrder, itemgetter, uniqueKeys or ())
+
+    @classmethod
+    def forDB(cls: Type['KeySorter[DBRecord]'],
+              keyOrder: Iterable[Union[str, Retriever]],
+              db: Database[DBRecord]
+              ) -> 'KeySorter[DBRecord]':
+        return KeySorter(keyOrder, db.retrieverFor, db.uniqueKeys)
+
     def __init__(self,
                  keyOrder: Iterable[Union[str, Retriever]],
-                 db: None = None,
-                 uniqueKeys: Optional[Collection[str]] = None):
-        ...
-
-    @overload
-    def __init__(self: 'KeySorter[DBRecord]',
-                 keyOrder: Iterable[Union[str, Retriever]],
-                 db: Database[DBRecord],
-                 uniqueKeys: Optional[Collection[str]] = None):
-        ...
-
-    def __init__(self: 'KeySorter',
-                 keyOrder: Iterable[Union[str, Retriever]],
-                 db: Optional[Database[DBRecord]] = None,
-                 uniqueKeys: Optional[Collection[str]] = None
+                 getRetriever: Callable[[str], Retriever],
+                 uniqueKeys: Collection[str]
                  ):
-        if uniqueKeys is None and db is not None:
-            uniqueKeys = db.uniqueKeys
-
         RecordSorter.__init__(self)
         retrievers: List[Retriever] = []
         for key in keyOrder:
             retrievers.append(_substMissingForNone(
-                key if callable(key) else _getRetriever(db, key)
+                key if callable(key) else getRetriever(key)
                 ))
-            if uniqueKeys is not None and key in uniqueKeys:
+            if key in uniqueKeys:
                 # There is no point in another key after a unique key,
                 # since the values will never be equal.
                 break

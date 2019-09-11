@@ -30,7 +30,7 @@ class ReportTasksCSV_GET(CSVPage['ReportTasksCSV_GET.Processor']):
             # Note: iterDoneTasks() can efficiently handle an empty (nothing
             #       matches) filter, no need for a special case here.
             query: List[RecordProcessor] = list(self.iterFilters())
-            query.append(KeySorter(['recent']))
+            query.append(KeySorter.forCustom(['recent']))
             tasks = runQuery(query, iterDoneTasks(self.args.task))
 
             # pylint: disable=attribute-defined-outside-init
