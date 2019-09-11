@@ -16,7 +16,7 @@ from softfab.config import dbDir, homePage, rootURL
 from softfab.databaselib import RecordObserver
 from softfab.datawidgets import DataColumn, DataTable
 from softfab.joblib import Job, jobDB
-from softfab.jobview import CommentPanel, JobsSubTable
+from softfab.jobview import CommentPanel, JobsSubTable, presentJobCaption
 from softfab.pagelinks import createJobURL, createUserDetailsURL
 from softfab.projectlib import project
 from softfab.querylib import CustomFilter, KeySorter, runQuery
@@ -25,7 +25,6 @@ from softfab.taskview import taskSummary
 from softfab.timelib import getTime
 from softfab.timeview import formatDuration, formatTime
 from softfab.userlib import User, checkPrivilege
-from softfab.utils import pluralize
 from softfab.version import VERSION
 from softfab.webgui import Table, cell, pageURL, row
 from softfab.xmlgen import atom, xhtml
@@ -184,24 +183,10 @@ class Feed_GET(ControlPage[ControlPage.Arguments, 'Feed_GET.Processor']):
                 for sheet in iterStyleSheets(proc.req)
                 )],
             jobTable.present(**presentationArgs),
-            xhtml.p[ self.presentJobInfo(job) ],
+            xhtml.p[ presentJobCaption(job) ],
             tasksTable.present(**presentationArgs),
             jobComment.present(**presentationArgs),
             ] ]
-
-    def presentJobInfo(self, job):
-        # TODO: Make this a general function in jobview.py
-        #       current code is copied from ShowReport.py
-        jobId = job.getId()
-        numTasks = len(job.getTaskSequence())
-        configId = job.getConfigId()
-        yield 'Job ', jobId, ' was created from ', (
-            'scratch' if configId is None else (
-                'configuration ', xhtml.b[ configId ]
-                ),
-            ' and contains ', str(numTasks), ' ', pluralize('task', numTasks),
-            ':'
-            )
 
     def presentTime(self, seconds):
         '''Present the given time stamp in seconds since the epoch in the format

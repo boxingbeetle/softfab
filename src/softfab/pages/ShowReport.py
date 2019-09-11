@@ -5,10 +5,9 @@ from typing import Iterator, Sequence, cast
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
 from softfab.datawidgets import DataTable
-from softfab.jobview import CommentPanel, JobsSubTable
+from softfab.jobview import CommentPanel, JobsSubTable, presentJobCaption
 from softfab.pagelinks import (
-    JobIdArgs, TaskIdArgs, createConfigDetailsLink, createTaskInfoLink,
-    createTaskRunnerDetailsLink
+    JobIdArgs, TaskIdArgs, createTaskInfoLink, createTaskRunnerDetailsLink
 )
 from softfab.productlib import Product
 from softfab.productview import ProductTable
@@ -17,7 +16,6 @@ from softfab.resourcelib import getTaskRunner
 from softfab.resourceview import getResourceStatus
 from softfab.tasktables import JobProcessorMixin, JobTaskRunsTable
 from softfab.userlib import User, checkPrivilege
-from softfab.utils import pluralize
 from softfab.webgui import Table, Widget, cell, pageLink
 from softfab.xmlgen import XMLContent, xhtml
 
@@ -40,16 +38,7 @@ class TaskRunsTable(JobTaskRunsTable):
     autoUpdate = True
 
     def presentCaptionParts(self, *, proc, **kwargs):
-        jobId = proc.args.jobId
-        numTasks = len(proc.job.getTaskSequence())
-        configId = proc.job.getConfigId()
-        yield 'Job ', jobId, ' was created from ', (
-            'scratch' if configId is None else (
-                'configuration ', xhtml.b[ createConfigDetailsLink(configId) ]
-                ),
-            ' and contains ', str(numTasks), ' ', pluralize('task', numTasks),
-            ':'
-            )
+        return presentJobCaption(proc.job)
 
 class ShowReport_GET(FabPage['ShowReport_GET.Processor',
                              'ShowReport_GET.Arguments']):

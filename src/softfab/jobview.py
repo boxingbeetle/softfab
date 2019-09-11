@@ -13,7 +13,7 @@ from softfab.datawidgets import (
 )
 from softfab.joblib import Job, Task, jobDB
 from softfab.notification import NotificationPresenter, sendNotification
-from softfab.pagelinks import createJobURL
+from softfab.pagelinks import createConfigDetailsLink, createJobURL
 from softfab.projectlib import project
 from softfab.resultcode import ResultCode
 from softfab.schedulelib import scheduleDB
@@ -21,6 +21,7 @@ from softfab.schedulerefs import createScheduleDetailsURL
 from softfab.sortedqueue import SortedQueue
 from softfab.taskview import getTaskStatus
 from softfab.userview import OwnerColumn
+from softfab.utils import pluralize
 from softfab.webgui import Panel, cell
 from softfab.xmlgen import XMLContent, xhtml
 
@@ -90,6 +91,17 @@ class _ResultlessJobs(SortedQueue[Job]):
         return not record.hasFinalResult()
 
 resultlessJobs = _ResultlessJobs(jobDB)
+
+def presentJobCaption(job: Job) -> XMLContent:
+    jobId = job.getId()
+    yield 'Job ', jobId, ' was created from '
+    configId = job.getConfigId()
+    if configId is None:
+        yield 'scratch'
+    else:
+        yield 'configuration ', xhtml.b[ createConfigDetailsLink(configId) ]
+    numTasks = len(job.getTaskSequence())
+    yield f" and contains {numTasks} {pluralize('task', numTasks)}:"
 
 def createStatusBar(tasks: Sequence[Task], length: int = 10) -> XMLContent:
     if len(tasks) == 0:
