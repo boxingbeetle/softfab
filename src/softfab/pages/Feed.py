@@ -7,19 +7,21 @@ Its specification is in RFC 4287:  http://tools.ietf.org/html/rfc4287
 
 from os.path import basename
 from time import gmtime, strftime
-from typing import Iterator
+from typing import Any, Collection, Iterator, List
 
 from softfab.ControlPage import ControlPage
 from softfab.Page import PageProcessor
 from softfab.UIPage import iterStyleSheets
+from softfab.compat import NoReturn
 from softfab.config import dbDir, homePage, rootURL
 from softfab.databaselib import RecordObserver
 from softfab.datawidgets import DataColumn, DataTable
-from softfab.joblib import Job, jobDB
+from softfab.joblib import Job, JobDB, jobDB
 from softfab.jobview import CommentPanel, JobsSubTable, presentJobCaption
 from softfab.pagelinks import createJobURL, createUserDetailsURL
 from softfab.projectlib import project
-from softfab.querylib import CustomFilter, KeySorter, runQuery
+from softfab.querylib import CustomFilter, KeySorter, RecordProcessor, runQuery
+from softfab.request import Request
 from softfab.response import Response
 from softfab.taskview import taskSummary
 from softfab.timelib import getTime
@@ -27,31 +29,33 @@ from softfab.timeview import formatDuration, formatTime
 from softfab.userlib import User, checkPrivilege
 from softfab.version import VERSION
 from softfab.webgui import Table, cell, pageURL, row
-from softfab.xmlgen import atom, xhtml
+from softfab.xmlgen import XMLContent, atom, xhtml
 
 # TODO: Give each factory a truly unique ID.
 factoryId = basename(dbDir)
 
-class MostRecent(RecordObserver):
+class MostRecent(RecordObserver[Job]):
     '''Keeps a list of the N (N=50) most recent completed jobs.
     Unlike the Home page, we only care about jobs with have a final result.
     '''
 
-    def __init__(self, db, key, number):
+    def __init__(self, db: JobDB, key: str, number: int):
         RecordObserver.__init__(self)
         self.number = number
-        query = [ CustomFilter(lambda job: job.hasFinalResult()),
-            KeySorter([ key ], db) ]
+        query: List[RecordProcessor] = [
+            CustomFilter(Job.hasFinalResult),
+            KeySorter([ key ], db)
+            ]
         self.records = runQuery(query, db)[ : number]
         db.addObserver(self)
 
-    def added(self, record):
+    def added(self, record: Job) -> None:
         self.updated(record)
 
-    def removed(self, record):
+    def removed(self, record: Job) -> NoReturn:
         assert False, f'job {record.getId()} removed'
 
-    def updated(self, record):
+    def updated(self, record: Job) -> None:
         if record.hasFinalResult():
             self.records.insert(0, record)
             self.records[self.number : ] = []
@@ -59,25 +63,26 @@ class MostRecent(RecordObserver):
 class JobResultColumn(DataColumn[Job]):
     label = 'Result'
 
-    def presentCell(self, record, **kwargs):
+    def presentCell(self, record: Job, **kwargs: object) -> XMLContent:
         return record.getResult()
 
 class SingleJobTable(JobsSubTable):
     #descriptionLink = False
     statusColumn = JobResultColumn.instance
 
-    def __init__(self, job):
+    def __init__(self, job: Job):
         self.__job = job
-        JobsSubTable.__init__(self)
+        super().__init__()
 
-    def getRecordsToQuery(self, proc):
+    def getRecordsToQuery(self, proc: PageProcessor) -> Collection[Job]:
         return [ self.__job ]
 
 class TasksTable(Table):
     columns = 'Task', 'Start Time', 'Duration', 'Summary', 'Result'
 
-    def iterRows(self, *, proc, **kwargs):
-        for task in proc.job.getTaskSequence():
+    def iterRows(self, **kwargs: Any) -> Iterator[XMLContent]:
+        job: Job = kwargs['job']
+        for task in job.getTaskSequence():
             yield row(class_ = task.getResult())[
                 task.getName(),
                 formatTime(task.startTime),
@@ -96,7 +101,10 @@ class Feed_GET(ControlPage[ControlPage.Arguments, 'Feed_GET.Processor']):
     class Processor(PageProcessor[ControlPage.Arguments]):
         recentJobs = MostRecent(jobDB, 'recent', 50)
 
-        def process(self, req, user):
+        def process(self,
+                    req: Request['Feed_GET.Arguments'],
+                    user: User
+                    ) -> None:
             jobs = list(self.recentJobs.records)
 
             # pylint: disable=attribute-defined-outside-init
@@ -117,7 +125,7 @@ class Feed_GET(ControlPage[ControlPage.Arguments, 'Feed_GET.Processor']):
             self.presentFeed(proc)
             ])
 
-    def presentFeed(self, proc):
+    def presentFeed(self, proc: Processor) -> XMLContent:
         projectName = project.name
         yield atom.title[ f'{projectName} SoftFab - Recent Jobs' ]
         yield atom.subtitle[
@@ -149,14 +157,16 @@ class Feed_GET(ControlPage[ControlPage.Arguments, 'Feed_GET.Processor']):
         for job, jobTable in zip(proc.jobs, proc.tables):
             yield atom.entry[ self.presentJob(proc, job, jobTable) ]
 
-    def presentJob(self, proc, job, jobTable):
+    def presentJob(self,
+                   proc: Processor,
+                   job: Job,
+                   jobTable: SingleJobTable
+                   ) -> XMLContent:
         jobId = job.getId()
         jobResult = job.getResult()
         owner = job.getOwner()
         projectName = project.name
-        tasksTable = TasksTable.instance
         jobComment = CommentPanel(job.comment)
-        proc.job = job
         yield atom.title[ f'{job.getDescription()}: {jobResult}' ]
         yield atom.link(href = rootURL + createJobURL(jobId))
         yield atom.id[ f'softfab:{factoryId}/jobs/{jobId}' ]
@@ -184,12 +194,12 @@ class Feed_GET(ControlPage[ControlPage.Arguments, 'Feed_GET.Processor']):
                 )],
             jobTable.present(**presentationArgs),
             xhtml.p[ presentJobCaption(job) ],
-            tasksTable.present(**presentationArgs),
+            TasksTable.instance.present(job=job, **presentationArgs),
             jobComment.present(**presentationArgs),
             ] ]
 
-    def presentTime(self, seconds):
+    def presentTime(self, seconds: int) -> str:
         '''Present the given time stamp in seconds since the epoch in the format
         specified by RFC 3339.
         '''
-        yield strftime('%Y-%m-%dT%H:%M:%SZ', gmtime(seconds))
+        return strftime('%Y-%m-%dT%H:%M:%SZ', gmtime(seconds))
