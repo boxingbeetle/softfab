@@ -2,9 +2,13 @@
 
 from collections import defaultdict
 from enum import Enum
-from typing import Iterator, cast
+from typing import (
+    Collection, DefaultDict, Dict, Iterable, Iterator, List, Mapping, Sequence,
+    Tuple, cast
+)
 
 from softfab.FabPage import FabPage
+from softfab.Page import PageProcessor
 from softfab.ReportMixin import ReportProcessor, ReportTaskArgs
 from softfab.datawidgets import DataColumn, DataTable
 from softfab.formlib import CheckBoxesTable, RadioTable, makeForm, submitButton
@@ -12,7 +16,8 @@ from softfab.joblib import Task, iterDoneTasks
 from softfab.jobview import CreateTimeColumn
 from softfab.pageargs import EnumArg, IntArg, SetArg, SortArg
 from softfab.pagelinks import createJobURL
-from softfab.querylib import KeySorter, runQuery
+from softfab.querylib import KeySorter, RecordProcessor, runQuery
+from softfab.request import Request
 from softfab.resultlib import getData, getKeys
 from softfab.setcalc import intersection
 from softfab.tasktables import TaskColumn, TaskRunsTable
@@ -22,36 +27,43 @@ from softfab.webgui import pageLink
 from softfab.xmlgen import XMLContent, xhtml
 
 
-def gatherData(taskFilter, tasks, activeKeys):
-    taskRunIdsByName = {taskName: [] for taskName in taskFilter}
+def gatherData(taskFilter: Iterable[str],
+               tasks: Iterable[Task],
+               activeKeys: Iterable[str]
+               ) -> Mapping[str, Mapping[str, str]]:
+    taskRunIdsByName: Dict[str, List[str]] = {
+        taskName: [] for taskName in taskFilter
+        }
     for task in tasks:
         taskRunIdsByName[task.getName()].append(task.getLatestRun().getId())
-    dataByRunId = defaultdict(dict)
+    dataByRunId: DefaultDict[str, Dict[str, str]] = defaultdict(dict)
     for key in activeKeys:
         for taskName in taskFilter:
-            for runId, valueStr in getData(
-                taskName, taskRunIdsByName[taskName], key
-                ):
+            for runId, valueStr in getData(taskName, taskRunIdsByName[taskName],
+                                           key):
                 dataByRunId[runId][key] = valueStr
     return dataByRunId
 
 class KeysTable(CheckBoxesTable):
     name = 'key'
     columns = 'Keys to include',
-    def iterOptions(self, proc, **kwargs):
+    def iterOptions(self, **kwargs: object
+                    ) -> Iterator[Tuple[str, Sequence[XMLContent]]]:
+        proc = cast(ExtractedData_GET.Processor, kwargs['proc'])
         for key in sorted(proc.keys):
-            yield key, ( key, )
-    def getActive(self, proc, **kwargs):
+            yield key, (key,)
+    def getActive(self, **kwargs: object) -> Collection[str]:
+        proc = cast(ExtractedData_GET.Processor, kwargs['proc'])
         return proc.activeKeys
 
 class VisualizationTable(RadioTable):
     name = 'vistype'
     columns = ('Visualization', )
-    def iterOptions(self, **kwargs):
+    def iterOptions(self, **kwargs: object) -> Iterator[Sequence[XMLContent]]:
         yield VisualizationType.CHART_BAR, 'Bar chart'
         yield VisualizationType.TABLE, 'Table'
 
-def visualizeBarCharts(proc):
+def visualizeBarCharts(proc: 'ExtractedData_GET.Processor') -> XMLContent:
     tasks = proc.tasks
     activeKeys = proc.activeKeys
     dataByRunId = proc.dataByRunId
@@ -61,7 +73,10 @@ def visualizeBarCharts(proc):
     for key in sorted(activeKeys):
         yield visualizeBarChart(key, tasks, dataByRunId)
 
-def visualizeBarChart(key, tasks, dataByRunId):
+def visualizeBarChart(key: str,
+                      tasks: Iterable[Task],
+                      dataByRunId: Mapping[str, Mapping[str, str]]
+                      ) -> XMLContent:
     yield xhtml.h3[ f'Chart for {key}:' ]
 
     dataPoints = []
@@ -126,7 +141,8 @@ def visualizeBarChart(key, tasks, dataByRunId):
     barWidth = min(maxBarWidth, graphWidth // len(dataPoints))
     graphWidth = barWidth * len(dataPoints)
 
-    def generateBars():
+    def generateBars() -> XMLContent:
+        assert maxValue is not None # work around mypy issue 2608
         for task, value in dataPoints:
             run = task.getLatestRun()
             if value is None:
@@ -162,19 +178,20 @@ def visualizeBarChart(key, tasks, dataByRunId):
 
 class ExtractedDataColumn(DataColumn[Task]):
 
-    def __init__(self, key):
+    def __init__(self, key: str):
         DataColumn.__init__(self, key, cellStyle = 'rightalign')
         self.__key = key
 
-    def presentCell(self, record, *, proc, **kwargs):
+    def presentCell(self, record: Task, **kwargs: object) -> XMLContent:
+        proc = cast(ExtractedData_GET.Processor, kwargs['proc'])
         runId = record.getLatestRun().getId()
         data = proc.dataByRunId.get(runId)
         return '-' if data is None else data.get(self.__key, '-')
 
 class ExtractedDataTable(TaskRunsTable):
 
-    def getRecordsToQuery(self, proc):
-        return proc.tasks
+    def getRecordsToQuery(self, proc: PageProcessor) -> Collection[Task]:
+        return cast(ExtractedData_GET.Processor, proc).tasks
 
     def iterColumns(self, **kwargs: object) -> Iterator[DataColumn[Task]]:
         proc = cast(ExtractedData_GET.Processor, kwargs['proc'])
@@ -201,9 +218,12 @@ class ExtractedData_GET(FabPage['ExtractedData_GET.Processor',
         sort = SortArg()
         first = IntArg(0)
 
-    class Processor(ReportProcessor):
+    class Processor(ReportProcessor[Arguments]):
 
-        def process(self, req, user):
+        def process(self,
+                    req: Request['ExtractedData_GET.Arguments'],
+                    user: User
+                    ) -> None:
             super().process(req, user)
 
             taskNames = req.args.task
@@ -213,11 +233,14 @@ class ExtractedData_GET(FabPage['ExtractedData_GET.Processor',
             keys = intersection(
                 getKeys(taskName) for taskName in taskNames
                 )
+            # The empty task set is rejected at argument parsing,
+            # so the intersection is always defined.
+            assert keys is not None
             activeKeys = req.args.key & keys
 
             # Query DB.
-            query = list(self.iterFilters())
-            query.append(KeySorter.forCustom(['starttime']))
+            query: List[RecordProcessor[Task]] = list(self.iterFilters())
+            query.append(KeySorter[Task].forCustom([ 'starttime' ]))
             tasks = runQuery(query, iterDoneTasks(taskNames))
             dataByRunId = gatherData(taskNames, tasks, activeKeys)
 
