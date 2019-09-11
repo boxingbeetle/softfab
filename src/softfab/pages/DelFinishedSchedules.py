@@ -7,6 +7,7 @@ from softfab.FabPage import FabPage, IconModifier
 from softfab.Page import PageProcessor, ProcT, Redirect
 from softfab.formlib import actionButtons, makeForm
 from softfab.pageargs import ArgsT, EnumArg, PageArgs
+from softfab.request import Request
 from softfab.schedulelib import scheduleDB
 from softfab.userlib import User, checkPrivilege
 from softfab.xmlgen import XMLContent, xhtml
@@ -50,10 +51,14 @@ class DelFinishedSchedules_POST(
 
     class Processor(PageProcessor['DelFinishedSchedules_POST.Arguments']):
 
-        def process(self, req, user):
+        def process(self,
+                    req: Request['DelFinishedSchedules_POST.Arguments'],
+                    user: User
+                    ) -> None:
             action = req.args.action
             if action is Actions.CANCEL:
-                raise Redirect(self.page.getParentURL(req.args))
+                page = cast(DelFinishedSchedules_POST, self.page)
+                raise Redirect(page.getParentURL(req.args))
             elif action is Actions.DELETE:
                 checkPrivilege(user, 's/d', 'delete all finished schedules')
                 finishedSchedules = [
