@@ -166,12 +166,11 @@ class SimpleConfigTable(DataTable[Config]):
     if True, its visibility depends on project settings.
     """
 
-    fixedColumns: Sequence[DataColumn[Config]] = (
+    fixedColumns = (
         _NameColumn(),
         DataColumn[Config]('#', 'nrtasks', cellStyle = 'rightalign'),
         DataColumn[Config](keyName = 'description')
         )
-          # Workaround for https://github.com/python/mypy/issues/4444
 
     def iterColumns(self, **kwargs: object) -> Iterator[DataColumn[Config]]:
         yield from self.fixedColumns
