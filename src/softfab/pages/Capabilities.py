@@ -2,6 +2,8 @@
 
 from typing import Collection, Iterator, MutableSet, cast
 
+import attr
+
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
 from softfab.datawidgets import DataColumn, DataTable
@@ -62,16 +64,13 @@ class ResourcesTable(DataTable[ResourceBase]):
             return res.typeName == typeName
         yield CustomFilter(match)
 
-# TODO: NamedTuple would be a simpler solution here, but proper
-#       type annotation support for that requires Python 3.6.
-#       Also DataColumn currently doesn't support NamedTuple.
+@attr.s(auto_attribs=True)
 class CapInfo:
     """Information about a capability's use."""
 
-    def __init__(self, capability: str):
-        self.capability = capability
-        self.taskDefIds: MutableSet[str] = set()
-        self.resourceIds: MutableSet[str] = set()
+    capability: str
+    taskDefIds: MutableSet[str] = attr.Factory(set)
+    resourceIds: MutableSet[str] = attr.Factory(set)
 
     def __getitem__(self, key: str) -> object:
         return getattr(self, key)
