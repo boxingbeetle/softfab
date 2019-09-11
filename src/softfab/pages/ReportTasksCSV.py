@@ -1,11 +1,12 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Iterator, Sequence
+from typing import Iterator, List, Sequence
 
 from softfab.CSVPage import CSVPage
 from softfab.ReportMixin import ReportProcessor, ReportTaskCSVArgs
 from softfab.joblib import iterDoneTasks
-from softfab.querylib import KeySorter, runQuery
+from softfab.querylib import KeySorter, RecordProcessor, runQuery
+from softfab.request import Request
 from softfab.resultlib import getData, getKeys
 from softfab.setcalc import union
 from softfab.taskview import getTaskStatus
@@ -18,14 +19,17 @@ class ReportTasksCSV_GET(CSVPage['ReportTasksCSV_GET.Processor']):
     class Arguments(ReportTaskCSVArgs):
         pass
 
-    class Processor(ReportProcessor):
+    class Processor(ReportProcessor[Arguments]):
 
-        def process(self, req, user):
+        def process(self,
+                    req: Request['ReportTasksCSV_GET.Arguments'],
+                    user: User
+                    ) -> None:
             super().process(req, user)
 
             # Note: iterDoneTasks() can efficiently handle an empty (nothing
             #       matches) filter, no need for a special case here.
-            query = list(self.iterFilters())
+            query: List[RecordProcessor] = list(self.iterFilters())
             query.append(KeySorter(['recent']))
             tasks = runQuery(query, iterDoneTasks(self.args.task))
 
@@ -51,7 +55,7 @@ class ReportTasksCSV_GET(CSVPage['ReportTasksCSV_GET.Processor']):
             taskName = task.getName()
             taskKeys = getKeys(taskName)
             # TODO: Which properties are useful to export?
-            timestamp = formatTime(task['timestamp'])
+            timestamp = formatTime(task.getJob().getCreateTime())
             # Assuming format "2008-09-16 15:21"
             results = [timestamp[:10], timestamp[-5:], getTaskStatus(task)]
             for key in keys:
