@@ -80,7 +80,7 @@ class TasksTable(Table):
         for task in proc.job.getTaskSequence():
             yield row(class_ = task.getResult())[
                 task.getName(),
-                formatTime(task['starttime']),
+                formatTime(task.startTime),
                 cell(class_ = 'rightalign')[formatDuration(task.getDuration())],
                 taskSummary(task),
                 task.getResult()

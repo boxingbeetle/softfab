@@ -26,7 +26,7 @@ def filterTasks(tag, owner):
         taskId = taskDef.getId()
         # Determine latest run of this task.
         taskTimes = (
-            ( task['starttime'], task )
+            ( task.startTime, task )
             for task in getAllTasksWithId(taskId)
             if task.isDone() and (
                 not owner or owner == task['owner']
@@ -80,7 +80,7 @@ class GetTaggedTaskInfo_GET(ControlPage['GetTaggedTaskInfo_GET.Arguments',
                     result = run.getResult(),
                     alert = run.getAlert(),
                     summary = run.getSummary(),
-                    starttime = formatTimeAttr(run['starttime']),
+                    starttime = formatTimeAttr(run.startTime),
                     duration = run.getDuration(),
                     report = run.getURL(),
                     owner = run['owner'],

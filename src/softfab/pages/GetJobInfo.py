@@ -44,7 +44,7 @@ class GetJobInfo_GET(ControlPage['GetJobInfo_GET.Arguments',
                 alert = task.getAlert(),
                 summary = task['summary'],
                 report = task.getURL(),
-                starttime = formatTimeAttr(task['starttime']),
+                starttime = formatTimeAttr(task.startTime),
                 duration = task['duration'],
                 runner = task['runner'],
                 )[

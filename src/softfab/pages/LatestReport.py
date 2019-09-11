@@ -26,7 +26,7 @@ class LatestReport_GET(
         def process(self, req, user):
             taskId = req.args.id
             taskTimes = (
-                ( task['starttime'], task )
+                ( task.startTime, task )
                 for task in getAllTasksWithId(taskId)
                 if task.getResult() in ( ResultCode.OK, ResultCode.WARNING )
                 )

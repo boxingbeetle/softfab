@@ -309,9 +309,17 @@ class Task(
         return cast(Optional[ResultCode], self._properties.get('result')) \
             or self.getLatestRun().getResult()
 
+    @property
+    def startTime(self) -> Optional[int]:
+        return cast(Optional[int], self._properties.get('starttime'))
+
+    @property
+    def stopTime(self) -> Optional[int]:
+        return cast(Optional[int], self._properties.get('stoptime'))
+
     def getDuration(self) -> Optional[int]:
-        startTime = cast(Optional[int], self._properties.get('starttime'))
-        stopTime = cast(Optional[int], self._properties.get('stoptime'))
+        startTime = self.startTime
+        stopTime = self.stopTime
         if startTime is not None and stopTime is not None:
             return stopTime - startTime
         else:
@@ -762,7 +770,7 @@ class Job(TaskRunnerSet, TaskSet[Task], XMLTag, DatabaseElem):
         queueTime = self.getCreateTime()
         if queueTime is None:
             return None
-        stopTime = self.getStopTime()
+        stopTime = self.stopTime
         if stopTime is None:
             return getTime() - queueTime
         else:
@@ -770,14 +778,13 @@ class Job(TaskRunnerSet, TaskSet[Task], XMLTag, DatabaseElem):
             self.__leadTime = leadTime
             return leadTime
 
-    def getStopTime(self) -> Optional[int]:
-        '''Gets this job's stop time, or None if it has not stopped yet.
-        '''
+    @property
+    def stopTime(self) -> Optional[int]:
+        """This job's stop time, or None if it has not stopped yet."""
         if self.__stopTime is None and self.isExecutionFinished():
             # Note: Execution is finished, so every task will have a stop time.
             self.__stopTime = max(
-                cast(int, task['stoptime'])
-                for task in self._tasks.values()
+                task.stopTime for task in self._tasks.values()
                 )
         return self.__stopTime
 
