@@ -2,8 +2,7 @@
 
 from abc import ABC
 from typing import (
-    TYPE_CHECKING, Callable, ClassVar, Generic, List, Optional, Sequence, Type,
-    TypeVar, cast
+    Callable, ClassVar, Generic, List, Optional, Sequence, Type, TypeVar, cast
 )
 
 from softfab.FabPage import FabPage
@@ -100,17 +99,11 @@ class DialogProcessorBase(PageProcessor[DialogArgsT]):
     `DialogPage`.
     """
 
-    if TYPE_CHECKING:
-        # Tell mypy that our 'page' member is a DialogPage.
-        # In theory we should pass the page type as a type argument to
-        # PageProcessor, but I can't figure out a way to do that and
-        # also keep the knowledge of the argument and processor types.
-        # I tried an override without a property first, but that triggered
-        # an internal error:
-        #   https://github.com/python/mypy/issues/5846
-        @property
-        def page(self) -> 'DialogPage': # type: ignore
-            return self.page
+    # Tell mypy that our 'page' member is a DialogPage.
+    # In theory we should pass the page type as a type argument to
+    # PageProcessor, but I can't figure out a way to do that and
+    # also keep the knowledge of the argument and processor types.
+    page: 'DialogPage' # type: ignore
 
     def __retryStep(self,
                     func: Callable[['DialogProcessorBase'], T]
