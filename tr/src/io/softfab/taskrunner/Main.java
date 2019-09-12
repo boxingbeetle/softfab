@@ -6,7 +6,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.List;
 import java.util.logging.FileHandler;
 import java.util.logging.Handler;
 import java.util.logging.Level;
@@ -28,13 +27,10 @@ public final class Main {
 
     private static Logger logger;
 
-    private static void listWrappers(List<WrappersConfig> wrappers) {
+    private static void listWrappers(Iterable<WrappersConfig> wrappers) {
         logger.info("Wrapper directories (searched in this order):");
         for (final WrappersConfig wrappersConfig : wrappers) {
-            File wrapperDir = wrappersConfig.dir;
-            if (wrapperDir.isDirectory()) {
-                logger.info("- " + wrapperDir.getAbsolutePath());
-            }
+            logger.info("- " + wrappersConfig.dir.getAbsolutePath());
         }
     }
 
