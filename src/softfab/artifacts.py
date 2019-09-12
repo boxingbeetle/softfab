@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from gzip import GzipFile
+from gzip import GzipFile, open as openGzip
 from mimetypes import guess_type
 from os import fsync, replace
 from struct import Struct
@@ -31,6 +31,7 @@ from softfab.request import Request
 from softfab.resourcelib import runnerFromToken
 from softfab.taskrunlib import TaskRun
 from softfab.tokens import TokenRole, TokenUser, authenticateToken
+from softfab.useragent import AcceptedEncodings
 from softfab.userlib import (
     AccessDenied, AnonGuestUser, SuperUser, UnauthorizedLogin, User,
     checkPrivilege
@@ -719,12 +720,24 @@ class GzippedArtifact(Resource):
             contentType = 'application/octet-stream'
         request.setHeader(b'Content-Type', contentType.encode())
         request.setHeader(b'Content-Disposition', b'inline')
-        if contentEncoding is not None:
-            # TODO: Check for gzip in the Accept-Encoding header.
-            #       In practice though, gzip is accepted universally.
-            request.setHeader(b'Content-Encoding', contentEncoding.encode())
 
-        FileProducer.servePlain(path.open(), request)
+        # Serve data in compressed form if user agent accepts it.
+        if contentEncoding is None:
+            decompress = False
+        else:
+            accept = AcceptedEncodings.parse(
+                                        request.getHeader('accept-encoding'))
+            decompress = 4.0 * accept[contentEncoding] < accept['identity']
+            if not decompress:
+                request.setHeader('Content-Encoding', contentEncoding)
+        if decompress:
+            # Note: Passing 'fileobj' to GzipFile appears more elegant,
+            #       but that stream isn't closed when GzipFile is closed.
+            stream = openGzip(path.path)
+        else:
+            stream = path.open()
+
+        FileProducer.servePlain(stream, request)
         return NOT_DONE_YET
 
 class PlainZipArtifact(PlainArtifact):
