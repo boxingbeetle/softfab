@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.List;
 import java.util.logging.FileHandler;
 import java.util.logging.Handler;
 import java.util.logging.Level;
@@ -13,6 +14,7 @@ import java.util.logging.Logger;
 
 import io.softfab.taskrunner.config.ConfigFactory;
 import io.softfab.taskrunner.config.TaskRunnerConfig;
+import io.softfab.taskrunner.config.WrappersConfig;
 import io.softfab.xmlbind.ParseException;
 
 /**
@@ -25,6 +27,16 @@ public final class Main {
     }
 
     private static Logger logger;
+
+    private static void listWrappers(List<WrappersConfig> wrappers) {
+        logger.info("Wrapper directories (searched in this order):");
+        for (final WrappersConfig wrappersConfig : wrappers) {
+            File wrapperDir = wrappersConfig.dir;
+            if (wrapperDir.isDirectory()) {
+                logger.info("- " + wrapperDir.getAbsolutePath());
+            }
+        }
+    }
 
     public static void main(String[] args) {
         // Initialise logger.
@@ -86,6 +98,7 @@ public final class Main {
 
         logger.info("Connecting to " + config.controlCenter.serverBaseURL);
         logger.info("Token ID: " + config.controlCenter.tokenId);
+        listWrappers(config.wrappers);
 
         // Run main loop.
         final SyncLoop syncLoop = new SyncLoop();
