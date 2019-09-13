@@ -15,13 +15,11 @@ from softfab.paramview import (
     ParamArgsMixin, ParamDefTable, addParamsToElement, checkParamState,
     initParamArgs, validateParamState
 )
-from softfab.projectlib import project
 from softfab.resourceview import (
     ResourceRequirementsArgsMixin, addResourceRequirementsToElement,
     checkResourceRequirementsState, initResourceRequirementsArgs,
     resourceRequirementsWidget, validateResourceRequirementsState
 )
-from softfab.selectview import textToValues, valuesToText
 from softfab.taskdeflib import TaskDef, taskDefDB
 from softfab.webgui import PropertiesTable
 from softfab.xmlgen import XMLContent, xhtml
@@ -89,7 +87,6 @@ class TaskEdit_GET(TaskEditBase):
                     descr = element.getDescription(),
                     framework = element.frameworkId or '',
                     timeout = element.timeoutMins or 0,
-                    requirements = valuesToText(element.getTagValues('sf.req')),
                     )
                 overrides.update(initParamArgs(element))
             overrides.update(initResourceRequirementsArgs(element))
@@ -123,7 +120,6 @@ class TaskEdit_POST(TaskEditBase):
             addParamsToElement(element, args)
             if args.timeout > 0:
                 element.addParameter('sf.timeout', str(args.timeout), True)
-            element.setTag('sf.req', textToValues(args.requirements))
             addResourceRequirementsToElement(element, args)
             return element
 
@@ -172,7 +168,3 @@ class TaskPropertiesTable(PropertiesTable):
             textInput(name='timeout', size=4),
             'minutes; 0 means "never".'
             )
-        if project['reqtag']:
-            # Note: dialog.State + formlib will take care that the requirement
-            #       links are preserved when piece of UI is not shown.
-            yield 'Requirements', textInput(name='requirements', size=80)

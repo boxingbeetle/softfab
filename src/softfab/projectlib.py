@@ -125,7 +125,7 @@ class Project(XMLTag, SingletonElem):
     '''
     tagName = 'project'
     boolProperties = (
-        'taskprio', 'trselect', 'reqtag', 'anonguest', 'mailnotification'
+        'taskprio', 'trselect', 'anonguest', 'mailnotification'
         )
     intProperties = ('maxjobs', )
     enumProperties = {'embed': EmbeddingPolicy}

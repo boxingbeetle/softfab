@@ -10,9 +10,7 @@ from softfab.pagelinks import (
     createTaskHistoryLink
 )
 from softfab.paramview import ParametersTable
-from softfab.projectlib import project
 from softfab.resourceview import InlineResourcesTable
-from softfab.selectview import valuesToText
 from softfab.taskdeflib import taskDefDB
 from softfab.taskdefview import configsUsingTaskDef, formatTimeout
 from softfab.userlib import User, checkPrivilege
@@ -38,9 +36,6 @@ class DetailsTable(PropertiesTable):
         yield 'Description', taskDef['description']
         yield 'Framework', createFrameworkDetailsLink(taskDef['parent'])
         yield 'Timeout', formatTimeout(taskDef.timeoutMins)
-        # Check if requirements are enabled in project settings
-        if project['reqtag']:
-            yield 'Requirements', valuesToText(taskDef.getTagValues('sf.req'))
         yield 'Parameters', taskDefParametersTable.present(proc=proc, **kwargs)
         yield 'Resources', InlineResourcesTable.instance.present(
             claim=taskDef.getFramework().resourceClaim.merge(

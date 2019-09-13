@@ -86,7 +86,7 @@ class TaskDefBase(ParamMixin, XMLTag, SelectableRecordABC):
         yield self.__resources
 
 class Framework(TaskDefBase):
-    cache = ObservingTagCache(frameworkDB, lambda: ('sf.req',) )
+    cache = ObservingTagCache(frameworkDB, lambda: ())
 
     @staticmethod
     def create(name: str,

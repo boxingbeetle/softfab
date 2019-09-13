@@ -154,7 +154,7 @@ Filters records using tags. The output is in XML format and consists of a set of
 Arguments:
 
 subject: (mandatory)
-:   The type of record to query. Valid values are `config` (configuration), `schedule` and `taskdef` (task definitions).
+:   The type of record to query. Valid values are `config` (configuration) and `schedule`.
 
 key: (any number of times)
 :   Match only those records that have a value for the given keys. If no keys are specified, all keys match.
@@ -169,9 +169,6 @@ Examples:
 
 `http://factory.company.com/GetTagged?subject=schedule&key=sf.trigger`
 :   List all triggered schedules that have a trigger filter.
-
-`http://factory.company.com/GetTagged?subject=taskdef&key=sf.req&value=R1&value=R2`
-:   List all task definitions that apply to requirement "R1" or requirement "R2".
 
 ### GetTaskDefParams<a id="GetTaskDefParams"></a>
 

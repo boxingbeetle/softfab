@@ -25,7 +25,6 @@ from softfab.projectlib import project
 from softfab.request import Request
 from softfab.resourceview import InlineResourcesTable
 from softfab.resultlib import getData, getKeys
-from softfab.selectview import valuesToText
 from softfab.taskdeflib import taskDefDB
 from softfab.taskdefview import formatTimeout
 from softfab.tasktables import JobTaskRunsTable, TaskProcessorMixin
@@ -198,8 +197,6 @@ class DetailsTable(PropertiesTable):
             )
         yield 'Timeout', formatTimeout(run.timeoutMins)
 
-        if project['reqtag']:
-            yield 'Requirements', valuesToText(taskDef.getTagValues('sf.req'))
         yield 'Parameters', taskParametersTable.present(**kwargs)
 
         # Task Runner selection.

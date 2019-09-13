@@ -24,7 +24,7 @@ class TaskDefDB(VersionedDatabase['TaskDef']):
 taskDefDB = TaskDefDB()
 
 class TaskDef(frameworklib.TaskDefBase):
-    cache = ObservingTagCache(taskDefDB, lambda: ('sf.req',) )
+    cache = ObservingTagCache(taskDefDB, lambda: ())
 
     @staticmethod
     def create(name: str,

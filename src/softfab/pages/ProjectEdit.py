@@ -28,7 +28,6 @@ class ProjectEditArgs(EditArgs):
     maxjobs = IntArg(defaultMaxJobs)
     taskprio = BoolArg()
     trselect = BoolArg()
-    reqtag = BoolArg()
     embed = EnumArg(EmbeddingPolicy, None)
     embedcustom = StrArg('')
 
@@ -75,7 +74,6 @@ class ProjectEdit_GET(ProjectEditBase):
                     maxjobs = project['maxjobs'],
                     taskprio = project['taskprio'],
                     trselect = project['trselect'],
-                    reqtag = project['reqtag'],
                     embed = project['embed'],
                     embedcustom = project['embedcustom'],
                     )
@@ -101,7 +99,6 @@ class ProjectEdit_POST(ProjectEditBase):
                 'timezone': decodeTimezone(args.timezone),
                 'taskprio': args.taskprio,
                 'trselect': args.trselect,
-                'reqtag': args.reqtag,
                 'embed': args.embed,
                 'embedcustom': args.embedcustom,
                 'version': oldElement.dbVersion,
@@ -240,10 +237,6 @@ class ProjectTable(PropertiesTable):
             ]
         yield 'Task Runner selection', checkBox(name='trselect')[
             'User can specify a subset of Task Runners for a job/task'
-            ]
-        yield 'Requirement tracing', checkBox(name='reqtag')[
-            'Link your task definitions with a requirements database'
-            ' (experimental)'
             ]
         yield 'Configuration tags', xhtml.br.join((
             textInput(name='tagkeys', size=80),
