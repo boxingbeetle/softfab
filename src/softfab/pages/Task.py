@@ -21,7 +21,6 @@ from softfab.pagelinks import (
 from softfab.paramview import ParametersTable
 from softfab.productlib import Product
 from softfab.productview import ProductTable
-from softfab.projectlib import project
 from softfab.request import Request
 from softfab.resourceview import InlineResourcesTable
 from softfab.resultlib import getData, getKeys
@@ -203,19 +202,17 @@ class DetailsTable(PropertiesTable):
         selectedRunners, level = task.getRunners(), 'task'
         if not selectedRunners:
             selectedRunners, level = task.getJob().getRunners(), 'job'
-        # Note that the TR selection setting only controls the UI, not the
-        # dispatching mechanism, so it is possible to have jobs with TR
-        # selection enabled even if the setting is disabled.
         if selectedRunners:
-            yield 'Task Runner selection', (
+            selection: XMLContent = (
                 f'selected for {level}: ',
                 txt(', ').join(
                     createTaskRunnerDetailsLink(runner)
                     for runner in sorted(selectedRunners)
                     )
                 )
-        elif project['trselect']:
-            yield 'Task Runner selection', '-'
+        else:
+            selection = '-'
+        yield 'Task Runner selection', selection
 
         # TODO: List assigned resources.
         yield 'Resources', InlineResourcesTable.instance.present(

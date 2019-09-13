@@ -27,7 +27,6 @@ class ProjectEditArgs(EditArgs):
     timezone = StrArg('')
     maxjobs = IntArg(defaultMaxJobs)
     taskprio = BoolArg()
-    trselect = BoolArg()
     embed = EnumArg(EmbeddingPolicy, None)
     embedcustom = StrArg('')
 
@@ -73,7 +72,6 @@ class ProjectEdit_GET(ProjectEditBase):
                     timezone = project.timezone,
                     maxjobs = project['maxjobs'],
                     taskprio = project['taskprio'],
-                    trselect = project['trselect'],
                     embed = project['embed'],
                     embedcustom = project['embedcustom'],
                     )
@@ -98,7 +96,6 @@ class ProjectEdit_POST(ProjectEditBase):
                 # TODO: Create a TimezoneArg?
                 'timezone': decodeTimezone(args.timezone),
                 'taskprio': args.taskprio,
-                'trselect': args.trselect,
                 'embed': args.embed,
                 'embedcustom': args.embedcustom,
                 'version': oldElement.dbVersion,
@@ -234,9 +231,6 @@ class ProjectTable(PropertiesTable):
             )
         yield 'Task priorities', checkBox(name='taskprio')[
             'User can specify priorities for tasks within a single job'
-            ]
-        yield 'Task Runner selection', checkBox(name='trselect')[
-            'User can specify a subset of Task Runners for a job/task'
             ]
         yield 'Configuration tags', xhtml.br.join((
             textInput(name='tagkeys', size=80),

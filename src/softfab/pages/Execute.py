@@ -76,8 +76,7 @@ class TaskStep(DialogStep):
     def presentFormBody(self, **kwargs: object) -> XMLContent:
         yield xhtml.p[ 'Select task(s) to execute:' ]
         yield TaskTable.instance.present(**kwargs)
-        if project['trselect']:
-            yield ShowTaskRunnerSelectionTable.instance.present(**kwargs)
+        yield ShowTaskRunnerSelectionTable.instance.present(**kwargs)
 
     def verify(self, proc: 'Execute_POST.Processor') -> Type[DialogStep]:
         tasks = proc.args.tasks
@@ -105,14 +104,7 @@ class RunnerStep(DialogStep):
     title = 'Task Runners'
 
     def process(self, proc: 'Execute_POST.Processor') -> bool:
-        if not proc.args.trselect:
-            return False
-        elif project['trselect']:
-            return any(iterTaskRunners())
-        elif proc.args.runners or proc.args.pertask:
-            raise ArgsCorrected(proc.args, runners = set(), pertask = False)
-        else:
-            return False
+        return proc.args.trselect and any(iterTaskRunners())
 
     def presentFormBody(self, **kwargs: object) -> XMLContent:
         yield xhtml.p[ 'Select Task Runner(s) to use:' ]

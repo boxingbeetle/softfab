@@ -124,9 +124,7 @@ class Project(XMLTag, SingletonElem):
     '''Overall project settings.
     '''
     tagName = 'project'
-    boolProperties = (
-        'taskprio', 'trselect', 'anonguest', 'mailnotification'
-        )
+    boolProperties = ('taskprio', 'anonguest', 'mailnotification')
     intProperties = ('maxjobs', )
     enumProperties = {'embed': EmbeddingPolicy}
 
