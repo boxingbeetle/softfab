@@ -1,17 +1,18 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from enum import Enum
-from typing import Iterator, cast
+from typing import Collection, Iterator, cast
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor, PresentableError, Redirect
-from softfab.configlib import configDB, iterConfigsByTag
+from softfab.configlib import Config, configDB, iterConfigsByTag
 from softfab.configview import SimpleConfigTable
 from softfab.datawidgets import DataTable
 from softfab.formlib import actionButtons, makeForm
 from softfab.joblib import jobDB
 from softfab.pageargs import EnumArg, PageArgs, RefererArg, SetArg, StrArg
 from softfab.pagelinks import createJobsURL
+from softfab.request import Request
 from softfab.selectview import TagArgs
 from softfab.userlib import User, checkPrivilege
 from softfab.utils import pluralize
@@ -26,8 +27,8 @@ class FastConfigTable(SimpleConfigTable):
     showTargets = True
     showOwner = False
 
-    def getRecordsToQuery(self, proc):
-        return proc.configs
+    def getRecordsToQuery(self, proc: PageProcessor) -> Collection[Config]:
+        return cast(FastExecute_GET.Processor, proc).configs
 
 class RefererArgs(PageArgs):
     configQuery = RefererArg('ConfigDetails')
@@ -49,10 +50,14 @@ class FastExecute_GET(FabPage['FastExecute_GET.Processor',
 
     class Processor(PageProcessor['FastExecute_GET.Arguments']):
 
-        def process(self, req, user):
+        def process(self,
+                    req: Request['FastExecute_GET.Arguments'],
+                    user: User
+                    ) -> None:
             configId = req.args.configId
             tagkey = req.args.tagkey
             tagvalue = req.args.tagvalue
+            # pylint: disable=attribute-defined-outside-init
 
             # Tag key and value must be provided both or neither.
             if tagkey is None and tagvalue is not None:
@@ -63,22 +68,23 @@ class FastExecute_GET(FabPage['FastExecute_GET.Processor',
                 raise PresentableError(xhtml.p[
                     'Got "tagvalue" without "tagkey".'
                     ])
-            # Either configId or tag key+value must be provided.
-            if configId is None and tagkey is None:
-                raise PresentableError(xhtml.p[
-                    'Either "configId" or "tagkey" + "tagvalue" is required.'
-                    ])
-            if configId is not None and tagkey is not None:
-                raise PresentableError(xhtml.p[
-                    'Providing both "configId" and "tagkey" + "tagvalue" '
-                    'is not allowed.'
-                    ])
 
-            # pylint: disable=attribute-defined-outside-init
+            # Either configId or tag key+value must be provided.
             if configId is None:
+                if tagkey is None:
+                    raise PresentableError(xhtml.p[
+                        'Either "configId" or "tagkey" + "tagvalue" '
+                        'is required.'
+                        ])
+                assert tagvalue is not None
                 # Look up tag key+value.
                 self.configs = sorted(iterConfigsByTag(tagkey, tagvalue))
             else:
+                if tagkey is not None:
+                    raise PresentableError(xhtml.p[
+                        'Providing both "configId" and "tagkey" + "tagvalue" '
+                        'is not allowed.'
+                        ])
                 # Look up configId.
                 try:
                     self.configs = [ configDB[configId] ]
@@ -146,20 +152,23 @@ class FastExecute_POST(FabPage['FastExecute_POST.Processor',
 
     class Processor(PageProcessor['FastExecute_POST.Arguments']):
 
-        def process(self, req, user):
+        def process(self,
+                    req: Request['FastExecute_POST.Arguments'],
+                    user: User
+                    ) -> None:
             action = req.args.action
 
             if action is Actions.CANCEL:
-                raise Redirect(
-                    req.args.refererURL or self.page.getParentURL(req.args)
-                    )
+                page = cast('FastExecute_POST', self.page)
+                raise Redirect(req.args.refererURL or
+                               page.getParentURL(req.args))
 
             if action is Actions.EXECUTE:
                 checkPrivilege(user, 'j/c', 'create jobs')
 
                 # Create jobs.
                 jobIds = []
-                user = user.name
+                userName = user.name
                 for configId in sorted(req.args.confirmedId):
                     # TODO: Configs that have disappeared or become invalid are
                     #       silently ignored. Since this is a rare situation,
@@ -170,7 +179,7 @@ class FastExecute_POST(FabPage['FastExecute_POST.Processor',
                         pass
                     else:
                         if config.hasValidInputs():
-                            for job in config.createJobs(user):
+                            for job in config.createJobs(userName):
                                 jobDB.add(job)
                                 jobIds.append(job.getId())
                 raise Redirect(createJobsURL(jobIds))
