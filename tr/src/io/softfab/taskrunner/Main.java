@@ -68,6 +68,7 @@ public final class Main {
             // Send logger output to file.
             try {
                 final FileHandler fh = new FileHandler(config.generic.logFile);
+                fh.setEncoding("UTF-8");
                 fh.setFormatter(new PlainFormatter());
                 logger.addHandler(fh);
             } catch (IOException e) {

@@ -128,6 +128,7 @@ final class TaskRunThread implements Runnable {
         try {
             runLogFile = new File(outputDir, factory.getLogFileName());
             fileHandler = new FileHandler(runLogFile.getAbsolutePath());
+            fileHandler.setEncoding("UTF-8");
         } catch (IOException e) {
             throw new TaskRunException("Could not create log file", e);
         }
