@@ -6,9 +6,10 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
@@ -240,9 +241,9 @@ public abstract class TaskRun {
     private void writeParameters(String startupScriptPath)
     throws TaskRunException {
         try {
-            final PrintWriter out = new PrintWriter(
-                new BufferedWriter(new FileWriter(startupScriptPath))
-                );
+            final PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(
+                new FileOutputStream(startupScriptPath), StandardCharsets.UTF_8
+                )));
             try {
                 writeStartupScript(out);
             } finally {
