@@ -95,4 +95,8 @@ public class PythonRun extends TaskRun {
         return new String[] { "python", "-u", startupScriptPath };
     }
 
+    protected void updateEnvironment(Map<String, String> env) {
+        env.put("PYTHONIOENCODING", "UTF-8");
+    }
+
 }
