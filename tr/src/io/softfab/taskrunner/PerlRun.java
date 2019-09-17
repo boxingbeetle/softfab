@@ -124,4 +124,9 @@ public class PerlRun extends TaskRun {
         return new String[] { "perl", "-w", startupScriptPath };
     }
 
+    protected void updateEnvironment(Map<String, String> env) {
+        // https://perldoc.perl.org/perlrun.html#PERL_UNICODE
+        env.put("PERL_UNICODE", "SDA");
+    }
+
 }
