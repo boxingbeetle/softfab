@@ -208,7 +208,13 @@ final class TaskRunThread implements Runnable {
         // tester and the operator may want to be informed.
         runLogger.setUseParentHandlers(true);
         for (final String report : result.getReports()) {
-            uploadArtifact(outputDir.toPath().resolve(report), runLogger);
+            try {
+                uploadArtifact(outputDir.toPath().resolve(report), runLogger);
+            } catch (RuntimeException e) {
+                // For some reason, java.nio.file.InvalidPathException is
+                // an unchecked exception.
+                runLogger.warning("Artifact upload failed: " + e);
+            }
         }
 
         // First, set taskRun field to null to indicate run is finished and can
