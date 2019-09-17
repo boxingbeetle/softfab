@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -95,27 +96,7 @@ public class ExternalProcess {
     public void start()
     throws IOException {
         checkRunning(false);
-        String commandLineToLog;
-        boolean first = true;
-        final StringBuffer buffer = new StringBuffer();
-        for (int index = 0; index < arguments.length; index ++) {
-            if (first) {
-                first = false;
-            } else {
-                buffer.append(' ');
-            }
-            final String arg = arguments[index];
-            final boolean containsSpaces = (arg.indexOf(' ') >= 0);
-            if (containsSpaces) {
-                buffer.append('"').append(arg).append('"');
-            } else {
-                buffer.append(arg);
-            }
-        }
-        commandLineToLog = buffer.toString();
-        logger.info(
-            "Starting wrapper with command line: [" + commandLineToLog + "]"
-            );
+        logger.info("Starting wrapper: " + Arrays.toString(arguments));
         try {
             process = Runtime.getRuntime().exec(arguments, null, workingDir);
         } catch (IOException e) {
