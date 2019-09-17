@@ -718,6 +718,16 @@ class GzippedArtifact(Resource):
         contentType, contentEncoding = guess_type(path.basename(), strict=False)
         if contentType is None:
             contentType = 'application/octet-stream'
+        elif contentType.startswith('text/'):
+            # Encoding autodetection in browsers is pretty poor, so we're
+            # likely better off forcing UTF-8. Most gzipped text files are
+            # logs and we tell the wrappers to output in UTF-8.
+            # TODO: Perform an encoding detection and convert to UTF-8
+            #       if the file is in a different encoding.
+            #       Converting is better than sending a different encoding
+            #       to the client, since non-browser clients can be simpler
+            #       if they only have to deal with UTF-8.
+            contentType += '; charset=UTF-8'
         request.setHeader(b'Content-Type', contentType.encode())
         request.setHeader(b'Content-Disposition', b'inline')
 
