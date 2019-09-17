@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -100,6 +101,23 @@ public class ExternalProcess {
         logger.info("Starting wrapper: " + Arrays.toString(arguments));
         final ProcessBuilder builder = new ProcessBuilder(arguments);
         builder.directory(workingDir);
+
+        // Request UTF-8 output from POSIX-compatible programs.
+        final Map<String, String> env = builder.environment();
+        String localeVar = "LC_ALL";
+        String localeValue = env.get(localeVar);
+        if (localeValue == null) {
+            localeVar = "LC_CTYPE";
+            localeValue = env.getOrDefault(localeVar, "C");
+        }
+        int sepIdx = localeValue.indexOf('.');
+        if (sepIdx >= 0) {
+            localeValue = localeValue.substring(0, sepIdx);
+        }
+        localeValue += ".UTF-8";
+        logger.info("Setting " + localeVar + " to " + localeValue);
+        env.put(localeVar, localeValue);
+
         try {
             process = builder.start();
         } catch (IOException e) {
