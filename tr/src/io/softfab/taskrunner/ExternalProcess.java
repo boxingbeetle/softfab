@@ -7,7 +7,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.Arrays;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -37,11 +36,9 @@ public class ExternalProcess {
         }
     }
 
-    private final String[] arguments;
+    private final ProcessBuilder builder;
 
     private Process process;
-
-    private File workingDir;
 
     /**
     Tracks whether the external process is running right now.
@@ -70,40 +67,20 @@ public class ExternalProcess {
      * @param logger Logger to pass read lines to.
      */
     public ExternalProcess(File workingDir, String[] args, Logger logger) {
-        this.workingDir = workingDir;
+        this.builder = new ProcessBuilder(args).directory(workingDir);
+
         this.logger = logger;
         rawLogger = Logger.getAnonymousLogger();
         rawLogger.setUseParentHandlers(false);
         rawLogger.setLevel(Level.INFO);
         running = false;
 
-        final int destIndex;
-        if (processWrapper == null) {
-            arguments = new String[args.length];
-            destIndex = 0;
-        } else {
-            arguments = new String[args.length + 1];
-            arguments[0] = processWrapper;
-            destIndex = 1;
+        if (processWrapper != null) {
+            builder.command().add(0, processWrapper);
         }
-        System.arraycopy(args, 0, arguments, destIndex, args.length);
-    }
-
-    /**
-    Start the external process and the logging of its output.
-    @throws IOException If executing the command line failed.
-    @throws IllegalStateException If the process was already running.
-    */
-    public void start()
-    throws IOException {
-        checkRunning(false);
-
-        logger.info("Starting wrapper: " + Arrays.toString(arguments));
-        final ProcessBuilder builder = new ProcessBuilder(arguments);
-        builder.directory(workingDir);
 
         // Request UTF-8 output from POSIX-compatible programs.
-        final Map<String, String> env = builder.environment();
+        final Map<String, String> env = environment();
         String localeVar = "LC_ALL";
         String localeValue = env.get(localeVar);
         if (localeValue == null) {
@@ -117,7 +94,28 @@ public class ExternalProcess {
         localeValue += ".UTF-8";
         logger.info("Setting " + localeVar + " to " + localeValue);
         env.put(localeVar, localeValue);
+    }
 
+    /**
+    Return the environment variables used by the external process.
+    This includes variables inherited from the Task Runner process.
+    Changes to the returned map made before #start is called will affect
+    the external process's environment.
+    */
+    public Map<String, String> environment() {
+        return builder.environment();
+    }
+
+    /**
+    Start the external process and the logging of its output.
+    @throws IOException If executing the command line failed.
+    @throws IllegalStateException If the process was already running.
+    */
+    public void start()
+    throws IOException {
+        checkRunning(false);
+
+        logger.info("Starting wrapper: " + builder.command());
         try {
             process = builder.start();
         } catch (IOException e) {
