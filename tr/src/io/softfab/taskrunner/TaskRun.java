@@ -114,6 +114,13 @@ public abstract class TaskRun {
     protected abstract String[] getStartupCommand(String startupScriptPath);
 
     /**
+     * Customize the environment variables for the wrapper process.
+     * The default implementation does nothing.
+     */
+    protected void updateEnvironment(Map<String, String> env) {
+    }
+
+    /**
      * Get the file name of the startup script.
      * This script defines several variables and then invokes the wrapper.
      */
@@ -260,9 +267,9 @@ public abstract class TaskRun {
             new File(outputDir, getStartupFileName()).getAbsolutePath();
         writeParameters(startupScriptPath);
         final String[] command = getStartupCommand(startupScriptPath);
-        return readResultFile(monitorProcess(
-            new ExternalProcess(outputDir, command, runLogger)
-            ));
+        final ExternalProcess process = new ExternalProcess(outputDir, command, runLogger);
+        updateEnvironment(process.environment());
+        return readResultFile(monitorProcess(process));
     }
 
     private TaskRun getAbortRun() {
