@@ -96,13 +96,17 @@ public class ExternalProcess {
     public void start()
     throws IOException {
         checkRunning(false);
+
         logger.info("Starting wrapper: " + Arrays.toString(arguments));
+        final ProcessBuilder builder = new ProcessBuilder(arguments);
+        builder.directory(workingDir);
         try {
-            process = Runtime.getRuntime().exec(arguments, null, workingDir);
+            process = builder.start();
         } catch (IOException e) {
             logger.severe("Wrapper execution failed: " + e);
             throw e;
         }
+
         running = true;
         // TODO: It seems to be impossible to both know the origin and get
         //       messages in the right order.
