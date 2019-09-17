@@ -7,7 +7,7 @@ package io.softfab.taskrunner;
  */
 public final class Version {
 
-    private static final String VERSION = "3.0.0-pre4"; // NOPMD
+    private static final String VERSION = "3.0.0-pre5"; // NOPMD
 
     private Version() {
         // Prevent instantiation.
