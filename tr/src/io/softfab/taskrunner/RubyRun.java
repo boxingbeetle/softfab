@@ -90,7 +90,9 @@ public class RubyRun extends TaskRun {
     }
 
     protected String[] getStartupCommand(String startupScriptPath) {
-        return new String[] { "ruby", startupScriptPath };
+        return new String[] {
+            "ruby", "--external-encoding=UTF-8", startupScriptPath
+        };
     }
 
 }
