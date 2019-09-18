@@ -879,15 +879,20 @@ class ZippedArtifact(Resource):
         request.setHeader(b'Content-Type', contentType.encode())
         request.setHeader(b'Content-Disposition', b'inline')
 
+        # Serve data in compressed form if user agent accepts it.
         if info.compress_type == ZIP_DEFLATED:
-            # Send compressed data to user agent.
-            # TODO: Check for gzip in the Accept-Encoding header.
-            FileProducer.serveZipEntry(self.zipPath.open(), info, request)
-            return NOT_DONE_YET
+            accept = AcceptedEncodings.parse(
+                                        request.getHeader('accept-encoding'))
+            decompress = 4.0 * accept['gzip'] < accept['identity']
+            if not decompress:
+                request.setHeader('Content-Encoding', 'gzip')
         else:
-            # Decompress and send to user agent.
+            decompress = True
+        if decompress:
             FileProducer.servePlain(zipFile.open(info), request)
-            return NOT_DONE_YET
+        else:
+            FileProducer.serveZipEntry(self.zipPath.open(), info, request)
+        return NOT_DONE_YET
 
 class ZipTreeNode:
 
