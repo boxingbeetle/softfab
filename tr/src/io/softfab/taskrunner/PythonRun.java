@@ -96,7 +96,11 @@ public class PythonRun extends TaskRun {
     }
 
     protected void updateEnvironment(Map<String, String> env) {
+        // Use UTF-8 for stdin, stdout and stderr.
         env.put("PYTHONIOENCODING", "UTF-8");
+        // Use UTF-8 for all system interfaces.
+        // This is new in Python 3.7 and has no effect on older versions.
+        env.put("PYTHONUTF8", "1");
     }
 
 }
