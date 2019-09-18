@@ -5,6 +5,7 @@ from os.path import splitext
 from typing import (
     Collection, Dict, Iterable, Iterator, Optional, Sequence, cast
 )
+import re
 
 from softfab.FabPage import FabPage
 from softfab.Page import InvalidRequest, PageProcessor
@@ -31,12 +32,19 @@ from softfab.userlib import User, checkPrivilege
 from softfab.webgui import PropertiesTable, Table, Widget, cell, pageLink
 from softfab.xmlgen import XMLContent, txt, xhtml
 
+reLabelSplit = re.compile(r'[_-]')
 
 def presentLabel(label: str) -> str:
     """Compute a good-looking tab label from the technical label.
     """
     root, ext_ = splitext(label)
-    return root.replace('_', ' ').replace('-', ' ').title()
+    if root:
+        # Note: Don't use the title() method, since that will capitalize the
+        #       first letter in a word even if it is preceded by non-letters.
+        return ' '.join(word[0].upper() + word[1:]
+                        for word in reLabelSplit.split(root))
+    else:
+        return '(empty)'
 
 class Task_GET(FabPage['Task_GET.Processor', 'Task_GET.Arguments']):
     icon = 'IconReport'
