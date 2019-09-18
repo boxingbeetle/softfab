@@ -84,6 +84,10 @@ tbody a:link, tbody a:visited,
 div.reporttabs a:link, div.reporttabs a:visited {
 	color: #1010E0;
 }
+div.reporttabs img {
+	margin-left: 0.5em;
+	vertical-align: text-bottom;
+}
 th {
 	text-align: left;
 }

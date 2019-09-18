@@ -10,6 +10,7 @@ import re
 from softfab.FabPage import FabPage
 from softfab.Page import InvalidRequest, PageProcessor
 from softfab.ReportMixin import ReportTaskArgs
+from softfab.StyleResources import styleRoot
 from softfab.artifacts import SANDBOX_RULES
 from softfab.datawidgets import DataTable
 from softfab.frameworklib import frameworkDB
@@ -45,6 +46,8 @@ def presentLabel(label: str) -> str:
                         for word in reLabelSplit.split(root))
     else:
         return '(empty)'
+
+openInNewTabIcon = styleRoot.addIcon('OpenInNewTab')
 
 class Task_GET(FabPage['Task_GET.Processor', 'Task_GET.Arguments']):
     icon = 'IconReport'
@@ -106,11 +109,16 @@ class Task_GET(FabPage['Task_GET.Processor', 'Task_GET.Arguments']):
 
         yield xhtml.div(class_='reporttabs')[(
             xhtml.div(class_='active' if active == label else None)[
-                pageLink(self.name,
-                            proc.args.override(report=label.casefold())
-                            )[ presentLabel(label) ]
+                pageLink(
+                    self.name,
+                    proc.args.override(report=label.casefold())
+                    )[ presentLabel(label) ],
+                None if url is None else xhtml.a(
+                    href=url, target='_blank',
+                    title='Open report in new tab'
+                    )[ openInNewTabIcon.present(**kwargs) ]
                 ]
-            for label in reports
+            for label, url in reports.items()
             )]
 
         if active == 'Overview':
