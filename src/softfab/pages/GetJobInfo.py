@@ -2,15 +2,17 @@
 
 from softfab.ControlPage import ControlPage
 from softfab.Page import InvalidRequest, PageProcessor
-from softfab.joblib import jobDB
+from softfab.joblib import Task, jobDB
 from softfab.pagelinks import JobIdArgs
 from softfab.productdeflib import ProductType
+from softfab.productlib import Product
 from softfab.projectlib import project
+from softfab.request import Request
 from softfab.resourcelib import iterTaskRunners
 from softfab.response import Response
 from softfab.timeview import formatTimeAttr
 from softfab.userlib import User, checkPrivilege
-from softfab.xmlgen import xml
+from softfab.xmlgen import XML, xml
 
 
 class GetJobInfo_GET(ControlPage['GetJobInfo_GET.Arguments',
@@ -21,7 +23,7 @@ class GetJobInfo_GET(ControlPage['GetJobInfo_GET.Arguments',
 
     class Processor(PageProcessor[JobIdArgs]):
 
-        def process(self, req, user):
+        def process(self, req: Request[JobIdArgs], user: User) -> None:
             jobId = req.args.jobId
             try:
                 # pylint: disable=attribute-defined-outside-init
@@ -35,34 +37,39 @@ class GetJobInfo_GET(ControlPage['GetJobInfo_GET.Arguments',
     def writeReply(self, response: Response, proc: Processor) -> None:
         taskprio = project['taskprio']
 
-        def taskToXML(task):
+        def taskToXML(task: Task) -> XML:
+            run = task.getLatestRun()
             return xml.task(
-                name = task['name'],
-                priority = task['priority'] if taskprio else None,
-                execstate = task['state'],
+                name = task.getName(),
+                priority = task.getPriority() if taskprio else None,
+                waiting = run.isWaiting(),
+                running = run.isRunning(),
+                done = run.isDone(),
+                cancelled = run.isCancelled(),
                 result = task.getResult(),
                 alert = task.getAlert(),
-                summary = task['summary'],
+                summary = run.getSummary(),
                 report = task.getURL(),
                 starttime = formatTimeAttr(task.startTime),
-                duration = task['duration'],
-                runner = task['runner'],
+                duration = task.getDuration(),
+                runner = run.getTaskRunnerId(),
                 )[
                 ( xml.param(name = name, value = value)
                   for name, value in task.getVisibleParameters().items() )
                 ]
 
-        def productToXML(product, listProducers):
+        def productToXML(product: Product, listProducers: bool) -> XML:
             prodType = product.getType()
             return xml.product(
-                name = product['name'],
+                name = product.getName(),
                 type = prodType,
-                state = product['state'],
+                available = product.isAvailable(),
+                blocked = product.isBlocked(),
                 local = product.isLocal(),
                 combined = product.isCombined(),
-                localat = product.get('localAt'),
+                localat = product.getLocalAt(),
                 locator = None if prodType is ProductType.TOKEN
-                    else product.get('locator'),
+                    else product.getLocator(),
                 )[
                 ( xml.producer(
                     name = name,
@@ -73,17 +80,17 @@ class GetJobInfo_GET(ControlPage['GetJobInfo_GET.Arguments',
                 ]
 
         job = proc.job
-        job.updateSummaries(tuple(iterTaskRunners()))
+        job.updateSummaries(list(iterTaskRunners()))
         comment = job.comment
         tasks = job.getTaskSequence()
         response.writeXML(
             xml.job(
                 jobid = job.getId(),
                 target = job.getTarget(),
-                createtime = formatTimeAttr(job['timestamp']),
-                configid = job['configId'],
-                owner = job['owner'],
-                scheduledby = job['scheduledby'],
+                createtime = formatTimeAttr(job.getCreateTime()),
+                configid = job.getConfigId(),
+                owner = job.getOwner(),
+                scheduledby = job.getScheduledBy(),
                 )
             [
             xml.comment[ comment ] if comment else None,
