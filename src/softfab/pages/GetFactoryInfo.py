@@ -5,6 +5,7 @@ from softfab.Page import PageProcessor
 from softfab.config import rootURL
 from softfab.databases import iterDatabases
 from softfab.projectlib import getBootTime, project
+from softfab.request import Request
 from softfab.response import Response
 from softfab.timeview import formatTimeAttr
 from softfab.userlib import User, checkPrivilege, privileges
@@ -25,7 +26,10 @@ class GetFactoryInfo_GET(ControlPage[ControlPage.Arguments,
 
     class Processor(PageProcessor[ControlPage.Arguments]):
 
-        def process(self, req, user):
+        def process(self,
+                    req: Request['GetFactoryInfo_GET.Arguments'],
+                    user: User
+                    ) -> None:
             pass
 
     def writeReply(self, response: Response, proc: Processor) -> None:
