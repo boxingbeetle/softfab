@@ -9,6 +9,7 @@ from softfab.ReportMixin import JobReportProcessor, ReportArgs
 from softfab.joblib import jobDB
 from softfab.pageargs import SetArg
 from softfab.querylib import RecordFilter, SetFilter, runQuery
+from softfab.request import Request
 from softfab.response import Response
 from softfab.userlib import User, checkPrivilege
 from softfab.utils import chop
@@ -25,7 +26,10 @@ class GetJobHistory_GET(ControlPage['GetJobHistory_GET.Arguments', 'GetJobHistor
 
     class Processor(JobReportProcessor[Arguments]):
 
-        def process(self, req, user):
+        def process(self,
+                    req: Request['GetJobHistory_GET.Arguments'],
+                    user: User
+                    ) -> None:
             super().process(req, user)
 
             jobs = runQuery(self.iterFilters(), jobDB)
