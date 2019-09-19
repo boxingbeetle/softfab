@@ -6,6 +6,7 @@ from typing import Dict, Optional
 import logging
 import re
 
+from pygments.formatters import HtmlFormatter
 from twisted.web.http import datetimeToString
 from twisted.web.iweb import IRequest
 from twisted.web.resource import Resource
@@ -17,7 +18,6 @@ from softfab.databaselib import createInternalId
 from softfab.timelib import getTime, secondsPerDay
 from softfab.useragent import AcceptedEncodings
 from softfab.webgui import Image, ShortcutIcon, StyleSheet, pngIcon, svgIcon
-from softfab.xmlgen import XMLPresentable, xhtml
 
 
 def _load(fileName: str) -> Optional[bytes]:
@@ -141,24 +141,15 @@ class _StyleRoot(Resource):
 styleRoot = _StyleRoot()
 
 # Register Pygments style sheet.
-try:
-    from pygments.formatters import HtmlFormatter
-except ImportError:
-    logging.warning(
-        "The pygments package is not installed; "
-        "syntax highlighting will be missing"
+# Note: The "codehilite" CSS class is required by the Markdown extension
+#       we use for syntax highlighting.
+pygmentsFileName = 'pygments.css'
+styleRoot.putChild(
+    pygmentsFileName.encode(),
+    Data(
+        HtmlFormatter().get_style_defs('.codehilite').encode(),
+        'text/css'
         )
-    pygmentsSheet: XMLPresentable = xhtml[None]
-else:
-    # Note: The "codehilite" CSS class is required by the Markdown extension
-    #       we use for syntax highlighting.
-    pygmentsFileName = 'pygments.css'
-    styleRoot.putChild(
-        pygmentsFileName.encode(),
-        Data(
-            HtmlFormatter().get_style_defs('.codehilite').encode(),
-            'text/css'
-            )
-        )
-    pygmentsSheet = StyleSheet(pygmentsFileName)
-    del pygmentsFileName
+    )
+pygmentsSheet = StyleSheet(pygmentsFileName)
+del pygmentsFileName
