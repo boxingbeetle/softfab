@@ -25,7 +25,7 @@ from twisted.web.util import redirectTo
 
 from softfab.FabPage import BasePage, LinkBarButton
 from softfab.Page import Authenticator, PageProcessor, Responder
-from softfab.StyleResources import styleRoot
+from softfab.StyleResources import pygmentsSheet, styleRoot
 from softfab.UIPage import UIResponder
 from softfab.authentication import LoginAuthPage
 from softfab.compat import importlib_resources
@@ -33,28 +33,7 @@ from softfab.pageargs import PageArgs
 from softfab.render import renderAuthenticated
 from softfab.response import Response
 from softfab.userlib import User
-from softfab.webgui import StyleSheet
-from softfab.xmlgen import XML, XMLContent, XMLPresentable, parseHTML, xhtml
-
-# Register pygments style sheet.
-try:
-    from pygments.formatters import HtmlFormatter
-except ImportError:
-    logging.warning(
-        "The pygments package is not installed; "
-        "code examples in the documentation will lack syntax highlighting"
-        )
-    pygmentsSheet: XMLPresentable = xhtml[None]
-else:
-    pygmentsFileName = 'pygments.css'
-    styleRoot.putChild(
-        pygmentsFileName.encode(),
-        Data(
-            HtmlFormatter().get_style_defs('.codehilite').encode(),
-            'text/css'
-            )
-        )
-    pygmentsSheet = StyleSheet(pygmentsFileName)
+from softfab.xmlgen import XML, XMLContent, parseHTML, xhtml
 
 PI_Handler = Callable[[str], XMLContent]
 
