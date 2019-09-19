@@ -189,7 +189,14 @@ class SandboxedResource:
             filePath = dirPath.child(nameStr + ext)
             if filePath.isfile():
                 return contentClass(filePath)
-        return NotFoundResource('Artifact not found')
+
+        # Redirect to non-sandboxed URL.
+        # It is possible the user edited the URL to request a different
+        # artifact or different presentation of the artifact that doesn't
+        # exist in the sandbox.
+        return Redirect(b'/'.join(
+            [b'..'] * (len(request.prepath) - 1) + request.prepath[2:]
+            ))
 
 def _runForRunnerUser(user: User) -> TaskRun:
     """Returns the task run accessible to the given user.
