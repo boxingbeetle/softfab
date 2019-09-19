@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from functools import partial
 from gzip import GzipFile, open as openGzip
 from mimetypes import guess_type
 from os import fsync, replace
@@ -28,6 +29,7 @@ from softfab.TwistedUtil import (
 )
 from softfab.joblib import Job, jobDB
 from softfab.projectlib import project
+from softfab.reports import createPresenter
 from softfab.request import Request
 from softfab.resourcelib import runnerFromToken
 from softfab.taskrunlib import TaskRun
@@ -461,13 +463,10 @@ class TaskResource(FactoryResource):
         dirPath = self.path.filePath
         for ext, plainClass in (('.gz', PlainGzipArtifact),
                                 ('.zip', PlainZipArtifact)):
-            # Serve the archive's contents, in the sandbox.
+            # Serve the archive's contents.
             filePath = dirPath.child(segment + ext)
             if filePath.isfile():
-                urlPath = [b'..'] * (len(request.postpath) - 1 + len(path.path))
-                urlPath.append(path.createURL().encode())
-                urlPath += request.postpath
-                return Redirect(b'/'.join(urlPath))
+                return self.reportForFile(filePath, path, request)
             # Serve the archive itself.
             if segment.endswith(ext):
                 filePath = path.filePath
@@ -480,6 +479,26 @@ class TaskResource(FactoryResource):
             return NotFoundResource(
                 f'No artifact named "{segment}" exists for this task'
                 )
+
+    def reportForFile(self,
+                      filePath: FilePath,
+                      sandboxedPath: SandboxedPath,
+                      request: TwistedRequest
+                      ) -> Resource:
+
+        if filePath.splitext()[1] == '.gz':
+            # Try to use fancy formatting.
+            resource = createPresenter(partial(openGzip, filePath.path),
+                                       sandboxedPath.path[-1])
+            if resource is not None:
+                return resource
+
+        # Redirect to sandbox to serve the report as-is.
+        urlPath = [b'..'] * (len(request.postpath) - 1 +
+                             len(sandboxedPath.path))
+        urlPath.append(sandboxedPath.createURL().encode())
+        urlPath += request.postpath
+        return Redirect(b'/'.join(urlPath))
 
     def renderIndex(self, request: TwistedRequest) -> bytes:
         return b'Listing task subresources is not implemented yet'

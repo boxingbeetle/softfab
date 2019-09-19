@@ -417,6 +417,9 @@ class XMLNode(_XMLSerializable):
             _XMLSequence(chain(self._children, _adaptSequence(index)))
             )
 
+    def flattenWithoutNamespace(self) -> str:
+        return ''.join(self._toFragments(self._namespace))
+
     def sameTag(self, other: object) -> bool:
         '''Returns True iff `other` is an XML node with the same namespace
         and name as this one; attributes and nested content are ignored.

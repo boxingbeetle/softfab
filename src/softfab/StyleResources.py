@@ -140,16 +140,14 @@ class _StyleRoot(Resource):
 
 styleRoot = _StyleRoot()
 
-# Register Pygments style sheet.
 # Note: The "codehilite" CSS class is required by the Markdown extension
 #       we use for syntax highlighting.
+pygmentsFormatter = HtmlFormatter(cssclass='codehilite')
+# Register Pygments style sheet.
 pygmentsFileName = 'pygments.css'
 styleRoot.putChild(
     pygmentsFileName.encode(),
-    Data(
-        HtmlFormatter().get_style_defs('.codehilite').encode(),
-        'text/css'
-        )
+    Data(pygmentsFormatter.get_style_defs().encode(), 'text/css')
     )
 pygmentsSheet = StyleSheet(pygmentsFileName)
 del pygmentsFileName

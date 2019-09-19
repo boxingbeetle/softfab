@@ -689,11 +689,11 @@ class StyleSheet(Widget):
         Widget.__init__(self)
         self.fileName = fileName
 
-    def present(self, **kwargs: object) -> XMLContent:
+    def present(self, **kwargs: object) -> XMLNode:
         '''Returns an XHTML fragment for linking this style sheet.
         '''
         styleURL = cast(str, kwargs['styleURL'])
-        yield xhtml.link(
+        return xhtml.link(
             rel = 'stylesheet',
             href = f'{styleURL}/{self.fileName}',
             type = 'text/css',
