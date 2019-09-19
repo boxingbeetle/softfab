@@ -746,11 +746,14 @@ class GzippedArtifact(Resource):
             # Encoding autodetection in browsers is pretty poor, so we're
             # likely better off forcing UTF-8. Most gzipped text files are
             # logs and we tell the wrappers to output in UTF-8.
-            # TODO: Perform an encoding detection and convert to UTF-8
-            #       if the file is in a different encoding.
-            #       Converting is better than sending a different encoding
-            #       to the client, since non-browser clients can be simpler
-            #       if they only have to deal with UTF-8.
+            # TODO: Perform an encoding detection on upload, or just preserve
+            #       the Content-Type header of the PUT request, if present.
+            # TODO: Convert to UTF-8 if the user agent requests it using
+            #       the Accept-Charset header. MDN says modern browsers omit
+            #       this header, but a non-browser client could set it to
+            #       indicate it is only willing to deal with UTF-8.
+            #       If no particular encoding is requested, just serve the
+            #       file as it was uploaded.
             contentType += '; charset=UTF-8'
         request.setHeader(b'Content-Type', contentType.encode())
         request.setHeader(b'Content-Disposition', b'inline')
