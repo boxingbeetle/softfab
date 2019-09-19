@@ -20,13 +20,8 @@ _shortcutIcon = styleRoot.addShortcutIcon('SoftFabIcon')
 def _createStyleSheets() -> Iterator[StyleSheet]:
     yield styleRoot.addStyleSheet('sw-factory')
 _styleSheets = tuple(_createStyleSheets())
-# This sheet contains workarounds for the very limited CSS support in MSOffice.
-# For example it is used to correct the Atom feed rendering in MS Outlook.
-_msOfficeSheet = styleRoot.addStyleSheet('msoffice')
 def iterStyleSheets(req: Request) -> Iterator[StyleSheet]:
     yield from _styleSheets
-    if req.userAgent.family == 'MSOffice':
-        yield _msOfficeSheet
 
 class UIResponder(Responder, Generic[ProcT]):
 
