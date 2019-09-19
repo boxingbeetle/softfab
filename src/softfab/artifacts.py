@@ -20,6 +20,7 @@ from twisted.web.resource import IResource, Resource
 from twisted.web.server import NOT_DONE_YET
 from twisted.web.util import Redirect, redirectTo
 from zope.interface import implementer
+import attr
 
 from softfab.TwistedUtil import (
     AccessDeniedResource, ClientErrorResource, NotFoundResource,
@@ -46,17 +47,13 @@ This probably needs to be tweaked over time; please submit an issue
 if you find this too restrictive or not restrictive enough.
 """
 
+@attr.s(auto_attribs=True, frozen=True)
 class SandboxedPath:
     """A file path within an artifact sandbox."""
 
-    def __init__(self,
-                 sandbox: 'ArtifactSandbox',
-                 filePath: FilePath,
-                 path: Iterable[str]
-                 ):
-        self.sandbox = sandbox
-        self.filePath = filePath
-        self.path = tuple(path)
+    sandbox: 'ArtifactSandbox'
+    filePath: FilePath
+    path: Tuple[str, ...]
 
     def child(self, name: str) -> 'SandboxedPath':
         """Return a sandboxed path that is a child of this path."""
@@ -71,6 +68,7 @@ class SandboxedPath:
         key = self.sandbox.keyFor(self)
         return '/'.join(('sandbox', key) + self.path)
 
+@attr.s(auto_attribs=True, cmp=False)
 @implementer(IResource)
 class ArtifactSandbox:
     """Serves the actual artifacts in a sandbox.
@@ -80,13 +78,13 @@ class ArtifactSandbox:
     keyTimeout = 30
     keyLength = 6
 
-    def __init__(self, baseDir: FilePath):
-        self.baseDir = baseDir
-        self._activeKeys: Dict[str, SandboxedPath] = {}
+    baseDir: FilePath
+    _activeKeys: Dict[str, SandboxedPath] = \
+        attr.ib(repr=False, init=False, factory=dict)
 
     @property
     def rootPath(self) -> SandboxedPath:
-        return SandboxedPath(self, self.baseDir, [])
+        return SandboxedPath(self, self.baseDir, ())
 
     def keyFor(self, path: SandboxedPath) -> str:
         """Return a key for accessing the given sandbox path.
@@ -123,7 +121,7 @@ class ArtifactSandbox:
         if name == b'anon' and project.anonguest:
             if origin is not None:
                 request.setHeader(b'Access-Control-Allow-Origin', b'*')
-            return SandboxedResource(self.baseDir, [])
+            return SandboxedResource(self.baseDir, ())
 
         # Verify that request came from null origin.
         if origin is not None:
@@ -150,15 +148,15 @@ class ArtifactSandbox:
         else:
             return SandboxedResource(self.baseDir, path.path)
 
+@attr.s(auto_attribs=True)
 @implementer(IResource)
 class SandboxedResource:
     """An intermediate directory in a sandboxed path."""
 
     isLeaf = False
 
-    def __init__(self, dirPath: FilePath, rightPath: Iterable[str]):
-        self.dirPath = dirPath
-        self.rightPath = tuple(rightPath)
+    dirPath: FilePath
+    rightPath: Tuple[str, ...]
 
     def render(self, request: TwistedRequest) -> bytes:
         return AccessDeniedResource('Incomplete path').render(request)
