@@ -85,8 +85,8 @@ div.reporttabs a:link, div.reporttabs a:visited {
 	color: #1010E0;
 }
 div.reporttabs img {
-	margin-left: 0.5em;
-	vertical-align: text-bottom;
+	margin: 2px 0 -1px 0.5em;
+	vertical-align: baseline;
 }
 th {
 	text-align: left;
