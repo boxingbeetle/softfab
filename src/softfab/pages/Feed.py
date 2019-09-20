@@ -11,7 +11,7 @@ from typing import Any, Collection, Iterator, List
 
 from softfab.ControlPage import ControlPage
 from softfab.Page import PageProcessor
-from softfab.UIPage import iterStyleSheets
+from softfab.UIPage import factoryStyleSheet
 from softfab.compat import NoReturn
 from softfab.config import dbDir, homePage, rootURL
 from softfab.databaselib import RecordObserver
@@ -189,8 +189,7 @@ class Feed_GET(ControlPage[ControlPage.Arguments, 'Feed_GET.Processor']):
         yield atom.summary(type = 'xhtml')[ xhtml.div[
             # TODO: Does xhtml.style work with other RSS readers too?
             xhtml.style[(
-                f'@import url({styleURL}/{sheet.fileName});'
-                for sheet in iterStyleSheets(proc.req)
+                f'@import url({styleURL}/{factoryStyleSheet.fileName});'
                 )],
             jobTable.present(**presentationArgs),
             xhtml.p[ presentJobCaption(job) ],

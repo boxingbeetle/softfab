@@ -4,7 +4,7 @@ from traceback import TracebackException
 from typing import TYPE_CHECKING, Generic, Iterator, Optional, cast
 
 from softfab.Page import PageProcessor, ProcT, Responder, logPageException
-from softfab.StyleResources import StyleSheet, styleRoot
+from softfab.StyleResources import styleRoot
 from softfab.pagelinks import createUserDetailsLink, loginURL, logoutURL
 from softfab.projectlib import project
 from softfab.request import Request
@@ -17,11 +17,7 @@ from softfab.xmlgen import XML, XMLContent, XMLNode, xhtml
 _logoIcon = styleRoot.addIcon('SoftFabLogo')
 _shortcutIcon = styleRoot.addShortcutIcon('SoftFabIcon')
 
-def _createStyleSheets() -> Iterator[StyleSheet]:
-    yield styleRoot.addStyleSheet('sw-factory')
-_styleSheets = tuple(_createStyleSheets())
-def iterStyleSheets(req: Request) -> Iterator[StyleSheet]:
-    yield from _styleSheets
+factoryStyleSheet = styleRoot.addStyleSheet('sw-factory')
 
 class UIResponder(Responder, Generic[ProcT]):
 
@@ -91,8 +87,7 @@ class UIPage(Generic[ProcT]):
             content='width=device-width, initial-scale=1, minimum-scale=1'
             )
         yield xhtml.title[ f'{project.name} - {self.pageTitle(proc)}' ]
-        for sheet in iterStyleSheets(proc.req):
-            yield sheet.present(**kwargs)
+        yield factoryStyleSheet.present(**kwargs)
         customStyleDefs = '\n'.join(self.iterStyleDefs())
         if customStyleDefs:
             yield xhtml.style[customStyleDefs]
