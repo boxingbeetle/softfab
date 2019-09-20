@@ -1,11 +1,11 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from codecs import getreader
-from typing import Callable, IO, Optional
+from typing import IO, Callable, Iterator, Optional, Tuple
 
-from pygments import highlight
 from pygments.lexer import Lexer
 from pygments.lexers import guess_lexer_for_filename
+from pygments.token import STANDARD_TYPES
 from pygments.util import ClassNotFound
 from twisted.web.http import Request as TwistedRequest
 from twisted.web.resource import Resource
@@ -13,7 +13,28 @@ from twisted.web.server import NOT_DONE_YET
 import attr
 
 from softfab.StyleResources import pygmentsFormatter, pygmentsSheet, styleRoot
+from softfab.xmlgen import XMLContent, XMLNode, XMLSubscriptable, xhtml
 
+TokenType = object
+
+def presentTokens(tokens: Iterator[Tuple[TokenType, str]]) -> XMLContent:
+    for ttype, value in tokens:
+        cssclass = STANDARD_TYPES.get(ttype, '')
+        if cssclass:
+            span: XMLSubscriptable = xhtml.span(class_=cssclass)
+        else:
+            span = xhtml
+
+        parts = value.split('\n')
+        for part in parts[:-1]:
+            yield span[part]
+            yield '\n'
+        yield span[parts[-1]]
+
+def presentBlock(tokens: Iterator[Tuple[TokenType, str]]) -> XMLNode:
+    return xhtml.pre(class_=pygmentsFormatter.cssclass)[
+        presentTokens(tokens)
+        ]
 
 @attr.s(auto_attribs=True)
 class TextResource(Resource):
@@ -29,6 +50,7 @@ class TextResource(Resource):
         depth = len(request.prepath) - 1
         styleURL = '../' * depth + styleRoot.relativeURL
         styleLink = pygmentsSheet.present(styleURL=styleURL)
+        code = presentBlock(self.lexer.get_tokens(self.text))
         request.write(
             '<!DOCTYPE html>\n'
             '<html>\n'
@@ -36,11 +58,8 @@ class TextResource(Resource):
             f'<title>Report: {self.fileName}</title>\n'
             f'{styleLink.flattenWithoutNamespace()}\n'
             '</head>\n'
-            '<body>\n'.encode()
-            )
-        output = highlight(self.text, self.lexer, pygmentsFormatter)
-        request.write(output.encode())
-        request.write(
+            '<body>\n'
+            f'{code.flattenWithoutNamespace()}\n'
             '</body>\n'
             '</html>\n'.encode()
             )
