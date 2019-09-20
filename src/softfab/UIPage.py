@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from traceback import TracebackException
-from typing import TYPE_CHECKING, Generic, Iterator, Optional, cast
+from typing import TYPE_CHECKING, Generic, Iterable, Iterator, Optional, cast
 
 from softfab.Page import PageProcessor, ProcT, Responder, logPageException
 from softfab.StyleResources import styleRoot
@@ -12,12 +12,21 @@ from softfab.response import Response
 from softfab.timelib import getTime
 from softfab.timeview import formatTime
 from softfab.version import VERSION
-from softfab.xmlgen import XML, XMLContent, XMLNode, xhtml
+from softfab.xmlgen import XML, XMLContent, XMLNode, XMLPresentable, xhtml
 
 _logoIcon = styleRoot.addIcon('SoftFabLogo')
 _shortcutIcon = styleRoot.addShortcutIcon('SoftFabIcon')
 
 factoryStyleSheet = styleRoot.addStyleSheet('sw-factory')
+
+fixedHeadItems: Iterable[XMLPresentable] = (
+    xhtml.meta(charset='UTF-8'),
+    xhtml.meta(
+        name='viewport',
+        content='width=device-width, initial-scale=1, minimum-scale=1'
+        ),
+    _shortcutIcon
+    )
 
 class UIResponder(Responder, Generic[ProcT]):
 
@@ -81,17 +90,13 @@ class UIPage(Generic[ProcT]):
 
     def presentHeadParts(self, **kwargs: object) -> XMLContent:
         proc = cast(ProcT, kwargs['proc'])
-        yield xhtml.meta(charset='UTF-8')
-        yield xhtml.meta(
-            name='viewport',
-            content='width=device-width, initial-scale=1, minimum-scale=1'
-            )
+        for item in fixedHeadItems:
+            yield item.present(**kwargs)
         yield xhtml.title[ f'{project.name} - {self.pageTitle(proc)}' ]
         yield factoryStyleSheet.present(**kwargs)
         customStyleDefs = '\n'.join(self.iterStyleDefs())
         if customStyleDefs:
             yield xhtml.style[customStyleDefs]
-        yield _shortcutIcon.present(**kwargs)
 
     def __title(self, proc: ProcT) -> XMLContent:
         return (

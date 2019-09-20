@@ -13,6 +13,7 @@ from twisted.web.server import NOT_DONE_YET
 import attr
 
 from softfab.StyleResources import pygmentsFormatter, pygmentsSheet, styleRoot
+from softfab.UIPage import fixedHeadItems
 from softfab.xmlgen import XMLContent, XMLNode, XMLSubscriptable, xhtml
 
 TokenType = object
@@ -46,22 +47,21 @@ class TextResource(Resource):
     fileName: str
     lexer: Lexer
 
-    def render_GET(self, request: TwistedRequest) -> bytes:
+    def render_GET(self, request: TwistedRequest) -> object:
         depth = len(request.prepath) - 1
         styleURL = '../' * depth + styleRoot.relativeURL
-        styleLink = pygmentsSheet.present(styleURL=styleURL)
-        code = presentBlock(self.lexer.get_tokens(self.text))
+        request.write(b'<!DOCTYPE html>\n')
         request.write(
-            '<!DOCTYPE html>\n'
-            '<html>\n'
-            '<head>\n'
-            f'<title>Report: {self.fileName}</title>\n'
-            f'{styleLink.flattenWithoutNamespace()}\n'
-            '</head>\n'
-            '<body>\n'
-            f'{code.flattenWithoutNamespace()}\n'
-            '</body>\n'
-            '</html>\n'.encode()
+            xhtml.html[
+                xhtml.head[
+                    fixedHeadItems,
+                    pygmentsSheet,
+                    xhtml.title[f'Report: {self.fileName}']
+                    ].present(styleURL=styleURL),
+                xhtml.body[
+                    presentBlock(self.lexer.get_tokens(self.text))
+                    ]
+                ].flattenXML().encode()
             )
         request.finish()
         return NOT_DONE_YET
