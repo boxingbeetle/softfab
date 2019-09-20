@@ -6,14 +6,43 @@ from typing import (
     IO, Callable, ClassVar, Dict, Generic, Iterable, Iterator, List, Mapping,
     Optional, Sequence, Type, TypeVar, Union, cast
 )
+from xml.etree.ElementTree import Element
 from xml.sax import make_parser
 from xml.sax.handler import (
     ContentHandler, ErrorHandler, feature_external_ges, feature_external_pes,
     feature_string_interning, property_interning_dict
 )
 
+import attr
+
 from softfab.utils import abstract
 from softfab.xmlgen import XML, XMLAttributeValue, XMLContent, xml as xmlnode
+
+T = TypeVar('T')
+
+def bindElement(element: Element, cls: Type[T]) -> T:
+    """Binds data from an XML element to a new object of a class annotated
+    with `@attr.s`.
+
+    An attribute of the element that does not exist on the class is ignored.
+    An attribute of the class that does not exist on the element get its
+    default value, unless it has no default, then `TypeError` is raised.
+    """
+
+    data: Dict[str, object] = {}
+    for attrib in attr.fields(cls):
+        if attrib.init:
+            name = attrib.name
+            value = element.get(name)
+            if value is not None:
+                if attrib.converter is None:
+                    # Attribute has no explicit converter;
+                    # use constructor as implicit converter.
+                    convert = attrib.type
+                    if convert is not None:
+                        value = convert(value)
+                data[name] = value
+    return cls(**data) # type: ignore
 
 # XML parsing:
 
