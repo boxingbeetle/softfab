@@ -1,7 +1,10 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from codecs import getreader
-from typing import IO, Callable, Iterator, Optional, Tuple
+from typing import (
+    IO, Any, Callable, Iterable, Iterator, Optional, Sequence, Tuple
+)
+from xml.etree.ElementTree import ElementTree, ParseError, parse
 
 from pygments.lexer import Lexer
 from pygments.lexers import guess_lexer_for_filename
@@ -13,7 +16,9 @@ from twisted.web.server import NOT_DONE_YET
 import attr
 
 from softfab.StyleResources import pygmentsFormatter, pygmentsSheet, styleRoot
-from softfab.UIPage import fixedHeadItems
+from softfab.UIPage import factoryStyleSheet, fixedHeadItems
+from softfab.webgui import Column, Table
+from softfab.xmlbind import bindElement
 from softfab.xmlgen import XMLContent, XMLNode, XMLSubscriptable, xhtml
 
 TokenType = object
@@ -38,11 +43,12 @@ def presentBlock(tokens: Iterator[Tuple[TokenType, str]]) -> XMLNode:
         ]
 
 @attr.s(auto_attribs=True)
-class TextResource(Resource):
-    """Presents a text artifact in a user friendly way.
+class PygmentedResource(Resource):
+    """Presents a text artifact using Pygments syntax highlighting.
     """
     isLeaf = True
 
+    message: XMLContent
     text: str
     fileName: str
     lexer: Lexer
@@ -59,12 +65,90 @@ class TextResource(Resource):
                     xhtml.title[f'Report: {self.fileName}']
                     ].present(styleURL=styleURL),
                 xhtml.body[
+                    self.message,
                     presentBlock(self.lexer.get_tokens(self.text))
                     ]
                 ].flattenXML().encode()
             )
         request.finish()
         return NOT_DONE_YET
+
+@attr.s(auto_attribs=True)
+class JUnitSuite:
+    name: str = 'nameless'
+    tests: int = 0
+    failures: int = 0
+    errors: int = 0
+    skipped: int = 0
+    time: float = 0
+
+def findJUnitSuites(tree: ElementTree) -> Sequence[JUnitSuite]:
+    """Looks for JUnit-style test suite results in the given XML."""
+
+    root = tree.getroot()
+    if root.tag == 'testsuites':
+        suites = [child for child in root if child.tag == 'testsuite']
+    elif root.tag == 'testsuite':
+        # pytest outputs a single suite as the root element.
+        suites = [root]
+    else:
+        suites = []
+
+    return [bindElement(suite, JUnitSuite) for suite in suites]
+
+@attr.s(auto_attribs=True)
+class JUnitResource(Resource):
+    """Presents a text artifact using Pygments syntax highlighting.
+    """
+    isLeaf = True
+
+    suites: Sequence[JUnitSuite]
+    fileName: str
+
+    def render_GET(self, request: TwistedRequest) -> object:
+        depth = len(request.prepath) - 1
+        styleURL = '../' * depth + styleRoot.relativeURL
+        request.write(b'<!DOCTYPE html>\n')
+        request.write(
+            xhtml.html[
+                xhtml.head[
+                    fixedHeadItems,
+                    factoryStyleSheet,
+                    xhtml.title[f'Report: {self.fileName}']
+                    ].present(styleURL=styleURL),
+                xhtml.body[
+                    xhtml.div(class_='body')[
+                        JUnitSummary.instance.present(suites=self.suites),
+                        self.presentSuites()
+                        ]
+                    ]
+                ].flattenXML().encode()
+            )
+        request.finish()
+        return NOT_DONE_YET
+
+    def presentSuites(self) -> XMLContent:
+        for suite in self.suites:
+            yield xhtml.h2[suite.name]
+
+class JUnitSummary(Table):
+
+    columns = (
+        'Suite',
+        Column(cellStyle='rightalign', label='Duration'),
+        Column(cellStyle='rightalign', label='Tests'),
+        Column(cellStyle='rightalign', label='Failures'),
+        Column(cellStyle='rightalign', label='Errors'),
+        Column(cellStyle='rightalign', label='Skipped'),
+        )
+
+    def iterRows(self, **kwargs: Any) -> Iterator[XMLContent]:
+        suites: Iterable[JUnitSuite] = kwargs['suites']
+        for suite in suites:
+            yield (
+                suite.name, f'{suite.time:1.3}', suite.tests,
+                suite.failures, suite.errors, suite.skipped
+                )
 
 UTF8Reader = getreader('utf-8')
 
@@ -83,12 +167,27 @@ def createPresenter(opener: Callable[[], IO[bytes]],
     #       by the 'artifacts' module.
     #       Do not use source highlighting for formats that the browser
     #       can handle in non-source form, like HTML and SVG.
-    if not fileName.endswith('.xml'):
+    message = None
+    if fileName.endswith('.xml'):
+        try:
+            with opener() as stream:
+                tree = parse(stream)
+            try:
+                suites = findJUnitSuites(tree)
+            except Exception as ex:
+                message = xhtml.p[xhtml.b['Bad JUnit data:'], f' {ex}']
+            else:
+                if suites:
+                    return JUnitResource(suites, fileName)
+        except ParseError as ex:
+            message = xhtml.p[xhtml.b['Invalid XML:'], f' {ex}']
+    else:
         return None
 
     # Load file contents into a string.
-    # TODO: Only do this if the file name suggests we will be able to
-    #       present the contents.
+    # TODO: Use encoding information from the XML parsing, if available.
+    # TODO: Do we want to display the original text or pretty-print the
+    #       parsed version?
     with opener() as stream:
         with UTF8Reader(stream, errors='replace') as reader:
             text = reader.read()
@@ -98,4 +197,4 @@ def createPresenter(opener: Callable[[], IO[bytes]],
     except ClassNotFound:
         return None
     else:
-        return TextResource(text, fileName, lexer)
+        return PygmentedResource(message, text, fileName, lexer)
