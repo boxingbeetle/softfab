@@ -146,7 +146,7 @@ class JUnitSummary(Table):
         suites: Iterable[JUnitSuite] = kwargs['suites']
         for suite in suites:
             yield (
-                suite.name, f'{suite.time:1.3}', suite.tests,
+                suite.name, f'{suite.time:1.3f}', suite.tests,
                 suite.failures, suite.errors, suite.skipped
                 )
 
