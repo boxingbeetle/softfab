@@ -87,9 +87,8 @@ disable=bad-continuation,
         # These only generate noise in a normal run.
         missing-docstring,
         # There are too many missing docstrings right now, maybe activate later.
-        no-else-return,
-        # An "if" statement where both the "if" and "else" part return can be
-        # more readable due to the symmetry.
+        no-else-return, no-else-continue, no-else-break,
+        # Having an "else" or "elif" can be more readable due to the symmetry.
         no-self-use,
         # Many false positives and not critical in case of a true positive.
         not-callable,
