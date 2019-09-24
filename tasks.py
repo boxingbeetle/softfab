@@ -47,9 +47,11 @@ def build_tr(c):
         )
 
 @task
-def lint(c, src=None, rule=None, html=None, results=None):
+def lint(c, src=None, rule=None, html=None, results=None, version=False):
     """Check sources with PyLint."""
     print('Checking sources with PyLint...')
+    if version:
+        lint_result = c.run('pylint --version', env=PYLINT_ENV)
     if results is None:
         report_dir = Path('.')
     else:
