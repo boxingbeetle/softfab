@@ -23,6 +23,12 @@ def remove_dir(path):
     if path.exists():
         rmtree(str(path))
 
+def write_results(results, results_path):
+    """Write a results dictionary to file."""
+    with open(results_path, 'w', encoding='utf-8') as out:
+        for key, value in results.items():
+            out.write('%s=%s\n' % (key, value.replace('\\', '\\\\')))
+
 @task
 def clean(c):
     """Clean up our output."""
@@ -41,18 +47,44 @@ def build_tr(c):
         )
 
 @task
-def lint(c, src=None, rule=None):
+def lint(c, src=None, rule=None, html=None, results=None):
     """Check sources with PyLint."""
     print('Checking sources with PyLint...')
-    args = []
+    if results is None:
+        report_dir = Path('.')
+    else:
+        # We need to output JSON to produce the results file, but we also
+        # need to report the issues, so we have to get those from the JSON
+        # output and the easiest way to do so is to enable the HTML report.
+        report_dir = Path(results).parent.resolve()
+        html = report_dir / 'pylint.html'
+    cmd = ['pylint']
     if rule is not None:
-        args += [
+        cmd += [
             '--disable=all', '--enable=' + rule,
             '--persistent=n', '--score=n'
             ]
-    args.append(source_arg(src))
+    if html is None:
+        hide = None
+    else:
+        json_file = report_dir / 'pylint.json'
+        hide = 'stdout'
+        cmd += ['--load-plugins=pylint_json2html',
+                '--output-format=jsonextended',
+                '>%s' % json_file]
+    cmd.append(source_arg(src))
     with c.cd(str(TOP_DIR)):
-        c.run('pylint %s' % ' '.join(args), env=PYLINT_ENV, pty=True)
+        lint_result = c.run(' '.join(cmd),
+                            env=PYLINT_ENV, warn=True, pty=results is None)
+    if html is not None:
+        c.run('pylint-json2html -f jsonextended -o %s %s' % (html, json_file))
+    if results is not None:
+        import sys
+        sys.path.append(f'{TOP_DIR}/tests/pylint')
+        from pylint_json2sfresults import gather_results
+        results_dict = gather_results(json_file, lint_result.exited)
+        results_dict['report'] = str(html)
+        write_results(results_dict, results)
 
 @task
 def types(c, src=None, clean=False, report=False, results=None):
