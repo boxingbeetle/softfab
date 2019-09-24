@@ -175,7 +175,8 @@ class Matrix(Table):
             allTasks
             )
 
-class TaskMatrix_GET(FabPage['TaskMatrix_GET.Processor', 'TaskMatrix_GET.Arguments']):
+class TaskMatrix_GET(FabPage['TaskMatrix_GET.Processor',
+                             'TaskMatrix_GET.Arguments']):
     icon = 'IconMatrix'
     description = 'Task Matrix'
 

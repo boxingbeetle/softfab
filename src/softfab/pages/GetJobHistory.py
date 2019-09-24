@@ -16,7 +16,8 @@ from softfab.utils import chop
 from softfab.xmlgen import xml
 
 
-class GetJobHistory_GET(ControlPage['GetJobHistory_GET.Arguments', 'GetJobHistory_GET.Processor']):
+class GetJobHistory_GET(ControlPage['GetJobHistory_GET.Arguments',
+                                    'GetJobHistory_GET.Processor']):
 
     class Arguments(ReportArgs):
         configId = SetArg()

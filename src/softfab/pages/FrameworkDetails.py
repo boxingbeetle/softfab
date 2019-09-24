@@ -91,7 +91,6 @@ class FrameworkDetails_GET(
 
     def presentContent(self, **kwargs: object) -> XMLContent:
         proc = cast(FrameworkDetails_GET.Processor, kwargs['proc'])
-        taskDef = proc.taskDef
         frameworkId = proc.args.id
         children = proc.children
         numChildren = len(children)

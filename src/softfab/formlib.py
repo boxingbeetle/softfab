@@ -611,7 +611,8 @@ class CheckBoxesTable(Table):
                 first = False
             else:
                 focus = False
-            boxCell: XMLContent = cell(class_ = 'clickable', onclick = 'toggleRow(event)')[
+            boxCell: XMLContent = cell(class_='clickable',
+                                       onclick='toggleRow(event)')[
                 xhtml.label[
                     xhtml.input(
                         type = 'checkbox', tabindex = 1,

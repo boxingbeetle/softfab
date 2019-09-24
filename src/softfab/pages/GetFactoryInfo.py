@@ -20,7 +20,7 @@ class GetFactoryInfo_GET(ControlPage[ControlPage.Arguments,
         checkPrivilege(user, 'p/a')
 
         # Check that user has 'list' privileges for all databases.
-        for priv in privileges.keys():
+        for priv in privileges:
             if priv.endswith('/l'):
                 checkPrivilege(user, priv)
 
