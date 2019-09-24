@@ -53,7 +53,7 @@ def lint(c, src=None, rule=None, html=None, results=None, version=False):
     if version:
         lint_result = c.run('pylint --version', env=PYLINT_ENV)
     if results is None:
-        report_dir = Path('.')
+        report_dir = Path(TOP_DIR)
     else:
         # We need to output JSON to produce the results file, but we also
         # need to report the issues, so we have to get those from the JSON
@@ -69,6 +69,7 @@ def lint(c, src=None, rule=None, html=None, results=None, version=False):
     if html is None:
         hide = None
     else:
+        html = Path(html).resolve()
         json_file = report_dir / 'pylint.json'
         hide = 'stdout'
         cmd += ['--load-plugins=pylint_json2html',
@@ -79,7 +80,8 @@ def lint(c, src=None, rule=None, html=None, results=None, version=False):
         lint_result = c.run(' '.join(cmd),
                             env=PYLINT_ENV, warn=True, pty=results is None)
     if html is not None:
-        c.run('pylint-json2html -f jsonextended -o %s %s' % (html, json_file))
+        with c.cd(str(TOP_DIR)):
+            c.run(f'pylint-json2html -f jsonextended -o {html} {json_file}')
     if results is not None:
         import sys
         sys.path.append(f'{TOP_DIR}/tests/pylint')
