@@ -144,7 +144,7 @@ class Capabilities_GET(FabPage['Capabilities_GET.Processor',
 
             # Always include targets, even if there are no TRs for them.
             for target in project.getTargets():
-                capMap[target]
+                capMap[target] # pylint: disable=pointless-statement
 
             # Determine capabilities required for each task.
             for taskDefId, taskDef in taskDefDB.items():

@@ -24,6 +24,7 @@ from softfab.waiting import ReasonForWaiting, topWhyNot
 from softfab.xmlbind import XMLTag
 from softfab.xmlgen import XML, XMLContent, xml
 
+# pylint: disable=used-before-assignment
 if TYPE_CHECKING:
     from softfab.joblib import Job, Task, jobDB
     from softfab.productlib import Product

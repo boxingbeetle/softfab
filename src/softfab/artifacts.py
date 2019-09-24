@@ -97,12 +97,12 @@ class ArtifactSandbox:
             return 'anon'
 
         key = genword(length=self.keyLength)
-        self._activeKeys[key] = path
+        self._activeKeys[key] = path # pylint: disable=unsupported-assignment-operation
         reactor.callLater(self.keyTimeout, self.keyExpired, key)
         return key
 
     def keyExpired(self, key: str) -> None:
-        del self._activeKeys[key]
+        del self._activeKeys[key] # # pylint: disable=unsupported-delete-operation
 
     def render(self, request: TwistedRequest) -> bytes:
         return AccessDeniedResource('Missing key').render(request)
@@ -140,7 +140,7 @@ class ArtifactSandbox:
             return ClientErrorResource('Key contains invalid characters')
 
         try:
-            path = self._activeKeys[key]
+            path = self._activeKeys[key] # pylint: disable=unsubscriptable-object
         except KeyError:
             # Key does not exist or is no longer valid.
             # Redirect to non-sandboxed path to acquire new key.

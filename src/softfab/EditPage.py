@@ -262,12 +262,13 @@ class InitialEditProcessor(EditProcessorBase[EditArgsT, DBRecord]):
     """
 
     def processState(self, oldElement: Optional[DBRecord]) -> None:
-        editArgs = self.argsClass(action='edit', id=self.args.id,
+        recordId = self.args.id # pylint: disable=access-member-before-definition
+        editArgs = self.argsClass(action='edit', id=recordId,
                                   **self._initArgs(oldElement))
         # TODO: An internal redirect to the POST page would be cleaner
         #       than overwriting the args, but that doesn't fit into
         #       the way pages are currently processed.
-        self.args = editArgs
+        self.args = editArgs # pylint: disable=attribute-defined-outside-init
 
     def determinePhase(self,
                        req: Request[InitialEditArgsT]
@@ -293,6 +294,7 @@ class EditProcessor(EditProcessorBase[EditArgsT, DBRecord]):
             try:
                 self._checkState()
             except PresentableError:
+                # pylint: disable=attribute-defined-outside-init
                 self.args = self.args.override(action='edit')
                 raise
 
@@ -368,6 +370,7 @@ class EditProcessor(EditProcessorBase[EditArgsT, DBRecord]):
         try:
             self.checkId(args.newId)
         except KeyError as ex:
+            # pylint: disable=attribute-defined-outside-init
             self.args = args.override(
                 prev = EditPagePrev.EDIT, action = 'save_as'
                 )

@@ -12,6 +12,7 @@ from softfab.waiting import (
     ResourceTypeReason, StatusLevel, statusLevelForResource
 )
 
+# pylint: disable=used-before-assignment
 if TYPE_CHECKING:
     from softfab.resourcelib import Resource
 else:

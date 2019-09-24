@@ -15,6 +15,7 @@ from softfab.connection import ConnectionStatus
 from softfab.resreq import ResourceSpec
 from softfab.utils import abstract, pluralize
 
+# pylint: disable=used-before-assignment
 if TYPE_CHECKING:
     from softfab.resourcelib import ResourceBase, TaskRunner
 else:

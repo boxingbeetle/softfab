@@ -119,7 +119,8 @@ class StatusModel:
         #print 'removing', key, 'from', self._children
         model = self._children[key]
         del self._children[key]
-        model._unregisterForUpdates() # pylint: disable=protected-access
+        # pylint: disable=protected-access
+        model._unregisterForUpdates()
         model.__parent = None
 
     def _getFormatter(self, fmt):
@@ -367,8 +368,8 @@ class StatusView:
 
     def _replaceModel(self, model):
         self.__model = model
-        self.__formatter = \
-            model._getFormatter(self.__format) # pylint: disable=protected-access
+        # pylint: disable=protected-access
+        self.__formatter = model._getFormatter(self.__format)
         # The new model is likely to have a different status.
         self.update()
 

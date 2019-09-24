@@ -11,6 +11,7 @@ from softfab.restypelib import taskRunnerResourceTypeName
 from softfab.resultcode import ResultCode
 from softfab.xmlgen import XMLContent, xml
 
+# pylint: disable=used-before-assignment
 if TYPE_CHECKING:
     from softfab.frameworklib import Framework
     from softfab.taskdeflib import TaskDef
