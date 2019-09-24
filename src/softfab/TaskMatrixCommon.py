@@ -35,7 +35,7 @@ class DateRangeMonitor(RecordObserver[Job]):
         return self.__maxYear
 
     def __init__(self) -> None:
-        RecordObserver.__init__(self)
+        super().__init__()
         # Determine minimum and maximum job time.
         createTimes = [ job.getCreateTime() for job in jobDB ]
         if createTimes:

@@ -651,6 +651,13 @@ class _XHTMLParser(HTMLParser):
             (cast(XMLNode, None), [])
             ]
 
+    def error(self, message: str) -> NoReturn:
+        # This method is not supposed to be called and will be removed
+        # in Python 3.8. But until then, PyLint will flag an error if we
+        # don't override this abstract method.
+        # https://bugs.python.org/issue31844
+        assert False
+
     def handle_starttag(self,
             tag: str,
             attrs: List[Tuple[str, Optional[str]]]

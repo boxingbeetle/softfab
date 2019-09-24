@@ -122,7 +122,8 @@ class WebhookResource(Resource):
         elif event is WebhookEvents.PUSH:
             return self.handlePush(request, repoMatch.getId(), parsed)
         else:
-            assert False, event
+            # https://github.com/PyCQA/pylint/issues/2908
+            raise AssertionError(event)
 
     def handlePing(self) -> bytes:
         return (

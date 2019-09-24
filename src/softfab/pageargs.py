@@ -1039,7 +1039,7 @@ class DictArgInstance(Dict[str, DictValue[ValueT]]):
     '''
 
     def __init__(self, items: Mapping[str, DictValue[ValueT]]):
-        dict.__init__(self)
+        super().__init__()
         for key, value in items.items():
             if isinstance(value, dict):
                 value = DictArgInstance(value)
