@@ -48,7 +48,6 @@ class ConfigTagsBase(FabPage['ConfigTagsBase.Processor', ArgsT]):
     class Processor(SelectConfigsMixin[ParentArgs], PageProcessor[ArgsT]):
 
         def process(self, req: Request[ArgsT], user: User) -> None:
-            # pylint: disable=attribute-defined-outside-init
             self.notices = []
 
             self.findConfigs()
@@ -119,7 +118,6 @@ class ConfigTags_POST(ConfigTagsBase['ConfigTags_POST.Arguments']):
                 assert action is Actions.CANCEL, action
                 raise Redirect(args.refererURL or parentPage)
 
-            # pylint: disable=attribute-defined-outside-init
             self.notices = []
             self.findConfigs()
             if self.notices:

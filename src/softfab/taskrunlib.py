@@ -130,12 +130,12 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
         if upgradeInProgress:
             if attributes['job'] not in jobDB:
                 raise ObsoleteRecordError()
-            self.__jobId = attributes['job'] # pylint: disable=attribute-defined-outside-init
+            self.__jobId = attributes['job']
             self.__taskName = attributes['name'] # pylint: disable=attribute-defined-outside-init
         else:
             # TODO: The delayed initialization is required when loading a job
             #       with non-finished tasks.
-            self.__jobId = attributes['job'] # pylint: disable=attribute-defined-outside-init
+            self.__jobId = attributes['job']
             self.__taskName = attributes['name'] # pylint: disable=attribute-defined-outside-init
             #self.__job = jobDB[attributes['job']]
             #self.__task = self.__job.getTask(attributes['name'])
@@ -654,7 +654,6 @@ class RunInfo(XMLTag):
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, RunInfo):
-            # pylint: disable=protected-access
             return self._properties == other._properties
         else:
             return NotImplemented

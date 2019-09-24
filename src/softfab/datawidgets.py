@@ -314,9 +314,7 @@ class DataTable(Table, Generic[Record]):
             assert self.db is not None
             self.objectName = pluralize(self.db.description, 42)
 
-    def getRecordsToQuery(self,
-                          proc: PageProcessor # pylint: disable=unused-argument
-                          ) -> Collection[Record]:
+    def getRecordsToQuery(self, proc: PageProcessor) -> Collection[Record]:
         '''Returns the initial record set on which filters will be applied.
         If "sortField" is None, the initial record set must be already sorted.
         '''
@@ -324,9 +322,7 @@ class DataTable(Table, Generic[Record]):
         assert db is not None
         return db
 
-    def iterFilters(self,
-                    proc: PageProcessor # pylint: disable=unused-argument
-                    ) -> Iterator[RecordFilter[Record]]:
+    def iterFilters(self,proc: PageProcessor) -> Iterator[RecordFilter[Record]]:
         '''Generates filter objects (see "querylib" module) to filter the
         records that are going to be displayed in a DataTable.
         The default implementation yields no filters; override this method to
@@ -351,9 +347,9 @@ class DataTable(Table, Generic[Record]):
             # Use cached version.
             return iter(data.columns)
 
-    def iterRowStyles(self, # pylint: disable=unused-argument
-                      rowNr: int, # pylint: disable=unused-argument
-                      record: Record, # pylint: disable=unused-argument
+    def iterRowStyles(self,
+                      rowNr: int,
+                      record: Record,
                       **kwargs: object
                       ) -> Iterator[str]:
         '''Override this to apply one or more CSS styles to a row.

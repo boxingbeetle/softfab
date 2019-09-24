@@ -117,7 +117,6 @@ class _PassFilter(RecordFilter[Record]):
         return iter(records)
 
 class SetFilter(RecordFilter[Record], Generic[Record, Comparable]):
-    # pylint: disable=function-redefined
 
     @overload
     @classmethod

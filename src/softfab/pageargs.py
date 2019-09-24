@@ -88,7 +88,7 @@ class _ArgumentFactory(Generic[ArgsT]):
         self.__argsClass = argsClass
         self.__data: Dict[str, object] = {}
         self.__unclaimedFields, self.__correctedArgs = \
-            argsClass._renameArguments(fields) # pylint: disable=protected-access
+            argsClass._renameArguments(fields)
         self.__invalidArgs = ArgsInvalid()
 
     def claimField(self,
@@ -486,18 +486,15 @@ class Argument(Generic[ValueT, DefaultT]):
     '''
 
     @overload
-    def __init__(self, default: DefaultT
-                 ): # pylint: disable=unused-argument
+    def __init__(self, default: DefaultT):
         ...
 
     @overload
-    def __init__(self, default: _DynamicValue
-                 ): # pylint: disable=unused-argument
+    def __init__(self, default: _DynamicValue):
         ...
 
     @overload
-    def __init__(self, default: _MandatoryValue = mandatory
-                 ): # pylint: disable=unused-argument
+    def __init__(self, default: _MandatoryValue = mandatory):
         ...
 
     def __init__(self, default: Any = mandatory):
@@ -651,16 +648,10 @@ if TYPE_CHECKING:
         ...
 
     @overload
-    def StrArg( # pylint: disable=function-redefined
-            default: DefaultT
-            # pylint: disable=unused-argument
-            ) -> _StrArg[DefaultT]:
+    def StrArg(default: DefaultT) -> _StrArg[DefaultT]:
         ...
 
-    def StrArg( # pylint: disable=function-redefined
-            default=mandatory
-            # pylint: disable=unused-argument
-            ):
+    def StrArg(default=mandatory): # pylint: disable=unused-argument
         pass
 else:
     StrArg = _StrArg
@@ -753,24 +744,16 @@ class _EnumArg(SingularArgument[EnumT, DefaultT]):
 
 if TYPE_CHECKING:
     @overload
-    def EnumArg(
-            enumType: Type[EnumT],
-            # pylint: disable=unused-argument
-            ) -> _EnumArg[EnumT, EnumT]:
+    def EnumArg(enumType: Type[EnumT]) -> _EnumArg[EnumT, EnumT]:
         ...
 
     @overload
-    def EnumArg( # pylint: disable=function-redefined
-            enumType: Type[EnumT],
-            default: DefaultT
-            # pylint: disable=unused-argument
-            ) -> _EnumArg[EnumT, DefaultT]:
+    def EnumArg(enumType: Type[EnumT],
+                default: DefaultT
+                ) -> _EnumArg[EnumT, DefaultT]:
         ...
 
-    def EnumArg( # pylint: disable=function-redefined
-            default=mandatory
-            # pylint: disable=unused-argument
-            ):
+    def EnumArg(default=mandatory): # pylint: disable=unused-argument
         pass
 else:
     EnumArg = _EnumArg
@@ -797,16 +780,10 @@ if TYPE_CHECKING:
         ...
 
     @overload
-    def IntArg( # pylint: disable=function-redefined
-            default: DefaultT
-            # pylint: disable=unused-argument
-            ) -> _IntArg[DefaultT]:
+    def IntArg(default: DefaultT) -> _IntArg[DefaultT]:
         ...
 
-    def IntArg( # pylint: disable=function-redefined
-            default=mandatory
-            # pylint: disable=unused-argument
-            ):
+    def IntArg(default=mandatory): # pylint: disable=unused-argument
         pass
 else:
     IntArg = _IntArg
@@ -927,19 +904,17 @@ if TYPE_CHECKING:
     def ListArg(
             prototype: _StrArg[str] = StrArg(),
             allowEmpty: bool = True
-            # pylint: disable=unused-argument
             ) -> _ListArg[str]:
         ...
 
     @overload
-    def ListArg( # pylint: disable=function-redefined
+    def ListArg(
             prototype: SingularArgument[ValueT, DefaultT],
             allowEmpty: bool = True
-            # pylint: disable=unused-argument
             ) -> _ListArg[ValueT]:
         ...
 
-    def ListArg(): # pylint: disable=function-redefined
+    def ListArg():
         pass
 else:
     ListArg = _ListArg
@@ -972,19 +947,17 @@ if TYPE_CHECKING:
     def SetArg(
             prototype: _StrArg[str] = StrArg(),
             allowEmpty: bool = True
-            # pylint: disable=unused-argument
             ) -> _SetArg[str]:
         ...
 
     @overload
-    def SetArg( # pylint: disable=function-redefined
+    def SetArg(
             prototype: SingularArgument[ValueT, DefaultT],
             allowEmpty: bool = True
-            # pylint: disable=unused-argument
             ) -> _SetArg[ValueT]:
         ...
 
-    def SetArg(): # pylint: disable=function-redefined
+    def SetArg():
         pass
 else:
     SetArg = _SetArg
@@ -1252,20 +1225,17 @@ class RenameToArg:
 @overload
 def _externalizeArg(arg: SingularArgument[ValueT, DefaultT],
                     value: ValueT
-                    # pylint: disable=unused-argument
                     ) -> Sequence[str]:
     ...
 
 @overload
 def _externalizeArg(arg: CollectionArg[Collection[ValueT], ValueT],
                     value: Collection[ValueT]
-                    # pylint: disable=unused-argument
                     ) -> Sequence[str]:
     ...
 
 @overload
-def _externalizeArg(arg: Any, value: Any # pylint: disable=unused-argument
-                    ) -> Sequence[str]:
+def _externalizeArg(arg: Any, value: Any) -> Sequence[str]:
     # Calling with this signature raises TypeError, but omitting this
     # signature means the calling code has to duplicate the runtime
     # type checks we do here just to please mypy.

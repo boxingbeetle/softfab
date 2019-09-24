@@ -354,7 +354,7 @@ class StatusView:
     def __init__(self, model, fmt):
         self.__model = model
         self.__format = fmt
-        self.__formatter = model._getFormatter(fmt) # pylint: disable=protected-access
+        self.__formatter = model._getFormatter(fmt)
         self.__clients = []
 
     def __formatUpdate(self):

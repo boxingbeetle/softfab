@@ -166,7 +166,7 @@ class SandboxedResource:
     def getChildWithDefault(
             self,
             name: bytes,
-            request: TwistedRequest # pylint: disable=unused-argument
+            request: TwistedRequest
             ) -> IResource:
         try:
             nameStr = name.decode()

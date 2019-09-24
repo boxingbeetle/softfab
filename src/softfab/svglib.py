@@ -38,9 +38,7 @@ class SVGPanel(Widget):
                 self.presentFooter(**kwargs)
                 ]
 
-    def presentFooter(self, # pylint: disable=unused-argument
-                      **kwargs: object
-                      ) -> XMLContent:
+    def presentFooter(self, **kwargs: object) -> XMLContent:
         '''Can be overridden to add a footer to the SVG panel.
         The default implementation does not show a footer.
         The footer should be an `xhtml.div`.

@@ -471,7 +471,7 @@ class Table(Widget):
         presentations = adaptToXML(self.presentCaptionParts(**kwargs))
         return xhtml.caption[ presentations ] if presentations else None
 
-    def presentCaptionParts(self, **kwargs: object) -> XMLContent: # pylint: disable=unused-argument
+    def presentCaptionParts(self, **kwargs: object) -> XMLContent:
         return None
 
     def __presentHead(self,
@@ -540,7 +540,7 @@ class Table(Widget):
 
         return xhtml.tbody(id = self.bodyId)[ rowPresentations ]
 
-    def iterStyles(self, **kwargs: object) -> Iterator[str]: # pylint: disable=unused-argument
+    def iterStyles(self, **kwargs: object) -> Iterator[str]:
         '''Iterates through CSS classes for this table.
         The default implementation yields the "style" field unless it is None.
         '''
@@ -548,9 +548,7 @@ class Table(Widget):
         if style is not None:
             yield style
 
-    def iterColumns(self, # pylint: disable=unused-argument
-            **kwargs: object
-            ) -> Iterator[Column]:
+    def iterColumns(self, **kwargs: object) -> Iterator[Column]:
         '''Iterates through the column definitions.
         The default implementation iterates through the field named `columns`;
         each element in the field should be a Column instance or a string or
@@ -628,7 +626,7 @@ class Image(AttrContainer):
     def _replaceAttributes(self, attributes: Mapping[str, object]) -> 'Image':
         return self.__class__(self.fileName, attributes)
 
-    def present(self, **kwargs: object) -> XMLContent: # pylint: disable=unused-argument
+    def present(self, **kwargs: object) -> XMLContent:
         styleURL = cast(str, kwargs['styleURL'])
         url = f'{styleURL}/{self.fileName}'
         return xhtml.img(src=url, **self._attributes)

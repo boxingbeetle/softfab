@@ -77,7 +77,7 @@ class ProductTable(Table, Generic[ProcT]):
         yield Column('Locator')
 
     def filterProducers(self,
-                        proc: ProcT, # pylint: disable=unused-argument
+                        proc: ProcT,
                         producers: Iterable[str]
                         ) -> Iterator[str]:
         '''Iterates through those producer task names that should be shown in
