@@ -41,7 +41,6 @@ if TYPE_CHECKING:
     from softfab.taskdeflib import TaskDef
     from softfab.taskgroup import TaskGroup
     from softfab.taskrunlib import TaskRun
-    from softfab.userlib import User
 else:
     Framework = object
     ProductDef = object
@@ -51,7 +50,6 @@ else:
     TaskDef = object
     TaskGroup = object
     TaskRun = object
-    User = object
 
 
 class JobFactory:

@@ -29,7 +29,6 @@ if TYPE_CHECKING:
     from softfab.joblib import Job, Task, jobDB
     from softfab.productlib import Product
     from softfab.resourcelib import Resource, ResourceDB, TaskRunner
-    from softfab.userlib import User
 else:
     Job = object
     Task = object
@@ -41,7 +40,6 @@ else:
     Resource = object
     ResourceDB = object
     TaskRunner = object
-    User = object
 
 
 defaultSummaries = {
