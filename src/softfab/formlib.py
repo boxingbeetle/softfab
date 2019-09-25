@@ -16,7 +16,6 @@ from softfab.xmlgen import (
     XML, XMLAttributeValue, XMLContent, XMLNode, XMLPresentable, txt, xhtml
 )
 
-# pylint: disable=used-before-assignment
 if TYPE_CHECKING:
     from softfab.Page import PageProcessor
 else:

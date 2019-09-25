@@ -15,7 +15,6 @@ from softfab.utils import abstract, escapeURL, pluralize
 from softfab.webgui import Column, Table, cell, pageLink, pageURL, row
 from softfab.xmlgen import XMLContent, XMLNode, XMLSubscriptable, xhtml
 
-# pylint: disable=used-before-assignment
 if TYPE_CHECKING:
     from softfab.Page import PageProcessor
 else:

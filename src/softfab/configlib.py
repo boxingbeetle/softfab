@@ -23,7 +23,6 @@ from softfab.tasklib import ResourceRequirementsMixin, TaskRunnerSet
 from softfab.xmlbind import XMLTag
 from softfab.xmlgen import XMLAttributeValue, XMLContent, xml
 
-# pylint: disable=used-before-assignment
 if TYPE_CHECKING:
     from softfab.taskdeflib import TaskDef
 else:

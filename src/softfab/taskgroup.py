@@ -15,7 +15,6 @@ from softfab.waiting import (
     BoundReason, ReasonForWaiting, checkBoundGroupRunner, checkGroupRunners
 )
 
-# pylint: disable=used-before-assignment
 if TYPE_CHECKING:
     from softfab.productdeflib import ProductDef
     from softfab.resourcelib import TaskRunner

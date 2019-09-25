@@ -15,7 +15,6 @@ from softfab.timeview import formatDate, formatTime
 from softfab.utils import cachedProperty, escapeURL, iterable
 
 # Avoid circular import.
-# pylint: disable=used-before-assignment
 if TYPE_CHECKING:
     from softfab.request import Request
 else:

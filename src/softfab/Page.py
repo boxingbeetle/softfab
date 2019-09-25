@@ -19,7 +19,6 @@ from softfab.utils import abstract
 from softfab.webgui import Widget, pageURL
 from softfab.xmlgen import XML
 
-# pylint: disable=used-before-assignment
 if TYPE_CHECKING:
     from softfab.request import Request
 else:
