@@ -1,8 +1,10 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from codecs import getreader
+from collections import defaultdict
 from typing import (
-    IO, Any, Callable, Iterable, Iterator, Optional, Sequence, Tuple
+    IO, Any, Callable, DefaultDict, Iterable, Iterator, List, Optional,
+    Sequence, Tuple
 )
 from xml.etree.ElementTree import ElementTree, ParseError, parse
 
@@ -17,7 +19,7 @@ import attr
 
 from softfab.StyleResources import pygmentsFormatter, pygmentsSheet, styleRoot
 from softfab.UIPage import factoryStyleSheet, fixedHeadItems
-from softfab.webgui import Column, Table
+from softfab.webgui import Column, Table, cell
 from softfab.xmlbind import bindElement
 from softfab.xmlgen import XMLContent, XMLNode, XMLSubscriptable, xhtml
 
@@ -74,6 +76,14 @@ class PygmentedResource(Resource):
         return NOT_DONE_YET
 
 @attr.s(auto_attribs=True)
+class JUnitCase:
+    name: str = 'unknown'
+    classname: str = ''
+    file: str = ''
+    line: int = 0
+    time: float = 0
+
+@attr.s(auto_attribs=True)
 class JUnitSuite:
     name: str = 'nameless'
     tests: int = 0
@@ -81,6 +91,7 @@ class JUnitSuite:
     errors: int = 0
     skipped: int = 0
     time: float = 0
+    testcase: List[JUnitCase] = attr.ib(factory=list)
 
 def findJUnitSuites(tree: ElementTree) -> Sequence[JUnitSuite]:
     """Looks for JUnit-style test suite results in the given XML."""
@@ -130,6 +141,7 @@ class JUnitResource(Resource):
     def presentSuites(self) -> XMLContent:
         for suite in self.suites:
             yield xhtml.h2[suite.name]
+            yield JUnitSuiteTable.instance.present(suite=suite)
 
 class JUnitSummary(Table):
 
@@ -149,6 +161,27 @@ class JUnitSummary(Table):
                 suite.name, f'{suite.time:1.3f}', suite.tests,
                 suite.failures, suite.errors, suite.skipped
                 )
+
+class JUnitSuiteTable(Table):
+
+    columns = (
+        'Class Name',
+        'Test Case',
+        Column(cellStyle='rightalign', label='Duration'),
+        )
+
+    def iterRows(self, **kwargs: Any) -> Iterator[XMLContent]:
+        suite: JUnitSuite = kwargs['suite']
+        casesByClass: DefaultDict[str, List[JUnitCase]] = defaultdict(list)
+        for case in suite.testcase:
+            casesByClass[case.classname].append(case)
+        for classname, cases in casesByClass.items():
+            for idx, case in enumerate(cases):
+                row: List[XMLContent] = []
+                if idx == 0:
+                    row.append(cell(rowspan=len(cases))[classname])
+                row += [case.name, f'{case.time:1.3f}']
+                yield row
 
 UTF8Reader = getreader('utf-8')
 
