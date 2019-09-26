@@ -27,21 +27,34 @@ def bindElement(element: Element, cls: Type[T]) -> T:
     An attribute of the element that does not exist on the class is ignored.
     An attribute of the class that does not exist on the element get its
     default value, unless it has no default, then `TypeError` is raised.
+
+    Attributes of type `List<S>` will receive data from XML child elements
+    with matching tag names, by a recursive call to this function to bind
+    the child element to a new instance of `S`.
     """
 
     data: Dict[str, object] = {}
     for attrib in attr.fields(cls):
         if attrib.init:
             name = attrib.name
-            value = element.get(name)
-            if value is not None:
-                if attrib.converter is None:
-                    # Attribute has no explicit converter;
-                    # use constructor as implicit converter.
-                    convert = attrib.type
-                    if convert is not None:
-                        value = convert(value)
-                data[name] = value
+            typ = attrib.type
+            if getattr(typ, '_name', '') == 'List':
+                # Recursively bind list items.
+                typeArg, = getattr(typ, '__args__')
+                data[name] = [
+                    bindElement(child, typeArg)
+                    for child in element
+                    if child.tag == name
+                    ]
+            else:
+                value = element.get(name)
+                if value is not None:
+                    if attrib.converter is None:
+                        # Attribute has no explicit converter;
+                        # use constructor as implicit converter.
+                        if typ is not None:
+                            value = typ(value)
+                    data[name] = value
     return cls(**data) # type: ignore
 
 # XML parsing:
