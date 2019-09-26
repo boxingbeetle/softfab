@@ -22,7 +22,7 @@ from softfab.resreq import (
 )
 from softfab.restypelib import resTypeDB, taskRunnerResourceTypeName
 from softfab.restypeview import iterResourceTypes
-from softfab.webgui import Panel, Table, rowManagerInstanceScript
+from softfab.webgui import Panel, Table, cell, rowManagerInstanceScript
 from softfab.xmlgen import XMLContent, txt, xhtml
 
 
@@ -59,7 +59,8 @@ def getResourceStatus(resource: ResourceBase) -> str:
 class StatusColumn(DataColumn[ResourceBase]):
     sortKey = cast(Retriever, staticmethod(getResourceStatus))
     def presentCell(self, record: ResourceBase, **kwargs: object) -> XMLContent:
-        return getResourceStatus(record)
+        status = getResourceStatus(record)
+        return cell(class_=status)[ status ]
 
 def presentCapabilities(capabilities: Collection[str],
                         resType: str,

@@ -15,7 +15,9 @@ from softfab.projectlib import project
 from softfab.querylib import CustomFilter, RecordFilter
 from softfab.request import Request
 from softfab.resourcelib import ResourceBase, resourceDB
-from softfab.resourceview import ResourceNameColumn, presentCapabilities
+from softfab.resourceview import (
+    ResourceNameColumn, StatusColumn, presentCapabilities
+)
 from softfab.restypelib import resTypeDB
 from softfab.restypeview import ResTypeTableMixin
 from softfab.taskdeflib import taskDefDB
@@ -55,9 +57,10 @@ class ResourcesTable(DataTable[ResourceBase]):
     columns = (
         ResourceNameColumn.instance,
         CapabilitiesColumn('Capabilities'),
+        StatusColumn(keyName = 'state'),
         )
     tabOffsetField = 'first_tr'
-    style = 'properties'
+    style = 'properties nostrong'
 
     def iterFilters(self, proc: PageProcessor) -> Iterator[RecordFilter]:
         def match(res: ResourceBase, typeName: str = proc.args.restype) -> bool:
