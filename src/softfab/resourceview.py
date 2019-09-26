@@ -8,7 +8,7 @@ from typing import (
 
 from softfab.Page import PageProcessor, PresentableError
 from softfab.connection import ConnectionStatus
-from softfab.databaselib import checkWrapperVarName
+from softfab.databaselib import Retriever, checkWrapperVarName
 from softfab.datawidgets import DataColumn
 from softfab.formlib import (
     dropDownList, emptyOption, hiddenInput, option, textInput
@@ -55,6 +55,11 @@ def getResourceStatus(resource: ResourceBase) -> str:
         return 'free'
     else:
         return connectionStatus.name.lower()
+
+class StatusColumn(DataColumn[ResourceBase]):
+    sortKey = cast(Retriever, staticmethod(getResourceStatus))
+    def presentCell(self, record: ResourceBase, **kwargs: object) -> XMLContent:
+        return getResourceStatus(record)
 
 def presentCapabilities(capabilities: Collection[str],
                         resType: str,

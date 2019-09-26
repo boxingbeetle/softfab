@@ -17,7 +17,7 @@ from softfab.pagelinks import createJobLink, createTaskInfoLink, createTaskLink
 from softfab.request import Request
 from softfab.resourcelib import ResourceBase, TaskRunner, resourceDB
 from softfab.resourceview import (
-    ResourceNameColumn, getResourceStatus, presentCapabilities
+    ResourceNameColumn, StatusColumn, getResourceStatus, presentCapabilities
 )
 from softfab.restypeview import iterResourceTypes, reservedTypes
 from softfab.taskrunlib import taskRunDB
@@ -29,11 +29,6 @@ from softfab.xmlgen import XML, XMLContent, xhtml
 class CapabilitiesColumn(ListDataColumn[ResourceBase]):
     def presentCell(self, record: ResourceBase, **kwargs: object) -> XMLContent:
         return presentCapabilities(record.capabilities, record.typeName)
-
-class StateColumn(DataColumn[ResourceBase]):
-    sortKey = cast(Retriever, staticmethod(getResourceStatus))
-    def presentCell(self, record: ResourceBase, **kwargs: object) -> XMLContent:
-        return getResourceStatus(record)
 
 def _getResourceReservedBy(resource: ResourceBase) -> str:
     if isinstance(resource, TaskRunner):
@@ -105,7 +100,7 @@ class ResourcesTable(DataTable[ResourceBase]):
     fixedColumns: Sequence[DataColumn[ResourceBase]] = (
         ResourceNameColumn.instance,
         CapabilitiesColumn(keyName = 'capabilities'),
-        StateColumn(keyName = 'state', cellStyle = 'strong'),
+        StatusColumn(keyName = 'state', cellStyle = 'strong'),
         ReservedByColumn('Reserved By', 'reserved'),
         )
     reserveColumn = ReserveColumn('Action')
