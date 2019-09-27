@@ -171,12 +171,19 @@ class JUnitResource(Resource):
             if not anyFailures:
                 yield xhtml.p['None.']
 
+    headerSep = xhtml[' \u25B8 ']
+
     def presentFailure(self, case: JUnitCase) -> XMLContent:
-        for failure in case.failure:
-            yield xhtml.h4[case.classname, ' \u25B8 ', case.name]
+        for number, failure in enumerate(case.failure, start=1):
+            header = [case.classname, case.name]
+            if len(case.failure) > 1:
+                header.append(f'{number} of {len(case.failure)}')
+            yield xhtml.h4[self.headerSep.join(header)]
+
             message = failure.message
             if message:
                 yield xhtml.p[message]
+
             text = failure.text
             if text:
                 yield xhtml.pre[xhtml.code[text]]
