@@ -138,6 +138,9 @@ class JUnitResource(Resource):
     def render_GET(self, request: TwistedRequest) -> object:
         depth = len(request.prepath) - 1
         styleURL = '../' * depth + styleRoot.relativeURL
+        suites = self.suites
+        showChecks = any(suite.tests != len(suite.testcase) for suite in suites)
+
         request.write(b'<!DOCTYPE html>\n')
         request.write(
             xhtml.html[
@@ -148,7 +151,9 @@ class JUnitResource(Resource):
                     ].present(styleURL=styleURL),
                 xhtml.body[
                     xhtml.div(class_='body')[
-                        JUnitSummary.instance.present(suites=self.suites),
+                        JUnitSummary.instance.present(
+                            suites=suites, showChecks=showChecks
+                            ),
                         self.presentSuites()
                         ]
                     ]
@@ -190,22 +195,34 @@ class JUnitResource(Resource):
 
 class JUnitSummary(Table):
 
-    columns = (
-        'Suite',
-        Column(cellStyle='rightalign', label='Duration'),
-        Column(cellStyle='rightalign', label='Tests'),
-        Column(cellStyle='rightalign', label='Failures'),
-        Column(cellStyle='rightalign', label='Errors'),
-        Column(cellStyle='rightalign', label='Skipped'),
-        )
+    suiteColumn = Column(label='Suite')
+    durationColumn = Column(cellStyle='rightalign', label='Duration')
+    testsColumn = Column(cellStyle='rightalign', label='Tests')
+    checksColumn = Column(cellStyle='rightalign', label='Checks')
+    failuresColumn = Column(cellStyle='rightalign', label='Failures')
+    errorsColumn = Column(cellStyle='rightalign', label='Errors')
+    skippedColumn = Column(cellStyle='rightalign', label='Skipped')
+
+    def iterColumns(self, **kwargs: Any) -> Iterator[Column]:
+        showChecks: bool = kwargs['showChecks']
+        yield self.suiteColumn
+        yield self.durationColumn
+        yield self.testsColumn
+        if showChecks:
+            yield self.checksColumn
+        yield self.failuresColumn
+        yield self.errorsColumn
+        yield self.skippedColumn
 
     def iterRows(self, **kwargs: Any) -> Iterator[XMLContent]:
+        showChecks: bool = kwargs['showChecks']
         suites: Iterable[JUnitSuite] = kwargs['suites']
         for suite in suites:
-            yield (
-                suite.name, f'{suite.time:1.3f}', suite.tests,
-                suite.failures, suite.errors, suite.skipped
-                )
+            row: List[XMLContent] = [suite.name, f'{suite.time:1.3f}']
+            if showChecks:
+                row.append(len(suite.testcase))
+            row += [suite.tests, suite.failures, suite.errors, suite.skipped]
+            yield row
 
 class JUnitSuiteTable(Table):
     style = 'nostrong'
