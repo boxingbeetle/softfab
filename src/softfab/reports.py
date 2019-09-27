@@ -194,6 +194,7 @@ class JUnitResource(Resource):
                 yield xhtml.pre[xhtml.code[text]]
 
 class JUnitSummary(Table):
+    style = 'nostrong'
 
     suiteColumn = Column(label='Suite')
     durationColumn = Column(cellStyle='rightalign', label='Duration')
@@ -221,7 +222,13 @@ class JUnitSummary(Table):
             row: List[XMLContent] = [suite.name, f'{suite.time:1.3f}']
             if showChecks:
                 row.append(len(suite.testcase))
-            row += [suite.tests, suite.failures, suite.errors, suite.skipped]
+            row.append(suite.tests)
+            for count, result in zip(
+                    (suite.failures, suite.errors, suite.skipped),
+                    (ResultCode.WARNING, ResultCode.ERROR, ResultCode.CANCELLED)
+                    ):
+                style=None if count == 0 else result
+                row.append(cell(class_=style)[count])
             yield row
 
 class JUnitSuiteTable(Table):
