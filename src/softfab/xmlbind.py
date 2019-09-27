@@ -55,6 +55,8 @@ def bindElement(element: Element, cls: Type[T]) -> T:
                         if typ is not None:
                             value = typ(value)
                     data[name] = value
+                elif name == 'text':
+                    data[name] = element.text
     return cls(**data) # type: ignore
 
 # XML parsing:

@@ -19,6 +19,7 @@ import attr
 
 from softfab.StyleResources import pygmentsFormatter, pygmentsSheet, styleRoot
 from softfab.UIPage import factoryStyleSheet, fixedHeadItems
+from softfab.resultcode import ResultCode
 from softfab.webgui import Column, Table, cell
 from softfab.xmlbind import bindElement
 from softfab.xmlgen import XMLContent, XMLNode, XMLSubscriptable, xhtml
@@ -75,6 +76,16 @@ class PygmentedResource(Resource):
         request.finish()
         return NOT_DONE_YET
 
+resultMap = {
+    ResultCode.OK: 'pass',
+    ResultCode.WARNING: 'fail',
+    }
+
+@attr.s(auto_attribs=True)
+class JUnitFailure:
+    message: str = ''
+    text: str = ''
+
 @attr.s(auto_attribs=True)
 class JUnitCase:
     name: str = 'unknown'
@@ -82,6 +93,14 @@ class JUnitCase:
     file: str = ''
     line: int = 0
     time: float = 0
+    failure: List[JUnitFailure] = attr.ib(factory=list)
+
+    @property
+    def result(self) -> ResultCode:
+        if self.failure:
+            return ResultCode.WARNING
+        else:
+            return ResultCode.OK
 
 @attr.s(auto_attribs=True)
 class JUnitSuite:
@@ -143,6 +162,25 @@ class JUnitResource(Resource):
             yield xhtml.h2[suite.name]
             yield JUnitSuiteTable.instance.present(suite=suite)
 
+            anyFailures = False
+            yield xhtml.h3['Failures']
+            for case in suite.testcase:
+                if case.result is ResultCode.WARNING:
+                    anyFailures = True
+                    yield self.presentFailure(case)
+            if not anyFailures:
+                yield xhtml.p['None.']
+
+    def presentFailure(self, case: JUnitCase) -> XMLContent:
+        for failure in case.failure:
+            yield xhtml.h4[case.classname, ' \u25B8 ', case.name]
+            message = failure.message
+            if message:
+                yield xhtml.p[message]
+            text = failure.text
+            if text:
+                yield xhtml.pre[xhtml.code[text]]
+
 class JUnitSummary(Table):
 
     columns = (
@@ -163,11 +201,13 @@ class JUnitSummary(Table):
                 )
 
 class JUnitSuiteTable(Table):
+    style = 'nostrong'
 
     columns = (
         'Class Name',
         'Test Case',
         Column(cellStyle='rightalign', label='Duration'),
+        'Result',
         )
 
     def iterRows(self, **kwargs: Any) -> Iterator[XMLContent]:
@@ -177,10 +217,13 @@ class JUnitSuiteTable(Table):
             casesByClass[case.classname].append(case)
         for classname, cases in casesByClass.items():
             for idx, case in enumerate(cases):
+                result = case.result
                 row: List[XMLContent] = []
                 if idx == 0:
                     row.append(cell(rowspan=len(cases))[classname])
-                row += [case.name, f'{case.time:1.3f}']
+                row.append(case.name)
+                row.append(f'{case.time:1.3f}')
+                row.append(cell(class_=result)[resultMap[result]])
                 yield row
 
 UTF8Reader = getreader('utf-8')
