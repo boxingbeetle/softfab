@@ -269,7 +269,7 @@ class ConfigJobModel(StatusModel):
     def formatStatus(self):
         job = self.__job
         return xml.status(
-            health = job.getResult() or 'unknown',
+            health = job.result or 'unknown',
             busy = 'true' if not job.isExecutionFinished() else 'false',
             url = rootURL + createJobURL(job.getId()),
             )

@@ -303,9 +303,10 @@ class Task(
     def _getState(self) -> str:
         return cast(str, self['state'])
 
-    def getResult(self) -> Optional[ResultCode]:
+    @property
+    def result(self) -> Optional[ResultCode]:
         return cast(Optional[ResultCode], self._properties.get('result')) \
-            or self.getLatestRun().getResult()
+            or self.getLatestRun().result
 
     @property
     def startTime(self) -> Optional[int]:
@@ -729,9 +730,10 @@ class Job(TaskRunnerSet, TaskSet[Task], XMLTag, DatabaseElem):
         '''Returns the ResultCode of the final result of this job, or None if
         this job does not have a final result yet.
         '''
-        return self.getResult() if self.hasFinalResult() else None
+        return self.result if self.hasFinalResult() else None
 
-    def getResult(self) -> Optional[ResultCode]:
+    @property
+    def result(self) -> Optional[ResultCode]:
         '''Summarizes the current result of this job by combining the task
         results into a single value.
         The result returned by this method applies to the current situation

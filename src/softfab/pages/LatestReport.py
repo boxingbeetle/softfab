@@ -28,7 +28,7 @@ class LatestReport_GET(
             taskTimes = (
                 ( task.startTime, task )
                 for task in getAllTasksWithId(taskId)
-                if task.getResult() in ( ResultCode.OK, ResultCode.WARNING )
+                if task.result in ( ResultCode.OK, ResultCode.WARNING )
                 )
             try:
                 starttime_, task = max(taskTimes)

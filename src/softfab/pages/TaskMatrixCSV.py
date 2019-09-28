@@ -75,7 +75,7 @@ class TaskMatrixCSV_GET(CSVPage['TaskMatrixCSV_GET.Processor']):
             for taskDict in taskData:
                 tasks = taskDict.get(taskName, ())
                 for taskRun in sorter(tasks):
-                    taskResult = RESULT_MAP.get(taskRun.getResult())
+                    taskResult = RESULT_MAP.get(taskRun.result)
                     if taskResult is not None:
                         result = taskResult
                         break

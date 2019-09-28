@@ -11,7 +11,7 @@ def getTaskStatus(task: Task) -> str:
     or task run.
     '''
     if task.isDone():
-        result = task.getResult()
+        result = task.result
         if result is None:
             return 'unknown'
         else:

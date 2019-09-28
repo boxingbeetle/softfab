@@ -77,7 +77,7 @@ class GetTaggedTaskInfo_GET(ControlPage['GetTaggedTaskInfo_GET.Arguments',
                 run = task.getLatestRun()
                 yield xml.run(
                     execstate = run['state'],
-                    result = run.getResult(),
+                    result = run.result,
                     alert = run.getAlert(),
                     summary = run.getSummary(),
                     starttime = formatTimeAttr(run.startTime),

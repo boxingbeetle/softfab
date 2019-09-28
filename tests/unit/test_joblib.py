@@ -651,7 +651,7 @@ class TestJobs(unittest.TestCase):
             self.assertIsNotNone(task)
             self.assertEqual(task.getName(), buildTask)
             taskDone(job, buildTask)
-            self.assertEqual(job.getResult(), ResultCode.OK)
+            self.assertEqual(job.result, ResultCode.OK)
             self.assertEqual(job.getFinalResult(), None)
             # Successfully complete first test task, without result.
             task = job.assignTask(resourcelib.resourceDB[tr])
@@ -660,7 +660,7 @@ class TestJobs(unittest.TestCase):
             taskDone(job, testTask1, ResultCode.INSPECT)
             self.assertFalse(job.isExecutionFinished())
             self.assertFalse(job.hasFinalResult())
-            self.assertEqual(job.getResult(), ResultCode.INSPECT)
+            self.assertEqual(job.result, ResultCode.INSPECT)
             self.assertIsNone(job.getFinalResult())
             # Successfully complete second test task, with result.
             task = job.assignTask(resourcelib.resourceDB[tr])
@@ -669,7 +669,7 @@ class TestJobs(unittest.TestCase):
             taskDone(job, testTask2, ResultCode.OK)
             self.assertFalse(job.isExecutionFinished())
             self.assertFalse(job.hasFinalResult())
-            self.assertEqual(job.getResult(), ResultCode.INSPECT)
+            self.assertEqual(job.result, ResultCode.INSPECT)
             self.assertIsNone(job.getFinalResult())
             # Successfully complete third test task, without result.
             task = job.assignTask(resourcelib.resourceDB[tr])
@@ -678,7 +678,7 @@ class TestJobs(unittest.TestCase):
             taskDone(job, testTask3, ResultCode.INSPECT)
             self.assertTrue(job.isExecutionFinished())
             self.assertFalse(job.hasFinalResult())
-            self.assertEqual(job.getResult(), ResultCode.INSPECT)
+            self.assertEqual(job.result, ResultCode.INSPECT)
             self.assertIsNone(job.getFinalResult())
             # Attempt to set invalid inspection result.
             with self.assertRaises(ValueError):
@@ -687,7 +687,7 @@ class TestJobs(unittest.TestCase):
             job.inspectDone(testTask1, ResultCode.WARNING, 'inspect 1')
             self.assertTrue(job.isExecutionFinished())
             self.assertFalse(job.hasFinalResult())
-            self.assertEqual(job.getResult(), ResultCode.INSPECT)
+            self.assertEqual(job.result, ResultCode.INSPECT)
             self.assertIsNone(job.getFinalResult())
             # Attempt to change inspection result.
             with self.assertRaises(IllegalStateError):
@@ -696,7 +696,7 @@ class TestJobs(unittest.TestCase):
             job.inspectDone(testTask3, ResultCode.OK, 'inspect 3')
             self.assertTrue(job.isExecutionFinished())
             self.assertTrue(job.hasFinalResult())
-            self.assertEqual(job.getResult(), ResultCode.WARNING)
+            self.assertEqual(job.result, ResultCode.WARNING)
             self.assertEqual(job.getFinalResult(), ResultCode.WARNING)
 
         self.runWithReload(gen.createConfiguration(), simulate)
@@ -717,7 +717,7 @@ class TestJobs(unittest.TestCase):
         self.assertTrue(task.isRunning())
         runner.markLost()
         self.assertFalse(task.isRunning())
-        self.assertEqual(task.getResult(), ResultCode.ERROR)
+        self.assertEqual(task.result, ResultCode.ERROR)
 
     def test0210TRRemovedWhileRunning(self):
         """Test what happens when a busy Task Runner is removed."""
@@ -735,7 +735,7 @@ class TestJobs(unittest.TestCase):
         self.assertTrue(task.isRunning())
         resourcelib.resourceDB.remove(runner)
         self.assertFalse(task.isRunning())
-        self.assertEqual(task.getResult(), ResultCode.ERROR)
+        self.assertEqual(task.result, ResultCode.ERROR)
 
     def test0220ResourceRemovedWhileRunning(self):
         """Test what happens when a non-TR resource removed while in use.
@@ -765,11 +765,11 @@ class TestJobs(unittest.TestCase):
         self.assertTrue(resource.isReserved())
         resourcelib.resourceDB.remove(resource)
         self.assertTrue(task.isRunning())
-        self.assertIsNone(task.getResult())
+        self.assertIsNone(task.result)
         taskDone(job, taskName, ResultCode.OK)
         self.assertTrue(job.isExecutionFinished())
         self.assertTrue(job.hasFinalResult())
-        self.assertEqual(job.getResult(), ResultCode.OK)
+        self.assertEqual(job.result, ResultCode.OK)
         self.assertEqual(job.getFinalResult(), ResultCode.OK)
 
 if __name__ == '__main__':

@@ -89,7 +89,7 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
         if key == 'state':
             return self._getState()
         elif key == 'result':
-            return self.getResult()
+            return self.result
         elif key == 'duration':
             return self.getDuration()
         elif key == 'starttime':
@@ -192,7 +192,7 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
             if task is not None:
                 # If a task can produce this product, get the result from
                 # the task.
-                result = task.getResult()
+                result = task.result
             else:
                 # No task produced this product, so it's a user input.
                 result = ResultCode.OK
@@ -277,7 +277,7 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
             else:
                 return reasonForWaiting.description
         else:
-            result = self.getResult()
+            result = self.result
             if result is ResultCode.INSPECT:
                 return 'waiting for postponed inspection'
             elif result in defaultSummaries:
@@ -585,7 +585,7 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
         if not self.isExecutionFinished():
             raise IllegalStateError('only finished tasks can have results')
 
-        oldResult = self.getResult()
+        oldResult = self.result
         if oldResult is None or oldResult is result:
             # Compatible result.
             if oldResult is None and result is not None:

@@ -69,15 +69,16 @@ class TaskStateMixin:
         return self._getState() in ( 'done', 'cancelled' )
 
     def isWaitingForInspection(self) -> bool:
-        return self.getResult() is ResultCode.INSPECT
+        return self.result is ResultCode.INSPECT
 
     def hasResult(self) -> bool:
         '''Returns True iff the result of this task run is available.
         '''
-        result = self.getResult()
+        result = self.result
         return result is not None and result is not ResultCode.INSPECT
 
-    def getResult(self) -> Optional[ResultCode]:
+    @property
+    def result(self) -> Optional[ResultCode]:
         return cast(Optional[ResultCode], self._properties.get('result'))
 
 class ResourceRequirementsMixin:

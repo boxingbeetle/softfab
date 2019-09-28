@@ -64,7 +64,7 @@ class JobResultColumn(DataColumn[Job]):
     label = 'Result'
 
     def presentCell(self, record: Job, **kwargs: object) -> XMLContent:
-        return record.getResult()
+        return record.result
 
 class SingleJobTable(JobsSubTable):
     #descriptionLink = False
@@ -83,12 +83,12 @@ class TasksTable(Table):
     def iterRows(self, **kwargs: Any) -> Iterator[XMLContent]:
         job: Job = kwargs['job']
         for task in job.getTaskSequence():
-            yield row(class_ = task.getResult())[
+            yield row(class_ = task.result)[
                 task.getName(),
                 formatTime(task.startTime),
                 cell(class_ = 'rightalign')[formatDuration(task.getDuration())],
                 taskSummary(task),
-                task.getResult()
+                task.result
                 ]
 
 class Feed_GET(ControlPage[ControlPage.Arguments, 'Feed_GET.Processor']):
@@ -163,7 +163,7 @@ class Feed_GET(ControlPage[ControlPage.Arguments, 'Feed_GET.Processor']):
                    jobTable: SingleJobTable
                    ) -> XMLContent:
         jobId = job.getId()
-        jobResult = job.getResult()
+        jobResult = job.result
         owner = job.getOwner()
         projectName = project.name
         jobComment = CommentPanel(job.comment)
