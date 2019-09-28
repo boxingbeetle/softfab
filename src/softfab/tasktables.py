@@ -17,7 +17,7 @@ from softfab.resourcelib import iterTaskRunners
 from softfab.taskview import getTaskStatus, taskSummary
 from softfab.userview import OwnerColumn
 from softfab.webgui import pageLink
-from softfab.xmlgen import XMLContent, xhtml
+from softfab.xmlgen import XMLContent
 
 
 class TaskColumn(DataColumn[Task]):
@@ -36,23 +36,6 @@ class SummaryColumn(DataColumn[Task]):
 
     def presentCell(self, record: Task, **kwargs: object) -> XMLContent:
         return taskSummary(record)
-
-class ExportColumn(DataColumn[Task]):
-    label = 'Export'
-
-    def presentCell(self, record: Task, **kwargs: object) -> XMLContent:
-        if not record.hasExport():
-            return '-'
-        if record.isDone():
-            url = record.getExportURL()
-            if url:
-                return xhtml.a(href = url)[ 'Export' ]
-            else:
-                return 'location unknown'
-        elif record.isCancelled():
-            return '-'
-        else:
-            return 'not yet'
 
 class AbortColumn(DataColumn[Task]):
     label = 'Abort'
@@ -163,14 +146,5 @@ class JobTaskRunsTable(TaskRunsTable):
         yield self.durationColumn
         yield self.summaryColumn
         yield TaskRunnerColumn.instance
-        # TODO: If a task does not have a report yet, hasExport() returns False.
-        #       This means that if all tasks are waiting, there is no export
-        #       column, even though it may appear later.
-        #       A better implementation would be to check whether any member
-        #       of the set of Task Runners potentially capable of running the
-        #       tasks writes its reports in a storage pool that is exportable.
-        #       However, this is beyond what can easily be implemented now.
-        if any(task.hasExport() for task in tasks):
-            yield ExportColumn.instance
         if any(task.canBeAborted() for task in tasks):
             yield AbortColumn.instance

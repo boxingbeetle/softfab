@@ -33,11 +33,3 @@ class StorageURLMixin:
             return urljoin('jobs/', url)
         else:
             return None
-
-    # TODO: Implement export in a new way.
-
-    def getExportURL(self) -> Optional[str]:
-        return None
-
-    def hasExport(self) -> bool:
-        return False

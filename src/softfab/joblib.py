@@ -414,12 +414,6 @@ class Task(
     def getURL(self) -> Optional[str]:
         return self.getLatestRun().getURL()
 
-    def getExportURL(self) -> Optional[str]:
-        return self.getLatestRun().getExportURL()
-
-    def hasExport(self) -> bool:
-        return self.getLatestRun().hasExport()
-
     def getRunId(self) -> str:
         return self.getLatestRun().getRunId()
 
