@@ -6,7 +6,6 @@ from softfab.config import rootURL
 from softfab.configlib import configDB
 from softfab.joblib import jobDB
 from softfab.pagelinks import createJobsURL
-from softfab.resultcode import combineResults
 from softfab.schedulelib import (
     JobDBObserver, ScheduleRepeat, Scheduled, asap, scheduleDB
 )
@@ -150,7 +149,7 @@ class ScheduleModel(StatusModel):
         scheduleId = self.getId()
         schedule = scheduleDB[scheduleId]
         lastJobs = schedule.getLastJobs()
-        result = combineResults(jobDB[jobId] for jobId in lastJobs)
+        result = max((jobDB[jobId].result for jobId in lastJobs), default=None)
         url = createJobsURL(lastJobs) or createScheduleDetailsURL(scheduleId)
         return xml.status(
             health = result or 'unknown',

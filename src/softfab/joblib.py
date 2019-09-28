@@ -19,7 +19,6 @@ from softfab.productlib import Product, productDB
 from softfab.resourcelib import resourceDB
 from softfab.resreq import ResourceClaim, ResourceSpec
 from softfab.restypelib import resTypeDB
-from softfab.resultcode import combineResults
 from softfab.taskgroup import PriorityMixin, TaskSet
 from softfab.tasklib import (
     ResourceRequirementsMixin, TaskRunnerSet, TaskStateMixin
@@ -742,7 +741,8 @@ class Job(TaskRunnerSet, TaskSet[Task], XMLTag, DatabaseElem):
         '''
         if self.__result is not None:
             return self.__result
-        result = combineResults(self._tasks.values())
+        result = max((task.result for task in self._tasks.values()),
+                     default=None)
         if self.hasFinalResult():
             self.__result = result
         return result

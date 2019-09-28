@@ -1,13 +1,15 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from enum import Enum
-from typing import Iterable, Optional
-
-from softfab.compat import Protocol
+from functools import total_ordering
 
 
+@total_ordering
 class ResultCode(Enum):
     """Result codes for tasks and jobs.
+    Result codes can be compared to each other and to None;
+    the more urgent result is considered greater and
+    all results are greater than None.
     """
 
     OK = 1
@@ -25,19 +27,21 @@ class ResultCode(Enum):
     INSPECT = 5
     """Waiting for postponed inspection."""
 
-class ResultProto(Protocol):
-    @property
-    def result(self) -> Optional[ResultCode]:
-        ...
+    def __hash__(self) -> int:
+        return self.value
 
-def combineResults(items: Iterable[ResultProto]) -> Optional[ResultCode]:
-    '''Computes the result over a series of items.
-    Returns the ResultCode of the worst item result, or None if none of the
-    items has a result.
-    Each item must have a `result` property that returns a ResultCode or None.
-    '''
-    return max(
-        (item.result for item in items),
-        default=None,
-        key=lambda result: 0 if result is None else result.value
-        )
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, ResultCode):
+            return self.value == other.value
+        elif other is None:
+            return False
+        else:
+            return NotImplemented
+
+    def __gt__(self, other: object) -> bool:
+        if isinstance(other, ResultCode):
+            return self.value > other.value
+        elif other is None:
+            return True
+        else:
+            return NotImplemented
