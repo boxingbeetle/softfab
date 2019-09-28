@@ -3,6 +3,8 @@
 from enum import Enum
 from typing import Iterable, Optional
 
+from softfab.compat import Protocol
+
 
 class ResultCode(Enum):
     """Result codes for tasks and jobs.
@@ -23,7 +25,12 @@ class ResultCode(Enum):
     INSPECT = 5
     """Waiting for postponed inspection."""
 
-def combineResults(items: Iterable) -> Optional[ResultCode]:
+class ResultProto(Protocol):
+    @property
+    def result(self) -> Optional[ResultCode]:
+        ...
+
+def combineResults(items: Iterable[ResultProto]) -> Optional[ResultCode]:
     '''Computes the result over a series of items.
     Returns the ResultCode of the worst item result, or None if none of the
     items has a result.
