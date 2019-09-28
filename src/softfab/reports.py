@@ -51,7 +51,7 @@ class PygmentedResource(Resource):
     """
     isLeaf = True
 
-    message: XMLContent
+    message: Optional[str]
     text: str
     fileName: str
     lexer: Lexer
@@ -68,13 +68,28 @@ class PygmentedResource(Resource):
                     xhtml.title[f'Report: {self.fileName}']
                     ].present(styleURL=styleURL),
                 xhtml.body[
-                    self.message,
+                    self.presentMessage(),
                     presentBlock(self.lexer.get_tokens(self.text))
                     ]
                 ].flattenXML().encode()
             )
         request.finish()
         return NOT_DONE_YET
+
+    def presentMessage(self) -> XMLContent:
+        message = self.message
+        if not message:
+            return None
+
+        details: Optional[str]
+        index = message.find(':') + 1
+        if index:
+            details = message[index:]
+            message = message[:index]
+        else:
+            details = None
+
+        return xhtml.p[xhtml.b[message], details]
 
 resultMap = {
     ResultCode.OK: 'pass',
@@ -112,19 +127,26 @@ class JUnitSuite:
     time: float = 0
     testcase: List[JUnitCase] = attr.ib(factory=list)
 
-def findJUnitSuites(tree: ElementTree) -> Sequence[JUnitSuite]:
-    """Looks for JUnit-style test suite results in the given XML."""
+@attr.s(auto_attribs=True)
+class JUnitReport:
+    testsuite: List[JUnitSuite] = attr.ib(factory=list)
+
+def parseXMLReport(tree: ElementTree) -> Optional[JUnitReport]:
+    """Looks for supported report formats in the given XML."""
 
     root = tree.getroot()
-    if root.tag == 'testsuites':
-        suites = [child for child in root if child.tag == 'testsuite']
-    elif root.tag == 'testsuite':
-        # pytest outputs a single suite as the root element.
-        suites = [root]
-    else:
-        suites = []
 
-    return [bindElement(suite, JUnitSuite) for suite in suites]
+    # JUnit-style reports.
+    try:
+        if root.tag == 'testsuites':
+            return bindElement(root, JUnitReport)
+        if root.tag == 'testsuite':
+            # pytest outputs a single suite as the root element.
+            return JUnitReport(testsuite=[bindElement(root, JUnitSuite)])
+    except Exception as ex:
+        raise ValueError(f'Bad JUnit data: {ex}') from ex
+
+    return None
 
 @attr.s(auto_attribs=True)
 class JUnitResource(Resource):
@@ -132,13 +154,13 @@ class JUnitResource(Resource):
     """
     isLeaf = True
 
-    suites: Sequence[JUnitSuite]
+    report: JUnitReport
     fileName: str
 
     def render_GET(self, request: TwistedRequest) -> object:
         depth = len(request.prepath) - 1
         styleURL = '../' * depth + styleRoot.relativeURL
-        suites = self.suites
+        suites = self.report.testsuite
         showChecks = any(suite.tests != len(suite.testcase) for suite in suites)
 
         request.write(b'<!DOCTYPE html>\n')
@@ -163,7 +185,7 @@ class JUnitResource(Resource):
         return NOT_DONE_YET
 
     def presentSuites(self) -> XMLContent:
-        for suite in self.suites:
+        for suite in self.report.testsuite:
             yield xhtml.h2[suite.name]
             yield JUnitSuiteTable.instance.present(suite=suite)
 
@@ -259,6 +281,27 @@ class JUnitSuiteTable(Table):
 
 UTF8Reader = getreader('utf-8')
 
+def parseReport(opener: Callable[[], IO[bytes]],
+                fileName: str
+                ) -> Optional[JUnitReport]:
+    """Attempt to parse a task report.
+    Return the report on success or None if no supported report format was
+    detected.
+    Raise ValueError when the report was in a recognized format but failed
+    to parse.
+    Raise OSError when there is a low-level error reading the report data.
+    """
+    if fileName.endswith('.xml'):
+        try:
+            with opener() as stream:
+                tree = parse(stream)
+        except ParseError as ex:
+            raise ValueError(f'Invalid XML: {ex}') from ex
+        else:
+            return parseXMLReport(tree)
+    else:
+        return None
+
 def createPresenter(opener: Callable[[], IO[bytes]],
                     fileName: str
                     ) -> Optional[Resource]:
@@ -267,6 +310,16 @@ def createPresenter(opener: Callable[[], IO[bytes]],
     presentation is available or desired for this artifact.
     """
 
+    message: Optional[str]
+    try:
+        report = parseReport(opener, fileName)
+    except ValueError as ex:
+        message = str(ex)
+    else:
+        if isinstance(report, JUnitReport):
+            return JUnitResource(report, fileName)
+        message = None
+
     # TODO: Perform file type detection to see if we want to do custom
     #       presentation.
     #       We can probably combine mimetypes.guess_type with the info
@@ -274,22 +327,6 @@ def createPresenter(opener: Callable[[], IO[bytes]],
     #       by the 'artifacts' module.
     #       Do not use source highlighting for formats that the browser
     #       can handle in non-source form, like HTML and SVG.
-    message = None
-    if fileName.endswith('.xml'):
-        try:
-            with opener() as stream:
-                tree = parse(stream)
-            try:
-                suites = findJUnitSuites(tree)
-            except Exception as ex:
-                message = xhtml.p[xhtml.b['Bad JUnit data:'], f' {ex}']
-            else:
-                if suites:
-                    return JUnitResource(suites, fileName)
-        except ParseError as ex:
-            message = xhtml.p[xhtml.b['Invalid XML:'], f' {ex}']
-    else:
-        return None
 
     # Load file contents into a string.
     # TODO: Use encoding information from the XML parsing, if available.
