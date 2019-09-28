@@ -40,7 +40,7 @@ class TestResults(unittest.TestCase):
             data = { self.key: self.valueFunc(index) }
             resultlib.putData(self.taskName, runId, data)
 
-        results = resultlib.getData(self.taskName, runIds, self.key)
+        results = resultlib.getCustomData(self.taskName, runIds, self.key)
         foundIds = []
         for runId, value in results:
             self.assertTrue(runId.startswith('run'))
@@ -60,7 +60,8 @@ class TestResults(unittest.TestCase):
                 KeyError,
                 lambda: resultlib.putData(self.taskName, self.runId, data)
                 )
-            results = resultlib.getData(self.taskName, [ self.runId ], key)
+            results = resultlib.getCustomData(
+                                    self.taskName, [ self.runId ], key)
             self.assertEqual(list(results), [])
 
         # This test case is atypical by not storing anything.
@@ -74,7 +75,8 @@ class TestResults(unittest.TestCase):
         newData = { self.key: 'new' }
         resultlib.putData(self.taskName, self.runId, oldData)
         resultlib.putData(self.taskName, self.runId, newData)
-        results = resultlib.getData(self.taskName, [ self.runId ], self.key)
+        results = resultlib.getCustomData(
+                                self.taskName, [ self.runId ], self.key)
         self.assertEqual(list(results), [ ( self.runId, 'new' ) ])
 
     def test0031ReplaceDiffKeys(self):
@@ -84,9 +86,11 @@ class TestResults(unittest.TestCase):
         newData = { 'newkey': 'new' }
         resultlib.putData(self.taskName, self.runId, oldData)
         resultlib.putData(self.taskName, self.runId, newData)
-        results1 = resultlib.getData(self.taskName, [ self.runId ], 'oldkey')
+        results1 = resultlib.getCustomData(
+                                self.taskName, [ self.runId ], 'oldkey')
         self.assertEqual(list(results1), [ ])
-        results2 = resultlib.getData(self.taskName, [ self.runId ], 'newkey')
+        results2 = resultlib.getCustomData(
+                                self.taskName, [ self.runId ], 'newkey')
         self.assertEqual(list(results2), [ ( self.runId, 'new' ) ])
 
     def test0040ListKeys(self):
@@ -102,22 +106,17 @@ class TestResults(unittest.TestCase):
             data = dict.fromkeys(keys, 'dummy')
             resultlib.putData(self.taskName, runId, data)
 
-        storedKeys = {
-            key
-            for key in resultlib.getKeys(self.taskName)
-            if not key.startswith('sf.')
-            }
         self.assertEqual(
-            storedKeys,
+            resultlib.getCustomKeys(self.taskName),
             # for every N, N % N == 0 is true
             # so every key for 2 <= key < nrRuns should be present
-            set( 'key%02d' % key for key in range(2, self.nrRuns) )
+            {'key%02d' % key for key in range(2, self.nrRuns)}
             )
 
     def test0041ListKeysNone(self):
         "Tests listing the keys if no data is stored for a task name."
 
-        self.assertEqual(resultlib.getKeys(self.taskName), {'sf.duration'})
+        self.assertEqual(resultlib.getCustomKeys(self.taskName), set())
 
         # This test case is atypical by not storing anything.
         # Make sure removeRec doesn't complain that the dir does not exist.

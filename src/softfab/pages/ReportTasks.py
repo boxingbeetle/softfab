@@ -14,9 +14,9 @@ from softfab.joblib import (
     iterAllTasks, iterDoneTasks, iterFinishedTasks, iterUnfinishedTasks, jobDB
 )
 from softfab.pageargs import IntArg, SortArg
-from softfab.resultlib import getKeys
 from softfab.setcalc import intersection, union
 from softfab.taskdeflib import taskDefDB
+from softfab.taskrunlib import getKeys
 from softfab.tasktables import TaskRunsTable
 from softfab.userlib import User, checkPrivilege
 from softfab.utils import pluralize

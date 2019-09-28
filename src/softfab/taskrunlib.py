@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from typing import (
-    TYPE_CHECKING, Dict, Iterable, Iterator, List, Mapping, Optional, Tuple,
-    cast
+    TYPE_CHECKING, Dict, Iterable, Iterator, List, Mapping, Optional, Set,
+    Tuple, cast
 )
 from urllib.parse import urljoin
 import logging
@@ -15,6 +15,7 @@ from softfab.databaselib import (
 from softfab.resreq import ResourceClaim
 from softfab.restypelib import taskRunnerResourceTypeName
 from softfab.resultcode import ResultCode
+from softfab.resultlib import getCustomData, getCustomKeys
 from softfab.storagelib import StorageURLMixin
 from softfab.tasklib import TaskStateMixin
 from softfab.timelib import getTime
@@ -667,3 +668,32 @@ class RunInfo(XMLTag):
         if task is None:
             raise KeyError(f'no task named "{taskId}" in job {jobId}')
         return task.getRun(runId)
+
+def getKeys(taskName: str) -> Set[str]:
+    '''Get the set of keys that exist for the given task name.
+    The existance of a key means that at least one record contains that key;
+    it is not guaranteed all records will contain that key.
+    '''
+    return {'sf.duration'} | getCustomKeys(taskName)
+
+def getData(taskName: str,
+            runIds: Iterable[str],
+            key: str
+            ) -> Iterator[Tuple[str, str]]:
+    '''Yield (run, value) pairs for all of the given runs that have
+    a synthetic or user-defined value for the given key.
+    The returned values are in the same order as in the given runIds.
+    The runIds are not checked against malicious constructs, so the caller
+    should take care that they are secure.
+    '''
+    # Handle synthetic keys.
+    if key.startswith('sf.'):
+        if key == 'sf.duration':
+            # This info is in the job DB, but we cannot access it there because
+            # there is no mapping from task run ID to job.
+            for run in runIds:
+                yield run, str(taskRunDB[run]['duration'])
+        else:
+            raise KeyError(key)
+    else:
+        yield from getCustomData(taskName, runIds, key)

@@ -18,8 +18,8 @@ from softfab.pageargs import EnumArg, IntArg, SetArg, SortArg
 from softfab.pagelinks import createJobURL
 from softfab.querylib import KeySorter, RecordProcessor, runQuery
 from softfab.request import Request
-from softfab.resultlib import getData, getKeys
 from softfab.setcalc import intersection
+from softfab.taskrunlib import getData, getKeys
 from softfab.tasktables import TaskColumn, TaskRunsTable
 from softfab.timeview import formatTime
 from softfab.userlib import User, checkPrivilege

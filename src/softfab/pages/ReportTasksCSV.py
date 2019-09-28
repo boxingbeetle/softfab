@@ -7,8 +7,8 @@ from softfab.ReportMixin import ReportProcessor, ReportTaskCSVArgs
 from softfab.joblib import iterDoneTasks
 from softfab.querylib import KeySorter, RecordProcessor, runQuery
 from softfab.request import Request
-from softfab.resultlib import getData, getKeys
 from softfab.setcalc import union
+from softfab.taskrunlib import getData, getKeys
 from softfab.taskview import getTaskStatus
 from softfab.timeview import formatTime
 from softfab.userlib import User, checkPrivilege

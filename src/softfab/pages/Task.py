@@ -25,9 +25,9 @@ from softfab.productlib import Product
 from softfab.productview import ProductTable
 from softfab.request import Request
 from softfab.resourceview import InlineResourcesTable
-from softfab.resultlib import getData, getKeys
 from softfab.taskdeflib import taskDefDB
 from softfab.taskdefview import formatTimeout
+from softfab.taskrunlib import getData, getKeys
 from softfab.tasktables import JobTaskRunsTable, TaskProcessorMixin
 from softfab.userlib import User, checkPrivilege
 from softfab.webgui import PropertiesTable, Table, Widget, cell, pageLink
