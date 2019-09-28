@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import IO, Callable, List, Optional
+from itertools import chain
+from typing import IO, Callable, Iterable, List, Optional
 from xml.etree.ElementTree import ElementTree, ParseError, parse
 
 import attr
@@ -40,9 +41,26 @@ class JUnitSuite:
     time: float = 0
     testcase: List[JUnitCase] = attr.ib(factory=list)
 
+    @property
+    def result(self) -> Optional[ResultCode]:
+        return max(chain(self.__statsResults(),
+                         (case.result for case in self.testcase),
+                         ), default=None)
+
+    def __statsResults(self) -> Iterable[ResultCode]:
+        """Results based on reported stats."""
+        if self.errors:
+            yield ResultCode.ERROR
+        if self.failures:
+            yield ResultCode.WARNING
+
 @attr.s(auto_attribs=True)
 class JUnitReport:
     testsuite: List[JUnitSuite] = attr.ib(factory=list)
+
+    @property
+    def result(self) -> Optional[ResultCode]:
+        return max((suite.result for suite in self.testsuite), default=None)
 
 def parseXMLReport(tree: ElementTree) -> Optional[JUnitReport]:
     """Looks for supported report formats in the given XML."""
