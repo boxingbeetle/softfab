@@ -29,7 +29,7 @@ from softfab.TwistedUtil import (
 )
 from softfab.joblib import Job, jobDB
 from softfab.projectlib import project
-from softfab.reports import createPresenter
+from softfab.reportview import createPresenter
 from softfab.request import Request
 from softfab.resourcelib import runnerFromToken
 from softfab.taskrunlib import TaskRun
