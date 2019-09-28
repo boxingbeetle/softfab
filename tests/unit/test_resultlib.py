@@ -102,8 +102,11 @@ class TestResults(unittest.TestCase):
             data = dict.fromkeys(keys, 'dummy')
             resultlib.putData(self.taskName, runId, data)
 
-        storedKeys = resultlib.getKeys(self.taskName)
-        storedKeys.difference_update(resultlib.syntheticKeys)
+        storedKeys = {
+            key
+            for key in resultlib.getKeys(self.taskName)
+            if not key.startswith('sf.')
+            }
         self.assertEqual(
             storedKeys,
             # for every N, N % N == 0 is true
@@ -114,10 +117,7 @@ class TestResults(unittest.TestCase):
     def test0041ListKeysNone(self):
         "Tests listing the keys if no data is stored for a task name."
 
-        self.assertEqual(
-            list(resultlib.getKeys(self.taskName)),
-            list(resultlib.syntheticKeys)
-            )
+        self.assertEqual(resultlib.getKeys(self.taskName), {'sf.duration'})
 
         # This test case is atypical by not storing anything.
         # Make sure removeRec doesn't complain that the dir does not exist.
