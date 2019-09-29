@@ -79,8 +79,8 @@ class TestResults(unittest.TestCase):
                                 self.taskName, [ self.runId ], self.key)
         self.assertEqual(list(results), [ ( self.runId, 'new' ) ])
 
-    def test0031ReplaceDiffKeys(self):
-        "Check that new data with different keys removes old keys."
+    def test0031Add(self):
+        "Check that new data with different keys is added to old data."
 
         oldData = { 'oldkey': 'old' }
         newData = { 'newkey': 'new' }
@@ -88,7 +88,7 @@ class TestResults(unittest.TestCase):
         resultlib.putData(self.taskName, self.runId, newData)
         results1 = resultlib.getCustomData(
                                 self.taskName, [ self.runId ], 'oldkey')
-        self.assertEqual(list(results1), [ ])
+        self.assertEqual(list(results1), [ ( self.runId, 'old' ) ])
         results2 = resultlib.getCustomData(
                                 self.taskName, [ self.runId ], 'newkey')
         self.assertEqual(list(results2), [ ( self.runId, 'new' ) ])

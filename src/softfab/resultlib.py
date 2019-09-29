@@ -54,14 +54,8 @@ def putData(taskName: str, runId: str, data: Mapping[str, str]) -> None:
         if _reKey.match(key) is None:
             raise KeyError(f'Invalid character in key "{key}".')
 
-    taskDir = _dbDir + '/' + taskName + '/'
-    # Remove old data.
-    for key in getCustomKeys(taskName):
-        if key not in data:
-            path = taskDir + key + '/' + runId
-            if os.path.exists(path):
-                os.remove(path)
     # Insert new data.
+    taskDir = _dbDir + '/' + taskName + '/'
     for key, value in data.items():
         keyDir = taskDir + key
         if not os.path.exists(keyDir):
