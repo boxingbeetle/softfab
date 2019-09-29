@@ -3,7 +3,7 @@
 import json
 import unittest
 
-from softfab.webhooks import github, gogs
+from softfab.webhooks import WebhookEvents, github, gogs
 
 
 class TestWebhookGogs(unittest.TestCase):
@@ -12,13 +12,20 @@ class TestWebhookGogs(unittest.TestCase):
     def __init__(self, methodName='runTest'):
         unittest.TestCase.__init__(self, methodName)
 
-    def testGogsPushIsRelevant(self):
-        """Check whether event is relevant."""
-        self.assertFalse(gogs.isRelevantEvent(emptyHeaders))
-        self.assertTrue(gogs.isRelevantEvent(pushHeadersGogs))
-        self.assertFalse(gogs.isRelevantEvent(
-            pushHeadersGogs.replace('X-Gogs-Event', 'beep')
-            ))
+    def testGogsPushType(self):
+        """Check whether a push event is identified as such."""
+        self.assertEqual(
+            gogs.getEvent(emptyHeaders),
+            WebhookEvents.UNSUPPORTED
+            )
+        self.assertEqual(
+            gogs.getEvent(pushHeadersGogs),
+            WebhookEvents.PUSH
+            )
+        self.assertEqual(
+            gogs.getEvent(pushHeadersGogs.replace('X-Gogs-Event', 'beep')),
+            WebhookEvents.UNSUPPORTED
+            )
 
     def testGogsPushVerifySignature(self):
         """Check signature."""
@@ -53,13 +60,20 @@ class TestWebhookGitHub(unittest.TestCase):
     def __init__(self, methodName='runTest'):
         unittest.TestCase.__init__(self, methodName)
 
-    def testGitHubPushIsRelevant(self):
-        """Check whether event is relevant."""
-        self.assertFalse(github.isRelevantEvent(emptyHeaders))
-        self.assertTrue(github.isRelevantEvent(pushHeadersGitHub))
-        self.assertFalse(github.isRelevantEvent(
-            pushHeadersGitHub.replace('X-GitHub-Event', 'beep')
-            ))
+    def testGitHubPushType(self):
+        """Check whether a push event is identified as such."""
+        self.assertEqual(
+            github.getEvent(emptyHeaders),
+            WebhookEvents.UNSUPPORTED
+            )
+        self.assertEqual(
+            github.getEvent(pushHeadersGitHub),
+            WebhookEvents.PUSH
+            )
+        self.assertEqual(
+            github.getEvent(pushHeadersGitHub.replace('X-GitHub-Event', 'beep')),
+            WebhookEvents.UNSUPPORTED
+            )
 
     def testGitHubPushVerifySignature(self):
         """Check signature."""
