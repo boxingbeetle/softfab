@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from itertools import chain
-from typing import IO, Callable, Iterable, List, Optional
+from typing import IO, Callable, Iterable, List, Mapping, Optional
 from xml.etree.ElementTree import ElementTree, ParseError, parse
 
 import attr
@@ -9,6 +9,31 @@ import attr
 from softfab.resultcode import ResultCode
 from softfab.xmlbind import bindElement
 
+
+class Report:
+    """Abstract base class for task reports."""
+
+    @property
+    def result(self) -> Optional[ResultCode]:
+        """The result code of the task execution, or None if we are unable
+        to determine the result.
+        Note that a final verdict can be based on the results from multiple
+        reports, so if a report only represents a part of the total task
+        execution, it should just return the result of that part.
+        """
+        raise NotImplementedError
+
+    @property
+    def summary(self) -> str:
+        """A short human-readable string describing the task result.
+        If `result` returns None, the summary will be ignored.
+        """
+        raise NotImplementedError
+
+    @property
+    def data(self) -> Mapping[str, str]:
+        """The mid-level data extracted from this report."""
+        raise NotImplementedError
 
 @attr.s(auto_attribs=True)
 class JUnitFailure:
@@ -55,14 +80,48 @@ class JUnitSuite:
             yield ResultCode.WARNING
 
 @attr.s(auto_attribs=True)
-class JUnitReport:
+class JUnitReport(Report):
     testsuite: List[JUnitSuite] = attr.ib(factory=list)
 
     @property
     def result(self) -> Optional[ResultCode]:
         return max((suite.result for suite in self.testsuite), default=None)
 
-def parseXMLReport(tree: ElementTree) -> Optional[JUnitReport]:
+    @property
+    def summary(self) -> str:
+        elems = []
+        errors = self.errors
+        if errors:
+            elems.append(f"{errors} error{'' if errors == 1 else 's'}")
+        elems.append(f'{self.failures} failed')
+        skipped = self.skipped
+        if skipped:
+            elems.append(f'{skipped} skipped')
+        return ', '.join(elems)
+
+    @property
+    def data(self) -> Mapping[str, str]:
+        return dict(
+            testcases=str(sum(len(suite.testcase) for suite in self.testsuite)),
+            checks=str(sum(suite.tests for suite in self.testsuite)),
+            failures=str(self.failures),
+            errors=str(self.errors),
+            skipped=str(self.skipped),
+            )
+
+    @property
+    def failures(self) -> int:
+        return sum(suite.failures for suite in self.testsuite)
+
+    @property
+    def errors(self) -> int:
+        return sum(suite.errors for suite in self.testsuite)
+
+    @property
+    def skipped(self) -> int:
+        return sum(suite.skipped for suite in self.testsuite)
+
+def parseXMLReport(tree: ElementTree) -> Optional[Report]:
     """Looks for supported report formats in the given XML."""
 
     root = tree.getroot()
@@ -81,7 +140,7 @@ def parseXMLReport(tree: ElementTree) -> Optional[JUnitReport]:
 
 def parseReport(opener: Callable[[], IO[bytes]],
                 fileName: str
-                ) -> Optional[JUnitReport]:
+                ) -> Optional[Report]:
     """Attempt to parse a task report.
     Return the report on success or None if no supported report format was
     detected.
