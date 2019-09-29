@@ -60,8 +60,6 @@ class TestTRDatabase(unittest.TestCase):
         # Check False -> False transition of suspended.
         record.setSuspend(False, None)
         self.assertTrue(not record.isSuspended())
-        # Check handling of non-boolean (invalid) value.
-        self.assertRaises(TypeError, lambda: record.setSuspend('abc', None))
 
     def syncTest(self, data1, data2):
         """Test syncing of the TR database."""
