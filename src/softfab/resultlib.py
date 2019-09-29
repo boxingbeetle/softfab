@@ -1,13 +1,13 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from pathlib import Path
 from typing import Iterable, Iterator, Mapping, Set, Tuple
-import os.path
 import re
 
 from softfab.config import dbDir
 
 # Values are stored in "results/<taskdef>/<key>/<taskrun>".
-_dbDir = dbDir + '/results'
+_dbPath = Path(dbDir) / 'results'
 
 # Regular expression which defines all valid keys.
 # TODO: Are these the characters we want to support?
@@ -19,10 +19,10 @@ def getCustomKeys(taskName: str) -> Set[str]:
     The existance of a key means that at least one record contains that key;
     it is not guaranteed all records will contain that key.
     '''
-    path = _dbDir + '/' + taskName
-    keys = set()
-    if os.path.exists(path):
-        keys.update(os.listdir(path))
+    taskPath = _dbPath / taskName
+    keys: Set[str] = set()
+    if taskPath.is_dir():
+        keys.update(path.name for path in taskPath.iterdir())
     return keys
 
 def getCustomData(taskName: str,
@@ -35,10 +35,10 @@ def getCustomData(taskName: str,
     The runIds are not checked against malicious constructs, so the caller
     should take care that they are secure.
     '''
-    valueDir = _dbDir + '/' + taskName + '/' + key + '/'
+    valuePath = _dbPath / taskName / key
     for run in runIds:
         try:
-            with open(valueDir + run) as inp:
+            with open(valuePath / run) as inp:
                 value = inp.readline()
             yield run, value
         except OSError:
@@ -55,10 +55,9 @@ def putData(taskName: str, runId: str, data: Mapping[str, str]) -> None:
             raise KeyError(f'Invalid character in key "{key}".')
 
     # Insert new data.
-    taskDir = _dbDir + '/' + taskName + '/'
+    taskPath = _dbPath / taskName
     for key, value in data.items():
-        keyDir = taskDir + key
-        if not os.path.exists(keyDir):
-            os.makedirs(keyDir)
-        with open(keyDir + '/' + runId, 'w') as out:
+        keyPath = taskPath / key
+        keyPath.mkdir(parents=True, exist_ok=True)
+        with open(keyPath / runId, 'w') as out:
             out.write(value)
