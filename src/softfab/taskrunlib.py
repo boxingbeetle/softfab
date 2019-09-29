@@ -1,5 +1,8 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from functools import partial
+from gzip import open as openGzip
+from pathlib import Path
 from typing import (
     TYPE_CHECKING, Dict, Iterable, Iterator, List, Mapping, Optional, Set,
     Tuple, cast
@@ -12,10 +15,11 @@ from softfab.conversionflags import upgradeInProgress
 from softfab.databaselib import (
     Database, DatabaseElem, ObsoleteRecordError, createInternalId
 )
+from softfab.reportlib import Report, parseReport
 from softfab.resreq import ResourceClaim
 from softfab.restypelib import taskRunnerResourceTypeName
 from softfab.resultcode import ResultCode
-from softfab.resultlib import getCustomData, getCustomKeys
+from softfab.resultlib import getCustomData, getCustomKeys, putData
 from softfab.storagelib import StorageURLMixin
 from softfab.tasklib import TaskStateMixin
 from softfab.timelib import getTime
@@ -41,6 +45,8 @@ else:
     ResourceDB = object
     TaskRunner = object
 
+
+artifactsPath = Path(dbDir) / 'artifacts'
 
 defaultSummaries = {
     ResultCode.OK: 'executed successfully',
@@ -507,6 +513,7 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
              outputs: Mapping[str, str]
              ) -> None:
         task = self.getTask()
+        taskName = task.getName()
 
         # Input validation.
         # It is important this occurs before the database is modified:
@@ -517,9 +524,27 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
         if self.isExecutionFinished():
             return
         assert self.isRunning()
+
+        # Remember reports.
+        artifactsPaths = self.__getJobId().split('-', 1)
+        artifactsPaths += (taskName, '')
+        self.setInternalStorage('/'.join(artifactsPaths))
+        self.__reports += reports
+
+        # Combine passed result with results from reports.
+        for report in self.parseReports():
+            reportResult = report.result
+            if reportResult and reportResult > result:
+                result = reportResult
+                summary = report.summary
+            putData(taskName, self.getId(), report.data)
+
+        # Finalize result.
         if result is None:
             result = ResultCode.ERROR
-            summary = 'wrapper did not specify result'
+            summary = 'wrapper nor reports specified result'
+        # TODO: Support duration tests by accepting results from reports
+        #       or properties file supplied by abort wrapper.
         if 'abort' in self._properties:
             # Keep the "who aborted" message, since it is more informative
             # than what the Task Runner sends.
@@ -529,18 +554,35 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
 
         self.__setState(result, 'done', summary, outputs)
 
-        # Remember reports.
-        artifactsPaths = self.__getJobId().split('-', 1)
-        artifactsPaths += (self.getName(), '')
-        self.setInternalStorage('/'.join(artifactsPaths))
-        self.__reports += reports
-
         # TODO: Mark as freed, but remember which resources were used.
         #       Maybe do this when we start modeling Task Runners as resources.
         self.getJob().releaseResources(task, self.__reserved)
         self.__reserved = {}
 
         self._notify()
+
+    def parseReports(self) -> Iterator[Report]:
+        url = self.getURL()
+        if url is None:
+            return
+        reportsPath = artifactsPath / url
+
+        for fileName in self.__reports:
+            path = reportsPath / f'{fileName}.gz'
+            if path.exists():
+                try:
+                    report = parseReport(partial(openGzip, path), fileName)
+                except ValueError as ex:
+                    logging.info(
+                        'Failed to parse report "%s": %s', fileName, ex
+                        )
+                except OSError as ex:
+                    logging.error(
+                        'Failed to read report "%s": %s', fileName, ex
+                        )
+                else:
+                    if report is not None:
+                        yield report
 
     def inspectDone(self, result: ResultCode, summary: Optional[str]) -> None:
         # Input validation.
