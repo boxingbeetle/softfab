@@ -6,8 +6,9 @@ from typing import Dict, Optional
 import logging
 import re
 
-from pygments.formatters import \
-    HtmlFormatter  # pylint: disable=no-name-in-module
+from pygments.formatters import (  # pylint: disable=no-name-in-module
+    HtmlFormatter
+)
 from twisted.web.http import datetimeToString
 from twisted.web.iweb import IRequest
 from twisted.web.resource import Resource
