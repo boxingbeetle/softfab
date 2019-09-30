@@ -1,9 +1,15 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from enum import Enum
-from typing import TYPE_CHECKING, Dict, Optional, Union, cast
+from functools import partial
+from gzip import open as openGzip
+from pathlib import Path
+from typing import IO, TYPE_CHECKING, Callable, Dict, Optional, Union, cast
 from urllib.parse import urljoin
 
+from softfab.config import dbDir
+
+artifactsPath = Path(dbDir) / 'artifacts'
 
 class StorageURLMixin:
 
@@ -33,3 +39,14 @@ class StorageURLMixin:
             return urljoin('jobs/', url)
         else:
             return None
+
+    def reportOpener(self, fileName: str) -> Optional[Callable[[], IO[bytes]]]:
+        """Return a function that opens a stream to the report with the given
+        file name, or None if no report is stored under that name.
+        """
+        url = self.getURL()
+        if url:
+            path = artifactsPath / url / f'{fileName}.gz'
+            if path.exists():
+                return partial(openGzip, path)
+        return None

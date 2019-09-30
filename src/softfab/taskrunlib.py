@@ -1,8 +1,5 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from functools import partial
-from gzip import open as openGzip
-from pathlib import Path
 from typing import (
     TYPE_CHECKING, Dict, Iterable, Iterator, List, Mapping, Optional, Set,
     Tuple, cast
@@ -45,8 +42,6 @@ else:
     ResourceDB = object
     TaskRunner = object
 
-
-artifactsPath = Path(dbDir) / 'artifacts'
 
 defaultSummaries = {
     ResultCode.OK: 'executed successfully',
@@ -562,16 +557,11 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
         self._notify()
 
     def parseReports(self) -> Iterator[Report]:
-        url = self.getURL()
-        if url is None:
-            return
-        reportsPath = artifactsPath / url
-
         for fileName in self.__reports:
-            path = reportsPath / f'{fileName}.gz'
-            if path.exists():
+            opener = self.reportOpener(fileName)
+            if opener is not None:
                 try:
-                    report = parseReport(partial(openGzip, path), fileName)
+                    report = parseReport(opener, fileName)
                 except ValueError as ex:
                     logging.info(
                         'Failed to parse report "%s": %s', fileName, ex
