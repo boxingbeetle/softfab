@@ -23,13 +23,15 @@ from twisted.web.util import Redirect, redirectTo
 from zope.interface import implementer
 import attr
 
+from softfab.StyleResources import styleRoot
 from softfab.TwistedUtil import (
     AccessDeniedResource, ClientErrorResource, NotFoundResource,
     UnauthorizedResource
 )
+from softfab.UIPage import fixedHeadItems
 from softfab.joblib import Job, jobDB
 from softfab.projectlib import project
-from softfab.reportview import createPresenter
+from softfab.reportview import ReportPresenter, createPresenter
 from softfab.request import Request
 from softfab.resourcelib import runnerFromToken
 from softfab.taskrunlib import TaskRun
@@ -39,6 +41,7 @@ from softfab.userlib import (
     AccessDenied, AnonGuestUser, SuperUser, UnauthorizedLogin, User,
     checkPrivilege
 )
+from softfab.xmlgen import xhtml
 
 SANDBOX_RULES = ' '.join('allow-' + perm for perm in (
     'forms', 'modals', 'popups', 'scripts'
@@ -488,10 +491,11 @@ class TaskResource(FactoryResource):
 
         if filePath.splitext()[1] == '.gz':
             # Try to use fancy formatting.
-            resource = createPresenter(partial(openGzip, filePath.path),
-                                       sandboxedPath.path[-1])
-            if resource is not None:
-                return resource
+            fileName = sandboxedPath.path[-1]
+            presenter = createPresenter(
+                            partial(openGzip, filePath.path), fileName)
+            if presenter is not None:
+                return ReportResource(presenter, fileName)
 
         # Redirect to sandbox to serve the report as-is.
         urlPath = [b'..'] * (len(request.postpath) - 1 +
@@ -502,6 +506,36 @@ class TaskResource(FactoryResource):
 
     def renderIndex(self, request: TwistedRequest) -> bytes:
         return b'Listing task subresources is not implemented yet'
+
+@attr.s(auto_attribs=True)
+class ReportResource(Resource):
+    """Presents a report as an HTML document."""
+    isLeaf = True
+
+    presenter: ReportPresenter
+    fileName: str
+
+    def render_GET(self, request: TwistedRequest) -> object:
+        presenter = self.presenter
+        depth = len(request.prepath) - 1
+        styleURL = '../' * depth + styleRoot.relativeURL
+        request.write(b'<!DOCTYPE html>\n')
+        request.write(
+            xhtml.html[
+                xhtml.head[
+                    fixedHeadItems,
+                    presenter.headItems(),
+                    xhtml.title[f'Report: {self.fileName}']
+                    ].present(styleURL=styleURL),
+                xhtml.body[
+                    xhtml.div(class_='body')[
+                        presenter.presentBody()
+                        ]
+                    ]
+                ].flattenXML().encode()
+            )
+        request.finish()
+        return NOT_DONE_YET
 
 @implementer(IPullProducer)
 class FileProducer:

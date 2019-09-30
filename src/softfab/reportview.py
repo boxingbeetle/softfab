@@ -11,17 +11,28 @@ from pygments.lexer import Lexer
 from pygments.lexers import guess_lexer_for_filename
 from pygments.token import STANDARD_TYPES
 from pygments.util import ClassNotFound
-from twisted.web.http import Request as TwistedRequest
-from twisted.web.resource import Resource
-from twisted.web.server import NOT_DONE_YET
 import attr
 
-from softfab.StyleResources import pygmentsFormatter, pygmentsSheet, styleRoot
-from softfab.UIPage import factoryStyleSheet, fixedHeadItems
+from softfab.StyleResources import pygmentsFormatter, pygmentsSheet
+from softfab.UIPage import factoryStyleSheet
 from softfab.reportlib import JUnitCase, JUnitReport, JUnitSuite, parseReport
 from softfab.resultcode import ResultCode
 from softfab.webgui import Column, Table, cell
 from softfab.xmlgen import XMLContent, XMLNode, XMLSubscriptable, xhtml
+
+
+class ReportPresenter:
+    """Abstract base class for code that presents reports as HTML."""
+
+    def headItems(self) -> XMLContent:
+        """The header items specific to this type of report.
+        The default implementation returns nothing.
+        """
+        return None
+
+    def presentBody(self) -> XMLContent:
+        """Present the body of the report."""
+        raise NotImplementedError
 
 TokenType = object
 
@@ -45,35 +56,19 @@ def presentBlock(tokens: Iterator[Tuple[TokenType, str]]) -> XMLNode:
         ]
 
 @attr.s(auto_attribs=True)
-class PygmentedResource(Resource):
-    """Presents a text artifact using Pygments syntax highlighting.
-    """
-    isLeaf = True
+class PygmentedPresenter(ReportPresenter):
+    """Presents a text artifact using Pygments syntax highlighting."""
 
     message: Optional[str]
     text: str
-    fileName: str
     lexer: Lexer
 
-    def render_GET(self, request: TwistedRequest) -> object:
-        depth = len(request.prepath) - 1
-        styleURL = '../' * depth + styleRoot.relativeURL
-        request.write(b'<!DOCTYPE html>\n')
-        request.write(
-            xhtml.html[
-                xhtml.head[
-                    fixedHeadItems,
-                    pygmentsSheet,
-                    xhtml.title[f'Report: {self.fileName}']
-                    ].present(styleURL=styleURL),
-                xhtml.body[
-                    self.presentMessage(),
-                    presentBlock(self.lexer.get_tokens(self.text))
-                    ]
-                ].flattenXML().encode()
-            )
-        request.finish()
-        return NOT_DONE_YET
+    def headItems(self) -> XMLContent:
+        return pygmentsSheet
+
+    def presentBody(self) -> XMLContent:
+        yield self.presentMessage()
+        yield presentBlock(self.lexer.get_tokens(self.text))
 
     def presentMessage(self) -> XMLContent:
         message = self.message
@@ -96,43 +91,22 @@ resultMap = {
     }
 
 @attr.s(auto_attribs=True)
-class JUnitResource(Resource):
-    """Presents a text artifact using Pygments syntax highlighting.
-    """
-    isLeaf = True
+class JUnitPresenter(ReportPresenter):
+    """Presents a JUnitReport as HTML."""
 
     report: JUnitReport
-    fileName: str
 
-    def render_GET(self, request: TwistedRequest) -> object:
-        depth = len(request.prepath) - 1
-        styleURL = '../' * depth + styleRoot.relativeURL
+    def headItems(self) -> XMLContent:
+        return factoryStyleSheet
+
+    def presentBody(self) -> XMLContent:
         suites = self.report.testsuite
-        showChecks = any(suite.tests != len(suite.testcase) for suite in suites)
-
-        request.write(b'<!DOCTYPE html>\n')
-        request.write(
-            xhtml.html[
-                xhtml.head[
-                    fixedHeadItems,
-                    factoryStyleSheet,
-                    xhtml.title[f'Report: {self.fileName}']
-                    ].present(styleURL=styleURL),
-                xhtml.body[
-                    xhtml.div(class_='body')[
-                        JUnitSummary.instance.present(
-                            suites=suites, showChecks=showChecks
-                            ),
-                        self.presentSuites()
-                        ]
-                    ]
-                ].flattenXML().encode()
+        yield JUnitSummary.instance.present(
+            suites=suites,
+            showChecks=any(suite.tests != len(suite.testcase)
+                           for suite in suites)
             )
-        request.finish()
-        return NOT_DONE_YET
-
-    def presentSuites(self) -> XMLContent:
-        for suite in self.report.testsuite:
+        for suite in suites:
             yield xhtml.h2[suite.name]
             yield JUnitSuiteTable.instance.present(suite=suite)
 
@@ -230,7 +204,7 @@ UTF8Reader = getreader('utf-8')
 
 def createPresenter(opener: Callable[[], IO[bytes]],
                     fileName: str
-                    ) -> Optional[Resource]:
+                    ) -> Optional[ReportPresenter]:
     """Attempt to create a custom presenter for the given artifact.
     Return a resource that handles the presentation, or None if no custom
     presentation is available or desired for this artifact.
@@ -243,7 +217,7 @@ def createPresenter(opener: Callable[[], IO[bytes]],
         message = str(ex)
     else:
         if isinstance(report, JUnitReport):
-            return JUnitResource(report, fileName)
+            return JUnitPresenter(report)
         message = None
 
     # TODO: Perform file type detection to see if we want to do custom
@@ -273,4 +247,4 @@ def createPresenter(opener: Callable[[], IO[bytes]],
     except ClassNotFound:
         return None
     else:
-        return PygmentedResource(message, text, fileName, lexer)
+        return PygmentedPresenter(message, text, lexer)
