@@ -22,7 +22,7 @@ public class PlainFormatter extends Formatter {
 
     public PlainFormatter() {
         super();
-        dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
     }
 
     public String format(LogRecord record) {
