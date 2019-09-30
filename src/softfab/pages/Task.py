@@ -23,6 +23,7 @@ from softfab.pagelinks import (
 from softfab.paramview import ParametersTable
 from softfab.productlib import Product
 from softfab.productview import ProductTable
+from softfab.reportview import createPresenter
 from softfab.request import Request
 from softfab.resourceview import InlineResourcesTable
 from softfab.taskdeflib import taskDefDB
@@ -126,9 +127,18 @@ class Task_GET(FabPage['Task_GET.Processor', 'Task_GET.Arguments']):
         elif active == 'Data':
             yield self.presentData(**kwargs)
         else:
-            yield xhtml.iframe(
-                class_='report', src=reports[active], sandbox=SANDBOX_RULES
-                )
+            run = proc.task.getLatestRun()
+            opener = run.reportOpener(active)
+            if opener is None:
+                presenter = None
+            else:
+                presenter = createPresenter(opener, active)
+            if presenter is None:
+                yield xhtml.iframe(
+                    class_='report', src=reports[active], sandbox=SANDBOX_RULES
+                    )
+            else:
+                yield presenter.presentBody()
 
     def presentOverview(self, **kwargs: object) -> XMLContent:
         proc = cast(Task_GET.Processor, kwargs['proc'])
