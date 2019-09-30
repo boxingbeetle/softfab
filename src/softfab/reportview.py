@@ -2,6 +2,7 @@
 
 from codecs import getreader
 from collections import defaultdict
+from mimetypes import guess_type
 from typing import (
     IO, Any, Callable, DefaultDict, Iterable, Iterator, List, Optional, Tuple
 )
@@ -250,8 +251,14 @@ def createPresenter(opener: Callable[[], IO[bytes]],
     #       We can probably combine mimetypes.guess_type with the info
     #       from Pygments into a new detection function that's also used
     #       by the 'artifacts' module.
-    #       Do not use source highlighting for formats that the browser
-    #       can handle in non-source form, like HTML and SVG.
+
+    # Only use source highlighting for text formats, except for HTML.
+    if message is None:
+        contentType, contentEncoding = guess_type(fileName, strict=False)
+        if not contentType or not contentType.startswith('text/'):
+            return None
+        if contentType == 'text/html':
+            return None
 
     # Load file contents into a string.
     # TODO: Use encoding information from the XML parsing, if available.
