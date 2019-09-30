@@ -148,6 +148,7 @@ def parseReport(opener: Callable[[], IO[bytes]],
     to parse.
     Raise OSError when there is a low-level error reading the report data.
     """
+    fileName = fileName.lower()
     if fileName.endswith('.xml'):
         try:
             with opener() as stream:
