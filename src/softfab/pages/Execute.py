@@ -374,7 +374,7 @@ EntranceSteps = Enum('EntranceSteps', 'EDIT')
 '''
 
 class ExecuteProcessorMixin:
-    __config = None
+    __config: Optional[Config] = None
 
     if TYPE_CHECKING:
         def __init__(self) -> None:
@@ -382,20 +382,23 @@ class ExecuteProcessorMixin:
 
     def iterTasks(self) -> Iterator[Task]:
         args = cast(Execute_POST.Arguments, getattr(self, 'args'))
+        values = cast(Mapping[str, str], args.values)
+        poverride = cast(Mapping[str, bool], args.poverride)
+        prio = cast(Mapping[str, int], args.prio)
         for taskId in args.tasks:
             taskDef = taskDefDB[taskId]
             taskParams = {}
             for name, defValue in taskDef.getParameters().items():
                 paramKey = taskId + '/' + name
-                value = args.values.get(paramKey)
-                if args.poverride.get(paramKey, False):
+                value = values.get(paramKey)
+                if poverride.get(paramKey, False):
                     if value is None:
                         value = defValue
                     if value is not None:
                         taskParams[name] = value
             yield Task.create(
                 name = taskId,
-                priority = int(args.prio.get(taskId, 0)),
+                priority = prio.get(taskId, 0),
                 parameters = taskParams,
                 )
 
@@ -414,6 +417,10 @@ class ExecuteProcessorMixin:
     def getConfig(self) -> Config:
         if self.__config is None:
             args = cast(Execute_POST.Arguments, getattr(self, 'args'))
+            local = cast(Mapping[str, str], args.local)
+            prod = cast(Mapping[str, str], args.prod)
+            tagkeys = cast(Mapping[str, str], args.tagkeys)
+            tagvalues = cast(Mapping[str, str], args.tagvalues)
 
             jobParams: Dict[str, str] = {}
             if args.notify:
@@ -437,7 +444,7 @@ class ExecuteProcessorMixin:
                 if group is not None:
                     # Local products.
                     for inp in inputs:
-                        localAt = args.local.get(inp['name'])
+                        localAt = local.get(inp.getName())
                         if localAt == '':
                             # Browsers that support the 'required'
                             # attribute won't allow form submissions
@@ -448,29 +455,28 @@ class ExecuteProcessorMixin:
                             break
                 for inp in inputs:
                     if inp.getType() is ProductType.TOKEN:
-                        locator = 'token'
+                        locator: Optional[str] = 'token'
                     else:
-                        locator = args.prod.get(inp['name'])
+                        locator = prod.get(inp.getName())
                     if locator is not None:
                         inp.setLocator(locator, localAt)
 
             if args.pertask:
+                runnerspt = cast(Mapping[str, AbstractSet[str]], args.runnerspt)
                 for item in config.getTaskGroupSequence():
                     if isinstance(item, TaskGroup):
                         tasks = item.getTaskSequence()
                     else:
                         tasks = (item,)
-                    runners = args.runnerspt.get(
+                    runners = runnerspt.get(
                         tasks[0].getName(), frozenset()
                         )
                     for task in tasks:
                         # pylint: disable=protected-access
                         task._setRunners(runners)
 
-            for index, key in args.tagkeys.items():
-                config.setTag(key, textToValues(
-                    args.tagvalues.get(index, '')
-                    ))
+            for index, key in tagkeys.items():
+                config.setTag(key, textToValues(tagvalues.get(index, '')))
 
             self.__config = config
         return self.__config
