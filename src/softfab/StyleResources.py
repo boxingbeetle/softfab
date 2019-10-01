@@ -142,6 +142,27 @@ class _StyleRoot(Resource):
 
 styleRoot = _StyleRoot()
 
+extraPygmentsStyles = '''
+table.codehilite {
+    border: none;
+    background: none;
+}
+table.codehilite tr {
+    background: none;
+}
+table.codehilite td {
+    border: none;
+    padding: 0;
+    font-family: monospace;
+    white-space: pre-wrap;
+}
+table.codehilite td.lineno {
+    text-align: right;
+    color: #808080;
+    padding-right: 1em;
+}
+'''
+
 # Note: The "codehilite" CSS class is required by the Markdown extension
 #       we use for syntax highlighting.
 pygmentsFormatter = HtmlFormatter(cssclass='codehilite')
@@ -149,7 +170,8 @@ pygmentsFormatter = HtmlFormatter(cssclass='codehilite')
 pygmentsFileName = 'pygments.css'
 styleRoot.putChild(
     pygmentsFileName.encode(),
-    Data(pygmentsFormatter.get_style_defs().encode(), 'text/css')
+    Data((pygmentsFormatter.get_style_defs() + extraPygmentsStyles).encode(),
+         'text/css')
     )
 pygmentsSheet = StyleSheet(pygmentsFileName)
 del pygmentsFileName

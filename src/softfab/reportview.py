@@ -18,7 +18,7 @@ from softfab.UIPage import factoryStyleSheet
 from softfab.reportlib import JUnitCase, JUnitReport, JUnitSuite, parseReport
 from softfab.resultcode import ResultCode
 from softfab.webgui import Column, Table, cell
-from softfab.xmlgen import XMLContent, XMLNode, XMLSubscriptable, xhtml
+from softfab.xmlgen import XMLContent, xhtml
 
 
 class ReportPresenter:
@@ -36,24 +36,41 @@ class ReportPresenter:
 
 TokenType = object
 
-def presentTokens(tokens: Iterator[Tuple[TokenType, str]]) -> XMLContent:
+def _splitLines(
+        tokens: Iterator[Tuple[TokenType, str]]
+        ) -> Iterator[XMLContent]:
     for ttype, value in tokens:
-        cssclass = STANDARD_TYPES.get(ttype, '')
-        if cssclass:
-            span: XMLSubscriptable = xhtml.span(class_=cssclass)
-        else:
-            span = xhtml
+        cssclass = STANDARD_TYPES.get(ttype)
+        span = xhtml.span(class_=cssclass) if cssclass else None
 
-        parts = value.split('\n')
-        for part in parts[:-1]:
-            yield span[part]
-            yield '\n'
-        yield span[parts[-1]]
+        first = True
+        for part in value.split('\n'):
+            if first:
+                first = False
+            else:
+                yield '\n'
+            if part:
+                yield part if span is None else span[part]
 
-def presentBlock(tokens: Iterator[Tuple[TokenType, str]]) -> XMLNode:
-    return xhtml.pre(class_=pygmentsFormatter.cssclass)[
-        presentTokens(tokens)
-        ]
+class PygmentedTable(Table):
+    style = pygmentsFormatter.cssclass
+
+    columns = (Column(cellStyle='lineno'), Column())
+
+    def iterRows(self, **kwargs: Any) -> Iterator[XMLContent]:
+        tokens: Iterator[Tuple[TokenType, str]] = kwargs['tokens']
+
+        lineNo = 1
+        nodes: List[XMLContent] = []
+        for node in _splitLines(tokens):
+            if node == '\n':
+                yield lineNo, nodes
+                lineNo += 1
+                nodes = []
+            else:
+                nodes.append(node)
+        if nodes:
+            yield lineNo, nodes
 
 @attr.s(auto_attribs=True)
 class PygmentedPresenter(ReportPresenter):
@@ -68,7 +85,9 @@ class PygmentedPresenter(ReportPresenter):
 
     def presentBody(self) -> XMLContent:
         yield self.presentMessage()
-        yield presentBlock(self.lexer.get_tokens(self.text))
+        yield PygmentedTable.instance.present(
+            tokens=self.lexer.get_tokens(self.text)
+            )
 
     def presentMessage(self) -> XMLContent:
         message = self.message
