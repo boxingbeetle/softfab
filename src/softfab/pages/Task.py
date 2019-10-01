@@ -23,7 +23,7 @@ from softfab.pagelinks import (
 from softfab.paramview import ParametersTable
 from softfab.productlib import Product
 from softfab.productview import ProductTable
-from softfab.reportview import createPresenter
+from softfab.reportview import ReportPresenter, createPresenter
 from softfab.request import Request
 from softfab.resourceview import InlineResourcesTable
 from softfab.taskdeflib import taskDefDB
@@ -83,9 +83,16 @@ class Task_GET(FabPage['Task_GET.Processor', 'Task_GET.Arguments']):
             if report != active.casefold():
                 raise ArgsCorrected(req.args.override(report=active.casefold()))
 
+            presenter: Optional[ReportPresenter] = None
+            if reports[active] is not None:
+                opener = run.reportOpener(active)
+                if opener is not None:
+                    presenter = createPresenter(opener, active)
+
             # pylint: disable=attribute-defined-outside-init
             self.reports = reports
             self.active = active
+            self.presenter = presenter
 
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'j/a')
@@ -100,6 +107,14 @@ class Task_GET(FabPage['Task_GET.Processor', 'Task_GET.Arguments']):
         if proc.active == 'Overview':
             yield SelfTaskRunsTable.instance
 
+    def presentHeadParts(self, **kwargs: object) -> XMLContent:
+        yield super().presentHeadParts(**kwargs)
+
+        proc = cast(Task_GET.Processor, kwargs['proc'])
+        presenter = proc.presenter
+        if presenter is not None:
+            yield xhtml[presenter.headItems()].present(**kwargs)
+
     def pageTitle(self, proc: Processor) -> str:
         return 'Task: ' + proc.task.getName()
 
@@ -107,6 +122,7 @@ class Task_GET(FabPage['Task_GET.Processor', 'Task_GET.Arguments']):
         proc = cast(Task_GET.Processor, kwargs['proc'])
         reports = proc.reports
         active = proc.active
+        presenter = proc.presenter
 
         yield xhtml.div(class_='reporttabs')[(
             xhtml.div(class_='active' if active == label else None)[
@@ -122,23 +138,16 @@ class Task_GET(FabPage['Task_GET.Processor', 'Task_GET.Arguments']):
             for label, url in reports.items()
             )]
 
-        if active == 'Overview':
+        if presenter is not None:
+            yield presenter.presentBody()
+        elif active == 'Overview':
             yield self.presentOverview(**kwargs)
         elif active == 'Data':
             yield self.presentData(**kwargs)
         else:
-            run = proc.task.getLatestRun()
-            opener = run.reportOpener(active)
-            if opener is None:
-                presenter = None
-            else:
-                presenter = createPresenter(opener, active)
-            if presenter is None:
-                yield xhtml.iframe(
-                    class_='report', src=reports[active], sandbox=SANDBOX_RULES
-                    )
-            else:
-                yield presenter.presentBody()
+            yield xhtml.iframe(
+                class_='report', src=reports[active], sandbox=SANDBOX_RULES
+                )
 
     def presentOverview(self, **kwargs: object) -> XMLContent:
         proc = cast(Task_GET.Processor, kwargs['proc'])
