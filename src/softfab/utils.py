@@ -240,8 +240,8 @@ class _AbstractField:
     from typing import ClassVar
 
     class AbstractClass(ABC):
-        a = abstract # type: ClassVar[str]
-        b = 2 # type: int
+        a: ClassVar[str] = abstract
+        b: int = 2
     '''
     __isabstractmethod__ = True
 

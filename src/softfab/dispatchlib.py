@@ -184,8 +184,8 @@ def pickResources(
 
     reservation: Dict[str, Resource] = {}
     for typeName, specs in specsByType.items():
-        resourcesByLevel = defaultdict(list) \
-            # type: Mapping[StatusLevel, List[Resource]]
+        resourcesByLevel: Mapping[StatusLevel, List[Resource]] = \
+                defaultdict(list)
         for res in resourcesByType[typeName]:
             level = statusLevelForResource(res)
             resourcesByLevel[level].append(res)
