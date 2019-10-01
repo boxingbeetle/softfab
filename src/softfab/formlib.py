@@ -470,11 +470,11 @@ argument is not provided, the selected options are determined by the value
 of the form argument that matches the widget's name.
 '''
 
-Options = Iterator[Union[
-    str, Tuple[XMLContent, str], Tuple[str, Iterable[
-        Union[str, Tuple[XMLContent, str]]
-        ]]
-    ]]
+Option = Union[
+    str,
+    Tuple[XMLContent, str],
+    Tuple[str, Iterable[Union[str, Tuple[XMLContent, str]]]]
+    ]
 
 class DropDownList(Widget):
     name: ClassVar[str] = abstract
@@ -518,7 +518,7 @@ class DropDownList(Widget):
         '''
         return _argDefault(kwargs['formArgs'], self.name)
 
-    def iterOptions(self, **kwargs: object) -> Options:
+    def iterOptions(self, **kwargs: object) -> Iterator[Option]:
         '''Iterates through the multiple choice options.
         Elements can be a string, which is used for both the value and the
         label of the option, a pair of a label and a value string, or a
@@ -530,7 +530,7 @@ class DropDownList(Widget):
         '''
         raise NotImplementedError
 
-def _presentOptions(options: Options,
+def _presentOptions(options: Iterable[Option],
                     selected: Optional[str],
                     prefix:  Optional[str] = None
                     ) -> Iterator[XML]:
@@ -543,24 +543,24 @@ def _presentOptions(options: Options,
     empty = True
     for item in options:
         empty = False
-        if iterable(item):
-            label, value = item # type: XMLContent, object
-        else:
-            assert isinstance(item, str)
+        label: XMLContent
+        value: Union[str, Iterable[Option]]
+        if isinstance(item, str):
             label = value = item
-        if iterable(value):
-            assert isinstance(label, str)
-            yield xhtml.optgroup(label = label)[
-                _presentOptions(cast(Options, value), selected, label + ',')
-                ]
         else:
-            assert isinstance(value, str)
+            label, value = item
+        if isinstance(value, str):
             if prefix is not None:
                 value = prefix + value
             yield xhtml.option(
                 value = value,
                 selected = value == selected
                 )[ label ]
+        else:
+            assert isinstance(label, str), label
+            yield xhtml.optgroup(label=label)[
+                _presentOptions(value, selected, label + ',')
+                ]
     if empty:
         # Empty <select> or <optgroup> is not allowed by the DTD.
         yield xhtml.option(disabled = True)[ '(list is empty)' ]
