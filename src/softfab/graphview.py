@@ -342,7 +342,7 @@ class GraphPageMixin:
                      proc: PageProcessor
                      ) -> Responder:
         if path is None:
-            return super().getResponder(path, proc) # type: ignore
+            return super().getResponder(path, proc) # type: ignore[misc]
         match = self.__reGraphPath.match(path)
         if match is None:
             raise KeyError("Subitem path is not of the form 'file.ext'")

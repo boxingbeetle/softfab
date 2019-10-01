@@ -195,7 +195,8 @@ class EditProcessorBase(PageProcessor[EditArgsT], Generic[EditArgsT, DBRecord]):
 
     if TYPE_CHECKING:
         @property
-        def page(self) -> 'EditPage[EditArgsT, DBRecord]': # type: ignore
+        def page(self # type: ignore[override]
+                 ) -> 'EditPage[EditArgsT, DBRecord]':
             ...
 
     def process(self, req: Request[EditArgsT], user: User) -> None:

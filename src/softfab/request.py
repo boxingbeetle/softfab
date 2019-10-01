@@ -144,7 +144,7 @@ class Request(RequestBase, Generic[ArgsT_co]):
         '''Called when the processing step is done.
         Reduces the interface of the request object.
         '''
-        self.__class__ = RequestBase # type: ignore
+        self.__class__ = RequestBase # type: ignore[assignment]
 
     def parseArgs(self, argsClass: Type[ArgsT_co]) -> ArgsT_co:
         '''Initialises the Arguments, if the page has one.

@@ -57,7 +57,7 @@ def bindElement(element: Element, cls: Type[T]) -> T:
                     data[name] = value
                 elif name == 'text':
                     data[name] = element.text
-    return cls(**data) # type: ignore
+    return cls(**data) # type: ignore[call-arg]
 
 # XML parsing:
 

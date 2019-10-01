@@ -103,7 +103,7 @@ class DialogProcessorBase(PageProcessor[DialogArgsT]):
     # In theory we should pass the page type as a type argument to
     # PageProcessor, but I can't figure out a way to do that and
     # also keep the knowledge of the argument and processor types.
-    page: 'DialogPage' # type: ignore
+    page: 'DialogPage' # type: ignore[assignment]
 
     def __retryStep(self,
                     func: Callable[['DialogProcessorBase'], T]
