@@ -41,12 +41,13 @@ class TaskRunnerSavePhase(SavePhase[TaskRunnerEditArgs, TaskRunner]):
             proc: EditProcessor[TaskRunnerEditArgs, TaskRunner],
             element: TaskRunner
             ) -> None:
+        assert isinstance(proc, TaskRunnerEdit_POST.Processor), proc
         token = element.token
-        proc.tokenId = token.getId() # type: ignore
+        proc.tokenId = token.getId()
         if proc.args.resetpass:
-            proc.password = token.resetPassword() # type: ignore
+            proc.password = token.resetPassword()
         else:
-            proc.password = None # type: ignore
+            proc.password = None
 
     def presentContent(self, **kwargs: object) -> XMLContent:
         yield TokenTable.instance.present(**kwargs)
@@ -106,6 +107,9 @@ class TaskRunnerEdit_POST(TaskRunnerEditBase):
         pass
 
     class Processor(EditProcessor[TaskRunnerEditArgs, TaskRunner]):
+
+        tokenId: str
+        password: Optional[str]
 
         def createElement(self,
                           recordId: str,
