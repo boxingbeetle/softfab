@@ -4,7 +4,7 @@
 Module to render the page
 '''
 
-from typing import ClassVar, Iterator, Optional, Type, cast
+from typing import Any, ClassVar, Generator, Iterator, Optional, Type, cast
 # TODO: we're using both the standard library and Twisted for logging.
 #       We should probably just pick one.
 import logging
@@ -156,12 +156,13 @@ def renderAuthenticated(page: FabResource, request: TwistedRequest) -> object:
 @inlineCallbacks
 def renderAsync(
         page: FabResource, request: TwistedRequest
-        ) -> Iterator[Deferred]:
+        ) -> Generator[Deferred, Any, None]:
     req: Request = Request(request)
     streaming = False
     try:
         authenticator = page.authenticator
         try:
+            user: User
             user = yield authenticator.authenticate(req)
         except LoginFailed as ex:
             responder = authenticator.askForAuthentication(
@@ -173,7 +174,7 @@ def renderAsync(
                         'You are not authorized to perform this operation'
                 )
         else:
-            responder = yield parseAndProcess(page, req, user) # type: ignore
+            responder = yield parseAndProcess(page, req, user)
             streaming = page.streaming
     except Redirect as ex:
         responder = Redirector(ex.url)
