@@ -15,8 +15,10 @@ from twisted.web.http import CACHED
 from twisted.web.iweb import IRequest
 from twisted.web.server import NOT_DONE_YET
 
+from softfab.compat import NoReturn
 from softfab.projectlib import project
 from softfab.useragent import AcceptedEncodings, UserAgent
+from softfab.utils import IllegalStateError
 from softfab.xmlgen import XMLContent, adaptToXML
 
 
@@ -32,8 +34,8 @@ class Response:
         if streaming:
             # Streaming pages must not be buffered.
             self.__buffer = None
-            self.__writeBytes = request.write \
-                    # type: Callable[[Union[bytes, bytearray]], int]
+            self.__writeBytes: Callable[[Union[bytes, bytearray]], int] = \
+                    request.write
         else:
             # Present entire page before deciding whether and how to send it
             # to the client.
@@ -90,7 +92,7 @@ class Response:
         self.__buffer.close()
         # Any write attempt after this is an error.
         self.__buffer = None
-        self.__writeBytes = None # type: ignore
+        self.__writeBytes = writeAfterFinish
 
         # Determine whether or not we will gzip the body.
         # We prefer gzip to save on bandwidth.
@@ -270,3 +272,6 @@ class Response:
         """Append the given XML content to this reponse.
         """
         self.__writeBytes(adaptToXML(xml).flattenXML().encode())
+
+def writeAfterFinish(buffer: Union[bytes, bytearray]) -> NoReturn:
+    raise IllegalStateError('Write on finished response')
