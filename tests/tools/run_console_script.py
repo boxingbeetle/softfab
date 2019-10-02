@@ -8,15 +8,26 @@ of executing console scripts.
 '''
 
 import sys
-from pkg_resources import working_set
+
+# On Python 3.8+, use importlib.metadata from the standard library.
+# On older versions, a compatibility package can be installed from PyPI.
+try:
+    import importlib.metadata as importlib_metadata
+except ImportError:
+    import importlib_metadata
+
 
 group = 'console_scripts'
 
 def print_scripts():
     print('', file=sys.stderr)
     print('Available scripts:', file=sys.stderr)
-    for entry in working_set.iter_entry_points(group):
-        print('  ', entry, file=sys.stderr)
+    entry_map = {
+        entry.name: entry.value
+        for entry in importlib_metadata.entry_points()[group]
+        }
+    for name in sorted(entry_map):
+        print(f'  {name} = {entry_map[name]}', file=sys.stderr)
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
@@ -25,7 +36,11 @@ if __name__ == '__main__':
         sys.exit(2)
 
     name = sys.argv[1]
-    entries = list(working_set.iter_entry_points(group, name))
+    entries = [
+        entry
+        for entry in importlib_metadata.entry_points()[group]
+        if entry.name == name
+        ]
     if not entries:
         print('Script not found:', name, file=sys.stderr)
         print_scripts()
