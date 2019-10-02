@@ -64,7 +64,10 @@ class PygmentedTable(Table):
         nodes: List[XMLContent] = []
         for node in _splitLines(tokens):
             if node == '\n':
-                yield lineNo, nodes
+                yield (
+                    xhtml.a(id=f'L{lineNo}'),
+                    xhtml.a(href=f'#L{lineNo}')[lineNo]
+                    ), nodes
                 lineNo += 1
                 nodes = []
             else:

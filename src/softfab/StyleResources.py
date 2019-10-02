@@ -158,8 +158,13 @@ table.codehilite td {
 }
 table.codehilite td.lineno {
     text-align: right;
-    color: #808080;
     padding-right: 1em;
+}
+td.lineno a {
+    color: #808080;
+}
+td.lineno a:hover {
+    color: black;
 }
 '''
 
