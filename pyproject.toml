@@ -39,6 +39,7 @@ Twisted = {version = '>=16.6', extras = ['tls']}
 passlib = {version = '^1.7', extras = ['bcrypt']}
 pygraphviz = '^1.4'
 pytz = '*'
+importlib_metadata = "^0.23.0"
 importlib_resources = "^1.0"
 "zope.interface" = '^4.4.2'
 markdown = "^3.1"
