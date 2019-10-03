@@ -4,7 +4,7 @@ from typing import (
     TYPE_CHECKING, Dict, Iterable, Iterator, List, Mapping, Optional, Set,
     Tuple, cast
 )
-from urllib.parse import urljoin
+from urllib.parse import quote_plus, urljoin
 import logging
 
 from softfab.config import dbDir
@@ -522,7 +522,7 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
 
         # Remember reports.
         artifactsPaths = self.__getJobId().split('-', 1)
-        artifactsPaths += (taskName, '')
+        artifactsPaths += (quote_plus(taskName), '')
         self.setInternalStorage('/'.join(artifactsPaths))
         self.__reports += reports
 
