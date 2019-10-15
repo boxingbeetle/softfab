@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from enum import Enum
-from typing import Optional, Sequence
+from typing import Iterable, Optional, Sequence
 
 from softfab.configlib import configDB
 from softfab.pageargs import (
@@ -175,6 +175,12 @@ class ExtractedDataArgs(ReportTaskArgs):
     vistype = EnumArg(VisualizationType, VisualizationType.CHART_BAR)
     sort = SortArg()
     first = IntArg(0)
+
+def createDataTrendsLink(task: str, keys: Iterable[str] = ()) -> XMLNode:
+    return pageLink(
+        'ExtractedData',
+        ExtractedDataArgs(task=(task,), key=keys)
+        )
 
 class CSVSeparator(Enum):
     '''Identifies the separator character to place between values.

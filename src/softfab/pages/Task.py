@@ -16,9 +16,9 @@ from softfab.frameworklib import frameworkDB
 from softfab.joblib import Task
 from softfab.pageargs import ArgsCorrected
 from softfab.pagelinks import (
-    ReportTaskArgs, TaskIdArgs, TaskReportArgs, createFrameworkDetailsLink,
-    createJobLink, createTaskDetailsLink, createTaskHistoryLink,
-    createTaskRunnerDetailsLink
+    TaskIdArgs, TaskReportArgs, createDataTrendsLink,
+    createFrameworkDetailsLink, createJobLink, createTaskDetailsLink,
+    createTaskHistoryLink, createTaskRunnerDetailsLink
 )
 from softfab.paramview import ParametersTable
 from softfab.productlib import Product
@@ -171,7 +171,7 @@ class Task_GET(FabPage['Task_GET.Processor', 'Task_GET.Arguments']):
             yield xhtml.p[ 'No data yet.' ]
 
         yield xhtml.p[
-            pageLink('ExtractedData', ReportTaskArgs(task = ( taskName, )))[
+            createDataTrendsLink(taskName)[
                 'Visualize trends of task ', xhtml.b[ taskName ]
                 ]
             ]
@@ -332,4 +332,7 @@ class ExtractedDataTable(Table):
             else:
                 assert len(values) == 1
                 value = values[0]
-            yield key, cell(class_ = 'rightalign')[value]
+            yield (
+                createDataTrendsLink(taskName, [key])[key],
+                cell(class_='rightalign')[value]
+                )
