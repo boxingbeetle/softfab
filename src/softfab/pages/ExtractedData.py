@@ -15,7 +15,7 @@ from softfab.formlib import CheckBoxesTable, RadioTable, makeForm, submitButton
 from softfab.joblib import Task, iterDoneTasks
 from softfab.jobview import CreateTimeColumn
 from softfab.pageargs import EnumArg, IntArg, SetArg, SortArg
-from softfab.pagelinks import createJobURL
+from softfab.pagelinks import createRunURL
 from softfab.querylib import KeySorter, RecordProcessor, runQuery
 from softfab.request import Request
 from softfab.setcalc import intersection
@@ -154,9 +154,7 @@ def visualizeBarChart(key: str,
                 barClass = 'graphbar'
                 # We cannot plot negative values, so clip to 0.
                 height = max(value, 0) * graphHeight // maxValue
-            url = run.getURL()
-            if url is None:
-                url = createJobURL(run.getJob().getId())
+            url = createRunURL(run, 'data')
             yield xhtml.td(
                 title = '%s - %s' % (
                     formatTime(run.getJob().getCreateTime()), valueDescription

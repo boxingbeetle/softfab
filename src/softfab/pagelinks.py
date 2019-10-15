@@ -7,6 +7,7 @@ from softfab.pageargs import BoolArg, PageArgs, SetArg, StrArg
 from softfab.request import Request
 from softfab.resourcelib import TaskRunner
 from softfab.restypelib import resTypeDB, taskRunnerResourceTypeName
+from softfab.taskrunlib import TaskRun
 from softfab.webgui import pageLink, pageURL
 from softfab.xmlgen import XMLContent, XMLNode, xhtml
 
@@ -110,6 +111,15 @@ class TaskReportArgs(TaskIdArgs):
     """Identifies a task and a report to show for that task.
     """
     report = StrArg(None)
+
+def createRunURL(run: TaskRun, report: str = 'overview') -> str:
+    """Return a URL of a page showing details of a task run."""
+    jobId = run.getJob().getId()
+    taskName = run.getName()
+    return pageURL(
+        'Task',
+        TaskReportArgs(jobId=jobId, taskName=taskName, report=report)
+        )
 
 def createTaskInfoLink(jobId: str, taskName: str) -> XMLNode:
     return pageLink(
