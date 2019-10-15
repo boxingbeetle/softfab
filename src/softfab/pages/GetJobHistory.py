@@ -5,9 +5,10 @@ from typing import Iterator
 from twisted.internet.defer import Deferred, inlineCallbacks
 
 from softfab.ControlPage import ControlPage
-from softfab.ReportMixin import JobReportProcessor, ReportArgs
+from softfab.ReportMixin import JobReportProcessor
 from softfab.joblib import jobDB
 from softfab.pageargs import SetArg
+from softfab.pagelinks import ReportArgs
 from softfab.querylib import RecordFilter, SetFilter, runQuery
 from softfab.request import Request
 from softfab.response import Response

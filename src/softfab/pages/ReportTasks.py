@@ -4,16 +4,14 @@ from typing import Iterator, cast
 
 from softfab.CSVPage import presentCSVLink
 from softfab.FabPage import FabPage
-from softfab.ReportMixin import (
-    ExecutionState, ReportFilterForm, ReportProcessor, ReportTaskArgs,
-    ReportTaskCSVArgs
-)
+from softfab.ReportMixin import ReportFilterForm, ReportProcessor
 from softfab.datawidgets import DataTable
 from softfab.formlib import selectionList
 from softfab.joblib import (
     iterAllTasks, iterDoneTasks, iterFinishedTasks, iterUnfinishedTasks, jobDB
 )
 from softfab.pageargs import IntArg, SortArg
+from softfab.pagelinks import ExecutionState, ReportTaskArgs, ReportTaskCSVArgs
 from softfab.setcalc import intersection, union
 from softfab.taskdeflib import taskDefDB
 from softfab.taskrunlib import getKeys

@@ -4,12 +4,11 @@ from typing import Any, Collection, Iterator, cast
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor, PresentableError
-from softfab.ReportMixin import ReportArgs
 from softfab.datawidgets import DataTable
 from softfab.joblib import Job, jobDB
 from softfab.jobview import JobsSubTable
 from softfab.pageargs import PageArgs, StrArg
-from softfab.pagelinks import UserIdArgs
+from softfab.pagelinks import ReportArgs, UserIdArgs
 from softfab.querylib import KeySorter, ValueFilter, runQuery
 from softfab.request import Request
 from softfab.userlib import User, userDB

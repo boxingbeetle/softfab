@@ -1,9 +1,12 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from enum import Enum
 from typing import Optional, Sequence
 
 from softfab.configlib import configDB
-from softfab.pageargs import BoolArg, PageArgs, SetArg, StrArg
+from softfab.pageargs import (
+    BoolArg, DateTimeArg, EnumArg, IntArg, PageArgs, SetArg, SortArg, StrArg
+)
 from softfab.request import Request
 from softfab.resourcelib import TaskRunner
 from softfab.restypelib import resTypeDB, taskRunnerResourceTypeName
@@ -143,6 +146,52 @@ def createTaskHistoryLink(taskName: str) -> XMLNode:
     return pageLink('ReportTasks', TaskIdSetArgs(task = {taskName}))[
         'Show history of task ', xhtml.b[ taskName ]
         ]
+
+class ExecutionState(Enum):
+    ALL = 1
+    COMPLETED = 2
+    FINISHED = 3
+    UNFINISHED = 4
+
+class ReportArgs(PageArgs):
+    ctabove = DateTimeArg(None)
+    ctbelow = DateTimeArg(None, True)
+    execState = EnumArg(ExecutionState, ExecutionState.ALL)
+    target = SetArg()
+    owner = SetArg()
+
+class ReportTaskArgs(ReportArgs, TaskIdSetArgs):
+    pass
+
+VisualizationType = Enum('VisualizationType', 'CHART_BAR TABLE')
+
+class ExtractedDataArgs(ReportTaskArgs):
+    # Override to make 'task' argument mandatory.
+    # Intersection of empty sequence is undefined, so we must ensure
+    # at least one task is selected.
+    task = SetArg(allowEmpty=False)
+
+    key = SetArg()
+    vistype = EnumArg(VisualizationType, VisualizationType.CHART_BAR)
+    sort = SortArg()
+    first = IntArg(0)
+
+class CSVSeparator(Enum):
+    '''Identifies the separator character to place between values.
+    The reason for allowing different separator characters than the comma is
+    that Excel only accepts the separator character of the active locale.
+    This is an utterly stupid idea, but many people use Excel so we have to
+    work around its idiocies.
+    '''
+    COMMA = ','
+    SEMICOLON = ';'
+    TAB = '\t'
+
+class CSVArgs(PageArgs):
+    sep = EnumArg(CSVSeparator, CSVSeparator.COMMA)
+
+class ReportTaskCSVArgs(ReportTaskArgs, CSVArgs):
+    pass
 
 class ResourceIdArgs(PageArgs):
     '''Identifies a resource.

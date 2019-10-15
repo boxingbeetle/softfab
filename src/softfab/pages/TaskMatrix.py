@@ -6,13 +6,13 @@ import time
 
 from softfab.CSVPage import presentCSVLink
 from softfab.FabPage import FabPage
-from softfab.ReportMixin import ReportTaskArgs
 from softfab.TaskMatrixCommon import (
     TaskMatrixArgs, TaskMatrixCSVArgs, TaskMatrixProcessor, dateRange
 )
 from softfab.configlib import configDB
 from softfab.formlib import dropDownList, emptyOption, makeForm, submitButton
 from softfab.jobview import createStatusBar
+from softfab.pagelinks import ReportTaskArgs
 from softfab.timelib import iterDays, normalizeWeek, secondsPerDay, weeksInYear
 from softfab.userlib import User, checkPrivilege
 from softfab.webgui import Column, Table, cell, pageLink, pageURL

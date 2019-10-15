@@ -9,7 +9,6 @@ import re
 
 from softfab.FabPage import FabPage
 from softfab.Page import InvalidRequest, PageProcessor
-from softfab.ReportMixin import ReportTaskArgs
 from softfab.StyleResources import styleRoot
 from softfab.artifacts import SANDBOX_RULES
 from softfab.datawidgets import DataTable
@@ -17,8 +16,9 @@ from softfab.frameworklib import frameworkDB
 from softfab.joblib import Task
 from softfab.pageargs import ArgsCorrected
 from softfab.pagelinks import (
-    TaskIdArgs, TaskReportArgs, createFrameworkDetailsLink, createJobLink,
-    createTaskDetailsLink, createTaskHistoryLink, createTaskRunnerDetailsLink
+    ReportTaskArgs, TaskIdArgs, TaskReportArgs, createFrameworkDetailsLink,
+    createJobLink, createTaskDetailsLink, createTaskHistoryLink,
+    createTaskRunnerDetailsLink
 )
 from softfab.paramview import ParametersTable
 from softfab.productlib import Product

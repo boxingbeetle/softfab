@@ -1,11 +1,9 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from enum import Enum
 from typing import (
     AbstractSet, ClassVar, Iterator, Optional, Set, TypeVar, cast
 )
 
-from softfab.CSVPage import CSVPage
 from softfab.Page import PageProcessor
 from softfab.databaselib import Database
 from softfab.formlib import (
@@ -13,10 +11,8 @@ from softfab.formlib import (
     selectionList, submitButton, textInput
 )
 from softfab.joblib import jobDB
-from softfab.pageargs import (
-    ArgsCorrected, DateTimeArg, EnumArg, PageArgs, SetArg
-)
-from softfab.pagelinks import TaskIdSetArgs
+from softfab.pageargs import ArgsCorrected
+from softfab.pagelinks import ExecutionState, ReportArgs
 from softfab.projectlib import project
 from softfab.querylib import CustomFilter, RecordFilter, SetFilter
 from softfab.request import Request
@@ -26,27 +22,6 @@ from softfab.utils import SharedInstance, abstract
 from softfab.webgui import script
 from softfab.xmlgen import XMLContent, XMLPresentable, xhtml
 
-
-class ExecutionState(Enum):
-    ALL = 1
-    COMPLETED = 2
-    FINISHED = 3
-    UNFINISHED = 4
-
-class ReportArgs(PageArgs):
-    ctabove = DateTimeArg(None)
-    ctbelow = DateTimeArg(None, True)
-    execState = EnumArg(ExecutionState, ExecutionState.ALL)
-    target = SetArg()
-    owner = SetArg()
-
-ReportArgsT = TypeVar('ReportArgsT', bound=ReportArgs)
-
-class ReportTaskArgs(ReportArgs, TaskIdSetArgs):
-    pass
-
-class ReportTaskCSVArgs(ReportTaskArgs, CSVPage.Arguments):
-    pass
 
 def executionStateBox(objectName: str) -> XMLPresentable:
     return dropDownList(name='execState', style='width:20ex')[(
@@ -83,6 +58,8 @@ def emptyToNone(values: AbstractSet[str]) -> AbstractSet[Optional[str]]:
         return newValues
     else:
         return values
+
+ReportArgsT = TypeVar('ReportArgsT', bound=ReportArgs)
 
 class ReportProcessor(PageProcessor[ReportArgsT]):
     db: Optional[Database] = None

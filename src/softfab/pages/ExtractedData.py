@@ -1,7 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from collections import defaultdict
-from enum import Enum
 from typing import (
     Collection, DefaultDict, Dict, Iterable, Iterator, List, Mapping, Sequence,
     Tuple, cast
@@ -9,13 +8,13 @@ from typing import (
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
-from softfab.ReportMixin import ReportProcessor, ReportTaskArgs
+from softfab.ReportMixin import ReportProcessor
 from softfab.datawidgets import DataColumn, DataTable
 from softfab.formlib import CheckBoxesTable, RadioTable, makeForm, submitButton
 from softfab.joblib import Task, iterDoneTasks
 from softfab.jobview import CreateTimeColumn
 from softfab.pageargs import EnumArg, IntArg, SetArg, SortArg
-from softfab.pagelinks import createRunURL
+from softfab.pagelinks import ReportTaskArgs, VisualizationType, createRunURL
 from softfab.querylib import KeySorter, RecordProcessor, runQuery
 from softfab.request import Request
 from softfab.setcalc import intersection
@@ -197,8 +196,6 @@ class ExtractedDataTable(TaskRunsTable):
         yield TaskColumn.instance
         for key in sorted(proc.activeKeys):
             yield ExtractedDataColumn(key)
-
-VisualizationType = Enum('VisualizationType', 'CHART_BAR TABLE')
 
 class ExtractedData_GET(FabPage['ExtractedData_GET.Processor',
                                 'ExtractedData_GET.Arguments']):

@@ -3,8 +3,9 @@
 from typing import Iterator, List, Sequence
 
 from softfab.CSVPage import CSVPage
-from softfab.ReportMixin import ReportProcessor, ReportTaskCSVArgs
+from softfab.ReportMixin import ReportProcessor
 from softfab.joblib import iterDoneTasks
+from softfab.pagelinks import ReportTaskCSVArgs
 from softfab.querylib import KeySorter, RecordProcessor, runQuery
 from softfab.request import Request
 from softfab.setcalc import union
