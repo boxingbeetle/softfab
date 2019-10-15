@@ -235,6 +235,11 @@ class FactoryResource(Resource):
         except UnicodeError:
             return ClientErrorResource('Path is not valid')
 
+        if not segment:
+            # Empty segment in the middle of a path is probably a typo,
+            # while empty segment at the end should render index.
+            return self
+
         try:
             return self.childForSegment(segment, request)
         except InsecurePath:
