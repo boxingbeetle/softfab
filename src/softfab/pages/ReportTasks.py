@@ -2,7 +2,6 @@
 
 from typing import Iterator, cast
 
-from softfab.CSVPage import presentCSVLink
 from softfab.FabPage import FabPage
 from softfab.ReportMixin import ReportFilterForm, ReportProcessor
 from softfab.datawidgets import DataTable
@@ -11,7 +10,7 @@ from softfab.joblib import (
     iterAllTasks, iterDoneTasks, iterFinishedTasks, iterUnfinishedTasks, jobDB
 )
 from softfab.pageargs import IntArg, SortArg
-from softfab.pagelinks import ExecutionState, ReportTaskArgs, ReportTaskCSVArgs
+from softfab.pagelinks import ExecutionState, ReportTaskArgs
 from softfab.setcalc import intersection, union
 from softfab.taskdeflib import taskDefDB
 from softfab.taskrunlib import getKeys
@@ -97,10 +96,5 @@ class ReportTasks_GET(FabPage['ReportTasks_GET.Processor',
                     'The selected tasks have mid-level data, '
                     'but they have no keys in common.'
                     ]
-
-        yield presentCSVLink(
-            'ReportTasksCSV',
-            ReportTaskCSVArgs(ReportTaskArgs.subset(proc.args))
-            )
 
         yield FilteredTaskRunsTable.instance.present(**kwargs)

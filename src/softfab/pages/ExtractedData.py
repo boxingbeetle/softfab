@@ -6,6 +6,7 @@ from typing import (
     Tuple, cast
 )
 
+from softfab.CSVPage import presentCSVLink
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
 from softfab.ReportMixin import ReportProcessor
@@ -14,7 +15,9 @@ from softfab.formlib import CheckBoxesTable, RadioTable, makeForm, submitButton
 from softfab.joblib import Task, iterDoneTasks
 from softfab.jobview import CreateTimeColumn
 from softfab.pageargs import EnumArg, IntArg, SetArg, SortArg
-from softfab.pagelinks import ReportTaskArgs, VisualizationType, createRunURL
+from softfab.pagelinks import (
+    ReportTaskArgs, ReportTaskCSVArgs, VisualizationType, createRunURL
+)
 from softfab.querylib import KeySorter, RecordProcessor, runQuery
 from softfab.request import Request
 from softfab.setcalc import intersection
@@ -260,6 +263,11 @@ class ExtractedData_GET(FabPage['ExtractedData_GET.Processor',
             VisualizationTable.instance,
             xhtml.p[ submitButton[ 'Apply' ] ],
             ].present(**kwargs)
+
+        yield presentCSVLink(
+            'ReportTasksCSV',
+            ReportTaskCSVArgs(ReportTaskArgs.subset(proc.args))
+            )
 
         yield xhtml.p[
             pageLink('ReportTasks', parentArgs)[
