@@ -13,6 +13,7 @@ from softfab.waiting import (
 )
 
 if TYPE_CHECKING:
+    # pylint: disable=cyclic-import
     from softfab.resourcelib import Resource
 else:
     Resource = None

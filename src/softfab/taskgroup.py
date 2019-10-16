@@ -16,6 +16,7 @@ from softfab.waiting import (
 )
 
 if TYPE_CHECKING:
+    # pylint: disable=cyclic-import
     from softfab.productdeflib import ProductDef
     from softfab.resourcelib import TaskRunner
     from softfab.taskrunlib import TaskRun

@@ -27,6 +27,7 @@ from softfab.xmlbind import XMLTag
 from softfab.xmlgen import XML, XMLContent, xml
 
 if TYPE_CHECKING:
+    # pylint: disable=cyclic-import
     from softfab.joblib import Job, Task, jobDB
     from softfab.productlib import Product
     from softfab.resourcelib import Resource, ResourceDB, TaskRunner

@@ -16,6 +16,7 @@ from softfab.resreq import ResourceSpec
 from softfab.utils import abstract, pluralize
 
 if TYPE_CHECKING:
+    # pylint: disable=cyclic-import
     from softfab.resourcelib import ResourceBase, TaskRunner
 else:
     ResourceBase = None

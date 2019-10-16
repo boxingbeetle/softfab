@@ -16,6 +16,7 @@ from softfab.webgui import Column, Table, cell, pageLink, pageURL, row
 from softfab.xmlgen import XMLContent, XMLNode, XMLSubscriptable, xhtml
 
 if TYPE_CHECKING:
+    # pylint: disable=cyclic-import
     from softfab.Page import PageProcessor
 else:
     PageProcessor = object

@@ -16,6 +16,7 @@ from softfab.utils import cachedProperty, escapeURL, iterable
 
 # Avoid circular import.
 if TYPE_CHECKING:
+    # pylint: disable=cyclic-import
     from softfab.request import Request
 else:
     Request = None

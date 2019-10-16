@@ -20,6 +20,7 @@ from softfab.webgui import Widget, pageURL
 from softfab.xmlgen import XML
 
 if TYPE_CHECKING:
+    # pylint: disable=cyclic-import
     from softfab.request import Request
 else:
     Request = Generic
