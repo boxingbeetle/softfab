@@ -45,7 +45,7 @@ class Observer:
     def updated(self, record):
         self.updatedRecords.append(record)
 
-class TestBasic:
+class BasicTests:
     """Test basic Database functionality.
     Contains reusable implementation for TestDatabase and
     TestVersionedDatabase, but should not be run in itself,
@@ -334,13 +334,13 @@ class TestBasic:
         "Test mixed addition, update and removal."
         self.runMixed(1234567890)
 
-class TestDatabase(TestBasic, unittest.TestCase):
+class TestDatabase(BasicTests, unittest.TestCase):
     "Test basic Database functionality."
 
     dbClass = databaselib.Database
 
     def __init__(self, methodName = 'runTest'):
-        TestBasic.__init__(self)
+        BasicTests.__init__(self)
         unittest.TestCase.__init__(self, methodName)
 
     def test0060Modify(self):
@@ -355,13 +355,13 @@ class TestDatabase(TestBasic, unittest.TestCase):
         savedRecord = db['id_mod']
         self.assertEqual(savedRecord.properties.get('modified'), 'true')
 
-class TestVersionedDatabase(TestBasic, unittest.TestCase):
+class TestVersionedDatabase(BasicTests, unittest.TestCase):
     "Test functionality of VersionedDatabase."
 
     dbClass = databaselib.VersionedDatabase
 
     def __init__(self, methodName = 'runTest'):
-        TestBasic.__init__(self)
+        BasicTests.__init__(self)
         unittest.TestCase.__init__(self, methodName)
 
     def checkVersions(self, db, version1, version2):
