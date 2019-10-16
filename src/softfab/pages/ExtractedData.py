@@ -16,7 +16,8 @@ from softfab.joblib import Task, iterDoneTasks
 from softfab.jobview import CreateTimeColumn
 from softfab.pageargs import EnumArg, IntArg, SetArg, SortArg
 from softfab.pagelinks import (
-    ReportTaskArgs, ReportTaskCSVArgs, VisualizationType, createRunURL
+    ExecutionState, ReportTaskArgs, ReportTaskCSVArgs, VisualizationType,
+    createRunURL
 )
 from softfab.querylib import KeySorter, RecordProcessor, runQuery
 from softfab.request import Request
@@ -25,6 +26,7 @@ from softfab.taskrunlib import getData, getKeys
 from softfab.tasktables import TaskColumn, TaskRunsTable
 from softfab.timeview import formatTime
 from softfab.userlib import User, checkPrivilege
+from softfab.utils import pluralize
 from softfab.webgui import pageLink
 from softfab.xmlgen import XMLContent, xhtml
 
@@ -258,6 +260,15 @@ class ExtractedData_GET(FabPage['ExtractedData_GET.Processor',
         proc = cast(ExtractedData_GET.Processor, kwargs['proc'])
         parentArgs = ReportTaskArgs.subset(proc.args)
 
+        yield xhtml.p[
+            self.presentTaskFilter(parentArgs)
+            ]
+        yield xhtml.p[
+            pageLink('ReportTasks', parentArgs)[
+                'Change task filters'
+                ]
+            ]
+
         yield makeForm(formId='keys', method='get')[
             KeysTable.instance,
             VisualizationTable.instance,
@@ -269,15 +280,44 @@ class ExtractedData_GET(FabPage['ExtractedData_GET.Processor',
             ReportTaskCSVArgs(ReportTaskArgs.subset(proc.args))
             )
 
-        yield xhtml.p[
-            pageLink('ReportTasks', parentArgs)[
-                'Change task filters'
-                ]
-            ]
-
         if len(proc.tasks) == 0:
             yield xhtml.p[ 'No tasks match the given filters.' ]
         elif proc.args.vistype is VisualizationType.CHART_BAR:
             yield visualizeBarCharts(proc)
         elif proc.args.vistype is VisualizationType.TABLE:
             yield ExtractedDataTable.instance.present(**kwargs)
+
+    def presentTaskFilter(self, args: ReportTaskArgs) -> XMLContent:
+        yield 'Showing data from ',
+
+        execState = args.execState
+        if execState is not ExecutionState.ALL:
+            yield xhtml.b[execState.name.lower()], ' '
+
+        taskNames = args.task
+        yield xhtml[', '].join(xhtml.b[name] for name in sorted(taskNames))
+        yield ' tasks'
+
+        owners = args.owner
+        if owners:
+            yield ' owned by '
+            yield xhtml[', '].join(xhtml.b[name] for name in sorted(owners))
+
+        targets = args.target
+        if targets:
+            yield ' for ', pluralize('target', len(targets)), ' '
+            yield xhtml[', '].join(xhtml.b[name] for name in sorted(targets))
+
+        ctabove = args.ctabove
+        ctbelow = args.ctbelow
+        if ctabove and ctbelow:
+            yield (
+                ' created between ', xhtml.b[formatTime(ctabove)],
+                ' and ', xhtml.b[formatTime(ctbelow)]
+                )
+        elif ctabove:
+            yield ' created after ', xhtml.b[formatTime(ctabove)]
+        elif ctbelow:
+            yield ' created before ', xhtml.b[formatTime(ctbelow)]
+
+        yield '.'
