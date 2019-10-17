@@ -2,6 +2,8 @@
 
 import os, os.path, random, time, unittest
 
+from initconfig import config
+
 from softfab import databaselib
 from softfab.xmlgen import xml
 
@@ -60,7 +62,7 @@ class BasicTests:
         pass
 
     def setUp(self):
-        self.dbDir = 'testdb'
+        self.dbDir = config.dbDir + '/testdb'
         self.record = Record( { 'id': 'id_abc', 'a': '1', 'b': '2' } )
         self.faultyRecord = FaultyRecord(
             { 'id': 'id_abc', 'a': '1', 'b': '2' }
