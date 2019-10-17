@@ -73,7 +73,7 @@ class SandboxedPath:
         key = self.sandbox.keyFor(self)
         return '/'.join(('sandbox', key) + self.path)
 
-@attr.s(auto_attribs=True, eq=False)
+@attr.s(auto_attribs=True)
 @implementer(IResource)
 class ArtifactSandbox:
     """Serves the actual artifacts in a sandbox.
