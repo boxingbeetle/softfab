@@ -134,6 +134,26 @@ def types(c, src=None, clean=False, report=False, results=None):
                 out.write(f'report.1={report_dir}/mypy-coverage\n')
 
 @task
+def unittest(c, junit_xml=None, results=None):
+    """Run unit tests."""
+    if results is not None:
+        report_dir = Path(results).parent.resolve()
+        junit_xml = report_dir / 'pytest-report.xml'
+    args = ['pytest']
+    if junit_xml is not None:
+        args.append('--junit-xml=%s' % junit_xml)
+    args.append('tests/unit')
+    with c.cd(str(TOP_DIR)):
+        c.run(' '.join(args), env=SRC_ENV, pty=results is None)
+    if results is not None:
+        results_dict = dict(report=str(junit_xml))
+        write_results(results_dict, results)
+
+@task(post=[unittest, lint, types])
+def test(c):
+    """Run all tests."""
+
+@task
 def isort(c, src=None):
     """Sort imports."""
     print('Sorting imports...')
