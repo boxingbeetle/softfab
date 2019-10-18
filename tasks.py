@@ -23,9 +23,10 @@ def remove_dir(path):
     if path.exists():
         rmtree(str(path))
 
-def write_results(results, results_path):
+def write_results(results, results_path, append=False):
     """Write a results dictionary to file."""
-    with open(results_path, 'w', encoding='utf-8') as out:
+    mode = 'a' if append else 'w'
+    with open(results_path, mode, encoding='utf-8') as out:
         for key, value in results.items():
             out.write('%s=%s\n' % (key, value.replace('\\', '\\\\')))
 
@@ -176,3 +177,22 @@ def run(c, host='localhost', port=8180, auth=False, coverage=False):
         cmd = ['coverage', 'run', '--source=../src', str(runner)] + cmd
     with c.cd(str(TOP_DIR / 'run')):
         c.run(' '.join(cmd), env=SRC_ENV, pty=True)
+
+@task
+def ape(c, host='localhost', port=8180, results=None):
+    cmd = [
+        'apetest',
+        '--check', 'launch',
+        '--cclog', 'run/cc-log.txt',
+        ]
+    if results is None:
+        report_dir = TOP_DIR.resolve()
+    else:
+        cmd += ['--result', str(Path(results).resolve())]
+        report_dir = Path(results).parent.resolve()
+    report = report_dir / 'ape-report.html'
+    cmd += [f'http://localhost:{port}/', str(report)]
+    with c.cd(str(TOP_DIR)):
+        c.run(' '.join(cmd), pty=results is None)
+    if results is not None:
+        write_results({'report': str(report)}, results, append=True)
