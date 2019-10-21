@@ -79,7 +79,7 @@ class TaskRunnerHistory_GET(FabPage['TaskRunnerHistory_GET.Processor',
                 'TaskRunnerDetails',
                 TaskRunnerIdArgs.subset(proc.args)
                 )[ 'Details' ],
-            ' / History of ', xhtml.b[ runnerId ], ':'
+            ' / History of Task Runner ', xhtml.b[ runnerId ], ':'
             ]
 
         if proc.reachedJobsLimit:
