@@ -21,6 +21,7 @@ factoryStyleSheet = styleRoot.addStyleSheet('sw-factory')
 
 fixedHeadItems: Iterable[XMLPresentable] = (
     xhtml.meta(charset='UTF-8'),
+    factoryStyleSheet,
     xhtml.meta(
         name='viewport',
         content='width=device-width, initial-scale=1, minimum-scale=1'
@@ -93,7 +94,6 @@ class UIPage(Generic[ProcT]):
         for item in fixedHeadItems:
             yield item.present(**kwargs)
         yield xhtml.title[ f'{project.name} - {self.pageTitle(proc)}' ]
-        yield factoryStyleSheet.present(**kwargs)
         customStyleDefs = '\n'.join(self.iterStyleDefs())
         if customStyleDefs:
             yield xhtml.style[customStyleDefs]
