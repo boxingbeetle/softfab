@@ -5,7 +5,8 @@ from functools import partial
 from gzip import open as openGzip
 from pathlib import Path
 from typing import IO, TYPE_CHECKING, Callable, Dict, Optional, Union, cast
-from urllib.parse import urljoin
+from urllib.parse import unquote_plus, urljoin
+import logging
 
 from softfab.config import dbDir
 
@@ -46,7 +47,17 @@ class StorageURLMixin:
         """
         url = self.getURL()
         if url:
-            path = artifactsPath / url / f'{fileName}.gz'
+            path = artifactsPath
+            for segment in url.split('/'):
+                dirName = unquote_plus(segment)
+                if dirName.startswith('.') or '/' in dirName:
+                    logging.warning(
+                        'Rejecting potentially unsafe artifact URL: %s', url
+                        )
+                    return None
+                elif dirName:
+                    path = path / dirName
+            path = path / f'{fileName}.gz'
             if path.exists():
                 return partial(openGzip, path)
         return None
