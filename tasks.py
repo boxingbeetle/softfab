@@ -1,5 +1,4 @@
 from pathlib import Path
-from os import makedirs
 from shutil import copyfile, rmtree
 
 from invoke import UnexpectedExit, call, task
@@ -162,11 +161,11 @@ def isort(c, src=None):
         c.run('isort %s' % source_arg(src), pty=True)
 
 @task
-def run(c, host='localhost', port=8180, auth=False, coverage=False):
+def run(c, host='localhost', port=8180, dbdir='run',
+        auth=False, coverage=False):
     """Run a Control Center instance."""
     print(f'Starting Control Center at: http://{host}:{port}/')
     root = 'debugAuth' if auth else 'debug'
-    makedirs('run/', exist_ok=True)
     cmd = [
         'twist', 'web',
         f'--listen tcp:interface={host}:port={port}',
@@ -175,7 +174,11 @@ def run(c, host='localhost', port=8180, auth=False, coverage=False):
     if coverage:
         runner = TOP_DIR / 'tests' / 'tools' / 'run_console_script.py'
         cmd = ['coverage', 'run', '--source=../src', str(runner)] + cmd
-    with c.cd(str(TOP_DIR / 'run')):
+    db_path = Path(dbdir)
+    if not db_path.is_absolute():
+        db_path = TOP_DIR / db_path
+    db_path.mkdir(exist_ok=True)
+    with c.cd(str(db_path)):
         c.run(' '.join(cmd), env=SRC_ENV, pty=True)
 
 @task
