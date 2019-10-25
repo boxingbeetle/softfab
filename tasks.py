@@ -182,11 +182,14 @@ def run(c, host='localhost', port=8180, dbdir='run',
         c.run(' '.join(cmd), env=SRC_ENV, pty=True)
 
 @task
-def ape(c, host='localhost', port=8180, results=None):
+def ape(c, host='localhost', port=8180, dbdir='run', results=None):
+    db_path = Path(dbdir)
+    if not db_path.is_absolute():
+        db_path = TOP_DIR / db_path
     cmd = [
         'apetest',
         '--check', 'launch',
-        '--cclog', 'run/cc-log.txt',
+        '--cclog', str(db_path / 'cc-log.txt'),
         ]
     if results is None:
         report_dir = TOP_DIR.resolve()
