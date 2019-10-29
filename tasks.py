@@ -4,8 +4,10 @@ from shutil import copyfile, rmtree
 from invoke import UnexpectedExit, call, task
 
 TOP_DIR = Path(__file__).parent
-SRC_ENV = {'PYTHONPATH': '{}/src'.format(TOP_DIR)}
-PYLINT_ENV = {'PYTHONPATH': '{0}/src:{0}/tests/pylint'.format(TOP_DIR)}
+SRC_DIR = TOP_DIR / 'src'
+SRC_ENV = {'PYTHONPATH': str(SRC_DIR)}
+PYLINT_DIR = TOP_DIR / 'tests' / 'pylint'
+PYLINT_ENV = {'PYTHONPATH': f'{SRC_DIR}:{PYLINT_DIR}'}
 
 mypy_report = 'mypy-report'
 
@@ -84,7 +86,7 @@ def lint(c, src=None, rule=None, html=None, results=None, version=False):
             c.run(f'pylint-json2html -f jsonextended -o {html} {json_file}')
     if results is not None:
         import sys
-        sys.path.append(f'{TOP_DIR}/tests/pylint')
+        sys.path.append(str(PYLINT_DIR))
         from pylint_json2sfresults import gather_results
         results_dict = gather_results(json_file, lint_result.exited)
         results_dict['report'] = str(html)
@@ -173,7 +175,7 @@ def run(c, host='localhost', port=8180, dbdir='run',
         ]
     if coverage:
         runner = TOP_DIR / 'tests' / 'tools' / 'run_console_script.py'
-        cmd = ['coverage', 'run', '--source=../src', str(runner)] + cmd
+        cmd = ['coverage', 'run', f'--source={SRC_DIR}', str(runner)] + cmd
     db_path = Path(dbdir)
     if not db_path.is_absolute():
         db_path = TOP_DIR / db_path
