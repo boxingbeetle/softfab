@@ -9,7 +9,6 @@ from typing import (
 import logging
 import os
 import os.path
-import re
 import time
 
 from softfab.config import dbDir
@@ -58,22 +57,6 @@ def _guessSystemTimezone() -> str:
             timezone = lines[0].strip()
             if timezone in pytz.common_timezones:
                 return timezone
-
-    # SUSE and Red Hat configure the timezone using /etc/sysconfig/clock.
-    try:
-        lines = open('/etc/sysconfig/clock').readlines()
-    except OSError:
-        pass
-    else:
-        reTimezone = re.compile(
-            r'^\s*TIMEZONE\s*=\s*["\']?([A-Za-z_\-/]*)["\']?\s*(#.*)?$'
-            )
-        for line in lines:
-            match = reTimezone.match(line)
-            if match:
-                timezone = match.group(1)
-                if timezone in pytz.common_timezones:
-                    return timezone
 
     # In Mac OS X, /etc/localtime is a symlink to the timezone definition.
     # (In Linux, it seems to be a hardlink or copy instead.)
