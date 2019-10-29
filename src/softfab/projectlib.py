@@ -47,17 +47,6 @@ def _guessSystemTimezone() -> str:
     if '/' in timezone and timezone in pytz.common_timezones:
         return timezone
 
-    # Debian stores the timezone in /etc/timezone.
-    try:
-        lines = open('/etc/timezone').readlines()
-    except OSError:
-        pass
-    else:
-        if lines:
-            timezone = lines[0].strip()
-            if timezone in pytz.common_timezones:
-                return timezone
-
     # In macOS and in Linux distros using systemd, /etc/localtime is a symlink
     # to the timezone definition.
     if os.path.islink('/etc/localtime'):
