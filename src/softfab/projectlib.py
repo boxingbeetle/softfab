@@ -58,8 +58,8 @@ def _guessSystemTimezone() -> str:
             if timezone in pytz.common_timezones:
                 return timezone
 
-    # In Mac OS X, /etc/localtime is a symlink to the timezone definition.
-    # (In Linux, it seems to be a hardlink or copy instead.)
+    # In macOS and in Linux distros using systemd, /etc/localtime is a symlink
+    # to the timezone definition.
     if os.path.islink('/etc/localtime'):
         parts = os.readlink('/etc/localtime').rsplit('/', 2)
         if len(parts) == 3:
