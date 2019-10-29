@@ -180,6 +180,8 @@ def run(c, host='localhost', port=8180, dbdir='run',
     if not db_path.is_absolute():
         db_path = TOP_DIR / db_path
     db_path.mkdir(exist_ok=True)
+    pid_file = db_path / 'cc.pid'
+    cmd = ['echo' ,'$$', f'>{pid_file}', '&&'] + cmd
     with c.cd(str(db_path)):
         c.run(' '.join(cmd), env=SRC_ENV, pty=True)
 
