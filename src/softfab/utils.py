@@ -36,17 +36,11 @@ class Heap(Generic[T]):
     the smallest item.
     Typically used for priority queues.
     Note: The storage space allocated internally never shrinks,
-        because for the current use it is unnecessary.
+          because for the current use it is unnecessary.
     """
 
-    def __init__(
-            self,
-            size: int = 0,
-            key: Optional[Callable[[T], object]] = None
-            ):
-        if size < 1:
-            size = 1
-        self.__array: List[Optional[T]] = [ None ] * size
+    def __init__(self, key: Optional[Callable[[T], object]] = None):
+        self.__array: List[Optional[T]] = [ None ]
         self.__count = 1
         self.__keyFunc = (lambda x: x) if key is None else key
 
@@ -55,9 +49,6 @@ class Heap(Generic[T]):
         each iteration removes the smallest element from the heap.
         """
         return self
-
-    #def __contains__(self, item):
-    #    return item in self.__array[:self.__count]
 
     def __moveUp(self, item: T, this: int) -> None:
         key = self.__keyFunc
@@ -87,7 +78,6 @@ class Heap(Generic[T]):
     def add(self, item: T) -> None:
         """Adds an item to the heap.
         """
-        #assert item is not None, 'None is not a valid item to add'
         if self.__array[0] is None:
             self.__moveDown(item, 0)
         else:
@@ -143,10 +133,7 @@ class Heap(Generic[T]):
         """Check proper element ordering (used for unit testing only).
         """
         key = self.__keyFunc
-        if self.__array[0] is not None:
-            index = 0
-        else:
-            index = 1
+        index = 1 if self.__array[0] is None else 0
         while index < self.__count:
             one = index * 2 + 1
             two = index * 2 + 2
