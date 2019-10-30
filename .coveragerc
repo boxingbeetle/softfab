@@ -5,6 +5,7 @@ branch = True
 exclude_lines =
     # Intended to be unreachable:
     raise NotImplementedError$
+    raise NotImplementedError\(
     assert False$
     assert False,
 
