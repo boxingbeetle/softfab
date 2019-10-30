@@ -136,19 +136,30 @@ def types(c, src=None, clean=False, report=False, results=None):
                 out.write(f'report.1={report_dir}/mypy-coverage\n')
 
 @task
-def unittest(c, junit_xml=None, results=None):
+def unittest(c, junit_xml=None, results=None, coverage=False):
     """Run unit tests."""
-    if results is not None:
+    test_dir = TOP_DIR / 'tests' / 'unit'
+    if results is None:
+        report_dir = test_dir
+    else:
         report_dir = Path(results).parent.resolve()
         junit_xml = report_dir / 'pytest-report.xml'
-    args = ['pytest']
+    cmd = ['pytest']
+    if coverage:
+        cmd.append(f'--cov={SRC_DIR}')
+        cmd.append(f"--cov-config={TOP_DIR / '.coveragerc'}")
+        cmd.append('--cov-report=')
+        cmd.append('--cov-branch')
     if junit_xml is not None:
-        args.append('--junit-xml=%s' % junit_xml)
-    args.append('tests/unit')
-    with c.cd(str(TOP_DIR)):
-        c.run(' '.join(args), env=SRC_ENV, pty=results is None)
+        cmd.append(f'--junit-xml={junit_xml}')
+    cmd.append(str(test_dir))
+    with c.cd(str(report_dir)):
+        c.run(' '.join(cmd), env=SRC_ENV, pty=results is None)
     if results is not None:
         results_dict = dict(report=str(junit_xml))
+        if coverage:
+            results_dict['output.COVERAGE.locator'] = \
+                    str(report_dir / '.coverage')
         write_results(results_dict, results)
 
 @task(post=[unittest, lint, types])
