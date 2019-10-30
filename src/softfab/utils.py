@@ -157,7 +157,7 @@ class Heap(Generic[T]):
             self.__array[0] = None
             return item
 
-    def _check(self, fail: Any = None) -> bool:
+    def _check(self) -> None:
         """Check proper element ordering (used for unit testing only).
         """
         array = self.__array
@@ -165,15 +165,12 @@ class Heap(Generic[T]):
         index = 1 if array[0] is None else 0
         while index < self.__count:
             one = index * 2 + 1
+            if one < self.__count:
+                assert key(array[one]) >= key(array[index]), index
             two = index * 2 + 2
-            if one < self.__count and key(array[one]) < key(array[index]) \
-            or two < self.__count and key(array[two]) < key(array[index]):
-                if fail is not None:
-                    fail.fail('Invalid state at position ' + str(index) +
-                        ' of ' + str(self.__count))
-                return False
+            if two < self.__count:
+                assert key(array[two]) >= key(array[index]), index
             index += 1
-        return True
 
 def escapeURL(text: str) -> str:
     return quote_plus(utf8encode(text)[0])

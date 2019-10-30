@@ -24,7 +24,7 @@ class TestHeap(unittest.TestCase):
         #return [item for item in heap]
         list = []
         for item in heap:
-            heap._check(self)
+            heap._check()
             list.append(item)
         return list
 
@@ -58,7 +58,7 @@ class TestHeap(unittest.TestCase):
             random.shuffle(shuffled)
             for item in shuffled:
                 heap.add(item)
-                heap._check(self)
+                heap._check()
             self.assertEqual(self.__getItems(heap), initial)
             self.__checkEmpty(heap)
 
@@ -75,7 +75,7 @@ class TestHeap(unittest.TestCase):
             sorted.sort(key=self.keyFunc)
             for item in initial:
                 heap.add(item)
-                heap._check(self)
+                heap._check()
             self.assertEqual(self.__getItems(heap), sorted)
             self.__checkEmpty(heap)
 
@@ -89,13 +89,13 @@ class TestHeap(unittest.TestCase):
             for a in range(toAdd):
                 item = self._wrapItem(random.randint(0, 1 << 30))
                 heap.add(item)
-                heap._check(self)
+                heap._check()
                 checkArray.append(item)
             checkArray.sort(key=self.keyFunc)
             for a in range(toGet):
                 try:
                     item = next(heap)
-                    heap._check(self)
+                    heap._check()
                 except StopIteration:
                     if len(checkArray) != 0:
                         self.fail('Heap is empty while check array'
@@ -107,7 +107,7 @@ class TestHeap(unittest.TestCase):
                         self.fail('Heap has returned \'' + str(item) +
                         '\' while check array is empty')
         for item in heap:
-            heap._check(self)
+            heap._check()
             try:
                 self.assertEqual(checkArray.pop(0), item)
             except IndexError:
@@ -124,7 +124,7 @@ class TestHeap(unittest.TestCase):
             random.shuffle(shuffled)
             for item in shuffled:
                 heap.add(item)
-                heap._check(self)
+                heap._check()
             for _ in range(int(self.__arraySize * self.__delFactor)):
                 value = self._wrapItem(random.randint(0, self.__arraySize - 1))
                 try:
@@ -137,7 +137,7 @@ class TestHeap(unittest.TestCase):
                         heap.remove(value)
                     except ValueError:
                         self.fail('Failed to remove element: ' + str(value))
-                    heap._check(self)
+                    heap._check()
             self.assertEqual(self.__getItems(heap), initial)
             self.__checkEmpty(heap)
 
