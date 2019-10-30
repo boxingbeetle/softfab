@@ -2,10 +2,9 @@
 
 from abc import ABC
 from collections.abc import ItemsView, ValuesView
-from functools import total_ordering
 from operator import itemgetter
 from typing import (
-    Any, Callable, ClassVar, Dict, FrozenSet, Generic, ItemsView as ItemsViewT,
+    Callable, ClassVar, Dict, FrozenSet, Generic, ItemsView as ItemsViewT,
     Iterator, KeysView as KeysViewT, List, Mapping, Optional, Sequence, Set,
     TypeVar, ValuesView as ValuesViewT, cast
 )
@@ -15,9 +14,8 @@ import os.path
 import re
 import time
 
-from softfab.compat import Protocol
 from softfab.config import dbAtomicWrites, logChanges
-from softfab.utils import abstract, atomicWrite, cachedProperty
+from softfab.utils import Comparable, abstract, atomicWrite, cachedProperty
 from softfab.xmlbind import parse
 from softfab.xmlgen import XML
 
@@ -40,14 +38,6 @@ class ObsoleteRecordError(Exception):
     accessed. Used to purge obsolete records during database conversion.
     '''
 
-@total_ordering
-class ComparableProto(Protocol):
-    def __eq__(self, other: Any) -> bool:
-        ...
-    def __lt__(self, other: Any) -> bool:
-        ...
-
-Comparable = TypeVar('Comparable', bound=ComparableProto)
 DBRecord = TypeVar('DBRecord', bound='DatabaseElem')
 R2 = TypeVar('R2', bound='DatabaseElem')
 Retriever = Callable[[DBRecord], Comparable]

@@ -7,8 +7,8 @@ from typing import (
 )
 
 from softfab.compat import Protocol
-from softfab.databaselib import Comparable, DBRecord, Database, Retriever
-from softfab.utils import MissingValue, missing, wildcardMatcher
+from softfab.databaselib import DBRecord, Database, Retriever
+from softfab.utils import Comparable, MissingValue, missing, wildcardMatcher
 
 
 class KeyValueStoreProto(Protocol):

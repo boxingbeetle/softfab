@@ -4,10 +4,9 @@ from abc import ABC
 from typing import Callable, ClassVar, Iterator, Sequence, Tuple
 
 from softfab.databaselib import (
-    Comparable, DBRecord, Database, RecordObserver, RecordSubjectMixin,
-    Retriever
+    DBRecord, Database, RecordObserver, RecordSubjectMixin, Retriever
 )
-from softfab.utils import abstract
+from softfab.utils import Comparable, abstract
 
 
 def binarySearch(lst: Sequence[DBRecord],

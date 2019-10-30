@@ -9,14 +9,14 @@ from logging import Logger
 from types import ModuleType
 from typing import (
     IO, Any, Callable, Dict, Generic, Iterable, Iterator, List, Match,
-    Optional, Pattern, Sized, Tuple, Type, TypeVar, Union, cast
+    Optional, Pattern, Sized, Tuple, Type, TypeVar, Union, cast, overload
 )
 from urllib.parse import quote_plus
 import os
 import os.path
 import re
 
-from softfab.compat import importlib_resources
+from softfab.compat import Protocol, importlib_resources
 
 C = TypeVar('C')
 T = TypeVar('T')
@@ -30,6 +30,17 @@ class IllegalStateError(Exception):
     current state of the object.
     '''
 
+class ComparableProto(Protocol):
+    # pylint: disable=multiple-statements
+    def __eq__(self, other: Any) -> bool: ...
+    def __ne__(self, other: Any) -> bool: ...
+    def __lt__(self, other: Any) -> bool: ...
+    def __le__(self, other: Any) -> bool: ...
+    def __gt__(self, other: Any) -> bool: ...
+    def __ge__(self, other: Any) -> bool: ...
+
+Comparable = TypeVar('Comparable', bound=ComparableProto)
+
 class Heap(Generic[T]):
     """Implements the heap data structure:
     an ordered set for which it is efficient to retrieve and remove
@@ -39,10 +50,22 @@ class Heap(Generic[T]):
           because for the current use it is unnecessary.
     """
 
-    def __init__(self, key: Optional[Callable[[T], object]] = None):
+    @overload
+    def __init__(self: 'Heap[Comparable]'):
+        ...
+    @overload
+    def __init__(self, key: Callable[[T], Comparable]):
+        ...
+    def __init__(self, key: Optional[Callable[[T], Comparable]] = None):
         self.__array: List[Optional[T]] = [ None ]
         self.__count = 1
-        self.__keyFunc = (lambda x: x) if key is None else key
+        # Note: We won't actually pass None to the key function,
+        #       but there is no efficient way to tell mypy that,
+        #       so instead we pretend the key function can handle None.
+        self.__keyFunc = cast(
+            Callable[[Optional[T]], Comparable],
+            (lambda x: x) if key is None else key
+            )
 
     def __iter__(self) -> 'Heap[T]':
         """Note: This heap's iterator is destructive:
