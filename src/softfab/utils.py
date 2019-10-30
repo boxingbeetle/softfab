@@ -51,55 +51,59 @@ class Heap(Generic[T]):
         return self
 
     def __moveUp(self, item: T, this: int) -> None:
+        array = self.__array
         key = self.__keyFunc
         while this > 0:
             nextIndex = (this - 1) // 2
-            if key(item) >= key(self.__array[nextIndex]):
+            if key(item) >= key(array[nextIndex]):
                 break
-            self.__array[this] = self.__array[nextIndex]
+            array[this] = array[nextIndex]
             this = nextIndex
-        self.__array[this] = item
+        array[this] = item
 
     def __moveDown(self, item: T, this: int) -> None:
+        array = self.__array
         key = self.__keyFunc
+        count = self.__count
         nextIndex = this * 2 + 1
-        while nextIndex < self.__count:
+        while nextIndex < count:
             other = nextIndex + 1
-            if other < self.__count and \
-                    key(self.__array[other]) < key(self.__array[nextIndex]):
+            if other < count and key(array[other]) < key(array[nextIndex]):
                 nextIndex = other
-            if key(item) <= key(self.__array[nextIndex]):
+            if key(item) <= key(array[nextIndex]):
                 break
-            self.__array[this] = self.__array[nextIndex]
+            array[this] = array[nextIndex]
             this = nextIndex
             nextIndex = this * 2 + 1
-        self.__array[this] = item
+        array[this] = item
 
     def add(self, item: T) -> None:
         """Adds an item to the heap.
         """
-        if self.__array[0] is None:
+        array = self.__array
+        if array[0] is None:
             self.__moveDown(item, 0)
         else:
             last = self.__count
             self.__count += 1
-            if last == len(self.__array):
-                self.__array.append(None)
+            if last == len(array):
+                array.append(None)
             self.__moveUp(item, last)
 
     def remove(self, item: T) -> None:
         """Removes an item from the heap.
         Raises ValueError if the heap does not contain the item.
         """
-        this = self.__array.index(item, 0, self.__count)
+        array = self.__array
+        this = array.index(item, 0, self.__count)
         if this == 0:
-            self.__array[0] = None
+            array[0] = None
         else:
             self.__count -= 1
             if this != self.__count:
-                item = cast(T, self.__array[self.__count])
+                item = cast(T, array[self.__count])
                 key = self.__keyFunc
-                if key(item) > key(self.__array[this]):
+                if key(item) > key(array[this]):
                     self.__moveDown(item, this)
                 else:
                     self.__moveUp(item, this)
@@ -107,13 +111,14 @@ class Heap(Generic[T]):
     def peek(self) -> Optional[T]:
         """Returns the smallest item in the heap.
         """
-        item = self.__array[0]
+        array = self.__array
+        item = array[0]
         if item is None:
             if self.__count > 1:
                 self.__count -= 1
-                item = cast(T, self.__array[self.__count])
+                item = cast(T, array[self.__count])
                 self.__moveDown(item, 0)
-                return self.__array[0]
+                return array[0]
             else:
                 return None
         else:
@@ -132,15 +137,14 @@ class Heap(Generic[T]):
     def _check(self, fail: Any = None) -> bool:
         """Check proper element ordering (used for unit testing only).
         """
+        array = self.__array
         key = self.__keyFunc
-        index = 1 if self.__array[0] is None else 0
+        index = 1 if array[0] is None else 0
         while index < self.__count:
             one = index * 2 + 1
             two = index * 2 + 2
-            if one < self.__count and \
-                    key(self.__array[one]) < key(self.__array[index]) \
-            or two < self.__count and \
-                    key(self.__array[two]) < key(self.__array[index]):
+            if one < self.__count and key(array[one]) < key(array[index]) \
+            or two < self.__count and key(array[two]) < key(array[index]):
                 if fail is not None:
                     fail.fail('Invalid state at position ' + str(index) +
                         ' of ' + str(self.__count))
