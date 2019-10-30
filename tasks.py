@@ -149,7 +149,6 @@ def unittest(c, junit_xml=None, results=None, coverage=False):
         cmd.append(f'--cov={SRC_DIR}')
         cmd.append(f"--cov-config={TOP_DIR / '.coveragerc'}")
         cmd.append('--cov-report=')
-        cmd.append('--cov-branch')
     if junit_xml is not None:
         cmd.append(f'--junit-xml={junit_xml}')
     cmd.append(str(test_dir))
