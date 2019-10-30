@@ -6,7 +6,7 @@ exclude_lines =
     # Intended to be unreachable:
     raise NotImplementedError$
     assert False$
-    assert False, $
+    assert False,
 
     # Debug-only code:
     def __repr__\(
