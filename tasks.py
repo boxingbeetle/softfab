@@ -186,7 +186,12 @@ def run(c, host='localhost', port=8180, dbdir='run',
         ]
     if coverage:
         runner = TOP_DIR / 'tests' / 'tools' / 'run_console_script.py'
-        cmd = ['coverage', 'run', f'--source={SRC_DIR}', str(runner)] + cmd
+        cmd = [
+            'coverage', 'run',
+            f"--rcfile={TOP_DIR / '.coveragerc'}",
+            f'--source={SRC_DIR}',
+            str(runner)
+            ] + cmd
     db_path = Path(dbdir)
     if not db_path.is_absolute():
         db_path = TOP_DIR / db_path
