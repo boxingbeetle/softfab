@@ -214,7 +214,6 @@ class TableData(Generic[Record]):
         if tabOffsetField is not None:
             tabOffset: int = getattr(proc.args, tabOffsetField)
             recordsPerPage = table.recordsPerPage
-            newOffset = tabOffset
             if tabOffset < 0:
                 # User tried to be funny and entered negative offset in URL.
                 # Clip to first tab.
