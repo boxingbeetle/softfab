@@ -143,7 +143,6 @@ def visualizeBarChart(key: str,
 
     # Calculate width of bars.
     barWidth = min(maxBarWidth, graphWidth // len(dataPoints))
-    graphWidth = barWidth * len(dataPoints)
 
     def generateBars() -> XMLContent:
         assert maxValue is not None # work around mypy issue 2608
