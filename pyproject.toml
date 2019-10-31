@@ -33,6 +33,9 @@ classifiers = [
     'Topic :: Software Development :: Testing',
     ]
 
+[tool.poetry.scripts]
+softfab = 'softfab.cmdline:main'
+
 [tool.poetry.dependencies]
 python = '^3.6'
 Twisted = {version = '>=16.6', extras = ['tls']}
@@ -45,6 +48,7 @@ importlib_resources = "^1.0"
 markdown = "^3.1"
 pygments = "^2.2"
 attrs = ">=18.2"
+click = "^7.0"
 
 [tool.poetry.dev-dependencies]
 pytest = '^4.0'
