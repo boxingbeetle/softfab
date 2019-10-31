@@ -1,11 +1,13 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from typing import Mapping
+
 from softfab.ControlPage import ControlPage
 from softfab.pageargs import PageArgs, SetArg
 from softfab.response import Response
 from softfab.taskdeflib import taskDefDB
 from softfab.userlib import User, checkPrivilege
-from softfab.xmlgen import xml
+from softfab.xmlgen import XMLContent, xml
 
 
 class GetTaskDefParams_GET(ControlPage['GetTaskDefParams_GET.Arguments',
@@ -22,9 +24,10 @@ class GetTaskDefParams_GET(ControlPage['GetTaskDefParams_GET.Arguments',
                    response: Response,
                    proc: ControlPage.Processor
                    ) -> None:
-        requestedParams = proc.args.param
+        args: GetTaskDefParams_GET.Arguments = proc.args
+        requestedParams = args.param
 
-        def externalizeParams(taskParams):
+        def externalizeParams(taskParams: Mapping[str, str]) -> XMLContent:
             for param in requestedParams or taskParams:
                 value = taskParams.get(param)
                 if value is not None:
