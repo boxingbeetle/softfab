@@ -72,7 +72,7 @@ public class ServerFormRequest extends ServerRequest {
     /**
      * Adds a parameter that indicates how the resource should be modified.
      * @param name Parameter name.
-     * @param value Sequence of parameter values.
+     * @param values Sequence of parameter values.
      */
     public void addBodyParam(String name, Iterable<String> values) {
         for (final String value : values) {
