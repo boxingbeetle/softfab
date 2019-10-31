@@ -1,28 +1,37 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from typing import (
+    AbstractSet, Dict, Iterable, List, Mapping, Optional, Tuple, cast
+)
+
 from softfab.ControlPage import ControlPage
 from softfab.Page import PageProcessor
-from softfab.joblib import getAllTasksWithId
-from softfab.pageargs import DictArg, PageArgs, SetArg, StrArg
+from softfab.joblib import Task, getAllTasksWithId
+from softfab.pageargs import DictArg, DictArgInstance, PageArgs, SetArg, StrArg
+from softfab.request import Request
 from softfab.response import Response
 from softfab.taskdeflib import TaskDef, taskDefDB
 from softfab.timeview import formatTimeAttr
 from softfab.userlib import User, checkPrivilege
-from softfab.xmlgen import xml
+from softfab.xmlgen import XMLContent, xml
 
+DefRunPair = Tuple[TaskDef, Optional[Task]]
 
-def filterTasks(tag, owner):
+def filterTasks(
+        tag: Mapping[str, Iterable[str]],
+        owner: Optional[str]
+        ) -> Mapping[str, Mapping[str, Iterable[DefRunPair]]]:
     # In "selected", each tag key is mapped to a dictionary which maps the
     # canonical versions of selected tag values to a list of all the task
     # definitions that have that particular tag.
-    selected = {}
+    selected: Dict[str, Dict[str, List[DefRunPair]]] = {}
     for tagKey, tagValues in tag.items():
         selected[tagKey] = {
             TaskDef.cache.toCanonical(tagKey, value)[0]: []
             for value in tagValues
             }
 
-    def createDefRunPair(taskDef):
+    def createDefRunPair(taskDef: TaskDef) -> DefRunPair:
         taskId = taskDef.getId()
         # Determine latest run of this task.
         taskTimes = (
@@ -32,6 +41,7 @@ def filterTasks(tag, owner):
                 not owner or owner == task['owner']
                 )
             )
+        task: Optional[Task]
         try:
             starttime_, task = max(taskTimes)
         except ValueError:
@@ -61,9 +71,15 @@ class GetTaggedTaskInfo_GET(ControlPage['GetTaggedTaskInfo_GET.Arguments',
 
     class Processor(PageProcessor['GetTaggedTaskInfo_GET.Arguments']):
 
-        def process(self, req, user):
+        def process(self,
+                    req: Request['GetTaggedTaskInfo_GET.Arguments'],
+                    user: User
+                    ) -> None:
             # pylint: disable=attribute-defined-outside-init
-            self.selected = filterTasks(req.args.tag, req.args.owner)
+            self.selected = filterTasks(
+                cast(DictArgInstance[AbstractSet[str]], req.args.tag),
+                req.args.owner
+                )
 
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'td/l', 'list task definitions')
@@ -72,21 +88,24 @@ class GetTaggedTaskInfo_GET(ControlPage['GetTaggedTaskInfo_GET.Arguments',
         checkPrivilege(user, 't/a', 'access tasks')
 
     def writeReply(self, response: Response, proc: Processor) -> None:
-        def taskToXML(task):
+        def taskToXML(task: Optional[Task]) -> XMLContent:
             if task is not None:
                 run = task.getLatestRun()
                 yield xml.run(
-                    execstate = run['state'],
+                    execstate = run._getState(),
                     result = run.result,
                     alert = run.getAlert(),
                     summary = run.getSummary(),
                     starttime = formatTimeAttr(run.startTime),
                     duration = run.getDuration(),
                     report = run.getURL(),
-                    owner = run['owner'],
+                    owner = task.getJob().getOwner(),
                     )
 
-        def taggedToXML(tagKey, tagged):
+        def taggedToXML(
+                tagKey: str,
+                tagged: Mapping[str, Iterable[DefRunPair]]
+                ) -> XMLContent:
             for tagValue, tasks in tagged.items():
                 cvalue, dvalue = TaskDef.cache.toCanonical(
                     tagKey, tagValue
