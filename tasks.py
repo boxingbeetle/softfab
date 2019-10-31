@@ -1,7 +1,7 @@
 from pathlib import Path
 from shutil import copyfile, rmtree
 
-from invoke import UnexpectedExit, call, task
+from invoke import UnexpectedExit, task
 
 TOP_DIR = Path(__file__).parent
 SRC_DIR = TOP_DIR / 'src'
@@ -53,7 +53,7 @@ def lint(c, src=None, rule=None, html=None, results=None, version=False):
     """Check sources with PyLint."""
     print('Checking sources with PyLint...')
     if version:
-        lint_result = c.run('pylint --version', env=PYLINT_ENV)
+        c.run('pylint --version', env=PYLINT_ENV)
     if results is None:
         report_dir = Path(TOP_DIR)
     else:
@@ -68,12 +68,9 @@ def lint(c, src=None, rule=None, html=None, results=None, version=False):
             '--disable=all', '--enable=' + rule,
             '--persistent=n', '--score=n'
             ]
-    if html is None:
-        hide = None
-    else:
+    if html is not None:
         html = Path(html).resolve()
         json_file = report_dir / 'pylint.json'
-        hide = 'stdout'
         cmd += ['--load-plugins=pylint_json2html',
                 '--output-format=jsonextended',
                 '>%s' % json_file]
