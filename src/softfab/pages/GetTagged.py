@@ -1,19 +1,24 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from typing import Mapping, Optional, cast
+
 from softfab.ControlPage import ControlPage
 from softfab.Page import InvalidRequest, PageProcessor
 from softfab.configlib import configDB
+from softfab.databaselib import Database
 from softfab.pageargs import PageArgs, SetArg, StrArg
+from softfab.request import Request
 from softfab.response import Response
 from softfab.schedulelib import scheduleDB
+from softfab.selectlib import SelectableRecordABC, TagCache
 from softfab.taskdeflib import taskDefDB
 from softfab.userlib import User, checkPrivilege
 from softfab.xmlgen import xml
 
-subjectToDB = dict(
-    config = configDB,
-    schedule = scheduleDB,
-    taskdef = taskDefDB,
+subjectToDB: Mapping[str, Database[SelectableRecordABC]] = dict(
+    config = cast(Database[SelectableRecordABC], configDB),
+    schedule = cast(Database[SelectableRecordABC], scheduleDB),
+    taskdef = cast(Database[SelectableRecordABC], taskDefDB),
     )
 
 class GetTagged_GET(ControlPage['GetTagged_GET.Arguments',
@@ -30,7 +35,10 @@ class GetTagged_GET(ControlPage['GetTagged_GET.Arguments',
 
     class Processor(PageProcessor['GetTagged_GET.Arguments']):
 
-        def process(self, req, user):
+        def process(self,
+                    req: Request['GetTagged_GET.Arguments'],
+                    user: User
+                    ) -> None:
             # Determine subject and access rights.
             try:
                 db = subjectToDB[req.args.subject]
@@ -45,6 +53,7 @@ class GetTagged_GET(ControlPage['GetTagged_GET.Arguments',
 
             # Get tag cache from any record.
             # TODO: Refactor so tag cache can be fetched directly from "db".
+            tagCache: Optional[TagCache]
             for recordId in db.keys():
                 tagCache = db[recordId].cache
                 break
