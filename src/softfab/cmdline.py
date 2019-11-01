@@ -11,6 +11,7 @@ import sys
 from click import command, group, option, version_option
 from twisted.application import strports
 from twisted.internet.error import CannotListenError
+from twisted.logger import globalLogBeginner, textFileLogObserver
 from twisted.web.server import Site
 
 from softfab.version import VERSION
@@ -46,6 +47,10 @@ def server(
 
     # This must be after importing initlog.
     from softfab.TwistedRoot import SoftFabRoot
+
+    # Set up Twisted's logging.
+    observers = [textFileLogObserver(sys.stderr)]
+    globalLogBeginner.beginLoggingTo(observers)
 
     root = SoftFabRoot(
         debugSupport=debug,
