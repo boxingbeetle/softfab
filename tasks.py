@@ -177,12 +177,13 @@ def run(c, host='localhost', port=8180, dbdir='run',
         auth=False, coverage=False):
     """Run a Control Center instance."""
     print(f'Starting Control Center at: http://{host}:{port}/')
-    root = 'debugAuth' if auth else 'debug'
     cmd = [
-        'twist', 'web',
+        'softfab', 'server',
         f'--listen tcp:interface={host}:port={port}',
-        f'--class softfab.TwistedApp.{root}'
+        '--debug', '--insecure-cookie'
         ]
+    if not auth:
+        cmd.append('--no-auth')
     if coverage:
         runner = TOP_DIR / 'tests' / 'tools' / 'run_console_script.py'
         cmd = [
