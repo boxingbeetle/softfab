@@ -195,8 +195,6 @@ class PageLoader:
             method = className[index + 1 : ]
             assert method not in pagesByMethod
             pagesByMethod[method] = page
-            if base == 'Login':
-                setattr(page, 'secureCookie', root.secureCookie)
             if name is None:
                 name = base
             else:
@@ -288,9 +286,7 @@ stylePrefix = styleRoot.urlPrefix.encode()
 
 class SoftFabRoot(Resource):
 
-    def __init__(self,
-            debugSupport: bool, anonOperator: bool, secureCookie: bool
-            ):
+    def __init__(self, debugSupport: bool, anonOperator: bool):
         """Creates a Control Center root resource.
 
         Parameters:
@@ -303,14 +299,9 @@ class SoftFabRoot(Resource):
             Automatically give every client operator privileges to
             pages registered under this root, without forcing a login.
 
-        secureCookie: bool
-            Mark the session cookie as secure, meaning it will only
-            be submitted over HTTPS.
-
         """
         self.debugSupport = debugSupport
         self.anonOperator = anonOperator
-        self.secureCookie = secureCookie
 
         if anonOperator:
             # TODO: This monkey-patches the class to change all instances

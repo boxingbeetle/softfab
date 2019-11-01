@@ -210,12 +210,6 @@ class FabResource(ABC, Generic[ArgsT, ProcT]):
     as the root resource.
     """
 
-    secureCookie = True
-    """Mark the session cookie as secure?
-
-    Browsers will only send secure cookies over secure channels (HTTPS).
-    """
-
     @property
     def name(self) -> str:
         return self.getResourceName()

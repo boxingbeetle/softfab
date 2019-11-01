@@ -202,7 +202,7 @@ class Request(RequestBase, Generic[ArgsT_co]):
         except KeyError:
             return None
 
-    def startSession(self, user: User, secure: bool) -> None:
+    def startSession(self, user: User) -> None:
         '''Starts a new session and returns it.
         '''
         request = self._request
@@ -212,7 +212,7 @@ class Request(RequestBase, Generic[ArgsT_co]):
         session.touch()
         request.addCookie(
             self.sessionCookieName, session.uid, path='/',
-            httpOnly=True, secure=secure,
+            httpOnly=True, secure=site.secureCookie,
             **({'sameSite': 'lax'} if sameSiteSupport else {})
             )
 

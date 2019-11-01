@@ -40,7 +40,6 @@ class Actions(Enum):
 
 class LoginBase(UIPage[ProcT], FabResource[ArgsT, ProcT]):
     authenticator = NoAuthPage.instance
-    secureCookie = True
 
     def checkAccess(self, user: User) -> None:
         pass
@@ -153,7 +152,7 @@ class Login_POST(LoginBase['Login_POST.Processor', 'Login_POST.Arguments']):
                 # attacks that inject a valid session cookie that was
                 # generated for a different client.
                 #   http://en.wikipedia.org/wiki/Session_fixation
-                req.startSession(user, self.page.secureCookie)
+                req.startSession(user)
 
                 if passwordQuality(username, password) is not \
                         PasswordMessage.SUCCESS and user.hasPrivilege('u/mo'):
