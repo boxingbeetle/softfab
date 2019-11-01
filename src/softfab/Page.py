@@ -201,15 +201,6 @@ class FabResource(ABC, Generic[ArgsT, ProcT]):
     authenticator: Authenticator = abstract
     streaming = False
 
-    debugSupport = False
-    """Provide additional debug information as part of a reply?
-
-    This could leak privileged information, so it should only be enabled
-    in development environments.
-    This flag can be enabled site-wide by using `softfab.TwistedApp.DebugRoot`
-    as the root resource.
-    """
-
     @property
     def name(self) -> str:
         return self.getResourceName()

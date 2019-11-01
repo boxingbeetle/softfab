@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from traceback import TracebackException
-from typing import TYPE_CHECKING, Generic, Iterable, Iterator, Optional, cast
+from typing import Generic, Iterable, Iterator, Optional, cast
 
 from softfab.Page import PageProcessor, ProcT, Responder, logPageException
 from softfab.StyleResources import styleRoot
@@ -54,9 +54,6 @@ class _ErrorResponder(UIResponder):
         super().respond(response)
 
 class UIPage(Generic[ProcT]):
-
-    if TYPE_CHECKING:
-        debugSupport = False
 
     def writeHTTPHeaders(self, response: Response) -> None:
         if response.userAgent.acceptsXHTML:
@@ -127,13 +124,13 @@ class UIPage(Generic[ProcT]):
     def errorResponder(self, ex: Exception, proc: PageProcessor) -> Responder:
         return _ErrorResponder(self, ex, cast(ProcT, proc))
 
-    def __formatError(self, ex: Exception) -> Iterator[XMLNode]:
+    def __formatError(self, req: Request, ex: Exception) -> Iterator[XMLNode]:
         '''Yields HTML informing the user of the given exception.
         '''
         yield xhtml.p(class_ = 'notice')[
             'An error occurred while generating this page.'
             ]
-        if self.debugSupport:
+        if req.displayTracebacks:
             tb = TracebackException.from_exception(ex)
             yield xhtml.pre[tb.format()]
         else:
@@ -148,19 +145,19 @@ class UIPage(Generic[ProcT]):
         yield self.presentHeader(**kwargs)
         try:
             yield xhtml.div(class_='body')[
-                self.__presentBody(**kwargs)
+                self.__presentBody(req, **kwargs)
                 ]
             if proc.processingError is None:
                 yield self.presentBackgroundScripts(**kwargs)
         except Exception as ex:
             logPageException(req, 'Error presenting page')
             response.setStatus(500, 'Error presenting page')
-            yield from self.__formatError(ex)
+            yield from self.__formatError(req, ex)
 
-    def __presentBody(self, **kwargs: object) -> XMLContent:
+    def __presentBody(self, req: Request, **kwargs: object) -> XMLContent:
         proc = cast(ProcT, kwargs['proc'])
         if proc.processingError is not None:
-            return self.__formatError(proc.processingError)
+            return self.__formatError(req, proc.processingError)
         elif proc.error is not None:
             return self.presentError(proc.error, **kwargs)
         else:

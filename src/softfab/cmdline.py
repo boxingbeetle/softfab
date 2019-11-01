@@ -55,11 +55,12 @@ def server(
     observers = [textFileLogObserver(sys.stderr)]
     globalLogBeginner.beginLoggingTo(observers)
 
-    root = SoftFabRoot(debugSupport=debug, anonOperator=no_auth)
+    root = SoftFabRoot(anonOperator=no_auth)
 
     site = Site(root)
     site.sessionFactory = LongSession
     site.secureCookie = not insecure_cookie
+    site.displayTracebacks = debug
 
     try:
         service = strports.service(listen, site)

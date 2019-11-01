@@ -171,7 +171,6 @@ class PageLoader:
                     module.__name__, pageClass.__name__
                     )
                 continue
-            page.debugSupport = root.debugSupport
             if root.anonOperator:
                 if not isinstance(page.authenticator, TokenAuthPage):
                     page.authenticator = DisabledAuthPage.instance
@@ -286,21 +285,16 @@ stylePrefix = styleRoot.urlPrefix.encode()
 
 class SoftFabRoot(Resource):
 
-    def __init__(self, debugSupport: bool, anonOperator: bool):
+    def __init__(self, anonOperator: bool):
         """Creates a Control Center root resource.
 
         Parameters:
-
-        debugSupport: bool
-            Value for `softfab.FabResource.debugSupport` to set on pages
-            registered under this root.
 
         anonOperator: bool
             Automatically give every client operator privileges to
             pages registered under this root, without forcing a login.
 
         """
-        self.debugSupport = debugSupport
         self.anonOperator = anonOperator
 
         if anonOperator:

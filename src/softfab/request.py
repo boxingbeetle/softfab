@@ -104,6 +104,14 @@ class RequestBase:
     def rawInput(self) -> IO[bytes]:
         return self._request.content
 
+    @property
+    def displayTracebacks(self) -> bool:
+        """True iff tracebacks should be shown on errors.
+        This is useful for debugging, but might expose sensitive information,
+        so it shouldn't be done for production sites.
+        """
+        return self._request.site.displayTracebacks
+
     @cachedProperty
     def method(self) -> str:
         return self._request.method.decode()
