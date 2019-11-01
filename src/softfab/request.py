@@ -19,9 +19,6 @@ from softfab.utils import cachedProperty
 # The 'sameSite' parameter was added in Twisted 18.9.0.
 sameSiteSupport = 'sameSite' in signature(TwistedRequest.addCookie).parameters
 
-class LongSession(Session):
-    sessionTimeout = 60 * 60 * 24 * 7 # one week in seconds
-
 def relativeURL(absolute: str) -> Optional[str]:
     """Returns the given absolute URL as a path relative to this site's root,
     or None if no URL was given, it doesn't belong to this site or it points
@@ -210,7 +207,6 @@ class Request(RequestBase, Generic[ArgsT_co]):
         '''
         request = self._request
         site = request.site
-        site.sessionFactory = LongSession
         session = site.makeSession()
         session.setComponent(ISessionData, SessionData(user))
         session.touch()

@@ -12,10 +12,13 @@ from click import command, group, option, version_option
 from twisted.application import strports
 from twisted.internet.error import CannotListenError
 from twisted.logger import globalLogBeginner, textFileLogObserver
-from twisted.web.server import Site
+from twisted.web.server import Session, Site
 
 from softfab.version import VERSION
 
+
+class LongSession(Session):
+    sessionTimeout = 60 * 60 * 24 * 7 # one week in seconds
 
 @command()
 @option('--listen', metavar='SOCKET',
@@ -57,7 +60,9 @@ def server(
         anonOperator=no_auth,
         secureCookie=not insecure_cookie
         )
+
     site = Site(root)
+    site.sessionFactory = LongSession
 
     try:
         service = strports.service(listen, site)
