@@ -185,7 +185,7 @@ def run(c, host='localhost', port=8180, dbdir='run',
     if not auth:
         cmd.append('--no-auth')
     if coverage:
-        runner = TOP_DIR / 'tests' / 'tools' / 'run_console_script.py'
+        runner = TOP_DIR / 'tools' / 'run_console_script.py'
         cmd = [
             'coverage', 'run',
             f"--rcfile={TOP_DIR / '.coveragerc'}",
