@@ -48,6 +48,12 @@ def server(
     # Importing of this module triggers the logging system initialisation.
     import softfab.initlog
 
+    if debug:
+        import logging
+        import warnings
+        logging.captureWarnings(True)
+        warnings.simplefilter('default')
+
     # This must be after importing initlog.
     from softfab.TwistedRoot import SoftFabRoot
 

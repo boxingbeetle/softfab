@@ -3,7 +3,6 @@
 import logging
 import os
 import os.path
-import warnings
 
 from softfab.config import dbDir, loggingLevel
 from softfab.version import VERSION
@@ -18,6 +17,3 @@ logging.basicConfig(
     )
 
 logging.info('> > Control Center startup, version %s', VERSION)
-
-logging.captureWarnings(True)
-warnings.simplefilter('default')
