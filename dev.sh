@@ -3,9 +3,6 @@
 
 cd `dirname $0`
 
-if ! test -e tools/python
-then
-    ln -s /usr/bin/python3 tools/python
-fi
+test -d tools/venv3 || virtualenv -p python3 tools/venv3
 
-PATH="$PWD/tools:$PATH" exec poetry shell
+test -d tools/venv3 && PATH="$PWD/tools/venv3/bin:$PATH" exec poetry shell

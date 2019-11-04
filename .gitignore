@@ -6,3 +6,4 @@ dist/
 poetry.lock
 docs/output
 run/
+tools/venv3
