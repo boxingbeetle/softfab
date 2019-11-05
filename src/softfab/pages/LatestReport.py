@@ -6,7 +6,8 @@ from softfab.Page import FabResource, PageProcessor, Redirect
 from softfab.UIPage import UIPage
 from softfab.authentication import LoginAuthPage
 from softfab.joblib import getAllTasksWithId
-from softfab.pagelinks import TaskDefIdArgs
+from softfab.pagelinks import TaskDefIdArgs, createRunURL
+from softfab.request import Request
 from softfab.resultcode import ResultCode
 from softfab.userlib import User, checkPrivilege
 from softfab.xmlgen import XMLContent, xhtml
@@ -23,7 +24,7 @@ class LatestReport_GET(
 
     class Processor(PageProcessor[TaskDefIdArgs]):
 
-        def process(self, req, user):
+        def process(self, req: Request[TaskDefIdArgs], user: User) -> None:
             taskId = req.args.id
             taskTimes = (
                 ( task.startTime, task )
@@ -35,7 +36,8 @@ class LatestReport_GET(
             except ValueError:
                 pass # empty sequence; handled by presentContent()
             else:
-                raise Redirect(task.getURL())
+                run = task.getLatestRun()
+                raise Redirect(createRunURL(run, report=None))
 
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 't/a', 'view task reports')

@@ -115,7 +115,7 @@ class TaskReportArgs(TaskIdArgs):
     """
     report = StrArg(None)
 
-def createRunURL(run: TaskRun, report: str = 'overview') -> str:
+def createRunURL(run: TaskRun, report: Optional[str] = 'overview') -> str:
     """Return a URL of a page showing details of a task run."""
     jobId = run.getJob().getId()
     taskName = run.getName()
