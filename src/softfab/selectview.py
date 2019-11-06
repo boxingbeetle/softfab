@@ -3,8 +3,8 @@
 from abc import ABC
 from itertools import chain
 from typing import (
-    TYPE_CHECKING, Callable, ClassVar, Generic, Iterable, Iterator, List,
-    MutableSet, Optional, Sequence, Tuple, TypeVar, cast
+    TYPE_CHECKING, Callable, ClassVar, Collection, Generic, Iterable, Iterator,
+    List, MutableSet, Optional, Sequence, Tuple, TypeVar, cast
 )
 
 from softfab.Page import Redirect
@@ -195,7 +195,7 @@ class SelectProcMixin(Generic[BasketArgsT, SelectableRecord]):
         self.filteredRecords = filteredRecords
 
     def __filterRecords(self, tagKey: Optional[str], tagValue: Optional[str]
-                        ) -> Iterable[SelectableRecord]:
+                        ) -> Collection[SelectableRecord]:
         if tagKey:
             assert tagValue is not None
             if tagValue:
