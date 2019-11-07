@@ -12,15 +12,22 @@ rootURL = 'https://softfab.example.com/projname/'
 # Directory this fab's database is located in.
 dbDir = 'run'
 
-# Enables the use atomic writes for updating database records.
-# This is safer but slower, therefore atomic writes are disabled during
-# unit testing. It is recommended to keep this enabled in production.
-dbAtomicWrites = True
 
-# Logging level (can be an integer or a string identifying one of the
-# predefined logging levels: 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'
+# Settings for debugging and testing:
+
 loggingLevel = 'INFO'
+"""Logging level.
+Can be an integer or a string identifying one of the predefined
+logging levels: 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'.
+"""
 
-# Enables database change logging.
-# This is useful for system testing; in production it should be disabled.
+dbAtomicWrites = True
+"""Enables the use atomic writes for updating database records.
+This is safer but slower, therefore atomic writes are disabled during
+unit testing. It is recommended to keep this enabled in production.
+"""
+
 logChanges = False
+"""Enables database change logging.
+This is useful for system testing; in production it should be disabled.
+"""
