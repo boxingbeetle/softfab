@@ -21,9 +21,6 @@ dbAtomicWrites = True
 # predefined logging levels: 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'
 loggingLevel = 'INFO'
 
-# Delay between the syncronization requests (seconds)
-syncDelay = 10
-
 # Enables database change logging.
 # This is useful for system testing; in production it should be disabled.
 logChanges = False

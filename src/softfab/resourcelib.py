@@ -9,7 +9,7 @@ import logging
 
 from twisted.internet import reactor
 
-from softfab.config import dbDir, syncDelay
+from softfab.config import dbDir
 from softfab.connection import ConnectionStatus
 from softfab.databaselib import Database, DatabaseElem, RecordObserver
 from softfab.paramlib import GetParent, ParamMixin, Parameterized, paramTop
@@ -582,7 +582,7 @@ class TaskRunner(ResourceBase):
     def getLostTimeout(self) -> int:
         """Returns the maximum time in seconds that may elapse until the
         TR gets the 'lost' status (=red).
-        lostTimeout is at least 302 or more if syncDelay > 30
+        lostTimeout is at least 302, more if sync delay is over 30 seconds.
         This method is public so it can be overridden by the unittest.
         """
         lostTimeout = max(302, self.getSyncWaitDelay() * 10 + 2)
@@ -595,7 +595,7 @@ class TaskRunner(ResourceBase):
         '''Returns the wait time in seconds before the Task Runner should
         synchronize with the Control Center again.
         '''
-        return syncDelay
+        return 10
 
     def getMinimalDelay(self) -> int:
         '''Returns the minimum wait time in seconds the Task Runner can handle.
