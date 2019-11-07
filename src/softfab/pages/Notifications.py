@@ -1,12 +1,12 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from enum import Enum
-from typing import cast
+from typing import Any, Generator, Iterable, Tuple, cast
 import re
 import time
 
 from twisted import version as twistedVersion
-from twisted.internet.defer import inlineCallbacks
+from twisted.internet.defer import Deferred, inlineCallbacks
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor, PresentableError, Redirect
@@ -14,6 +14,7 @@ from softfab.formlib import actionButtons, checkBox, makeForm, textInput
 from softfab.notification import sendTestMail, sendmail
 from softfab.pageargs import BoolArg, EnumArg, PageArgs, StrArg
 from softfab.projectlib import project
+from softfab.request import Request
 from softfab.userlib import User, checkPrivilege
 from softfab.xmlgen import XML, XMLContent, xhtml
 
@@ -23,7 +24,7 @@ class MailConfigArgs(PageArgs):
     smtpRelay = StrArg()
     mailSender = StrArg()
 
-def presentEmailForm():
+def presentEmailForm() -> XMLContent:
     yield xhtml.p[
         checkBox(name='mailNotification')['Send notifications via e-mail']
         ]
@@ -115,14 +116,18 @@ class Notifications_POST(FabPage['Notifications_POST.Processor',
     class Processor(PageProcessor['Notifications_POST.Arguments']):
 
         @inlineCallbacks
-        def process(self, req, user):
+        def process(self,
+                    req: Request['Notifications_POST.Arguments'],
+                    user: User
+                    ) -> Generator[Deferred, Any, None]:
             args = req.args
             action = args.action
             smtpRelay = args.smtpRelay
             mailSender = args.mailSender
 
             if action is Actions.CANCEL:
-                raise Redirect(self.page.getParentURL(req.args))
+                page = cast(Notifications_POST, self.page)
+                raise Redirect(page.getParentURL(req.args))
             elif action is Actions.TEST:
                 # pylint: disable=attribute-defined-outside-init
                 recipient = args.mailRecipient
@@ -133,6 +138,7 @@ class Notifications_POST(FabPage['Notifications_POST.Processor',
                         ])
                 self.mailTestTime = time.localtime()
                 try:
+                    addresses: Iterable[Tuple[bytes, int, bytes]]
                     numOk_, addresses = yield sendTestMail(
                         smtpRelay, mailSender, args.mailRecipient
                         )
