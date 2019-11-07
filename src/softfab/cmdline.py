@@ -5,10 +5,14 @@ Command line interface.
 """
 
 
-from os import getcwd
+from pathlib import Path
+from typing import Optional
 import sys
 
-from click import command, group, option, version_option
+from click import (
+    BadParameter, Context, ParamType, Parameter, command, group, option,
+    version_option
+)
 from twisted.application import strports
 from twisted.internet.error import CannotListenError
 from twisted.logger import globalLogBeginner, textFileLogObserver
@@ -20,7 +24,37 @@ from softfab.version import VERSION
 class LongSession(Session):
     sessionTimeout = 60 * 60 * 24 * 7 # one week in seconds
 
+class DirectoryParamType(ParamType):
+    """Parameter type for specifying directories."""
+
+    name = 'directory'
+
+    def __init__(self, mustExist: bool):
+        self.mustExist = mustExist
+
+    def get_metavar(self, param: Parameter) -> str:
+        return 'DIR'
+
+    def convert(
+            self,
+            value: str,
+            param: Optional[Parameter],
+            ctx: Optional[Context]
+            ) -> Path:
+
+        path = Path(value)
+        if path.is_dir():
+            return path
+        elif path.exists():
+            raise BadParameter(f'Path is not a directory: {path}')
+        elif self.mustExist:
+            raise BadParameter(f'Directory does not exist: {path}')
+        else:
+            return path
+
 @command()
+@option('--dir', 'path', type=DirectoryParamType(True), default='.',
+        help='Directory containing configuration, data and logging.')
 @option('--listen', metavar='SOCKET',
         default='tcp:interface=localhost:port=8180',
         help='Socket to listen to, in Twisted strports format.')
@@ -31,6 +65,7 @@ class LongSession(Session):
 @option('--insecure-cookie', is_flag=True,
         help='Allow cookies to be sent over plain HTTP.')
 def server(
+        path: Path,
         listen: str,
         debug: bool,
         no_auth: bool,
@@ -43,7 +78,7 @@ def server(
     from twisted.internet import reactor
 
     import softfab.config
-    softfab.config.dbDir = getcwd()
+    softfab.config.dbDir = str(path)
 
     # Importing of this module triggers the logging system initialisation.
     import softfab.initlog
