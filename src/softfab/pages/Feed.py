@@ -13,7 +13,7 @@ from softfab.ControlPage import ControlPage
 from softfab.Page import PageProcessor
 from softfab.UIPage import factoryStyleSheet
 from softfab.compat import NoReturn
-from softfab.config import dbDir, homePage, rootURL
+from softfab.config import dbDir, rootURL
 from softfab.databaselib import RecordObserver
 from softfab.datawidgets import DataColumn, DataTable
 from softfab.joblib import Job, JobDB, jobDB
@@ -27,7 +27,7 @@ from softfab.taskview import taskSummary
 from softfab.timelib import getTime
 from softfab.timeview import formatDuration, formatTime
 from softfab.userlib import User, checkPrivilege
-from softfab.version import VERSION
+from softfab.version import HOMEPAGE, VERSION
 from softfab.webgui import Table, cell, pageURL, row
 from softfab.xmlgen import XMLContent, atom, xhtml
 
@@ -133,7 +133,7 @@ class Feed_GET(ControlPage[ControlPage.Arguments, 'Feed_GET.Processor']):
             ]
         yield atom.id[ f'urn:softfab:{factoryId}:jobs' ]
         yield atom.updated[ self.presentTime(getTime()) ]
-        yield atom.generator(uri=homePage, version=VERSION)[ 'SoftFab' ]
+        yield atom.generator(uri=HOMEPAGE, version=VERSION)[ 'SoftFab' ]
         # TODO: Akregator for KDE4 won't show the icon, no matter what I try.
         #       Might be related to Konqueror often losing the icon.
         yield atom.icon[ rootURL + 'styles/SoftFabIcon.png' ]
