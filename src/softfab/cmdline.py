@@ -53,7 +53,7 @@ class DirectoryParamType(ParamType):
             return path
 
 @command()
-@option('--dir', 'path', type=DirectoryParamType(True), default='.',
+@option('-d', '--dir', 'path', type=DirectoryParamType(True), default='.',
         help='Directory containing configuration, data and logging.')
 @option('--listen', metavar='SOCKET',
         default='tcp:interface=localhost:port=8180',
