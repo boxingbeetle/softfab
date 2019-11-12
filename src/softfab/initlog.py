@@ -4,14 +4,14 @@ import logging
 import os
 import os.path
 
-from softfab.config import dbDir, loggingLevel
+from softfab.config import dbDir
 from softfab.version import VERSION
 
 if not os.path.exists(dbDir):
     os.makedirs(dbDir)
 
 logging.basicConfig(
-    level = loggingLevel,
+    level = logging.INFO,
     format = '* %(asctime)s %(levelname)-8s> %(message)s',
     filename = dbDir + '/cc-log.txt', filemode = 'a'
     )

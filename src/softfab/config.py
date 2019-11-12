@@ -97,12 +97,6 @@ def initConfig(path: Path) -> None:
 
 # Settings for debugging and testing:
 
-loggingLevel = 'INFO'
-"""Logging level.
-Can be an integer or a string identifying one of the predefined
-logging levels: 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'.
-"""
-
 dbAtomicWrites = True
 """Enables the use atomic writes for updating database records.
 This is safer but slower, therefore atomic writes are disabled during
