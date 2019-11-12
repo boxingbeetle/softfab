@@ -77,8 +77,12 @@ def server(
     # which we don't need for every subcommand.
     from twisted.internet import reactor
 
-    import softfab.config
-    softfab.config.dbDir = str(path)
+    from softfab.config import initConfig
+    try:
+        initConfig(Path('.'))
+    except Exception as ex:
+        print('Error reading configuration:', ex, file=sys.stderr)
+        sys.exit(1)
 
     # Importing of this module triggers the logging system initialisation.
     import softfab.initlog

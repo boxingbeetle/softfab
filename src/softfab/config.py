@@ -13,6 +13,15 @@ from pathlib import Path
 from typing import IO, Mapping, Optional
 from urllib.parse import SplitResult, urlsplit, urlunsplit
 
+# Note: These declarations must be ahead of their use in a 'global' statement
+#       for the code to be accepted by Python < 3.8.0.
+#       https://github.com/python/cpython/commit/de2aea0f
+
+dbDir: str
+"""Directory this factory's database is located in."""
+
+rootURL = 'https://softfab.example.com/projname/'
+"""The root URL of this factory. Must end with a slash."""
 
 def loadConfig(file: IO[str]) -> None:
     """Load the configuration from an INI file.
@@ -73,8 +82,10 @@ def _loadServer(name: str, section: Mapping[str, str]) -> None:
 
 def initConfig(path: Path) -> None:
     """Initialize the global configuration.
+
     The given path will be used to read configuration file from and
     as the database and logs directory.
+    Can raise the same exceptions as loadConfig().
     """
 
     global dbDir
@@ -82,13 +93,6 @@ def initConfig(path: Path) -> None:
 
     with open(path / 'softfab.ini', encoding='utf-8') as file:
         loadConfig(file)
-
-
-rootURL = 'https://softfab.example.com/projname/'
-"""The root URL of this factory. Must end with a slash."""
-
-dbDir = 'run'
-"""Directory this factory's database is located in."""
 
 
 # Settings for debugging and testing:
