@@ -1,15 +1,20 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Mapping, Optional
+from typing import (
+    Iterable, Iterator, Mapping, Optional, Sequence, Tuple, cast, overload
+)
 from urllib.parse import urlparse
 import time
 
 from softfab.EditPage import (
-    EditArgs, EditPage, EditProcessor, InitialEditArgs, InitialEditProcessor
+    EditArgs, EditPage, EditProcessor, EditProcessorBase, InitialEditArgs,
+    InitialEditProcessor
 )
 from softfab.FabPage import IconModifier
 from softfab.Page import PresentableError
-from softfab.formlib import DropDownList, RadioTable, checkBox, textInput
+from softfab.formlib import (
+    DropDownList, Option, RadioTable, checkBox, textInput
+)
 from softfab.pageargs import ArgsCorrected, BoolArg, EnumArg, IntArg, StrArg
 from softfab.projectlib import (
     EmbeddingPolicy, Project, _projectDB, defaultMaxJobs, getKnownTimezones,
@@ -17,14 +22,14 @@ from softfab.projectlib import (
 )
 from softfab.setcalc import categorizedLists
 from softfab.webgui import PropertiesTable, Widget, docLink
-from softfab.xmlgen import xhtml
+from softfab.xmlgen import XML, XMLContent, xhtml
 
 
 class ProjectEditArgs(EditArgs):
     name = StrArg('')
     targets = StrArg('')
     tagkeys = StrArg('')
-    timezone = StrArg('')
+    timezone = StrArg(None)
     maxjobs = IntArg(defaultMaxJobs)
     taskprio = BoolArg()
     embed = EnumArg(EmbeddingPolicy, None)
@@ -45,7 +50,9 @@ class ProjectEditBase(EditPage[ProjectEditArgs, Project]):
     formId = 'project'
     autoName = 'singleton'
 
-    def getFormContent(self, proc):
+    def getFormContent(self,
+                       proc: EditProcessorBase[ProjectEditArgs, Project]
+                       ) -> XMLContent:
         yield ProjectTable.instance
         yield xhtml.p[
             'For help about above project values, please read the '
@@ -150,7 +157,7 @@ class ProjectEdit_POST(ProjectEditBase):
                         f'Invalid site filter "{siteFilter}": {ex}'
                         ])
                 for name in ('path', 'params', 'query', 'fragment',
-                        'username', 'password'):
+                             'username', 'password'):
                     if getattr(url, name):
                         raise PresentableError(xhtml.p[
                             f'Site filter "{siteFilter}" contains {name}, '
@@ -183,38 +190,52 @@ class ProjectEdit_POST(ProjectEditBase):
                     #'Illegal character in site filter: ";"'
                     #])
 
-def decodeTimezone(tzStr):
-    if tzStr:
+def decodeTimezone(tzStr: Optional[str]) -> Optional[str]:
+    if tzStr is None:
+        return None
+    else:
         return tzStr.replace(',', '/').replace(' ', '_')
-    else:
-        return None
 
-def encodeTimezone(timezone):
-    if timezone:
-        return timezone.replace('/', ',').replace('_', ' ')
-    else:
+@overload
+def encodeTimezone(timezone: None) -> None: ...
+
+@overload
+def encodeTimezone(timezone: str) -> str: ...
+
+def encodeTimezone(timezone: Optional[str]) -> Optional[str]:
+    if timezone is None:
         return None
+    else:
+        return timezone.replace('/', ',').replace('_', ' ')
 
 class TimeZoneSelector(DropDownList):
     name = 'timezone'
-    def getActive(self, proc, **kwargs):
-        return encodeTimezone(proc.args.timezone)
-    def iterOptions(self, timezones, **kwargs):
-        zonesByRegion = categorizedLists(
-            encodeTimezone(fullZone).split(',', 1)
-            for fullZone in timezones
-            if '/' in fullZone
-            )
+
+    def getActive(self, **kwargs: object) -> Optional[str]:
+        proc = cast(ProjectEditBase.Processor, kwargs['proc'])
+        args = cast(ProjectEditArgs, proc.args)
+        return encodeTimezone(args.timezone)
+
+    def iterOptions(self, **kwargs: object) -> Iterator[Option]:
+
+        def splitZones() -> Iterator[Tuple[str, str]]:
+            for fullZone in cast(Iterable[str], kwargs['timezones']):
+                if '/' in fullZone:
+                    region, name = encodeTimezone(fullZone).split(',', 1)
+                    yield region, name
+
+        zonesByRegion: Mapping[str, Iterable[str]] \
+                     = categorizedLists(splitZones())
         for region, zones in sorted(zonesByRegion.items()):
             yield region, sorted(zones)
 
 class TimeZoneDisplay(Widget):
-    def present(self, **kwargs):
+    def present(self, **kwargs: object) -> str:
         return time.tzname[bool(time.daylight)]
 
 class ProjectTable(PropertiesTable):
 
-    def iterRows(self, **kwargs):
+    def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
         yield 'Project name', textInput(name='name', size=20)
         yield 'Targets', xhtml.br.join((
             textInput(name='targets', size=80),
@@ -246,7 +267,7 @@ class EmbeddingWidget(RadioTable):
     name = 'embed'
     columns = None,
 
-    def iterOptions(self, **kwargs):
+    def iterOptions(self, **kwargs: object) -> Iterator[Sequence[XMLContent]]:
         yield EmbeddingPolicy.NONE, 'Never'
         yield EmbeddingPolicy.SELF, 'Same site only'
         yield EmbeddingPolicy.CUSTOM, 'Custom: ', (
@@ -269,5 +290,5 @@ class EmbeddingWidget(RadioTable):
                 )['full documentation at MDN'],
             )
 
-    def formatOption(self, box, cells):
+    def formatOption(self, box: XML, cells: Sequence[XMLContent]) -> XMLContent:
         yield xhtml.label[box, ' ', cells[0]] + cells[1:]
