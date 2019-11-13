@@ -208,14 +208,19 @@ def parseAndProcess(page: FabResource[ArgsT, PageProcessor[ArgsT]],
     Processing step: database interaction.
     Returns a `Deferred` which has a `Responder` as its result.
     '''
-    try:
-        # We might hit an error before argument parsing completes, for example
-        # if access is denied at the page level or if the argument parsing
-        # itself raises an exception.
-        # TODO: There should be a way to respond without having a processing
-        #       result, or to construct a processing result without arguments.
-        args = cast(ArgsT, None)
 
+    # We might hit an error before argument parsing completes, for example
+    # if access is denied at the page level or if the argument parsing
+    # itself raises an exception.
+    # TODO: There should be a way to respond without having a processing
+    #       result, or to construct a processing result without arguments.
+    args = cast(ArgsT, None)
+    # TODO: Create processor in the processing step.
+    #       This is currently not possible because the error handlers
+    #       need a PageProcessor instance.
+    proc: PageProcessor[ArgsT] = page.Processor(page, req, args, user)
+
+    try:
         # Page-level authorization.
         # It is possible for additional access checks to fail during the
         # processing step.
@@ -232,13 +237,11 @@ def parseAndProcess(page: FabResource[ArgsT, PageProcessor[ArgsT]],
                 # come from the request body instead of the URL.
                 args = cast(ArgsCorrected[ArgsT], ex).correctedArgs
         req.args = args
+        proc.args = args
 
         _checkActive(page, args)
 
         # Processing step.
-        proc: PageProcessor[ArgsT] = page.Processor(
-            page, req, args, user
-            )
         try:
             yield proc.process(req, user)
         except PresentableError as ex:
@@ -257,7 +260,6 @@ def parseAndProcess(page: FabResource[ArgsT, PageProcessor[ArgsT]],
         forbiddenPage: ErrorPage[PageProcessor[ArgsT]] = ForbiddenPage(
             f"You don't have permission to {str(ex) or 'access this page'}"
             )
-        proc = PageProcessor(page, req, args, user)
         responder: Responder = UIResponder(forbiddenPage, proc)
     except ArgsCorrected as ex:
         subPath = req.getSubPath()
@@ -277,7 +279,6 @@ def parseAndProcess(page: FabResource[ArgsT, PageProcessor[ArgsT]],
                     )]
                 )
             )
-        proc = PageProcessor(page, req, args, user)
         responder = UIResponder(badRequestPage, proc)
     except InvalidRequest as ex:
         badRequestPage = BadRequestPage(
