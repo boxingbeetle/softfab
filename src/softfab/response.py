@@ -20,6 +20,7 @@ from softfab.projectlib import project
 from softfab.useragent import AcceptedEncodings, UserAgent
 from softfab.utils import IllegalStateError
 from softfab.xmlgen import XMLContent, adaptToXML
+import softfab.config
 
 
 class Response:
@@ -47,6 +48,11 @@ class Response:
         self.__connectionLostFailure: Optional[Failure] = None
         d = request.notifyFinish()
         d.addErrback(self.__connectionLost)
+
+    @property
+    def rootURL(self) -> str:
+        """Public root URL of this Control Center."""
+        return softfab.config.rootURL
 
     @property
     def relativeRoot(self) -> str:

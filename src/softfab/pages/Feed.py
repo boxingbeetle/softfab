@@ -11,9 +11,10 @@ from typing import Any, Collection, Iterator, List
 
 from softfab.ControlPage import ControlPage
 from softfab.Page import PageProcessor
+from softfab.StyleResources import styleRoot
 from softfab.UIPage import factoryStyleSheet
 from softfab.compat import NoReturn
-from softfab.config import dbDir, rootURL
+from softfab.config import dbDir
 from softfab.databaselib import RecordObserver
 from softfab.datawidgets import DataColumn, DataTable
 from softfab.joblib import Job, JobDB, jobDB
@@ -122,10 +123,10 @@ class Feed_GET(ControlPage[ControlPage.Arguments, 'Feed_GET.Processor']):
         response.writeXML(atom.feed(
             xmlns = 'http://www.w3.org/2005/Atom',
             )[
-            self.presentFeed(proc)
+            self.presentFeed(proc, response.rootURL)
             ])
 
-    def presentFeed(self, proc: Processor) -> XMLContent:
+    def presentFeed(self, proc: Processor, rootURL: str) -> XMLContent:
         projectName = project.name
         yield atom.title[ f'{projectName} SoftFab - Recent Jobs' ]
         yield atom.subtitle[
@@ -155,10 +156,11 @@ class Feed_GET(ControlPage[ControlPage.Arguments, 'Feed_GET.Processor']):
             type = 'application/atom+xml',
             )
         for job, jobTable in zip(proc.jobs, proc.tables):
-            yield atom.entry[ self.presentJob(proc, job, jobTable) ]
+            yield atom.entry[ self.presentJob(proc, rootURL, job, jobTable) ]
 
     def presentJob(self,
                    proc: Processor,
+                   rootURL: str,
                    job: Job,
                    jobTable: SingleJobTable
                    ) -> XMLContent:
@@ -184,7 +186,7 @@ class Feed_GET(ControlPage[ControlPage.Arguments, 'Feed_GET.Processor']):
                 atom.uri[ rootURL + createJobURL(jobId) ],
                 ]
         # Note: The Atom spec requires all XHTML to be inside a single <div>.
-        styleURL = rootURL + 'styles'
+        styleURL = rootURL + styleRoot.relativeURL
         presentationArgs = dict(proc=proc, styleURL=styleURL)
         yield atom.summary(type = 'xhtml')[ xhtml.div[
             # TODO: Does xhtml.style work with other RSS readers too?

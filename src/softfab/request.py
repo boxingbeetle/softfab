@@ -10,11 +10,11 @@ from twisted.web.server import Session
 from zope.interface import Attribute, Interface, implementer
 
 from softfab.Page import InvalidRequest
-from softfab.config import rootURL
 from softfab.pageargs import ArgsT_co, Query
 from softfab.useragent import UserAgent
 from softfab.userlib import User
 from softfab.utils import cachedProperty
+import softfab.config
 
 # The 'sameSite' parameter was added in Twisted 18.9.0.
 sameSiteSupport = 'sameSite' in signature(TwistedRequest.addCookie).parameters
@@ -89,6 +89,11 @@ class RequestBase:
         return self._request.content
 
     @property
+    def rootURL(self) -> str:
+        """Public root URL of this Control Center."""
+        return softfab.config.rootURL
+
+    @property
     def displayTracebacks(self) -> bool:
         """True iff tracebacks should be shown on errors.
         This is useful for debugging, but might expose sensitive information,
@@ -125,6 +130,7 @@ class RequestBase:
         the given full URL or URL path, or None if the given URL doesn't
         belong to this site or it points to the Login page.
         """
+        rootURL = self.rootURL
         absolute = urljoin(rootURL, url)
         if not absolute.startswith(rootURL):
             # URL belongs to a different site.
