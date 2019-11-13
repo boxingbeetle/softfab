@@ -16,7 +16,6 @@ from twisted.web.static import Data
 
 from softfab import styles
 from softfab.compat import importlib_resources
-from softfab.databaselib import createInternalId
 from softfab.timelib import getTime, secondsPerDay
 from softfab.useragent import AcceptedEncodings
 from softfab.webgui import Image, ShortcutIcon, StyleSheet, pngIcon, svgIcon
@@ -80,11 +79,7 @@ def _compressableType(mediaType: str) -> bool:
     return mediaType.startswith('text/') or mediaType.endswith('+xml')
 
 class _StyleRoot(Resource):
-    # Create a new URL every time the Control Center is restarted.
-    # This allows to set the expiry time really high without running the risk
-    # of using outdated cached style files.
-    urlPrefix = 'styles-'
-    relativeURL = urlPrefix + createInternalId()
+    relativeURL = 'styles'
 
     def __init__(self):
         Resource.__init__(self)
@@ -138,7 +133,7 @@ class _StyleRoot(Resource):
                 imageFile = match.group(1)
                 self.__addFile(imageFile, 'image/png')
                 index = match.end()
-        return StyleSheet(fileName)
+        return StyleSheet(fileName, data)
 
 styleRoot = _StyleRoot()
 
@@ -171,12 +166,13 @@ td.lineno a:hover {
 # Note: The "codehilite" CSS class is required by the Markdown extension
 #       we use for syntax highlighting.
 pygmentsFormatter = HtmlFormatter(cssclass='codehilite')
-# Register Pygments style sheet.
-pygmentsFileName = 'pygments.css'
-styleRoot.putChild(
-    pygmentsFileName.encode(),
-    Data((pygmentsFormatter.get_style_defs() + extraPygmentsStyles).encode(),
-         'text/css')
-    )
-pygmentsSheet = StyleSheet(pygmentsFileName)
-del pygmentsFileName
+def _initPygmentsSheet() -> StyleSheet:
+    """Create and register Pygments style sheet."""
+    fileName = 'pygments.css'
+    data = (pygmentsFormatter.get_style_defs() + extraPygmentsStyles).encode()
+    styleRoot.putChild(
+        fileName.encode(),
+        Data(data, 'text/css')
+        )
+    return StyleSheet(fileName, data)
+pygmentsSheet = _initPygmentsSheet()

@@ -13,6 +13,7 @@ from typing import (
     Sequence, Tuple, TypeVar, Union, cast
 )
 from xml.etree import ElementTree
+from zlib import adler32
 import logging
 
 from softfab.compat import NoReturn
@@ -601,34 +602,46 @@ class PropertiesTable(Table):
         # that here to please PyLint.
         raise NotImplementedError
 
+def addChecksum(fileName: str, data: Optional[bytes]) -> str:
+    """Add query containing a checksum after the given file name.
+    This creates a unique URL every time a style asset changes,
+    which allows us to set cache expiry far ahead without the risk
+    of old assets being shown.
+    """
+    if data is None:
+        return fileName
+    else:
+        return f'{fileName}?c={adler32(data):08x}'
+
 class Image(AttrContainer):
 
     @classmethod
     def create(cls,
                fileName: str,
                width: Optional[int] = None,
-               height: Optional[int] = None
+               height: Optional[int] = None,
+               data: Optional[bytes] = None
                ) -> 'Image':
         attributes: Dict[str, object] = dict(alt='')
         if width is not None:
             attributes['width'] = width
         if height is not None:
             attributes['height'] = height
-        return cls(fileName, attributes)
+        return cls(addChecksum(fileName, data), attributes)
 
-    def __init__(self, fileName: str, attributes: Mapping[str, object]):
+    def __init__(self, path: str, attributes: Mapping[str, object]):
         super().__init__((), attributes)
-        self.fileName = fileName
+        self.path = path
 
     def _replaceContents(self, contents: Iterable[XMLPresentable]) -> NoReturn:
         raise ValueError('Image does not support nested content')
 
     def _replaceAttributes(self, attributes: Mapping[str, object]) -> 'Image':
-        return self.__class__(self.fileName, attributes)
+        return self.__class__(self.path, attributes)
 
     def present(self, **kwargs: object) -> XMLContent:
         styleURL = cast(str, kwargs['styleURL'])
-        url = f'{styleURL}/{self.fileName}'
+        url = f'{styleURL}/{self.path}'
         return xhtml.img(src=url, **self._attributes)
 
 def pngIcon(fileName: str, data: Optional[bytes]) -> Image:
@@ -641,7 +654,7 @@ def pngIcon(fileName: str, data: Optional[bytes]) -> Image:
                 logging.error(
                     'Invalid PNG file for icon "%s": %s', fileName, ex
                     )
-    return Image.create(fileName, width, height)
+    return Image.create(fileName, width, height, data)
 
 def svgIcon(fileName: str, data: Optional[bytes]) -> Image:
     width = height = None
@@ -655,7 +668,7 @@ def svgIcon(fileName: str, data: Optional[bytes]) -> Image:
             width = None if widthStr is None else int(widthStr)
             heightStr = svgElement.get('height')
             height = None if heightStr is None else int(heightStr)
-    return Image.create(fileName, width, height)
+    return Image.create(fileName, width, height, data)
 
 class ShortcutIcon(Widget):
 
@@ -683,9 +696,9 @@ class ShortcutIcon(Widget):
 
 class StyleSheet(Widget):
 
-    def __init__(self, fileName: str):
+    def __init__(self, fileName: str, data: Optional[bytes]):
         Widget.__init__(self)
-        self.fileName = fileName
+        self.path = addChecksum(fileName, data)
 
     def present(self, **kwargs: object) -> XMLNode:
         '''Returns an XHTML fragment for linking this style sheet.
@@ -693,7 +706,7 @@ class StyleSheet(Widget):
         styleURL = cast(str, kwargs['styleURL'])
         return xhtml.link(
             rel = 'stylesheet',
-            href = f'{styleURL}/{self.fileName}',
+            href = f'{styleURL}/{self.path}',
             type = 'text/css',
             )
 

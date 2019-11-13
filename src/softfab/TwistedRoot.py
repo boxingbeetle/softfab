@@ -280,9 +280,6 @@ class StaticResource(Resource):
         request.setHeader(b'Content-Length', str(len(data)).encode())
         return data
 
-# Twisted.web paths are bytes.
-stylePrefix = styleRoot.urlPrefix.encode()
-
 class SoftFabRoot(Resource):
 
     def __init__(self, anonOperator: bool):
@@ -336,14 +333,3 @@ class SoftFabRoot(Resource):
         # properly. This avoids the case where the failure of a rarely used
         # piece of functionality would block the entire SoftFab.
         self.startupComplete(None)
-
-    def getChild(self, path: bytes, request: TwistedRequest) -> Resource:
-        # This method is called to dynamically generate a Resource;
-        # if a Resource is statically registered this call will not happen.
-        if path.startswith(stylePrefix):
-            # Also serve style resources under URLs that contain old IDs.
-            # This is needed for the Atom feed, where XHTML can be stored by
-            # the feed reader for a long time.
-            return styleRoot
-        else:
-            return self.defaultResource

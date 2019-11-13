@@ -189,7 +189,7 @@ class Feed_GET(ControlPage[ControlPage.Arguments, 'Feed_GET.Processor']):
         yield atom.summary(type = 'xhtml')[ xhtml.div[
             # TODO: Does xhtml.style work with other RSS readers too?
             xhtml.style[(
-                f'@import url({styleURL}/{factoryStyleSheet.fileName});'
+                f'@import url({styleURL}/{factoryStyleSheet.path});'
                 )],
             jobTable.present(**presentationArgs),
             xhtml.p[ presentJobCaption(job) ],
