@@ -2,20 +2,12 @@
 
 from typing import Iterable, List
 
-from softfab.config import rootURL
 from softfab.configlib import configDB
-from softfab.joblib import jobDB
 from softfab.pagelinks import createJobsURL
-from softfab.schedulelib import (
-    JobDBObserver, ScheduleRepeat, Scheduled, asap, scheduleDB
-)
-from softfab.schedulerefs import createScheduleDetailsURL
-from softfab.statuslib import (
-    DBStatusModelGroup, StatusModel, StatusModelRegistry
-)
+from softfab.schedulelib import ScheduleRepeat, Scheduled, asap
 from softfab.timeview import formatTime
 from softfab.webgui import maybeLink
-from softfab.xmlgen import XML, XMLContent, xml
+from softfab.xmlgen import XML, XMLContent
 
 weekDays = [
     'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday',
@@ -115,65 +107,3 @@ def getScheduleStatus(schedule: Scheduled) -> str:
         return 'suspended'
     else:
         return 'ok'
-
-class ScheduleModel(StatusModel):
-
-    @classmethod
-    def getChildClass(cls):
-        return None
-
-    def __init__(self, modelId, parent):
-        #print 'create model:', modelId
-        if modelId not in scheduleDB:
-            raise KeyError(f'There is no schedule named "{modelId}"')
-        #print 'create model - found'
-        StatusModel.__init__(self, modelId, parent)
-        #print 'create model - done'
-
-    def jobUpdated(self, job, schedule):
-        assert schedule.getId() == self.getId()
-        if job.getId() in schedule.getLastJobs():
-            self._notify()
-
-    def scheduleUpdated(self, schedule):
-        assert schedule.getId() == self.getId()
-        self._notify()
-
-    def _registerForUpdates(self):
-        pass
-
-    def _unregisterForUpdates(self):
-        pass
-
-    def formatStatus(self):
-        scheduleId = self.getId()
-        schedule = scheduleDB[scheduleId]
-        lastJobs = schedule.getLastJobs()
-        result = max((jobDB[jobId].result for jobId in lastJobs), default=None)
-        url = createJobsURL(lastJobs) or createScheduleDetailsURL(scheduleId)
-        return xml.status(
-            health = result or 'unknown',
-            busy = 'true' if schedule.isRunning() else 'false',
-            suspended = 'true' if schedule.isSuspended() else 'false',
-            url = rootURL + url,
-            )
-
-class ScheduleModelGroup(DBStatusModelGroup):
-    childClass = ScheduleModel
-    db = scheduleDB
-
-    def __init__(self, modelId, parent):
-        DBStatusModelGroup.__init__(self, modelId, parent)
-        JobDBObserver.instance.addObserver(self.__jobUpdated)
-
-    def __jobUpdated(self, job, schedule):
-        child = self._children.get(schedule.getId())
-        if child is not None:
-            child.jobUpdated(job, schedule)
-
-    def _monitoredRecordUpdated(self, model, record):
-        model.scheduleUpdated(record)
-
-StatusModelRegistry.instance.addModelGroup(
-    ScheduleModelGroup, 'scheduled jobs'
-    )

@@ -4,27 +4,21 @@ from typing import (
     TYPE_CHECKING, Generic, Iterator, List, Optional, Sequence, TypeVar, cast
 )
 
-from softfab.config import rootURL
 from softfab.configlib import Config, Input, TaskSetWithInputs, configDB
-from softfab.databaselib import RecordObserver
 from softfab.datawidgets import DataColumn, DataTable, LinkColumn
 from softfab.formlib import dropDownList, emptyOption, hiddenInput, textInput
 from softfab.joblib import Job, jobDB
-from softfab.jobview import unfinishedJobs
-from softfab.pagelinks import (
-    createConfigDetailsLink, createJobURL, createTargetLink
-)
+from softfab.pagelinks import createConfigDetailsLink, createTargetLink
 from softfab.productdeflib import ProductType
 from softfab.projectlib import project
 from softfab.resourcelib import TaskRunner, iterTaskRunners
 from softfab.schedulelib import scheduleDB
 from softfab.selectview import SelectArgs
 from softfab.sortedqueue import SortedQueue
-from softfab.statuslib import StatusModel, StatusModelRegistry
 from softfab.taskgroup import LocalGroup
 from softfab.userview import OwnerColumn
 from softfab.webgui import Column, Table, cell
-from softfab.xmlgen import XMLContent, txt, xml
+from softfab.xmlgen import XMLContent, txt
 
 SelectArgsT = TypeVar('SelectArgsT', bound=SelectArgs)
 
@@ -212,115 +206,3 @@ class SortedJobsByConfig(SortedQueue):
 
     def _filter(self, record: Job) -> bool:
         return record['configId'] == self.__configId
-
-class ConfigJobModel(StatusModel):
-
-    @classmethod
-    def getChildClass(cls):
-        return None
-
-    def __recomputeJob(self, recentLimit):
-        # Find the oldest non-final job.
-        watched = None
-        if recentLimit is None:
-            configId = self.getId()
-            retriever = jobDB.retrieverFor('configId')
-            for job in unfinishedJobs:
-                if retriever(job) == configId:
-                    watched = job
-                    break
-        else:
-            for job in self.__sortedJobsByConfig:
-                if job['recent'] >= recentLimit:
-                    break
-                if not job.isExecutionFinished():
-                    watched = job
-        if watched is None:
-            # All jobs have final result; watch the latest one.
-            # Note: Because this class is instantiated only for those configIds
-            #       in jobDB.uniqueValues('configId'), there is always at least
-            #       one matching job.
-            watched = self.__sortedJobsByConfig[0]
-        return watched
-
-    def _registerForUpdates(self):
-        self.__sortedJobsByConfig = SortedJobsByConfig(self.getId())
-        self.__job = self.__recomputeJob(None)
-
-    def _unregisterForUpdates(self):
-        self.__sortedJobsByConfig.retire()
-        del self.__sortedJobsByConfig
-        del self.__job
-
-    def jobModified(self, job):
-        # pylint: disable=attribute-defined-outside-init
-        if job.getId() == self.__job.getId():
-            if self.__job.isExecutionFinished():
-                # Currently watched job has finished, get new one to watch.
-                self.__job = self.__recomputeJob(self.__job['recent'])
-            self._notify()
-        else:
-            if self.__job.isExecutionFinished():
-                if job['recent'] < self.__job['recent']:
-                    # A job was added, start watching the new job.
-                    self.__job = job
-                    self._notify()
-
-    def formatStatus(self):
-        job = self.__job
-        return xml.status(
-            health = job.result or 'unknown',
-            busy = 'true' if not job.isExecutionFinished() else 'false',
-            url = rootURL + createJobURL(job.getId()),
-            )
-
-class ConfigJobModelGroup(StatusModel, RecordObserver):
-
-    @classmethod
-    def getChildClass(cls):
-        return ConfigJobModel
-
-    def __init__(self, modelId, parent):
-        RecordObserver.__init__(self)
-        StatusModel.__init__(self, modelId, parent)
-        self.__keys = jobDB.uniqueValues('configId') - {None}
-
-    def _createModel(self, key):
-        return ConfigJobModel(key, self)
-
-    def _iterKeys(self):
-        assert None not in self.__keys
-        return iter(self.__keys)
-
-    def _registerForUpdates(self):
-        jobDB.addObserver(self)
-
-    def _unregisterForUpdates(self):
-        jobDB.removeObserver(self)
-
-    def added(self, record):
-        configId = record.getConfigId()
-        if configId is not None:
-            if configId not in self.__keys:
-                self.__keys.add(configId)
-                self._modelAdded(configId)
-            child = self._children.get(configId)
-            if child is not None:
-                child.jobModified(record)
-
-    def removed(self, record):
-        assert False, f'job {record.getId()} removed'
-
-    def updated(self, record):
-        configId = record.getConfigId()
-        if configId is not None:
-            child = self._children.get(configId)
-            if child is not None:
-                child.jobModified(record)
-
-# This feature is experimental; it should only be enabled on hand-picked
-# factories.
-if False:
-    StatusModelRegistry.instance.addModelGroup(
-        ConfigJobModelGroup, 'job from configuration'
-        )
