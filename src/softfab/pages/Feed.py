@@ -169,7 +169,7 @@ class Feed_GET(ControlPage[ControlPage.Arguments, 'Feed_GET.Processor']):
         owner = job.getOwner()
         projectName = project.name
         jobComment = CommentPanel(job.comment)
-        yield atom.title[ f'{job.getDescription()}: {jobResult}' ]
+        yield atom.title[ f'{job.getDescription()}: ', jobResult ]
         yield atom.link(href = rootURL + createJobURL(jobId))
         yield atom.id[ f'softfab:{factoryId}/jobs/{jobId}' ]
         yield atom.published[ self.presentTime(job.getCreateTime()) ]
