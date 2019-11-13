@@ -2,7 +2,6 @@
 
 from enum import Enum, auto
 from typing import Generator, Iterator, Tuple, cast
-from urllib.parse import urljoin
 
 from twisted.cred.error import LoginFailed
 from twisted.internet.defer import Deferred, inlineCallbacks
@@ -12,14 +11,13 @@ from softfab.Page import (
 )
 from softfab.UIPage import UIPage
 from softfab.authentication import NoAuthPage
-from softfab.config import rootURL
 from softfab.formlib import (
     FormTable, actionButtons, makeForm, passwordInput, textInput
 )
 from softfab.pageargs import ArgsCorrected, ArgsT, EnumArg, StrArg
 from softfab.pagelinks import URLArgs
 from softfab.projectlib import project
-from softfab.request import Request, relativeURL
+from softfab.request import Request
 from softfab.userlib import (
     PasswordMessage, User, UserInfo, authenticateUser, passwordQuality
 )
@@ -99,7 +97,7 @@ class Login_GET(LoginBase['Login_GET.Processor', 'Login_GET.Arguments']):
             url = req.args.url
             if url is not None:
                 # Only accept relative URLs.
-                url = relativeURL(urljoin(rootURL, url))
+                url = req.relativeURL(url)
                 if url is None:
                     raise ArgsCorrected(req.args, url=None)
 

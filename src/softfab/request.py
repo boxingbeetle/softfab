@@ -3,7 +3,7 @@
 from cgi import parse_header
 from inspect import signature
 from typing import IO, Generic, Mapping, Optional, Tuple, Type, Union, cast
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, urljoin, urlparse
 
 from twisted.web.http import Request as TwistedRequest
 from twisted.web.server import Session
@@ -18,22 +18,6 @@ from softfab.utils import cachedProperty
 
 # The 'sameSite' parameter was added in Twisted 18.9.0.
 sameSiteSupport = 'sameSite' in signature(TwistedRequest.addCookie).parameters
-
-def relativeURL(absolute: str) -> Optional[str]:
-    """Returns the given absolute URL as a path relative to this site's root,
-    or None if no URL was given, it doesn't belong to this site or it points
-    to the Login page.
-    """
-    if not absolute.startswith(rootURL):
-        # URL belongs to a different site.
-        return None
-    relative = absolute[len(rootURL) : ]
-    page = urlparse(relative).path
-    if page == 'Login':
-        # The Login page was the previously requested page, but it is not
-        # the actual referer (that information is lost).
-        return None
-    return relative
 
 class RequestBase:
     '''Contains the request information that is available during all request
@@ -57,7 +41,7 @@ class RequestBase:
         before the current page, or None if not applicable.
         '''
         url = self._request.getHeader('referer')
-        return None if url is None else relativeURL(url)
+        return None if url is None else self.relativeURL(url)
 
     @cachedProperty
     def refererPage(self) -> Optional[str]:
@@ -135,6 +119,23 @@ class RequestBase:
             return None
         assert path.startswith(pagePath + b'/')
         return path[len(pagePath) + 1 : ].decode()
+
+    def relativeURL(self, url: str) -> Optional[str]:
+        """Return a path relative to this site's root that corresponds to
+        the given full URL or URL path, or None if the given URL doesn't
+        belong to this site or it points to the Login page.
+        """
+        absolute = urljoin(rootURL, url)
+        if not absolute.startswith(rootURL):
+            # URL belongs to a different site.
+            return None
+        relative = absolute[len(rootURL) : ]
+        page = urlparse(relative).path
+        if page == 'Login':
+            # The Login page was the previously requested page, but it is not
+            # the actual referer (that information is lost).
+            return None
+        return relative
 
 class Request(RequestBase, Generic[ArgsT_co]):
     '''Contains the request information that is only available during the

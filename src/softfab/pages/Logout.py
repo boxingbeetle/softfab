@@ -1,16 +1,14 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from typing import cast
-from urllib.parse import urljoin
 
 from softfab.Page import FabResource, PageProcessor, Redirect
 from softfab.UIPage import UIPage
 from softfab.authentication import NoAuthPage
-from softfab.config import rootURL
 from softfab.pageargs import ArgsCorrected
 from softfab.pagelinks import URLArgs
 from softfab.projectlib import project
-from softfab.request import Request, relativeURL
+from softfab.request import Request
 from softfab.userlib import User
 from softfab.webgui import pageLink
 from softfab.xmlgen import XMLContent, xhtml
@@ -34,7 +32,7 @@ class Logout_GET(UIPage['Logout_GET.Processor'],
             url = req.args.url
             if url is not None:
                 # Only accept relative URLs.
-                url = relativeURL(urljoin(rootURL, url))
+                url = req.relativeURL(url)
                 if url is None:
                     raise ArgsCorrected(req.args, url=None)
 
