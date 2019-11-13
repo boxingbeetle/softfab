@@ -8,7 +8,7 @@ from softfab.projectlib import getBootTime, project
 from softfab.request import Request
 from softfab.response import Response
 from softfab.timeview import formatTimeAttr
-from softfab.userlib import User, checkPrivilege, privileges
+from softfab.userlib import User, checkPrivilege
 from softfab.version import VERSION
 from softfab.xmlgen import xml
 
@@ -17,12 +17,11 @@ class GetFactoryInfo_GET(ControlPage[ControlPage.Arguments,
                                      'GetFactoryInfo_GET.Processor']):
 
     def checkAccess(self, user: User) -> None:
-        checkPrivilege(user, 'p/a')
-
         # Check that user has 'list' privileges for all databases.
-        for priv in privileges:
-            if priv.endswith('/l'):
-                checkPrivilege(user, priv)
+        # For the singleton project DB, check the 'access' privilege instead.
+        for db in iterDatabases():
+            priv = f'{db.privilegeObject}/l'
+            checkPrivilege(user, 'p/a' if priv == 'p/l' else priv)
 
     class Processor(PageProcessor[ControlPage.Arguments]):
 
