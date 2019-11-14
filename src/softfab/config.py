@@ -23,6 +23,12 @@ dbDir: str
 rootURL = 'https://softfab.example.com/projname/'
 """The root URL of this factory. Must end with a slash."""
 
+endpointDesc: str
+"""Description of the socket to listen to, in Twisted 'strports' format.
+See the documentation of `twisted.internet.endpoints.serverFromString`
+for the string syntax.
+"""
+
 def loadConfig(file: IO[str]) -> None:
     """Load the configuration from an INI file.
 
@@ -48,6 +54,7 @@ def _loadServer(name: str, section: Mapping[str, str]) -> None:
     """
 
     url: Optional[SplitResult] = None
+    listen: Optional[str] = None
 
     for key, value in section.items():
         if key == 'rooturl':
@@ -66,8 +73,7 @@ def _loadServer(name: str, section: Mapping[str, str]) -> None:
             if url.fragment:
                 raise ValueError(f'Root URL "{value}" contains fragment')
         elif key == 'listen':
-            # TODO: Move socket spec from command line to config file.
-            pass
+            listen = value
         else:
             raise NameError(f'Unknown key "{key}" in section "{name}"')
 
@@ -79,6 +85,12 @@ def _loadServer(name: str, section: Mapping[str, str]) -> None:
             path += '/'
         global rootURL
         rootURL = urlunsplit((url.scheme, url.netloc, path, '', ''))
+
+    if listen is None:
+        raise KeyError(f'Section "{name}" is missing key "listen"')
+    else:
+        global endpointDesc
+        endpointDesc = listen
 
 def initConfig(path: Path) -> None:
     """Initialize the global configuration.

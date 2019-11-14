@@ -14,7 +14,6 @@ from click import (
     version_option
 )
 from twisted.application import strports
-from twisted.internet.error import CannotListenError
 from twisted.logger import globalLogBeginner, textFileLogObserver
 from twisted.web.server import Session, Site
 
@@ -55,9 +54,6 @@ class DirectoryParamType(ParamType):
 @command()
 @option('-d', '--dir', 'path', type=DirectoryParamType(True), default='.',
         help='Directory containing configuration, data and logging.')
-@option('--listen', metavar='SOCKET',
-        default='tcp:interface=localhost:port=8180',
-        help='Socket to listen to, in Twisted strports format.')
 @option('--debug', is_flag=True,
         help='Enable debug features. Can leak data; use only in development.')
 @option('--no-auth', is_flag=True,
@@ -66,7 +62,6 @@ class DirectoryParamType(ParamType):
         help='Allow cookies to be sent over plain HTTP.')
 def server(
         path: Path,
-        listen: str,
         debug: bool,
         no_auth: bool,
         insecure_cookie: bool
@@ -77,9 +72,9 @@ def server(
     # which we don't need for every subcommand.
     from twisted.internet import reactor
 
-    from softfab.config import initConfig
+    import softfab.config
     try:
-        initConfig(Path('.'))
+        softfab.config.initConfig(Path('.'))
     except Exception as ex:
         print('Error reading configuration:', ex, file=sys.stderr)
         sys.exit(1)
@@ -108,14 +103,14 @@ def server(
     site.displayTracebacks = debug
 
     try:
-        service = strports.service(listen, site)
+        service = strports.service(softfab.config.endpointDesc, site)
     except ValueError as ex:
         print('Invalid socket specification:', ex, file=sys.stderr)
         sys.exit(1)
 
     try:
         service.startService()
-    except CannotListenError as ex:
+    except Exception as ex:
         print('Failed to listen on socket:', ex, file=sys.stderr)
         sys.exit(1)
 

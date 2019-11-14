@@ -173,13 +173,10 @@ def isort(c, src=None):
         c.run('isort %s' % source_arg(src), pty=True)
 
 @task
-def run(c, host='localhost', port=8180, dbdir='run',
-        auth=False, coverage=False):
+def run(c, dbdir='run', auth=False, coverage=False):
     """Run a Control Center instance."""
-    print(f'Starting Control Center at: http://{host}:{port}/')
     cmd = [
         'softfab', 'server',
-        f'--listen tcp:interface={host}:port={port}',
         '--debug', '--insecure-cookie'
         ]
     if not auth:
@@ -195,6 +192,7 @@ def run(c, host='localhost', port=8180, dbdir='run',
     db_path = Path(dbdir)
     if not db_path.is_absolute():
         db_path = TOP_DIR / db_path
+    print(f'Starting Control Center from {db_path}')
     db_path.mkdir(exist_ok=True)
     pid_file = db_path / 'cc.pid'
     cmd = ['echo' ,'$$', f'>{pid_file}', '&&'] + cmd
