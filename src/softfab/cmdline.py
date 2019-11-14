@@ -23,6 +23,12 @@ from softfab.version import VERSION
 class LongSession(Session):
     sessionTimeout = 60 * 60 * 24 * 7 # one week in seconds
 
+class ControlCenter(Site):
+    sessionFactory = LongSession
+
+    def __repr__(self) -> str:
+        return 'ControlCenter'
+
 class DirectoryParamType(ParamType):
     """Parameter type for specifying directories."""
 
@@ -95,8 +101,7 @@ def server(
 
     root = SoftFabRoot(anonOperator=anonoper)
 
-    site = Site(root)
-    site.sessionFactory = LongSession
+    site = ControlCenter(root)
     site.secureCookie = not softfab.config.rootURL.startswith('http://')
     site.displayTracebacks = debug
 
