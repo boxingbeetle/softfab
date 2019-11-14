@@ -3,14 +3,17 @@
 from typing import Iterator, cast
 
 from softfab.FabPage import FabPage
+from softfab.Page import PageProcessor
 from softfab.ReportMixin import ReportFilterForm, ReportProcessor
 from softfab.datawidgets import DataTable
 from softfab.formlib import selectionList
 from softfab.joblib import (
-    iterAllTasks, iterDoneTasks, iterFinishedTasks, iterUnfinishedTasks, jobDB
+    Task, iterAllTasks, iterDoneTasks, iterFinishedTasks, iterUnfinishedTasks,
+    jobDB
 )
 from softfab.pageargs import IntArg, SortArg
 from softfab.pagelinks import ExecutionState, ReportTaskArgs
+from softfab.querylib import RecordFilter
 from softfab.setcalc import intersection, union
 from softfab.taskdeflib import taskDefDB
 from softfab.taskrunlib import getKeys
@@ -26,7 +29,8 @@ class FilteredTaskRunsTable(TaskRunsTable):
     def showTargetColumn(self) -> bool:
         return super().showTargetColumn() or bool(jobDB.uniqueValues('target'))
 
-    def getRecordsToQuery(self, proc):
+    def getRecordsToQuery(self, proc: PageProcessor) -> Iterator[Task]:
+        args = cast(ReportTasks_GET.Processor, proc).args
         # Note: iterAllTasks() etc can efficiently handle an empty (nothing
         #       matches) filter, no need for a special case here.
         return {
@@ -34,15 +38,17 @@ class FilteredTaskRunsTable(TaskRunsTable):
             ExecutionState.COMPLETED: iterDoneTasks,
             ExecutionState.FINISHED: iterFinishedTasks,
             ExecutionState.UNFINISHED: iterUnfinishedTasks,
-            }[proc.args.execState](proc.args.task)
+            }[args.execState](args.task)
 
-    def iterFilters(self, proc):
-        return proc.iterFilters()
+    def iterFilters(self, proc: PageProcessor) -> Iterator[RecordFilter]:
+        return cast(ReportTasks_GET.Processor, proc).iterFilters()
 
 class FilterForm(ReportFilterForm):
     objectName = FilteredTaskRunsTable.objectName
 
-    def presentCustomBox(self, proc, numListItems, **kwargs):
+    def presentCustomBox(self, **kwargs: object) -> XMLContent:
+        proc = cast(ReportTasks_GET.Processor, kwargs['proc'])
+        numListItems = cast(int, kwargs['numListItems'])
         yield xhtml.td(colspan = 4)[
             selectionList(
                 name='task', selected=proc.args.task, size=numListItems
@@ -59,7 +65,7 @@ class ReportTasks_GET(FabPage['ReportTasks_GET.Processor',
         first = IntArg(0)
         sort = SortArg()
 
-    class Processor(ReportProcessor):
+    class Processor(ReportProcessor[Arguments]):
         pass
 
     def checkAccess(self, user: User) -> None:
