@@ -322,7 +322,9 @@ class DataTable(Table, Generic[Record]):
         assert db is not None
         return db
 
-    def iterFilters(self,proc: PageProcessor) -> Iterator[RecordFilter[Record]]:
+    def iterFilters(self,
+                    proc: PageProcessor
+                    ) -> Iterator[RecordFilter[Record]]:
         '''Generates filter objects (see "querylib" module) to filter the
         records that are going to be displayed in a DataTable.
         The default implementation yields no filters; override this method to
