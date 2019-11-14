@@ -58,13 +58,10 @@ class DirectoryParamType(ParamType):
         help='Enable debug features. Can leak data; use only in development.')
 @option('--no-auth', is_flag=True,
         help='Disable authentication. Use only in development.')
-@option('--insecure-cookie', is_flag=True,
-        help='Allow cookies to be sent over plain HTTP.')
 def server(
         path: Path,
         debug: bool,
-        no_auth: bool,
-        insecure_cookie: bool
+        no_auth: bool
         ) -> None:
     """Run a SoftFab Control Center."""
 
@@ -99,7 +96,7 @@ def server(
 
     site = Site(root)
     site.sessionFactory = LongSession
-    site.secureCookie = not insecure_cookie
+    site.secureCookie = not softfab.config.rootURL.startswith('http://')
     site.displayTracebacks = debug
 
     try:
