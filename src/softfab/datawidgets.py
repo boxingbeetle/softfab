@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from typing import (
-    TYPE_CHECKING, Any, ClassVar, Collection, Dict, Generic, Iterable,
-    Iterator, List, Mapping, Optional, Sequence, Tuple, Union, cast
+    TYPE_CHECKING, Any, ClassVar, Dict, Generic, Iterable, Iterator, List,
+    Mapping, Optional, Sequence, Sized, Tuple, Union, cast
 )
 
 from softfab.databaselib import DBRecord, Database, Retriever
@@ -168,7 +168,7 @@ class TableData(Generic[Record]):
         columns = tuple(table.iterColumns(proc=proc, data=None))
 
         records = table.getRecordsToQuery(proc)
-        if hasattr(records, '__len__'):
+        if isinstance(records, Sized):
             unfilteredNrRecords: Optional[int] = len(records)
         else:
             # We could store all records in a list or wrap a counting iterator
@@ -314,7 +314,7 @@ class DataTable(Table, Generic[Record]):
             assert self.db is not None
             self.objectName = pluralize(self.db.description, 42)
 
-    def getRecordsToQuery(self, proc: PageProcessor) -> Collection[Record]:
+    def getRecordsToQuery(self, proc: PageProcessor) -> Iterable[Record]:
         '''Returns the initial record set on which filters will be applied.
         If "sortField" is None, the initial record set must be already sorted.
         '''
