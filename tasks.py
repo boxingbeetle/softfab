@@ -177,7 +177,7 @@ def run(c, dbdir='run', auth=False, coverage=False):
     """Run a Control Center instance."""
     cmd = ['softfab', 'server', '--debug']
     if not auth:
-        cmd.append('--no-auth')
+        cmd.append('--anonoper')
     if coverage:
         runner = TOP_DIR / 'tools' / 'run_console_script.py'
         cmd = [

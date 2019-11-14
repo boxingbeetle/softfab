@@ -56,12 +56,13 @@ class DirectoryParamType(ParamType):
         help='Directory containing configuration, data and logging.')
 @option('--debug', is_flag=True,
         help='Enable debug features. Can leak data; use only in development.')
-@option('--no-auth', is_flag=True,
-        help='Disable authentication. Use only in development.')
+@option('--anonoper', is_flag=True,
+        help='Give every visitor operator privileges, without logging in. '
+             'Use only in development.')
 def server(
         path: Path,
         debug: bool,
-        no_auth: bool
+        anonoper: bool
         ) -> None:
     """Run a SoftFab Control Center."""
 
@@ -92,7 +93,7 @@ def server(
     observers = [textFileLogObserver(sys.stderr)]
     globalLogBeginner.beginLoggingTo(observers)
 
-    root = SoftFabRoot(anonOperator=no_auth)
+    root = SoftFabRoot(anonOperator=anonoper)
 
     site = Site(root)
     site.sessionFactory = LongSession
