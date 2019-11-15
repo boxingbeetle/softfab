@@ -58,6 +58,54 @@ class DirectoryParamType(ParamType):
             return path
 
 @command()
+@option('-d', '--dir', 'path', type=DirectoryParamType(False), default='.',
+        help='Directory containing configuration, data and logging.')
+@option('--host', default='localhost',
+        help='Host name or IP address at which the Control Center '
+             'accepts connections.')
+@option('--port', default=8100,
+        help='TCP port at which the Control Center accepts connections.')
+@option('--url',
+        help='Public URL for the Control Center. '
+             'Provide this when the Control Center is behind a reverse proxy.')
+def init(
+        path: Path,
+        host: str,
+        port: int,
+        url: Optional[str]
+        ) -> None:
+    """Create a Control Center directory."""
+
+    if url is None:
+        url = f'http://{host}:{port:d}/'
+
+    listen = f'tcp:interface={host}:port={port:d}'
+
+    path.mkdir(mode=0o770, exist_ok=True)
+
+    import softfab.config
+    try:
+        with softfab.config.openConfig(path, 'x') as file:
+            # ConfigParser cannot write comments, so we manually format
+            # our initial configuration file instead.
+            print('[Server]', file=file)
+            print(f'# The URL under which the Control Center is reachable.\n'
+                  f'rootURL = {url}',
+                  file=file)
+            print(f'# Socket to listen to, in Twisted strports format.\n'
+                  f'listen = {listen}',
+                  file=file)
+    except FileExistsError:
+        print('Refusing to overwrite existing configuration file.',
+              file=sys.stderr)
+        sys.exit(1)
+    except Exception as ex:
+        print('Failed to create configuration file:', ex, file=sys.stderr)
+        sys.exit(1)
+
+    print(f'Control Center created in {path}.', file=sys.stderr)
+
+@command()
 @option('-d', '--dir', 'path', type=DirectoryParamType(True), default='.',
         help='Directory containing configuration, data and logging.')
 @option('--debug', is_flag=True,
@@ -70,7 +118,7 @@ def server(
         debug: bool,
         anonoper: bool
         ) -> None:
-    """Run a SoftFab Control Center."""
+    """Run a Control Center server."""
 
     # Inline import because this also starts the reactor,
     # which we don't need for every subcommand.
@@ -127,4 +175,5 @@ def main() -> None:
     """Command line interface to SoftFab."""
     pass
 
+main.add_command(init)
 main.add_command(server)

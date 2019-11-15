@@ -29,6 +29,10 @@ See the documentation of `twisted.internet.endpoints.serverFromString`
 for the string syntax.
 """
 
+def openConfig(path: Path, mode: str) -> IO[str]:
+    """Open the SoftFab configuration file."""
+    return open(path / 'softfab.ini', encoding='utf-8', mode=mode)
+
 def loadConfig(file: IO[str]) -> None:
     """Load the configuration from an INI file.
 
@@ -103,7 +107,7 @@ def initConfig(path: Path) -> None:
     global dbDir
     dbDir = str(path)
 
-    with open(path / 'softfab.ini', encoding='utf-8') as file:
+    with openConfig(path, 'r') as file:
         loadConfig(file)
 
 
