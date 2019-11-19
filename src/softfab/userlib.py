@@ -540,7 +540,7 @@ def checkPrivilegeForOwned(
         userName = user.name
         if not iterable(records):
             records = ( records, )
-        if all(record.getOwner() == userName for record in records):
+        if all(record.owner == userName for record in records):
             return
     # Construct error message.
     if isinstance(text, tuple):

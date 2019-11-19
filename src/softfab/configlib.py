@@ -394,7 +394,11 @@ class Config(TaskRunnerSet, TaskSetWithInputs[Task], XMLTag,
         """
         return self.__targets
 
-    def getOwner(self) -> Optional[str]:
+    @property
+    def owner(self) -> Optional[str]:
+        """The owner of this configuration, or None if it does not have
+        an owner.
+        """
         return cast(Optional[str], self._properties.get('owner'))
 
     @property
@@ -406,7 +410,7 @@ class Config(TaskRunnerSet, TaskSetWithInputs[Task], XMLTag,
 
     def __getitem__(self, key: str) -> object:
         if key == 'owner':
-            return self.getOwner()
+            return self.owner
         elif key == 'comment':
             return self.__comment
         elif key == 'description':
@@ -493,7 +497,7 @@ class Config(TaskRunnerSet, TaskSetWithInputs[Task], XMLTag,
             taskParameters: Mapping[str, Mapping[str, str]] = {}
             ) -> Iterator[Job]:
         if owner is None:
-            owner = self.getOwner()
+            owner = self.owner
         if comment is None:
             comment = self.__comment
         jobParams = dict(self.__params)

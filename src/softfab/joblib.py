@@ -510,7 +510,7 @@ class Job(TaskRunnerSet, TaskSet[Task], XMLTag, DatabaseElem):
         elif key == 'target':
             return self.getTarget()
         elif key == 'owner':
-            return self.getOwner()
+            return self.owner
         elif key == 'scheduledby':
             return self.getScheduledBy()
         elif key == 'configId':
@@ -614,10 +614,9 @@ class Job(TaskRunnerSet, TaskSet[Task], XMLTag, DatabaseElem):
         '''
         return cast(Optional[str], self._properties.get('target'))
 
-    def getOwner(self) -> Optional[str]:
-        """Gets the owner of this job,
-        or None if this job does not have an owner.
-        """
+    @property
+    def owner(self) -> Optional[str]:
+        """The owner of this job, or None if it does not have an owner."""
         return cast(Optional[str], self._properties.get('owner'))
 
     def getScheduledBy(self) -> Optional[str]:
@@ -1038,8 +1037,10 @@ def _releaseResources(reserved: Iterable[str]) -> None:
 # Work around lack of knowledge of @property in mypy.
 #   https://github.com/python/mypy/issues/7974
 if TYPE_CHECKING:
+    _ownerRetreiver = Job.owner
     _configIdRetriever = Job.configId
 else:
+    _ownerRetreiver = Job.owner.__get__
     _configIdRetriever = Job.configId.__get__
 
 JobDB.keyRetrievers = {
@@ -1048,7 +1049,7 @@ JobDB.keyRetrievers = {
     'leadtime': Job.getLeadTime,
     'target': Job.getTarget,
     'description': Job.getDescription,
-    'owner': Job.getOwner,
+    'owner': _ownerRetreiver,
     'configId': _configIdRetriever,
     }
 

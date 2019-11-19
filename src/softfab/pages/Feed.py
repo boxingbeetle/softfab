@@ -166,7 +166,7 @@ class Feed_GET(ControlPage[ControlPage.Arguments, 'Feed_GET.Processor']):
                    ) -> XMLContent:
         jobId = job.getId()
         jobResult = job.result
-        owner = job.getOwner()
+        owner = job.owner
         projectName = project.name
         jobComment = CommentPanel(job.comment)
         yield atom.title[ f'{job.getDescription()}: ', jobResult ]

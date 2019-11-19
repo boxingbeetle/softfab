@@ -278,7 +278,7 @@ class Scheduled(XMLTag, SelectableRecordABC):
         elif key == 'comment':
             return self.__comment
         elif key == 'owner':
-            return self.getOwner()
+            return self.owner
         elif key == 'lastStartTime':
             return self.getLastStartTime()
         else:
@@ -304,10 +304,9 @@ class Scheduled(XMLTag, SelectableRecordABC):
         '''
         return tuple(self.__lastJobIds)
 
-    def getOwner(self) -> Optional[str]:
-        """Gets the owner of this scheduled job,
-        or None if this job does not have an owner.
-        """
+    @property
+    def owner(self) -> Optional[str]:
+        """The owner of this schedule, or None if it does not have an owner."""
         return cast(Optional[str], self._properties.get('owner'))
 
     @property
@@ -565,7 +564,7 @@ class Scheduled(XMLTag, SelectableRecordABC):
             try:
                 config = configDB[configId]
                 if config.hasValidInputs():
-                    for job in config.createJobs(self.getOwner()):
+                    for job in config.createJobs(self.owner):
                         job.comment += '\n' + self.comment
                         job.setScheduledBy(self.getId())
                         jobDB.add(job)

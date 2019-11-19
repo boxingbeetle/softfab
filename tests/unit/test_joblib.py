@@ -178,7 +178,7 @@ class TestJobs(unittest.TestCase):
             self.assertEqual(config.targets, {'target1', 'target2'})
             self.assertEqual(config.getId(), jobId)
             self.assertEqual(config['name'], jobId)
-            self.assertEqual(config.getOwner(), self.owner)
+            self.assertEqual(config.owner, self.owner)
             self.assertEqual(config['owner'], self.owner)
             self.assertEqual(config.comment, self.comment)
             #self.assertEqual(config.getDescription(), config['description'])

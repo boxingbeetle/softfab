@@ -99,7 +99,7 @@ class GetTaggedTaskInfo_GET(ControlPage['GetTaggedTaskInfo_GET.Arguments',
                     starttime = formatTimeAttr(run.startTime),
                     duration = run.getDuration(),
                     report = run.getURL(),
-                    owner = task.getJob().getOwner(),
+                    owner = task.getJob().owner,
                     )
 
         def taggedToXML(

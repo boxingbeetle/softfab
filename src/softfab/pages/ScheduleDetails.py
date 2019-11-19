@@ -91,7 +91,7 @@ class DetailsTable(PropertiesTable):
                 sorted(scheduled.getTagValues('sf.trigger'))
                 )
         if project.showOwners:
-            yield 'Owner', scheduled.getOwner() or '-'
+            yield 'Owner', scheduled.owner or '-'
         yield 'Comment', xhtml.br.join(scheduled.comment.splitlines())
         yield row(class_ = getScheduleStatus(scheduled))[
             'Status', statusDescription(scheduled)
