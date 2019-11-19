@@ -18,15 +18,19 @@ from softfab.xmlgen import XMLContent, xhtml
 class NameColumn(DataColumn[ProductDef]):
     label = 'Product ID'
     keyName = 'id'
-    def presentCell(self, record, **kwargs):
+
+    def presentCell(self, record: ProductDef, **kwargs: object) -> XMLContent:
         return createProductDetailsLink(record.getId())
 
 class TypeColumn(DataColumn[ProductDef]):
     label = 'Type'
     keyName = 'type'
+
     @staticmethod
-    def sortKey(record):
-        return record['type'].name
+    def typeName(record: ProductDef) -> str:
+        return record.getType().name
+
+    sortKey = typeName
 
 class ProductDefTable(DataTable[ProductDef]):
     db = productDefDB
