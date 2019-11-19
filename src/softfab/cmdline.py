@@ -148,21 +148,12 @@ def server(
         logging.captureWarnings(True)
         warnings.simplefilter('default')
 
-    # This must happen after logging has been initialized.
-    from softfab.TwistedRoot import SoftFabRoot
-
     # Set up Twisted's logging.
     observers = [textFileLogObserver(sys.stderr)]
     globalLogBeginner.beginLoggingTo(observers)
 
-    pidfilePath = path / 'cc.pid'
-    try:
-        writePIDFile(pidfilePath)
-    except OSError as ex:
-        print(f'Failed to create PID file "{pidfilePath}": {ex}',
-              file=sys.stderr)
-        sys.exit(1)
-
+    # This must happen after logging has been initialized.
+    from softfab.TwistedRoot import SoftFabRoot
     root = SoftFabRoot(anonOperator=anonoper)
 
     site = ControlCenter(root)
@@ -180,8 +171,17 @@ def server(
     except Exception as ex:
         print('Failed to listen on socket:', ex, file=sys.stderr)
         sys.exit(1)
+    else:
+        reactor.addSystemEventTrigger('before', 'shutdown', service.stopService)
 
-    reactor.addSystemEventTrigger('before', 'shutdown', service.stopService)
+    pidfilePath = path / 'cc.pid'
+    try:
+        writePIDFile(pidfilePath)
+    except OSError as ex:
+        print(f'Failed to create PID file "{pidfilePath}": {ex}',
+              file=sys.stderr)
+        sys.exit(1)
+
     reactor.run()
 
     pidfilePath.unlink()
