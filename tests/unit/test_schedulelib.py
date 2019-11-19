@@ -656,7 +656,7 @@ class Test0600Tagged(ScheduleFixtureMixin, unittest.TestCase):
             config.getId() for config in configFactory.configs
             )
         jobConfigs = set(
-            joblib.jobDB[jobId].getConfigId()
+            joblib.jobDB[jobId].configId
             for jobId in self.scheduled.getLastJobs()
             )
         self.assertEqual(createdConfigs, jobConfigs)

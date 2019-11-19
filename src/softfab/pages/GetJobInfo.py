@@ -88,7 +88,7 @@ class GetJobInfo_GET(ControlPage['GetJobInfo_GET.Arguments',
                 jobid = job.getId(),
                 target = job.getTarget(),
                 createtime = formatTimeAttr(job.getCreateTime()),
-                configid = job.getConfigId(),
+                configid = job.configId,
                 owner = job.getOwner(),
                 scheduledby = job.getScheduledBy(),
                 )

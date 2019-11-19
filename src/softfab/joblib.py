@@ -514,7 +514,7 @@ class Job(TaskRunnerSet, TaskSet[Task], XMLTag, DatabaseElem):
         elif key == 'scheduledby':
             return self.getScheduledBy()
         elif key == 'configId':
-            return self.getConfigId()
+            return self.configId
         else:
             return XMLTag.__getitem__(self, key)
 
@@ -706,8 +706,9 @@ class Job(TaskRunnerSet, TaskSet[Task], XMLTag, DatabaseElem):
         '''
         return iter(self._tasks.values())
 
-    def getConfigId(self) -> Optional[str]:
-        """Return the ID of the configuration this job was once created from,
+    @property
+    def configId(self) -> Optional[str]:
+        """The ID of the configuration this job was once created from,
         or None if this job was created from scratch.
         """
         return cast(Optional[str], self._properties.get('configId'))
@@ -716,7 +717,7 @@ class Job(TaskRunnerSet, TaskSet[Task], XMLTag, DatabaseElem):
         # Since task definition is fixed, caching is possible.
         description = self.__description
         if description is None:
-            description = self.getConfigId() or super().getDescription()
+            description = self.configId or super().getDescription()
             self.__description = description
         return description
 
@@ -1034,6 +1035,13 @@ def _releaseResources(reserved: Iterable[str]) -> None:
             if resType['perjob'] or resType['pertask']:
                 resource.free()
 
+# Work around lack of knowledge of @property in mypy.
+#   https://github.com/python/mypy/issues/7974
+if TYPE_CHECKING:
+    _configIdRetriever = Job.configId
+else:
+    _configIdRetriever = Job.configId.__get__
+
 JobDB.keyRetrievers = {
     'recent': Job.getRecent,
     'timestamp': Job.getCreateTime,
@@ -1041,7 +1049,7 @@ JobDB.keyRetrievers = {
     'target': Job.getTarget,
     'description': Job.getDescription,
     'owner': Job.getOwner,
-    'configId': Job.getConfigId,
+    'configId': _configIdRetriever,
     }
 
 class _TaskToJobs(RecordObserver[Job]):

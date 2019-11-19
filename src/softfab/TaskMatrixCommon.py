@@ -79,7 +79,7 @@ def filterJobs(jobs: Iterable[Job],
 
     if configFilter:
         def configMatches(job: Job) -> bool:
-            return job.getConfigId() == configFilter
+            return job.configId == configFilter
         query.append(CustomFilter(configMatches))
 
     def timeMatches(job: Job) -> bool:

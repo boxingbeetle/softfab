@@ -95,7 +95,7 @@ resultlessJobs = _ResultlessJobs(jobDB)
 def presentJobCaption(job: Job) -> XMLContent:
     jobId = job.getId()
     yield 'Job ', jobId, ' was created from '
-    configId = job.getConfigId()
+    configId = job.configId
     if configId is None:
         yield 'scratch'
     else:
