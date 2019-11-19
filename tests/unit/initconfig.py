@@ -1,11 +1,17 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-import os
+from pathlib import Path
+
 from softfab import config
-# Set 'config.dbDir' to the current directory before importing 'initlog' to
-# have the log file there rather than in 'testdb', which will be removed later
-config.dbDir = '.'
-import softfab.initlog
-config.dbDir = 'testdb'
-assert not os.path.exists(config.dbDir), 'dir already exists: ' + config.dbDir
+from softfab.initlog import initLogging
+
+
+# Create log in the current directory rather than in 'testdb',
+# because the latter will be removed later.
+initLogging(Path.cwd())
+
+dbDir = Path('testdb')
+assert not dbDir.exists(), f'dir already exists: {dbDir}'
+config.dbDir = str(dbDir)
+
 config.dbAtomicWrites = False

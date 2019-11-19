@@ -131,8 +131,8 @@ def server(
         print('Error reading configuration:', ex, file=sys.stderr)
         sys.exit(1)
 
-    # Importing of this module triggers the logging system initialisation.
-    import softfab.initlog
+    from softfab.initlog import initLogging
+    initLogging(Path(softfab.config.dbDir))
 
     if debug:
         import logging
@@ -140,7 +140,7 @@ def server(
         logging.captureWarnings(True)
         warnings.simplefilter('default')
 
-    # This must be after importing initlog.
+    # This must happen after logging has been initialized.
     from softfab.TwistedRoot import SoftFabRoot
 
     # Set up Twisted's logging.
