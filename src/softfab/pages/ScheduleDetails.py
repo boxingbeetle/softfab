@@ -59,7 +59,7 @@ class DetailsTable(PropertiesTable):
 
     def iterRows(self, *, proc, **kwargs):
         scheduled = proc.scheduled
-        configId = scheduled['configId']
+        configId = scheduled.configId
         if configId is None:
             yield 'Tag', TagsTable.instance.present(proc=proc, **kwargs)
         else:

@@ -194,7 +194,7 @@ def schedulesUsingConfig(configId: str) -> Iterator[str]:
     matter whether the configuration matches the tag or not.
     '''
     for scheduleId, schedule in scheduleDB.items():
-        if schedule['configId'] == configId:
+        if schedule.configId == configId:
             yield scheduleId
 
 class SortedJobsByConfig(SortedQueue):

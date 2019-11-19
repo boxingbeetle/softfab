@@ -262,8 +262,7 @@ class Scheduled(XMLTag, SelectableRecordABC):
         if key == 'startTime':
             return self.startTime
         elif key == 'configId':
-            # configId is None if this schedule is based on tags.
-            return self._properties.get('configId')
+            return self.configId
         elif key == 'tagValue':
             # Return the current display value.
             cvalue_, dvalue = Config.cache.toCanonical(self.tagKey,
@@ -331,6 +330,13 @@ class Scheduled(XMLTag, SelectableRecordABC):
         in minutes.
         """
         return cast(int, self._properties['minDelay'])
+
+    @property
+    def configId(self) -> Optional[str]:
+        """The ID of the configuration instantiated by this schedule,
+        or None if this schedule picks configurations based on tags instead.
+        """
+        return cast(Optional[str], self._properties.get('configId'))
 
     @property
     def tagKey(self) -> str:
@@ -494,7 +500,7 @@ class Scheduled(XMLTag, SelectableRecordABC):
         '''Returns the IDs of configurations that will be instantiated by this
         schedule, if the schedule would be triggered right now.
         '''
-        configId = cast(Optional[str], self._properties.get('configId'))
+        configId = self.configId
         if configId is None:
             return tuple(
                 config.getId()

@@ -108,7 +108,7 @@ class ScheduleEdit_GET(ScheduleEditBase):
                 return {}
             else:
                 overrides: Dict[str, object] = {}
-                configId = element['configId']
+                configId = element.configId
                 if configId is None:
                     overrides['selectBy'] = SelectBy.TAG
                     overrides['tag'] = element.tagKey + ',' + element.tagValue
