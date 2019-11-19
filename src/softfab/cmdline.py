@@ -126,7 +126,7 @@ def server(
 
     import softfab.config
     try:
-        softfab.config.initConfig(Path(path))
+        softfab.config.initConfig(path)
     except Exception as ex:
         print('Error reading configuration:', ex, file=sys.stderr)
         sys.exit(1)
