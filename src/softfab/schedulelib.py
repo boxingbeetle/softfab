@@ -323,6 +323,23 @@ class Scheduled(XMLTag, SelectableRecordABC):
         return cast(ScheduleRepeat, self._properties['repeat'])
 
     @property
+    def dayFlags(self) -> str:
+        """A string of length 7, on position per day, starting at Monday:
+        if '0' the schedule does not fire on that day, if '1' it does.
+        """
+        repeat = self.repeat
+        if repeat is ScheduleRepeat.WEEKLY:
+            dayFlags = cast(str, self._properties['days'])
+            assert '1' in dayFlags and len(dayFlags) == 7, dayFlags
+            return dayFlags
+        elif repeat is ScheduleRepeat.DAILY:
+            return '1' * 7
+        else:
+            raise ValueError(
+                f'dayFlags is not defined for repeat {repeat.name}'
+                )
+
+    @property
     def startTime(self) -> int:
         """Returns the start time for this schedule (in seconds since the
         epoch), or `asap` if the schedule will start as soon as possible,
@@ -482,12 +499,6 @@ class Scheduled(XMLTag, SelectableRecordABC):
         elif repeat is ScheduleRepeat.TRIGGERED:
             nextTime = None
         else:
-            if repeat is ScheduleRepeat.WEEKLY:
-                dayFlags = cast(str, self._properties['days'])
-                assert '1' in dayFlags and len(dayFlags) == 7
-            else:
-                assert repeat is ScheduleRepeat.DAILY
-                dayFlags = '1' * 7
             nextTimeList = list(time.localtime(startTime)[:9])
             nextTimeList[8] = -1 # local time: no time zone
             if startTime is None or currentTime >= startTime:
@@ -497,6 +508,7 @@ class Scheduled(XMLTag, SelectableRecordABC):
                     # Move ahead at least one day.
                     nextTimeList[2] += 1
             nextTime = _listToTimestamp(nextTimeList)
+            dayFlags = self.dayFlags
             while nextTime < currentTime \
                or dayFlags[time.localtime(nextTime)[6]] != '1':
                 nextTimeList[2] += 1

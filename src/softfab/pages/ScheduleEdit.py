@@ -122,9 +122,7 @@ class ScheduleEdit_GET(ScheduleEditBase):
                 repeat = element.repeat
                 overrides['repeat'] = repeat
                 if repeat is ScheduleRepeat.WEEKLY:
-                    overrides['days'] = stringToListDays(
-                        cast(str, element['days'])
-                        )
+                    overrides['days'] = stringToListDays(element.dayFlags)
                 elif repeat is ScheduleRepeat.CONTINUOUSLY:
                     overrides['minDelay'] = element.minDelay
                 elif repeat is ScheduleRepeat.TRIGGERED:

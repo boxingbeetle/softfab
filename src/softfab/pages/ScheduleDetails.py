@@ -76,7 +76,7 @@ class DetailsTable(PropertiesTable):
         repeat = scheduled.repeat
         yield 'Repeat', repeat
         if repeat is ScheduleRepeat.WEEKLY:
-            yield 'Days', ', '.join(stringToListDays(scheduled['days']))
+            yield 'Days', ', '.join(stringToListDays(scheduled.dayFlags))
         elif repeat is ScheduleRepeat.CONTINUOUSLY:
             minDelay = scheduled['minDelay']
             yield 'Minimum delay', \
