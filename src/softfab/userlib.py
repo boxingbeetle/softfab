@@ -15,6 +15,7 @@ from passlib.apache import HtpasswdFile
 from twisted.cred.error import LoginFailed, UnauthorizedLogin
 from twisted.internet.defer import Deferred, inlineCallbacks
 
+from softfab.compat import Protocol
 from softfab.config import dbDir
 from softfab.databaselib import Database, DatabaseElem
 from softfab.utils import atomicWrite, iterable
@@ -513,15 +514,19 @@ def checkPrivilege(user: User, priv: str, text: Optional[str] = None) -> None:
         else:
             raise AccessDenied(text)
 
+class Owned(Protocol):
+    @property
+    def owner(self) -> Optional[str]: ...
+
 def checkPrivilegeForOwned(
         user: User,
         priv: str,
-        records: Any,
+        owned: Union[Owned, Iterable[Owned]],
         text: Union[None, str, Tuple[str, str]] = None
         ) -> None:
     '''Checks whether a user is allowed to perform an action on an owned
     database record.
-    @param records Record or sequence of records to test for ownership.
+    @param owned Record or sequence of records to test for ownership.
     @param text String to display if the user is not allowed to perform
         the action, or a tuple of which the first element is the string to
         display if the user is not allowed to perform the action on this
@@ -538,10 +543,13 @@ def checkPrivilegeForOwned(
     if hasOwnedPriv:
         # User is allowed to perform action, but only for owned records.
         userName = user.name
-        if not iterable(records):
-            records = ( records, )
-        if all(record.owner == userName for record in records):
-            return
+        if iterable(owned):
+            if all(rec.owner == userName
+                   for rec in cast(Iterable[Owned], owned)):
+                return
+        else:
+            if cast(Owned, owned).owner == userName:
+                return
     # Construct error message.
     if isinstance(text, tuple):
         text = text[0 if hasOwnedPriv else 1]
