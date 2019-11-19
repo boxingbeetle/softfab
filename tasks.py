@@ -190,9 +190,6 @@ def run(c, dbdir='run', auth=False, coverage=False):
     if not db_path.is_absolute():
         db_path = TOP_DIR / db_path
     print(f'Starting Control Center from {db_path}')
-    db_path.mkdir(exist_ok=True)
-    pid_file = db_path / 'cc.pid'
-    cmd = ['echo' ,'$$', f'>{pid_file}', '&&'] + cmd
     with c.cd(str(db_path)):
         c.run(' '.join(cmd), env=SRC_ENV, pty=True)
 

@@ -5,6 +5,7 @@ Command line interface.
 """
 
 
+from os import getpid, kill, name as os_name
 from pathlib import Path
 from typing import Optional
 import sys
@@ -28,6 +29,54 @@ class ControlCenter(Site):
 
     def __repr__(self) -> str:
         return 'ControlCenter'
+
+def createPIDFile(path: Path) -> None:
+    """Write our process ID to a newly created file.
+    Raise OSError if writing the file failed; in particular FileExistsError
+    will be raised if the file already exists.
+    """
+    with open(path, 'x', encoding='utf-8') as out:
+        out.write(f'{getpid():d}\n')
+
+def handleExistingPIDFile(path: Path) -> Optional[int]:
+    """Handle the presence of a pre-existing PID file.
+    Return the PID contained in the file if a process with that ID is
+    currently running, None otherwise.
+    """
+    pid: Optional[int]
+    try:
+        with open(path, 'r', encoding='utf-8') as inp:
+            pid = int(inp.read())
+    except ValueError:
+        # Note: UnicodeDecodeError is also a ValueError.
+        print(f'Removing PID file "{path}" that contains garbage',
+              file=sys.stderr)
+        pid = None
+    else:
+        # Note: While os.kill() exists on Windows, passing signal zero to test
+        #       whether a process exists doesn't work there.
+        if os_name == 'posix':
+            try:
+                kill(pid, 0)
+            except ProcessLookupError:
+                # No process with this ID.
+                print(f'Removing stale PID file "{path}"', file=sys.stderr)
+                pid = None
+        else:
+            print(f'Cannot check process status on OS "{os_name}"; '
+                  f'assuming process {pid:d} is still running',
+                  file=sys.stderr)
+
+    if pid is None:
+        # Remove stale PID file.
+        try:
+            path.unlink()
+        except FileNotFoundError:
+            # The file could have been removed since we last checked.
+            # Python 3.8 has the 'missing_ok' parameter for this.
+            pass
+
+    return pid
 
 class DirectoryParamType(ParamType):
     """Parameter type for specifying directories."""
@@ -147,6 +196,24 @@ def server(
     observers = [textFileLogObserver(sys.stderr)]
     globalLogBeginner.beginLoggingTo(observers)
 
+    pidfilePath = path / 'cc.pid'
+    try:
+        try:
+            createPIDFile(pidfilePath)
+        except FileExistsError:
+            pid = handleExistingPIDFile(pidfilePath)
+            if pid is None:
+                createPIDFile(pidfilePath)
+            else:
+                print(f'PID file "{pidfilePath}" contains PID {pid:d}, '
+                      f'which belongs to a running process; startup aborted.',
+                      file=sys.stderr)
+                sys.exit(1)
+    except OSError as ex:
+        print(f'Failed to create PID file "{pidfilePath}": {ex}',
+              file=sys.stderr)
+        sys.exit(1)
+
     root = SoftFabRoot(anonOperator=anonoper)
 
     site = ControlCenter(root)
@@ -167,6 +234,8 @@ def server(
 
     reactor.addSystemEventTrigger('before', 'shutdown', service.stopService)
     reactor.run()
+
+    pidfilePath.unlink()
 
 @version_option(prog_name='SoftFab', version=VERSION,
                 message='%(prog)s version %(version)s')
