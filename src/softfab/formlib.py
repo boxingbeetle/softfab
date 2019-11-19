@@ -339,8 +339,8 @@ passwordInput = _TextInput((), dict(type = 'password', tabindex = 1))
 
 class _TextArea(AttrContainer, XMLPresentable):
 
-    def present(self, **kwargs: Any) -> XMLContent:
-        form: _FormPresenter = kwargs['form']
+    def present(self, **kwargs: object) -> XMLContent:
+        form = cast(_FormPresenter, kwargs['form'])
         attributes = self._attributes
 
         name = cast(Optional[str], attributes.get('name'))
@@ -348,7 +348,8 @@ class _TextArea(AttrContainer, XMLPresentable):
 
         contents: XMLContent = tuple(self._presentContents(**kwargs))
         if not contents and name is not None:
-            value = _argValue(kwargs['formArgs'], name)
+            formArgs = cast(PageArgs, kwargs['formArgs'])
+            value = _argValue(formArgs, name)
             if isinstance(value, str):
                 contents = txt(value)
             elif value is not None:
