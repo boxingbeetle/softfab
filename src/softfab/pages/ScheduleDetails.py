@@ -3,12 +3,13 @@
 from typing import Iterator, cast
 
 from softfab.FabPage import FabPage
-from softfab.Page import PageProcessor
+from softfab.Page import PageProcessor, PresentableError
 from softfab.RecordDelete import DeleteArgs
 from softfab.configlib import configDB
 from softfab.pagelinks import ConfigIdArgs, createConfigDetailsLink
 from softfab.projectlib import project
-from softfab.schedulelib import ScheduleRepeat, scheduleDB
+from softfab.request import Request
+from softfab.schedulelib import ScheduleRepeat, Scheduled, scheduleDB
 from softfab.schedulerefs import ScheduleIdArgs
 from softfab.scheduleview import (
     createLastJobLink, describeNextRun, getScheduleStatus, stringToListDays
@@ -17,10 +18,10 @@ from softfab.selectview import TagArgs
 from softfab.userlib import User, checkPrivilege
 from softfab.utils import pluralize
 from softfab.webgui import PropertiesTable, Table, Widget, cell, pageLink, row
-from softfab.xmlgen import XMLContent, xhtml
+from softfab.xmlgen import XML, XMLContent, xhtml
 
 
-def statusDescription(scheduled):
+def statusDescription(scheduled: Scheduled) -> XMLContent:
     status = getScheduleStatus(scheduled)
     if status == 'error':
         return xhtml.br.join(
@@ -39,7 +40,9 @@ def statusDescription(scheduled):
 class TagsTable(Table):
     columns = None, None
     style = 'hollow'
-    def iterRows(self, *, proc, **kwargs):
+
+    def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
+        proc = cast(ScheduleDetails_GET.Processor, kwargs['proc'])
         tagKey = proc.scheduled['tagKey']
         tagValue = proc.scheduled['tagValue']
         numMatches = len(proc.scheduled.getMatchingConfigIds())
@@ -57,11 +60,12 @@ class DetailsTable(PropertiesTable):
     widgetId = 'detailsTable'
     autoUpdate = True
 
-    def iterRows(self, *, proc, **kwargs):
+    def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
+        proc = cast(ScheduleDetails_GET.Processor, kwargs['proc'])
         scheduled = proc.scheduled
         configId = scheduled.configId
         if configId is None:
-            yield 'Tag', TagsTable.instance.present(proc=proc, **kwargs)
+            yield 'Tag', TagsTable.instance.present(**kwargs)
         else:
             yield 'Configuration', (
                 createConfigDetailsLink(configId, 'view'),
@@ -78,7 +82,7 @@ class DetailsTable(PropertiesTable):
         if repeat is ScheduleRepeat.WEEKLY:
             yield 'Days', ', '.join(stringToListDays(scheduled.dayFlags))
         elif repeat is ScheduleRepeat.CONTINUOUSLY:
-            minDelay = scheduled['minDelay']
+            minDelay = scheduled.minDelay
             yield 'Minimum delay', \
                 f"{minDelay:d} {pluralize('minute', minDelay)}"
         elif repeat is ScheduleRepeat.TRIGGERED:
@@ -103,9 +107,15 @@ class ScheduleDetails_GET(FabPage['ScheduleDetails_GET.Processor',
 
     class Processor(PageProcessor[ScheduleIdArgs]):
 
-        def process(self, req, user):
-            # pylint: disable=attribute-defined-outside-init
-            self.scheduled = scheduleDB.get(req.args.id)
+        def process(self, req: Request[ScheduleIdArgs], user: User) -> None:
+            scheduleId = req.args.id
+            try:
+                # pylint: disable=attribute-defined-outside-init
+                self.scheduled = scheduleDB[scheduleId]
+            except KeyError:
+                raise PresentableError(xhtml[
+                    'Schedule ', xhtml.b[ scheduleId ], ' does not exist.'
+                    ])
 
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 's/a')
@@ -116,12 +126,6 @@ class ScheduleDetails_GET(FabPage['ScheduleDetails_GET.Processor',
     def presentContent(self, **kwargs: object) -> XMLContent:
         proc = cast(ScheduleDetails_GET.Processor, kwargs['proc'])
         scheduleId = proc.args.id
-        scheduled = proc.scheduled
-        if scheduled is None:
-            yield xhtml.p[
-                'Schedule ', xhtml.b[ scheduleId ], ' does not exist.'
-                ]
-            return
 
         yield xhtml.h3[ 'Details of schedule ', xhtml.b[ scheduleId ], ':' ]
         yield DetailsTable.instance.present(**kwargs)
@@ -135,3 +139,6 @@ class ScheduleDetails_GET(FabPage['ScheduleDetails_GET.Processor',
                     ]
                 ))
             ]
+
+    def presentError(self, message: XML, **kwargs: object) -> XMLContent:
+        yield xhtml.p[ message ]
