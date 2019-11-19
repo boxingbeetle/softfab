@@ -73,14 +73,15 @@ class DetailsTable(PropertiesTable):
                 )
         yield 'Last run', createLastJobLink(scheduled)
         yield 'Next run', describeNextRun(scheduled)
-        yield 'Repeat', scheduled['sequence']
-        if scheduled['sequence'] is ScheduleRepeat.WEEKLY:
+        repeat = scheduled.repeat
+        yield 'Repeat', repeat
+        if repeat is ScheduleRepeat.WEEKLY:
             yield 'Days', ', '.join(stringToListDays(scheduled['days']))
-        elif scheduled['sequence'] is ScheduleRepeat.CONTINUOUSLY:
+        elif repeat is ScheduleRepeat.CONTINUOUSLY:
             minDelay = scheduled['minDelay']
             yield 'Minimum delay', \
                 f"{minDelay:d} {pluralize('minute', minDelay)}"
-        elif scheduled['sequence'] is ScheduleRepeat.TRIGGERED:
+        elif repeat is ScheduleRepeat.TRIGGERED:
             yield 'Triggered', 'yes' if scheduled['trigger'] else 'no'
             yield 'Triggers', xhtml.br.join(
                 sorted(scheduled.getTagValues('sf.trigger'))

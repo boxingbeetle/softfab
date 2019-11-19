@@ -41,7 +41,7 @@ class ScheduleEditArgs(EditArgs):
     # TODO: Make TimeArg? We already have DateArg.
     startTime = StrArg('')
     suspended = BoolArg()
-    sequence = EnumArg(ScheduleRepeat, ScheduleRepeat.ONCE)
+    repeat = EnumArg(ScheduleRepeat, ScheduleRepeat.ONCE)
     days = SetArg()
     minDelay = IntArg(10)
     trigger = DictArg(StrArg(), separators = '/')
@@ -72,14 +72,14 @@ class ScheduleEditBase(EditPage[ScheduleEditArgs, Scheduled]):
         yield vgroup[
             (ConfigTagTable if project.getTagKeys() else ConfigTable).instance,
             TimeTable.instance,
-            SequenceTable.instance,
-            _createGroupItem(args.sequence is ScheduleRepeat.WEEKLY)[
+            RepeatTable.instance,
+            _createGroupItem(args.repeat is ScheduleRepeat.WEEKLY)[
                 DaysTable.instance
                 ],
-            _createGroupItem(args.sequence is ScheduleRepeat.CONTINUOUSLY)[
+            _createGroupItem(args.repeat is ScheduleRepeat.CONTINUOUSLY)[
                 DelayPanel.instance
                 ],
-            _createGroupItem(args.sequence is ScheduleRepeat.TRIGGERED)[
+            _createGroupItem(args.repeat is ScheduleRepeat.TRIGGERED)[
                 TriggerPanel.instance
                 ],
             CommentPanel.instance,
@@ -119,15 +119,15 @@ class ScheduleEdit_GET(ScheduleEditBase):
                 startTime = element.startTime
                 if startTime not in (asap, endOfTime):
                     overrides['startTime'] = formatTime(startTime)
-                sequence = element['sequence']
-                overrides['sequence'] = sequence
-                if sequence is ScheduleRepeat.WEEKLY:
+                repeat = element.repeat
+                overrides['repeat'] = repeat
+                if repeat is ScheduleRepeat.WEEKLY:
                     overrides['days'] = stringToListDays(
                         cast(str, element['days'])
                         )
-                elif sequence is ScheduleRepeat.CONTINUOUSLY:
+                elif repeat is ScheduleRepeat.CONTINUOUSLY:
                     overrides['minDelay'] = element.minDelay
-                elif sequence is ScheduleRepeat.TRIGGERED:
+                elif repeat is ScheduleRepeat.TRIGGERED:
                     branchesByRepo: DefaultDict[str, List[str]] = \
                                     defaultdict(list)
                     for trigger in element.getTagValues('sf.trigger'):
@@ -176,12 +176,12 @@ class ScheduleEdit_POST(ScheduleEditBase):
                 startTime = stringToTime(args.startTime)
             except ValueError:
                 startTime = 0
-            sequence = args.sequence
+            repeat = args.repeat
             parameters: Dict[str, XMLAttributeValue] = {
                 'id': recordId,
                 'suspended': str(args.suspended),
                 'startTime': startTime,
-                'sequence': sequence.name,
+                'repeat': repeat.name,
                 'owner': self.user.name,
                 }
             if args.selectBy is SelectBy.NAME:
@@ -192,12 +192,12 @@ class ScheduleEdit_POST(ScheduleEditBase):
                 parameters['tagValue'] = value
             else:
                 assert False, args.selectBy
-            if sequence is ScheduleRepeat.WEEKLY:
+            if repeat is ScheduleRepeat.WEEKLY:
                 parameters['days'] = listToStringDays(args.days)
-            elif sequence is ScheduleRepeat.CONTINUOUSLY:
+            elif repeat is ScheduleRepeat.CONTINUOUSLY:
                 parameters['minDelay'] = args.minDelay
             element = Scheduled(parameters, args.comment, True)
-            if sequence is ScheduleRepeat.TRIGGERED:
+            if repeat is ScheduleRepeat.TRIGGERED:
                 triggers = cast(Mapping[str, str], args.trigger)
                 tags = []
                 for repoId, branchesText in triggers.items():
@@ -210,8 +210,8 @@ class ScheduleEdit_POST(ScheduleEditBase):
                 for jobId in oldElement.getLastJobs():
                     element._addLastJob(jobId) # pylint: disable=protected-access
                 # Remember whether schedule was triggered.
-                if sequence is ScheduleRepeat.TRIGGERED \
-                and oldElement['sequence'] is ScheduleRepeat.TRIGGERED:
+                if repeat is ScheduleRepeat.TRIGGERED \
+                and oldElement.repeat is ScheduleRepeat.TRIGGERED:
                     if oldElement['trigger']:
                         element.setTrigger()
             return element
@@ -262,10 +262,10 @@ class ConfigTagTable(RadioTable):
         label, widget = cells
         yield xhtml.label[box, ' ', label], xhtml.br, widget
 
-class SequenceTable(RadioTable):
-    name = 'sequence'
-    widgetId = 'sequence'
-    columns = ('Sequence', )
+class RepeatTable(RadioTable):
+    name = 'repeat'
+    widgetId = 'repeat'
+    columns = ('Repeat', )
 
     def iterOptions(self, **kwargs):
         for repeat in ScheduleRepeat:
@@ -387,7 +387,7 @@ function checkStartTime() {
         # pylint: enable=line-too-long
         yield r'''
 function checkWeekDays() {
-    if (document.forms.schedule.sequence[2].checked) {
+    if (document.forms.schedule.repeat[2].checked) {
         var daysSelected = false;
         for (var i = 0; i < ''' + str(len(weekDays)) + r'''; i++) {
             if (document.forms.schedule.days[i].checked) {
@@ -404,7 +404,7 @@ function checkWeekDays() {
 function checkMinDelay() {
     if ((!document.forms.schedule.minDelay.value.match(/^\d+$/)) ||
         (parseInt(document.forms.schedule.minDelay.value) <= 0)) {
-        if (document.forms.schedule.sequence[3].checked) {
+        if (document.forms.schedule.repeat[3].checked) {
             alert('Minimum delay must be a positive integer');
             return false;
         } else {
@@ -428,15 +428,15 @@ function setVisibility(node, visible) {
 function adjustControls() {
     setVisibility(
         document.getElementById('daysTable'),
-        document.forms.schedule.sequence[2].checked
+        document.forms.schedule.repeat[2].checked
         );
     setVisibility(
         document.getElementById('delayPanel'),
-        document.forms.schedule.sequence[3].checked
+        document.forms.schedule.repeat[3].checked
         );
     setVisibility(
         document.getElementById('triggerPanel'),
-        document.forms.schedule.sequence[4].checked
+        document.forms.schedule.repeat[4].checked
         );
 }
 function radio() {
@@ -473,6 +473,6 @@ document.forms.schedule.startTime.onfocus = removeTimeExmpl;
 document.forms.schedule.onsubmit = checkValues;
 window.onload = initForm;
 for (var i = 0; i < ''' + str(len(ScheduleRepeat)) + r'''; i++) {
-    document.getElementById('sequence').rows[i + 1].onclick = radio;
+    document.getElementById('repeat').rows[i + 1].onclick = radio;
 }
 '''

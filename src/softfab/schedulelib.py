@@ -211,7 +211,7 @@ class Scheduled(XMLTag, SelectableRecordABC):
     tagName = 'scheduled'
     boolProperties = ('suspended',)
     intProperties = ('startTime', 'minDelay')
-    enumProperties = {'sequence': ScheduleRepeat}
+    enumProperties = {'repeat': ScheduleRepeat}
     cache = ObservingTagCache(scheduleDB, lambda: ('sf.trigger',) )
 
     def __init__(self,
@@ -225,9 +225,14 @@ class Scheduled(XMLTag, SelectableRecordABC):
         if 'paused' in properties:
             properties = dict(properties, suspended=properties['paused'])
             del properties['paused']
-        # COMPAT 2.x.x: Rename 'passive' to 'triggered'.
-        if properties['sequence'] == 'passive':
-            properties = dict(properties, sequence='triggered')
+        # COMPAT 2.x.x: Rename 'sequence' key to 'repeat'.
+        #               Rename 'passive' value to 'triggered'.
+        if 'sequence' in properties:
+            repeat = properties['sequence']
+            if repeat == 'passive':
+                repeat = 'triggered'
+            properties = dict(properties, repeat=repeat)
+            del properties['sequence']
 
         XMLTag.__init__(self, properties)
         SelectableRecordABC.__init__(self)
@@ -237,19 +242,19 @@ class Scheduled(XMLTag, SelectableRecordABC):
         # vice versa.
         self.__running = True
 
-        sequence = self._properties['sequence']
-        if sequence is ScheduleRepeat.ONCE:
+        repeat = self._properties['repeat']
+        if repeat is ScheduleRepeat.ONCE:
             self._properties['done'] = \
                 cast(str, self._properties.get('done', '')).lower() == 'true'
         else:
             assert 'done' not in self._properties
-        if sequence is ScheduleRepeat.TRIGGERED:
+        if repeat is ScheduleRepeat.TRIGGERED:
             self._properties['trigger'] = (
                 cast(str, self._properties.get('trigger', '')).lower() == 'true'
                 )
         else:
             assert 'trigger' not in self._properties
-        if sequence is ScheduleRepeat.CONTINUOUSLY:
+        if repeat is ScheduleRepeat.CONTINUOUSLY:
             self._properties.setdefault('minDelay', 10)
         elif 'minDelay' in self._properties:
             del self._properties['minDelay']
@@ -313,6 +318,11 @@ class Scheduled(XMLTag, SelectableRecordABC):
         return self.__comment
 
     @property
+    def repeat(self) -> ScheduleRepeat:
+        """How often should this schedule fire?"""
+        return cast(ScheduleRepeat, self._properties['repeat'])
+
+    @property
     def startTime(self) -> int:
         """Returns the start time for this schedule (in seconds since the
         epoch), or `asap` if the schedule will start as soon as possible,
@@ -362,12 +372,12 @@ class Scheduled(XMLTag, SelectableRecordABC):
         a daily schedule can be triggered when suspended, in that case it will
         skip one day.
         '''
-        sequence = self._properties['sequence']
-        if sequence is ScheduleRepeat.ONCE:
+        repeat = self.repeat
+        if repeat is ScheduleRepeat.ONCE:
             return self.isDone() or self.isSuspended()
-        elif sequence is ScheduleRepeat.CONTINUOUSLY:
+        elif repeat is ScheduleRepeat.CONTINUOUSLY:
             return self.isRunning() or self.isSuspended()
-        elif sequence is ScheduleRepeat.TRIGGERED:
+        elif repeat is ScheduleRepeat.TRIGGERED:
             return not self._properties['trigger'] or self.isRunning() \
                 or self.isSuspended()
         else:
@@ -406,7 +416,7 @@ class Scheduled(XMLTag, SelectableRecordABC):
         '''Sets the trigger on a triggered schedule.
         Raises ValueError if this is not a triggered schedule.
         '''
-        if self._properties['sequence'] is not ScheduleRepeat.TRIGGERED:
+        if self.repeat is not ScheduleRepeat.TRIGGERED:
             raise ValueError('Not a triggered schedule')
         if not self._properties['trigger']:
             self._properties['trigger'] = True
@@ -438,11 +448,11 @@ class Scheduled(XMLTag, SelectableRecordABC):
         if currentTime is None:
             currentTime = getTime()
         startTime = cast(Optional[int], self._properties.get('startTime'))
-        sequence = self._properties['sequence']
+        repeat = self.repeat
 
         if startTime is None:
             # Start time can be None if a schedule is done or should start ASAP.
-            assert sequence not in (ScheduleRepeat.DAILY, ScheduleRepeat.WEEKLY)
+            assert repeat not in (ScheduleRepeat.DAILY, ScheduleRepeat.WEEKLY)
 
             if not skipToNext:
                 # There is nothing to adjust.
@@ -455,13 +465,13 @@ class Scheduled(XMLTag, SelectableRecordABC):
             # but we have no use for it and therefore don't support it.
             assert not skipToNext
 
-            if sequence is not ScheduleRepeat.WEEKLY:
+            if repeat is not ScheduleRepeat.WEEKLY:
                 # Any start time in the future is fine as-is.
                 return
 
-        if sequence is ScheduleRepeat.ONCE:
+        if repeat is ScheduleRepeat.ONCE:
             nextTime = None
-        elif sequence is ScheduleRepeat.CONTINUOUSLY:
+        elif repeat is ScheduleRepeat.CONTINUOUSLY:
             assert startTime is None or currentTime >= startTime
             if skipToNext:
                 nextTime = ( # round up to minute boundary
@@ -469,14 +479,14 @@ class Scheduled(XMLTag, SelectableRecordABC):
                     ) * 60
             else:
                 nextTime = None
-        elif sequence is ScheduleRepeat.TRIGGERED:
+        elif repeat is ScheduleRepeat.TRIGGERED:
             nextTime = None
         else:
-            if sequence is ScheduleRepeat.WEEKLY:
+            if repeat is ScheduleRepeat.WEEKLY:
                 dayFlags = cast(str, self._properties['days'])
                 assert '1' in dayFlags and len(dayFlags) == 7
             else:
-                assert sequence is ScheduleRepeat.DAILY
+                assert repeat is ScheduleRepeat.DAILY
                 dayFlags = '1' * 7
             nextTimeList = list(time.localtime(startTime)[:9])
             nextTimeList[8] = -1 # local time: no time zone
@@ -525,10 +535,10 @@ class Scheduled(XMLTag, SelectableRecordABC):
         self.__adjustStartTime(True, currentTime)
         try:
             if not self.isSuspended():
-                sequence = self._properties['sequence']
-                if sequence is ScheduleRepeat.ONCE:
+                repeat = self.repeat
+                if repeat is ScheduleRepeat.ONCE:
                     self._properties['done'] = True
-                elif sequence is ScheduleRepeat.TRIGGERED:
+                elif repeat is ScheduleRepeat.TRIGGERED:
                     self._properties['trigger'] = False
                 self.__createJobs()
         finally:

@@ -385,7 +385,7 @@ Deleting a Task Runner record is only possible in the status 'lost'. Note that i
 
 <h2><?icon IconSchedule?> Schedules</h2>
 
-It is possible to schedule a job in the future via the web interface. In order to schedule a job, first a job configuration should be created. Both one-time scheduling and sequentially scheduling are possible. In case of a weekly sequence, more days of the week can be chosen.
+It is possible to schedule a job in the future via the web interface. In order to schedule a job, first a job configuration should be created. Both one-time scheduling and sequentially scheduling are possible. In case of a weekly repeat, more days of the week can be chosen.
 
 Once a Schedule has been created, a record is placed in the 'Schedules' overview. The time of the 'Last Run' will be stored and in case of a sequentially schedule, the time of the 'Next Run' will be calculated automatically. The color of this record represents the status, see table below.
 
@@ -438,7 +438,7 @@ Once a Schedule has been created, a record is placed in the 'Schedules' overview
 
 Important to know is that the synchronization of the Task Runner(s) is the actual trigger to initiate a scheduled job. If no Task Runners are active, no scheduled jobs will run.
 
-One very handy additional feature to launch a schedule is the 'Triggered' sequence. One can use this to build a Continuous Integration (CI) process. See [Continuous Integration](../../howto/ci/) for detailed information.
+One very handy additional feature to launch a schedule is the 'Triggered' repeat. One can use this to build a Continuous Integration (CI) process. See [Continuous Integration](../../howto/ci/) for detailed information.
 
 ## SoftFab API
 Besides the GUI, a growing set of functionality of the SoftFab can be accessed via the [SoftFab API](../../reference/api/).

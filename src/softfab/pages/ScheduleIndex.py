@@ -40,12 +40,12 @@ class NextRunColumn(DataColumn[Scheduled]):
     def presentCell(self, record, **kwargs):
         return describeNextRun(record)
 
-class SequenceColumn(DataColumn[Scheduled]):
-    label = 'Sequence'
-    keyName = 'sequence'
+class RepeatColumn(DataColumn[Scheduled]):
+    label = 'Repeat'
+    keyName = 'repeat'
     @staticmethod
     def sortKey(record):
-        return record['sequence'].name
+        return record.repeat.name
 
 class SuspendColumn(DataColumn[Scheduled]):
     label = 'Action'
@@ -72,7 +72,7 @@ class ScheduleTable(DataTable[Scheduled]):
         yield NameColumn.instance
         yield LastRunColumn.instance
         yield NextRunColumn.instance
-        yield SequenceColumn.instance
+        yield RepeatColumn.instance
         if project.showOwners:
             yield OwnerColumn[Scheduled].instance
         yield LinkColumn('Edit', 'ScheduleEdit')

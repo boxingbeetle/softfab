@@ -27,7 +27,7 @@ def listToStringDays(listDays: Iterable[str]) -> str:
 
 def stringToListDays(binDays: str) -> List[str]:
     '''Returns a list of days on which a configuration
-    should be scheduled in case of a weekly sequence.
+    should be scheduled in case of a weekly repeat.
     Example: "0101000" will be converted into ['Tuesday', 'Thursday']
     '''
     assert len(binDays) == 0 or len(binDays) == 7
@@ -53,8 +53,8 @@ def describeNextRun(schedule: Scheduled) -> XMLContent:
         return 'done'
 
     # Compute some useful predicates.
-    sequence = schedule['sequence']
-    waiting = sequence in (
+    repeat = schedule.repeat
+    waiting = repeat in (
         ScheduleRepeat.CONTINUOUSLY, ScheduleRepeat.TRIGGERED
         ) and schedule.isRunning()
     suspended = schedule.isSuspended()
@@ -68,7 +68,7 @@ def describeNextRun(schedule: Scheduled) -> XMLContent:
             )
 
     # Schedule should start ASAP; tell user why it hasn't started yet.
-    if sequence is ScheduleRepeat.TRIGGERED and not schedule['trigger']:
+    if repeat is ScheduleRepeat.TRIGGERED and not schedule['trigger']:
         return 'not triggered'
     if waiting:
         return 'waiting for last run to finish'
