@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from enum import Enum
-from typing import Iterator, cast
+from typing import Iterator, Mapping, cast
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor, Redirect
@@ -9,6 +9,7 @@ from softfab.datawidgets import DataColumn, DataTable, LinkColumn
 from softfab.formlib import makeForm
 from softfab.pageargs import DictArg, EnumArg, IntArg, PageArgs, SortArg
 from softfab.projectlib import project
+from softfab.request import Request
 from softfab.schedulelib import Scheduled, scheduleDB
 from softfab.schedulerefs import createScheduleDetailsLink
 from softfab.scheduleview import (
@@ -23,33 +24,40 @@ from softfab.xmlgen import XMLContent, xhtml
 class NameColumn(DataColumn[Scheduled]):
     label = 'Name'
     keyName = 'id'
-    def presentCell(self, record, **kwargs):
+
+    def presentCell(self, record: Scheduled, **kwargs: object) -> XMLContent:
         return createScheduleDetailsLink(record.getId())
 
 class LastRunColumn(DataColumn[Scheduled]):
     label = 'Last Run'
     keyName = 'lastStartTime'
     cellStyle = 'nobreak'
-    def presentCell(self, record, **kwargs):
+
+    def presentCell(self, record: Scheduled, **kwargs: object) -> XMLContent:
         return createLastJobLink(record)
 
 class NextRunColumn(DataColumn[Scheduled]):
     label = 'Next Run'
     keyName = 'startTime'
     cellStyle = 'nobreak'
-    def presentCell(self, record, **kwargs):
+
+    def presentCell(self, record: Scheduled, **kwargs: object) -> XMLContent:
         return describeNextRun(record)
 
 class RepeatColumn(DataColumn[Scheduled]):
     label = 'Repeat'
     keyName = 'repeat'
+
     @staticmethod
-    def sortKey(record):
+    def repeatName(record: Scheduled) -> str:
         return record.repeat.name
+
+    sortKey = repeatName
 
 class SuspendColumn(DataColumn[Scheduled]):
     label = 'Action'
-    def presentCell(self, record, **kwargs):
+
+    def presentCell(self, record: Scheduled, **kwargs: object) -> XMLContent:
         if record.isDone():
             return None
         else:
@@ -65,7 +73,8 @@ class ScheduleTable(DataTable[Scheduled]):
     autoUpdate = True
     db = scheduleDB
 
-    def iterRowStyles(self, rowNr, record, **kwargs):
+    def iterRowStyles(self, rowNr: int, record: Scheduled, **kwargs: object
+                      ) -> Iterator[str]:
         yield getScheduleStatus(record)
 
     def iterColumns(self, **kwargs: object) -> Iterator[DataColumn[Scheduled]]:
@@ -96,11 +105,13 @@ class ScheduleIndex_GET(FabPage['ScheduleIndex_GET.Processor',
 
     class Processor(PageProcessor['ScheduleIndex_GET.Arguments']):
 
-        def process(self, req, user):
+        def process(self,
+                    req: Request['ScheduleIndex_GET.Arguments'],
+                    user: User
+                    ) -> None:
             self.finishedSchedules = any(
                 schedule.isDone() for schedule in scheduleDB
                 )
-
 
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 's/l')
@@ -133,8 +144,12 @@ class ScheduleIndex_POST(FabPage['ScheduleIndex_POST.Processor',
 
     class Processor(PageProcessor['ScheduleIndex_POST.Arguments']):
 
-        def process(self, req, user):
-            for scheduleId, action in req.args.action.items():
+        def process(self,
+                    req: Request['ScheduleIndex_POST.Arguments'],
+                    user: User
+                    ) -> None:
+            actions = cast(Mapping[str, str], req.args.action)
+            for scheduleId, action in actions.items():
                 # Toggle suspend.
                 scheduled = scheduleDB.get(scheduleId)
                 # TODO: Report when action is not possible, instead of ignoring.
