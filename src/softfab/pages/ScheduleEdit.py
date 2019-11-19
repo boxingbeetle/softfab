@@ -3,15 +3,18 @@
 from collections import defaultdict
 from enum import Enum
 from time import localtime
-from typing import DefaultDict, Dict, Iterator, List, Mapping, Optional, cast
+from typing import (
+    DefaultDict, Dict, Iterator, List, Mapping, Optional, Sequence, Tuple, cast
+)
 
 from softfab.EditPage import (
-    EditArgs, EditPage, EditProcessor, InitialEditArgs, InitialEditProcessor
+    EditArgs, EditPage, EditProcessor, EditProcessorBase, InitialEditArgs,
+    InitialEditProcessor
 )
 from softfab.Page import PresentableError
 from softfab.configlib import Config, configDB
 from softfab.formlib import (
-    CheckBoxesTable, DropDownList, RadioTable, checkBox, dropDownList,
+    CheckBoxesTable, DropDownList, Option, RadioTable, checkBox, dropDownList,
     textArea, textInput
 )
 from softfab.pageargs import BoolArg, DictArg, EnumArg, IntArg, SetArg, StrArg
@@ -25,10 +28,12 @@ from softfab.scheduleview import listToStringDays, stringToListDays, weekDays
 from softfab.timelib import getTime, stringToTime
 from softfab.timeview import formatTime
 from softfab.webgui import (
-    Column, Panel, Script, Table, addRemoveStyleScript, docLink, groupItem,
-    pageLink, vgroup
+    Column, Container, Panel, Script, Table, addRemoveStyleScript, docLink,
+    groupItem, pageLink, vgroup
 )
-from softfab.xmlgen import XMLAttributeValue, XMLContent, txt, xhtml
+from softfab.xmlgen import (
+    XML, XMLAttributeValue, XMLContent, XMLPresentable, txt, xhtml
+)
 
 SelectBy = Enum('SelectBy', 'NAME TAG')
 '''Mechanism by which a schedule selects the configurations it will start.
@@ -65,7 +70,9 @@ class ScheduleEditBase(EditPage[ScheduleEditArgs, Scheduled]):
     def iterStyleDefs(self) -> Iterator[str]:
         yield _pageStyles
 
-    def getFormContent(self, proc):
+    def getFormContent(self,
+                       proc: EditProcessorBase[ScheduleEditArgs, Scheduled]
+                       ) -> XMLContent:
         args = proc.args
         if args.id != '':
             yield xhtml.h3[ 'Schedule: ', xhtml.b[ args.id ]]
@@ -217,17 +224,21 @@ class ScheduleEdit_POST(ScheduleEditBase):
 class TagList(DropDownList):
     name = 'tag'
     extraAttribs = { 'style': 'width:100%' }
-    def getActive(self, proc, **kwargs):
+
+    def getActive(self, **kwargs: object) -> Optional[str]:
+        proc = cast(EditProcessorBase[ScheduleEditArgs, Scheduled],
+                    kwargs['proc'])
         args = proc.args
         return args.tag if args.selectBy is SelectBy.TAG else None
-    def iterOptions(self, **kwargs):
+
+    def iterOptions(self, **kwargs: object) -> Iterator[Option]:
         for key in project.getTagKeys():
             yield key, Config.cache.getValues(key)
 
-def _createGroupItem(visible):
+def _createGroupItem(visible: bool) -> Container:
     return groupItem(class_=None if visible else 'hidden')
 
-def _createConfigDropDownList():
+def _createConfigDropDownList() -> XMLPresentable:
     return dropDownList(name='configId', style='width:100%')[
         sorted(configDB.uniqueValues('name'))
         ]
@@ -236,7 +247,7 @@ class ConfigTable(Table):
     widgetId = 'jobConfTable'
     columns = 'Configuration',
 
-    def iterRows(self, **kwargs):
+    def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
         yield _createConfigDropDownList(),
 
 class ConfigTagTable(RadioTable):
@@ -244,7 +255,7 @@ class ConfigTagTable(RadioTable):
     widgetId = 'jobConfTable'
     columns = ('Configurations', )
 
-    def iterOptions(self, **kwargs):
+    def iterOptions(self, **kwargs: object) -> Iterator[Sequence[XMLContent]]:
         yield (
             SelectBy.NAME,
             'Configuration by name:',
@@ -256,7 +267,10 @@ class ConfigTagTable(RadioTable):
             TagList.instance
             )
 
-    def formatOption(self, box, cells):
+    def formatOption(self,
+                     box: XML,
+                     cells: Sequence[XMLContent]
+                     ) -> XMLContent:
         label, widget = cells
         yield xhtml.label[box, ' ', label], xhtml.br, widget
 
@@ -265,7 +279,7 @@ class RepeatTable(RadioTable):
     widgetId = 'repeat'
     columns = ('Repeat', )
 
-    def iterOptions(self, **kwargs):
+    def iterOptions(self, **kwargs: object) -> Iterator[Sequence[XMLContent]]:
         for repeat in ScheduleRepeat:
             if repeat is ScheduleRepeat.TRIGGERED:
                 desc = 'Triggered, by API call or webhook'
@@ -277,7 +291,9 @@ class TimeTable(Table):
     widgetId = 'timeTable'
     columns = 'Start Time',
 
-    def iterRows(self, *, proc, **kwargs):
+    def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
+        proc = cast(EditProcessorBase[ScheduleEditArgs, Scheduled],
+                    kwargs['proc'])
         timeStr = proc.args.startTime
         if timeStr == '':
             timeStr = formatTime(getTime())
@@ -291,7 +307,8 @@ class DaysTable(CheckBoxesTable):
     name = 'days'
     columns = Column('Days', cellStyle = 'nobreak'),
 
-    def iterOptions(self, **kwargs):
+    def iterOptions(self, **kwargs: object
+                    ) -> Iterator[Tuple[str, Sequence[XMLContent]]]:
         for day in weekDays:
             yield day, ( day, )
 
@@ -340,10 +357,12 @@ class CommentPanel(Panel):
 class ScheduleScript(Script):
     timeExmpl = 'YYYY-MM-DD HH:MM'
 
-    def iterLines(self, **kwargs):
+    def iterLines(self, **kwargs: object) -> Iterator[str]:
         # JavaScript thinks it's funny to start counting months at 0.
-        currentTime = list(localtime(getTime()))
-        currentTime[1] -= 1
+        pythonTime = localtime(getTime())
+        month = pythonTime[1]
+        currentTime = list(pythonTime)
+        currentTime[1] = month - 1
         # pylint: disable=line-too-long
         # Trying to make this code fit to 80 columns is likely to cause more
         # problems than it solves.
