@@ -24,6 +24,7 @@ softfab server --dir "$DBDIR" 2> "$LOG_FILE" &
 #poetry run sh -c 'softfab server --dir '"$DBDIR"' 2> '"$LOG_FILE"' &'
 
 if [ $? -eq 0 ] && [ -d "/proc/$CC_PID" ]; then
+    CC_PID=$!
     echo "CC started ($CC_PID)"
 else
     echo "Could not launch CC"
