@@ -9,20 +9,12 @@ if [ -f "$PID_FILE" ]; then
 	if [ -d "/proc/$CC_PID" ]; then
         # Shut down Control Center.
         echo "Shutting down CC..."
-        kill -s SIGINT "$CC_PID"
+        kill -s SIGTERM "$CC_PID"
         for count in $(seq 1 10)
         do
             sleep 1
             test -d "/proc/$CC_PID" || break
         done
-        if [ -d "/proc/$CC_PID" ]; then
-            kill -s SIGTERM "$CC_PID"
-            for count in $(seq 1 10)
-            do
-                sleep 1
-                test -d "/proc/$CC_PID" || break
-            done
-        fi
         if [ -d "/proc/$CC_PID" ]; then
             echo "Graceful shutdown failed, now killing CC."
             kill -s SIGKILL "$CC_PID"
