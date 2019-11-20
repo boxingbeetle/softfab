@@ -1,8 +1,8 @@
 #!/bin/bash
 
-PID_FILE="$PWD/cc.pid"
-LOG_FILE="$PWD/pg1.log"
 DBDIR="$PWD/run"
+PID_FILE="$DBDIR/cc.pid"
+LOG_FILE="$PWD/pg1.log"
 
 if [ -f "$PID_FILE" ]; then
     CC_PID=`cat "$PID_FILE"`
@@ -10,7 +10,7 @@ if [ -f "$PID_FILE" ]; then
         echo "CC already running ($CC_PID)"
         exit 0
     else
-        echo "Cleaned ghost pid file ($CC_PID)"
+        echo "Cleaned stale pid file ($CC_PID)"
         rm "$PID_FILE"
     fi
 fi
@@ -24,8 +24,6 @@ softfab server --dir "$DBDIR" 2> "$LOG_FILE" &
 #poetry run sh -c 'softfab server --dir '"$DBDIR"' 2> '"$LOG_FILE"' &'
 
 if [ $? -eq 0 ] && [ -d "/proc/$CC_PID" ]; then
-    CC_PID=$!
-    echo $CC_PID > "$PID_FILE"
     echo "CC started ($CC_PID)"
 else
     echo "Could not launch CC"

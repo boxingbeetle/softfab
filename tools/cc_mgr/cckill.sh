@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PID_FILE="cc.pid"
+PID_FILE="run/cc.pid"
 KILLED="no"
 
 if [ -f "$PID_FILE" ]; then
@@ -24,12 +24,12 @@ if [ -f "$PID_FILE" ]; then
             done
         fi
         if [ -d "/proc/$CC_PID" ]; then
-            echo "Graceful shutdown failed, now killing it."
+            echo "Graceful shutdown failed, now killing CC."
             kill -s SIGKILL "$CC_PID"
         fi
 		KILLED="yes"
 	else
-		echo "Cleaned ghost pid file ($CC_PID)"
+		echo "Cleaned stale pid file ($CC_PID)"
 	fi
 	rm "$PID_FILE"
 fi
