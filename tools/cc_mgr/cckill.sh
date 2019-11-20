@@ -23,7 +23,6 @@ if [ -f "$PID_FILE" ]; then
 	else
 		echo "Cleaned stale pid file ($CC_PID)"
 	fi
-	rm "$PID_FILE"
 fi
 
 if [ "$KILLED" == "yes" ]; then
