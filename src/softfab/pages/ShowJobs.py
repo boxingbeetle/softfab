@@ -1,13 +1,14 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Iterator, cast
+from typing import Iterable, Iterator, cast
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
 from softfab.datawidgets import DataTable
-from softfab.joblib import jobDB
+from softfab.joblib import Job, jobDB
 from softfab.jobview import JobsSubTable
 from softfab.pagelinks import JobIdSetArgs
+from softfab.request import Request
 from softfab.userlib import User, checkPrivilege
 from softfab.utils import pluralize
 from softfab.webgui import Widget, unorderedList
@@ -18,7 +19,8 @@ class ShowJobsTable(JobsSubTable):
     widgetId = 'jobsTable'
     autoUpdate = True
 
-    def getRecordsToQuery(self, proc):
+    def getRecordsToQuery(self, proc: PageProcessor) -> Iterable[Job]:
+        assert isinstance(proc, ShowJobs_GET.Processor), proc
         return proc.jobs
 
 class ShowJobs_GET(FabPage['ShowJobs_GET.Processor', 'ShowJobs_GET.Arguments']):
@@ -31,7 +33,7 @@ class ShowJobs_GET(FabPage['ShowJobs_GET.Processor', 'ShowJobs_GET.Arguments']):
 
     class Processor(PageProcessor[JobIdSetArgs]):
 
-        def process(self, req, user):
+        def process(self, req: Request[JobIdSetArgs], user: User) -> None:
             jobs = []
             invalidJobIds = []
             for jobId in req.args.jobId:
