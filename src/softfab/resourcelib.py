@@ -246,7 +246,7 @@ class Resource(ResourceBase):
                 self.getId()
                 )
 
-class _TaskRunnerData(XMLTag):
+class TaskRunnerData(XMLTag):
     '''This class represents a request of a Task Runner.
     It is also a part of a Task Runner database record.
     '''
@@ -258,7 +258,7 @@ class _TaskRunnerData(XMLTag):
         self.__run = cast(RunInfo, None)
 
     def __eq__(self, other: object) -> bool:
-        if isinstance(other, _TaskRunnerData):
+        if isinstance(other, TaskRunnerData):
             return (
                 # pylint: disable=protected-access
                 self._properties == other._properties and
@@ -307,8 +307,8 @@ class _TaskRunnerData(XMLTag):
 
 class RequestFactory:
     @staticmethod
-    def createRequest(attributes: Mapping[str, str]) -> _TaskRunnerData:
-        return _TaskRunnerData(attributes)
+    def createRequest(attributes: Mapping[str, str]) -> TaskRunnerData:
+        return TaskRunnerData(attributes)
 
 class ExecutionObserver(RecordObserver[TaskRun]):
     '''Monitors the task run DB to keep track of which run a particular
@@ -396,11 +396,11 @@ class ExecutionObserver(RecordObserver[TaskRun]):
 class TaskRunner(ResourceBase):
     '''This is a database record with information about a Task Runner.
     This class contains the information which originates in the Control Center,
-    while the _TaskRunnerData class contains the information as provided by
+    while the TaskRunnerData class contains the information as provided by
     the Task Runner on its last synchronization.
 
     Some information is present twice, like "which run is being executed":
-    the version in _TaskRunnerData represents the point of view of the Task
+    the version in TaskRunnerData represents the point of view of the Task
     Runner, while the version in this class represents the point of view of
     the Control Center. Typically these will be aligned, but when they are not,
     it is useful to have access to both versions.
@@ -444,7 +444,7 @@ class TaskRunner(ResourceBase):
         ResourceBase.__init__(self, properties)
         self._properties.setdefault('description', '')
         self._properties.setdefault('status', ConnectionStatus.NEW)
-        self.__data: Optional[_TaskRunnerData] = None
+        self.__data: Optional[TaskRunnerData] = None
         self.__hasBeenInSync = False
         self.__executionObserver = ExecutionObserver(
             self, self.__shouldBeExecuting
@@ -518,8 +518,8 @@ class TaskRunner(ResourceBase):
     def targets(self) -> AbstractSet[str]:
         return self._capabilities & project.getTargets()
 
-    def _setData(self, attributes: Mapping[str, str]) -> _TaskRunnerData:
-        self.__data = _TaskRunnerData(attributes)
+    def _setData(self, attributes: Mapping[str, str]) -> TaskRunnerData:
+        self.__data = TaskRunnerData(attributes)
         return self.__data
 
     def _setExecutionrun(self, attributes: Mapping[str, str]) -> None:
@@ -645,7 +645,7 @@ class TaskRunner(ResourceBase):
             )
         self.setSuspend(True, 'ControlCenter')
 
-    def sync(self, data: _TaskRunnerData) -> bool:
+    def sync(self, data: TaskRunnerData) -> bool:
         '''Synchronise database with data reported by the Task Runner.
         The sync time will be remembered, but not stored in the database.
         Returns True iff the run that the Task Runner reports should be aborted,
