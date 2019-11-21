@@ -1,10 +1,11 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Iterator, Sequence, cast
+from typing import Collection, Iterator, Sequence, cast
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
 from softfab.datawidgets import DataTable
+from softfab.joblib import Job
 from softfab.jobview import CommentPanel, JobsSubTable, presentJobCaption
 from softfab.pagelinks import (
     JobIdArgs, TaskIdArgs, createTaskInfoLink, createTaskRunnerDetailsLink
@@ -30,14 +31,16 @@ class SelfJobsTable(JobsSubTable):
     widgetId = 'selfJobsTable'
     autoUpdate = True
 
-    def getRecordsToQuery(self, proc):
-        return [ proc.job ]
+    def getRecordsToQuery(self, proc: PageProcessor) -> Iterator[Job]:
+        assert isinstance(proc, JobProcessor), proc
+        yield proc.job
 
 class TaskRunsTable(JobTaskRunsTable):
     widgetId = 'taskRunsTable'
     autoUpdate = True
 
-    def presentCaptionParts(self, *, proc, **kwargs):
+    def presentCaptionParts(self, **kwargs: object) -> XMLContent:
+        proc = cast(JobProcessor, kwargs['proc'])
         return presentJobCaption(proc.job)
 
 class ShowReport_GET(FabPage['ShowReport_GET.Processor',
@@ -124,10 +127,11 @@ class ParamTable(Table):
     columns = 'Task', 'Parameter', 'Value'
     hideWhenEmpty = True
 
-    def presentCaptionParts(self, **kwargs):
+    def presentCaptionParts(self, **kwargs: object) -> XMLContent:
         yield 'Job uses the following parameters:'
 
-    def iterRows(self, *, proc, **kwargs):
+    def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
+        proc = cast(JobProcessor, kwargs['proc'])
         jobId = proc.args.jobId
         for task in proc.job.getTaskSequence():
             params = task.getVisibleParameters()
@@ -141,7 +145,7 @@ class ParamTable(Table):
                 else:
                     yield key, value
 
-    def present(self, **kwargs):
+    def present(self, **kwargs: object) -> XMLContent:
         presentation = super().present(**kwargs)
         if presentation is None:
             message = 'This job contains no non-final parameters. '
@@ -164,7 +168,8 @@ class InputTable(ProductTable):
         # Create list of inputs in alphabetical order.
         return sorted(proc.job.getInputs())
 
-    def presentCaptionParts(self, *, proc, **kwargs):
+    def presentCaptionParts(self, **kwargs: object) -> XMLContent:
+        proc = cast(JobProcessor, kwargs['proc'])
         numInputs = len(proc.job.getInputs())
         yield 'Job consumes the following %s:' % (
             'input' if numInputs == 1 else f'{numInputs:d} inputs'
@@ -181,13 +186,15 @@ class OutputTable(ProductTable):
     def getProducts(self, proc: JobProcessor) -> Sequence[Product]:
         return proc.job.getProduced()
 
-    def presentCaptionParts(self, *, proc, **kwargs):
+    def presentCaptionParts(self, **kwargs: object) -> XMLContent:
+        proc = cast(JobProcessor, kwargs['proc'])
         numOutputs = len(proc.job.getProduced())
         yield 'Job produces the following %s:' % (
             'output' if numOutputs == 1 else f'{numOutputs:d} outputs'
             )
 
-def presentTaskRunner(runnerId):
+def presentTaskRunner(runnerId: str) -> XMLContent:
+    content: XMLContent
     try:
         runner = getTaskRunner(runnerId)
     except KeyError:
@@ -198,7 +205,9 @@ def presentTaskRunner(runnerId):
         content = createTaskRunnerDetailsLink(runnerId)
     return cell(class_=status)[ content ]
 
-def presentTaskRunners(taskLabel, runnerIds):
+def presentTaskRunners(taskLabel: str,
+                       runnerIds: Collection[str]
+                       ) -> Iterator[XMLContent]:
     first = True
     for runner in sorted(runnerIds):
         if first:
@@ -217,10 +226,11 @@ class TaskRunnerTable(Table):
     widgetId = 'trSelTable'
     autoUpdate = True
 
-    def presentCaptionParts(self, **kwargs):
+    def presentCaptionParts(self, **kwargs: object) -> XMLContent:
         yield 'The following Task Runners may be used:'
 
-    def iterRows(self, *, proc, **kwargs):
+    def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
+        proc = cast(JobProcessor, kwargs['proc'])
         tasks = proc.job.getTaskSequence()
         trsPerTask = 0
         for task in tasks:
