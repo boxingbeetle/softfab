@@ -17,9 +17,6 @@ class Synchronize_POST(ControlPage[ControlPage.Arguments,
     authenticator = TokenAuthPage(TokenRole.RESOURCE)
 
     def assignExecutionRun(self, taskRunner):
-        # COMPAT 2.x.x: Refuse to assign to 2.x.x Task Runners.
-        if taskRunner['version'][0] < 3:
-            return None
         # Find oldest unassigned task.
         capabilities = taskRunner.capabilities
         # TODO: It would be more efficient to keep non-fixed tasks instead of
