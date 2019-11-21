@@ -1,11 +1,17 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from typing import Optional, cast
+
 from softfab.ControlPage import ControlPage
 from softfab.Page import InvalidRequest, PageProcessor
 from softfab.authentication import TokenAuthPage
 from softfab.jobview import unfinishedJobs
-from softfab.resourcelib import RequestFactory, resourceDB, runnerFromToken
+from softfab.request import Request
+from softfab.resourcelib import (
+    RequestFactory, TaskRunner, TaskRunnerData, resourceDB, runnerFromToken
+)
 from softfab.response import Response
+from softfab.taskrunlib import TaskRun
 from softfab.tokens import TokenRole, TokenUser
 from softfab.userlib import User, checkPrivilege
 from softfab.xmlbind import parse
@@ -16,7 +22,7 @@ class Synchronize_POST(ControlPage[ControlPage.Arguments,
                                    'Synchronize_POST.Processor']):
     authenticator = TokenAuthPage(TokenRole.RESOURCE)
 
-    def assignExecutionRun(self, taskRunner):
+    def assignExecutionRun(self, taskRunner: TaskRunner) -> Optional[TaskRun]:
         # Find oldest unassigned task.
         capabilities = taskRunner.capabilities
         # TODO: It would be more efficient to keep non-fixed tasks instead of
@@ -40,12 +46,15 @@ class Synchronize_POST(ControlPage[ControlPage.Arguments,
 
     class Processor(PageProcessor[ControlPage.Arguments]):
 
-        def process(self, req, user):
+        def process(self,
+                    req: Request[ControlPage.Arguments],
+                    user: User
+                    ) -> None:
             # pylint: disable=attribute-defined-outside-init
 
             # Parse posted XML request.
             rawReq = req.rawInput()
-            request = parse(RequestFactory(), rawReq)
+            request = cast(TaskRunnerData, parse(RequestFactory(), rawReq))
 
             # Sync Task Runner database.
             assert isinstance(user, TokenUser), user
@@ -65,7 +74,8 @@ class Synchronize_POST(ControlPage[ControlPage.Arguments,
                     self.exit = True
                     taskRunner.setExitFlag(False)
                 elif not taskRunner.isSuspended():
-                    self.newRun = self.page.assignExecutionRun(taskRunner)
+                    page = cast(Synchronize_POST, self.page)
+                    self.newRun = page.assignExecutionRun(taskRunner)
 
         def createResponse(self) -> XMLContent:
             taskRunner = self.taskRunner
