@@ -16,7 +16,7 @@ from softfab.timelib import setTime
 class DataFactory:
     """Factory for TaskRunnerData class."""
     def createData(self, attributes):
-        return resourcelib._TaskRunnerData(attributes)
+        return resourcelib.TaskRunnerData(attributes)
 
 class TestTRDatabase(unittest.TestCase):
     """Test basic Task Runner database functionality."""
