@@ -153,7 +153,7 @@ def unittest(c, suite=None, junit_xml=None, results=None, coverage=False):
     else:
         cmd.extend(str(path) for path in test_dir.glob(suite))
     with c.cd(str(report_dir)):
-        c.run(' '.join(cmd), env=SRC_ENV, pty=results is None)
+        c.run(' '.join(cmd), env=SRC_ENV, pty=results is None, warn=True)
     if results is not None:
         results_dict = dict(report=str(junit_xml))
         if coverage:
