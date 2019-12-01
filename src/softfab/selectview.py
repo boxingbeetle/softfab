@@ -3,8 +3,8 @@
 from abc import ABC
 from itertools import chain
 from typing import (
-    TYPE_CHECKING, Callable, ClassVar, Collection, Generic, Iterable, Iterator,
-    List, MutableSet, Optional, Sequence, Tuple, TypeVar, cast
+    Callable, ClassVar, Collection, Generic, Iterable, Iterator, List,
+    MutableSet, Optional, Sequence, Tuple, TypeVar, cast
 )
 
 from softfab.Page import Redirect
@@ -124,9 +124,7 @@ class SelectProcMixin(Generic[BasketArgsT, SelectableRecord]):
     tagCache: ClassVar[TagCache] = abstract
     db: Database[SelectableRecord] = abstract
 
-    if TYPE_CHECKING:
-        def __init__(self, args: BasketArgsT) -> None:
-            self.args = args
+    args: BasketArgsT
 
     def iterActions(self) -> Iterator[Tuple[str, str, str]]:
         raise NotImplementedError

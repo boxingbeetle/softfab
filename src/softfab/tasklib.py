@@ -40,8 +40,7 @@ class TaskStateMixin:
         'result': ResultCode
         }
 
-    if TYPE_CHECKING:
-        _properties: Dict[str, Union[str, int, Enum]] = {}
+    _properties: Dict[str, Union[str, int, Enum]]
 
     def _getState(self) -> str:
         raise NotImplementedError

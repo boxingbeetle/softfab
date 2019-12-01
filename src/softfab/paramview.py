@@ -1,8 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from typing import (
-    TYPE_CHECKING, Dict, Iterable, Iterator, Mapping, Optional, Set, Tuple,
-    cast
+    Dict, Iterable, Iterator, Mapping, Optional, Set, Tuple, cast
 )
 import re
 
@@ -28,11 +27,11 @@ class ParamArgsMixin:
 
 class _ParamArgs:
     """Helper class for type checking."""
-    if TYPE_CHECKING:
-        params = Dict[str, str]()
-        values = Dict[str, str]()
-        final = Dict[str, bool]()
-        poverride = Dict[str, bool]()
+
+    params: Mapping[str, str]
+    values: Mapping[str, str]
+    final: Mapping[str, bool]
+    poverride: Mapping[str, bool]
 
 # Note: We have the ability to present certain reserved parameters
 #       in a special way. The only parameter that used this was removed,

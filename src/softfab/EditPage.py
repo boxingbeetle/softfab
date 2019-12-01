@@ -287,8 +287,7 @@ class InitialEditProcessor(EditProcessorBase[EditArgsT, DBRecord]):
 
 class EditProcessor(EditProcessorBase[EditArgsT, DBRecord]):
 
-    if TYPE_CHECKING:
-        replace = True
+    replace: bool
 
     def processState(self, oldElement: Optional[DBRecord]) -> None:
         if self.args.action not in ('edit', 'cancel'):

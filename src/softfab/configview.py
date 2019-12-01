@@ -1,8 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import (
-    TYPE_CHECKING, Generic, Iterator, List, Optional, Sequence, TypeVar, cast
-)
+from typing import Generic, Iterator, List, Optional, Sequence, TypeVar, cast
 
 from softfab.configlib import Config, Input, TaskSetWithInputs, configDB
 from softfab.datawidgets import DataColumn, DataTable, LinkColumn
@@ -27,10 +25,8 @@ class SelectConfigsMixin(Generic[SelectArgsT]):
     select configurations.
     '''
 
-    if TYPE_CHECKING:
-        def __init__(self) -> None:
-            self.args = cast(SelectArgsT, None)
-            self.notices: List[str] = []
+    args: SelectArgsT
+    notices: List[str]
 
     def findConfigs(self) -> None:
         configs = []

@@ -18,9 +18,7 @@ class StorageURLMixin:
         def _notify(self) -> None:
             ...
 
-    def __init__(self) -> None:
-        if TYPE_CHECKING:
-            self._properties: Dict[str, Union[str, int, Enum]] = {}
+    _properties: Dict[str, Union[str, int, Enum]]
 
     def setInternalStorage(self, path: str) -> None:
         """Use the Control Center's internal storage pool.
