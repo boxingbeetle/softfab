@@ -16,14 +16,12 @@ artifactsPath = Path(dbDir) / 'artifacts'
 
 class StorageURLABC(Protocol):
 
-    @property
-    @abstractmethod
-    def _properties(self) -> Dict[str, Union[str, int, Enum]]: ...
-
     @abstractmethod
     def _notify(self) -> None: ...
 
 class StorageURLMixin(StorageURLABC):
+
+    _properties: Dict[str, Union[str, int, Enum]]
 
     def setInternalStorage(self, path: str) -> None:
         """Use the Control Center's internal storage pool.
