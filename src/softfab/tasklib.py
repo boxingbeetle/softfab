@@ -1,11 +1,13 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from abc import abstractmethod
 from enum import Enum
 from typing import (
     TYPE_CHECKING, AbstractSet, ClassVar, Dict, Iterable, Mapping, Optional,
     Sequence, Set, Type, Union, cast
 )
 
+from softfab.compat import Protocol
 from softfab.resreq import ResourceClaim
 from softfab.restypelib import taskRunnerResourceTypeName
 from softfab.resultcode import ResultCode
@@ -14,6 +16,9 @@ from softfab.xmlgen import XMLContent, xml
 if TYPE_CHECKING:
     from softfab.frameworklib import Framework
     from softfab.taskdeflib import TaskDef
+else:
+    Framework = object
+    TaskDef = object
 
 
 class TaskRunnerSet:
@@ -80,12 +85,15 @@ class TaskStateMixin:
     def result(self) -> Optional[ResultCode]:
         return cast(Optional[ResultCode], self._properties.get('result'))
 
-class ResourceRequirementsMixin:
+class ResourceRequirementsABC(Protocol):
 
-    if TYPE_CHECKING:
-        # pylint: disable=multiple-statements
-        def getFramework(self) -> Framework: ...
-        def getDef(self) -> TaskDef: ...
+    @abstractmethod
+    def getFramework(self) -> Framework: ...
+
+    @abstractmethod
+    def getDef(self) -> TaskDef: ...
+
+class ResourceRequirementsMixin(ResourceRequirementsABC):
 
     @property
     def resourceClaim(self) -> ResourceClaim:

@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from abc import abstractmethod
 from collections import defaultdict
 from functools import total_ordering
 from typing import (
@@ -178,16 +179,19 @@ class TaskSet(Generic[TaskT]):
         else:
             return ', '.join(descrList)
 
+class PriorityABC(Protocol):
+
+    @abstractmethod
+    def getName(self) -> str: ...
+
+    @abstractmethod
+    def getPriority(self) -> int: ...
+
 @total_ordering
-class PriorityMixin:
+class PriorityMixin(PriorityABC):
     '''Mixin that orders objects primarily on the integer value returned by
     getPriority() and secondarily on the value returned by getName().
     '''
-
-    if TYPE_CHECKING:
-        # pylint: disable=multiple-statements
-        def getName(self) -> str: ...
-        def getPriority(self) -> int: ...
 
     def __hash__(self) -> int:
         return hash(self.getName())

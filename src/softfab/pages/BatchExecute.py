@@ -128,6 +128,8 @@ class BatchExecute_GET(FabPage['BatchExecute_GET.Processor',
 
     class Processor(SelectConfigsMixin[ParentArgs], PageProcessor[ParentArgs]):
 
+        notices: List[str]
+
         def initTaskSet(self) -> None:
             '''Initializes our `taskSet` attribute with a TaskSetWithInputs
             instance that contains all tasks from the given configurations.

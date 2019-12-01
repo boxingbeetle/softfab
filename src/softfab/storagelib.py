@@ -1,24 +1,29 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from abc import abstractmethod
 from enum import Enum
 from functools import partial
 from gzip import open as openGzip
 from pathlib import Path
-from typing import IO, TYPE_CHECKING, Callable, Dict, Optional, Union, cast
+from typing import IO, Callable, Dict, Optional, Union, cast
 from urllib.parse import unquote_plus, urljoin
 import logging
 
+from softfab.compat import Protocol
 from softfab.config import dbDir
 
 artifactsPath = Path(dbDir) / 'artifacts'
 
-class StorageURLMixin:
+class StorageURLABC(Protocol):
 
-    if TYPE_CHECKING:
-        def _notify(self) -> None:
-            ...
+    @property
+    @abstractmethod
+    def _properties(self) -> Dict[str, Union[str, int, Enum]]: ...
 
-    _properties: Dict[str, Union[str, int, Enum]]
+    @abstractmethod
+    def _notify(self) -> None: ...
+
+class StorageURLMixin(StorageURLABC):
 
     def setInternalStorage(self, path: str) -> None:
         """Use the Control Center's internal storage pool.

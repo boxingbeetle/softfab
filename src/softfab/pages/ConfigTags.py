@@ -2,7 +2,7 @@
 
 from enum import Enum
 from typing import (
-    Collection, Dict, FrozenSet, Iterator, Mapping, Optional, cast
+    Collection, Dict, FrozenSet, Iterator, List, Mapping, Optional, cast
 )
 
 from softfab.FabPage import FabPage, IconModifier
@@ -46,6 +46,8 @@ class ConfigTagsBase(FabPage['ConfigTagsBase.Processor', ArgsT]):
     linkDescription = False
 
     class Processor(SelectConfigsMixin[ParentArgs], PageProcessor[ArgsT]):
+
+        notices: List[str]
 
         def process(self, req: Request[ArgsT], user: User) -> None:
             self.notices = []

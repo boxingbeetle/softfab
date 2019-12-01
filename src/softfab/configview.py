@@ -1,7 +1,9 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from abc import abstractmethod
 from typing import Generic, Iterator, List, Optional, Sequence, TypeVar, cast
 
+from softfab.compat import Protocol
 from softfab.configlib import Config, Input, TaskSetWithInputs, configDB
 from softfab.datawidgets import DataColumn, DataTable, LinkColumn
 from softfab.formlib import dropDownList, emptyOption, hiddenInput, textInput
@@ -20,13 +22,18 @@ from softfab.xmlgen import XMLContent, txt
 
 SelectArgsT = TypeVar('SelectArgsT', bound=SelectArgs)
 
-class SelectConfigsMixin(Generic[SelectArgsT]):
+class SelectConfigsABC(Protocol):
+
+    @property
+    @abstractmethod
+    def notices(self) -> List[str]: ...
+
+class SelectConfigsMixin(SelectConfigsABC, Generic[SelectArgsT]):
     '''Mixin for PageProcessors that want to use the `sel` argument to
     select configurations.
     '''
 
     args: SelectArgsT
-    notices: List[str]
 
     def findConfigs(self) -> None:
         configs = []
