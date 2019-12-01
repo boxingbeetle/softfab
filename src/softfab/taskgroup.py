@@ -257,7 +257,7 @@ class TaskGroup(PriorityMixin, Generic[TaskT]):
 
         tasksLeft: Dict[str, TaskElem] = dict(self.__tasks)
         availableProducts = set(self.getInputs())
-        readyTasks: Heap[TaskElem] = Heap()
+        readyTasks = cast(Heap[TaskElem], Heap())
         mainSequence = []
         flatSequence: List[TaskT] = []
         flattened = False
