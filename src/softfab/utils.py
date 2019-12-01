@@ -412,7 +412,7 @@ def cachedProperty(method: Callable[[C], T]) -> _CachedProperty[C, T]:
     '''
     return _CachedProperty(method)
 
-class MissingValue:
+class Missing:
     '''Value that can be used to represent a missing value (null) in
     database records. Unlike None, this can be compared to any value
     type. It is considered larger than any other value, so it will
@@ -443,7 +443,7 @@ class MissingValue:
     def __ge__(self, other: object) -> bool:
         return True
 
-missing = MissingValue()
+missing = Missing()
 
 _versionPattern = re.compile(r'(\d+)\.(\d+)\.(\d+)(\D.*)?$')
 def parseVersion(versionStr: str) -> Tuple[int, int, int]:

@@ -8,7 +8,7 @@ from typing import (
 
 from softfab.compat import Protocol
 from softfab.databaselib import DBRecord, Database, Retriever
-from softfab.utils import Comparable, MissingValue, missing, wildcardMatcher
+from softfab.utils import Comparable, Missing, missing, wildcardMatcher
 
 
 class KeyValueStoreProto(Protocol):
@@ -194,10 +194,10 @@ class RecordSorter(Generic[Record]):
 #       would make an extra step like this unnecessary.
 def _substMissingForNone(
         retriever: Retriever[Record, Optional[Comparable]]
-        ) -> Retriever[Record, Union[Comparable, MissingValue]]:
+        ) -> Retriever[Record, Union[Comparable, Missing]]:
     def wrap(record: Record,
              retriever: Retriever[Record, Optional[Comparable]] = retriever
-             ) -> Union[Comparable, MissingValue]:
+             ) -> Union[Comparable, Missing]:
         value = retriever(record)
         return missing if value is None else value
     return wrap
