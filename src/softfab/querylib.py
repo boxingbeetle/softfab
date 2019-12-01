@@ -54,10 +54,7 @@ class ValueFilter(RecordFilter[Record], Generic[Record, Comparable]):
                  db: Optional[Database] = None
                  ):
         RecordFilter.__init__(self)
-        self.__retriever = cast(
-            Retriever[Record, Comparable],
-            _getRetriever(db, key)
-            )
+        self.__retriever: Retriever[Record, Comparable] = _getRetriever(db, key)
         self.__value = value
 
     def __call__(self, records: Iterable[Record]) -> Iterable[Record]:
@@ -87,10 +84,7 @@ class WildcardFilter(RecordFilter[Record]):
                  db: Optional[Database] = None
                  ):
         RecordFilter.__init__(self)
-        self.__retriever = cast(
-            Retriever[Record, str],
-            _getRetriever(db, key)
-            )
+        self.__retriever: Retriever[Record, str] = _getRetriever(db, key)
         self.__matcher = wildcardMatcher(pattern)
 
     def __call__(self, records: Iterable[Record]) -> Iterable[Record]:
@@ -167,10 +161,7 @@ class SetFilter(RecordFilter[Record], Generic[Record, Comparable]):
                  db: Optional[Database[DBRecord]]
                  ):
         RecordFilter.__init__(self)
-        self.__retriever = cast(
-            Retriever[Record, Comparable],
-            _getRetriever(db, key)
-            )
+        self.__retriever: Retriever[Record, Comparable] = _getRetriever(db, key)
         self.__selected = selected
 
     def __call__(self, records: Iterable[Record]) -> Iterable[Record]:
