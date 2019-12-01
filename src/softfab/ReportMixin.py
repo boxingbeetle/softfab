@@ -62,7 +62,7 @@ def emptyToNone(values: AbstractSet[str]) -> AbstractSet[Optional[str]]:
 ReportArgsT = TypeVar('ReportArgsT', bound=ReportArgs)
 
 class ReportProcessor(PageProcessor[ReportArgsT]):
-    db: Optional[Database] = None
+    db: ClassVar[Optional[Database]] = None
 
     def process(self, req: Request[ReportArgsT], user: User) -> None:
         # Set of targets for which jobs have run.
@@ -108,14 +108,29 @@ class ReportProcessor(PageProcessor[ReportArgsT]):
                 record['timestamp'] <= cTimeBelowInt
                 )
 
+        # TODO: These casts are lies.
+        #       None is not Comparable and that is an issue while sorting;
+        #       querylib works around that by mapping None to Missing.
+        #       However, the type annotations aren't aware of that.
+        #       I think the best solution would be to use Missing in all
+        #       cases in which records don't have a value for a particular
+        #       key, but that is a big change that I don't want to make
+        #       right now.
+
         if self.args.target:
             yield SetFilter.create(
-                'target', emptyToNone(self.args.target), self.targets, self.db
+                'target',
+                cast(AbstractSet[str], emptyToNone(self.args.target)),
+                cast(AbstractSet[str], self.targets),
+                self.db
                 )
 
         if self.args.owner:
             yield SetFilter.create(
-                'owner', emptyToNone(self.args.owner), self.owners, self.db
+                'owner',
+                cast(AbstractSet[str], emptyToNone(self.args.owner)),
+                cast(AbstractSet[str], self.owners),
+                self.db
                 )
 
 class JobReportProcessor(ReportProcessor[ReportArgsT]):
