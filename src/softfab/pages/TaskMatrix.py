@@ -95,6 +95,7 @@ class Matrix(Table):
         yield Column('Week')
 
     def iterRows(self, *, proc, **kwargs):
+        configId = proc.args.config
         beginWeek = proc.beginWeek
         endWeek = proc.endWeek
         taskData = proc.taskData
@@ -102,9 +103,17 @@ class Matrix(Table):
         tasksByDay = proc.tasksByDay
         allTasks = proc.allTasks
 
-        taskNames = set()
-        # Add task names for task runs that were created in the selected week.
-        taskNames.update(tasksByName)
+        # Show names for task runs that were created in the selected week.
+        taskNames = set(tasksByName)
+        # Add names of tasks in the filtered configuration, to make it explicit
+        # when they didn't run.
+        if configId:
+            try:
+                config = configDB[configId]
+            except KeyError:
+                pass
+            else:
+                taskNames.update(config.iterTaskNames())
 
         def makeURL(taskName, beginTime, endTime):
             if taskName is None:
