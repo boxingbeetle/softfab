@@ -1,7 +1,9 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from collections import defaultdict
-from typing import Iterator, cast
+from typing import (
+    DefaultDict, Iterable, Iterator, List, Optional, Sequence, cast
+)
 import time
 
 from softfab.CSVPage import presentCSVLink
@@ -11,15 +13,17 @@ from softfab.TaskMatrixCommon import (
 )
 from softfab.configlib import configDB
 from softfab.formlib import dropDownList, emptyOption, makeForm, submitButton
+from softfab.joblib import Task
 from softfab.jobview import createStatusBar
 from softfab.pagelinks import ReportTaskArgs
+from softfab.request import Request
 from softfab.timelib import iterDays, normalizeWeek, secondsPerDay, weeksInYear
 from softfab.userlib import User, checkPrivilege
 from softfab.webgui import Column, Table, cell, pageLink, pageURL
-from softfab.xmlgen import XMLContent, xhtml
+from softfab.xmlgen import XMLContent, XMLNode, xhtml
 
 
-def dateLink(args, year, week):
+def dateLink(args: TaskMatrixArgs, year: int, week: int) -> XMLNode:
     return pageLink('TaskMatrix', args.override(year = year, week = week))
 
 class NavigationBar(Table):
@@ -27,10 +31,13 @@ class NavigationBar(Table):
     '''
     columns = None, None, None, None
 
-    def iterRows(self, *, proc, **kwargs):
+    def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
+        proc = cast(TaskMatrixProcessor, kwargs['proc'])
         args = proc.args
         week = args.week
+        assert isinstance(week, int)
         year = args.year
+        assert isinstance(year, int)
         yield (
             cell[
                 'Year: ',
@@ -40,7 +47,7 @@ class NavigationBar(Table):
                         ],
                     dropDownList(name = 'year')[
                         range(dateRange.minYear, dateRange.maxYear + 1)
-                        ].present(proc=proc, **kwargs),
+                        ],
                     dateLink(args, year + 1, min(week, weeksInYear(year + 1)))[
                         '\u2192'
                         ]
@@ -52,7 +59,7 @@ class NavigationBar(Table):
                     dateLink(args, *normalizeWeek(year, week - 1))[ '\u2190' ],
                     dropDownList(name = 'week')[
                         range(1, weeksInYear(year) + 1)
-                        ].present(proc=proc, **kwargs),
+                        ],
                     dateLink(args, *normalizeWeek(year, week + 1))[ '\u2192' ]
                     ]
                 ],
@@ -61,10 +68,10 @@ class NavigationBar(Table):
                 dropDownList(name = 'config')[
                     emptyOption[ '(All - no filter)' ],
                     sorted(configDB.uniqueValues('name'))
-                    ].present(proc=proc, **kwargs)
+                    ]
                 ],
             cell[
-                submitButton[ 'Apply' ].present(proc=proc, **kwargs)
+                submitButton[ 'Apply' ]
                 ]
             )
 
@@ -94,7 +101,8 @@ class Matrix(Table):
         yield Column('Total')
         yield Column('Week')
 
-    def iterRows(self, *, proc, **kwargs):
+    def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
+        proc = cast(TaskMatrix_GET.Processor, kwargs['proc'])
         configId = proc.args.config
         beginWeek = proc.beginWeek
         endWeek = proc.endWeek
@@ -115,7 +123,7 @@ class Matrix(Table):
             else:
                 taskNames.update(config.iterTaskNames())
 
-        def makeURL(taskName, beginTime, endTime):
+        def makeURL(taskName: str, beginTime: int, endTime: int) -> str:
             if taskName is None:
                 # TODO: The links which match all tasks are currently disabled,
                 #       but are also no longer accepted by ReportTasks.
@@ -127,7 +135,11 @@ class Matrix(Table):
                     )
                 )
 
-        def createCell(taskName, tasks, beginTime, endTime):
+        def createCell(taskName: Optional[str],
+                       tasks: Optional[Sequence[Task]],
+                       beginTime: int,
+                       endTime: int
+                       ) -> XMLContent:
             if tasks is None:
                 return ''
             bar = createStatusBar(tasks, length = 0)
@@ -138,7 +150,11 @@ class Matrix(Table):
                 xhtml.a(href = url)[ bar ]
                 ]
 
-        def iterCells(taskName, rowHeader, weekTasks, totalTasks):
+        def iterCells(taskName: Optional[str],
+                      rowHeader: XMLContent,
+                      weekTasks: Iterable[Optional[Sequence[Task]]],
+                      totalTasks: Optional[Sequence[Task]]
+                      ) -> Iterator[XMLContent]:
             # pylint: disable=stop-iteration-return
             # https://github.com/PyCQA/pylint/issues/2158
 
@@ -173,10 +189,15 @@ class Matrix(Table):
                     ( taskDict.get(taskName) for taskDict in taskData ),
                     tasksByName.get(taskName)
                     )
-        yield [ xhtml.b[ 'Total' ] ] + [
-            cell(class_ = 'rightalign')[str(len(tasks)) if tasks else '']
-            for tasks in tasksByDay
-            ] + [ '', '' ]
+        def presentTotals() -> Iterator[XMLContent]:
+            yield xhtml.b[ 'Total' ]
+            for tasks in tasksByDay:
+                yield cell(class_ = 'rightalign')[
+                    str(len(tasks)) if tasks else ''
+                    ]
+            yield ''
+            yield ''
+        yield presentTotals()
         yield iterCells(
             None,
             xhtml.b[ 'All Tasks' ],
@@ -194,12 +215,12 @@ class TaskMatrix_GET(FabPage['TaskMatrix_GET.Processor',
 
     class Processor(TaskMatrixProcessor):
 
-        def process(self, req, user):
-            # pylint: disable=attribute-defined-outside-init
+        def process(self, req: Request[TaskMatrixArgs], user: User) -> None:
             super().process(req, user)
-            self.tasksByName = tasksByName = defaultdict(list)
-            self.tasksByDay = tasksByDay = []
-            self.allTasks = allTasks = []
+
+            tasksByName: DefaultDict[str, List[Task]] = defaultdict(list)
+            tasksByDay = []
+            allTasks = []
             for dayTasks in self.taskData:
                 combinedDayTasks = []
                 for name, tasks in dayTasks.items():
@@ -207,6 +228,11 @@ class TaskMatrix_GET(FabPage['TaskMatrix_GET.Processor',
                     tasksByName[name].extend(tasks)
                 tasksByDay.append(combinedDayTasks)
                 allTasks.extend(combinedDayTasks)
+
+            # pylint: disable=attribute-defined-outside-init
+            self.tasksByName = tasksByName
+            self.tasksByDay = tasksByDay
+            self.allTasks = allTasks
 
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'j/a', 'view the task list')

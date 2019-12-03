@@ -121,9 +121,9 @@ class TaskMatrixArgs(PageArgs):
 class TaskMatrixCSVArgs(TaskMatrixArgs, CSVPage.Arguments):
     pass
 
-class TaskMatrixProcessor(PageProcessor[TaskMatrixCSVArgs]):
+class TaskMatrixProcessor(PageProcessor[TaskMatrixArgs]):
 
-    def process(self, req: Request[TaskMatrixCSVArgs], user: User) -> None:
+    def process(self, req: Request[TaskMatrixArgs], user: User) -> None:
         # TODO: It would be useful to have these as method arguments.
         year = req.args.year
         week = req.args.week
