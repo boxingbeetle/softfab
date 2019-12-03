@@ -1,32 +1,34 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import cast
+from typing import Iterable, Iterator, cast
 
 from softfab.FabPage import FabPage
-from softfab.Page import PageProcessor
+from softfab.Page import PageProcessor, PresentableError
 from softfab.RecordDelete import DeleteArgs
 from softfab.pagelinks import (
     TaskDefIdArgs, createConfigDetailsLink, createFrameworkDetailsLink,
     createTaskHistoryLink
 )
 from softfab.paramview import ParametersTable
+from softfab.request import Request
 from softfab.resourceview import InlineResourcesTable
 from softfab.taskdeflib import taskDefDB
 from softfab.taskdefview import configsUsingTaskDef, formatTimeout
 from softfab.userlib import User, checkPrivilege
 from softfab.utils import pluralize
 from softfab.webgui import PropertiesTable, pageLink
-from softfab.xmlgen import XMLContent, xhtml
+from softfab.xmlgen import XML, XMLContent, xhtml
 
 taskDefParametersTable = ParametersTable('taskDef')
 
 class DetailsTable(PropertiesTable):
 
-    def iterRows(self, *, proc, **kwargs):
+    def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
+        proc = cast(TaskDetails_GET.Processor, kwargs['proc'])
         taskDef = proc.taskDef
         configs = proc.configs
 
-        def formatConfigs(configIds):
+        def formatConfigs(configIds: Iterable[str]) -> XMLContent:
             return xhtml.br.join(
                 createConfigDetailsLink(configId)
                 for configId in sorted(configIds)
@@ -34,9 +36,14 @@ class DetailsTable(PropertiesTable):
 
         yield 'Title', taskDef['title']
         yield 'Description', taskDef['description']
-        yield 'Framework', createFrameworkDetailsLink(taskDef['parent'])
+        frameworkId = taskDef.frameworkId
+        yield 'Framework', (
+            '-'
+            if frameworkId is None
+            else createFrameworkDetailsLink(frameworkId)
+            )
         yield 'Timeout', formatTimeout(taskDef.timeoutMins)
-        yield 'Parameters', taskDefParametersTable.present(proc=proc, **kwargs)
+        yield 'Parameters', taskDefParametersTable.present(**kwargs)
         yield 'Resources', InlineResourcesTable.instance.present(
             claim=taskDef.getFramework().resourceClaim.merge(
                 taskDef.resourceClaim
@@ -55,25 +62,28 @@ class TaskDetails_GET(FabPage['TaskDetails_GET.Processor',
 
     class Processor(PageProcessor[TaskDefIdArgs]):
 
-        def process(self, req, user):
+        def process(self, req: Request[TaskDefIdArgs], user: User) -> None:
+            taskDefId = req.args.id
+
+            try:
+                taskDef = taskDefDB[taskDefId]
+            except KeyError:
+                raise PresentableError(xhtml[
+                    'Task Definition ', xhtml.b[ taskDefId ], ' does not exist.'
+                    ])
+
             # pylint: disable=attribute-defined-outside-init
-            self.taskDef = taskDefDB.get(req.args.id)
-            self.configs = list(configsUsingTaskDef(req.args.id))
+            self.taskDef = taskDef
+            self.configs = list(configsUsingTaskDef(taskDefId))
 
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'td/a')
 
     def presentContent(self, **kwargs: object) -> XMLContent:
         proc = cast(TaskDetails_GET.Processor, kwargs['proc'])
-        taskDef = proc.taskDef
         taskDefId = proc.args.id
         configs = proc.configs
 
-        if taskDef is None:
-            yield xhtml.p[
-                'Task Definition ', xhtml.b[ taskDefId ], ' does not exist.'
-                ]
-            return
         yield xhtml.h3[
             'Details of task definition ', xhtml.b[ taskDefId ], ':'
             ]
@@ -90,3 +100,6 @@ class TaskDetails_GET(FabPage['TaskDetails_GET.Processor',
                 'TaskDelete', DeleteArgs(id = taskDefId)
                 )[ 'Delete this task definition' ]
             ]
+
+    def presentError(self, message: XML, **kwargs: object) -> XMLContent:
+        yield xhtml.p[ message ]
