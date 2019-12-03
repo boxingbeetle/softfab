@@ -19,7 +19,7 @@ from softfab.xmlgen import XMLContent, xhtml
 class NameColumn(DataColumn[TaskDef]):
     label = 'Task Definition ID'
     keyName = 'id'
-    def presentCell(self, record, **kwargs):
+    def presentCell(self, record: TaskDef, **kwargs: object) -> XMLContent:
         return createTaskDetailsLink(record.getId())
 
 class TasksTable(DataTable[TaskDef]):
