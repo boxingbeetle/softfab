@@ -1,18 +1,25 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from typing import Callable
+
 from softfab.Page import PageProcessor
 from softfab.RecordDelete import (
     RecordDelete_GET, RecordDelete_POSTMixin, RecordInUseError
 )
+from softfab.databaselib import Database
 from softfab.frameworklib import frameworkDB
 from softfab.pageargs import RefererArg
 from softfab.pagelinks import createFrameworkDetailsLink, createTaskDetailsLink
 from softfab.resourcelib import resourceDB
 from softfab.restypelib import ResType, resTypeDB
 from softfab.taskdeflib import taskDefDB
+from softfab.xmlgen import XMLContent
 
 
-def checkRequirements(db, typeName, linkFunc):
+def checkRequirements(db: Database,
+                      typeName: str,
+                      linkFunc: Callable[[str], XMLContent]
+                      ) -> None:
     usedBy = {
         record.getId()
         for record in db
