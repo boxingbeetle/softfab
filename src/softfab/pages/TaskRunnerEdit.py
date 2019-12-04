@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Mapping, Optional, cast
+from typing import Iterator, Mapping, Optional, cast
 
 from softfab.EditPage import (
     EditArgs, EditPage, EditProcessor, EditProcessorBase, InitialEditArgs,
@@ -68,7 +68,9 @@ class TaskRunnerEditBase(EditPage[TaskRunnerEditArgs, TaskRunner]):
     formId = 'runner'
     autoName = None
 
-    def getFormContent(self, proc: EditProcessorBase) -> XMLContent:
+    def getFormContent(self,
+                       proc: EditProcessorBase[TaskRunnerEditArgs, TaskRunner]
+                       ) -> XMLContent:
         args = proc.args
         if args.id != '':
             yield xhtml.h3[ 'Task Runner: ', xhtml.b[ args.id ]]
@@ -130,7 +132,7 @@ class TaskRunnerEdit_POST(TaskRunnerEditBase):
                 element.copyState(oldElement)
             return element
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.savePhase = TaskRunnerSavePhase(self)
 
@@ -141,9 +143,10 @@ class ResetPassPanel(SingleCheckBoxTable):
 class TokenTable(Table):
     columns = None, None
 
-    def iterRows(self, *, proc, **kwargs):
-        tokenId: str = getattr(proc, 'tokenId')
-        password: Optional[str] = getattr(proc, 'password')
+    def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
+        proc = cast(TaskRunnerEdit_POST.Processor, kwargs['proc'])
+        tokenId = proc.tokenId
+        password = proc.password
         yield 'Access token ID: ', xhtml.code[tokenId]
         if password is not None:
             yield 'Access token password: ', xhtml.code[password]
