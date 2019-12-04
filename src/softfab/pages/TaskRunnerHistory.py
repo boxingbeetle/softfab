@@ -1,14 +1,15 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Iterator, cast
+from typing import Iterable, Iterator, List, cast
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
 from softfab.datawidgets import DataTable
-from softfab.joblib import jobDB
+from softfab.joblib import Job, Task, jobDB
 from softfab.pageargs import IntArg, SortArg
 from softfab.pagelinks import TaskRunnerIdArgs
 from softfab.querylib import runQuery
+from softfab.request import Request
 from softfab.tasktables import TaskRunsTable
 from softfab.userlib import User, checkPrivilege
 from softfab.webgui import pageLink
@@ -22,7 +23,8 @@ _jobsLimit = 10000
 
 class HistoryTable(TaskRunsTable):
 
-    def getRecordsToQuery(self, proc):
+    def getRecordsToQuery(self, proc: PageProcessor) -> Iterable[Task]:
+        proc = cast(TaskRunnerHistory_GET.Processor, proc)
         return proc.tasks
 
     def showTargetColumn(self) -> bool:
@@ -41,7 +43,10 @@ class TaskRunnerHistory_GET(FabPage['TaskRunnerHistory_GET.Processor',
 
     class Processor(PageProcessor['TaskRunnerHistory_GET.Arguments']):
 
-        def process(self, req, user):
+        def process(self,
+                    req: Request['TaskRunnerHistory_GET.Arguments'],
+                    user: User
+                    ) -> None:
             runnerId = req.args.runnerId
 
             jobs = list(jobDB.values())
@@ -50,14 +55,16 @@ class TaskRunnerHistory_GET(FabPage['TaskRunnerHistory_GET.Processor',
             if reachedJobsLimit:
                 jobs[_jobsLimit : ] = []
 
-            def recordFilter(jobs):
+            # TODO: This is actually not a filter, since it changes the
+            #       record type.
+            def recordFilter(jobs: Iterable[Job]) -> List[Task]:
                 return [
                     task
                     for job in jobs
                     for task in job.getTaskSequence()
                     if task['runner'] == runnerId
                     ]
-            tasks = runQuery((recordFilter, ), jobs)
+            tasks = cast(List[Task], runQuery((recordFilter, ), jobs))
 
             # pylint: disable=attribute-defined-outside-init
             self.reachedJobsLimit = reachedJobsLimit
