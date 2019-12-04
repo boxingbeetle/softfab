@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Iterator
+from typing import Iterable, Iterator, cast
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
@@ -17,10 +17,12 @@ from softfab.xmlgen import XMLContent, txt, xhtml
 
 
 class ProductColumn(DataColumn[TaskDefBase]):
-    def presentCell(self, record, **kwargs):
+    def presentCell(self, record: TaskDefBase, **kwargs: object) -> XMLContent:
+        keyName = self.keyName
+        assert keyName is not None
         return txt(', ').join(
             createProductDetailsLink(productDefId)
-            for productDefId in record[self.keyName]
+            for productDefId in cast(Iterable[str], record[keyName])
             )
 
 class FrameworksTable(DataTable[TaskDefBase]):
