@@ -3,6 +3,7 @@
 from softfab.ControlPage import ControlPage
 from softfab.Page import InvalidRequest, PageProcessor
 from softfab.pagelinks import TaskRunnerIdArgs
+from softfab.request import Request
 from softfab.resourcelib import getTaskRunner
 from softfab.response import Response
 from softfab.userlib import User, checkPrivilege
@@ -17,7 +18,7 @@ class TaskRunnerExit_POST(ControlPage['TaskRunnerExit_POST.Arguments',
 
     class Processor(PageProcessor[TaskRunnerIdArgs]):
 
-        def process(self, req, user):
+        def process(self, req: Request[TaskRunnerIdArgs], user: User) -> None:
             runnerId = req.args.runnerId
             try:
                 runner = getTaskRunner(runnerId)
