@@ -256,7 +256,7 @@ class _AbstractField:
     '''
     __isabstractmethod__ = True
 
-    def __get__(self, instance, owner):
+    def __get__(self, instance: object, owner: object = None) -> _AbstractField:
         if instance is None:
             # Class attribute access.
             return self
@@ -264,13 +264,13 @@ class _AbstractField:
         #       inherit from ABC, but that is an easy mistake to make.
         raise NotImplementedError('Read of abstract field')
 
-    def __set__(self, instance, value):
+    def __set__(self, instance: object, value: object) -> None:
         raise AttributeError('Write to abstract field')
 
-    def __delete__(self, instance):
+    def __delete__(self, instance: object) -> None:
         raise AttributeError('Delete of abstract field')
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return '<abstract field>'
 
 abstract: Any = _AbstractField()
