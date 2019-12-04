@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Mapping, Optional
+from typing import Iterator, Mapping, Optional, cast
 
 from softfab.EditPage import (
     EditArgs, EditPage, EditProcessor, EditProcessorBase, InitialEditArgs,
@@ -76,7 +76,9 @@ class ProductEdit_POST(ProductEditBase):
 
 class ProductTable(PropertiesTable):
 
-    def iterRows(self, *, proc, **kwargs):
+    def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
+        proc = cast(EditProcessorBase[ProductEditArgs, ProductDef],
+                    kwargs['proc'])
         yield 'Product ID', proc.args.id or '(untitled)'
         yield 'Locator type', dropDownList(name='type')[ ProductType ]
         yield 'Local', (
