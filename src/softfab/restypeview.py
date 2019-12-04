@@ -16,7 +16,7 @@ class ResourceTypeInfo:
     name: str
     editPage: str
     record: ResType = attr.ib(init=False)
-    def __attrs_post_init__(self):
+    def __attrs_post_init__(self) -> None:
         object.__setattr__(self, 'record', resTypeDB[self.name])
 
 reservedTypes = (
