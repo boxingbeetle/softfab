@@ -81,7 +81,7 @@ def _compressableType(mediaType: str) -> bool:
 class _StyleRoot(Resource):
     relativeURL = 'styles'
 
-    def __init__(self):
+    def __init__(self) -> None:
         Resource.__init__(self)
         self.__icons: Dict[str, Image] = {}
 
