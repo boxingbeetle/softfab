@@ -13,7 +13,8 @@ from softfab.pageargs import (
 )
 from softfab.pagelinks import AnonGuestArgs, UserIdArgs, createUserDetailsLink
 from softfab.projectlib import project
-from softfab.querylib import CustomFilter
+from softfab.querylib import CustomFilter, RecordFilter
+from softfab.request import Request
 from softfab.userlib import (
     UIRoleNames, User, UserInfo, checkPrivilege, rolesGrantPrivilege, userDB
 )
@@ -25,7 +26,8 @@ from softfab.xmlgen import XML, XMLContent, xhtml
 class NameColumn(DataColumn[UserInfo]):
     label = 'Name'
     keyName = 'id'
-    def presentCell(self, record, **kwargs):
+
+    def presentCell(self, record: UserInfo, **kwargs: object) -> XMLContent:
         return createUserDetailsLink(record.getId())
 
 roleDropDownList = dropDownList(name='role')[ UIRoleNames ]
@@ -34,7 +36,8 @@ class RoleColumn(DataColumn[UserInfo]):
     label = 'Role'
     keyName = 'uirole'
 
-    def presentCell(self, record, *, proc, **kwargs):
+    def presentCell(self, record: UserInfo, **kwargs: object) -> XMLContent:
+        proc = cast(UserList_GET.Processor, kwargs['proc'])
         role = record.uiRole
         if proc.canChangeRoles:
             userName = record.getId()
@@ -45,14 +48,15 @@ class RoleColumn(DataColumn[UserInfo]):
                 )[
                 hiddenInput(name='user', value=userName),
                 roleDropDownList(selected=role), ' ', submitButton[ 'Apply' ]
-                ].present(proc=proc, **kwargs)
+                ].present(**kwargs)
         else:
             return role
 
 class PasswordColumn(DataColumn[UserInfo]):
     label = 'Password'
 
-    def presentCell(self, record, *, proc, **kwargs):
+    def presentCell(self, record: UserInfo, **kwargs: object) -> XMLContent:
+        proc = cast(UserList_GET.Processor, kwargs['proc'])
         requestUser = proc.user
         userName = record.getId()
         if requestUser.hasPrivilege('u/m') or (
@@ -70,7 +74,8 @@ class FilterTable(SingleCheckBoxTable):
     name = 'inactive'
     label = 'Show inactive users'
 
-    def iterRows(self, **kwargs):
+    def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
+        proc = cast(UserList_GET.Processor, kwargs['proc'])
         yield from super().iterRows(**kwargs)
         yield submitButton[ 'Apply' ].present(**kwargs),
 
@@ -78,7 +83,8 @@ class AnonGuestTable(SingleCheckBoxTable):
     name = 'anonguest'
     label = 'Anonymous guest access'
 
-    def iterRows(self, **kwargs):
+    def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
+        proc = cast(UserList_GET.Processor, kwargs['proc'])
         yield from super().iterRows(**kwargs)
         yield (
             'This grants visitors that are not logged in read-only access '
@@ -90,9 +96,11 @@ class UserTable(DataTable[UserInfo]):
     db = userDB
     objectName = 'users'
 
-    def iterFilters(self, proc):
+    def iterFilters(self,
+                    proc: PageProcessor['UserList_GET.Arguments']
+                    ) -> Iterator[RecordFilter]:
         if not proc.args.inactive:
-            yield CustomFilter(lambda user: user.isActive())
+            yield CustomFilter(UserInfo.isActive)
 
     def iterColumns(self, **kwargs: object) -> Iterator[DataColumn[UserInfo]]:
         proc = cast(PageProcessor, kwargs['proc'])
@@ -145,7 +153,10 @@ class UserList_GET(FabPage['UserList_GET.Processor', 'UserList_GET.Arguments']):
 
     class Processor(PageProcessor['UserList_GET.Arguments']):
 
-        def process(self, req, user):
+        def process(self,
+                    req: Request['UserList_GET.Arguments'],
+                    user: User
+                    ) -> None:
             # pylint: disable=attribute-defined-outside-init
             self.canChangeRoles = user.hasPrivilege('u/m')
             self.canChangeAnonGuest = user.hasPrivilege('p/m')
@@ -195,7 +206,10 @@ class UserList_POST(FabPage['UserList_POST.Processor',
 
     class Processor(PageProcessor['UserList_POST.Arguments']):
 
-        def process(self, req, user):
+        def process(self,
+                    req: Request['UserList_POST.Arguments'],
+                    user: User
+                    ) -> None:
             # Find user record.
             userName = req.args.user
             try:
@@ -213,7 +227,7 @@ class UserList_POST(FabPage['UserList_POST.Processor',
             if (userName == requestUserName
                     and not rolesGrantPrivilege(newRoles, 'u/m')):
                 # Prevent user from revoking their own 'u/m' privilege.
-                raise PresentableError((
+                raise PresentableError(xhtml[
                     xhtml.p(class_ = 'notice')[
                         'Revoking your own privileges could lead to '
                         'a situation from which recovery is impossible.'
@@ -223,7 +237,7 @@ class UserList_POST(FabPage['UserList_POST.Processor',
                         f'please log in as another user with operator '
                         f'privileges.'
                         ],
-                    ))
+                    ])
 
             # Changes are OK, commit them.
             subject.roles = newRoles
