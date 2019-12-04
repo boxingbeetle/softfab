@@ -256,7 +256,10 @@ class _AbstractField:
     '''
     __isabstractmethod__ = True
 
-    def __get__(self, instance: object, owner: object = None) -> _AbstractField:
+    def __get__(self,
+                instance: object,
+                owner: object = None
+                ) -> '_AbstractField':
         if instance is None:
             # Class attribute access.
             return self
