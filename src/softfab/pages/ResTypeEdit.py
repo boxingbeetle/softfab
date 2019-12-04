@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Mapping, Optional
+from typing import Iterator, Mapping, Optional, Sequence, Tuple, cast
 
 from softfab.EditPage import (
     EditArgs, EditPage, EditProcessor, EditProcessorBase, InitialEditArgs,
@@ -87,7 +87,9 @@ class ResTypeEdit_POST(ResTypeEditBase):
 class ExclusiveWidget(CheckBoxesTable):
     name = 'type'
     columns = Column(cellStyle='nobreak'), None
-    def iterOptions(self, **kwargs):
+
+    def iterOptions(self, **kwargs: object
+                    ) -> Iterator[Tuple[str, Sequence[XMLContent]]]:
         yield 'pertask', (
             'per task:',
             'only one task at a time can use the resource'
@@ -96,17 +98,11 @@ class ExclusiveWidget(CheckBoxesTable):
             'per job:',
             'the resource will remain reserved between tasks in the same job'
             )
-    def getActive(self, proc, **kwargs):
-        return proc.args.type
 
 class ResTypeTable(PropertiesTable):
 
-    def iterRows(self, *, proc, **kwargs):
+    def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
+        proc = cast(EditProcessorBase[ResTypeEditArgs, ResType], kwargs['proc'])
         yield 'Name', proc.args.id or '(unnamed)'
-        yield 'Description', \
-            textInput(name = 'description', size = 80).present(
-                proc=proc, **kwargs
-                )
-        yield 'Exclusive', cell(class_ = 'checkboxes')[
-            ExclusiveWidget.instance.present(proc=proc, **kwargs)
-            ]
+        yield 'Description', textInput(name='description', size=80)
+        yield 'Exclusive', cell(class_='checkboxes')[ ExclusiveWidget.instance ]
