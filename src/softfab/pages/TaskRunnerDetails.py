@@ -1,13 +1,14 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Iterator, cast
+from typing import Iterable, Iterator, Optional, cast
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
 from softfab.pagelinks import (
     ResourceIdArgs, TaskRunnerIdArgs, createJobLink, createTaskLink
 )
-from softfab.resourcelib import getTaskRunner
+from softfab.request import Request
+from softfab.resourcelib import TaskRunner, getTaskRunner
 from softfab.resourceview import getResourceStatus, presentCapabilities
 from softfab.restypelib import taskRunnerResourceTypeName
 from softfab.timeview import formatDuration, formatTime
@@ -26,13 +27,15 @@ class TaskRunnerDetails_GET(FabPage['TaskRunnerDetails_GET.Processor',
 
     class Processor(PageProcessor[TaskRunnerIdArgs]):
 
-        def process(self, req, user):
+        def process(self, req: Request[TaskRunnerIdArgs], user: User) -> None:
             runnerId = req.args.runnerId
-            # pylint: disable=attribute-defined-outside-init
+            taskRunner: Optional[TaskRunner]
             try:
-                self.taskRunner = getTaskRunner(runnerId)
+                taskRunner = getTaskRunner(runnerId)
             except KeyError:
-                self.taskRunner = None
+                taskRunner = None
+            # pylint: disable=attribute-defined-outside-init
+            self.taskRunner = taskRunner
 
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'r/l')
@@ -52,7 +55,9 @@ class TaskRunnerDetails_GET(FabPage['TaskRunnerDetails_GET.Processor',
         yield DetailsTable.instance.present(**kwargs)
         yield xhtml.p[xhtml.br.join(self.__presentLinks(proc.taskRunner))]
 
-    def __presentLinks(self, taskRunner):
+    def __presentLinks(self,
+                       taskRunner: Optional[TaskRunner]
+                       ) -> Iterable[XMLContent]:
         if taskRunner is not None:
             args = ResourceIdArgs(id = taskRunner.getId())
             yield pageLink('TaskRunnerEdit', args)[
@@ -67,7 +72,8 @@ class DetailsTable(Table):
     autoUpdate = True
     columns = Column('Property', cellStyle = 'nobreak'), 'Value'
 
-    def iterRows(self, *, proc, **kwargs):
+    def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
+        proc = cast(TaskRunnerDetails_GET.Processor, kwargs['proc'])
         runner = proc.taskRunner
         if runner is None:
             # Note: This is also reachable through auto-refresh of older
@@ -90,10 +96,11 @@ class DetailsTable(Table):
             runner.capabilities - runner.targets,
             taskRunnerResourceTypeName
             )
-        yield 'Time since last sync', formatDuration(runner['lastSync'])
+        lastSync = cast(Optional[int], runner['lastSync'])
+        yield 'Time since last sync', formatDuration(lastSync)
         run = runner.getRun()
         yield 'Current job', (
-            '-' if run is None else createJobLink(run['jobId'])
+            '-' if run is None else createJobLink(cast(str, run['jobId']))
             )
         yield 'Current task', createTaskLink(runner)
         yield 'Duration', formatDuration(run.getDuration() if run else None)
