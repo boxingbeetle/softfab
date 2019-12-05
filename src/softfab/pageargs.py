@@ -652,7 +652,7 @@ if TYPE_CHECKING:
     def StrArg(default: DefaultT) -> _StrArg[DefaultT]:
         ...
 
-    def StrArg(default=mandatory): # pylint: disable=unused-argument
+    def StrArg(default: object = mandatory) -> object: # pylint: disable=unused-argument
         pass
 else:
     StrArg = _StrArg
@@ -754,7 +754,10 @@ if TYPE_CHECKING:
                 ) -> _EnumArg[EnumT, DefaultT]:
         ...
 
-    def EnumArg(default=mandatory): # pylint: disable=unused-argument
+    def EnumArg(# pylint: disable=unused-argument
+                enumType: Type[EnumT],
+                default: object = mandatory
+                ) -> object:
         pass
 else:
     EnumArg = _EnumArg
@@ -784,7 +787,7 @@ if TYPE_CHECKING:
     def IntArg(default: DefaultT) -> _IntArg[DefaultT]:
         ...
 
-    def IntArg(default=mandatory): # pylint: disable=unused-argument
+    def IntArg(default: object = mandatory) -> object: # pylint: disable=unused-argument
         pass
 else:
     IntArg = _IntArg
@@ -915,7 +918,10 @@ if TYPE_CHECKING:
             ) -> _ListArg[ValueT]:
         ...
 
-    def ListArg():
+    def ListArg(# pylint: disable=unused-argument
+                prototype: object = None,
+                allowEmpty: bool = True
+                ) -> object:
         pass
 else:
     ListArg = _ListArg
@@ -958,7 +964,10 @@ if TYPE_CHECKING:
             ) -> _SetArg[ValueT]:
         ...
 
-    def SetArg():
+    def SetArg(# pylint: disable=unused-argument
+               prototype: object = None,
+               allowEmpty: bool = True
+               ) -> object:
         pass
 else:
     SetArg = _SetArg
