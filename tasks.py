@@ -133,7 +133,8 @@ def types(c, src=None, clean=False, report=False, results=None):
                 out.write(f'report.1={report_dir}/mypy-coverage\n')
 
 @task
-def unittest(c, suite=None, junit_xml=None, results=None, coverage=False):
+def unittest(c, suite=None, select=None,
+             junit_xml=None, results=None, coverage=False):
     """Run unit tests."""
     test_dir = TOP_DIR / 'tests' / 'unit'
     if results is None:
@@ -152,6 +153,8 @@ def unittest(c, suite=None, junit_xml=None, results=None, coverage=False):
         cmd.append(str(test_dir))
     else:
         cmd.extend(str(path) for path in test_dir.glob(suite))
+    if select is not None:
+        cmd.append(f'-k="{select}"')
     with c.cd(str(report_dir)):
         c.run(' '.join(cmd), env=SRC_ENV, pty=results is None, warn=True)
     if results is not None:
