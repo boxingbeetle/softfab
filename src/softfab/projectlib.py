@@ -90,14 +90,19 @@ class ProjectDB(Database['Project']):
     privilegeObject = 'p'
     description = 'project configuration'
 
-    def preload(self) -> None:
-        super().preload()
+    def _postLoad(self) -> None:
+        super()._postLoad()
 
         # Create singleton record if it doesn't exist already.
         if len(self) == 0:
             project = Project({'name': 'Nameless'})
             project.updateVersion()
             self.add(project)
+        else:
+            project = self['singleton']
+
+        # Call observers, no matter whether we loaded or created the record.
+        self._notifyAdded(project)
 
 _projectDB = ProjectDB()
 
@@ -265,7 +270,6 @@ class _TimezoneUpdater(SingletonObserver):
     def updated(self, record: Project) -> None:
         _selectTimezone()
 
-_selectTimezone()
 _projectDB.addObserver(_TimezoneUpdater())
 
 _bootTime = getTime()

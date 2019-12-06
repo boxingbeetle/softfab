@@ -5,9 +5,9 @@ from initconfig import removeDB
 from datageneratorlib import DataGenerator
 
 from softfab import (
-    databases, configlib, joblib, resourcelib, schedulelib, scheduleview
+    databases, configlib, joblib, projectlib, resourcelib, schedulelib,
+    scheduleview
     )
-from softfab.projectlib import project
 from softfab.resultcode import ResultCode
 from softfab.scheduleview import getScheduleStatus
 from softfab.timelib import endOfTime, secondsPerDay, setTimeFunc
@@ -593,7 +593,7 @@ class TaggedConfigFactory:
             dataGenerator.createConfiguration(name = 'config%d' % count)
             for count in range(numConfigs)
             ]
-        project.setTagKeys(( self.tagKey, ))
+        projectlib.project.setTagKeys(( self.tagKey, ))
 
     def __call__(self):
         return { 'tagKey': self.tagKey, 'tagValue': self.tagValue }

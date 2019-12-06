@@ -440,18 +440,64 @@ class Database(Generic[DBRecord], RecordSubjectMixin[DBRecord], ABC):
         superclass method call.
         """
 
+        self._prepareLoad()
+        for dummy_ in self._iterLoad(logging.getLogger()):
+            pass
+        self._postLoad()
+
+    def _prepareLoad(self) -> None:
         # Make sure that we're not preloading twice.
         assert len(self._cache) == 0, self.description
 
         if not os.path.exists(self.baseDir):
             os.makedirs(self.baseDir)
 
-        for fileName in os.listdir(self.baseDir):
-            if fileName.endswith('.xml'):
-                key = self._keyForFileName(fileName)
+    def _postLoad(self) -> None:
+        """Subclasses can override this to perform actions after the records
+        have been loaded, for example to create default records if needed,
+        after the superclass method call.
+        """
+
+    def _iterLoad(self, logger: logging.Logger) -> Iterator[None]:
+        """Generator that loads the records in this database into memory.
+
+        Every iteration does a small amount of work.
+        Errors are logged on the given logger and not propagated.
+        """
+
+        # Sorting the keys makes it more likely that records that will be
+        # used around the same time are close together in memory as well.
+        keys = sorted(
+            self._keyForFileName(fileName)
+            for fileName in os.listdir(self.baseDir)
+            if fileName.endswith('.xml')
+            )
+        yield None # sorting might take a while for big DBs
+
+        failedRecordCount = 0
+        for key in keys:
+            try:
                 value = cast(DBRecord,
                              parse(self.factory, self._fileNameForKey(key)))
                 self._register(key, value)
+            except Exception:
+                # Log a small number of exceptions per DB.
+                # If there are more exceptions, it is likely the
+                # same problem repeated again and again; no point
+                # in flooding the log file.
+                if failedRecordCount < 3:
+                    logger.exception(
+                        'Failed to load record "%s" from %s database',
+                        key, self.description
+                        )
+                failedRecordCount += 1
+            yield None
+
+        if failedRecordCount != 0:
+            logger.error(
+                'Failed to load %d of %d records from %s database',
+                failedRecordCount, len(keys), self.description
+                )
 
     def convert(self, visitor: Optional[Callable[[DBRecord], None]] = None) \
             -> None:
@@ -693,8 +739,8 @@ class VersionedDatabase(Database[DBRecord]):
         _changeLogger.info('datachange/%s/update/%s', self.name, versionedKey)
         self._notifyUpdated(value)
 
-    def preload(self) -> None:
-        super().preload()
+    def _postLoad(self) -> None:
+        super()._postLoad()
 
         latestVersionOf: Dict[str, str] = {}
         for versionedKey in self._cache:
@@ -749,30 +795,13 @@ class SingletonWrapper(Generic[DBRecord]):
         '''Creates a singleton wrapper for the given database.
         The database must already contain its single record.
         '''
-        def updateInstance() -> None:
-            assert len(db) == 1, len(db)
-            # pylint: disable=attribute-defined-outside-init
-            # PyLint does not see that this is called first from the
-            # constructor.
-            self.__record = db['singleton']
-
-        db.preload()
-        updateInstance()
-
-        class Observer(SingletonObserver):
-            def updated(self, record: DBRecord) -> None:
-                updateInstance()
-
-        # TODO: For consistency, this observer must be the first one called
-        #       when the record is updated. This is true for our current
-        #       implementation, but not guaranteed by the interface.
-        db.addObserver(Observer())
+        self.__db = db
 
     def __getattr__(self, name: str) -> object:
-        return getattr(self.__record, name)
+        return getattr(self.__db['singleton'], name)
 
     def __getitem__(self, name: str) -> object:
-        return self.__record[name]
+        return self.__db['singleton'][name]
 
 # Regular expression with defines all valid wrapper variable names.
 # Under UNIX-like systems, the only universal rule is that a name cannot be

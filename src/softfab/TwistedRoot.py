@@ -101,44 +101,12 @@ class DatabaseLoader:
 
     def process(self) -> Iterator[None]:
         for db in iterDatabases():
-            description = db.description
-            failedRecordCount = 0
-            startupMessages.addMessage(f'Loading {description} database')
-            # Sorting the keys makes it more likely that records that will be
-            # used around the same time are close together in memory as well.
-            keys = sorted(db.keys())
-            yield None # sorting might take a while for big DBs
-            recordIndex = 0
-            dbLen = len(keys)
-            while recordIndex < dbLen:
-                recordEnd = min(recordIndex + self.recordChunks, dbLen)
-                for key in keys[recordIndex : recordEnd]:
-                    try:
-                        # We only call this method for its side effect:
-                        # caching of the loaded record.
-                        db[key]
-                    except Exception:
-                        # Log a small number of exceptions per DB.
-                        # If there are more exceptions, it is likely the
-                        # same problem repeated again and again; no point
-                        # in flooding the log file.
-                        if failedRecordCount < 3:
-                            startupLogger.exception(
-                                'Failed to load record from %s database',
-                                description
-                                )
-                        failedRecordCount += 1
-                recordIndex = recordEnd
-                startupMessages.replaceMessage(
-                    f'Loading {description} database, '
-                    f'record {recordIndex:d} / {dbLen:d}'
-                    )
-                yield None
-            if failedRecordCount != 0:
-                startupLogger.error(
-                    'Failed to load %d of %d records from %s database',
-                    failedRecordCount, dbLen, description
-                    )
+            startupMessages.addMessage(f'Loading {db.description} database')
+            db._prepareLoad()
+            for idx, dummy_ in enumerate(db._iterLoad(startupLogger)):
+                if idx % self.recordChunks == 0:
+                    yield None
+            db._postLoad()
 
 class PageLoader:
 

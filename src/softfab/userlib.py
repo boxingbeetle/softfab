@@ -428,8 +428,8 @@ class UserDB(Database['UserInfo']):
         """
         return sum(user.isActive() for user in self)
 
-    def preload(self) -> None:
-        super().preload()
+    def _postLoad(self) -> None:
+        super()._postLoad()
 
         # Create admin account if database is empty.
         if len(self) == 0:

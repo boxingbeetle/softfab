@@ -23,8 +23,8 @@ class ResTypeDB(VersionedDatabase['ResType']):
     description = 'resource type'
     uniqueKeys = ( 'name', )
 
-    def preload(self) -> None:
-        super().preload()
+    def _postLoad(self) -> None:
+        super()._postLoad()
 
         if taskRunnerResourceTypeName not in self:
             self.add(ResType.create(

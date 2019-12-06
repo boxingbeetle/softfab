@@ -33,6 +33,7 @@ def reloadDatabases() -> None:
     # !!! NOTE: The order of reloading is very important:
     # dependent modules must be reloaded AFTER their dependencies
     # TODO: Automate this.
+    reload(projectlib)
     reload(tokens)
     reload(userlib)
     reload(restypelib)
@@ -47,5 +48,4 @@ def reloadDatabases() -> None:
     reload(schedulelib)
 
     for db in iterDatabases():
-        if db is not projectlib._projectDB: # pylint: disable=protected-access
-            db.preload()
+        db.preload()
