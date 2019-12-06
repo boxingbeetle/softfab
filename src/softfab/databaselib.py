@@ -1,12 +1,10 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from abc import ABC
-from collections.abc import ItemsView, ValuesView
 from operator import itemgetter
 from typing import (
-    Callable, ClassVar, Dict, FrozenSet, Generic, ItemsView as ItemsViewT,
-    Iterator, KeysView as KeysViewT, List, Mapping, Optional, Sequence, Set,
-    TypeVar, ValuesView as ValuesViewT, cast
+    Callable, ClassVar, Dict, FrozenSet, Generic, Iterable, Iterator, KeysView,
+    List, Mapping, Optional, Sequence, Set, Tuple, TypeVar, cast
 )
 import logging
 import os
@@ -18,12 +16,6 @@ from softfab.config import dbAtomicWrites, logChanges
 from softfab.utils import Comparable, abstract, atomicWrite, cachedProperty
 from softfab.xmlbind import parse
 from softfab.xmlgen import XML
-
-# TODO: Use weakref.WeakValueDictionary to ensure value objects which are
-#       dropped from the cache but still in use elsewhere returned the next
-#       time the corresponding key is requested.
-#       This seems straightforward, but has a lot of messy details, so it needs
-#       additional unit tests to verify its behaviour.
 
 # Automatically convert non-versioned DB directory to versioned if
 # a VersionedDatabase class uses it.
@@ -201,13 +193,6 @@ class Database(Generic[DBRecord], RecordSubjectMixin[DBRecord], ABC):
     # Describes the type of records contained in this database.
     description: ClassVar[str] = abstract
 
-    # Indicates whether this database is kept in memory at all times.
-    alwaysInMemory = True
-
-    # Indicates whether during conversion the loaded records can be discarded
-    # or have to remain in memory.
-    keepInMemoryDuringConversion = False
-
     # Lists the column keys that are unique: every record will have a different
     # value for the listed keys.
     uniqueKeys: Sequence[str] = ()
@@ -246,13 +231,7 @@ class Database(Generic[DBRecord], RecordSubjectMixin[DBRecord], ABC):
 
     def __init__(self) -> None:
         super().__init__()
-        if not os.path.exists(self.baseDir):
-            os.makedirs(self.baseDir)
-        cache: Dict[str, Optional[DBRecord]] = {}
-        for fileName in os.listdir(self.baseDir):
-            if fileName.endswith('.xml'):
-                cache[self._keyForFileName(fileName)] = None
-        self._cache = cache
+        self._cache: Dict[str, DBRecord] = {}
         self.__uniqueValuesFor: Dict[str, Set[object]] = {
             key: set() for key in self.cachedUniqueValues
             }
@@ -261,23 +240,10 @@ class Database(Generic[DBRecord], RecordSubjectMixin[DBRecord], ABC):
         self.__updateFunc = self._update
 
     def __getitem__(self, key: str) -> DBRecord:
-        value = self._cache[key]
-        if value is None:
-            value = cast(DBRecord,
-                         parse(self.factory, self._fileNameForKey(key)))
-            self._register(key, value)
-        return value
+        return self._cache[key]
 
     def __iter__(self) -> Iterator[DBRecord]:
-        # In most databases all records are cached, so make that quick.
-        if self.alwaysInMemory:
-            yield from cast(Iterator[DBRecord], self._cache.values())
-        else:
-            for key, value in self._cache.items():
-                if value is None:
-                    yield self.__getitem__(key)
-                else:
-                    yield value
+        return iter(self._cache.values())
 
     def __len__(self) -> int:
         return len(self._cache)
@@ -326,27 +292,14 @@ class Database(Generic[DBRecord], RecordSubjectMixin[DBRecord], ABC):
         else:
             return None
 
-    def keys(self) -> KeysViewT[str]:
+    def keys(self) -> KeysView[str]:
         return self._cache.keys()
 
-    def values(self) -> ValuesViewT[DBRecord]:
-        if self.alwaysInMemory:
-            # All values are in the cache.
-            return cast(ValuesViewT[DBRecord], self._cache.values())
-        else:
-            # Load items as they are iterated through.
-            # TODO: If you're going to iterate through all items, why not
-            #       keep the database in memory at all times?
-            #       Maybe we should have separate classes for preloaded and
-            #       not preloaded databases, since in practice they support
-            #       different operations.
-            return _CachedValuesView(self._cache, self.__getitem__)
+    def values(self) -> Iterable[DBRecord]:
+        return self._cache.values()
 
-    def items(self) -> ItemsViewT[str, DBRecord]:
-        if self.alwaysInMemory:
-            return cast(ItemsViewT[str, DBRecord], self._cache.items())
-        else:
-            return _CachedItemsView(self._cache, self.__getitem__)
+    def items(self) -> Iterable[Tuple[str, DBRecord]]:
+        return self._cache.items()
 
     def uniqueValues(self, column: str) -> FrozenSet[object]:
         '''Returns an immutable set containing all unique values in `column`.
@@ -478,8 +431,27 @@ class Database(Generic[DBRecord], RecordSubjectMixin[DBRecord], ABC):
         self._notifyUpdated(value)
 
     def preload(self) -> None:
-        for key in self.keys():
-            self.__getitem__(key)
+        """Load all records in this database into memory.
+
+        Also ensures that the database directory exists.
+
+        Subclasses that automatically create predefined records should do
+        so by overriding this method and creating the records after the
+        superclass method call.
+        """
+
+        # Make sure that we're not preloading twice.
+        assert len(self._cache) == 0, self.description
+
+        if not os.path.exists(self.baseDir):
+            os.makedirs(self.baseDir)
+
+        for fileName in os.listdir(self.baseDir):
+            if fileName.endswith('.xml'):
+                key = self._keyForFileName(fileName)
+                value = cast(DBRecord,
+                             parse(self.factory, self._fileNameForKey(key)))
+                self._register(key, value)
 
     def convert(self, visitor: Optional[Callable[[DBRecord], None]] = None) \
             -> None:
@@ -515,10 +487,6 @@ class Database(Generic[DBRecord], RecordSubjectMixin[DBRecord], ABC):
                     except ObsoleteRecordError:
                         logging.warning('Removing obsolete record: %s', key)
                         self.remove(value)
-                    if not self.keepInMemoryDuringConversion:
-                        # Do not keep value in memory.
-                        value._unload() # pylint: disable=protected-access
-                        self._cache[key] = None
         except Exception:
             logging.exception('Exception while processing record: %s', key)
             raise
@@ -572,35 +540,16 @@ class VersionedDatabase(Database[DBRecord]):
                             )
 
         Database.__init__(self)
-
-        latestVersionOf: Dict[str, str] = {}
-        for versionedKey in self._cache:
-            key, version = versionedKey.split('|')
-            latest = latestVersionOf.get(key)
-            if latest is None or version > latest[-self.versionDigits : ]:
-                latestVersionOf[key] = versionedKey
-
-        removedRecords = {}
-        for fileName in os.listdir(self.baseDir):
-            if fileName.endswith('.removed'):
-                key = fileName[ : -len('.removed')]
-                removedRecords[key] = latestVersionOf[key]
-                del latestVersionOf[key]
-
-        self.__latestVersionOf = latestVersionOf
-        self.__removedRecords = removedRecords
+        self.__latestVersionOf: Dict[str, str] = {}
+        self.__removedRecords: Dict[str, str] = {}
 
     def __getitem__(self, key: str) -> DBRecord:
-        # Test the most common path first: key includes version and is cached.
-        value = self._cache.get(key)
-        if value is not None:
-            return value
-
-        value = self.get(key)
-        if value is None:
-            raise KeyError(key)
-        else:
-            return value
+        try:
+            # Test the most common path first: key includes version.
+            return self._cache[key]
+        except KeyError:
+            # Look up unversioned key.
+            return self._cache[self.__latestVersionOf[key]]
 
     def __iter__(self) -> Iterator[DBRecord]:
         for versionedKey in self.__latestVersionOf.values():
@@ -658,16 +607,7 @@ class VersionedDatabase(Database[DBRecord]):
         """Get a specific version of a record.
         Raises KeyError if the key does not exist.
         """
-        assert '|' in versionedKey, versionedKey
-        value = self._cache[versionedKey]
-        if value is None:
-            # Key exists, but was not cached yet.
-            value = cast(
-                DBRecord,
-                parse(self.factory, self._fileNameForKey(versionedKey))
-                )
-            self._register(versionedKey, value)
-        return value
+        return self._cache[versionedKey]
 
     _getValueToConvert = getVersion
 
@@ -676,14 +616,20 @@ class VersionedDatabase(Database[DBRecord]):
         """
         return self.__latestVersionOf.get(key)
 
-    def keys(self) -> KeysViewT[str]:
+    def keys(self) -> KeysView[str]:
         return self.__latestVersionOf.keys()
 
-    def values(self) -> ValuesViewT[DBRecord]:
-        return _IndirectValuesView(self.__latestVersionOf, self.getVersion)
+    def values(self) -> Iterable[DBRecord]:
+        return (
+            self.getVersion(versionedKey)
+            for versionedKey in self.__latestVersionOf.values()
+            )
 
-    def items(self) -> ItemsViewT[str, DBRecord]:
-        return _IndirectItemsView(self.__latestVersionOf, self.getVersion)
+    def items(self) -> Iterable[Tuple[str, DBRecord]]:
+        return (
+            (key, self.getVersion(versionedKey))
+            for key, versionedKey in self.__latestVersionOf.items()
+            )
 
     def add(self, value: DBRecord) -> None:
         key = value.getId()
@@ -747,69 +693,24 @@ class VersionedDatabase(Database[DBRecord]):
         _changeLogger.info('datachange/%s/update/%s', self.name, versionedKey)
         self._notifyUpdated(value)
 
-class _CachedValuesView(ValuesView):
-    '''A view on mapping values that returns cached values when available.
-    '''
+    def preload(self) -> None:
+        super().preload()
 
-    __slots__ = '_lookup',
+        latestVersionOf: Dict[str, str] = {}
+        for versionedKey in self._cache:
+            key, version = versionedKey.split('|')
+            latest = latestVersionOf.get(key)
+            if latest is None or version > latest[-self.versionDigits : ]:
+                latestVersionOf[key] = versionedKey
+        self.__latestVersionOf = latestVersionOf
 
-    def __init__(self, mapping, lookup):
-        ValuesView.__init__(self, mapping)
-        self._lookup = lookup
-
-    def __iter__(self):
-        lookup = self._lookup
-        for key, value in self._mapping.items():
-            if value is None:
-                value = lookup(key)
-            yield value
-
-class _CachedItemsView(ItemsView):
-    '''A view on mapping items that returns cached values when available.
-    '''
-
-    __slots__ = '_lookup',
-
-    def __init__(self, mapping, lookup):
-        ItemsView.__init__(self, mapping)
-        self._lookup = lookup
-
-    def __iter__(self):
-        lookup = self._lookup
-        for key, value in self._mapping.items():
-            if value is None:
-                value = lookup(key)
-            yield key, value
-
-class _IndirectValuesView(ValuesView):
-    '''A view on mapping values that passes values through a lookup function.
-    '''
-
-    __slots__ = '_lookup',
-
-    def __init__(self, mapping, lookup):
-        ValuesView.__init__(self, mapping)
-        self._lookup = lookup
-
-    def __iter__(self):
-        lookup = self._lookup
-        for value in self._mapping.values():
-            yield lookup(value)
-
-class _IndirectItemsView(ItemsView):
-    '''A view on mapping items that passes values through a lookup function.
-    '''
-
-    __slots__ = '_lookup',
-
-    def __init__(self, mapping, lookup):
-        ItemsView.__init__(self, mapping)
-        self._lookup = lookup
-
-    def __iter__(self):
-        lookup = self._lookup
-        for key, value in self._mapping.items():
-            yield key, lookup(value)
+        removedRecords = {}
+        for fileName in os.listdir(self.baseDir):
+            if fileName.endswith('.removed'):
+                key = fileName[ : -len('.removed')]
+                removedRecords[key] = latestVersionOf[key]
+                del latestVersionOf[key]
+        self.__removedRecords = removedRecords
 
 class SingletonElem(DatabaseElem):
     '''Base class for singleton records, meaning record which are by definition
@@ -849,12 +750,13 @@ class SingletonWrapper(Generic[DBRecord]):
         The database must already contain its single record.
         '''
         def updateInstance() -> None:
-            assert len(db) == 1
+            assert len(db) == 1, len(db)
             # pylint: disable=attribute-defined-outside-init
             # PyLint does not see that this is called first from the
             # constructor.
             self.__record = db['singleton']
 
+        db.preload()
         updateInstance()
 
         class Observer(SingletonObserver):

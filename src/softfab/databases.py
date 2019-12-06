@@ -29,11 +29,6 @@ def iterDatabases() -> Iterator[databaselib.Database]:
     yield userlib.userDB
     yield tokens.tokenDB
 
-def iterDatabasesToPreload() -> Iterator[databaselib.Database]:
-    for db in iterDatabases():
-        if db.alwaysInMemory:
-            yield db
-
 def reloadDatabases() -> None:
     # !!! NOTE: The order of reloading is very important:
     # dependent modules must be reloaded AFTER their dependencies
@@ -51,5 +46,6 @@ def reloadDatabases() -> None:
     reload(configlib)
     reload(schedulelib)
 
-    for db in iterDatabasesToPreload():
-        db.preload()
+    for db in iterDatabases():
+        if db is not projectlib._projectDB: # pylint: disable=protected-access
+            db.preload()

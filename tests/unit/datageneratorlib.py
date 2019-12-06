@@ -1,11 +1,11 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from io import StringIO
-import os, os.path, random
+import random
 
 from softfab import (
     configlib, frameworklib, productdeflib, resourcelib, restypelib,
-    taskdeflib, userlib, xmlbind
+    taskdeflib, xmlbind
     )
 from softfab.resreq import ResourceSpec
 

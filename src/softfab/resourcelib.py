@@ -809,11 +809,9 @@ def recomputeRunning() -> None:
     '''
     # pylint: disable=protected-access
     # The methods are protected on purpose, because no-one else should use them.
-    resourceDB.preload()
     for runner in iterTaskRunners():
         runner._resetRuns()
 
-    taskRunDB.preload()
     for run in taskRunDB:
         if run.isRunning():
             runnerId = run.getTaskRunnerId()

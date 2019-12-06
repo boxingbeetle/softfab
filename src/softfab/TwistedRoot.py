@@ -24,7 +24,7 @@ from softfab.artifacts import createArtifactRoots
 from softfab.authentication import DisabledAuthPage, NoAuthPage, TokenAuthPage
 from softfab.compat import importlib_resources
 from softfab.config import dbDir
-from softfab.databases import iterDatabasesToPreload
+from softfab.databases import iterDatabases
 from softfab.docserve import DocPage, DocResource
 from softfab.pageargs import PageArgs
 from softfab.render import NotFoundPage, renderAuthenticated
@@ -100,7 +100,7 @@ class DatabaseLoader:
         self.root = root
 
     def process(self) -> Iterator[None]:
-        for db in iterDatabasesToPreload():
+        for db in iterDatabases():
             description = db.description
             failedRecordCount = 0
             startupMessages.addMessage(f'Loading {description} database')

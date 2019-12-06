@@ -68,12 +68,14 @@ class TestTRDatabase(unittest.TestCase):
 
         # Check if cache and database are in sync:
         reload(resourcelib)
+        resourcelib.resourceDB.preload()
         record2 = resourcelib.resourceDB[record1.getId()]
         self.assertEqual(record1._properties, record2._properties)
         # Change data in database.
         # Check if cache and database are still in sync:
         record1.sync(data2)
         reload(resourcelib)
+        resourcelib.resourceDB.preload()
         record2 = resourcelib.resourceDB[record1.getId()]
         self.assertEqual(record1._properties, record2._properties)
 
@@ -133,6 +135,7 @@ class TestTRDatabase(unittest.TestCase):
 
         # Check if status 'unknown' is returned after a cache flush:
         reload(resourcelib)
+        resourcelib.resourceDB.preload()
         record = resourcelib.resourceDB[record.getId()]
         self.assertEqual(getResourceStatus(record), 'unknown')
         # Check that (un)pausing the TR changes the status:

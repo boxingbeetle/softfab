@@ -89,7 +89,16 @@ class ProjectDB(Database['Project']):
     factory = ProjectFactory()
     privilegeObject = 'p'
     description = 'project configuration'
-    keepInMemoryDuringConversion = True
+
+    def preload(self) -> None:
+        super().preload()
+
+        # Create singleton record if it doesn't exist already.
+        if len(self) == 0:
+            project = Project({'name': 'Nameless'})
+            project.updateVersion()
+            self.add(project)
+
 _projectDB = ProjectDB()
 
 class Project(XMLTag, SingletonElem):
@@ -247,13 +256,6 @@ class Project(XMLTag, SingletonElem):
         else:
             assert False, embed
             return "'none'"
-
-# Create singleton record if it doesn't exist already.
-if len(_projectDB) == 0:
-    _project = Project( { 'name': 'Nameless' } )
-    _project.updateVersion()
-    _projectDB.add(_project)
-    del _project
 
 # Note: SingletonWrapper is not a Project, but mimics it closely.
 project = cast(Project, SingletonWrapper(_projectDB))

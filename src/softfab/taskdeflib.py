@@ -106,7 +106,3 @@ class TaskDef(frameworklib.TaskDefBase):
         yield xml.title[ self.__title ]
         yield xml.description[ self.__description ]
         yield self._tagsAsXML()
-
-# Force loading of DB, so TagCache is filled with all existing tag values.
-# TODO: Is there an alternative for taskDefDB.preload()?
-taskDefDB.preload()

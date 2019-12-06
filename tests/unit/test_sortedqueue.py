@@ -3,7 +3,7 @@
 from softfab.databaselib import Database, DatabaseElem
 from softfab.sortedqueue import SortedQueue
 from softfab.xmlgen import xml
-import os, os.path, random, unittest
+import os, os.path, unittest
 
 class Record(DatabaseElem):
     "Minimal implementation of DatabaseElem."
@@ -63,6 +63,7 @@ class TestSortedQueue(unittest.TestCase):
     def setUp(self):
         assert not os.path.exists(DB.baseDir)
         self.db = db = DB()
+        db.preload()
         self.observer = observer = Observer()
         self.queue = queue = EvenQueue(db)
         queue.addObserver(observer)

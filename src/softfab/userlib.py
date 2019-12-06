@@ -411,6 +411,9 @@ class UserInfoFactory:
     def createUser(attributes: Mapping[str, str]) -> 'UserInfo':
         return UserInfo(attributes)
 
+adminUserName = 'admin'
+adminDefaultPassword = 'admin'
+
 class UserDB(Database['UserInfo']):
     baseDir = dbDir + '/users'
     factory = UserInfoFactory()
@@ -424,6 +427,13 @@ class UserDB(Database['UserInfo']):
         that are no longer allowed to login.
         """
         return sum(user.isActive() for user in self)
+
+    def preload(self) -> None:
+        super().preload()
+
+        # Create admin account if database is empty.
+        if len(self) == 0:
+            addUserAccount(adminUserName, adminDefaultPassword, ( 'operator', ))
 
 userDB = UserDB()
 
@@ -557,10 +567,3 @@ def checkPrivilegeForOwned(
         raise AccessDenied()
     else:
         raise AccessDenied(text)
-
-adminUserName = 'admin'
-adminDefaultPassword = 'admin'
-
-# Create admin account if database is empty.
-if len(userDB) == 0:
-    addUserAccount(adminUserName, adminDefaultPassword, ( 'operator', ))

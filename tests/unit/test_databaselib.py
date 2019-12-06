@@ -79,19 +79,19 @@ class BasicTests:
             baseDir = self.dbDir
             factory = recordFactory
             description = 'test'
-            alwaysInMemory = False
             privilegeObject = 'x' # dummy
             if keyChecker is not None:
                 def _customCheckId(self, key):
                     keyChecker(key)
         db = DB()
+        db.preload()
         observer = Observer()
         db.addObserver(observer)
         return db, observer
 
     def checkEmpty(self, db):
         "Check that given database has no records."
-        self.assertTrue(len(db) == 0, len(db))
+        self.assertEqual(len(db), 0)
         self.assertRaises(KeyError, lambda: db[self.record.getId()])
         self.assertEqual(db.get(self.record.getId()), None)
         self.assertEqual(len(list(db.keys())), 0)
@@ -102,7 +102,7 @@ class BasicTests:
 
     def checkOne(self, db):
         "Check that given database has one record."
-        self.assertTrue(len(db) == 1, len(db))
+        self.assertEqual(len(db), 1)
         self.assertEqual(db[self.record.getId()], self.record)
         self.assertEqual(db.get(self.record.getId()), self.record)
         self.assertEqual(

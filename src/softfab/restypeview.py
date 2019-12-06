@@ -7,6 +7,7 @@ import attr
 from softfab.restypelib import (
     ResType, repoResourceTypeName, resTypeDB, taskRunnerResourceTypeName
 )
+from softfab.utils import cachedProperty
 from softfab.webgui import Column
 from softfab.xmlgen import XMLContent, XMLNode
 
@@ -15,9 +16,10 @@ from softfab.xmlgen import XMLContent, XMLNode
 class ResourceTypeInfo:
     name: str
     editPage: str
-    record: ResType = attr.ib(init=False)
-    def __attrs_post_init__(self) -> None:
-        object.__setattr__(self, 'record', resTypeDB[self.name])
+
+    @cachedProperty
+    def record(self) -> ResType:
+        return resTypeDB[self.name]
 
 reservedTypes = (
     ResourceTypeInfo(

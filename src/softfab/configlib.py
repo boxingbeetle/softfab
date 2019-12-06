@@ -589,7 +589,3 @@ def iterConfigsByTag(key: str, value: str) -> Iterator[Config]:
     for config in configDB:
         if config.hasTagValue(key, cvalue):
             yield config
-
-# Force loading of DB, so TagCache is filled with all existing tag values.
-# TODO: Is there an alternative?
-configDB.preload()

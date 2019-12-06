@@ -13,12 +13,28 @@ class ResTypeFactory:
     def createRestype(attributes: Mapping[str, str]) -> 'ResType':
         return ResType(attributes)
 
+taskRunnerResourceTypeName = 'sf.tr'
+repoResourceTypeName = 'sf.repo'
+
 class ResTypeDB(VersionedDatabase['ResType']):
     baseDir = dbDir + '/restypes'
     factory = ResTypeFactory()
     privilegeObject = 'rt'
     description = 'resource type'
     uniqueKeys = ( 'name', )
+
+    def preload(self) -> None:
+        super().preload()
+
+        if taskRunnerResourceTypeName not in self:
+            self.add(ResType.create(
+                taskRunnerResourceTypeName, pertask=True, perjob=False
+                ))
+
+        if repoResourceTypeName not in self:
+            self.add(ResType.create(
+                repoResourceTypeName, pertask=False, perjob=False
+                ))
 
 resTypeDB = ResTypeDB()
 
@@ -81,16 +97,3 @@ class ResType(XMLTag, DatabaseElem):
     def _getContent(self) -> XMLContent:
         if self.__description:
             yield xml.description[ self.__description ]
-
-taskRunnerResourceTypeName = 'sf.tr'
-repoResourceTypeName = 'sf.repo'
-
-if taskRunnerResourceTypeName not in resTypeDB:
-    resTypeDB.add(ResType.create(
-        taskRunnerResourceTypeName, pertask=True, perjob=False
-        ))
-
-if repoResourceTypeName not in resTypeDB:
-    resTypeDB.add(ResType.create(
-        repoResourceTypeName, pertask=False, perjob=False
-        ))
