@@ -4,14 +4,13 @@ import unittest
 from importlib import reload
 from io import StringIO
 
-from initconfig import config
-
-from datageneratorlib import removeRec
+from initconfig import removeDB
 
 from softfab import resourcelib, xmlbind
 from softfab.databases import reloadDatabases
 from softfab.resourceview import getResourceStatus
 from softfab.timelib import setTime
+
 
 class DataFactory:
     """Factory for TaskRunnerData class."""
@@ -39,7 +38,7 @@ class TestTRDatabase(unittest.TestCase):
         assert len(resourcelib.resourceDB) == 0
 
     def tearDown(self):
-        removeRec(config.dbDir)
+        removeDB()
 
     def suspendTest(self, data):
         """Test suspend functionality."""

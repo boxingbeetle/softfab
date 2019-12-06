@@ -2,11 +2,10 @@
 
 import os, unittest
 
-from initconfig import config
-
-from datageneratorlib import removeRec
+from initconfig import config, removeDB
 
 from softfab import resultlib
+
 
 class TestResults(unittest.TestCase):
     """Test result storage and processing functionality.
@@ -28,7 +27,7 @@ class TestResults(unittest.TestCase):
         pass
 
     def tearDown(self):
-        removeRec(config.dbDir)
+        removeDB()
 
     def test0010PutGet(self):
         "Test whether data can be stored and retrieved."
@@ -65,7 +64,7 @@ class TestResults(unittest.TestCase):
             self.assertEqual(list(results), [])
 
         # This test case is atypical by not storing anything.
-        # Make sure removeRec doesn't complain that the dir does not exist.
+        # Make sure removeDB doesn't complain that the dir does not exist.
         os.makedirs(config.dbDir)
 
     def test0030Replace(self):
@@ -119,7 +118,7 @@ class TestResults(unittest.TestCase):
         self.assertEqual(resultlib.getCustomKeys(self.taskName), set())
 
         # This test case is atypical by not storing anything.
-        # Make sure removeRec doesn't complain that the dir does not exist.
+        # Make sure removeDB doesn't complain that the dir does not exist.
         os.makedirs(config.dbDir)
 
 if __name__ == '__main__':

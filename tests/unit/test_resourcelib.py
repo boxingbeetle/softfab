@@ -6,11 +6,10 @@ test_resource_requirements suite.
 
 import unittest
 
-from initconfig import config
+from initconfig import removeDB
 
 from softfab import databases, resourcelib
 
-from datageneratorlib import removeRec
 
 def resourcesOfType(typeName):
     return sorted(resourcelib.resourceDB.resourcesOfType(typeName))
@@ -28,7 +27,7 @@ class TestResources(unittest.TestCase):
         self.reloadDatabases()
 
     def tearDown(self):
-        removeRec(config.dbDir)
+        removeDB()
 
     def test0100ResourcesOfType(self):
         """Test resourceDB.resourcesOfType() method."""

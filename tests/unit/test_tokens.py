@@ -4,10 +4,10 @@ import unittest
 
 from twisted.cred.error import UnauthorizedLogin
 
-from initconfig import config
+from initconfig import removeDB
 
 from softfab import databases, tokens
-from datageneratorlib import removeRec
+
 
 class TestTokens(unittest.TestCase):
     """Test access tokens."""
@@ -22,7 +22,7 @@ class TestTokens(unittest.TestCase):
         self.reloadDatabases()
 
     def tearDown(self):
-        removeRec(config.dbDir)
+        removeDB()
 
     def test0100Params(self):
         """Test token parameters."""

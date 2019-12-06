@@ -2,7 +2,7 @@
 
 import os, os.path, random, time, unittest
 
-from initconfig import config
+from initconfig import config, removeDB
 
 from softfab import databaselib
 from softfab.xmlgen import xml
@@ -72,10 +72,7 @@ class BasicTests:
         assert not os.path.exists(self.dbDir)
 
     def tearDown(self):
-        prefix = self.dbDir + '/'
-        for file in os.listdir(self.dbDir):
-            os.remove(prefix + file)
-        os.rmdir(self.dbDir)
+        removeDB()
 
     def createDB(self, recordFactory=RecordFactory(), keyChecker=None):
         class DB(self.dbClass):

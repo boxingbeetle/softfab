@@ -2,17 +2,17 @@
 
 import unittest
 
-from initconfig import config
+from initconfig import removeDB
 
 from softfab import databases
 from softfab import configlib, resourcelib, restypelib
-from softfab.resreq import ResourceSpec, taskRunnerResourceRefName
+from softfab.resreq import taskRunnerResourceRefName
 from softfab.restypelib import taskRunnerResourceTypeName
 from softfab.resultcode import ResultCode
 from softfab.timelib import setTime
-from softfab.utils import IllegalStateError
 
-from datageneratorlib import removeRec, DataGenerator
+from datageneratorlib import DataGenerator
+
 
 OWNER = 'Maggy'
 
@@ -35,7 +35,7 @@ class TestResourceRequirements(unittest.TestCase):
         self.reloadDatabases()
 
     def tearDown(self):
-        removeRec(config.dbDir)
+        removeDB()
 
     def reloadDatabases(self):
         databases.reloadDatabases()

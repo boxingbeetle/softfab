@@ -9,17 +9,6 @@ from softfab import (
     )
 from softfab.resreq import ResourceSpec
 
-def removeRec(path):
-    """Removes a directory and the files it contains, recursively.
-    """
-    if os.path.isfile(path):
-        os.remove(path)
-    elif os.path.isdir(path):
-        for file in os.listdir(path):
-            removeRec(path + '/' + file)
-        os.rmdir(path)
-    else:
-        assert False, path
 
 def _addResources(record, resources):
     if resources is not None:

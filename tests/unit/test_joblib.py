@@ -2,7 +2,7 @@
 
 import random, unittest
 
-from initconfig import config
+from initconfig import removeDB
 
 from softfab import databases
 from softfab import configlib, resourcelib, taskgroup
@@ -10,7 +10,7 @@ from softfab.resultcode import ResultCode
 from softfab.timelib import setTime
 from softfab.utils import IllegalStateError
 
-from datageneratorlib import removeRec, DataGenerator
+from datageneratorlib import DataGenerator
 
 def locatorForTask(taskId):
     return 'dummylocator@' + taskId
@@ -45,7 +45,7 @@ class TestJobs(unittest.TestCase):
         self.reloadDatabases()
 
     def tearDown(self):
-        removeRec(config.dbDir)
+        removeDB()
 
     def reloadDatabases(self):
         databases.reloadDatabases()

@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from initconfig import config as cfg
+from initconfig import removeDB
 
-from datageneratorlib import removeRec, DataGenerator
+from datageneratorlib import DataGenerator
 
 from softfab import (
     databases, configlib, joblib, resourcelib, schedulelib, scheduleview
@@ -15,6 +15,7 @@ from softfab.timeview import formatTime
 
 import time, unittest
 from heapq import heappush, heappop
+
 
 class DummyReactor:
     '''Dummy replacement for Twisted's reactor.
@@ -139,7 +140,7 @@ class ScheduleFixtureMixin:
         self.__suspended = None
 
     def tearDown(self):
-        removeRec(cfg.dbDir)
+        removeDB()
 
     def reloadDatabases(self):
         databases.reloadDatabases()
