@@ -213,7 +213,7 @@ def ape(c, host='localhost', port=8180, dbdir='run', results=None):
         cmd += ['--result', str(Path(results).resolve())]
         report_dir = Path(results).parent.resolve()
     report = report_dir / 'ape-report.html'
-    cmd += [f'http://localhost:{port}/', str(report)]
+    cmd += [f'http://{host}:{port}/', str(report)]
     with c.cd(str(TOP_DIR)):
         c.run(' '.join(cmd), pty=results is None)
     if results is not None:
