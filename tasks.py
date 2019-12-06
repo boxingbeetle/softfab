@@ -198,6 +198,7 @@ def run(c, dbdir='run', auth=False, coverage=False):
 
 @task
 def ape(c, host='localhost', port=8180, dbdir='run', results=None):
+    """Test the Control Center using APE."""
     db_path = Path(dbdir)
     if not db_path.is_absolute():
         db_path = TOP_DIR / db_path
