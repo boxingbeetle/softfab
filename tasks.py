@@ -8,6 +8,7 @@ SRC_DIR = TOP_DIR / 'src'
 SRC_ENV = {'PYTHONPATH': str(SRC_DIR)}
 PYLINT_DIR = TOP_DIR / 'tests' / 'pylint'
 PYLINT_ENV = {'PYTHONPATH': f'{SRC_DIR}:{PYLINT_DIR}'}
+BUILD_DIR = TOP_DIR / 'build'
 
 mypy_report = 'mypy-report'
 
@@ -218,3 +219,19 @@ def ape(c, host='localhost', port=8180, dbdir='run', results=None):
         c.run(' '.join(cmd), pty=results is None)
     if results is not None:
         write_results({'report': str(report)}, results, append=True)
+
+@task
+def apidocs(c):
+    """Generate documentation as HTML files."""
+    api_dir = BUILD_DIR / 'apidocs'
+    remove_dir(api_dir)
+    BUILD_DIR.mkdir()
+    cmd = [
+        'pydoctor', '--make-html',
+        f'--html-output={api_dir}',
+        f'--add-package={SRC_DIR}/softfab',
+        f'--project-name=SoftFab',
+        f'--project-url=https://softfab.io/',
+        ]
+    with c.cd(str(TOP_DIR)):
+        c.run(' '.join(cmd))
