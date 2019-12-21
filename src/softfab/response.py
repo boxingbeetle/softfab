@@ -63,25 +63,16 @@ class Response:
     def finish(self) -> None:
         request = self.__request
 
-        # Cache control was introduced in HTTP 1.1.
-        cacheControl = request.clientproto != 'HTTP/1.0'
-
-        if not cacheControl:
-            # Play it safe and ask for no caching.
-            request.setHeader('Pragma', 'no-cache')
-
         if self.__buffer is None:
             # Body was not buffered; this is a stream.
-            if cacheControl:
-                request.setHeader('Cache-Control', 'no-cache')
+            request.setHeader('Cache-Control', 'no-cache')
             return
 
-        if cacheControl:
-            # Tell cache that this is private data and that it can be cached,
-            # but must be revalidated every time.
-            request.setHeader(
-                'Cache-Control', 'private, must-revalidate, max-age=0'
-                )
+        # Tell cache that this is private data and that it can be cached,
+        # but must be revalidated every time.
+        request.setHeader(
+            'Cache-Control', 'private, must-revalidate, max-age=0'
+            )
 
         request.setHeader(
             'Content-Security-Policy',
@@ -252,7 +243,7 @@ class Response:
         # Set HTTP headers for redirect.
         # Response code 303 specifies the way most existing clients incorrectly
         # handle 302 (see RFC-2616 section 10.3.3).
-        self.setStatus(303 if self.__request.clientproto == 'HTTP/1.1' else 302)
+        self.setStatus(303)
         # RFC-7231 section 7.1.2 allows relative URLs in the Location header.
         self.__request.setHeader('location', url.encode())
 
