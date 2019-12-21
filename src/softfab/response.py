@@ -5,7 +5,6 @@ from gzip import GzipFile
 from hashlib import md5
 from io import BytesIO
 from typing import AnyStr, Callable, Optional, Union
-from urllib.parse import urljoin
 
 from twisted.internet import reactor
 from twisted.internet.defer import Deferred
@@ -250,14 +249,12 @@ class Response:
         # containing only a query is valid, it is resolved to the parent of
         # the current page, which is not what we want.
         assert not url.startswith('?'), 'page is missing from URL'
-        # The Location header must have an absolute URL as its value (see
-        # RFC-2616 section 14.30).
-        urlBytes = urljoin(self.__request.prePathURL(), url.encode())
         # Set HTTP headers for redirect.
         # Response code 303 specifies the way most existing clients incorrectly
         # handle 302 (see RFC-2616 section 10.3.3).
         self.setStatus(303 if self.__request.clientproto == 'HTTP/1.1' else 302)
-        self.__request.setHeader('location', urlBytes)
+        # RFC-7231 section 7.1.2 allows relative URLs in the Location header.
+        self.__request.setHeader('location', url.encode())
 
     def write(self, *texts: Optional[AnyStr]) -> None:
         writeBytes = self.__writeBytes

@@ -1,7 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from typing import cast
-from urllib.parse import urljoin
 
 from twisted.web.http import Request as TwistedRequest
 from twisted.web.iweb import IRequest
@@ -23,10 +22,7 @@ class PageRedirect(Resource):
         self.page = page
 
     def render(self, request: IRequest) -> bytes:
-        # The Location header must have an absolute URL as its value (see
-        # RFC-2616 section 14.30).
-        url = urljoin(request.prePathURL(), self.page.encode())
-        return redirectTo(url, request)
+        return redirectTo(self.page.encode(), request)
 
     def getChild(self, path: str, request: IRequest) -> Resource:
         return self
