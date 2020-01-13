@@ -1,4 +1,4 @@
 #!/bin/bash
 
-./cckill.sh
-./ccstart.sh
+cckill.sh
+ccstart.sh
