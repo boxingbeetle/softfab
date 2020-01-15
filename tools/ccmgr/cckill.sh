@@ -2,7 +2,7 @@
 
 FACDIR="$PWD"
 FACTORY=`basename "$FACDIR"`
-DBDIR="$FACTORY/db"
+DBDIR="$FACDIR/db"
 PID_FILE="$DBDIR/cc.pid"
 
 KILLED="no"
