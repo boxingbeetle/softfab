@@ -97,7 +97,9 @@ def init(
             # ConfigParser cannot write comments, so we manually format
             # our initial configuration file instead.
             print('[Server]', file=file)
-            print(f'# The URL under which the Control Center is reachable.\n'
+            print(f'# The URL under which the Control Center is accessed '
+                  f'by the end user.\n'
+                  f'# In a reverse proxy setup, enter the public URL here.\n'
                   f'rootURL = {url}',
                   file=file)
             print(f'# Socket to listen to, in Twisted strports format.\n'
