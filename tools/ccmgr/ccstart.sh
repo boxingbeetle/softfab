@@ -28,6 +28,8 @@ if [ -z $VIRTUAL_ENV ]; then
         exit 1
     fi
     source "$FACDIR"/venv/bin/activate
+    METAFILE=`ls "$FACDIR"/venv/lib/python*/site-packages/softfab-*/METADATA`
+    REVISION=`grep "^Version" "$METAFILE" | sed 's/.\++g//'`
 fi
 
 softfab server --dir "$DBDIR" 2> "$LOG_FILE" &
@@ -40,7 +42,7 @@ if [ $? -eq 0 ]; then
         sleep 1
     done
     CC_PID=`cat "$PID_FILE"`
-    echo "CC '$FACTORY' started ($CC_PID)"
+    echo "CC '$FACTORY' revision '$REVISION' started ($CC_PID)"
 else
     echo "Could not launch CC '$FACTORY'"
 fi
