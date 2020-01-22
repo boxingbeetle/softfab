@@ -12,10 +12,9 @@ from softfab.graphview import (
     GraphPageMixin, GraphPanel, canCreateGraphs, createExecutionGraph,
     createLegend, iterConnectedExecutionGraphs
 )
-from softfab.pageargs import PageArgs, StrArg
 from softfab.request import Request
 from softfab.userlib import User, checkPrivilege
-from softfab.webgui import docLink, pageLink
+from softfab.webgui import docLink
 from softfab.xmlgen import XMLContent, xhtml
 
 
@@ -28,9 +27,6 @@ class Design_GET(
     children = [
         'ProductIndex', 'FrameworkIndex', 'TaskIndex', 'ResTypeIndex'
         ]
-
-    class Arguments(PageArgs):
-        show = StrArg('no')
 
     class Processor(PageProcessor['Design_GET.Arguments']):
 
@@ -63,15 +59,13 @@ class Design_GET(
                 graphNodes.append((orphanProducts, set()))
             export = req.getSubPath() is not None
             graphs = []
-            if req.args.show == 'yes':
-                for index, (productIds, frameworkIds) in enumerate(graphNodes):
-                    graphs.append( createExecutionGraph( f'graph{index:d}',
-                        productIds, frameworkIds, export)
-                        )
+            for index, (productIds, frameworkIds) in enumerate(graphNodes):
+                graphs.append( createExecutionGraph( f'graph{index:d}',
+                    productIds, frameworkIds, export)
+                    )
             graphs.append(createLegend(export))
             # pylint: disable=attribute-defined-outside-init
             self.graphs = graphs
-            self.show = req.args.show
 
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'fd/a')
@@ -79,59 +73,26 @@ class Design_GET(
 
     def presentContent(self, **kwargs: object) -> XMLContent:
         proc = cast(Design_GET.Processor, kwargs['proc'])
-        show = proc.args.show
-        if show == 'yes':
-            if len(proc.graphs) == 1: # only containing the Legend
-                yield xhtml.p[
-                    'This factory has no product and framework definitions yet.'
-                    ]
-                yield xhtml.p[
-                    "Please start designing the factory "
-                    'by adding new products and frameworks. '
-                    'Select the "Products" or "Frameworks" button '
-                    'from the navigation bar above.'
-                    ]
-            else:
-                yield xhtml.p[
-                    'Execution graph(s) of the products and frameworks:'
-                    ]
+        if len(proc.graphs) == 1: # only containing the Legend
+            yield xhtml.p[
+                'This factory has no product and framework definitions yet.'
+                ]
+            yield xhtml.p[
+                "Please start designing the factory "
+                'by adding new products and frameworks. '
+                'Select the "Products" or "Frameworks" button '
+                'from the navigation bar above.'
+                ]
+        else:
+            yield xhtml.p[
+                'Execution graph(s) of the products and frameworks:'
+                ]
 
         if canCreateGraphs:
-            if show == 'yes':
-                for index, graph in enumerate(proc.graphs):
-                    if index == len(proc.graphs) - 1:
-                        yield xhtml.h2[ 'Legend' ]
-                    yield GraphPanel.instance.present(graph=graph, **kwargs)
-            else:
-                yield xhtml.p[
-                    pageLink('Design', show='yes')[ 'Execution Graph(s)' ],
-                    ': Show the graph(s) of the products and frameworks and '
-                    'their interconnections.'
-                    ]
-                yield xhtml.hr
-                descriptions = [
-                    ( 'Products', 'ProductIndex',
-                        'Lists all products, create new products or '
-                        'edit existing products.'
-                        ),
-                    ( 'Frameworks', 'FrameworkIndex',
-                        'Lists all frameworks, create new frameworks or '
-                        'edit existing frameworks.'
-                        ),
-                    ( 'Task Definitions', 'TaskIndex',
-                        'Lists all task definitions, '
-                        'create new task definitions or '
-                        'edit existing task definitions.'
-                        ),
-                    ( 'Resources Types', 'ResTypeIndex',
-                        'Lists all resources types, create new resource types '
-                        'or edit existing resource types.'
-                        )
-                    ]
-                yield xhtml.dl(class_='toc')[(
-                    (xhtml.dt[xhtml.a(href=url)[name]], xhtml.dd[descr])
-                    for name, url, descr in descriptions
-                    )]
+            for index, graph in enumerate(proc.graphs):
+                if index == len(proc.graphs) - 1:
+                    yield xhtml.h2[ 'Legend' ]
+                yield GraphPanel.instance.present(graph=graph, **kwargs)
         else:
             yield xhtml.p(class_ = 'notice')[
                 'Graph creation is not available because the server '
