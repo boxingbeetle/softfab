@@ -7,7 +7,7 @@ from typing import Optional, cast
 from xml.etree import ElementTree
 
 from softfab.webgui import Widget
-from softfab.xmlgen import XMLContent, adaptToXML, xhtml
+from softfab.xmlgen import XMLContent, xhtml
 
 svgNamespace = 'http://www.w3.org/2000/svg'
 xlinkNamespace = 'http://www.w3.org/1999/xlink'
@@ -34,7 +34,7 @@ class SVGPanel(Widget):
             return None
         else:
             return xhtml.div(class_ = 'graph')[
-                xhtml.div[ adaptToXML(svg) ],
+                xhtml.div[ svg ],
                 self.presentFooter(**kwargs)
                 ]
 
