@@ -14,6 +14,7 @@ from softfab.graphview import (
 )
 from softfab.request import Request
 from softfab.userlib import User, checkPrivilege
+from softfab.utils import pluralize
 from softfab.webgui import docLink
 from softfab.xmlgen import XMLContent, xhtml
 
@@ -73,7 +74,8 @@ class Design_GET(
 
     def presentContent(self, **kwargs: object) -> XMLContent:
         proc = cast(Design_GET.Processor, kwargs['proc'])
-        if len(proc.graphs) == 1: # only containing the Legend
+        numGraphs = len(proc.graphs) - 1 # subtract the legend
+        if numGraphs == 0:
             yield xhtml.p[
                 'This factory has no product and framework definitions yet.'
                 ]
@@ -85,7 +87,8 @@ class Design_GET(
                 ]
         else:
             yield xhtml.p[
-                'Execution graph(s) of the products and frameworks:'
+                f"Execution {pluralize('graph', numGraphs)} of "
+                f"the products and frameworks:"
                 ]
 
         if canCreateGraphs:
