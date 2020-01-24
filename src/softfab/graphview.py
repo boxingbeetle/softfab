@@ -307,14 +307,6 @@ def createExecutionGraphBuilder(name: str,
         (frameworkDB[frameworkId] for frameworkId in frameworkIds)
         )
 
-def createExecutionGraph(name: str,
-                         productIds: Iterable[str],
-                         frameworkIds: Iterable[str],
-                         export: bool
-                         ) -> Graph:
-    builder = createExecutionGraphBuilder(name, productIds, frameworkIds)
-    return builder.build(export, not export)
-
 legendBuilder = ExecutionGraphBuilder(
     'legend',
     products=(
@@ -327,28 +319,36 @@ legendBuilder = ExecutionGraphBuilder(
         ),
     )
 
-def createLegend(export: bool) -> Graph:
-    return legendBuilder.build(export, False)
-
 
 class GraphPanel(Widget):
     '''Presents a graph on a panel, with the same frame and background as
-    tables. The graph should be passed to the present method as "graph".
+    tables.
+
+    The graph builder should be passed to the present method as "graph".
     '''
+
+    def __init__(self, links: bool = True):
+        Widget.__init__(self)
+        self.__links = links
 
     def present(self, **kwargs: object) -> XMLContent:
         proc = cast(PageProcessor, kwargs.get('proc'))
-        graph = cast(Graph, kwargs['graph'])
+        builder = cast(GraphBuilder, kwargs['graph'])
         return xhtml.div(class_ = 'graph')[
-            xhtml.div[ graph.toSVG() ],
-            None if proc is None else self.__presentFooter(proc, graph)
+            xhtml.div[
+                builder.build(export=False, links=self.__links).toSVG()
+                ],
+            None if proc is None else self.__presentFooter(proc, builder)
             ]
 
-    def __presentFooter(self, proc: PageProcessor, graph: Graph) -> XMLContent:
+    def __presentFooter(self,
+                        proc: PageProcessor,
+                        builder: GraphBuilder
+                        ) -> XMLContent:
         return xhtml.div(class_ = 'export')[
             'export: ', txt(', ').join(
                 xhtml.a(
-                    href = proc.subItemRelURL(f'{graph.name}.{fmt.ext}'),
+                    href = proc.subItemRelURL(f'{builder.name}.{fmt.ext}'),
                     title = fmt.description,
                     )[ fmt.ext ]
                 for fmt in GraphFormat
@@ -357,17 +357,18 @@ class GraphPanel(Widget):
 
 class _GraphResponder(Responder):
 
-    def __init__(self, graph: Graph, fileName: str, fmt: GraphFormat):
+    def __init__(self, builder: GraphBuilder, fileName: str, fmt: GraphFormat):
         Responder.__init__(self)
-        self.__graph = graph
+        self.__builder = builder
         self.__fileName = fileName
         self.__format = fmt
 
     def respond(self, response: Response) -> None:
+        graph = self.__builder.build(export=True, links=False)
         fmt = self.__format
         response.setHeader('Content-Type', fmt.mediaType)
         response.setFileName(f'{self.__fileName}.{fmt.ext}')
-        response.write(self.__graph.export(fmt))
+        response.write(graph.export(fmt))
 
 class GraphPageMixin:
     __reGraphPath = re.compile(r'(\w+)\.(\w+)')
@@ -383,27 +384,28 @@ class GraphPageMixin:
             raise KeyError("Subitem path is not of the form 'file.ext'")
         name, formatStr = match.groups()
         try:
-            graph = self.__getGraph(proc, name)
+            builder = self.__getBuilder(proc, name)
         except KeyError as ex:
             raise KeyError(f'Unknown graph "{name}"') from ex
         try:
             fmt = GraphFormat[formatStr.upper()]
         except ValueError as ex:
             raise KeyError(f'Unknown file format "{formatStr}"') from ex
-        return _GraphResponder(graph, name, fmt)
+        return _GraphResponder(builder, name, fmt)
 
-    def __getGraph(self, proc: PageProcessor, name: str) -> Graph:
+    def __getBuilder(self, proc: PageProcessor, name: str) -> GraphBuilder:
         if hasattr(proc, 'graphs'):
-            graphs: Optional[Iterable[Graph]] = getattr(proc, 'graphs')
-            if graphs is None:
-                graphs = ()
+            builders: Iterable[GraphBuilder] = getattr(proc, 'graphs', ())
         elif hasattr(proc, 'graph'):
-            graph: Optional[Graph] = getattr(proc, 'graph')
-            graphs = () if graph is None else (graph, )
+            builder: Optional[GraphBuilder] = getattr(proc, 'graph')
+            if builder is None:
+                builders = ()
+            else:
+                builders = (builder, )
         else:
             raise AttributeError('Unable to find graphs in Processor')
 
-        for graph in graphs:
-            if graph.name == name:
-                return graph
+        for builder in builders:
+            if builder.name == name:
+                return builder
         raise KeyError(name)

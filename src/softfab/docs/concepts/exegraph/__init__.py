@@ -50,8 +50,8 @@ graphBuilders = {
         )
     }
 
+docGraphPanel = GraphPanel(links=False)
+
 @piHandler
 def graph(arg: str) -> XMLContent:
-    return GraphPanel.instance.present(
-        graph=graphBuilders[arg].build(False, False)
-        )
+    return docGraphPanel.present(graph=graphBuilders[arg])

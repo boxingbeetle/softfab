@@ -9,8 +9,8 @@ from typing import Sized, Tuple, cast
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
 from softfab.graphview import (
-    GraphPageMixin, GraphPanel, canCreateGraphs, createExecutionGraph,
-    createLegend, iterConnectedExecutionGraphs
+    GraphPageMixin, GraphPanel, canCreateGraphs, createExecutionGraphBuilder,
+    iterConnectedExecutionGraphs, legendBuilder
 )
 from softfab.request import Request
 from softfab.userlib import User, checkPrivilege
@@ -58,15 +58,15 @@ class Design_GET(
                 graphNodes.append((set(), orphanFrameworks))
             if orphanProducts:
                 graphNodes.append((orphanProducts, set()))
-            export = req.getSubPath() is not None
-            graphs = []
-            for index, (productIds, frameworkIds) in enumerate(graphNodes):
-                graphs.append( createExecutionGraph( f'graph{index:d}',
-                    productIds, frameworkIds, export)
+            graphBuilders = [
+                createExecutionGraphBuilder(
+                    f'graph{index:d}', productIds, frameworkIds
                     )
-            graphs.append(createLegend(export))
+                for index, (productIds, frameworkIds) in enumerate(graphNodes)
+                ]
+            graphBuilders.append(legendBuilder)
             # pylint: disable=attribute-defined-outside-init
-            self.graphs = graphs
+            self.graphs = graphBuilders
 
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'fd/a')
@@ -95,7 +95,9 @@ class Design_GET(
             for index, graph in enumerate(proc.graphs):
                 if index == len(proc.graphs) - 1:
                     yield xhtml.h2[ 'Legend' ]
-                yield GraphPanel.instance.present(graph=graph, **kwargs)
+                    yield legendPanel.present(graph=graph, **kwargs)
+                else:
+                    yield GraphPanel.instance.present(graph=graph, **kwargs)
         else:
             yield xhtml.p(class_ = 'notice')[
                 'Graph creation is not available because the server '
@@ -111,3 +113,5 @@ class Design_GET(
                 ], ' or ',
             docLink('/start/user_manual/#resources')[ 'Resources' ], '.'
             ]
+
+legendPanel = GraphPanel(links=False)

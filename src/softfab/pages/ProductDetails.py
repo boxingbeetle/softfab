@@ -6,7 +6,9 @@ from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor, PresentableError
 from softfab.RecordDelete import DeleteArgs
 from softfab.frameworklib import frameworkDB
-from softfab.graphview import GraphPageMixin, GraphPanel, createExecutionGraph
+from softfab.graphview import (
+    GraphPageMixin, GraphPanel, createExecutionGraphBuilder
+)
 from softfab.pagelinks import ProductDefIdArgs, createFrameworkDetailsLink
 from softfab.productdeflib import productDefDB
 from softfab.request import Request
@@ -66,18 +68,17 @@ class ProductDetails_GET(
                 if productDefId in framework.getOutputs():
                     producers.append(frameworkId)
 
-            graph = createExecutionGraph(
+            graphBuilder = createExecutionGraphBuilder(
                 'graph',
                 [ productDefId ],
                 producers + consumers,
-                req.getSubPath() is not None
                 )
 
             # pylint: disable=attribute-defined-outside-init
             self.productDef = productDef
             self.producers = producers
             self.consumers = consumers
-            self.graph = graph
+            self.graph = graphBuilder
 
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'pd/a')

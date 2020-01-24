@@ -7,7 +7,9 @@ from softfab.Page import PageProcessor, PresentableError
 from softfab.RecordDelete import DeleteArgs
 from softfab.frameworklib import frameworkDB
 from softfab.frameworkview import taskDefsUsingFramework
-from softfab.graphview import GraphPageMixin, GraphPanel, createExecutionGraph
+from softfab.graphview import (
+    GraphPageMixin, GraphPanel, createExecutionGraphBuilder
+)
 from softfab.pagelinks import (
     FrameworkIdArgs, createProductDetailsLink, createTaskDetailsLink
 )
@@ -74,17 +76,16 @@ class FrameworkDetails_GET(
                     ])
             taskDefs = list(taskDefsUsingFramework(frameworkId))
 
-            graph = createExecutionGraph(
+            graphBuilder = createExecutionGraphBuilder(
                 'graph',
                 framework.getInputs() | framework.getOutputs(),
-                [ frameworkId ],
-                req.getSubPath() is not None
+                [ frameworkId ]
                 )
 
             # pylint: disable=attribute-defined-outside-init
             self.taskDef = framework
             self.children = taskDefs
-            self.graph = graph
+            self.graph = graphBuilder
 
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'fd/a')

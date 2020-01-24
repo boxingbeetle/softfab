@@ -6,7 +6,9 @@ from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor, PresentableError
 from softfab.RecordDelete import DeleteArgs
 from softfab.configlib import configDB
-from softfab.graphview import GraphPageMixin, GraphPanel, createExecutionGraph
+from softfab.graphview import (
+    GraphPageMixin, GraphPanel, createExecutionGraphBuilder
+)
 from softfab.jobview import CommentPanel
 from softfab.pagelinks import (
     ConfigIdArgs, createTargetLink, createTaskDetailsLink,
@@ -192,11 +194,10 @@ class ConfigDetails_GET(
                     frameworkIds.append(framework.getId())
                 productIds |= framework.getInputs()
                 productIds |= framework.getOutputs()
-            graph = createExecutionGraph(
+            graphBuilder = createExecutionGraphBuilder(
                 'graph',
                 productIds,
                 frameworkIds,
-                req.getSubPath() is not None
                 )
             scheduleIds = tuple(
                 scheduleId
@@ -206,7 +207,7 @@ class ConfigDetails_GET(
 
             # pylint: disable=attribute-defined-outside-init
             self.config = config
-            self.graph = graph
+            self.graph = graphBuilder
             self.scheduleIds = scheduleIds
 
     def checkAccess(self, user: User) -> None:
