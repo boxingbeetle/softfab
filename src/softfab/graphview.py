@@ -255,7 +255,8 @@ class ExecutionGraphBuilder(GraphBuilder):
         if productDef['type'] is ProductType.TOKEN:
             nodeAttrib['style'] = _defaultNodeAttrib['style'] + ',dashed'
         if links:
-            nodeAttrib['URL'] = createProductDetailsURL(productId)
+            nodeAttrib['URL'] = '../' + createProductDetailsURL(productId)
+            nodeAttrib['target'] = '_parent'
 
         productNodeId = 'prod.' + productId
         if not graph.has_node(productNodeId):
@@ -278,7 +279,8 @@ class ExecutionGraphBuilder(GraphBuilder):
             )
 
         if links:
-            nodeAttrib['URL'] = createFrameworkDetailsURL(frameworkId)
+            nodeAttrib['URL'] = '../' + createFrameworkDetailsURL(frameworkId)
+            nodeAttrib['target'] = '_parent'
 
         frameworkNodeId = 'fw.' + frameworkId
         if not graph.has_node(frameworkNodeId):
@@ -331,6 +333,11 @@ class GraphPanel(Widget):
         return xhtml.div(class_ = 'graph')[
             xhtml.div[
                 builder.build(export=False).toSVG()
+                if proc is None else
+                xhtml.object(
+                    data=proc.subItemRelURL(f'{builder.name}.ui.svg'),
+                    type='image/svg+xml'
+                    )
                 ],
             None if proc is None else self.__presentFooter(proc, builder)
             ]
@@ -351,21 +358,31 @@ class GraphPanel(Widget):
 
 class _GraphResponder(Responder):
 
-    def __init__(self, builder: GraphBuilder, fileName: str, fmt: GraphFormat):
+    def __init__(self,
+                 builder: GraphBuilder,
+                 fileName: str,
+                 fmt: GraphFormat,
+                 export: bool
+                 ):
         Responder.__init__(self)
         self.__builder = builder
         self.__fileName = fileName
         self.__format = fmt
+        self.__export = export
 
     def respond(self, response: Response) -> None:
-        graph = self.__builder.build(export=True)
+        export = self.__export
+        graph = self.__builder.build(export)
         fmt = self.__format
         response.setHeader('Content-Type', fmt.mediaType)
-        response.setFileName(f'{self.__fileName}.{fmt.ext}')
+        if export:
+            response.setFileName(f'{self.__fileName}.{fmt.ext}')
+        else:
+            response.allowEmbedding()
         response.write(graph.export(fmt))
 
 class GraphPageMixin:
-    __reGraphPath = re.compile(r'(\w+)\.(\w+)')
+    __reGraphPath = re.compile(r'(\w+)(\.ui)?\.(\w+)')
 
     def getResponder(self,
                      path: Optional[str],
@@ -376,7 +393,7 @@ class GraphPageMixin:
         match = self.__reGraphPath.match(path)
         if match is None:
             raise KeyError("Subitem path is not of the form 'file.ext'")
-        name, formatStr = match.groups()
+        name, ui, formatStr = match.groups()
         try:
             builder = self.__getBuilder(proc, name)
         except KeyError as ex:
@@ -385,7 +402,7 @@ class GraphPageMixin:
             fmt = GraphFormat[formatStr.upper()]
         except ValueError as ex:
             raise KeyError(f'Unknown file format "{formatStr}"') from ex
-        return _GraphResponder(builder, name, fmt)
+        return _GraphResponder(builder, name, fmt, not ui)
 
     def __getBuilder(self, proc: PageProcessor, name: str) -> GraphBuilder:
         if hasattr(proc, 'graphs'):

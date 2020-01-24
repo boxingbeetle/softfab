@@ -29,6 +29,7 @@ class Response:
                  userAgent: UserAgent,
                  streaming: bool):
         self.__request = request
+        self.__frameAncestors = project.frameAncestors
         self.userAgent = userAgent
 
         if streaming:
@@ -81,7 +82,7 @@ class Response:
             f"frame-src http: https:; "
             f"script-src 'self' 'unsafe-inline'; "
             f"style-src 'self' 'unsafe-inline'; "
-            f"frame-ancestors {project.frameAncestors}"
+            f"frame-ancestors {self.__frameAncestors}"
             )
 
         body = self.__buffer.getvalue()
@@ -220,6 +221,16 @@ class Response:
 
     def setHeader(self, name: str, value: str) -> None:
         self.__request.setHeader(name.lower(), value.encode('ascii', 'ignore'))
+
+    def allowEmbedding(self) -> None:
+        """Allow embedding of this resource on the current site.
+        This is necessary to display SVGs in <object> tags.
+        """
+        frameAncestors = self.__frameAncestors
+        if frameAncestors == "'none'":
+            self.__frameAncestors = "'self'"
+        elif "'self'" not in frameAncestors:
+            self.__frameAncestors = f"'self' {frameAncestors}"
 
     def setFileName(self, fileName: str) -> None:
         '''Suggest a file name to the browser for saving this document.

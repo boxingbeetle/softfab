@@ -512,6 +512,9 @@ div.graph > div.export {
 	padding: 2px 4px;
 	white-space: nowrap;
 }
+div.graph object {
+	width: -moz-max-content;
+}
 
 div.reporttabs {
 	display: flex;
