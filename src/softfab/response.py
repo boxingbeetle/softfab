@@ -92,9 +92,7 @@ class Response:
 
         # Determine whether or not we will gzip the body.
         # We prefer gzip to save on bandwidth.
-        accept = AcceptedEncodings.parse(
-            self.__request.getHeader('accept-encoding')
-            )
+        accept = AcceptedEncodings.parse(request.getHeader('accept-encoding'))
         gzipContent = 2.0 * accept['gzip'] > accept['identity']
 
         # Compute entity tag.
