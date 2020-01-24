@@ -113,7 +113,8 @@ class Graph:
         self.__name = name
         self.__graph = graph
 
-    def getName(self) -> str:
+    @property
+    def name(self) -> str:
         return self.__name
 
     def export(self, fmt: GraphFormat) -> Optional[str]:
@@ -347,9 +348,7 @@ class GraphPanel(Widget):
         return xhtml.div(class_ = 'export')[
             'export: ', txt(', ').join(
                 xhtml.a(
-                    href = proc.subItemRelURL(
-                        f'{graph.getName()}.{fmt.ext}'
-                        ),
+                    href = proc.subItemRelURL(f'{graph.name}.{fmt.ext}'),
                     title = fmt.description,
                     )[ fmt.ext ]
                 for fmt in GraphFormat
@@ -405,6 +404,6 @@ class GraphPageMixin:
             raise AttributeError('Unable to find graphs in Processor')
 
         for graph in graphs:
-            if graph.getName() == name:
+            if graph.name == name:
                 return graph
         raise KeyError(name)
