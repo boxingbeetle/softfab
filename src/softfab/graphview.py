@@ -109,13 +109,8 @@ class Graph:
     Use a GraphBuilder subclass to construct graphs.
     '''
 
-    def __init__(self, name: str, graph: Optional[AGraph]):
-        self.__name = name
+    def __init__(self, graph: Optional[AGraph]):
         self.__graph = graph
-
-    @property
-    def name(self) -> str:
-        return self.__name
 
     def export(self, fmt: GraphFormat) -> Optional[str]:
         '''Renders this graph in the given format.
@@ -206,7 +201,7 @@ class GraphBuilder:
         name = self._name
 
         if not canCreateGraphs:
-            return Graph(name, None)
+            return Graph(None)
 
         try:
             graph = AGraph(directed=True, strict=True, id=name)
@@ -216,12 +211,12 @@ class GraphBuilder:
             graph.graph_attr.update(bgcolor=('white' if export
                                                 else 'transparent'))
             self.populate(graph, links)
-            return Graph(name, graph)
+            return Graph(graph)
         except Exception:
             logging.exception(
                 'Execution graph creation (pygraphviz) failed'
                 )
-            return Graph(name, None)
+            return Graph(None)
 
 
 class ExecutionGraphBuilder(GraphBuilder):
