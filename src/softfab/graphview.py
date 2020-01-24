@@ -18,7 +18,7 @@ from softfab.pagelinks import (
 from softfab.productdeflib import ProductDef, ProductType, productDefDB
 from softfab.response import Response
 from softfab.setcalc import UnionFind
-from softfab.svglib import SVGPanel, svgNSPrefix
+from softfab.webgui import Widget
 from softfab.xmlgen import XMLContent, txt, xhtml
 
 try:
@@ -27,6 +27,18 @@ try:
 except ImportError:
     AGraph = object
     canCreateGraphs = False
+
+
+svgNamespace = 'http://www.w3.org/2000/svg'
+xlinkNamespace = 'http://www.w3.org/1999/xlink'
+
+# Register namespaces with the ElementTree module.
+# This is not strictly necessary, but without this ElementTree will generate
+# synthetic names like "ns0", which makes the XML output harder to read.
+ElementTree.register_namespace('svg', svgNamespace)
+ElementTree.register_namespace('xlink', xlinkNamespace)
+
+svgNSPrefix = '{%s}' % svgNamespace
 
 
 class GraphFormat(Enum):
@@ -294,20 +306,20 @@ def createLegend(export: bool) -> Graph:
         )
 
 
-class GraphPanel(SVGPanel):
+class GraphPanel(Widget):
     '''Presents a graph on a panel, with the same frame and background as
     tables. The graph should be passed to the present method as "graph".
     '''
 
     def present(self, **kwargs: object) -> XMLContent:
+        proc = cast(PageProcessor, kwargs.get('proc'))
         graph = cast(Graph, kwargs['graph'])
-        return super().present(svgElement=graph.toSVG(), **kwargs)
+        return xhtml.div(class_ = 'graph')[
+            xhtml.div[ graph.toSVG() ],
+            None if proc is None else self.__presentFooter(proc, graph)
+            ]
 
-    def presentFooter(self, **kwargs: object) -> XMLContent:
-        proc = cast(Optional[PageProcessor], kwargs.get('proc'))
-        if proc is None:
-            return None
-        graph = cast(Graph, kwargs['graph'])
+    def __presentFooter(self, proc: PageProcessor, graph: Graph) -> XMLContent:
         return xhtml.div(class_ = 'export')[
             'export: ', txt(', ').join(
                 xhtml.a(
