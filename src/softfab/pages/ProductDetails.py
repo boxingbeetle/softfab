@@ -66,7 +66,7 @@ class ProductDetails_GET(
                 if productDefId in framework.getOutputs():
                     producers.append(frameworkId)
 
-            graph = None if productDef is None else createExecutionGraph(
+            graph = createExecutionGraph(
                 'graph',
                 [ productDefId ],
                 producers + consumers,

@@ -74,7 +74,7 @@ class FrameworkDetails_GET(
                     ])
             taskDefs = list(taskDefsUsingFramework(frameworkId))
 
-            graph = None if framework is None else createExecutionGraph(
+            graph = createExecutionGraph(
                 'graph',
                 framework.getInputs() | framework.getOutputs(),
                 [ frameworkId ],
