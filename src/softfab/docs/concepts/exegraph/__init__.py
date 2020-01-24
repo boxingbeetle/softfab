@@ -15,18 +15,21 @@ graphBuilders = {
     for builder in (
         ExecutionGraphBuilder(
             'task',
+            links=False,
             frameworks=(
                 Framework.create('build', (), ()),
-                )
+                ),
             ),
         ExecutionGraphBuilder(
             'product',
+            links=False,
             products=(
                 ProductDef.create('binary'),
-                )
+                ),
             ),
         ExecutionGraphBuilder(
             'dependency',
+            links=False,
             products=(
                 ProductDef.create('binary'),
                 ),
@@ -37,12 +40,14 @@ graphBuilders = {
             ),
         ExecutionGraphBuilder(
             'token',
+            links=False,
             products=(
                 ProductDef.create('app_installed', prodType=ProductType.TOKEN),
                 ),
             ),
         ExecutionGraphBuilder(
             'combined',
+            links=False,
             products=(
                 ProductDef.create('coverage_data', combined=True),
                 ),
@@ -50,8 +55,6 @@ graphBuilders = {
         )
     }
 
-docGraphPanel = GraphPanel(links=False)
-
 @piHandler
 def graph(arg: str) -> XMLContent:
-    return docGraphPanel.present(graph=graphBuilders[arg])
+    return GraphPanel.instance.present(graph=graphBuilders[arg])

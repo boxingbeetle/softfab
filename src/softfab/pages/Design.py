@@ -95,9 +95,7 @@ class Design_GET(
             for index, graph in enumerate(proc.graphs):
                 if index == len(proc.graphs) - 1:
                     yield xhtml.h2[ 'Legend' ]
-                    yield legendPanel.present(graph=graph, **kwargs)
-                else:
-                    yield GraphPanel.instance.present(graph=graph, **kwargs)
+                yield GraphPanel.instance.present(graph=graph, **kwargs)
         else:
             yield xhtml.p(class_ = 'notice')[
                 'Graph creation is not available because the server '
@@ -113,5 +111,3 @@ class Design_GET(
                 ], ' or ',
             docLink('/start/user_manual/#resources')[ 'Resources' ], '.'
             ]
-
-legendPanel = GraphPanel(links=False)

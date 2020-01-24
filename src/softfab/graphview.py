@@ -178,8 +178,9 @@ class Graph:
 class GraphBuilder:
     """Holds the data for creating a graph."""
 
-    def __init__(self, name: str):
+    def __init__(self, name: str, links: bool):
         self._name = name
+        self._links = links
 
     @property
     def name(self) -> str:
@@ -188,7 +189,7 @@ class GraphBuilder:
     def populate(self, graph: AGraph, links: bool) -> None:
         raise NotImplementedError
 
-    def build(self, export: bool, links: bool) -> Graph:
+    def build(self, export: bool) -> Graph:
         """Creates a populated graph.
 
         Any errors are logged and not propagated.
@@ -210,7 +211,7 @@ class GraphBuilder:
             graph.graph_attr.update(_defaultGraphAttrib)
             graph.graph_attr.update(bgcolor=('white' if export
                                                 else 'transparent'))
-            self.populate(graph, links)
+            self.populate(graph, self._links and not export)
             return Graph(graph)
         except Exception:
             logging.exception(
@@ -222,11 +223,12 @@ class GraphBuilder:
 class ExecutionGraphBuilder(GraphBuilder):
 
     def __init__(self,
-                 name: str,
+                 name: str, *,
+                 links: bool = True,
                  products: Iterable[ProductDef] = (),
                  frameworks: Iterable[Framework] = ()
                  ):
-        GraphBuilder.__init__(self, name)
+        GraphBuilder.__init__(self, name, links)
         self._products = tuple(products)
         self._frameworks = tuple(frameworks)
 
@@ -298,12 +300,13 @@ def createExecutionGraphBuilder(name: str,
                                 ) -> ExecutionGraphBuilder:
     return ExecutionGraphBuilder(
         name,
-        (productDefDB[productId] for productId in productIds),
-        (frameworkDB[frameworkId] for frameworkId in frameworkIds)
+        products=(productDefDB[productId] for productId in productIds),
+        frameworks=(frameworkDB[frameworkId] for frameworkId in frameworkIds)
         )
 
 legendBuilder = ExecutionGraphBuilder(
     'legend',
+    links=False,
     products=(
         ProductDef.create('product'),
         ProductDef.create('combined-product', combined=True),
@@ -322,16 +325,12 @@ class GraphPanel(Widget):
     The graph builder should be passed to the present method as "graph".
     '''
 
-    def __init__(self, links: bool = True):
-        Widget.__init__(self)
-        self.__links = links
-
     def present(self, **kwargs: object) -> XMLContent:
         proc = cast(PageProcessor, kwargs.get('proc'))
         builder = cast(GraphBuilder, kwargs['graph'])
         return xhtml.div(class_ = 'graph')[
             xhtml.div[
-                builder.build(export=False, links=self.__links).toSVG()
+                builder.build(export=False).toSVG()
                 ],
             None if proc is None else self.__presentFooter(proc, builder)
             ]
@@ -359,7 +358,7 @@ class _GraphResponder(Responder):
         self.__format = fmt
 
     def respond(self, response: Response) -> None:
-        graph = self.__builder.build(export=True, links=False)
+        graph = self.__builder.build(export=True)
         fmt = self.__format
         response.setHeader('Content-Type', fmt.mediaType)
         response.setFileName(f'{self.__fileName}.{fmt.ext}')
