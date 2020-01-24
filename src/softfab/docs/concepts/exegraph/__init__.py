@@ -10,45 +10,48 @@ button = 'Graph'
 children = ()
 icon = 'IconDesign'
 
-class TaskGraphBuilder(ExecutionGraphBuilder):
-
-    def populate(self, **kwargs: object) -> None:
-        self.addFramework(Framework.create('build', (), ()))
-
-class ProductGraphBuilder(ExecutionGraphBuilder):
-
-    def populate(self, **kwargs: object) -> None:
-        self.addProduct(ProductDef.create('binary'))
-
-class DependencyGraphBuilder(ExecutionGraphBuilder):
-
-    def populate(self, **kwargs: object) -> None:
-        self.addProduct(ProductDef.create('binary'))
-        self.addFramework(Framework.create('build', (), ('binary',)))
-        self.addFramework(Framework.create('test', ('binary',), ()))
-
-class TokenProductGraphBuilder(ExecutionGraphBuilder):
-
-    def populate(self, **kwargs: object) -> None:
-        self.addProduct(
-            ProductDef.create('app_installed', prodType=ProductType.TOKEN)
-            )
-
-class CombinedProductGraphBuilder(ExecutionGraphBuilder):
-
-    def populate(self, **kwargs: object) -> None:
-        self.addProduct(ProductDef.create('coverage_data', combined=True))
-
-graphBuilders = dict(
-    task=TaskGraphBuilder,
-    product=ProductGraphBuilder,
-    dependency=DependencyGraphBuilder,
-    token=TokenProductGraphBuilder,
-    combined=CombinedProductGraphBuilder,
-    )
+graphBuilders = {
+    builder.name: builder
+    for builder in (
+        ExecutionGraphBuilder(
+            'task',
+            frameworks=(
+                Framework.create('build', (), ()),
+                )
+            ),
+        ExecutionGraphBuilder(
+            'product',
+            products=(
+                ProductDef.create('binary'),
+                )
+            ),
+        ExecutionGraphBuilder(
+            'dependency',
+            products=(
+                ProductDef.create('binary'),
+                ),
+            frameworks=(
+                Framework.create('build', (), ('binary',)),
+                Framework.create('test', ('binary',), ())
+                ),
+            ),
+        ExecutionGraphBuilder(
+            'token',
+            products=(
+                ProductDef.create('app_installed', prodType=ProductType.TOKEN),
+                ),
+            ),
+        ExecutionGraphBuilder(
+            'combined',
+            products=(
+                ProductDef.create('coverage_data', combined=True),
+                ),
+            ),
+        )
+    }
 
 @piHandler
 def graph(arg: str) -> XMLContent:
     return GraphPanel.instance.present(
-        graph=graphBuilders[arg].build(arg, False, False)
+        graph=graphBuilders[arg].build(False, False)
         )

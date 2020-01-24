@@ -180,29 +180,29 @@ class Graph:
         return svgElement
 
 class GraphBuilder:
-    '''Wrapper around GraphViz graphs that are under construction.
-    '''
+    """Holds the data for creating a graph."""
 
-    def __init__(self, graph: AGraph, export: bool, links: bool):
-        '''Creates a graph.
-        Iff "export" is True, the graph is optimized for use outside of the
-        Control Center (mailing, printing).
-        '''
-        self._graph = graph
-        self._export = export
-        self._links = links
+    def __init__(self, name: str):
+        self._name = name
 
-    def populate(self, **kwargs: object) -> None:
+    @property
+    def name(self) -> str:
+        return self._name
+
+    def populate(self, graph: AGraph, links: bool) -> None:
         raise NotImplementedError
 
-    @classmethod
-    def build(cls,
-              name: str, export: bool, links: bool, **kwargs: object
-              ) -> Graph:
-        '''Creates an empty graph, wraps it in a builder and calls the
-        builder's populate() function with the keyword arguments.
+    def build(self, export: bool, links: bool) -> Graph:
+        """Creates a populated graph.
+
         Any errors are logged and not propagated.
-        '''
+
+        @param export: optimize the graph for use outside of the Control Center
+                       (mailing, printing)?
+        @param links: include hyperlinks?
+        """
+
+        name = self._name
 
         if not canCreateGraphs:
             return Graph(name, None)
@@ -214,8 +214,7 @@ class GraphBuilder:
             graph.graph_attr.update(_defaultGraphAttrib)
             graph.graph_attr.update(bgcolor=('white' if export
                                                 else 'transparent'))
-            builder = cls(graph, export, links)
-            builder.populate(**kwargs)
+            self.populate(graph, links)
             return Graph(name, graph)
         except Exception:
             logging.exception(
@@ -223,15 +222,29 @@ class GraphBuilder:
                 )
             return Graph(name, None)
 
+
 class ExecutionGraphBuilder(GraphBuilder):
 
-    def populate(self, **kwargs: object) -> None:
-        for product in cast(Iterable[ProductDef], kwargs['products']):
-            self.addProduct(product)
-        for framework in cast(Iterable[Framework], kwargs['frameworks']):
-            self.addFramework(framework)
+    def __init__(self,
+                 name: str,
+                 products: Iterable[ProductDef] = (),
+                 frameworks: Iterable[Framework] = ()
+                 ):
+        GraphBuilder.__init__(self, name)
+        self._products = tuple(products)
+        self._frameworks = tuple(frameworks)
 
-    def addProduct(self, productDef: ProductDef) -> None:
+    def populate(self, graph: AGraph, links: bool) -> None:
+        for product in self._products:
+            self.addProduct(graph, links, product)
+        for framework in self._frameworks:
+            self.addFramework(graph, links, framework)
+
+    def addProduct(self,
+                   graph: AGraph,
+                   links: bool,
+                   productDef: ProductDef
+                   ) -> None:
         '''Add a node for the given product to this graph.
            Specify node attribs if product is a token and/or combined product
         '''
@@ -243,16 +256,18 @@ class ExecutionGraphBuilder(GraphBuilder):
             )
         if productDef['type'] is ProductType.TOKEN:
             nodeAttrib['style'] = _defaultNodeAttrib['style'] + ',dashed'
-        if self._links:
+        if links:
             nodeAttrib['URL'] = createProductDetailsURL(productId)
 
         productNodeId = 'prod.' + productId
-        graph = self._graph
-        assert graph is not None
         if not graph.has_node(productNodeId):
             graph.add_node(productNodeId, **nodeAttrib)
 
-    def addFramework(self, framework: Framework) -> None:
+    def addFramework(self,
+                     graph: AGraph,
+                     links: bool,
+                     framework: Framework
+                     ) -> None:
         '''Add a node for the given framework to this graph.
         Also adds edges between the framework to all previously added products
         that are an input or output of this framework.
@@ -264,46 +279,55 @@ class ExecutionGraphBuilder(GraphBuilder):
             shape = 'oval',
             )
 
-        if self._links:
+        if links:
             nodeAttrib['URL'] = createFrameworkDetailsURL(frameworkId)
 
         frameworkNodeId = 'fw.' + frameworkId
-        if not self._graph.has_node(frameworkNodeId):
-            self._graph.add_node(frameworkNodeId, **nodeAttrib)
+        if not graph.has_node(frameworkNodeId):
+            graph.add_node(frameworkNodeId, **nodeAttrib)
 
         for inputDefId in framework.getInputs():
             inputProductNodeId = 'prod.' + inputDefId
-            if self._graph.has_node(inputProductNodeId):
-                self._graph.add_edge(inputProductNodeId, frameworkNodeId)
+            if graph.has_node(inputProductNodeId):
+                graph.add_edge(inputProductNodeId, frameworkNodeId)
 
         for outputDefId in framework.getOutputs():
             outputProductNodeId = 'prod.' + outputDefId
-            if self._graph.has_node(outputProductNodeId):
-                self._graph.add_edge(frameworkNodeId, outputProductNodeId)
+            if graph.has_node(outputProductNodeId):
+                graph.add_edge(frameworkNodeId, outputProductNodeId)
+
+def createExecutionGraphBuilder(name: str,
+                                productIds: Iterable[str],
+                                frameworkIds: Iterable[str]
+                                ) -> ExecutionGraphBuilder:
+    return ExecutionGraphBuilder(
+        name,
+        (productDefDB[productId] for productId in productIds),
+        (frameworkDB[frameworkId] for frameworkId in frameworkIds)
+        )
 
 def createExecutionGraph(name: str,
                          productIds: Iterable[str],
                          frameworkIds: Iterable[str],
                          export: bool
                          ) -> Graph:
-    products = [productDefDB[productId] for productId in productIds]
-    frameworks = [frameworkDB[frameworkId] for frameworkId in frameworkIds]
-    return ExecutionGraphBuilder.build(
-        name, export, not export, products=products, frameworks=frameworks
-        )
+    builder = createExecutionGraphBuilder(name, productIds, frameworkIds)
+    return builder.build(export, not export)
 
-def createLegend(export: bool) -> Graph:
-    products = (
+legendBuilder = ExecutionGraphBuilder(
+    'legend',
+    products=(
         ProductDef.create('product'),
         ProductDef.create('combined-product', combined=True),
-        ProductDef.create('token-product', prodType=ProductType.TOKEN)
-        )
-    frameworks = (
+        ProductDef.create('token-product', prodType=ProductType.TOKEN),
+        ),
+    frameworks=(
         Framework.create('framework', (), ()),
-        )
-    return ExecutionGraphBuilder.build(
-        'legend', export, False, products=products, frameworks=frameworks
-        )
+        ),
+    )
+
+def createLegend(export: bool) -> Graph:
+    return legendBuilder.build(export, False)
 
 
 class GraphPanel(Widget):
