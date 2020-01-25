@@ -13,14 +13,14 @@ from softfab.pageargs import IntArg, PageArgs, SortArg
 from softfab.pagelinks import createProductDetailsLink
 from softfab.userlib import User, checkPrivilege
 from softfab.webgui import docLink
-from softfab.xmlgen import XMLContent, txt, xhtml
+from softfab.xmlgen import XMLContent, xhtml
 
 
 class ProductColumn(DataColumn[TaskDefBase]):
     def presentCell(self, record: TaskDefBase, **kwargs: object) -> XMLContent:
         keyName = self.keyName
         assert keyName is not None
-        return txt(', ').join(
+        return xhtml[', '].join(
             createProductDetailsLink(productDefId)
             for productDefId in cast(Iterable[str], record[keyName])
             )

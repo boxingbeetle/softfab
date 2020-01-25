@@ -19,7 +19,7 @@ from softfab.productdeflib import ProductDef, ProductType, productDefDB
 from softfab.response import Response
 from softfab.setcalc import UnionFind
 from softfab.webgui import Widget
-from softfab.xmlgen import XMLContent, txt, xhtml
+from softfab.xmlgen import XMLContent, xhtml
 
 try:
     from pygraphviz import AGraph
@@ -347,7 +347,7 @@ class GraphPanel(Widget):
                         builder: GraphBuilder
                         ) -> XMLContent:
         return xhtml.div(class_ = 'export')[
-            'export: ', txt(', ').join(
+            'export: ', xhtml[', '].join(
                 xhtml.a(
                     href = proc.subItemRelURL(f'{builder.name}.{fmt.ext}'),
                     title = fmt.description,

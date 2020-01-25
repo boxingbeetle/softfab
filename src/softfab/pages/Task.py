@@ -32,7 +32,7 @@ from softfab.taskrunlib import getData, getKeys
 from softfab.tasktables import JobTaskRunsTable, TaskProcessorMixin
 from softfab.userlib import User, checkPrivilege
 from softfab.webgui import PropertiesTable, Table, Widget, cell, pageLink
-from softfab.xmlgen import XMLContent, txt, xhtml
+from softfab.xmlgen import XMLContent, xhtml
 
 reLabelSplit = re.compile(r'[_-]')
 
@@ -240,7 +240,7 @@ class DetailsTable(PropertiesTable):
         if selectedRunners:
             selection: XMLContent = (
                 f'selected for {level}: ',
-                txt(', ').join(
+                xhtml[', '].join(
                     createTaskRunnerDetailsLink(runner)
                     for runner in sorted(selectedRunners)
                     )

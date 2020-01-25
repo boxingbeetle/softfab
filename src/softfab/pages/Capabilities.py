@@ -24,7 +24,7 @@ from softfab.taskdeflib import taskDefDB
 from softfab.userlib import User, checkPrivilege
 from softfab.utils import ResultKeeper
 from softfab.webgui import Table, pageLink, row, vgroup
-from softfab.xmlgen import XMLContent, XMLNode, txt, xhtml
+from softfab.xmlgen import XMLContent, XMLNode, xhtml
 
 
 class ResTypeTable(ResTypeTableMixin, Table):
@@ -90,7 +90,7 @@ class ResourcesColumn(DataColumn[CapInfo]):
     keyName = 'resourceIds'
 
     def presentCell(self, record: CapInfo, **kwargs: object) -> XMLContent:
-        return txt(', ').join(
+        return xhtml[', '].join(
             createTaskRunnerDetailsLink(runnerId)
             for runnerId in sorted(record.resourceIds)
             )
@@ -99,7 +99,7 @@ class TaskDefinitionsColumn(DataColumn[CapInfo]):
     keyName = 'taskDefIds'
 
     def presentCell(self, record: CapInfo, **kwargs: object) -> XMLContent:
-        return txt(', ').join(
+        return xhtml[', '].join(
             createTaskDetailsLink(taskDefId)
             for taskDefId in sorted(record.taskDefIds)
             )

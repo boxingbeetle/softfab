@@ -16,7 +16,7 @@ from softfab.sortedqueue import SortedQueue
 from softfab.taskgroup import LocalGroup
 from softfab.userview import OwnerColumn
 from softfab.webgui import Column, Table, cell
-from softfab.xmlgen import XMLContent, txt
+from softfab.xmlgen import XMLContent, xhtml
 
 SelectArgsT = TypeVar('SelectArgsT', bound=SelectArgs)
 
@@ -134,7 +134,7 @@ class TargetsColumn(DataColumn[Config]):
     def presentCell(self, record: Config, **kwargs: object) -> XMLContent:
         targets = record.targets
         if targets:
-            return txt(', ').join(
+            return xhtml[', '].join(
                 createTargetLink(target)
                 for target in sorted(targets)
                 )

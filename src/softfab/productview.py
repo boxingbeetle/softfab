@@ -14,7 +14,7 @@ from softfab.tasktables import JobProcessorMixin
 from softfab.taskview import getTaskStatus
 from softfab.utils import abstract
 from softfab.webgui import Column, Table, cell, row
-from softfab.xmlgen import XMLContent, txt, xhtml
+from softfab.xmlgen import XMLContent, xhtml
 
 
 def formatLocator(product: Product,
@@ -28,7 +28,7 @@ def formatLocator(product: Product,
     elif product.getType() is ProductType.TOKEN:
         return 'token was produced'
     else:
-        return txt(locator)
+        return locator
 
 def getProductStatus(job: Job, name: str) -> Optional[str]:
     '''Returns the status of the product with the given name.

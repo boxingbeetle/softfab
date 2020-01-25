@@ -13,7 +13,7 @@ from softfab.webgui import (
     AttrContainer, Column, Table, Widget, cell, row, script
 )
 from softfab.xmlgen import (
-    XML, XMLAttributeValue, XMLContent, XMLNode, XMLPresentable, txt, xhtml
+    XML, XMLAttributeValue, XMLContent, XMLNode, XMLPresentable, xhtml
 )
 
 if TYPE_CHECKING:
@@ -278,7 +278,7 @@ def actionButtons(*values: Union[XMLAttributeValue, Type[Enum]],
         else:
             raise TypeError(type(value))
 
-    return txt(' ').join(
+    return xhtml[' '].join(
         submitButton(name = name, value = value, **kwargs)
         for value in valueStrings
         )
@@ -351,7 +351,7 @@ class _TextArea(AttrContainer, XMLPresentable):
             formArgs = cast(PageArgs, kwargs['formArgs'])
             value = _argValue(formArgs, name)
             if isinstance(value, str):
-                contents = txt(value)
+                contents = value
             elif value is not None:
                 raise TypeError(type(value))
 

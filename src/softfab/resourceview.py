@@ -23,7 +23,7 @@ from softfab.resreq import (
 from softfab.restypelib import resTypeDB, taskRunnerResourceTypeName
 from softfab.restypeview import iterResourceTypes
 from softfab.webgui import Panel, Table, cell, rowManagerInstanceScript
-from softfab.xmlgen import XMLContent, txt, xhtml
+from softfab.xmlgen import XMLContent, xhtml
 
 
 class ResourceNameColumn(DataColumn[ResourceBase]):
@@ -70,7 +70,7 @@ def presentCapabilities(capabilities: Collection[str],
         return '-'
     if capFilter is None:
         capFilter = lambda cap: False
-    return txt(', ').join(
+    return xhtml[', '].join(
         createCapabilityLink(resType, cap)(
             class_ = 'match' if capFilter(cap) else None
             )

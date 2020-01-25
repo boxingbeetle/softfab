@@ -32,7 +32,7 @@ from softfab.webgui import (
     groupItem, pageLink, vgroup
 )
 from softfab.xmlgen import (
-    XML, XMLAttributeValue, XMLContent, XMLPresentable, txt, xhtml
+    XML, XMLAttributeValue, XMLContent, XMLPresentable, xhtml
 )
 
 SelectBy = Enum('SelectBy', 'NAME TAG')
@@ -315,7 +315,7 @@ class DaysTable(CheckBoxesTable):
 class DelayPanel(Panel):
     widgetId = 'delayPanel'
     label = 'Minimal Delay'
-    content = txt('\u00A0').join((
+    content = xhtml['\u00A0'].join((
         textInput(name='minDelay', size='4'), 'minutes'
         ))
 

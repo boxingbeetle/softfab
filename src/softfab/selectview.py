@@ -21,7 +21,7 @@ from softfab.webgui import (
     Column, Table, addRemoveStyleScript, cell, hgroup, pageLink, pageURL,
     preserveSpaces, script
 )
-from softfab.xmlgen import XML, XMLContent, XMLNode, txt, xhtml
+from softfab.xmlgen import XML, XMLContent, XMLNode, xhtml
 
 
 class TagArgs(PageArgs):
@@ -269,7 +269,7 @@ def selectDialog(formAction: str,
                 "window.onload = function() { RowSelection('selform1'); }"
                 ],
             xhtml.p[
-                txt('\u00A0').join(chain(
+                xhtml['\u00A0'].join(chain(
                     [ _scriptButton(True)[ _selButtonLabel ],
                       _scriptButton(False)[ _resButtonLabel ] ],
                     actionButtons()
@@ -358,7 +358,7 @@ def selectDialog(formAction: str,
         # There will be checkboxes named "sel" as well; the results from the
         # active checkboxes will be merged with these hidden fields.
         (hiddenInput(name='sel', value=item) for item in selected),
-        xhtml.p[ txt('\u00A0').join(buttons) ]
+        xhtml.p[ xhtml['\u00A0'].join(buttons) ]
         ].present(
             getRowStyle=rowStyle,
             selectName='sel',
@@ -379,7 +379,7 @@ def selectDialog(formAction: str,
             )[
             basketTable,
             xhtml.p[
-                txt('\u00A0').join(chain(
+                xhtml['\u00A0'].join(chain(
                     [ _scriptButton(True, 'bsk')[ _selButtonLabel ],
                       resetButton[ _resButtonLabel ],
                       submitButton(name = 'action', value = 'remove') ],

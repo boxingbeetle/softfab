@@ -725,4 +725,3 @@ def parseHTML(
 xml = _XMLNodeFactory(None)
 atom = _XMLNodeFactory('http://www.w3.org/2005/Atom')
 xhtml = _XHTMLNodeFactory('http://www.w3.org/1999/xhtml')
-txt: Callable[[str], XML] = _Text.__call__

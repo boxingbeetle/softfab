@@ -26,7 +26,7 @@ from softfab.utils import pluralize
 from softfab.webgui import (
     Column, PresenterFunction, Table, cell, decoration, pageLink, unorderedList
 )
-from softfab.xmlgen import XML, XMLContent, txt, xhtml
+from softfab.xmlgen import XML, XMLContent, xhtml
 
 # Note:
 # The following pieces of information are not included in this page:
@@ -47,7 +47,7 @@ class TagsTable(Table):
         for key in project.getTagKeys():
             values = config.getTagValues(key)
             if values:
-                yield key, txt(', ').join(
+                yield key, xhtml[', '].join(
                     pageLink(
                         'LoadExecute',
                         TagArgs(tagkey = key, tagvalue = value)
