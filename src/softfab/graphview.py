@@ -5,7 +5,7 @@ Builds the execution graphs by using AGraph from the pygraphviz module.
 '''
 
 from enum import Enum
-from typing import Iterable, Iterator, Optional, Set, Tuple, cast
+from typing import AnyStr, Iterable, Iterator, Optional, Set, Tuple, cast
 from xml.etree import ElementTree
 import logging
 import re
@@ -112,7 +112,7 @@ class Graph:
     def __init__(self, graph: Optional[AGraph]):
         self.__graph = graph
 
-    def export(self, fmt: GraphFormat) -> Optional[str]:
+    def export(self, fmt: GraphFormat) -> Optional[AnyStr]:
         '''Renders this graph in the given format.
         Returns the rendered graph data, or None if rendering failed.
         '''
