@@ -5,7 +5,9 @@ Builds the execution graphs by using AGraph from the pygraphviz module.
 '''
 
 from enum import Enum
-from typing import AnyStr, Iterable, Iterator, Optional, Set, Tuple, cast
+from typing import (
+    AbstractSet, AnyStr, Iterable, Iterator, Optional, Set, Tuple, cast
+)
 from xml.etree import ElementTree
 import logging
 import re
@@ -233,10 +235,12 @@ class ExecutionGraphBuilder(GraphBuilder):
         self._frameworks = tuple(frameworks)
 
     def populate(self, graph: AGraph, links: bool) -> None:
+        productIds = set()
         for product in self._products:
             self.addProduct(graph, links, product)
+            productIds.add(product.getId())
         for framework in self._frameworks:
-            self.addFramework(graph, links, framework)
+            self.addFramework(graph, links, framework, productIds)
 
     def addProduct(self,
                    graph: AGraph,
@@ -263,12 +267,12 @@ class ExecutionGraphBuilder(GraphBuilder):
     def addFramework(self,
                      graph: AGraph,
                      links: bool,
-                     framework: Framework
+                     framework: Framework,
+                     productIds: AbstractSet[str]
                      ) -> None:
         '''Add a node for the given framework to this graph.
-        Also adds edges between the framework to all previously added products
-        that are an input or output of this framework.
-        Pre-condition: make sure products are added first!
+        Also adds edges between the framework its inputs and outputs,
+        for those products included in `productIds`.
         '''
         frameworkId = framework.getId()
         nodeAttrib = dict(
@@ -284,14 +288,12 @@ class ExecutionGraphBuilder(GraphBuilder):
         graph.add_node(frameworkNodeId, **nodeAttrib)
 
         for inputDefId in framework.getInputs():
-            inputProductNodeId = 'prod.' + inputDefId
-            if graph.has_node(inputProductNodeId):
-                graph.add_edge(inputProductNodeId, frameworkNodeId)
+            if inputDefId in productIds:
+                graph.add_edge(f'prod.{inputDefId}', frameworkNodeId)
 
         for outputDefId in framework.getOutputs():
-            outputProductNodeId = 'prod.' + outputDefId
-            if graph.has_node(outputProductNodeId):
-                graph.add_edge(frameworkNodeId, outputProductNodeId)
+            if outputDefId in productIds:
+                graph.add_edge(frameworkNodeId, f'prod.{outputDefId}')
 
 def createExecutionGraphBuilder(name: str,
                                 productIds: Iterable[str],
