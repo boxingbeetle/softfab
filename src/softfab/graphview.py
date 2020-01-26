@@ -52,7 +52,7 @@ class GraphFormat(Enum):
 
     PNG = ('png', 'PNG image', 'image/png')
     SVG = ('svg', 'SVG image', 'image/svg+xml; charset=UTF-8')
-    DOT = ('dot', 'GraphViz dot file', 'application/x-graphviz; charset=UTF-8')
+    DOT = ('dot', 'Graphviz dot file', 'application/x-graphviz; charset=UTF-8')
 
 # Note: We have multiple instances of "except Exception:" in the
 #       code because pygraphviz does not document in its API what
@@ -107,7 +107,7 @@ def iterConnectedExecutionGraphs() -> Iterator[Tuple[Set[str], Set[str]]]:
         yield productIds, frameworkIds
 
 class Graph:
-    '''Wrapper around GraphViz graphs.
+    '''Wrapper around Graphviz graphs.
     Use a GraphBuilder subclass to construct graphs.
     '''
 
