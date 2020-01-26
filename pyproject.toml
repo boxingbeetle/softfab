@@ -40,7 +40,7 @@ softfab = 'softfab.cmdline:main'
 python = '^3.6'
 Twisted = {version = '>=16.6', extras = ['tls']}
 passlib = {version = '^1.7', extras = ['bcrypt']}
-pygraphviz = '^1.4'
+graphviz = ">=0.13.2"
 pytz = '*'
 importlib_metadata = "^0.23.0"
 importlib_resources = "^1.0"

@@ -22,11 +22,6 @@ try:
 except ImportError:
     pytzVersion = 'not installed'
 
-try:
-    from pygraphviz import __version__ as pyGraphvizVersion
-except ImportError:
-    pyGraphvizVersion = 'not installed'
-
 class About_GET(FabPage[FabPage.Processor, FabPage.Arguments]):
     icon = 'IconHome'
     description = 'About'
@@ -86,7 +81,6 @@ class InstallationTable(Table):
             'not installed' if sendmail is None else 'installed'
             )
         yield 'Passlib version:', passlibVersion
-        yield 'PyGraphviz version:', pyGraphvizVersion
         yield 'pytz version:', pytzVersion
         yield 'Python version:', python_version()
 

@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-'''
-Builds the execution graphs by using AGraph from the pygraphviz module.
-'''
+"""
+Build execution graphs using Graphviz.
+"""
 
 from enum import Enum
 from typing import (
@@ -11,6 +11,8 @@ from typing import (
 from xml.etree import ElementTree
 import logging
 import re
+
+from graphviz import Digraph, version as gvVersion
 
 from softfab.Page import PageProcessor, Responder
 from softfab.frameworklib import Framework, frameworkDB
@@ -24,12 +26,12 @@ from softfab.webgui import Widget
 from softfab.xmlgen import XMLContent, xhtml
 
 try:
-    from pygraphviz import AGraph
-    canCreateGraphs = True
-except ImportError:
-    AGraph = object
+    gvVersion()
+except Exception:
+    logging.exception('Error getting Graphviz version')
     canCreateGraphs = False
-
+else:
+    canCreateGraphs = True
 
 svgNamespace = 'http://www.w3.org/2000/svg'
 xlinkNamespace = 'http://www.w3.org/1999/xlink'
@@ -59,6 +61,7 @@ class GraphFormat(Enum):
 #       exceptions it can raise. Rather than risking catching too
 #       little, especially as new versions might raise different
 #       exceptions, we catch everything except exit exceptions.
+# TODO: With the new graphviz library, this can be cleaned up.
 
 _defaultEdgeAttrib = dict(
     color = 'black:black',
@@ -111,7 +114,7 @@ class Graph:
     Use a GraphBuilder subclass to construct graphs.
     '''
 
-    def __init__(self, graph: Optional[AGraph]):
+    def __init__(self, graph: Optional[Digraph]):
         self.__graph = graph
 
     def export(self, fmt: GraphFormat) -> Optional[AnyStr]:
@@ -123,14 +126,14 @@ class Graph:
             return None
         try:
             if fmt is GraphFormat.DOT:
-                return graph.string()
+                return graph.source
             elif fmt is GraphFormat.SVG:
                 svgElement = self.toSVG()
                 if svgElement is None:
                     return None
                 return ElementTree.tostring(svgElement, 'utf-8')
             else:
-                return graph.draw(format=fmt.ext, prog='dot')
+                return graph.pipe(format=fmt.ext)
         except Exception:
             logging.exception(
                 'Execution graph export failed'
@@ -147,11 +150,9 @@ class Graph:
 
         try:
             # Note: This catches exceptions from the rendering process
-            svgGraph: str = graph.draw(format='svg', prog='dot')
+            svgGraph: bytes = graph.pipe(format='svg')
         except Exception:
-            logging.exception(
-                'Execution graph rendering (pygraphviz) failed'
-                )
+            logging.exception('Execution graph rendering (Graphviz) failed')
             return None
 
         try:
@@ -188,7 +189,7 @@ class GraphBuilder:
     def name(self) -> str:
         return self._name
 
-    def populate(self, graph: AGraph, links: bool) -> None:
+    def populate(self, graph: Digraph, links: bool) -> None:
         raise NotImplementedError
 
     def build(self, export: bool) -> Graph:
@@ -207,18 +208,16 @@ class GraphBuilder:
             return Graph(None)
 
         try:
-            graph = AGraph(directed=True, strict=True, id=name)
-            graph.node_attr.update(_defaultNodeAttrib)
-            graph.edge_attr.update(_defaultEdgeAttrib)
-            graph.graph_attr.update(_defaultGraphAttrib)
-            graph.graph_attr.update(bgcolor=('white' if export
-                                                else 'transparent'))
+            graph = Digraph(name=name,
+                            graph_attr=_defaultGraphAttrib,
+                            node_attr=_defaultNodeAttrib,
+                            edge_attr=_defaultEdgeAttrib,
+                            strict=True)
+            graph.attr(bgcolor=('white' if export else 'transparent'))
             self.populate(graph, self._links and not export)
             return Graph(graph)
         except Exception:
-            logging.exception(
-                'Execution graph creation (pygraphviz) failed'
-                )
+            logging.exception('Execution graph creation (Graphviz) failed')
             return Graph(None)
 
 
@@ -234,7 +233,7 @@ class ExecutionGraphBuilder(GraphBuilder):
         self._products = tuple(products)
         self._frameworks = tuple(frameworks)
 
-    def populate(self, graph: AGraph, links: bool) -> None:
+    def populate(self, graph: Digraph, links: bool) -> None:
         productIds = set()
         for product in self._products:
             self.addProduct(graph, links, product)
@@ -243,7 +242,7 @@ class ExecutionGraphBuilder(GraphBuilder):
             self.addFramework(graph, links, framework, productIds)
 
     def addProduct(self,
-                   graph: AGraph,
+                   graph: Digraph,
                    links: bool,
                    productDef: ProductDef
                    ) -> None:
@@ -262,10 +261,10 @@ class ExecutionGraphBuilder(GraphBuilder):
             nodeAttrib['URL'] = '../' + createProductDetailsURL(productId)
             nodeAttrib['target'] = '_parent'
 
-        graph.add_node(f'prod.{productId}', **nodeAttrib)
+        graph.node(f'prod.{productId}', **nodeAttrib)
 
     def addFramework(self,
-                     graph: AGraph,
+                     graph: Digraph,
                      links: bool,
                      framework: Framework,
                      productIds: AbstractSet[str]
@@ -285,15 +284,15 @@ class ExecutionGraphBuilder(GraphBuilder):
             nodeAttrib['target'] = '_parent'
 
         frameworkNodeId = f'fw.{frameworkId}'
-        graph.add_node(frameworkNodeId, **nodeAttrib)
+        graph.node(frameworkNodeId, **nodeAttrib)
 
         for inputDefId in framework.getInputs():
             if inputDefId in productIds:
-                graph.add_edge(f'prod.{inputDefId}', frameworkNodeId)
+                graph.edge(f'prod.{inputDefId}', frameworkNodeId)
 
         for outputDefId in framework.getOutputs():
             if outputDefId in productIds:
-                graph.add_edge(frameworkNodeId, f'prod.{outputDefId}')
+                graph.edge(frameworkNodeId, f'prod.{outputDefId}')
 
 def createExecutionGraphBuilder(name: str,
                                 productIds: Iterable[str],

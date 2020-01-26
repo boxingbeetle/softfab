@@ -99,7 +99,7 @@ class Design_GET(
         else:
             yield xhtml.p(class_ = 'notice')[
                 'Graph creation is not available because the server '
-                'does not have "pygraphviz" installed.'
+                'does not have Graphviz installed.'
                 ]
         yield xhtml.p[
             'For help please read the documentation about the ',
