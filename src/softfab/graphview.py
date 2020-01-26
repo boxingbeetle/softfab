@@ -258,9 +258,7 @@ class ExecutionGraphBuilder(GraphBuilder):
             nodeAttrib['URL'] = '../' + createProductDetailsURL(productId)
             nodeAttrib['target'] = '_parent'
 
-        productNodeId = 'prod.' + productId
-        if not graph.has_node(productNodeId):
-            graph.add_node(productNodeId, **nodeAttrib)
+        graph.add_node(f'prod.{productId}', **nodeAttrib)
 
     def addFramework(self,
                      graph: AGraph,
@@ -282,9 +280,8 @@ class ExecutionGraphBuilder(GraphBuilder):
             nodeAttrib['URL'] = '../' + createFrameworkDetailsURL(frameworkId)
             nodeAttrib['target'] = '_parent'
 
-        frameworkNodeId = 'fw.' + frameworkId
-        if not graph.has_node(frameworkNodeId):
-            graph.add_node(frameworkNodeId, **nodeAttrib)
+        frameworkNodeId = f'fw.{frameworkId}'
+        graph.add_node(frameworkNodeId, **nodeAttrib)
 
         for inputDefId in framework.getInputs():
             inputProductNodeId = 'prod.' + inputDefId
