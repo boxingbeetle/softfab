@@ -6,7 +6,7 @@ Build execution graphs using Graphviz.
 
 from enum import Enum
 from typing import (
-    AbstractSet, AnyStr, Iterable, Iterator, Optional, Set, Tuple, cast
+    AbstractSet, Iterable, Iterator, Optional, Set, Tuple, Union, cast
 )
 from xml.etree import ElementTree
 import logging
@@ -117,7 +117,7 @@ class Graph:
     def __init__(self, graph: Optional[Digraph]):
         self.__graph = graph
 
-    def export(self, fmt: GraphFormat) -> Optional[AnyStr]:
+    def export(self, fmt: GraphFormat) -> Union[None, bytes, str]:
         '''Renders this graph in the given format.
         Returns the rendered graph data, or None if rendering failed.
         '''

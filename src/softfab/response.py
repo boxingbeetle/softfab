@@ -4,7 +4,7 @@ from base64 import standard_b64encode
 from gzip import GzipFile
 from hashlib import md5
 from io import BytesIO
-from typing import AnyStr, Callable, Optional, Union
+from typing import Callable, Optional, Union
 
 from twisted.internet import reactor
 from twisted.internet.defer import Deferred
@@ -256,7 +256,7 @@ class Response:
         # RFC-7231 section 7.1.2 allows relative URLs in the Location header.
         self.__request.setHeader('location', url.encode())
 
-    def write(self, *texts: Optional[AnyStr]) -> None:
+    def write(self, *texts: Union[None, bytes, str]) -> None:
         writeBytes = self.__writeBytes
         for text in texts:
             if isinstance(text, str):
