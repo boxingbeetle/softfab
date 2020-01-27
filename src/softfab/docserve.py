@@ -18,6 +18,7 @@ from markdown.extensions.fenced_code import FencedCodeExtension
 from markdown.extensions.tables import TableExtension
 from markdown.treeprocessors import Treeprocessor
 from markdown.util import etree
+from twisted.internet.defer import Deferred
 from twisted.web.http import Request as TwistedRequest
 from twisted.web.resource import Resource
 from twisted.web.static import Data
@@ -31,6 +32,7 @@ from softfab.authentication import LoginAuthPage
 from softfab.compat import importlib_resources
 from softfab.pageargs import PageArgs
 from softfab.render import renderAuthenticated
+from softfab.request import Request
 from softfab.response import Response
 from softfab.userlib import User
 from softfab.xmlgen import XML, XMLContent, parseHTML, xhtml
@@ -149,6 +151,14 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
 
     class Processor(PageProcessor[Arguments]):
         content: Optional[XML] = None
+
+        def process(self,
+                    req: Request['DocPage.Arguments'],
+                    user: User
+                    ) -> Optional[Deferred]:
+            page = cast(DocPage, self.page)
+            func = getattr(page.module, 'process', None)
+            return None if func is None else func()
 
     def __init__(self,
                  resource: 'DocResource',
@@ -411,7 +421,8 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
 
     def presentContent(self, **kwargs: object) -> XMLContent:
         proc = cast('DocPage.Processor', kwargs['proc'])
-        return proc.content
+        content = proc.content
+        return None if content is None else content.present(**kwargs)
 
     def presentError(self, message: XML, **kwargs: object) -> XMLContent:
         yield message

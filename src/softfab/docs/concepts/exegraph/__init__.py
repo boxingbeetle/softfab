@@ -1,9 +1,13 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from functools import partial
+from typing import Dict
+
 from softfab.docserve import piHandler
 from softfab.frameworklib import Framework
 from softfab.graphview import ExecutionGraphBuilder
 from softfab.productdeflib import ProductDef, ProductType
+from softfab.webgui import PresenterFunction
 from softfab.xmlgen import XMLContent, xhtml
 
 button = 'Graph'
@@ -55,7 +59,22 @@ graphBuilders = {
         )
     }
 
+graphRenders: Dict[str, XMLContent] = {}
+
+def process() -> None:
+    for name, builder in graphBuilders.items():
+        if name not in graphRenders:
+            svg = builder.build(export=False).toSVG()
+            if svg is not None:
+                graphRenders[name] = svg
+
+def presentGraph(name: str, **kwargs: object) -> XMLContent:
+    try:
+        svg = graphRenders[name]
+    except KeyError:
+        svg = xhtml.span(class_='notice')['Graph rendering failed']
+    return xhtml.div(class_='graph')[ xhtml.div[ svg ] ]
+
 @piHandler
 def graph(arg: str) -> XMLContent:
-    svg = graphBuilders[arg].build(export=False).toSVG()
-    return xhtml.div(class_='graph')[ xhtml.div[ svg ] ]
+    return PresenterFunction(partial(presentGraph, name=arg))
