@@ -9,7 +9,7 @@ from typing import Sized, Tuple, cast
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
 from softfab.graphview import (
-    GraphPageMixin, GraphPanel, canCreateGraphs, createExecutionGraphBuilder,
+    GraphPageMixin, GraphPanel, createExecutionGraphBuilder,
     iterConnectedExecutionGraphs, legendBuilder
 )
 from softfab.request import Request
@@ -91,16 +91,10 @@ class Design_GET(
                 f"the products and frameworks:"
                 ]
 
-        if canCreateGraphs:
-            for index, graph in enumerate(proc.graphs):
-                if index == len(proc.graphs) - 1:
-                    yield xhtml.h2[ 'Legend' ]
-                yield GraphPanel.instance.present(graph=graph, **kwargs)
-        else:
-            yield xhtml.p(class_ = 'notice')[
-                'Graph creation is not available because the server '
-                'does not have Graphviz installed.'
-                ]
+        for index, graph in enumerate(proc.graphs):
+            if index == len(proc.graphs) - 1:
+                yield xhtml.h2[ 'Legend' ]
+            yield GraphPanel.instance.present(graph=graph, **kwargs)
         yield xhtml.p[
             'For help please read the documentation about the ',
             docLink('/concepts/exegraph/')[

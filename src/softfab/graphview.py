@@ -12,7 +12,7 @@ from xml.etree import ElementTree
 import logging
 import re
 
-from graphviz import Digraph, version as gvVersion
+from graphviz import Digraph
 
 from softfab.Page import PageProcessor, Responder
 from softfab.frameworklib import Framework, frameworkDB
@@ -24,14 +24,6 @@ from softfab.response import Response
 from softfab.setcalc import UnionFind
 from softfab.webgui import Widget
 from softfab.xmlgen import XMLContent, xhtml
-
-try:
-    gvVersion()
-except Exception:
-    logging.exception('Error getting Graphviz version')
-    canCreateGraphs = False
-else:
-    canCreateGraphs = True
 
 svgNamespace = 'http://www.w3.org/2000/svg'
 xlinkNamespace = 'http://www.w3.org/1999/xlink'
@@ -202,13 +194,8 @@ class GraphBuilder:
         @param links: include hyperlinks?
         """
 
-        name = self._name
-
-        if not canCreateGraphs:
-            return Graph(None)
-
         try:
-            graph = Digraph(graph_attr=dict(_defaultGraphAttrib, id=name),
+            graph = Digraph(graph_attr=dict(_defaultGraphAttrib, id=self._name),
                             node_attr=_defaultNodeAttrib,
                             edge_attr=_defaultEdgeAttrib,
                             strict=True)
