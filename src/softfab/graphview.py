@@ -48,13 +48,6 @@ class GraphFormat(Enum):
     SVG = ('svg', 'SVG image', 'image/svg+xml; charset=UTF-8')
     DOT = ('dot', 'Graphviz dot file', 'application/x-graphviz; charset=UTF-8')
 
-# Note: We have multiple instances of "except Exception:" in the
-#       code because pygraphviz does not document in its API what
-#       exceptions it can raise. Rather than risking catching too
-#       little, especially as new versions might raise different
-#       exceptions, we catch everything except exit exceptions.
-# TODO: With the new graphviz library, this can be cleaned up.
-
 _defaultEdgeAttrib = dict(
     color = 'black:black',
     )
@@ -106,45 +99,39 @@ class Graph:
     Use a GraphBuilder subclass to construct graphs.
     '''
 
-    def __init__(self, graph: Optional[Digraph]):
+    def __init__(self, graph: Digraph):
         self.__graph = graph
+
+    def _runDot(self, fmt: GraphFormat) -> Optional[bytes]:
+        # TODO: Catch more specific exceptions, or maybe even propagate them
+        #       instead of catching them here.
+        try:
+            return self.__graph.pipe(format=fmt.ext)
+        except Exception:
+            logging.exception('Execution graph rendering (Graphviz) failed')
+            return None
 
     def export(self, fmt: GraphFormat) -> Union[None, bytes, str]:
         '''Renders this graph in the given format.
         Returns the rendered graph data, or None if rendering failed.
         '''
-        graph = self.__graph
-        if graph is None:
-            return None
-        try:
-            if fmt is GraphFormat.DOT:
-                return graph.source
-            elif fmt is GraphFormat.SVG:
-                svgElement = self.toSVG()
-                if svgElement is None:
-                    return None
-                return ElementTree.tostring(svgElement, 'utf-8')
-            else:
-                return graph.pipe(format=fmt.ext)
-        except Exception:
-            logging.exception(
-                'Execution graph export failed'
-                )
-            return None
+        if fmt is GraphFormat.DOT:
+            return self.__graph.source
+        elif fmt is GraphFormat.SVG:
+            svgElement = self.toSVG()
+            if svgElement is None:
+                return None
+            return ElementTree.tostring(svgElement, 'utf-8')
+        else:
+            return self._runDot(fmt)
 
     def toSVG(self) -> Optional[ElementTree.Element]:
         '''Renders this graph as SVG image and cleans up the resulting SVG.
         If rendering fails, the error is logged and None is returned.
         '''
-        graph = self.__graph
-        if graph is None:
-            return None
 
-        try:
-            # Note: This catches exceptions from the rendering process
-            svgGraph: bytes = graph.pipe(format='svg')
-        except Exception:
-            logging.exception('Execution graph rendering (Graphviz) failed')
+        svgGraph: Optional[bytes] = self._runDot(GraphFormat.SVG)
+        if svgGraph is None:
             return None
 
         try:
@@ -187,24 +174,17 @@ class GraphBuilder:
     def build(self, export: bool) -> Graph:
         """Creates a populated graph.
 
-        Any errors are logged and not propagated.
-
         @param export: optimize the graph for use outside of the Control Center
                        (mailing, printing)?
-        @param links: include hyperlinks?
         """
 
-        try:
-            graph = Digraph(graph_attr=dict(_defaultGraphAttrib, id=self._name),
-                            node_attr=_defaultNodeAttrib,
-                            edge_attr=_defaultEdgeAttrib,
-                            strict=True)
-            graph.attr(bgcolor=('white' if export else 'transparent'))
-            self.populate(graph, self._links and not export)
-            return Graph(graph)
-        except Exception:
-            logging.exception('Execution graph creation (Graphviz) failed')
-            return Graph(None)
+        graph = Digraph(graph_attr=dict(_defaultGraphAttrib, id=self._name),
+                        node_attr=_defaultNodeAttrib,
+                        edge_attr=_defaultEdgeAttrib,
+                        strict=True)
+        graph.attr(bgcolor=('white' if export else 'transparent'))
+        self.populate(graph, self._links and not export)
+        return Graph(graph)
 
 
 class ExecutionGraphBuilder(GraphBuilder):
