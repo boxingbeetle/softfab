@@ -208,8 +208,7 @@ class GraphBuilder:
             return Graph(None)
 
         try:
-            graph = Digraph(name=name,
-                            graph_attr=_defaultGraphAttrib,
+            graph = Digraph(graph_attr=dict(_defaultGraphAttrib, id=name),
                             node_attr=_defaultNodeAttrib,
                             edge_attr=_defaultEdgeAttrib,
                             strict=True)
