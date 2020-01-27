@@ -5,14 +5,17 @@ Build execution graphs using Graphviz.
 """
 
 from enum import Enum
+from functools import partial
 from typing import (
-    AbstractSet, Iterable, Iterator, Optional, Set, Tuple, Union, cast
+    AbstractSet, Generator, Iterable, Iterator, Optional, Set, Tuple, cast
 )
 from xml.etree import ElementTree
 import logging
 import re
 
 from graphviz import Digraph
+from twisted.internet.defer import Deferred, fail, inlineCallbacks, succeed
+from twisted.python.failure import Failure
 
 from softfab.Page import PageProcessor, Responder
 from softfab.frameworklib import Framework, frameworkDB
@@ -102,37 +105,35 @@ class Graph:
     def __init__(self, graph: Digraph):
         self.__graph = graph
 
-    def _runDot(self, fmt: GraphFormat) -> Optional[bytes]:
+    def _runDot(self, fmt: GraphFormat) -> Deferred:
         # TODO: Catch more specific exceptions, or maybe even propagate them
         #       instead of catching them here.
         try:
-            return self.__graph.pipe(format=fmt.ext)
+            return succeed(self.__graph.pipe(format=fmt.ext))
         except Exception:
             logging.exception('Execution graph rendering (Graphviz) failed')
-            return None
+            return fail(RuntimeError('See log for details'))
 
-    def export(self, fmt: GraphFormat) -> Union[None, bytes, str]:
+    def export(self, fmt: GraphFormat) -> Deferred:
         '''Renders this graph in the given format.
-        Returns the rendered graph data, or None if rendering failed.
+        Returns a `Deferred` that on success delivers the rendered graph data,
+        which is of type `bytes` or `str` depending on the requested format.
         '''
         if fmt is GraphFormat.DOT:
-            return self.__graph.source
+            return succeed(self.__graph.source)
         elif fmt is GraphFormat.SVG:
-            svgElement = self.toSVG()
-            if svgElement is None:
-                return None
-            return ElementTree.tostring(svgElement, 'utf-8')
+            d = self.toSVG()
+            d.addCallback(partial(ElementTree.tostring, encoding='utf-8'))
+            return d
         else:
             return self._runDot(fmt)
 
-    def toSVG(self) -> Optional[ElementTree.Element]:
+    @inlineCallbacks
+    def toSVG(self) -> Generator[Deferred, bytes, ElementTree.Element]:
         '''Renders this graph as SVG image and cleans up the resulting SVG.
-        If rendering fails, the error is logged and None is returned.
         '''
 
-        svgGraph: Optional[bytes] = self._runDot(GraphFormat.SVG)
-        if svgGraph is None:
-            return None
+        svgGraph = yield self._runDot(GraphFormat.SVG)
 
         try:
             # Note: This catches exceptions from the XML parser in
@@ -143,7 +144,7 @@ class Graph:
             logging.exception(
                 'Generated XML (from svgGraph) is invalid'
                 )
-            return None
+            raise RuntimeError('See log for details')
 
         # Remove <title> elements to reduce output size.
         # It seems only Opera renders these at all (as tool tips). For nodes
@@ -329,7 +330,7 @@ class _GraphResponder(Responder):
         self.__format = fmt
         self.__export = export
 
-    def respond(self, response: Response) -> None:
+    def respond(self, response: Response) -> Deferred:
         export = self.__export
         graph = self.__builder.build(export)
         fmt = self.__format
@@ -338,7 +339,13 @@ class _GraphResponder(Responder):
             response.setFileName(f'{self.__fileName}.{fmt.ext}')
         else:
             response.allowEmbedding()
-        response.write(graph.export(fmt))
+        return graph.export(fmt).addErrback(self.graphError, response)
+
+    def graphError(self, reason: Failure, response: Response) -> str:
+        response.setStatus(500, 'Graph rendering failed')
+        response.setHeader('Content-Type', 'text/plain')
+        return f'Graph rendering failed: {reason.value}'
+
 
 class GraphPageMixin:
     __reGraphPath = re.compile(r'(\w+)(\.ui)?\.(\w+)')

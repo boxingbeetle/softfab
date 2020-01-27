@@ -1,7 +1,9 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from functools import partial
-from typing import Dict
+from typing import Dict, Optional
+
+from twisted.internet.defer import Deferred, DeferredList
 
 from softfab.docserve import piHandler
 from softfab.frameworklib import Framework
@@ -61,12 +63,17 @@ graphBuilders = {
 
 graphRenders: Dict[str, XMLContent] = {}
 
-def process() -> None:
+def process() -> Optional[Deferred]:
+    deferreds = []
     for name, builder in graphBuilders.items():
         if name not in graphRenders:
-            svg = builder.build(export=False).toSVG()
-            if svg is not None:
-                graphRenders[name] = svg
+            d = builder.build(export=False).toSVG()
+            d.addCallback(partial(graphRenders.__setitem__, name))
+            deferreds.append(d)
+    if deferreds:
+        return DeferredList(deferreds)
+    else:
+        return None
 
 def presentGraph(name: str, **kwargs: object) -> XMLContent:
     try:
