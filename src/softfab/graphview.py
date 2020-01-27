@@ -292,28 +292,23 @@ class GraphPanel(Widget):
     '''
 
     def present(self, **kwargs: object) -> XMLContent:
-        proc = cast(PageProcessor, kwargs.get('proc'))
-        builder = cast(GraphBuilder, kwargs['graph'])
+        proc = cast(PageProcessor, kwargs['proc'])
+        name = cast(GraphBuilder, kwargs['graph']).name
         return xhtml.div(class_ = 'graph')[
             xhtml.div[
-                builder.build(export=False).toSVG()
-                if proc is None else
                 xhtml.object(
-                    data=proc.subItemRelURL(f'{builder.name}.ui.svg'),
+                    data=proc.subItemRelURL(f'{name}.ui.svg'),
                     type='image/svg+xml'
                     )
                 ],
-            None if proc is None else self.__presentFooter(proc, builder)
+            self.__presentFooter(proc, name)
             ]
 
-    def __presentFooter(self,
-                        proc: PageProcessor,
-                        builder: GraphBuilder
-                        ) -> XMLContent:
+    def __presentFooter(self, proc: PageProcessor, name: str) -> XMLContent:
         return xhtml.div(class_ = 'export')[
             'export: ', xhtml[', '].join(
                 xhtml.a(
-                    href = proc.subItemRelURL(f'{builder.name}.{fmt.ext}'),
+                    href = proc.subItemRelURL(f'{name}.{fmt.ext}'),
                     title = fmt.description,
                     )[ fmt.ext ]
                 for fmt in GraphFormat

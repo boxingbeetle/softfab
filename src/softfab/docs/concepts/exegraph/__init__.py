@@ -2,9 +2,9 @@
 
 from softfab.docserve import piHandler
 from softfab.frameworklib import Framework
-from softfab.graphview import ExecutionGraphBuilder, GraphPanel
+from softfab.graphview import ExecutionGraphBuilder
 from softfab.productdeflib import ProductDef, ProductType
-from softfab.xmlgen import XMLContent
+from softfab.xmlgen import XMLContent, xhtml
 
 button = 'Graph'
 children = ()
@@ -57,4 +57,5 @@ graphBuilders = {
 
 @piHandler
 def graph(arg: str) -> XMLContent:
-    return GraphPanel.instance.present(graph=graphBuilders[arg])
+    svg = graphBuilders[arg].build(export=False).toSVG()
+    return xhtml.div(class_='graph')[ xhtml.div[ svg ] ]
