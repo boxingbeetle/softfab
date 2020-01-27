@@ -148,7 +148,7 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
         pass
 
     class Processor(PageProcessor[Arguments]):
-        pass
+        content: Optional[XML] = None
 
     def __init__(self,
                  resource: 'DocResource',
@@ -357,7 +357,7 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
                      proc: 'DocPage.Processor'
                      ) -> Responder:
         self.renderContent()
-        setattr(proc, 'content', self.postProcess())
+        proc.content = self.postProcess()
         if self.errors:
             message = xhtml.p(class_='notice')[
                 'Error in documentation ', xhtml[', '].join(self.errors), '. ',
@@ -410,8 +410,8 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
             yield page.createLinkBarButton(name + '/')
 
     def presentContent(self, **kwargs: object) -> XMLContent:
-        proc = cast(PageProcessor, kwargs['proc'])
-        return cast(XMLContent, getattr(proc, 'content'))
+        proc = cast('DocPage.Processor', kwargs['proc'])
+        return proc.content
 
     def presentError(self, message: XML, **kwargs: object) -> XMLContent:
         yield message
