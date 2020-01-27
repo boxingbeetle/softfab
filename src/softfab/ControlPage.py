@@ -5,9 +5,7 @@ from typing import Generic, Optional, Union
 from twisted.internet.defer import Deferred
 from twisted.internet.interfaces import IProducer
 
-from softfab.Page import (
-    Authenticator, FabResource, PageProcessor, ProcT, Responder
-)
+from softfab.Page import Authenticator, FabResource, ProcT, Responder
 from softfab.authentication import HTTPAuthPage
 from softfab.pageargs import ArgsT
 from softfab.response import Response
@@ -55,7 +53,7 @@ class ControlPage(FabResource[ArgsT, ProcT]):
     def getContentType(self, proc: ProcT) -> str: # pylint: disable=unused-argument
         return self.contentType
 
-    def errorResponder(self, ex: Exception, proc: PageProcessor) -> Responder:
+    def errorResponder(self, ex: Exception, proc: ProcT) -> Responder:
         return plainTextErrorResponder
 
     def writeReply(self,

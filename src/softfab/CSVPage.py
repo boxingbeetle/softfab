@@ -6,7 +6,7 @@
 from typing import Generic, Iterator, Optional, Sequence
 
 from softfab.ControlPage import plainTextErrorResponder
-from softfab.Page import FabResource, PageProcessor, ProcT, Responder
+from softfab.Page import FabResource, ProcT, Responder
 from softfab.authentication import LoginAuthPage
 from softfab.pagelinks import CSVArgs, CSVSeparator
 from softfab.response import Response
@@ -42,7 +42,7 @@ class CSVPage(FabResource['CSVPage.Arguments', ProcT]):
         else:
             raise KeyError('Resource does not contain subitems')
 
-    def errorResponder(self, ex: Exception, proc: PageProcessor) -> Responder:
+    def errorResponder(self, ex: Exception, proc: ProcT) -> Responder:
         return plainTextErrorResponder
 
     def getFileName(self, proc: ProcT) -> str:

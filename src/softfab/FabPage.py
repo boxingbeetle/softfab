@@ -23,13 +23,10 @@ IconModifier = Enum('IconModifier', 'NONE NEW EDIT DELETE')
 
 class BasePage(UIPage[ProcT], FabResource[ArgsT, ProcT], ABC):
 
-    def getResponder(self,
-                     path: Optional[str],
-                     proc: PageProcessor
-                     ) -> Responder:
+    def getResponder(self, path: Optional[str], proc: ProcT) -> Responder:
         if path is None:
             return super().getResponder(None, proc)
-        for widget in self.iterWidgets(cast(ProcT, proc)):
+        for widget in self.iterWidgets(proc):
             if widget.widgetId == path:
                 return _WidgetResponder(self, widget, proc)
         raise KeyError(f'Page does not contain a widget named "{path}"')

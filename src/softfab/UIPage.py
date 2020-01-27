@@ -3,7 +3,7 @@
 from traceback import TracebackException
 from typing import Generic, Iterable, Iterator, Optional, cast
 
-from softfab.Page import PageProcessor, ProcT, Responder, logPageException
+from softfab.Page import ProcT, Responder, logPageException
 from softfab.StyleResources import styleRoot
 from softfab.pagelinks import createUserDetailsLink, loginURL, logoutURL
 from softfab.projectlib import project
@@ -112,17 +112,14 @@ class UIPage(Generic[ProcT]):
         '''
         return iter(())
 
-    def getResponder(self,
-                     path: Optional[str],
-                     proc: PageProcessor
-                     ) -> Responder:
+    def getResponder(self, path: Optional[str], proc: ProcT) -> Responder:
         if path is None:
-            return UIResponder(self, cast(ProcT, proc))
+            return UIResponder(self, proc)
         else:
             raise KeyError('Page does not contain subitems')
 
-    def errorResponder(self, ex: Exception, proc: PageProcessor) -> Responder:
-        return _ErrorResponder(self, ex, cast(ProcT, proc))
+    def errorResponder(self, ex: Exception, proc: ProcT) -> Responder:
+        return _ErrorResponder(self, ex, proc)
 
     def __formatError(self, req: Request, ex: Exception) -> Iterator[XMLNode]:
         '''Yields HTML informing the user of the given exception.

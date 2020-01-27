@@ -237,7 +237,7 @@ class FabResource(ABC, Generic[ArgsT, ProcT]):
         '''
         raise NotImplementedError
 
-    def errorResponder(self, ex: Exception, proc: PageProcessor) -> Responder:
+    def errorResponder(self, ex: Exception, proc: ProcT) -> Responder:
         '''Returns a Responder that can present an error page for the given
         exception.
         '''

@@ -354,7 +354,7 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
 
     def getResponder(self,
                      path: Optional[str],
-                     proc: PageProcessor
+                     proc: 'DocPage.Processor'
                      ) -> Responder:
         self.renderContent()
         setattr(proc, 'content', self.postProcess())
@@ -364,9 +364,7 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
                 xhtml.br,
                 'Please check the Control Center log for details.'
                 ]
-            return DocErrorResponder(
-                self, cast(DocPage.Processor, proc), message
-                )
+            return DocErrorResponder(self, proc, message)
         else:
             return super().getResponder(path, proc)
 
