@@ -331,10 +331,7 @@ def present(responder: Responder, response: Response) -> Optional[Deferred]:
             raise TypeError(type(presenter))
     else:
         if isinstance(presenter, Deferred):
-            presenter.addCallback(
-                lambda result, response: response.finish(),
-                response
-                )
+            presenter.addCallback(response.writeAndFinish)
         elif presenter is None:
             response.finish()
         else:
