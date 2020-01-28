@@ -15,7 +15,7 @@ from softfab.graphview import (
 from softfab.request import Request
 from softfab.userlib import User, checkPrivilege
 from softfab.utils import pluralize
-from softfab.webgui import docLink
+from softfab.webgui import docLink, hgroup
 from softfab.xmlgen import XMLContent, xhtml
 
 
@@ -82,8 +82,10 @@ class Design_GET(
                 f"Execution {pluralize('graph', len(graphs))} of "
                 f"the products and frameworks:"
                 ]
-            for graph in graphs:
-                yield GraphPanel.instance.present(graph=graph, **kwargs)
+            yield hgroup(class_='wrap')[(
+                GraphPanel.instance.present(graph=graph, **kwargs)
+                for graph in graphs
+                )].present(**kwargs)
         else:
             yield xhtml.p[
                 'This factory has no product and framework definitions yet.'
