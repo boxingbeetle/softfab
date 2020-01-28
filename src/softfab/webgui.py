@@ -19,7 +19,7 @@ import logging
 from softfab.compat import NoReturn
 from softfab.pageargs import PageArgs, Query
 from softfab.pnglib import getPNGDimensions
-from softfab.utils import SharedInstance, iterable
+from softfab.utils import SharedInstance, abstract, iterable
 from softfab.xmlgen import (
     XML, XMLContent, XMLNode, XMLPresentable, XMLSubscriptable, adaptToXML,
     xhtml
@@ -174,6 +174,23 @@ class AttrContainer(Container):
                 attributes[key] = value
         return self._replaceAttributes(attributes)
 
+    # TODO: This is a modified copy-paste of XMLNode.addClass().
+    #       It would be better to have a class for attributes and
+    #       implement this method there.
+    def addClass(self: AttrContainerT, name: Optional[str]) -> AttrContainerT:
+        '''Appends the given `name` to our `class` attribute.
+        This can be used to add a CSS class without overwriting an existing one.
+        Returns a new container, or this one if `name` was None.
+        '''
+        if name is None:
+            return self
+
+        attrs = dict(self._attributes)
+        oldClass = attrs.get('class')
+        newClass = name if oldClass is None else f'{oldClass} {name}'
+        attrs['class'] = newClass
+        return self._replaceAttributes(attrs)
+
 class _GroupItem(AttrContainer):
     '''Wraps an item that is contained within a group container.
     '''
@@ -203,6 +220,7 @@ class _Group(AttrContainer):
     '''
     groupTag = xhtml.div
     itemTag = xhtml.div
+    cssClass: str = abstract
 
     def _adaptContentElement(self, element: XMLContent) -> Iterator[XML]:
         yield adaptToXML(cast(XMLPresentable, groupItem.adapt(element)))
@@ -215,17 +233,25 @@ class _Group(AttrContainer):
             if presentation
             ]
         if presentations:
-            return self.groupTag(**self._attributes)[ presentations ]
+            return self.groupTag(**self._attributes).addClass(self.cssClass)[
+                presentations
+                ]
         else:
             return None
 
-hgroup = _Group((), dict(class_ = 'hgroup'))
+class _HGroup(_Group):
+    cssClass = 'hgroup'
+
+class _VGroup(_Group):
+    cssClass = 'vgroup'
+
+hgroup = _HGroup((), {})
 '''Container that groups page elements horizontally, aligned to top.
 Items with an empty presentation will not have cells allocated to them.
 If all items present empty, the group itself is omitted.
 '''
 
-vgroup = _Group((), dict(class_ = 'vgroup'))
+vgroup = _VGroup((), {})
 '''Container that groups page elements vertically, with equal width.
 Items with an empty presentation will not have cells allocated to them.
 If all items present empty, the group itself is omitted.
