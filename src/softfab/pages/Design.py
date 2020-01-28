@@ -74,8 +74,17 @@ class Design_GET(
 
     def presentContent(self, **kwargs: object) -> XMLContent:
         proc = cast(Design_GET.Processor, kwargs['proc'])
-        numGraphs = len(proc.graphs) - 1 # subtract the legend
-        if numGraphs == 0:
+        graphs = proc.graphs[:-1]
+        legend = proc.graphs[-1]
+
+        if graphs:
+            yield xhtml.p[
+                f"Execution {pluralize('graph', len(graphs))} of "
+                f"the products and frameworks:"
+                ]
+            for graph in graphs:
+                yield GraphPanel.instance.present(graph=graph, **kwargs)
+        else:
             yield xhtml.p[
                 'This factory has no product and framework definitions yet.'
                 ]
@@ -85,16 +94,10 @@ class Design_GET(
                 'Select the "Products" or "Frameworks" button '
                 'from the navigation bar above.'
                 ]
-        else:
-            yield xhtml.p[
-                f"Execution {pluralize('graph', numGraphs)} of "
-                f"the products and frameworks:"
-                ]
 
-        for index, graph in enumerate(proc.graphs):
-            if index == len(proc.graphs) - 1:
-                yield xhtml.h2[ 'Legend' ]
-            yield GraphPanel.instance.present(graph=graph, **kwargs)
+        yield xhtml.h2[ 'Legend' ]
+        yield GraphPanel.instance.present(graph=legend, **kwargs)
+
         yield xhtml.p[
             'For help please read the documentation about the ',
             docLink('/concepts/exegraph/')[
