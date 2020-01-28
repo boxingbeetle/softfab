@@ -439,9 +439,9 @@ class XMLNode(_XMLSerializable):
         if name is None:
             return self
 
-        oldClass = self._attributes.get('class')
-        newClass = name if oldClass is None else oldClass + ' ' + name
         attrs = dict(self._attributes)
+        oldClass = attrs.get('class')
+        newClass = name if oldClass is None else f'{oldClass} {name}'
         attrs['class'] = newClass
         return self.__class__(
             self._namespace, self._name, attrs, self._children
