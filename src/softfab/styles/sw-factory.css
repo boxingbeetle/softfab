@@ -150,6 +150,9 @@ button {
 .nobreak, th, label {
 	white-space: nowrap;
 }
+.wrap {
+	flex-wrap: wrap;
+}
 .centeralign {
 	text-align: center;
 }
@@ -388,7 +391,7 @@ dd {
 }
 
 div.hgroup, div.vgroup {
-	display: table;
+	display: flex;
 }
 div.vgroup {
 	margin-right: 24px;

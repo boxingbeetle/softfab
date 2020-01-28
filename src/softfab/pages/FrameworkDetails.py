@@ -104,7 +104,7 @@ class FrameworkDetails_GET(
                 )[ 'Delete this framework' ]
 
         yield xhtml.h3[ 'Details of framework ', xhtml.b[ frameworkId ], ':' ]
-        yield hgroup[
+        yield hgroup(class_='wrap')[
             DetailsTable.instance,
             GraphPanel.instance.present(graph=proc.graph, **kwargs)
             ].present(**kwargs)

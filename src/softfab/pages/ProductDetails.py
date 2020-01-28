@@ -101,7 +101,7 @@ class ProductDetails_GET(
                 )[ 'Delete this Product' ]
 
         yield xhtml.h3[ 'Details of product ', xhtml.b[ productDefId ], ':' ]
-        yield hgroup[
+        yield hgroup(class_='wrap')[
             DetailsTable.instance,
             GraphPanel.instance.present(graph=proc.graph, **kwargs)
             ].present(**kwargs)

@@ -70,7 +70,7 @@ class FrameworkEditBase(EditPage[FrameworkEditArgs, Framework]):
                 ],
             ]
 
-        yield hgroup[
+        yield hgroup(class_='wrap')[
             InputsTable.instance,
             OutputsTable.instance
             ]
