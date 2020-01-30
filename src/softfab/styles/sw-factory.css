@@ -497,6 +497,7 @@ div.graph {
     border: 1px solid #C0C0C0;
     background: #F0F0F0;
     max-width: max-content;
+    width: calc(100% - 24px);
     margin: 8px 12px 16px 12px;
 }
 div.graph > div {
