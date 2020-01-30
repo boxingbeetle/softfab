@@ -398,11 +398,7 @@ div.vgroup {
 	margin-right: 24px;
 }
 div.hgroup > div {
-	display: table-cell;
 	vertical-align: top;
-}
-div.vgroup > div {
-	display: table-row;
 }
 div.vgroup > div > * {
 	width: 100%;
