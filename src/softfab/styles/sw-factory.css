@@ -397,9 +397,6 @@ div.vgroup {
 	flex-direction: column;
 	margin-right: 24px;
 }
-div.hgroup > div {
-	vertical-align: top;
-}
 div.vgroup > div > * {
 	width: 100%;
 }
