@@ -499,8 +499,7 @@ div.graph {
 	flex-direction: column;
 	border: 1px solid #C0C0C0;
 	background: #F0F0F0;
-	max-width: -moz-min-content;
-	max-width: min-content;
+	max-width: max-content;
 	margin: 8px 12px 16px 12px;
 }
 div.graph > div {
@@ -514,9 +513,6 @@ div.graph > div.export {
 	background: #D8D8D8;
 	padding: 2px 4px;
 	white-space: nowrap;
-}
-div.graph object {
-	width: -moz-max-content;
 }
 
 div.reporttabs {
