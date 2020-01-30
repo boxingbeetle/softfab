@@ -14,7 +14,7 @@ from softfab.productdeflib import productDefDB
 from softfab.request import Request
 from softfab.userlib import User, checkPrivilege
 from softfab.utils import pluralize
-from softfab.webgui import PropertiesTable, hgroup, pageLink
+from softfab.webgui import PropertiesTable, pageLink
 from softfab.xmlgen import XML, XMLContent, xhtml
 
 
@@ -101,10 +101,10 @@ class ProductDetails_GET(
                 )[ 'Delete this Product' ]
 
         yield xhtml.h3[ 'Details of product ', xhtml.b[ productDefId ], ':' ]
-        yield hgroup(class_='wrap')[
+        yield xhtml.div(class_='hgroup wrap')[
             DetailsTable.instance,
-            GraphPanel.instance.present(graph=proc.graph, **kwargs)
-            ].present(**kwargs)
+            GraphPanel.instance
+            ].present(graph=proc.graph, **kwargs)
         yield xhtml.p[
             pageLink('ProductEdit', proc.args)[ 'Edit this product' ],
             xhtml.br,

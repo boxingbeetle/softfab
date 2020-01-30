@@ -18,7 +18,7 @@ from softfab.request import Request
 from softfab.resourceview import InlineResourcesTable
 from softfab.userlib import User, checkPrivilege
 from softfab.utils import pluralize
-from softfab.webgui import PropertiesTable, hgroup, pageLink
+from softfab.webgui import PropertiesTable, pageLink
 from softfab.xmlgen import XML, XMLContent, xhtml
 
 # Note: We use "taskDef" here to refer to instances of TaskDefBase,
@@ -104,10 +104,10 @@ class FrameworkDetails_GET(
                 )[ 'Delete this framework' ]
 
         yield xhtml.h3[ 'Details of framework ', xhtml.b[ frameworkId ], ':' ]
-        yield hgroup(class_='wrap')[
+        yield xhtml.div(class_='hgroup wrap')[
             DetailsTable.instance,
-            GraphPanel.instance.present(graph=proc.graph, **kwargs)
-            ].present(**kwargs)
+            GraphPanel.instance
+            ].present(graph=proc.graph, **kwargs)
         yield xhtml.p[
             pageLink('FrameworkEdit', proc.args)[ 'Edit this framework' ],
             xhtml.br,
