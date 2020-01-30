@@ -394,6 +394,7 @@ div.hgroup, div.vgroup {
 	display: flex;
 }
 div.vgroup {
+	flex-direction: column;
 	margin-right: 24px;
 }
 div.hgroup > div {
