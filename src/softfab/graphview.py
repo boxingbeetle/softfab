@@ -6,16 +6,18 @@ Build execution graphs using Graphviz.
 
 from enum import Enum
 from functools import partial
-from subprocess import PIPE, Popen
 from typing import (
-    AbstractSet, Generator, Iterable, Iterator, Optional, Set, Tuple, cast
+    AbstractSet, Generator, Iterable, Iterator, List, Optional, Set, Tuple,
+    cast
 )
 from xml.etree import ElementTree
 import logging
 import re
 
 from graphviz import Digraph
+from twisted.internet import reactor
 from twisted.internet.defer import Deferred, fail, inlineCallbacks, succeed
+from twisted.internet.protocol import ProcessProtocol
 from twisted.python.failure import Failure
 
 from softfab.Page import PageProcessor, Responder
@@ -98,6 +100,33 @@ def iterConnectedExecutionGraphs() -> Iterator[Tuple[Set[str], Set[str]]]:
                 frameworkIds.add(recordId)
         yield productIds, frameworkIds
 
+class DotProcessProtocol(ProcessProtocol):
+    """Handles the execution of the Graphviz 'dot' tool."""
+
+    def __init__(self, data: bytes):
+        self.data = data
+        self.output: List[bytes] = []
+        self.deferred = Deferred()
+
+    def connectionMade(self) -> None:
+        self.transport.write(self.data)
+        self.transport.closeStdin()
+
+    def outReceived(self, data: bytes) -> None:
+        self.output.append(data)
+
+    def errReceived(self, data: bytes) -> None:
+        logging.warning('Graphviz "dot" tool printed on stderr:\n%s',
+                        data.decode('utf-8', 'replace'))
+
+    def processEnded(self, reason: Failure) -> None:
+        code = reason.value.exitCode
+        if code == 0:
+            self.deferred.callback(b''.join(self.output))
+        else:
+            logging.warning('Graphviz "dot" tool exited with code %d', code)
+            self.deferred.errback(Failure(RuntimeError('See log for details')))
+
 class Graph:
     '''Wrapper around Graphviz graphs.
     Use a GraphBuilder subclass to construct graphs.
@@ -109,18 +138,16 @@ class Graph:
     def _runDot(self, fmt: GraphFormat) -> Deferred:
         data = self.__graph.source.encode('utf-8')
 
-        cmd = ('dot', f'-T{fmt.ext}')
+        proto = DotProcessProtocol(data)
+        executable = 'dot'
+        args = ('dot', f'-T{fmt.ext}')
         try:
-            proc = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+            reactor.spawnProcess(proto, executable, args)
         except OSError:
-            logging.exception('Failed to run Graphviz command %r', cmd)
+            logging.exception('Failed to spawn Graphviz "dot" tool')
             return fail(RuntimeError('See log for details'))
 
-        out, err = proc.communicate(data)
-        if err:
-            logging.warning('Graphviz printed on stderr:\n%s',
-                            err.decode('utf-8', 'replace'))
-        return succeed(out)
+        return proto.deferred
 
     def export(self, fmt: GraphFormat) -> Deferred:
         '''Renders this graph in the given format.
