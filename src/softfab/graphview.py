@@ -6,6 +6,7 @@ Build execution graphs using Graphviz.
 
 from enum import Enum
 from functools import partial
+from subprocess import PIPE, Popen
 from typing import (
     AbstractSet, Generator, Iterable, Iterator, Optional, Set, Tuple, cast
 )
@@ -106,13 +107,20 @@ class Graph:
         self.__graph = graph
 
     def _runDot(self, fmt: GraphFormat) -> Deferred:
-        # TODO: Catch more specific exceptions, or maybe even propagate them
-        #       instead of catching them here.
+        data = self.__graph.source.encode('utf-8')
+
+        cmd = ('dot', f'-T{fmt.ext}')
         try:
-            return succeed(self.__graph.pipe(format=fmt.ext))
-        except Exception:
-            logging.exception('Execution graph rendering (Graphviz) failed')
+            proc = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        except OSError:
+            logging.exception('Failed to run Graphviz command %r', cmd)
             return fail(RuntimeError('See log for details'))
+
+        out, err = proc.communicate(data)
+        if err:
+            logging.warning('Graphviz printed on stderr:\n%s',
+                            err.decode('utf-8', 'replace'))
+        return succeed(out)
 
     def export(self, fmt: GraphFormat) -> Deferred:
         '''Renders this graph in the given format.
