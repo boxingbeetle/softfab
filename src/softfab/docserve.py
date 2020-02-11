@@ -7,6 +7,7 @@ from types import ModuleType
 from typing import (
     Callable, Dict, Iterable, Iterator, List, Optional, Sequence, Tuple, cast
 )
+from xml.etree.ElementTree import Element
 import logging
 import sys
 
@@ -17,7 +18,6 @@ from markdown.extensions.def_list import DefListExtension
 from markdown.extensions.fenced_code import FencedCodeExtension
 from markdown.extensions.tables import TableExtension
 from markdown.treeprocessors import Treeprocessor
-from markdown.util import etree
 from twisted.internet.defer import Deferred
 from twisted.web.http import Request as TwistedRequest
 from twisted.web.resource import Resource
@@ -67,12 +67,14 @@ extractionFailedInfo = ExtractedInfo('Error', xhtml.p(class_='notice')['Error'])
 
 class ExtractionProcessor(Treeprocessor):
 
-    def run(self, root: etree.Element) -> None:
+    def run(self, root: Element) -> None:
         # pylint: disable=attribute-defined-outside-init
 
         # Extract title from level 1 header.
         titleElem = root.find('./h1')
+        assert titleElem is not None
         title = titleElem.text
+        assert title is not None
         root.remove(titleElem)
 
         # Extract first paragraph to use as an abstract.
@@ -104,11 +106,11 @@ class ExtractionExtension(Extension):
 
 class FixupProcessor(Treeprocessor):
 
-    def fixAlign(self, cell: etree.Element) -> None:
+    def fixAlign(self, cell: Element) -> None:
         alignment = cell.attrib.pop('align')
         cell.set('style', 'text-align: ' + alignment)
 
-    def run(self, root: etree.Element) -> None:
+    def run(self, root: Element) -> None:
         for cell in root.findall('.//th[@align]'):
             self.fixAlign(cell)
         for cell in root.findall('.//td[@align]'):
