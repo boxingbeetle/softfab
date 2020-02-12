@@ -13,7 +13,7 @@ fi
 
 if [ -f "$PID_FILE" ]; then
     CC_PID=`cat "$PID_FILE"`
-    if [ -d "/proc/$PID" ]; then
+    if [ -d "/proc/$CC_PID" ]; then
         echo "CC '$FACTORY' already running ($CC_PID)"
         exit 0
     else
