@@ -445,7 +445,6 @@ public abstract class TaskRun {
         }
         ret.put("SF_CC_URL",
             config.controlCenter.serverBaseURL.toExternalForm());
-        ret.putAll(config.parameters);
         return ret;
     }
 
