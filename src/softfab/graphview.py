@@ -19,6 +19,7 @@ from twisted.internet import reactor
 from twisted.internet.defer import Deferred, fail, inlineCallbacks, succeed
 from twisted.internet.protocol import ProcessProtocol
 from twisted.python.failure import Failure
+import attr
 
 from softfab.Page import PageProcessor, Responder
 from softfab.frameworklib import Framework, frameworkDB
@@ -100,20 +101,46 @@ def iterConnectedExecutionGraphs() -> Iterator[Tuple[Set[str], Set[str]]]:
                 frameworkIds.add(recordId)
         yield productIds, frameworkIds
 
+class RenderConsumer:
+    """Consumes one rendering from a stream."""
+
+    def __init__(self) -> None:
+        self.output: List[bytes] = []
+        self.deferred = Deferred()
+
+    def write(self, data: bytes) -> None:
+        """Consumes data from the stream.
+        Can be called multiple times, when new data becomes available.
+        """
+        self.output.append(data)
+
+    def fail(self, failure: Failure) -> None:
+        """Called when the production failed.
+        The producer will not make any further calls.
+        """
+        self.deferred.errback(failure)
+
+    def done(self) -> None:
+        """Called when the end of the stream was reached without errors.
+        Note that it is possible that the data was truncated, but that
+        can only be verified by the consumer, not by the producer.
+        The producer will not make any further calls.
+        """
+        self.deferred.callback(b''.join(self.output))
+
+@attr.s(auto_attribs=True)
 class DotProcessProtocol(ProcessProtocol):
     """Handles the execution of the Graphviz 'dot' tool."""
 
-    def __init__(self, data: bytes):
-        self.data = data
-        self.output: List[bytes] = []
-        self.deferred = Deferred()
+    data: bytes
+    consumer: RenderConsumer
 
     def connectionMade(self) -> None:
         self.transport.write(self.data)
         self.transport.closeStdin()
 
     def outReceived(self, data: bytes) -> None:
-        self.output.append(data)
+        self.consumer.write(data)
 
     def errReceived(self, data: bytes) -> None:
         logging.warning('Graphviz "dot" tool printed on stderr:\n%s',
@@ -122,10 +149,10 @@ class DotProcessProtocol(ProcessProtocol):
     def processEnded(self, reason: Failure) -> None:
         code = reason.value.exitCode
         if code == 0:
-            self.deferred.callback(b''.join(self.output))
+            self.consumer.done()
         else:
             logging.warning('Graphviz "dot" tool exited with code %d', code)
-            self.deferred.errback(Failure(RuntimeError('See log for details')))
+            self.consumer.fail(Failure(RuntimeError('See log for details')))
 
 class Graph:
     '''Wrapper around Graphviz graphs.
@@ -138,7 +165,8 @@ class Graph:
     def _runDot(self, fmt: GraphFormat) -> Deferred:
         data = self.__graph.source.encode('utf-8')
 
-        proto = DotProcessProtocol(data)
+        consumer = RenderConsumer()
+        proto = DotProcessProtocol(data, consumer)
         executable = 'dot'
         args = ('dot', f'-T{fmt.ext}')
         try:
@@ -147,7 +175,7 @@ class Graph:
             logging.exception('Failed to spawn Graphviz "dot" tool')
             return fail(RuntimeError('See log for details'))
 
-        return proto.deferred
+        return consumer.deferred
 
     def export(self, fmt: GraphFormat) -> Deferred:
         '''Renders this graph in the given format.
