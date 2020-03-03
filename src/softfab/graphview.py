@@ -162,7 +162,7 @@ class DotProcessProtocol(ProcessProtocol):
 
     def errReceived(self, data: bytes) -> None:
         logging.warning('Graphviz "dot" tool printed on stderr:\n%s',
-                        data.decode('utf-8', 'replace'))
+                        data.decode(errors='replace'))
 
     def processEnded(self, reason: Failure) -> None:
         code = reason.value.exitCode
@@ -181,7 +181,7 @@ class Graph:
         self.__graph = graph
 
     def _runDot(self, fmt: GraphFormat) -> Deferred:
-        data = self.__graph.source.encode('utf-8')
+        data = self.__graph.source.encode()
 
         consumer = BufferingRenderConsumer()
         proto = DotProcessProtocol(data, consumer)
@@ -198,10 +198,10 @@ class Graph:
     def export(self, fmt: GraphFormat) -> Deferred:
         '''Renders this graph in the given format.
         Returns a `Deferred` that on success delivers the rendered graph data,
-        which is of type `bytes` or `str` depending on the requested format.
+        which is of type `bytes`.
         '''
         if fmt is GraphFormat.DOT:
-            return succeed(self.__graph.source)
+            return succeed(self.__graph.source.encode())
         elif fmt is GraphFormat.SVG:
             d = self.toSVG()
             d.addCallback(partial(ElementTree.tostring, encoding='utf-8'))
