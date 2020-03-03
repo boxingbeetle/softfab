@@ -5,7 +5,6 @@ Build execution graphs using Graphviz.
 """
 
 from enum import Enum
-from functools import partial
 from io import BytesIO
 from typing import (
     AbstractSet, Generator, Iterable, Iterator, Optional, Set, Tuple, cast
@@ -16,7 +15,7 @@ import re
 
 from graphviz import Digraph
 from twisted.internet import reactor
-from twisted.internet.defer import Deferred, fail, inlineCallbacks, succeed
+from twisted.internet.defer import Deferred, fail, inlineCallbacks
 from twisted.internet.protocol import ProcessProtocol
 from twisted.python.failure import Failure
 import attr
@@ -102,7 +101,10 @@ def iterConnectedExecutionGraphs() -> Iterator[Tuple[Set[str], Set[str]]]:
         yield productIds, frameworkIds
 
 class RenderConsumer:
-    """Consumes one rendering from a stream."""
+    """Consumes one rendering from a stream.
+    The `deferred` will be called with the concrete render consumer as
+    its argument, from which format-specific output can be retrieved.
+    """
 
     def __init__(self) -> None:
         self.deferred = Deferred()
@@ -125,11 +127,7 @@ class RenderConsumer:
         can only be verified by the consumer, not by the producer.
         The producer will not make any further calls.
         """
-        self.deferred.callback(self._createResult())
-
-    def _createResult(self) -> bytes:
-        """Return the final output object."""
-        raise NotImplementedError
+        self.deferred.callback(self)
 
 class BufferingRenderConsumer(RenderConsumer):
 
@@ -140,11 +138,43 @@ class BufferingRenderConsumer(RenderConsumer):
     def write(self, data: bytes) -> None:
         self.buffer.write(data)
 
-    def _createResult(self) -> bytes:
+    def takeData(self) -> bytes:
+        """Retrieve the buffered data.
+        Can be called only once.
+        """
         buffer = self.buffer
         data = buffer.getvalue()
         buffer.close()
         return data
+
+class SVGRenderConsumer(BufferingRenderConsumer):
+
+    def takeSVG(self) -> ElementTree.Element:
+        """Retrieve the SVG image.
+        Can be called only once.
+        """
+        data = self.takeData()
+
+        try:
+            # Note: This catches exceptions from the XML parser in
+            #       case the generated XML is invalid.
+            # ElementTree generates XML (it also adds namespace prefixes)
+            svgElement = ElementTree.fromstring(data)
+        except ElementTree.ParseError:
+            logging.exception('XML received from Graphviz is invalid')
+            raise RuntimeError('See log for details')
+
+        # Remove <title> elements to reduce output size.
+        # It seems only Opera renders these at all (as tool tips). For nodes
+        # the title is the same as the text, so not useful at all; for edges
+        # the title mentions the nodes it connects, but that is obvious
+        # for most graphs.
+        svgTitleTag = svgNSPrefix + 'title'
+        for group in svgElement.iter(svgNSPrefix + 'g'):
+            for title in group.findall(svgTitleTag):
+                group.remove(title)
+
+        return svgElement
 
 @attr.s(auto_attribs=True)
 class DotProcessProtocol(ProcessProtocol):
@@ -180,10 +210,9 @@ class Graph:
     def __init__(self, graph: Digraph):
         self.__graph = graph
 
-    def _runDot(self, fmt: GraphFormat) -> Deferred:
+    def _runDot(self, fmt: GraphFormat, consumer: RenderConsumer) -> Deferred:
         data = self.__graph.source.encode()
 
-        consumer = BufferingRenderConsumer()
         proto = DotProcessProtocol(data, consumer)
         executable = 'dot'
         args = ('dot', f'-T{fmt.ext}')
@@ -195,49 +224,30 @@ class Graph:
 
         return consumer.deferred
 
-    def export(self, fmt: GraphFormat) -> Deferred:
+    @inlineCallbacks
+    def export(self,
+               fmt: GraphFormat
+               ) -> Generator[Deferred, RenderConsumer, bytes]:
         '''Renders this graph in the given format.
         Returns a `Deferred` that on success delivers the rendered graph data,
         which is of type `bytes`.
         '''
         if fmt is GraphFormat.DOT:
-            return succeed(self.__graph.source.encode())
+            return self.__graph.source.encode()
         elif fmt is GraphFormat.SVG:
-            d = self.toSVG()
-            d.addCallback(partial(ElementTree.tostring, encoding='utf-8'))
-            return d
+            consumer = yield self._runDot(GraphFormat.SVG, SVGRenderConsumer())
+            assert isinstance(consumer, SVGRenderConsumer), consumer
+            return ElementTree.tostring(consumer.takeSVG(), encoding='utf-8')
         else:
-            return self._runDot(fmt)
+            consumer = yield self._runDot(fmt, BufferingRenderConsumer())
+            assert isinstance(consumer, BufferingRenderConsumer), consumer
+            return consumer.takeData()
 
-    @inlineCallbacks
-    def toSVG(self) -> Generator[Deferred, bytes, ElementTree.Element]:
+    def toSVG(self) -> Deferred:
         '''Renders this graph as SVG image and cleans up the resulting SVG.
+        The returned Deferred will deliver an SVGRenderConsumer on success.
         '''
-
-        svgGraph = yield self._runDot(GraphFormat.SVG)
-
-        try:
-            # Note: This catches exceptions from the XML parser in
-            #       case the generated XML is invalid.
-            # ElementTree generates XML (it also adds namespace prefixes)
-            svgElement = ElementTree.fromstring( svgGraph )
-        except ElementTree.ParseError:
-            logging.exception(
-                'Generated XML (from svgGraph) is invalid'
-                )
-            raise RuntimeError('See log for details')
-
-        # Remove <title> elements to reduce output size.
-        # It seems only Opera renders these at all (as tool tips). For nodes
-        # the title is the same as the text, so not useful at all; for edges
-        # the title mentions the nodes it connects, but that is obvious
-        # for most graphs.
-        svgTitleTag = svgNSPrefix + 'title'
-        for group in svgElement.iter(svgNSPrefix + 'g'):
-            for title in group.findall(svgTitleTag):
-                group.remove(title)
-
-        return svgElement
+        return self._runDot(GraphFormat.SVG, SVGRenderConsumer())
 
 class GraphBuilder:
     """Holds the data for creating a graph."""
