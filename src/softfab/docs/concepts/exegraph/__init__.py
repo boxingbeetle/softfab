@@ -10,7 +10,7 @@ from softfab.frameworklib import Framework
 from softfab.graphview import ExecutionGraphBuilder, SVGRenderConsumer
 from softfab.productdeflib import ProductDef, ProductType
 from softfab.webgui import PresenterFunction
-from softfab.xmlgen import XMLContent, xhtml
+from softfab.xmlgen import XML, XMLContent, xhtml
 
 button = 'Graph'
 children = ()
@@ -58,13 +58,13 @@ graphBuilders = (
         ),
     )
 
-graphRenders: Dict[str, XMLContent] = {}
+graphRenders: Dict[str, XML] = {}
 
 @inlineCallbacks
 def renderGraph(builder: ExecutionGraphBuilder
                 ) -> Generator[Deferred, SVGRenderConsumer, None]:
     consumer = yield builder.build(export=False).toSVG()
-    graphRenders[builder.name] = consumer.takeSVG()
+    graphRenders[builder.name] = xhtml[ consumer.takeSVG() ]
 
 def process() -> Optional[Deferred]:
     deferreds = [
