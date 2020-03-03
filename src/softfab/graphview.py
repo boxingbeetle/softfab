@@ -6,9 +6,9 @@ Build execution graphs using Graphviz.
 
 from enum import Enum
 from functools import partial
+from io import BytesIO
 from typing import (
-    AbstractSet, Generator, Iterable, Iterator, List, Optional, Set, Tuple,
-    cast
+    AbstractSet, Generator, Iterable, Iterator, Optional, Set, Tuple, cast
 )
 from xml.etree import ElementTree
 import logging
@@ -105,14 +105,13 @@ class RenderConsumer:
     """Consumes one rendering from a stream."""
 
     def __init__(self) -> None:
-        self.output: List[bytes] = []
         self.deferred = Deferred()
 
     def write(self, data: bytes) -> None:
         """Consumes data from the stream.
         Can be called multiple times, when new data becomes available.
         """
-        self.output.append(data)
+        raise NotImplementedError
 
     def fail(self, failure: Failure) -> None:
         """Called when the production failed.
@@ -126,7 +125,26 @@ class RenderConsumer:
         can only be verified by the consumer, not by the producer.
         The producer will not make any further calls.
         """
-        self.deferred.callback(b''.join(self.output))
+        self.deferred.callback(self._createResult())
+
+    def _createResult(self) -> bytes:
+        """Return the final output object."""
+        raise NotImplementedError
+
+class BufferingRenderConsumer(RenderConsumer):
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.buffer = BytesIO()
+
+    def write(self, data: bytes) -> None:
+        self.buffer.write(data)
+
+    def _createResult(self) -> bytes:
+        buffer = self.buffer
+        data = buffer.getvalue()
+        buffer.close()
+        return data
 
 @attr.s(auto_attribs=True)
 class DotProcessProtocol(ProcessProtocol):
@@ -165,7 +183,7 @@ class Graph:
     def _runDot(self, fmt: GraphFormat) -> Deferred:
         data = self.__graph.source.encode('utf-8')
 
-        consumer = RenderConsumer()
+        consumer = BufferingRenderConsumer()
         proto = DotProcessProtocol(data, consumer)
         executable = 'dot'
         args = ('dot', f'-T{fmt.ext}')
