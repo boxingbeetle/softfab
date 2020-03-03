@@ -147,19 +147,26 @@ class BufferingRenderConsumer(RenderConsumer):
         buffer.close()
         return data
 
-class SVGRenderConsumer(BufferingRenderConsumer):
+class SVGRenderConsumer(RenderConsumer):
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.parser = ElementTree.XMLParser()
+
+    def write(self, data: bytes) -> None:
+        try:
+            self.parser.feed(data)
+        except ElementTree.ParseError:
+            logging.exception('XML received from Graphviz is invalid')
+            raise RuntimeError('See log for details')
 
     def takeSVG(self) -> ElementTree.Element:
         """Retrieve the SVG image.
         Can be called only once.
         """
-        data = self.takeData()
 
         try:
-            # Note: This catches exceptions from the XML parser in
-            #       case the generated XML is invalid.
-            # ElementTree generates XML (it also adds namespace prefixes)
-            svgElement = ElementTree.fromstring(data)
+            svgElement = self.parser.close()
         except ElementTree.ParseError:
             logging.exception('XML received from Graphviz is invalid')
             raise RuntimeError('See log for details')
