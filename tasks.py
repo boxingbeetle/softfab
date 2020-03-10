@@ -40,6 +40,13 @@ def clean(c):
     remove_dir(TOP_DIR / 'tr' / 'derived')
 
 @task
+def readme(c):
+    """Render README.md to HTML."""
+    print('Rendering README...')
+    BUILD_DIR.mkdir(exist_ok=True)
+    c.run(f'markdown_py -f {BUILD_DIR}/README.html README.md')
+
+@task
 def build_tr(c):
     """Build Task Runner."""
     with c.cd(str(TOP_DIR / 'tr')):
@@ -225,7 +232,7 @@ def apidocs(c):
     """Generate documentation as HTML files."""
     api_dir = BUILD_DIR / 'apidocs'
     remove_dir(api_dir)
-    BUILD_DIR.mkdir()
+    BUILD_DIR.mkdir(exist_ok=True)
     cmd = [
         'pydoctor', '--make-html',
         f'--html-output={api_dir}',
