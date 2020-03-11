@@ -20,16 +20,19 @@ If you are interested in sponsoring a new feature, [contact us at Boxing Beetle]
 Contributing
 ------------
 
-SoftFab requires Python 3.6 or later.
+SoftFab requires Python 3.6 or later. It also needs [Graphviz](http://graphviz.org/) to layout execution graphs. The development environment is managed by [Poetry](https://poetry.eustace.io/), which requires `curl`, `pip` and `venv` to be installed.
 
-If you want to modify SoftFab, start by cloning the Git repository:
+If you are using Debian are a Linux distribution derived from Debian such as Ubuntu, you need to install the packages `python3`, `python3-venv`, `python3-pip`, `python-pip`, `curl` and `graphviz`.
+
+When you have the required packages installed, you can fetch the SoftFab source code from its Git repository:
 
     $ git clone https://github.com/boxingbeetle/softfab.git
 
-SoftFab uses the [Poetry build system](https://poetry.eustace.io/) for managing its development environment. Using the [recommended installation procedure](https://github.com/sdispater/poetry#installation) instead of pip helps separate Poetry's dependencies from those of the software it manages, like SoftFab.
+SoftFab uses Poetry to manage its development environment. Using the [recommended installation procedure](https://github.com/sdispater/poetry#installation) instead of pip helps separate Poetry's dependencies from those of the software it manages, like SoftFab.
 
 Create a virtual environment managed by Poetry:
 
+    $ cd softfab
     $ poetry env use python3
 
 Start a shell in this virtual environment:
@@ -47,7 +50,7 @@ Now you should have the `softfab` command available in the Poetry shell:
 
 This command runs SoftFab directly from the source tree, so any code you edit is active the next time you run the `softfab` command.
 
-Now you can create a database directory to test with. This directory should be placed at the top of your cloned Git work area. The suggested name is `run`:
+Now you can create a database directory to test with. The suggested location is a directory named `run` at the top of your cloned Git work area:
 
     $ softfab init -d run
 
