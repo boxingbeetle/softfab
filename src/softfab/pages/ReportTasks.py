@@ -78,6 +78,16 @@ class ReportTasks_GET(FabPage['ReportTasks_GET.Processor',
         proc = cast(ReportTasks_GET.Processor, kwargs['proc'])
         taskFilter = proc.args.task
 
+        if len(taskDefDB) == 0:
+            yield xhtml.p[
+                'No tasks have been defined yet.'
+                ]
+            yield xhtml.p[
+                'Go to the ', pageLink('Design')['Design page'],
+                ' to input your execution graph.'
+                ]
+            return
+
         yield FilterForm.instance.present(numListItems=10, **kwargs)
 
         if len(taskFilter) == 0:
