@@ -20,9 +20,9 @@ If you are interested in sponsoring a new feature, [contact us at Boxing Beetle]
 Contributing
 ------------
 
-SoftFab requires Python 3.6 or later. It also needs [Graphviz](http://graphviz.org/) to layout execution graphs. The development environment is managed by [Poetry](https://poetry.eustace.io/), which requires `curl`, `pip` and `venv` to be installed.
+SoftFab requires Python 3.6 or later. It also needs [Graphviz](http://graphviz.org/) to layout execution graphs. The development environment is managed by [Poetry](https://poetry.eustace.io/), which requires `curl` and `pip` to be installed.
 
-If you are using Debian are a Linux distribution derived from Debian such as Ubuntu, you need to install the packages `python3`, `python3-venv`, `python3-pip`, `python-pip`, `curl` and `graphviz`.
+If you are using Debian or a Linux distribution derived from Debian such as Ubuntu, you need to install the packages `python3`, `python3-pip`, `python-pip`, `curl` and `graphviz`.
 
 When you have the required packages installed, you can fetch the SoftFab source code from its Git repository:
 
