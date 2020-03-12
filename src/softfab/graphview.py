@@ -184,7 +184,7 @@ class SVGRenderConsumer(RenderConsumer):
         return svgElement
 
 @attr.s(auto_attribs=True)
-class DotProcessProtocol(ProcessProtocol):
+class DotProcess(ProcessProtocol):
     """Handles the execution of the Graphviz 'dot' tool."""
 
     data: bytes
@@ -220,11 +220,11 @@ class Graph:
     def _runDot(self, fmt: GraphFormat, consumer: RenderConsumer) -> Deferred:
         data = self.__graph.source.encode()
 
-        proto = DotProcessProtocol(data, consumer)
+        proc = DotProcess(data, consumer)
         executable = 'dot'
         args = ('dot', f'-T{fmt.ext}')
         try:
-            reactor.spawnProcess(proto, executable, args)
+            reactor.spawnProcess(proc, executable, args)
         except OSError:
             logging.exception('Failed to spawn Graphviz "dot" tool')
             return fail(RuntimeError('See log for details'))
