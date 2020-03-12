@@ -264,6 +264,13 @@ def createPresenter(opener: Callable[[], IO[bytes]],
         with UTF8Reader(stream, errors='replace') as reader:
             text = reader.read()
 
+    if text.count('\n') >= 1000:
+        # Workaround for slow rendering (both server and client side)
+        # of long text files: returning None will show the raw text file
+        # in an iframe instead of formatting it as HTML.
+        #   https://github.com/boxingbeetle/softfab/issues/31
+        return None
+
     try:
         lexer = guess_lexer_for_filename(fileName, text)
     except ClassNotFound:
