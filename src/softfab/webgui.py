@@ -220,7 +220,7 @@ class _Group(AttrContainer):
     '''
     groupTag = xhtml.div
     itemTag = xhtml.div
-    cssClass: str = abstract
+    cssClass: Optional[str] = abstract
 
     def _adaptContentElement(self, element: XMLContent) -> Iterator[XML]:
         yield adaptToXML(cast(XMLPresentable, groupItem.adapt(element)))
