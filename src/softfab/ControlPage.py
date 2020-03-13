@@ -21,14 +21,14 @@ class ControlResponder(Responder, Generic[ArgsT, ProcT]):
     def respond(self, response: Response) -> Union[None, Deferred, IProducer]:
         page = self.page
         proc = self.proc
-        response.setHeader('Content-Type', page.getContentType(proc))
+        response.setContentType(page.getContentType(proc))
         return page.writeReply(response, proc)
 
 class _ErrorResponder(Responder):
 
     def respond(self, response: Response) -> None:
         response.setStatus(500, 'Unexpected exception processing request')
-        response.setHeader('Content-Type', 'text/plain')
+        response.setContentType('text/plain')
         response.write(
             'Unexpected exception processing request.\n'
             'Details were written to the server log.\n'

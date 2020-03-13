@@ -24,7 +24,7 @@ class CSVResponder(Responder, Generic[ProcT]):
     def respond(self, response: Response) -> None:
         page = self.page
         proc = self.proc
-        response.setHeader('Content-Type', 'text/x-csv; charset=UTF-8')
+        response.setContentType('text/x-csv; charset=UTF-8')
         response.setFileName(page.getFileName(proc))
         sepChar = proc.args.sep.value
         for row in page.iterRows(proc):

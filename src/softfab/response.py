@@ -219,6 +219,9 @@ class Response:
         # they implement the spec correctly.
         return key + b"*=utf8'en'" + encoded
 
+    def setContentType(self, value: str) -> None:
+        self.__request.setHeader('content-type', value.encode('ascii'))
+
     def setHeader(self, name: str, value: str) -> None:
         self.__request.setHeader(name.lower(), value.encode('ascii', 'ignore'))
 

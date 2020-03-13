@@ -64,7 +64,7 @@ class UIPage(Generic[ProcT]):
             # XHTML content type, but will parse the document correctly
             # when it is served as HTML.
             contentType = 'text/html'
-        response.setHeader('Content-Type', contentType + '; charset=UTF-8')
+        response.setContentType(contentType + '; charset=UTF-8')
 
     def writeHTML(self, response: Response, proc: ProcT) -> None:
         ccURL = response.relativeRoot

@@ -131,7 +131,7 @@ class _PlainTextResponder(Responder):
 
     def respond(self, response: Response) -> None:
         response.setStatus(self.__status, self.__message)
-        response.setHeader('Content-Type', 'text/plain')
+        response.setContentType('text/plain')
         response.write(self.__message + '\n')
 
 def renderAuthenticated(page: FabResource, request: TwistedRequest) -> object:

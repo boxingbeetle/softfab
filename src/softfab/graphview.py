@@ -510,7 +510,7 @@ class _GraphResponder(Responder):
         export = self.__export
         graph = self.__builder.build(export)
         fmt = self.__format
-        response.setHeader('Content-Type', fmt.mediaType)
+        response.setContentType(fmt.mediaType)
         if export:
             response.setFileName(f'{self.__fileName}.{fmt.ext}')
         else:
@@ -519,7 +519,7 @@ class _GraphResponder(Responder):
 
     def graphError(self, reason: Failure, response: Response) -> str:
         response.setStatus(500, 'Graph rendering failed')
-        response.setHeader('Content-Type', 'text/plain')
+        response.setContentType('text/plain')
         return f'Graph rendering failed: {reason.value}'
 
 
