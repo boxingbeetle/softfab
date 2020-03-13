@@ -4,10 +4,11 @@
 Build execution graphs using Graphviz.
 """
 
-from enum import Enum
+from enum import Enum, auto
 from io import BytesIO
 from typing import (
-    AbstractSet, Generator, Iterable, Iterator, Optional, Set, Tuple, cast
+    AbstractSet, Dict, Generator, Iterable, Iterator, List, Optional, Set,
+    Tuple, cast
 )
 from xml.etree import ElementTree
 import logging
@@ -15,7 +16,8 @@ import re
 
 from graphviz import Digraph
 from twisted.internet import reactor
-from twisted.internet.defer import Deferred, fail, inlineCallbacks
+from twisted.internet.defer import Deferred, inlineCallbacks
+from twisted.internet.error import ProcessExitedAlready
 from twisted.internet.protocol import ProcessProtocol
 from twisted.python.failure import Failure
 import attr
@@ -106,28 +108,11 @@ class RenderConsumer:
     its argument, from which format-specific output can be retrieved.
     """
 
-    def __init__(self) -> None:
-        self.deferred = Deferred()
-
     def write(self, data: bytes) -> None:
         """Consumes data from the stream.
         Can be called multiple times, when new data becomes available.
         """
         raise NotImplementedError
-
-    def fail(self, failure: Failure) -> None:
-        """Called when the production failed.
-        The producer will not make any further calls.
-        """
-        self.deferred.errback(failure)
-
-    def done(self) -> None:
-        """Called when the end of the stream was reached without errors.
-        Note that it is possible that the data was truncated, but that
-        can only be verified by the consumer, not by the producer.
-        The producer will not make any further calls.
-        """
-        self.deferred.callback(self)
 
 class BufferingRenderConsumer(RenderConsumer):
 
@@ -184,30 +169,131 @@ class SVGRenderConsumer(RenderConsumer):
         return svgElement
 
 @attr.s(auto_attribs=True)
-class DotProcess(ProcessProtocol):
-    """Handles the execution of the Graphviz 'dot' tool."""
+class DotWork:
+    """Work unit for layouting one graph."""
 
     data: bytes
     consumer: RenderConsumer
+    deferred: Deferred = attr.ib(factory=Deferred)
 
-    def connectionMade(self) -> None:
-        self.transport.write(self.data)
+    def fail(self, failure: Failure) -> None:
+        """Called when the production failed.
+        The producer will not make any further calls.
+        """
+        self.deferred.errback(failure)
+
+    def done(self) -> None:
+        """Called when the end of the stream was reached without errors.
+        Note that it is possible that the data was truncated, but that
+        can only be verified by the consumer, not by the producer.
+        The producer will not make any further calls.
+        """
+        self.deferred.callback(self.consumer)
+
+class _ProcessState(Enum):
+    NOT_RUNNING = auto()
+    STARTING = auto()
+    IDLE = auto()
+    WORKING = auto()
+
+class DotProcess(ProcessProtocol):
+    """Handles the execution of the Graphviz 'dot' tool."""
+
+    def __init__(self, fmt: GraphFormat):
+        self.format = fmt
+        self.queue: List[DotWork] = []
+        self.state = _ProcessState.NOT_RUNNING
+
+    def enqueue(self, work: DotWork) -> None:
+        """Queues the given work for execution.
+        After the work is done, its `deferred` will be called.
+        """
+
+        if self.state is _ProcessState.NOT_RUNNING:
+            self.startProcess()
+            if self.state is _ProcessState.NOT_RUNNING:
+                work.fail(Failure(RuntimeError('Graph layout failed')))
+                return
+
+        self.queue.append(work)
+
+        if self.state is _ProcessState.IDLE:
+            self.startWork()
+
+    def startProcess(self) -> None:
+        assert self.state is _ProcessState.NOT_RUNNING, self.state
+        self.state = _ProcessState.STARTING
+        executable = 'dot'
+        args = ('dot', f'-T{self.format.ext}')
+        try:
+            reactor.spawnProcess(self, executable, args)
+        except OSError:
+            logging.exception('Failed to spawn Graphviz "dot" tool')
+            self.state = _ProcessState.NOT_RUNNING
+
+    def startWork(self) -> None:
+        assert self.state is _ProcessState.IDLE, self.state
+        self.state = _ProcessState.WORKING
+        work = self.queue[0]
+        self.transport.write(work.data)
         self.transport.closeStdin()
 
+    def connectionMade(self) -> None:
+        assert self.state is _ProcessState.STARTING, self.state
+        self.state = _ProcessState.IDLE
+        if self.queue:
+            self.startWork()
+
     def outReceived(self, data: bytes) -> None:
-        self.consumer.write(data)
+        if self.state is _ProcessState.WORKING:
+            work = self.queue[0]
+            work.consumer.write(data)
+        else:
+            logging.warning('Got unexpected data from "dot" tool: %r',
+                            data[:100])
+            self.abortProcess()
 
     def errReceived(self, data: bytes) -> None:
         logging.warning('Graphviz "dot" tool printed on stderr:\n%s',
                         data.decode(errors='replace'))
+        self.abortProcess()
+
+    def abortProcess(self) -> None:
+        """Force the spawned process to end."""
+        try:
+            self.transport.signalProcess('KILL')
+        except ProcessExitedAlready:
+            pass
+        except OSError as ex:
+            logging.warning('Failed to abort "dot" process: %s', ex)
+        self.state = _ProcessState.NOT_RUNNING
 
     def processEnded(self, reason: Failure) -> None:
+        wasWorking = self.state is _ProcessState.WORKING
+        self.state = _ProcessState.NOT_RUNNING
         code = reason.value.exitCode
-        if code == 0:
-            self.consumer.done()
+        work = self.queue.pop(0)
+        if wasWorking and code == 0:
+            work.done()
         else:
-            logging.warning('Graphviz "dot" tool exited with code %d', code)
-            self.consumer.fail(Failure(RuntimeError('See log for details')))
+            if wasWorking:
+                logging.warning('Graphviz "dot" tool exited with code %d', code)
+            work.fail(Failure(RuntimeError('See log for details')))
+
+        if self.queue:
+            self.startProcess()
+
+_dotProcesses: Dict[GraphFormat, DotProcess] = {}
+"""Since the output format is a command line argument, we have to maintain
+a separate 'dot' process for each output format.
+"""
+
+def _submitDotWork(work: DotWork, fmt: GraphFormat) -> None:
+    proc = _dotProcesses.get(fmt)
+    if proc is None:
+        proc = DotProcess(fmt)
+        _dotProcesses[fmt] = proc
+    proc.enqueue(work)
 
 class Graph:
     '''Wrapper around Graphviz graphs.
@@ -219,17 +305,9 @@ class Graph:
 
     def _runDot(self, fmt: GraphFormat, consumer: RenderConsumer) -> Deferred:
         data = self.__graph.source.encode()
-
-        proc = DotProcess(data, consumer)
-        executable = 'dot'
-        args = ('dot', f'-T{fmt.ext}')
-        try:
-            reactor.spawnProcess(proc, executable, args)
-        except OSError:
-            logging.exception('Failed to spawn Graphviz "dot" tool')
-            return fail(RuntimeError('See log for details'))
-
-        return consumer.deferred
+        work = DotWork(data, consumer)
+        _submitDotWork(work, fmt)
+        return work.deferred
 
     @inlineCallbacks
     def export(self,
