@@ -260,6 +260,7 @@ If all items present empty, the group itself is omitted.
 class _UnorderedList(_Group):
     groupTag = xhtml.ul
     itemTag = xhtml.li
+    cssClass = None
 
 unorderedList = _UnorderedList((), {})
 '''Container that displays its items as an unordered (bullet) list.
