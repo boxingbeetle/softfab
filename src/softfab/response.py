@@ -8,7 +8,7 @@ from typing import Callable, Optional, Union
 
 from twisted.internet import reactor
 from twisted.internet.defer import Deferred
-from twisted.internet.interfaces import IPullProducer, IPushProducer
+from twisted.internet.interfaces import IProducer, IPullProducer, IPushProducer
 from twisted.python.failure import Failure
 from twisted.web.http import CACHED
 from twisted.web.iweb import IRequest
@@ -123,7 +123,7 @@ class Response:
     def __connectionLost(self, reason: Failure) -> None:
         self.__connectionLostFailure = reason
 
-    def registerProducer(self, producer: object) -> Deferred:
+    def registerProducer(self, producer: IProducer) -> Deferred:
         if IPushProducer.providedBy(producer):
             streaming = True
         elif IPullProducer.providedBy(producer):
