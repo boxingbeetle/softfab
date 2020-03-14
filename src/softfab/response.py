@@ -69,6 +69,16 @@ class Response:
     def finish(self) -> None:
         request = self.__request
 
+        request.setHeader(
+            'Content-Security-Policy',
+            f"default-src 'self'; "
+            f"form-action 'self'; "
+            f"frame-src http: https:; "
+            f"script-src 'self' 'unsafe-inline'; "
+            f"style-src 'self' 'unsafe-inline'; "
+            f"frame-ancestors {self.__frameAncestors}"
+            )
+
         if self.__buffer is None:
             # Body was not buffered; this is a stream.
             request.setHeader('Cache-Control', 'no-cache')
@@ -78,16 +88,6 @@ class Response:
         # but must be revalidated every time.
         request.setHeader(
             'Cache-Control', 'private, must-revalidate, max-age=0'
-            )
-
-        request.setHeader(
-            'Content-Security-Policy',
-            f"default-src 'self'; "
-            f"form-action 'self'; "
-            f"frame-src http: https:; "
-            f"script-src 'self' 'unsafe-inline'; "
-            f"style-src 'self' 'unsafe-inline'; "
-            f"frame-ancestors {self.__frameAncestors}"
             )
 
         body = self.__buffer.getvalue()
