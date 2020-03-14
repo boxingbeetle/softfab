@@ -166,12 +166,6 @@ button {
 .obfuscate::selection {
     background: #98B4FF;
 }
-.overlay {
-    position: absolute;
-    z-index: 1;
-}
-.preoverlay {
-}
 
 /* TODO: reports use tr, resources use td */
 tr.ok > td, table.nostrong > tbody > tr > td.ok,
