@@ -34,13 +34,15 @@ from softfab.xmlgen import XMLContent, xhtml
 
 # Profiling options:
 
-# Print the time it took to render the page.
 _timeRender = False
-# Profile the rendering and create a file with profile data.
-# Note that capturing profile data adds considerable overhead, so don't
-# attach any value to the absolute times while doing that. The useful
-# information is in where most time gets spent relatively.
+"""Print the time it took to render the page."""
+
 _profileRender = False
+"""Profile the rendering and create a file with profile data.
+Note that capturing profile data adds considerable overhead, so don't
+attach any value to the absolute times while doing that. The useful
+information is in where most time gets spent relatively.
+"""
 
 if _timeRender:
     from time import time
