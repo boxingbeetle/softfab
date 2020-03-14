@@ -43,6 +43,11 @@ class Response:
             self.__buffer = BytesIO()
             self.__writeBytes = self.__buffer.write
 
+        # Determine whether or not we will gzip the body.
+        # We prefer gzip to save on bandwidth.
+        accept = AcceptedEncodings.parse(request.getHeader('accept-encoding'))
+        self.__gzipContent = 2.0 * accept['gzip'] > accept['identity']
+
         self.__producerDone: Optional[Deferred] = None
 
         self.__connectionLostFailure: Optional[Failure] = None
@@ -91,10 +96,7 @@ class Response:
         self.__buffer = None
         self.__writeBytes = writeAfterFinish
 
-        # Determine whether or not we will gzip the body.
-        # We prefer gzip to save on bandwidth.
-        accept = AcceptedEncodings.parse(request.getHeader('accept-encoding'))
-        gzipContent = 2.0 * accept['gzip'] > accept['identity']
+        gzipContent = self.__gzipContent
 
         # Compute entity tag.
         # Since encoding the content with gzip changes it, we have to return
@@ -221,6 +223,9 @@ class Response:
 
     def setContentType(self, value: str) -> None:
         self.__request.setHeader('content-type', value.encode('ascii'))
+        # Do not compress data that is already compressed.
+        if value == 'image/png':
+            self.__gzipContent = False
 
     def setHeader(self, name: str, value: str) -> None:
         self.__request.setHeader(name.lower(), value.encode('ascii', 'ignore'))
