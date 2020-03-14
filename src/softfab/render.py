@@ -12,7 +12,7 @@ import logging
 from twisted.cred.error import LoginFailed, Unauthorized
 from twisted.internet.defer import Deferred, inlineCallbacks
 from twisted.internet.error import ConnectionLost
-from twisted.internet.interfaces import IProducer, IPullProducer, IPushProducer
+from twisted.internet.interfaces import IProducer, IPushProducer
 from twisted.python import log
 from twisted.python.failure import Failure
 from twisted.web.http import Request as TwistedRequest
@@ -323,11 +323,8 @@ def present(responder: Responder, response: Response) -> Optional[Deferred]:
             # Note: This only finishes the headers.
             response.finish()
             return d
-        elif IPullProducer.providedBy(presenter):
-            # We don't actually have any pull producers at the moment.
-            # TODO: Decide whether to use pull producers or remove support.
-            raise NotImplemented
         else:
+            # We don't have any pages implementing IPullProducer.
             raise TypeError(type(presenter))
     else:
         if isinstance(presenter, Deferred):
