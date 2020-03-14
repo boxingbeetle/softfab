@@ -28,7 +28,7 @@ class CSVResponder(Responder, Generic[ProcT]):
         response.setFileName(page.getFileName(proc))
         sepChar = proc.args.sep.value
         for row in page.iterRows(proc):
-            response.write(sepChar.join(row), '\r\n')
+            response.write(sepChar.join(row) + '\r\n')
 
 class CSVPage(FabResource['CSVPage.Arguments', ProcT]):
     authenticator = LoginAuthPage.instance

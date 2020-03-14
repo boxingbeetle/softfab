@@ -264,20 +264,16 @@ class Response:
         # RFC-7231 section 7.1.2 allows relative URLs in the Location header.
         self.__request.setHeader('location', url.encode())
 
-    def write(self, *texts: Union[None, bytes, str]) -> None:
-        writeBytes = self.__writeBytes
-        for text in texts:
-            if isinstance(text, str):
-                writeBytes(text.encode())
-            elif isinstance(text, bytes):
-                writeBytes(text)
-            elif text is None:
-                continue
-            else:
-                raise TypeError(
-                    f'Cannot handle document output '
-                    f'of type "{type(text).__name__}"'
-                    )
+    def write(self, text: Union[None, bytes, str]) -> None:
+        if isinstance(text, str):
+            self.__writeBytes(text.encode())
+        elif isinstance(text, bytes):
+            self.__writeBytes(text)
+        elif text is not None:
+            raise TypeError(
+                f'Cannot handle document output '
+                f'of type "{type(text).__name__}"'
+                )
 
     def writeXML(self, xml: XMLContent) -> None:
         """Append the given XML content to this reponse.
