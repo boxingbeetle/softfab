@@ -182,6 +182,7 @@ class _SubmitButton(AttrContainer, XMLPresentable):
         label: XMLContent = tuple(self._presentContents(**kwargs))
         if not label:
             # Automatically create label.
+            words: Sequence[str]
             if isinstance(value, Enum):
                 words = (value.name.lower(), )
             else:

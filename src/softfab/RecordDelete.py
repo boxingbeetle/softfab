@@ -152,7 +152,7 @@ class RecordDelete_POSTMixin:
 
     def presentContent(self, **kwargs: object) -> XMLContent:
         proc = cast(PageProcessor, kwargs['proc'])
-        assert isinstance(self, FabPage), self # indirect type hint
+        assert isinstance(self, RecordDelete_GET), self # indirect type hint
         yield (
             xhtml.p[
                 self.recordName.capitalize(), ' ',

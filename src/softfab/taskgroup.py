@@ -187,7 +187,9 @@ class PriorityABC(Protocol):
     @abstractmethod
     def getPriority(self) -> int: ...
 
-@total_ordering
+# Suppress mypy message about applying total_ordering to an abstract class.
+#   https://github.com/python/mypy/issues/8539
+@total_ordering # type: ignore[misc]
 class PriorityMixin(PriorityABC):
     '''Mixin that orders objects primarily on the integer value returned by
     getPriority() and secondarily on the value returned by getName().
