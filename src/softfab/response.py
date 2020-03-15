@@ -12,7 +12,6 @@ from twisted.internet.interfaces import IProducer, IPullProducer, IPushProducer
 from twisted.python.failure import Failure
 from twisted.web.http import CACHED
 from twisted.web.iweb import IRequest
-from twisted.web.server import NOT_DONE_YET
 
 from softfab.compat import NoReturn
 from softfab.projectlib import project
@@ -139,7 +138,7 @@ class Response:
         self.__request.unregisterProducer()
         self.__producerDone.callback(None)
 
-    def returnToReactor(self) -> object:
+    def returnToReactor(self) -> Deferred:
         '''A page that writes a large response can hog the reactor for quite
         some time, during which other requests are not serviced. To prevent
         this, a large response should be cut into chunks and control should be
@@ -165,7 +164,7 @@ class Response:
                 d.errback(lost)
 
         reactor.callLater(0, resume)
-        return NOT_DONE_YET        # Fixed ticket 448
+        return d
 
     def setStatus(self, code: int, msg: Optional[str] = None) -> None:
         self.__request.setResponseCode(
