@@ -139,13 +139,13 @@ class Response:
         self.__request.unregisterProducer()
         self.__producerDone.callback(None)
 
-    def returnToReactor(self, result: object = None) -> object:
+    def returnToReactor(self) -> object:
         '''A page that writes a large response can hog the reactor for quite
         some time, during which other requests are not serviced. To prevent
         this, a large response should be cut into chunks and control should be
         returned to the reactor inbetween chunks.
-        Returns a Deferred that has the given result if the client is still
-        connected, or a Failure wrapping ConnectionLost if the client
+        Returns a Deferred that succeeds with no arguments if the client is
+        still connected, or fails with a ConnectionLost if the client
         disconnected.
 
         Example use:
@@ -157,15 +157,14 @@ class Response:
         '''
         d = Deferred()
 
-        def resume(resumeResult: object) -> None:
-            assert resumeResult is result
+        def resume() -> None:
             lost = self.__connectionLostFailure
             if lost is None:
-                d.callback(resumeResult)
+                d.callback(None)
             else:
                 d.errback(lost)
 
-        reactor.callLater(0, resume, result)
+        reactor.callLater(0, resume)
         return NOT_DONE_YET        # Fixed ticket 448
 
     def setStatus(self, code: int, msg: Optional[str] = None) -> None:
