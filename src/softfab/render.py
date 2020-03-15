@@ -5,15 +5,12 @@ Module to render the page
 '''
 
 from typing import Any, ClassVar, Generator, Iterator, Optional, Type, cast
-# TODO: we're using both the standard library and Twisted for logging.
-#       We should probably just pick one.
 import logging
 
 from twisted.cred.error import LoginFailed, Unauthorized
 from twisted.internet.defer import Deferred, inlineCallbacks
-from twisted.internet.error import ConnectionLost
+from twisted.internet.error import ConnectionClosed
 from twisted.internet.interfaces import IProducer, IPushProducer
-from twisted.python import log
 from twisted.python.failure import Failure
 from twisted.web.http import Request as TwistedRequest
 from twisted.web.server import NOT_DONE_YET
@@ -139,8 +136,15 @@ class _PlainTextResponder(Responder):
 def renderAuthenticated(page: FabResource, request: TwistedRequest) -> object:
     def done(result: object) -> None: # pylint: disable=unused-argument
         request.finish()
-    def failed(fail: Failure) -> None:
-        request.processingFailed(fail)
+    def failed(reason: Failure) -> None:
+        ex = reason.value
+        if isinstance(ex, ConnectionClosed):
+            logging.debug(
+                'Connection closed while presenting "%s": %s',
+                request.path.decode(errors='replace'), ex
+                )
+        else:
+            request.processingFailed(reason)
         # Returning None (implicitly) because the error is handled.
         # Otherwise, it will be logged twice.
     d = renderAsync(page, request)
@@ -182,14 +186,7 @@ def renderAsync(
             )
 
     response = Response(request, req.userAgent, streaming)
-    try:
-        yield present(responder, response)
-    except ConnectionLost as ex:
-        subPath = req.getSubPath()
-        log.msg(
-            'Connection lost while presenting page %s%s: %s',
-            page.name, '' if subPath is None else f' item "{subPath}"', ex
-            )
+    yield present(responder, response)
 
 def _checkActive(
         page: FabResource[ArgsT, PageProcessor[ArgsT]],
