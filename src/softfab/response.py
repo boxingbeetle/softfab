@@ -155,16 +155,16 @@ class Response:
                     yield response.returnToReactor()
         '''
         d = Deferred()
-
-        def resume() -> None:
-            lost = self.__connectionLostFailure
-            if lost is None:
-                d.callback(None)
-            else:
-                d.errback(lost)
-
-        reactor.callLater(0, resume)
+        reactor.callLater(0, self.__resume, d)
         return d
+
+    def __resume(self, d: Deferred) -> None:
+        """Helper method for `returnToReactor()`."""
+        lost = self.__connectionLostFailure
+        if lost is None:
+            d.callback(None)
+        else:
+            d.errback(lost)
 
     def setStatus(self, code: int, msg: Optional[str] = None) -> None:
         self.__request.setResponseCode(
