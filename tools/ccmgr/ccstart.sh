@@ -40,7 +40,7 @@ if [ $? -eq 0 ]; then
         sleep 1
     done
     CC_PID=`cat "$PID_FILE"`
-    REVISION=`pip list | grep softfab | sed 's/.\+-g//'`
+    REVISION=`pip list | grep softfab | sed 's/.\++g//'`
     echo "CC '$FACTORY' revision '$REVISION' started ($CC_PID)"
 else
     echo "Could not launch CC '$FACTORY'"
