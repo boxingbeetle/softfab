@@ -182,7 +182,7 @@ class Redirector(Responder):
         self.__url = url
 
     def respond(self, response: Response) -> None:
-        response.sendRedirect(response.relativeRoot + self.__url)
+        response.sendRedirect(self.__url)
 
 class HTTPAuthenticator(Responder):
 

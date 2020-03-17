@@ -13,6 +13,7 @@ from twisted.python.failure import Failure
 from twisted.web.http import CACHED
 from twisted.web.iweb import IRequest
 
+from softfab.TwistedUtil import getRelativeRoot
 from softfab.compat import NoReturn
 from softfab.useragent import AcceptedEncodings, UserAgent
 from softfab.utils import IllegalStateError
@@ -92,13 +93,6 @@ class Response:
         self.__connectionLostFailure: Optional[Failure] = None
         d = request.notifyFinish()
         d.addErrback(self.__connectionLost)
-
-    @property
-    def relativeRoot(self) -> str:
-        """Relative URL from the requested page to the site root.
-        Ends in a slash when non-empty.
-        """
-        return '../' * (len(self.__request.prepath) - 1)
 
     def finish(self) -> None:
         request = self.__request
@@ -248,7 +242,9 @@ class Response:
         # handle 302 (see RFC-2616 section 10.3.3).
         self.setStatus(303)
         # RFC-7231 section 7.1.2 allows relative URLs in the Location header.
-        self.__request.setHeader('location', url.encode())
+        request = self.__request
+        location = getRelativeRoot(request) + url
+        request.setHeader('location', location.encode())
 
     def write(self, text: Union[None, bytes, str]) -> None:
         if isinstance(text, str):

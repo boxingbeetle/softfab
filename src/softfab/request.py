@@ -10,6 +10,7 @@ from twisted.web.server import Session
 from zope.interface import Attribute, Interface, implementer
 
 from softfab.Page import InvalidRequest
+from softfab.TwistedUtil import getRelativeRoot
 from softfab.pageargs import ArgsT_co, Query
 from softfab.useragent import UserAgent
 from softfab.userlib import User
@@ -119,6 +120,13 @@ class RequestBase:
             return None
         assert path.startswith(pagePath + b'/')
         return path[len(pagePath) + 1 : ].decode()
+
+    @property
+    def relativeRoot(self) -> str:
+        """Relative URL from the requested page to the site root.
+        Ends in a slash when non-empty.
+        """
+        return getRelativeRoot(self._request)
 
     def relativeURL(self, url: str) -> Optional[str]:
         """Return a path relative to this site's root that corresponds to

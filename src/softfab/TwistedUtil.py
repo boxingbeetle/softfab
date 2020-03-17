@@ -12,6 +12,12 @@ from softfab.compat import NoReturn
 from softfab.userlib import AccessDenied
 
 
+def getRelativeRoot(request: IRequest) -> str:
+    """Relative URL from the requested page to the site root.
+    Ends in a slash when non-empty.
+    """
+    return '../' * (len(request.prepath) - 1)
+
 class PageRedirect(Resource):
     '''Redirect to a fixed page.
     '''

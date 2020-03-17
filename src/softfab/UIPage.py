@@ -67,7 +67,8 @@ class UIPage(Generic[ProcT]):
         response.setContentType(contentType + '; charset=UTF-8')
 
     def writeHTML(self, response: Response, proc: ProcT) -> None:
-        ccURL = response.relativeRoot
+        req = proc.req
+        ccURL = req.relativeRoot
         presentationArgs = dict(
             proc=proc,
             ccURL=ccURL,
@@ -80,8 +81,7 @@ class UIPage(Generic[ProcT]):
                     self.presentHeadParts(**presentationArgs)
                     ],
                 xhtml.body[
-                    self.__presentBodyParts(proc.req, response,
-                                            **presentationArgs)
+                    self.__presentBodyParts(req, response, **presentationArgs)
                     ],
                 ]
             )

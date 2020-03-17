@@ -309,9 +309,10 @@ class _WidgetResponder(Responder):
         # TODO: This is copy-pasted from UIPage.
         #       I'm not sure yet where the proper location would be;
         #       if it is copy-pasted a third time it might be clearer.
+        proc = self.__proc
         presentationArgs = dict(
-            proc=self.__proc,
-            styleURL=response.relativeRoot + styleRoot.relativeURL,
+            proc=proc,
+            styleURL=proc.req.relativeRoot + styleRoot.relativeURL,
             )
         response.writeXML(self.__widget.present(**presentationArgs))
 
