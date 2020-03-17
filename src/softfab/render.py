@@ -24,7 +24,7 @@ from softfab.UIPage import UIPage, UIResponder
 from softfab.pageargs import ArgsCorrected, ArgsInvalid, ArgsT, Query, dynamic
 from softfab.projectlib import project
 from softfab.request import Request
-from softfab.response import Response
+from softfab.response import Response, ResponseHeaders
 from softfab.userlib import AccessDenied, UnknownUser, User
 from softfab.utils import abstract
 from softfab.webgui import docLink
@@ -63,7 +63,7 @@ class ErrorPage(UIPage[ProcT]):
     def pageTitle(self, proc: ProcT) -> str:
         return self.title
 
-    def writeHTTPHeaders(self, response: Response) -> None:
+    def writeHTTPHeaders(self, response: ResponseHeaders) -> None:
         response.setStatus(self.status, self.messageText)
         super().writeHTTPHeaders(response)
 

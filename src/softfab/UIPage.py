@@ -8,7 +8,7 @@ from softfab.StyleResources import styleRoot
 from softfab.pagelinks import createUserDetailsLink, loginURL, logoutURL
 from softfab.projectlib import project
 from softfab.request import Request
-from softfab.response import Response
+from softfab.response import Response, ResponseHeaders
 from softfab.timelib import getTime
 from softfab.timeview import formatTime
 from softfab.version import VERSION
@@ -55,7 +55,7 @@ class _ErrorResponder(UIResponder):
 
 class UIPage(Generic[ProcT]):
 
-    def writeHTTPHeaders(self, response: Response) -> None:
+    def writeHTTPHeaders(self, response: ResponseHeaders) -> None:
         if response.userAgent.acceptsXHTML:
             # All modern browsers accept the XHTML content type.
             contentType = 'application/xhtml+xml'
@@ -135,7 +135,7 @@ class UIPage(Generic[ProcT]):
 
     def __presentBodyParts(self,
                            req: Request,
-                           response: Response,
+                           response: ResponseHeaders,
                            **kwargs: object
                            ) -> XMLContent:
         proc = cast(ProcT, kwargs['proc'])

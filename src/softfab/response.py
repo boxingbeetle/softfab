@@ -61,16 +61,81 @@ def _encodeHeaderValue(key: bytes, value: str) -> bytes:
     # Provide the UTF-8 and the ASCII version as a fallback.
     return b'''%b="%b"; %b*=UTF-8''%b''' % (key, filteredAscii, key, encoded)
 
-class Response:
+class ResponseHeaders:
+
+    def __init__(self,
+                 request: IRequest,
+                 frameAncestors: str,
+                 userAgent: UserAgent):
+
+        self._request = request
+        self._frameAncestors = frameAncestors
+        self.userAgent = userAgent
+
+        # Determine whether or not we will gzip the body.
+        # We prefer gzip to save on bandwidth.
+        accept = AcceptedEncodings.parse(request.getHeader('accept-encoding'))
+        self._gzipContent = 2.0 * accept['gzip'] > accept['identity']
+
+    def allowEmbedding(self) -> None:
+        """Allow embedding of this resource on the current site.
+        This is necessary to display SVGs in <object> tags.
+        """
+        frameAncestors = self._frameAncestors
+        if frameAncestors == "'none'":
+            self._frameAncestors = "'self'"
+        elif "'self'" not in frameAncestors:
+            self._frameAncestors = f"'self' {frameAncestors}"
+
+    def setStatus(self, code: int, msg: Optional[str] = None) -> None:
+        self._request.setResponseCode(
+            code,
+            None if msg is None else msg.encode('ascii', 'ignore')
+            )
+
+    def setContentType(self, value: str) -> None:
+        self._request.setHeader('content-type', value.encode('ascii'))
+        # Do not compress data that is already compressed.
+        if value == 'image/png':
+            self._gzipContent = False
+
+    def setHeader(self, name: str, value: str) -> None:
+        self._request.setHeader(name.lower(), value.encode('ascii', 'ignore'))
+
+    def setFileName(self, fileName: str) -> None:
+        '''Suggest a file name to the browser for saving this document.
+        This method sets an HTTP header, so call it before you do any output.
+        To be compatible with IE's lack of proper mime type handling,
+        it is recommended to use a file name extension that implies the
+        desired mime type.
+        '''
+        self._request.setHeader(
+            'content-disposition',
+            b'attachment; ' + _encodeHeaderValue(b'filename', fileName)
+            )
+
+    def sendRedirect(self, url: str) -> None:
+        # Relative URLs must include page name: although a relative URL
+        # containing only a query is valid, it is resolved to the parent of
+        # the current page, which is not what we want.
+        assert not url.startswith('?'), 'page is missing from URL'
+        # Set HTTP headers for redirect.
+        # Response code 303 specifies the way most existing clients incorrectly
+        # handle 302 (see RFC-2616 section 10.3.3).
+        self.setStatus(303)
+        # RFC-7231 section 7.1.2 allows relative URLs in the Location header.
+        request = self._request
+        location = getRelativeRoot(request) + url
+        request.setHeader('location', location.encode())
+
+class Response(ResponseHeaders):
 
     def __init__(self,
                  request: IRequest,
                  frameAncestors: str,
                  userAgent: UserAgent,
                  streaming: bool):
-        self.__request = request
-        self.__frameAncestors = frameAncestors
-        self.userAgent = userAgent
+        ResponseHeaders.__init__(self, request, frameAncestors, userAgent)
 
         if streaming:
             # Streaming pages must not be buffered.
@@ -83,11 +148,6 @@ class Response:
             self.__buffer = BytesIO()
             self.__writeBytes = self.__buffer.write
 
-        # Determine whether or not we will gzip the body.
-        # We prefer gzip to save on bandwidth.
-        accept = AcceptedEncodings.parse(request.getHeader('accept-encoding'))
-        self.__gzipContent = 2.0 * accept['gzip'] > accept['identity']
-
         self.__producerDone: Optional[Deferred] = None
 
         self.__connectionLostFailure: Optional[Failure] = None
@@ -95,7 +155,7 @@ class Response:
         d.addErrback(self.__connectionLost)
 
     def finish(self) -> None:
-        request = self.__request
+        request = self._request
 
         request.setHeader(
             'Content-Security-Policy',
@@ -104,7 +164,7 @@ class Response:
             f"frame-src http: https:; "
             f"script-src 'self' 'unsafe-inline'; "
             f"style-src 'self' 'unsafe-inline'; "
-            f"frame-ancestors {self.__frameAncestors}"
+            f"frame-ancestors {self._frameAncestors}"
             )
 
         if self.__buffer is None:
@@ -124,7 +184,7 @@ class Response:
         self.__buffer = None
         self.__writeBytes = writeAfterFinish
 
-        gzipContent = self.__gzipContent
+        gzipContent = self._gzipContent
 
         # Compute entity tag.
         # Since encoding the content with gzip changes it, we have to return
@@ -158,13 +218,13 @@ class Response:
             streaming = False
         else:
             raise TypeError(type(producer))
-        self.__request.registerProducer(producer, streaming)
+        self._request.registerProducer(producer, streaming)
         self.__producerDone = d = Deferred()
         return d
 
     def unregisterProducer(self) -> None:
         assert self.__producerDone is not None, 'producer was never registered'
-        self.__request.unregisterProducer()
+        self._request.unregisterProducer()
         self.__producerDone.callback(None)
 
     def returnToReactor(self) -> Deferred:
@@ -194,57 +254,6 @@ class Response:
             d.callback(None)
         else:
             d.errback(lost)
-
-    def setStatus(self, code: int, msg: Optional[str] = None) -> None:
-        self.__request.setResponseCode(
-            code,
-            None if msg is None else msg.encode('ascii', 'ignore')
-            )
-
-    def setContentType(self, value: str) -> None:
-        self.__request.setHeader('content-type', value.encode('ascii'))
-        # Do not compress data that is already compressed.
-        if value == 'image/png':
-            self.__gzipContent = False
-
-    def setHeader(self, name: str, value: str) -> None:
-        self.__request.setHeader(name.lower(), value.encode('ascii', 'ignore'))
-
-    def allowEmbedding(self) -> None:
-        """Allow embedding of this resource on the current site.
-        This is necessary to display SVGs in <object> tags.
-        """
-        frameAncestors = self.__frameAncestors
-        if frameAncestors == "'none'":
-            self.__frameAncestors = "'self'"
-        elif "'self'" not in frameAncestors:
-            self.__frameAncestors = f"'self' {frameAncestors}"
-
-    def setFileName(self, fileName: str) -> None:
-        '''Suggest a file name to the browser for saving this document.
-        This method sets an HTTP header, so call it before you do any output.
-        To be compatible with IE's lack of proper mime type handling,
-        it is recommended to use a file name extension that implies the
-        desired mime type.
-        '''
-        self.__request.setHeader(
-            'content-disposition',
-            b'attachment; ' + _encodeHeaderValue(b'filename', fileName)
-            )
-
-    def sendRedirect(self, url: str) -> None:
-        # Relative URLs must include page name: although a relative URL
-        # containing only a query is valid, it is resolved to the parent of
-        # the current page, which is not what we want.
-        assert not url.startswith('?'), 'page is missing from URL'
-        # Set HTTP headers for redirect.
-        # Response code 303 specifies the way most existing clients incorrectly
-        # handle 302 (see RFC-2616 section 10.3.3).
-        self.setStatus(303)
-        # RFC-7231 section 7.1.2 allows relative URLs in the Location header.
-        request = self.__request
-        location = getRelativeRoot(request) + url
-        request.setHeader('location', location.encode())
 
     def write(self, text: Union[None, bytes, str]) -> None:
         if isinstance(text, str):
