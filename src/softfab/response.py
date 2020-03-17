@@ -20,6 +20,48 @@ from softfab.xmlgen import XMLContent, adaptToXML
 import softfab.config
 
 
+_fileNameTranslation = bytes(
+    ch if 32 <= ch < 127 and ch not in b'"\\%?' else ord(b'_')
+    for ch in range(256)
+    )
+"""Lookup table for `bytes.translate()` that maps characters that we cannot
+include in a "filename=" parameter to underscores.
+For interoperability, we cannot use backslashes escapes, which makes it
+impossible to produce a double quote and the backslash itself.
+We reject the percent character for interoperability as well.
+The question mark is rejected because that is what the 'replace' encoding
+error policy maps non-ASCII characters to.
+"""
+
+def _encodeHeaderValue(key: bytes, value: str) -> bytes:
+    """Encodes a string that is used in the value part of the
+    Content-Disposition HTTP header.
+    """
+
+    # We follow the advice from RFC-6266 appendix D.
+    #   https://tools.ietf.org/html/rfc6266#appendix-D
+
+    # Build an ASCII representation.
+    asciiValue = value.encode('ascii', 'replace')
+
+    # Filter out characters we cannot use in quoted-string form.
+    filteredAscii = asciiValue.translate(_fileNameTranslation)
+
+    # If ASCII is sufficient, include only that.
+    # Note that '?' replacements from encoding were translated to '_'.
+    if filteredAscii == asciiValue:
+        return b'%b="%b"' % (key, asciiValue)
+
+    # Encode string as UTF-8, then encode bytes with percent encoding.
+    utf8Value = value.encode()
+    encoded = b''.join(
+        ch if ch.isalnum() or ch in b'!#$&+-.^_`|~' else b'%%%02X' % ord(ch)
+        for ch in (utf8Value[idx:idx+1] for idx in range(len(utf8Value)))
+        )
+
+    # Provide the UTF-8 and the ASCII version as a fallback.
+    return b'''%b="%b"; %b*=UTF-8''%b''' % (key, filteredAscii, key, encoded)
+
 class Response:
 
     def __init__(self,
@@ -172,53 +214,6 @@ class Response:
             None if msg is None else msg.encode('ascii', 'ignore')
             )
 
-    def __encodeHeaderValue(self, key: bytes, value: str) -> bytes:
-        '''Encodes a string that is used in the value part of an HTTP header.
-        If the string contains non-ASCII characters, this method does a best
-        effort to encode it in a way the user agent might understand.
-        In other words, if the string must absolutely not be mangled, just use
-        ASCII and bypass this method completely.
-        '''
-        family = self.userAgent.family
-
-        if family in ('Konqueror', 'Safari'):
-            # Browser does not seem to accept any kind of escaping.
-            # It does accept spaces without quoting.
-            # Tested with:
-            # - Konqueror 3.5.7
-            # - Safari 3.1.2
-            return key + b'=' + value.encode('ascii', 'ignore')
-
-        encoded = b''
-        for byte in value.encode('utf-8'):
-            ch = bytes((byte,))
-            if ch.isalnum() or ch in b'.,-_':
-                encoded += ch
-            else:
-                encoded += b'%%%02X' % byte
-
-        if family in ('MSIE', 'Chrome'):
-            # Browser understands escaped UTF8, but does not support parameters
-            # defined with "*=".
-            return key + b'=' + encoded
-
-        try:
-            # Test if string contains non-ASCII characters.
-            asciiValue = value.encode('ascii', 'strict')
-        except UnicodeEncodeError:
-            pass
-        else:
-            if b'"' not in asciiValue:
-                # If the string contains nothing but ASCII, things are simple.
-                return key + b'="' + asciiValue + b'"'
-
-        # This is how RFC-2184 prescribes it.
-        # Mozilla and Opera support this correctly.
-        # And for other browsers... well, until we've actually tested them, we
-        # don't know what kind of problems they have, so we might as well assume
-        # they implement the spec correctly.
-        return key + b"*=utf8'en'" + encoded
-
     def setContentType(self, value: str) -> None:
         self.__request.setHeader('content-type', value.encode('ascii'))
         # Do not compress data that is already compressed.
@@ -247,7 +242,7 @@ class Response:
         '''
         self.__request.setHeader(
             'content-disposition',
-            b'attachment; ' + self.__encodeHeaderValue(b'filename', fileName)
+            b'attachment; ' + _encodeHeaderValue(b'filename', fileName)
             )
 
     def sendRedirect(self, url: str) -> None:
