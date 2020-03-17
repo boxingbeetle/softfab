@@ -14,7 +14,7 @@ from softfab.Page import PageProcessor
 from softfab.StyleResources import styleRoot
 from softfab.UIPage import factoryStyleSheet
 from softfab.compat import NoReturn
-from softfab.config import dbDir
+from softfab.config import dbDir, rootURL
 from softfab.databaselib import RecordObserver
 from softfab.datawidgets import DataColumn, DataTable
 from softfab.joblib import Job, JobDB, jobDB
@@ -123,7 +123,7 @@ class Feed_GET(ControlPage[ControlPage.Arguments, 'Feed_GET.Processor']):
         response.writeXML(atom.feed(
             xmlns = 'http://www.w3.org/2005/Atom',
             )[
-            self.presentFeed(proc, response.rootURL)
+            self.presentFeed(proc, rootURL)
             ])
 
     def presentFeed(self, proc: Processor, rootURL: str) -> XMLContent:
