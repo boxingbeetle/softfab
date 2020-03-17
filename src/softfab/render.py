@@ -22,6 +22,7 @@ from softfab.Page import (
 )
 from softfab.UIPage import UIPage, UIResponder
 from softfab.pageargs import ArgsCorrected, ArgsInvalid, ArgsT, Query, dynamic
+from softfab.projectlib import project
 from softfab.request import Request
 from softfab.response import Response
 from softfab.userlib import AccessDenied, UnknownUser, User
@@ -185,7 +186,8 @@ def renderAsync(
             PageProcessor(page, req, FabResource.Arguments(), UnknownUser())
             )
 
-    response = Response(request, req.userAgent, streaming)
+    frameAncestors = project.frameAncestors
+    response = Response(request, frameAncestors, req.userAgent, streaming)
     yield present(responder, response)
 
 def _checkActive(

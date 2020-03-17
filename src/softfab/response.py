@@ -14,7 +14,6 @@ from twisted.web.http import CACHED
 from twisted.web.iweb import IRequest
 
 from softfab.compat import NoReturn
-from softfab.projectlib import project
 from softfab.useragent import AcceptedEncodings, UserAgent
 from softfab.utils import IllegalStateError
 from softfab.xmlgen import XMLContent, adaptToXML
@@ -25,10 +24,11 @@ class Response:
 
     def __init__(self,
                  request: IRequest,
+                 frameAncestors: str,
                  userAgent: UserAgent,
                  streaming: bool):
         self.__request = request
-        self.__frameAncestors = project.frameAncestors
+        self.__frameAncestors = frameAncestors
         self.userAgent = userAgent
 
         if streaming:
