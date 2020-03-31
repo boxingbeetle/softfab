@@ -152,6 +152,12 @@ def renderAuthenticated(page: FabResource, request: TwistedRequest) -> object:
     d.addCallback(done).addErrback(failed) # pylint: disable=no-member
     return NOT_DONE_YET
 
+def _unauthorizedResponder(ex: Exception) -> Responder:
+    return _PlainTextResponder(
+        403, ex.args[0] if ex.args else
+                "You are not authorized to perform this operation"
+        )
+
 @inlineCallbacks
 def renderAsync(
         page: FabResource, request: TwistedRequest
@@ -164,14 +170,16 @@ def renderAsync(
             user: User
             user = yield authenticator.authenticate(req)
         except LoginFailed as ex:
-            responder = authenticator.askForAuthentication(
-                req, ex.args[0] if ex.args else None
-                )
+            if request.postpath:
+                # Widget requests should just fail immediately instead of
+                # asking for authentication.
+                responder = _unauthorizedResponder(ex)
+            else:
+                responder = authenticator.askForAuthentication(
+                    req, ex.args[0] if ex.args else None
+                    )
         except Unauthorized as ex:
-            responder = _PlainTextResponder(
-                403, ex.args[0] if ex.args else
-                        'You are not authorized to perform this operation'
-                )
+            responder = _unauthorizedResponder(ex)
         else:
             responder = yield parseAndProcess(page, req, user)
             streaming = page.streaming
