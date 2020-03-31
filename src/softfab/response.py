@@ -4,11 +4,10 @@ from base64 import standard_b64encode
 from gzip import GzipFile
 from hashlib import md5
 from io import BytesIO
-from typing import Callable, Optional, Union
+from typing import Optional, Union
 
 from twisted.internet import reactor
 from twisted.internet.defer import Deferred
-from twisted.internet.interfaces import IProducer, IPullProducer, IPushProducer
 from twisted.python.failure import Failure
 from twisted.web.http import CACHED
 from twisted.web.iweb import IRequest
@@ -133,22 +132,13 @@ class Response(ResponseHeaders):
     def __init__(self,
                  request: IRequest,
                  frameAncestors: str,
-                 userAgent: UserAgent,
-                 streaming: bool):
+                 userAgent: UserAgent):
         ResponseHeaders.__init__(self, request, frameAncestors, userAgent)
 
-        if streaming:
-            # Streaming pages must not be buffered.
-            self.__buffer = None
-            self.__writeBytes: Callable[[Union[bytes, bytearray]], int] = \
-                    request.write
-        else:
-            # Present entire page before deciding whether and how to send it
-            # to the client.
-            self.__buffer = BytesIO()
-            self.__writeBytes = self.__buffer.write
-
-        self.__producerDone: Optional[Deferred] = None
+        # Present entire page before deciding whether and how to send it
+        # to the client.
+        self.__buffer = BytesIO()
+        self.__writeBytes = self.__buffer.write
 
         self.__connectionLostFailure: Optional[Failure] = None
         d = request.notifyFinish()
@@ -181,7 +171,6 @@ class Response(ResponseHeaders):
         body = self.__buffer.getvalue()
         self.__buffer.close()
         # Any write attempt after this is an error.
-        self.__buffer = None
         self.__writeBytes = writeAfterFinish
 
         gzipContent = self._gzipContent
@@ -210,22 +199,6 @@ class Response(ResponseHeaders):
 
     def __connectionLost(self, reason: Failure) -> None:
         self.__connectionLostFailure = reason
-
-    def registerProducer(self, producer: IProducer) -> Deferred:
-        if IPushProducer.providedBy(producer):
-            streaming = True
-        elif IPullProducer.providedBy(producer):
-            streaming = False
-        else:
-            raise TypeError(type(producer))
-        self._request.registerProducer(producer, streaming)
-        self.__producerDone = d = Deferred()
-        return d
-
-    def unregisterProducer(self) -> None:
-        assert self.__producerDone is not None, 'producer was never registered'
-        self._request.unregisterProducer()
-        self.__producerDone.callback(None)
 
     def returnToReactor(self) -> Deferred:
         '''A page that writes a large response can hog the reactor for quite

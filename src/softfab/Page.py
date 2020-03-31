@@ -3,13 +3,11 @@
 from abc import ABC
 from collections import defaultdict
 from typing import (
-    TYPE_CHECKING, DefaultDict, Dict, Generic, Iterator, Optional, Set,
-    TypeVar, Union
+    TYPE_CHECKING, DefaultDict, Dict, Generic, Iterator, Optional, Set, TypeVar
 )
 import logging
 
 from twisted.internet.defer import Deferred
-from twisted.internet.interfaces import IProducer
 
 from softfab.datawidgets import DataTable, TableData
 from softfab.pageargs import ArgsT, PageArgs
@@ -167,11 +165,10 @@ class Responder:
     generating a response to an HTTP request.
     '''
 
-    def respond(self, response: Response) -> Union[None, Deferred, IProducer]:
+    def respond(self, response: Response) -> Optional[Deferred]:
         '''Respond to a request.
         The output can either be written directly to the `response`
-        object, or a delayed presenter can be returned as a Deferred
-        or IProducer.
+        object, or a delayed presenter can be returned as a Deferred.
         '''
         raise NotImplementedError
 
@@ -199,7 +196,6 @@ class FabResource(ABC, Generic[ArgsT, ProcT]):
     '''Abstract base class for Control Center pages.
     '''
     authenticator: Authenticator = abstract
-    streaming = False
 
     @property
     def name(self) -> str:

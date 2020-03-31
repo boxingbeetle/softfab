@@ -1,9 +1,8 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Generic, Optional, Union
+from typing import Generic, Optional
 
 from twisted.internet.defer import Deferred
-from twisted.internet.interfaces import IProducer
 
 from softfab.Page import Authenticator, FabResource, ProcT, Responder
 from softfab.authentication import HTTPAuthPage
@@ -18,7 +17,7 @@ class ControlResponder(Responder, Generic[ArgsT, ProcT]):
         self.page = page
         self.proc = proc
 
-    def respond(self, response: Response) -> Union[None, Deferred, IProducer]:
+    def respond(self, response: Response) -> Optional[Deferred]:
         page = self.page
         proc = self.proc
         response.setContentType(page.getContentType(proc))
@@ -56,8 +55,5 @@ class ControlPage(FabResource[ArgsT, ProcT]):
     def errorResponder(self, ex: Exception, proc: ProcT) -> Responder:
         return plainTextErrorResponder
 
-    def writeReply(self,
-                   response: Response,
-                   proc: ProcT
-                   ) -> Union[None, Deferred, IProducer]:
+    def writeReply(self, response: Response, proc: ProcT) -> Optional[Deferred]:
         raise NotImplementedError

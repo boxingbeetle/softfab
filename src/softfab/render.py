@@ -10,7 +10,6 @@ import logging
 from twisted.cred.error import LoginFailed, Unauthorized
 from twisted.internet.defer import Deferred, inlineCallbacks
 from twisted.internet.error import ConnectionClosed
-from twisted.internet.interfaces import IProducer, IPushProducer
 from twisted.python.failure import Failure
 from twisted.web.http import Request as TwistedRequest
 from twisted.web.server import NOT_DONE_YET
@@ -163,7 +162,6 @@ def renderAsync(
         page: FabResource, request: TwistedRequest
         ) -> Generator[Deferred, Any, None]:
     req: Request = Request(request)
-    streaming = False
     try:
         authenticator = page.authenticator
         try:
@@ -182,7 +180,6 @@ def renderAsync(
             responder = _unauthorizedResponder(ex)
         else:
             responder = yield parseAndProcess(page, req, user)
-            streaming = page.streaming
     except Redirect as ex:
         responder = Redirector(ex.url)
     except InternalError as ex:
@@ -195,7 +192,7 @@ def renderAsync(
             )
 
     frameAncestors = project.frameAncestors
-    response = Response(request, frameAncestors, req.userAgent, streaming)
+    response = Response(request, frameAncestors, req.userAgent)
     yield present(responder, response)
 
 def _checkActive(
@@ -325,21 +322,10 @@ def present(responder: Responder, response: Response) -> Optional[Deferred]:
         end = time()
         print('Responding took %1.3f seconds' % (end - start))
 
-    if IProducer.providedBy(presenter):
-        # Producer which will write to the request object.
-        d = response.registerProducer(presenter)
-        if IPushProducer.providedBy(presenter):
-            # Note: This only finishes the headers.
-            response.finish()
-            return d
-        else:
-            # We don't have any pages implementing IPullProducer.
-            raise TypeError(type(presenter))
+    if isinstance(presenter, Deferred):
+        presenter.addCallback(response.writeAndFinish)
+    elif presenter is None:
+        response.finish()
     else:
-        if isinstance(presenter, Deferred):
-            presenter.addCallback(response.writeAndFinish)
-        elif presenter is None:
-            response.finish()
-        else:
-            assert False, presenter
-        return presenter
+        assert False, presenter
+    return presenter
