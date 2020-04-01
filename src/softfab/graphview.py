@@ -288,12 +288,39 @@ _dotProcesses: Dict[GraphFormat, DotProcess] = {}
 a separate 'dot' process for each output format.
 """
 
-def _submitDotWork(work: DotWork, fmt: GraphFormat) -> None:
+def _runDot(data: bytes,
+            fmt: GraphFormat,
+            consumer: RenderConsumer
+            ) -> Deferred:
+    """Render graph data in a particular output format."""
+
     proc = _dotProcesses.get(fmt)
     if proc is None:
         proc = DotProcess(fmt)
         _dotProcesses[fmt] = proc
+
+    work = DotWork(data, consumer)
     proc.enqueue(work)
+    return work.deferred
+
+@inlineCallbacks
+def _renderGraph(data: bytes,
+                 fmt: GraphFormat
+                 ) -> Generator[Deferred, RenderConsumer, bytes]:
+    """Renders 'dot' data in the given format.
+    Returns a `Deferred` that on success delivers the rendered graph data,
+    which is of type `bytes`.
+    """
+    if fmt is GraphFormat.DOT:
+        return data
+    elif fmt is GraphFormat.SVG:
+        consumer = yield _runDot(data, GraphFormat.SVG, SVGRenderConsumer())
+        assert isinstance(consumer, SVGRenderConsumer), consumer
+        return ElementTree.tostring(consumer.takeSVG(), encoding='utf-8')
+    else:
+        consumer = yield _runDot(data, fmt, BufferingRenderConsumer())
+        assert isinstance(consumer, BufferingRenderConsumer), consumer
+        return consumer.takeData()
 
 class Graph:
     '''Wrapper around Graphviz graphs.
@@ -303,36 +330,16 @@ class Graph:
     def __init__(self, graph: Digraph):
         self.__graph = graph
 
-    def _runDot(self, fmt: GraphFormat, consumer: RenderConsumer) -> Deferred:
-        data = self.__graph.source.encode()
-        work = DotWork(data, consumer)
-        _submitDotWork(work, fmt)
-        return work.deferred
-
-    @inlineCallbacks
-    def export(self,
-               fmt: GraphFormat
-               ) -> Generator[Deferred, RenderConsumer, bytes]:
-        '''Renders this graph in the given format.
-        Returns a `Deferred` that on success delivers the rendered graph data,
-        which is of type `bytes`.
-        '''
-        if fmt is GraphFormat.DOT:
-            return self.__graph.source.encode()
-        elif fmt is GraphFormat.SVG:
-            consumer = yield self._runDot(GraphFormat.SVG, SVGRenderConsumer())
-            assert isinstance(consumer, SVGRenderConsumer), consumer
-            return ElementTree.tostring(consumer.takeSVG(), encoding='utf-8')
-        else:
-            consumer = yield self._runDot(fmt, BufferingRenderConsumer())
-            assert isinstance(consumer, BufferingRenderConsumer), consumer
-            return consumer.takeData()
+    @property
+    def data(self) -> bytes:
+        """The 'dot' source for this graph, encoded as UTF-8."""
+        return self.__graph.source.encode()
 
     def toSVG(self) -> Deferred:
         '''Renders this graph as SVG image and cleans up the resulting SVG.
         The returned Deferred will deliver an SVGRenderConsumer on success.
         '''
-        return self._runDot(GraphFormat.SVG, SVGRenderConsumer())
+        return _runDot(self.data, GraphFormat.SVG, SVGRenderConsumer())
 
 class GraphBuilder:
     """Holds the data for creating a graph."""
@@ -515,7 +522,8 @@ class _GraphResponder(Responder):
             response.setFileName(f'{self.__fileName}.{fmt.ext}')
         else:
             response.allowEmbedding()
-        return graph.export(fmt).addErrback(self.graphError, response)
+        data = graph.data
+        return _renderGraph(data, fmt).addErrback(self.graphError, response)
 
     def graphError(self, reason: Failure, response: Response) -> str:
         response.setStatus(500, 'Graph rendering failed')
