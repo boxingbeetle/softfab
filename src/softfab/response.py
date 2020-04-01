@@ -157,11 +157,6 @@ class Response(ResponseHeaders):
             f"frame-ancestors {self._frameAncestors}"
             )
 
-        if self.__buffer is None:
-            # Body was not buffered; this is a stream.
-            request.setHeader('Cache-Control', 'no-cache')
-            return
-
         # Tell cache that this is private data and that it can be cached,
         # but must be revalidated every time.
         request.setHeader(
