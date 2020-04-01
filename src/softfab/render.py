@@ -26,7 +26,7 @@ from softfab.UIPage import UIPage, UIResponder
 from softfab.pageargs import ArgsCorrected, ArgsInvalid, ArgsT, Query, dynamic
 from softfab.projectlib import project
 from softfab.request import Request
-from softfab.response import Response, ResponseHeaders
+from softfab.response import NotModified, Response, ResponseHeaders
 from softfab.userlib import AccessDenied, UnknownUser, User
 from softfab.utils import abstract
 from softfab.webgui import docLink
@@ -313,17 +313,20 @@ def present(responder: Responder, response: Response) -> Optional[Deferred]:
     '''Presentation step: write a response based on the processing results.
     Returns None or a Deferred that does the actual presentation.
     '''
-    if _timeRender:
-        start = time()
-    if _profileRender:
-        profile = Profile()
-        presenter = profile.runcall(responder.respond, response)
-        profile.dump_stats('request.prof')
-    else:
-        presenter = responder.respond(response)
-    if _timeRender:
-        end = time()
-        print('Responding took %1.3f seconds' % (end - start))
+    try:
+        if _timeRender:
+            start = time()
+        if _profileRender:
+            profile = Profile()
+            presenter = profile.runcall(responder.respond, response)
+            profile.dump_stats('request.prof')
+        else:
+            presenter = responder.respond(response)
+        if _timeRender:
+            end = time()
+            print('Responding took %1.3f seconds' % (end - start))
+    except NotModified:
+        presenter = None
 
     if isinstance(presenter, Deferred):
         presenter.addCallback(partial(writeAndFinish, response=response))

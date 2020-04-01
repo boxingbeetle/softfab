@@ -18,6 +18,11 @@ from softfab.useragent import AcceptedEncodings, UserAgent
 from softfab.utils import IllegalStateError
 from softfab.xmlgen import XMLContent, adaptToXML
 
+
+def createETag(data: bytes) -> bytes:
+    """Return a content hash for the given data, encoded in ASCII."""
+    return standard_b64encode(md5(data).digest()).rstrip(b'=')
+
 _fileNameTranslation = bytes(
     ch if 32 <= ch < 127 and ch not in b'"\\%?' else ord(b'_')
     for ch in range(256)
@@ -59,6 +64,11 @@ def _encodeHeaderValue(key: bytes, value: str) -> bytes:
 
     # Provide the UTF-8 and the ASCII version as a fallback.
     return b'''%b="%b"; %b*=UTF-8''%b''' % (key, filteredAscii, key, encoded)
+
+class NotModified(Exception):
+    """Raised when we can skip writing the response body because
+    the user agent already has an up-to-date version of the resource.
+    """
 
 class ResponseHeaders:
 
@@ -144,6 +154,17 @@ class Response(ResponseHeaders):
         d = request.notifyFinish()
         d.addErrback(self.__connectionLost)
 
+    def setETag(self, etag: bytes) -> None:
+        """Set the given entity tag for this response.
+        Raise NotModified if the tag matches an If-None-Match request header.
+        """
+        if self._gzipContent:
+            # Since encoding the content with gzip changes it, we have to
+            # return a different ETag if we use gzip.
+            etag += b'-gzip'
+        if self._request.setETag(etag) is CACHED:
+            raise NotModified()
+
     def finish(self) -> None:
         request = self._request
 
@@ -168,22 +189,15 @@ class Response(ResponseHeaders):
         # Any write attempt after this is an error.
         self.__writeBytes = writeAfterFinish
 
-        gzipContent = self._gzipContent
+        if not request.etag:
+            # Create entity tag from response body.
+            try:
+                self.setETag(createETag(body))
+            except NotModified:
+                # ETag match; no body should be written.
+                return
 
-        # Compute entity tag.
-        # Since encoding the content with gzip changes it, we have to return
-        # a different ETag if we use gzip. However, the gzip format contains
-        # a timestamp, meaning that the compressed body will be different
-        # even if the raw body did not change. Therefore we compute the ETag
-        # on the raw body and appened a flag to it if we plan to gzip it.
-        etag = standard_b64encode(md5(body).digest()).rstrip(b'=')
-        if gzipContent:
-            etag += b'-gzip'
-        if request.setETag(etag) is CACHED:
-            # ETag match; no body should be written.
-            return
-
-        if gzipContent:
+        if self._gzipContent:
             request.setHeader('Content-Encoding', 'gzip')
             # Note: Some quick measurements show that compression level 6 gives
             #       a good balance between resulting size and CPU power needed.

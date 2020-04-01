@@ -28,7 +28,7 @@ from softfab.pagelinks import (
     createFrameworkDetailsURL, createProductDetailsURL
 )
 from softfab.productdeflib import ProductDef, ProductType, productDefDB
-from softfab.response import Response
+from softfab.response import Response, createETag
 from softfab.setcalc import UnionFind
 from softfab.webgui import Widget
 from softfab.xmlgen import XMLContent, xhtml
@@ -515,14 +515,14 @@ class _GraphResponder(Responder):
 
     def respond(self, response: Response) -> Deferred:
         export = self.__export
-        graph = self.__builder.build(export)
         fmt = self.__format
         response.setContentType(fmt.mediaType)
         if export:
             response.setFileName(f'{self.__fileName}.{fmt.ext}')
         else:
             response.allowEmbedding()
-        data = graph.data
+        data = self.__builder.build(export).data
+        response.setETag(createETag(data) + b'-dot')
         return _renderGraph(data, fmt).addErrback(self.graphError, response)
 
     def graphError(self, reason: Failure, response: Response) -> str:
