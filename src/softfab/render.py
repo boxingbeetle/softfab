@@ -4,7 +4,10 @@
 Module to render the page
 '''
 
-from typing import Any, ClassVar, Generator, Iterator, Optional, Type, cast
+from functools import partial
+from typing import (
+    Any, ClassVar, Generator, Iterator, Optional, Type, Union, cast
+)
 import logging
 
 from twisted.cred.error import LoginFailed, Unauthorized
@@ -323,9 +326,13 @@ def present(responder: Responder, response: Response) -> Optional[Deferred]:
         print('Responding took %1.3f seconds' % (end - start))
 
     if isinstance(presenter, Deferred):
-        presenter.addCallback(response.writeAndFinish)
+        presenter.addCallback(partial(writeAndFinish, response=response))
     elif presenter is None:
         response.finish()
     else:
         assert False, presenter
     return presenter
+
+def writeAndFinish(result: Union[None, bytes, str], response: Response) -> None:
+    response.write(result)
+    response.finish()

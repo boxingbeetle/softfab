@@ -244,9 +244,5 @@ class Response(ResponseHeaders):
         """
         self.__writeBytes(adaptToXML(xml).flattenXML().encode())
 
-    def writeAndFinish(self, result: Union[None, bytes, str]) -> None:
-        self.write(result)
-        self.finish()
-
 def writeAfterFinish(buffer: Union[bytes, bytearray]) -> NoReturn:
     raise IllegalStateError('Write on finished response')
