@@ -1,11 +1,11 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from enum import Enum
+from enum import Flag, auto
 from importlib import import_module
 from pathlib import Path
 from types import ModuleType
 from typing import (
-    Callable, Dict, Iterable, Iterator, List, Optional, Sequence, Tuple, cast
+    Callable, Dict, Iterator, List, Optional, Sequence, Tuple, cast
 )
 from xml.etree.ElementTree import Element
 import logging
@@ -123,22 +123,30 @@ class FixupExtension(Extension):
         processor = FixupProcessor(md)
         md.treeprocessors.register(processor, 'softfab.fixup', 5)
 
-# TODO: In Python 3.6, we could use IntFlag instead.
-class DocErrors(Enum):
+class DocErrors(Flag):
     """Errors that can happen when processing documentation.
     """
 
-    MODULE = 1
+    MODULE = auto()
     """Python module failed to load."""
 
-    METADATA = 2
+    METADATA = auto()
     """Missing metadata."""
 
-    CONTENT = 3
+    CONTENT = auto()
     """Markdown content failed to load."""
 
-    RENDERING = 4
+    RENDERING = auto()
     """Markdown content failed to render."""
+
+    def present(self) -> str:
+        """Return a user-readable string listing the errors that happened."""
+        value = self.value
+        return ', '.join(
+            name.lower()
+            for name, member in self.__class__.__members__.items()
+            if member.value & value
+            )
 
 class DocMetadata:
     button = 'ERROR'
@@ -166,13 +174,13 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
                  resource: 'DocResource',
                  module: Optional[ModuleType],
                  metadata: DocMetadata,
-                 errors: Iterable[DocErrors]
+                 errors: DocErrors
                  ):
         super().__init__()
         self.resource = resource
         self.module = module
         self.metadata = metadata
-        self.errors = set(errors)
+        self.errors = errors
 
         contentPath = None
         if module is not None:
@@ -211,8 +219,7 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
             self.__renderedStr = None
             self.__renderedXML = None
             self.__extractedInfo = None
-            self.errors.discard(DocErrors.CONTENT)
-            self.errors.discard(DocErrors.RENDERING)
+            self.errors &= ~(DocErrors.CONTENT | DocErrors.RENDERING)
 
     def renderContent(self) -> None:
         self.checkModified()
@@ -220,10 +227,10 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
         if self.__renderedStr is not None:
             # Previous render is still valid.
             return
-        if DocErrors.CONTENT in self.errors:
+        if self.errors & DocErrors.CONTENT:
             # Loading failed; nothing to render.
             return
-        if DocErrors.RENDERING in self.errors:
+        if self.errors & DocErrors.RENDERING:
             # Rendering attempted and failed.
             return
 
@@ -240,7 +247,7 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
         except Exception:
             logging.exception('Error loading documentation content "%s"',
                               contentPath.name)
-            self.errors.add(DocErrors.CONTENT)
+            self.errors |= DocErrors.CONTENT
             return
 
         # Create a private Markdown converter.
@@ -263,7 +270,7 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
             self.__renderedStr = md.convert(content)
         except Exception:
             logging.exception('Error rendering Markdown for %s', packageName)
-            self.errors.add(DocErrors.RENDERING)
+            self.errors |= DocErrors.RENDERING
         else:
             self.__extractedInfo = extractor.extracted
 
@@ -310,7 +317,7 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
                 'Error post-processing content for %s',
                 self.resource.packageName
                 )
-            self.errors.add(DocErrors.RENDERING)
+            self.errors |= DocErrors.RENDERING
             return None
         else:
             self.__renderedXML = renderedXML
@@ -372,7 +379,7 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
         proc.content = self.postProcess()
         if self.errors:
             message = xhtml.p(class_='notice')[
-                'Error in documentation ', xhtml[', '].join(self.errors), '. ',
+                'Error in documentation ', self.errors.present(), '. ',
                 xhtml.br,
                 'Please check the Control Center log for details.'
                 ]
@@ -454,7 +461,7 @@ class DocResource(Resource):
                      packageName: str,
                      parent: Optional['DocResource'] = None
                      ) -> 'DocResource':
-        errors = set()
+        errors = DocErrors(0)
 
         # Load module.
         try:
@@ -464,7 +471,7 @@ class DocResource(Resource):
                 'Error importing documentation module "%s"',
                 packageName
                 )
-            errors.add(DocErrors.MODULE)
+            errors |= DocErrors.MODULE
             initModule = None
 
         # Collect metadata.
@@ -480,7 +487,7 @@ class DocResource(Resource):
                         'Missing metadata "%s" in module "%s"',
                         name, packageName
                         )
-                    errors.add(DocErrors.METADATA)
+                    errors |= DocErrors.METADATA
                 else:
                     setattr(metadata, name, value)
 
