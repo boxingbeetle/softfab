@@ -237,7 +237,6 @@ def migrate(path: Path) -> None:
     softfab.projectlib._projectDB.preload() # pylint: disable=protected-access
     versionStr = softfab.projectlib.project.dbVersion
     from softfab.utils import parseVersion
-    error = None
     try:
         dbVersion = parseVersion(versionStr)
     except ValueError as ex:
@@ -245,8 +244,8 @@ def migrate(path: Path) -> None:
              f"Migration aborted.", err=True)
         sys.exit(1)
     if dbVersion < (2, 16, 0):
-        echo(f"Cannot convert database because its format "
-             f"({versionStr}) is {error}.\n"
+        echo(f"Cannot migrate database because its format "
+             f"({versionStr}) is too old.\n"
              f"Please upgrade to an earlier SoftFab version first.\n"
              f"See release notes for details.", err=True)
         sys.exit(1)
