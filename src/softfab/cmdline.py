@@ -11,7 +11,7 @@ from typing import Callable, Optional, TypeVar
 import sys
 
 from click import (
-    BadParameter, Context, ParamType, Parameter, command, group, option,
+    BadParameter, Context, ParamType, Parameter, command, echo, group, option,
     version_option
 )
 from twisted.application import strports
@@ -115,14 +115,13 @@ def init(
                   f'listen = {listen}',
                   file=file)
     except FileExistsError:
-        print('Refusing to overwrite existing configuration file.',
-              file=sys.stderr)
+        echo("Refusing to overwrite existing configuration file.", err=True)
         sys.exit(1)
     except Exception as ex:
-        print('Failed to create configuration file:', ex, file=sys.stderr)
+        echo(f"Failed to create configuration file: {ex}", err=True)
         sys.exit(1)
 
-    print(f'Control Center created in {path}.', file=sys.stderr)
+    echo(f"Control Center created in {path}.", err=True)
 
 @command()
 @dirOption(True)
@@ -146,7 +145,7 @@ def server(
     try:
         softfab.config.initConfig(path)
     except Exception as ex:
-        print('Error reading configuration:', ex, file=sys.stderr)
+        echo(f"Error reading configuration: {ex}", err=True)
         sys.exit(1)
 
     from softfab.initlog import initLogging
@@ -173,13 +172,13 @@ def server(
     try:
         service = strports.service(softfab.config.endpointDesc, site)
     except ValueError as ex:
-        print('Invalid socket specification:', ex, file=sys.stderr)
+        echo(f"Invalid socket specification: {ex}", err=True)
         sys.exit(1)
 
     try:
         service.startService()
     except Exception as ex:
-        print('Failed to listen on socket:', ex, file=sys.stderr)
+        echo(f"Failed to listen on socket: {ex}", err=True)
         sys.exit(1)
     else:
         reactor.addSystemEventTrigger('before', 'shutdown', service.stopService)
@@ -188,8 +187,7 @@ def server(
     try:
         writePIDFile(pidfilePath)
     except OSError as ex:
-        print(f'Failed to create PID file "{pidfilePath}": {ex}',
-              file=sys.stderr)
+        echo(f"Failed to create PID file '{pidfilePath}': {ex}", err=True)
         sys.exit(1)
 
     reactor.run()
@@ -210,15 +208,14 @@ def migrate(path: Path) -> None:
     try:
         softfab.config.initConfig(path)
     except Exception as ex:
-        print('Error reading configuration:', ex, file=sys.stderr)
+        echo(f"Error reading configuration: {ex}", err=True)
         sys.exit(1)
 
     # Avoid migrating a database that is in use.
     pidfilePath = path / 'cc.pid'
     if pidfilePath.is_file():
-        print('PID file exists:', pidfilePath, file=sys.stderr)
-        print('Stop the Control Center before migrating the data.',
-              file=sys.stderr)
+        echo(f"PID file exists: {pidfilePath}", err=True)
+        echo(f"Stop the Control Center before migrating the data.", err=True)
         sys.exit(1)
 
     # Avoid calling fsync on record rewrites.
@@ -244,20 +241,14 @@ def migrate(path: Path) -> None:
     try:
         dbVersion = parseVersion(versionStr)
     except ValueError as ex:
-        print(
-            f"Failed to parse database version: {ex}\n"
-            f"Migration aborted.",
-            file=sys.stderr
-            )
+        echo(f"Failed to parse database version: {ex}\n"
+             f"Migration aborted.", err=True)
         sys.exit(1)
     if dbVersion < (2, 16, 0):
-        print(
-            f"Cannot convert database because its format "
-            f"({versionStr}) is {error}.\n"
-            f"Please upgrade to an earlier SoftFab version first.\n"
-            f"See release notes for details.",
-            file=sys.stderr
-            )
+        echo(f"Cannot convert database because its format "
+             f"({versionStr}) is {error}.\n"
+             f"Please upgrade to an earlier SoftFab version first.\n"
+             f"See release notes for details.", err=True)
         sys.exit(1)
 
     setConversionFlagsForVersion(dbVersion)
