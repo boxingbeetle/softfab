@@ -49,3 +49,18 @@ def reloadDatabases() -> None:
 
     for db in iterDatabases():
         db.preload()
+
+def convertAll() -> None:
+    """Convert all databases to the current format."""
+
+    for db in iterDatabases():
+        print('Migrating', db.description, 'database...')
+        db.convert()
+
+    print('Recomputing running tasks...')
+    resourcelib.recomputeRunning()
+
+    print('Updating database version tag...')
+    projectlib.project.updateVersion()
+
+    print('Done.')

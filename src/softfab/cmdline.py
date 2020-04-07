@@ -73,6 +73,8 @@ def dirOption(mustExist: bool) -> Decorator:
         '-d', '--dir', 'path', type=DirectoryParamType(mustExist), default='.',
         help='Directory containing configuration, data and logging.')
 
+# pylint: disable=import-outside-toplevel
+
 @command()
 @dirOption(False)
 @option('--host', default='localhost',
@@ -194,6 +196,75 @@ def server(
 
     pidfilePath.unlink()
 
+@command()
+@dirOption(True)
+def migrate(path: Path) -> None:
+    """Migrate a Control Center database.
+    This updates the data to the latest schema.
+    Should be run after upgrading SoftFab, if the release notes say so.
+    Will also repair inconsistent data and remove unreachable records.
+    """
+
+    # Read the config first; doubles as a sanity check of the 'path' option.
+    import softfab.config
+    try:
+        softfab.config.initConfig(path)
+    except Exception as ex:
+        print('Error reading configuration:', ex, file=sys.stderr)
+        sys.exit(1)
+
+    # Avoid migrating a database that is in use.
+    pidfilePath = path / 'cc.pid'
+    if pidfilePath.is_file():
+        print('PID file exists:', pidfilePath, file=sys.stderr)
+        print('Stop the Control Center before migrating the data.',
+              file=sys.stderr)
+        sys.exit(1)
+
+    # Avoid calling fsync on record rewrites.
+    # Syncing on every file would make migrations of large databases take
+    # forever. The upgrade procedure states that a backup should be made
+    # before upgrading, so in case of abnormal termination the user can
+    # restart the upgrade from the backup.
+    softfab.config.dbAtomicWrites = False
+
+    # Set conversion flags.
+    from softfab.conversionflags import (
+        setConversionFlags, setConversionFlagsForVersion
+    )
+    setConversionFlags()
+
+    # Check whether we can convert from the database version in use before
+    # the migration.
+    import softfab.projectlib
+    softfab.projectlib._projectDB.preload() # pylint: disable=protected-access
+    versionStr = softfab.projectlib.project.dbVersion
+    from softfab.utils import parseVersion
+    error = None
+    try:
+        dbVersion = parseVersion(versionStr)
+    except ValueError as ex:
+        print(
+            f"Failed to parse database version: {ex}\n"
+            f"Migration aborted.",
+            file=sys.stderr
+            )
+        sys.exit(1)
+    if dbVersion < (2, 16, 0):
+        print(
+            f"Cannot convert database because its format "
+            f"({versionStr}) is {error}.\n"
+            f"Please upgrade to an earlier SoftFab version first.\n"
+            f"See release notes for details.",
+            file=sys.stderr
+            )
+        sys.exit(1)
+
+    setConversionFlagsForVersion(dbVersion)
+
+    from softfab.databases import convertAll
+    convertAll()
+
 @version_option(prog_name='SoftFab', version=VERSION,
                 message='%(prog)s version %(version)s')
 @group()
@@ -203,3 +274,4 @@ def main() -> None:
 
 main.add_command(init)
 main.add_command(server)
+main.add_command(migrate)
