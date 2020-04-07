@@ -7,7 +7,7 @@ Command line interface.
 
 from os import getpid
 from pathlib import Path
-from typing import Optional
+from typing import Callable, Optional, TypeVar
 import sys
 
 from click import (
@@ -65,9 +65,16 @@ class DirectoryParamType(ParamType):
         else:
             return path
 
-@command()
-@option('-d', '--dir', 'path', type=DirectoryParamType(False), default='.',
+Decorated = TypeVar('Decorated', bound=Callable)
+Decorator = Callable[[Decorated], Decorated]
+
+def dirOption(mustExist: bool) -> Decorator:
+    return option(
+        '-d', '--dir', 'path', type=DirectoryParamType(mustExist), default='.',
         help='Directory containing configuration, data and logging.')
+
+@command()
+@dirOption(False)
 @option('--host', default='localhost',
         help='Host name or IP address at which the Control Center '
              'accepts connections.')
@@ -116,8 +123,7 @@ def init(
     print(f'Control Center created in {path}.', file=sys.stderr)
 
 @command()
-@option('-d', '--dir', 'path', type=DirectoryParamType(True), default='.',
-        help='Directory containing configuration, data and logging.')
+@dirOption(True)
 @option('--debug', is_flag=True,
         help='Enable debug features. Can leak data; use only in development.')
 @option('--anonoper', is_flag=True,
