@@ -8,7 +8,7 @@ from urllib.parse import quote_plus, urljoin
 import logging
 
 from softfab.config import dbDir
-from softfab.conversionflags import upgradeInProgress
+from softfab.conversionflags import migrationInProgress
 from softfab.databaselib import (
     Database, DatabaseElem, ObsoleteRecordError, createInternalId
 )
@@ -128,7 +128,7 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
         self.__reserved[attributes['ref']] = attributes['id']
 
     def _setTask(self, attributes: Mapping[str, str]) -> None:
-        if upgradeInProgress:
+        if migrationInProgress:
             if attributes['job'] not in jobDB:
                 raise ObsoleteRecordError()
             self.__jobId = attributes['job']
