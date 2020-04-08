@@ -12,11 +12,12 @@ import sys
 
 from click import (
     BadParameter, Context, ParamType, Parameter, command, echo, group, option,
-    version_option
+    pass_context, pass_obj, version_option
 )
 from twisted.application import strports
 from twisted.logger import globalLogBeginner, textFileLogObserver
 from twisted.web.server import Session, Site
+import attr
 
 from softfab.version import VERSION
 
@@ -67,6 +68,29 @@ class DirectoryParamType(ParamType):
 
 Decorated = TypeVar('Decorated', bound=Callable)
 Decorator = Callable[[Decorated], Decorated]
+
+@attr.s(auto_attribs=True)
+class GlobalOptions:
+    debug: bool
+
+    def apply(self, path: Path) -> None:
+        # Read the config first.
+        # This doubles as a sanity check of the 'path' option.
+        import softfab.config
+        try:
+            softfab.config.initConfig(path)
+        except Exception as ex:
+            echo(f"Error reading configuration: {ex}", err=True)
+            sys.exit(1)
+
+        from softfab.initlog import initLogging
+        initLogging(path)
+
+        if self.debug:
+            import logging
+            import warnings
+            logging.captureWarnings(True)
+            warnings.simplefilter('default')
 
 def dirOption(mustExist: bool) -> Decorator:
     return option(
@@ -125,14 +149,13 @@ def init(
 
 @command()
 @dirOption(True)
-@option('--debug', is_flag=True,
-        help='Enable debug features. Can leak data; use only in development.')
 @option('--anonoper', is_flag=True,
         help='Give every visitor operator privileges, without logging in. '
              'Use only in development.')
+@pass_obj
 def server(
+        globalOptions: GlobalOptions,
         path: Path,
-        debug: bool,
         anonoper: bool
         ) -> None:
     """Run a Control Center server."""
@@ -141,21 +164,7 @@ def server(
     # which we don't need for every subcommand.
     from twisted.internet import reactor
 
-    import softfab.config
-    try:
-        softfab.config.initConfig(path)
-    except Exception as ex:
-        echo(f"Error reading configuration: {ex}", err=True)
-        sys.exit(1)
-
-    from softfab.initlog import initLogging
-    initLogging(Path(softfab.config.dbDir))
-
-    if debug:
-        import logging
-        import warnings
-        logging.captureWarnings(True)
-        warnings.simplefilter('default')
+    globalOptions.apply(path)
 
     # Set up Twisted's logging.
     observers = [textFileLogObserver(sys.stderr)]
@@ -165,9 +174,10 @@ def server(
     from softfab.TwistedRoot import SoftFabRoot
     root = SoftFabRoot(anonOperator=anonoper)
 
+    import softfab.config
     site = ControlCenter(root)
     site.secureCookie = not softfab.config.rootURL.startswith('http://')
-    site.displayTracebacks = debug
+    site.displayTracebacks = globalOptions.debug
 
     try:
         service = strports.service(softfab.config.endpointDesc, site)
@@ -196,20 +206,18 @@ def server(
 
 @command()
 @dirOption(True)
-def migrate(path: Path) -> None:
+@pass_obj
+def migrate(
+        globalOptions: GlobalOptions,
+        path: Path
+        ) -> None:
     """Migrate a Control Center database.
     This updates the data to the latest schema.
     Should be run after upgrading SoftFab, if the release notes say so.
     Will also repair inconsistent data and remove unreachable records.
     """
 
-    # Read the config first; doubles as a sanity check of the 'path' option.
-    import softfab.config
-    try:
-        softfab.config.initConfig(path)
-    except Exception as ex:
-        echo(f"Error reading configuration: {ex}", err=True)
-        sys.exit(1)
+    globalOptions.apply(path)
 
     # Avoid migrating a database that is in use.
     pidfilePath = path / 'cc.pid'
@@ -223,6 +231,7 @@ def migrate(path: Path) -> None:
     # forever. The upgrade procedure states that a backup should be made
     # before upgrading, so in case of abnormal termination the user can
     # restart the upgrade from the backup.
+    import softfab.config
     softfab.config.dbAtomicWrites = False
 
     # Set conversion flags.
@@ -252,15 +261,26 @@ def migrate(path: Path) -> None:
 
     setConversionFlagsForVersion(dbVersion)
 
-    from softfab.databases import convertAll
-    convertAll()
+    import logging
+    logging.info("Migrating from version %s to version %s", versionStr, VERSION)
+    try:
+        from softfab.databases import convertAll
+        convertAll()
+    except Exception as ex:
+        logging.exception(f"Migration aborted with error: {ex}")
+        raise
+    else:
+        logging.info("Migration complete")
 
+@group()
+@option('--debug', is_flag=True,
+        help='Enable debug features. Can leak data; use only in development.')
 @version_option(prog_name='SoftFab', version=VERSION,
                 message='%(prog)s version %(version)s')
-@group()
-def main() -> None:
+@pass_context
+def main(ctx: Context, debug: bool) -> None:
     """Command line interface to SoftFab."""
-    pass
+    ctx.obj = GlobalOptions(debug=debug)
 
 main.add_command(init)
 main.add_command(server)
