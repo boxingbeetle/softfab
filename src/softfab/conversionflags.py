@@ -8,8 +8,7 @@ work since some module initialisations load records from other databases,
 causing them to be parsed before the flags are set up.
 '''
 
-from typing import Dict, Tuple
-import sys
+from typing import Tuple
 
 # Set during any upgrade.
 upgradeInProgress = False
@@ -17,7 +16,7 @@ upgradeInProgress = False
 def setConversionFlags() -> None:
     '''Sets all conversion flags to True.
     '''
-    variables: Dict[str, object] = sys.modules[__name__].__dict__
+    variables = globals()
     for name in list(variables.keys()):
         if isinstance(variables[name], bool):
             variables[name] = True
