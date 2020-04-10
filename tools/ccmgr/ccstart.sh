@@ -30,7 +30,7 @@ if [ -z $VIRTUAL_ENV ]; then
     source "$FACDIR"/venv/bin/activate
 fi
 
-softfab server --dir "$DBDIR" 2> "$LOG_FILE" &
+softfab --dir "$DBDIR" server 2> "$LOG_FILE" &
 
 if [ $? -eq 0 ]; then
     for count in $(seq 10); do
