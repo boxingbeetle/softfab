@@ -43,9 +43,6 @@ class DirectoryParamType(ParamType):
 
     name = 'directory'
 
-    def __init__(self, mustExist: bool):
-        self.mustExist = mustExist
-
     def get_metavar(self, param: Parameter) -> str:
         return 'DIR'
 
@@ -57,12 +54,8 @@ class DirectoryParamType(ParamType):
             ) -> Path:
 
         path = Path(value)
-        if path.is_dir():
-            return path
-        elif path.exists():
+        if path.exists() and not path.is_dir():
             raise BadParameter(f'Path is not a directory: {path}')
-        elif self.mustExist:
-            raise BadParameter(f'Directory does not exist: {path}')
         else:
             return path
 
@@ -72,8 +65,14 @@ Decorator = Callable[[Decorated], Decorated]
 @attr.s(auto_attribs=True)
 class GlobalOptions:
     debug: bool
+    path: Path
 
-    def apply(self, path: Path) -> None:
+    def apply(self) -> None:
+        path = self.path
+        if not path.is_dir():
+            echo(f"Path is not a directory: {path}", err=True)
+            sys.exit(1)
+
         # Read the config first.
         # This doubles as a sanity check of the 'path' option.
         import softfab.config
@@ -92,15 +91,9 @@ class GlobalOptions:
             logging.captureWarnings(True)
             warnings.simplefilter('default')
 
-def dirOption(mustExist: bool) -> Decorator:
-    return option(
-        '-d', '--dir', 'path', type=DirectoryParamType(mustExist), default='.',
-        help='Directory containing configuration, data and logging.')
-
 # pylint: disable=import-outside-toplevel
 
 @command()
-@dirOption(False)
 @option('--host', default='localhost',
         help='Host name or IP address at which the Control Center '
              'accepts connections.')
@@ -109,8 +102,9 @@ def dirOption(mustExist: bool) -> Decorator:
 @option('--url',
         help='Public URL for the Control Center. '
              'Provide this when the Control Center is behind a reverse proxy.')
+@pass_obj
 def init(
-        path: Path,
+        globalOptions: GlobalOptions,
         host: str,
         port: int,
         url: Optional[str]
@@ -122,6 +116,7 @@ def init(
 
     listen = f'tcp:interface={host}:port={port:d}'
 
+    path = globalOptions.path
     path.mkdir(mode=0o770, exist_ok=True)
 
     import softfab.config
@@ -148,14 +143,12 @@ def init(
     echo(f"Control Center created in {path}.", err=True)
 
 @command()
-@dirOption(True)
 @option('--anonoper', is_flag=True,
         help='Give every visitor operator privileges, without logging in. '
              'Use only in development.')
 @pass_obj
 def server(
         globalOptions: GlobalOptions,
-        path: Path,
         anonoper: bool
         ) -> None:
     """Run a Control Center server."""
@@ -164,7 +157,7 @@ def server(
     # which we don't need for every subcommand.
     from twisted.internet import reactor
 
-    globalOptions.apply(path)
+    globalOptions.apply()
 
     # Set up Twisted's logging.
     observers = [textFileLogObserver(sys.stderr)]
@@ -193,7 +186,7 @@ def server(
     else:
         reactor.addSystemEventTrigger('before', 'shutdown', service.stopService)
 
-    pidfilePath = path / 'cc.pid'
+    pidfilePath = globalOptions.path / 'cc.pid'
     try:
         writePIDFile(pidfilePath)
     except OSError as ex:
@@ -205,22 +198,18 @@ def server(
     pidfilePath.unlink()
 
 @command()
-@dirOption(True)
 @pass_obj
-def migrate(
-        globalOptions: GlobalOptions,
-        path: Path
-        ) -> None:
+def migrate(globalOptions: GlobalOptions) -> None:
     """Migrate a Control Center database.
     This updates the data to the latest schema.
     Should be run after upgrading SoftFab, if the release notes say so.
     Will also repair inconsistent data and remove unreachable records.
     """
 
-    globalOptions.apply(path)
+    globalOptions.apply()
 
     # Avoid migrating a database that is in use.
-    pidfilePath = path / 'cc.pid'
+    pidfilePath = globalOptions.path / 'cc.pid'
     if pidfilePath.is_file():
         echo(f"PID file exists: {pidfilePath}", err=True)
         echo(f"Stop the Control Center before migrating the data.", err=True)
@@ -275,12 +264,14 @@ def migrate(
 @group()
 @option('--debug', is_flag=True,
         help='Enable debug features. Can leak data; use only in development.')
+@option('-d', '--dir', 'path', type=DirectoryParamType(), default='.',
+        help='Directory containing configuration, data and logging.')
 @version_option(prog_name='SoftFab', version=VERSION,
                 message='%(prog)s version %(version)s')
 @pass_context
-def main(ctx: Context, debug: bool) -> None:
+def main(ctx: Context, debug: bool, path: Path) -> None:
     """Command line interface to SoftFab."""
-    ctx.obj = GlobalOptions(debug=debug)
+    ctx.obj = GlobalOptions(debug=debug, path=path)
 
 main.add_command(init)
 main.add_command(server)
