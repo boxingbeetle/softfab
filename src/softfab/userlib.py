@@ -337,8 +337,6 @@ def passwordQuality(userName: str, password: str) -> PasswordMessage:
     if len(password) < minimumPasswordLength:
         return PasswordMessage.SHORT
 
-    if userName == adminUserName and password == adminDefaultPassword:
-        return PasswordMessage.POOR
     if userName == password:
         return PasswordMessage.POOR
 
@@ -411,9 +409,6 @@ class UserInfoFactory:
     def createUser(attributes: Mapping[str, str]) -> 'UserInfo':
         return UserInfo(attributes)
 
-adminUserName = 'admin'
-adminDefaultPassword = 'admin'
-
 class UserDB(Database['UserInfo']):
     baseDir = dbDir + '/users'
     factory = UserInfoFactory()
@@ -427,13 +422,6 @@ class UserDB(Database['UserInfo']):
         that are no longer allowed to login.
         """
         return sum(user.isActive() for user in self)
-
-    def _postLoad(self) -> None:
-        super()._postLoad()
-
-        # Create admin account if database is empty.
-        if len(self) == 0:
-            addUserAccount(adminUserName, adminDefaultPassword, ( 'operator', ))
 
 userDB = UserDB()
 
