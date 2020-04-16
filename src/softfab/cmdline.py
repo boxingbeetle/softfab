@@ -15,6 +15,7 @@ from click import (
     pass_context, pass_obj, version_option
 )
 from twisted.application import strports
+from twisted.internet.interfaces import IReactorUNIX
 from twisted.logger import globalLogBeginner, textFileLogObserver
 from twisted.web.server import Session, Site
 import attr
@@ -30,6 +31,11 @@ class ControlCenter(Site):
 
     def __repr__(self) -> str:
         return 'ControlCenter'
+
+class ControlSocket(Site):
+
+    def __repr__(self) -> str:
+        return 'ControlSocket'
 
 def writePIDFile(path: Path) -> None:
     """Write our process ID to a text file.
@@ -192,6 +198,17 @@ def server(
     except OSError as ex:
         echo(f"Failed to create PID file '{pidfilePath}': {ex}", err=True)
         sys.exit(1)
+
+    if IReactorUNIX.providedBy(reactor):
+        from softfab.newapi import createAPIRoot
+        reactor.listenUNIX(
+            str(globalOptions.path / 'ctrl.sock'),
+            ControlSocket(createAPIRoot()),
+            mode=0o600
+            )
+    else:
+        echo("Reactor does not support UNIX sockets; "
+             "control socket not available", err=True)
 
     reactor.run()
 
