@@ -186,7 +186,7 @@ def isort(c, src=None):
 @task
 def run(c, dbdir='run', auth=False, coverage=False):
     """Run a Control Center instance."""
-    cmd = ['softfab', 'server', '--debug']
+    cmd = ['softfab', '--debug', 'server']
     if not auth:
         cmd.append('--anonoper')
     if coverage:
