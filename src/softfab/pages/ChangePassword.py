@@ -14,8 +14,8 @@ from softfab.formlib import (
 from softfab.pageargs import EnumArg, PasswordArg, RefererArg
 from softfab.request import Request
 from softfab.userlib import (
-    PasswordMessage, User, UserInfo, authenticateUser, changePassword,
-    checkPrivilege, passwordQuality, userDB
+    PasswordMessage, User, UserInfo, authenticateUser, checkPrivilege,
+    passwordQuality, setPassword, userDB
 )
 from softfab.userview import LoginPassArgs, PasswordMsgArgs, passwordStr
 from softfab.webgui import pageURL
@@ -165,9 +165,7 @@ class ChangePassword_POST(FabPage['ChangePassword_POST.Processor',
                         "change other user's password (ask an operator)"
                         )
 
-                try:
-                    userInfo = userDB[userName]
-                except KeyError:
+                if userName not in userDB:
                     self.retry = False # pylint: disable=attribute-defined-outside-init
                     raise PresentableError(xhtml[
                         f'User "{userName}" does not exist (anymore)'
@@ -199,9 +197,8 @@ class ChangePassword_POST(FabPage['ChangePassword_POST.Processor',
 
                 # Apply changes.
                 try:
-                    changePassword(userInfo, password)
+                    setPassword(userName, password)
                 except ValueError as ex:
-                    # Failed to changePassword
                     self.retry = True # pylint: disable=attribute-defined-outside-init
                     raise PresentableError(xhtml[str(ex)])
                 else:

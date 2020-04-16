@@ -266,13 +266,12 @@ def _checkPassword(password: str) -> None:
             ', '.join(f'{code:d}' for code in sorted(invalidCodes))
             )
 
-def addUserAccount(userName: str, password: str, roles: Iterable[str]) -> None:
+def addUserAccount(userName: str, roles: Iterable[str]) -> None:
     '''Creates a new user account.
     @param userName: The name of the new user account.
-    @param password: New password for the new user.
     @param roles: The initial roles for the new user.
     @raise ValueError: If the user already exists,
-      or the user name or password is syntactically invalid.
+      or the user name is syntactically invalid.
     '''
     # Check user name.
     try:
@@ -282,33 +281,18 @@ def addUserAccount(userName: str, password: str, roles: Iterable[str]) -> None:
     if userName in userDB:
         raise ValueError(f'User "{userName}" already exists')
 
-    # Check password.
-    _checkPassword(password)
-
     # Create user record.
     userInfo = UserInfo({'id': userName})
     userInfo.roles = roles
     userDB.add(userInfo)
 
-    # Commit the password.
-    _passwordFile.load_if_changed()
-    updated = _passwordFile.set_password(userName, password)
-    writePasswordFile(_passwordFile)
-    if updated:
-        logging.warning(
-            'Password entry for "%s" was overwritten; '
-            'user existed in password file but not in user DB',
-            userName
-            )
-
-def changePassword(userInfo: 'UserInfo', password: str) -> None:
-    '''Changes the password of an existing user account.
-    @param user: UserInfo object specifying the user.
+def setPassword(userName: str, password: str) -> None:
+    '''Sets the password for an existing user account.
+    @param userName: The name of the user account.
     @param password: New password for the user.
     @raise ValueError: If the user does not exist in the database,
       or the password is syntactically invalid.
     '''
-    userName = userInfo.getId()
 
     # Sanity check on user name.
     if userName not in userDB:
@@ -319,14 +303,8 @@ def changePassword(userInfo: 'UserInfo', password: str) -> None:
 
     # Commit the new password.
     _passwordFile.load_if_changed()
-    updated = _passwordFile.set_password(userName, password)
+    _passwordFile.set_password(userName, password)
     writePasswordFile(_passwordFile)
-    if not updated:
-        logging.warning(
-            'Password entry for "%s" was created; '
-            'user existed in user DB but not in password file',
-            userName
-            )
 
 def passwordQuality(userName: str, password: str) -> PasswordMessage:
     '''Performs sanity checks on a username/password combination.

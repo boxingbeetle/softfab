@@ -16,7 +16,7 @@ from softfab.pageargs import ArgsT, EnumArg, PageArgs, RefererArg, StrArg
 from softfab.request import Request
 from softfab.userlib import (
     PasswordMessage, User, UserInfo, addUserAccount, authenticateUser,
-    checkPrivilege, passwordQuality
+    checkPrivilege, passwordQuality, setPassword
 )
 from softfab.userview import (
     LoginPassArgs, UIRoleNames, passwordStr, uiRoleToSet
@@ -133,9 +133,8 @@ class AddUser_POST(AddUserBase['AddUser_POST.Processor',
 
                 # Create new user account.
                 try:
-                    addUserAccount(
-                        userName, password, uiRoleToSet(role)
-                        )
+                    addUserAccount(userName, uiRoleToSet(role))
+                    setPassword(userName, password)
                 except ValueError as ex:
                     raise PresentableError(xhtml[f'{ex}.'])
             else:
