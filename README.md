@@ -52,13 +52,13 @@ This command runs SoftFab directly from the source tree, so any code you edit is
 
 Now you can create a database directory to test with. The suggested location is a directory named `run` at the top of your cloned Git work area:
 
-    $ softfab init -d run
+    $ softfab --dir run init
 
 By default this will configure the SoftFab Control Center to run on localhost at port 8100. If you want different settings, check `softfab init --help` for options or edit the generated configuration file `run/softfab.ini`.
 
 You can now start the Control Center using the following command:
 
-    $ softfab server -d run --debug --anonoper
+    $ softfab --dir run --debug server --anonoper
 
 The `--debug` option enables more detailed logging and other debug features. The `--anonoper` option will give any visitor to the Control Center operator privileges, so you don't need to log in while testing. These options are strictly for development and **should not be enabled in production**.
 
