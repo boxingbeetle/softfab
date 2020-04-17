@@ -5,13 +5,14 @@ Command line interface.
 """
 
 
+from enum import Enum, auto
 from os import getpid
 from pathlib import Path
 from typing import Callable, Optional, TypeVar
 import sys
 
 from click import (
-    BadParameter, Context, ParamType, Parameter, echo, group, option,
+    BadParameter, Context, ParamType, Parameter, argument, echo, group, option,
     pass_context, pass_obj, version_option
 )
 from twisted.application import strports
@@ -72,6 +73,10 @@ class DirectoryParamType(ParamType):
 
 Decorated = TypeVar('Decorated', bound=Callable)
 Decorator = Callable[[Decorated], Decorated]
+
+class OutputFormat(Enum):
+    TEXT = auto()
+    JSON = auto()
 
 # We import inside functions to avoid wasting time importing modules that the
 # issued command doesn't need. Another reason is to avoid side effects from
@@ -302,3 +307,55 @@ def migrate(globalOptions: GlobalOptions) -> None:
         raise
     else:
         logging.info("Migration complete")
+
+@main.group()
+def user() -> None:
+    """Query and modify user accounts."""
+
+@user.command()
+@argument('name')
+@option('--text', 'fmt', flag_value=OutputFormat.TEXT, default=True,
+        help="Output as human-readable text.")
+@option('--json', 'fmt', flag_value=OutputFormat.JSON,
+        help="Output as JSON.")
+@pass_obj
+def show(globalOptions: GlobalOptions, name: str, fmt: OutputFormat) -> None:
+    """Show details of a single user acconut."""
+
+    from twisted.internet import reactor
+    from twisted.internet.endpoints import clientFromString
+    from twisted.python.failure import Failure
+
+    from softfab.apiclient import run_GET
+
+    socketPath = (globalOptions.path / 'ctrl.sock').absolute()
+    if socketPath.is_socket():
+        client = clientFromString(reactor, f'unix:{socketPath}:timeout=10')
+    else:
+        echo(f"Control socket not found: {socketPath}", err=True)
+        sys.exit(1)
+
+    exitCode = 0
+
+    def done(result: bytes) -> None:
+        if fmt is OutputFormat.TEXT:
+            import json
+            data = json.loads(result)
+            for key, value in data.items():
+                echo(f"{key}: {value}")
+        else:
+            echo(result.decode())
+        reactor.stop()
+
+    def failed(reason: Failure) -> None:
+        ex = reason.value
+        echo(f"API call failed: {ex}", err=True)
+        nonlocal exitCode
+        exitCode = 1
+        reactor.stop()
+
+    d = run_GET(client, f'http://dummy/users/{name}.json')
+    d.addCallback(done).addErrback(failed) # pylint: disable=no-member
+
+    reactor.run()
+    sys.exit(exitCode)
