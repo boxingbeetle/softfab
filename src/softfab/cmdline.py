@@ -320,7 +320,7 @@ def user() -> None:
         help="Output as JSON.")
 @pass_obj
 def show(globalOptions: GlobalOptions, name: str, fmt: OutputFormat) -> None:
-    """Show details of a single user acconut."""
+    """Show details of a single user account."""
 
     from twisted.internet import reactor
     from twisted.internet.endpoints import clientFromString
