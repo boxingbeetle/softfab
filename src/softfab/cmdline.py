@@ -29,6 +29,11 @@ class LongSession(Session):
 class ControlCenter(Site):
     sessionFactory = LongSession
 
+    secureCookie: bool
+    """Mark session cookie as secure.
+    When True, the browser will only transmit it over HTTPS.
+    """
+
     def __repr__(self) -> str:
         return 'ControlCenter'
 
@@ -68,6 +73,11 @@ class DirectoryParamType(ParamType):
 Decorated = TypeVar('Decorated', bound=Callable)
 Decorator = Callable[[Decorated], Decorated]
 
+# We import inside functions to avoid wasting time importing modules that the
+# issued command doesn't need. Another reason is to avoid side effects from
+# loading modules, but that is an issue we want to eliminate at some point.
+# pylint: disable=import-outside-toplevel
+
 @attr.s(auto_attribs=True)
 class GlobalOptions:
     debug: bool
@@ -96,8 +106,6 @@ class GlobalOptions:
             import warnings
             logging.captureWarnings(True)
             warnings.simplefilter('default')
-
-# pylint: disable=import-outside-toplevel
 
 @group()
 @option('--debug', is_flag=True,
@@ -241,7 +249,7 @@ def migrate(globalOptions: GlobalOptions) -> None:
     pidfilePath = globalOptions.path / 'cc.pid'
     if pidfilePath.is_file():
         echo(f"PID file exists: {pidfilePath}", err=True)
-        echo(f"Stop the Control Center before migrating the data.", err=True)
+        echo("Stop the Control Center before migrating the data.", err=True)
         sys.exit(1)
 
     # Avoid calling fsync on record rewrites.
@@ -285,7 +293,7 @@ def migrate(globalOptions: GlobalOptions) -> None:
         from softfab.databases import convertAll
         convertAll()
     except Exception as ex:
-        logging.exception(f"Migration aborted with error: {ex}")
+        logging.exception("Migration aborted with error: %s", ex)
         raise
     else:
         logging.info("Migration complete")
