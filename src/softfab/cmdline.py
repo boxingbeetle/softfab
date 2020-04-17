@@ -11,7 +11,7 @@ from typing import Callable, Optional, TypeVar
 import sys
 
 from click import (
-    BadParameter, Context, ParamType, Parameter, command, echo, group, option,
+    BadParameter, Context, ParamType, Parameter, echo, group, option,
     pass_context, pass_obj, version_option
 )
 from twisted.application import strports
@@ -99,7 +99,19 @@ class GlobalOptions:
 
 # pylint: disable=import-outside-toplevel
 
-@command()
+@group()
+@option('--debug', is_flag=True,
+        help='Enable debug features. Can leak data; use only in development.')
+@option('-d', '--dir', 'path', type=DirectoryParamType(), default='.',
+        help='Directory containing configuration, data and logging.')
+@version_option(prog_name='SoftFab', version=VERSION,
+                message='%(prog)s version %(version)s')
+@pass_context
+def main(ctx: Context, debug: bool, path: Path) -> None:
+    """Command line interface to SoftFab."""
+    ctx.obj = GlobalOptions(debug=debug, path=path)
+
+@main.command()
 @option('--host', default='localhost',
         help='Host name or IP address at which the Control Center '
              'accepts connections.')
@@ -148,7 +160,7 @@ def init(
 
     echo(f"Control Center created in {path}.", err=True)
 
-@command()
+@main.command()
 @option('--anonoper', is_flag=True,
         help='Give every visitor operator privileges, without logging in. '
              'Use only in development.')
@@ -214,7 +226,7 @@ def server(
 
     pidfilePath.unlink()
 
-@command()
+@main.command()
 @pass_obj
 def migrate(globalOptions: GlobalOptions) -> None:
     """Migrate a Control Center database.
@@ -277,19 +289,3 @@ def migrate(globalOptions: GlobalOptions) -> None:
         raise
     else:
         logging.info("Migration complete")
-
-@group()
-@option('--debug', is_flag=True,
-        help='Enable debug features. Can leak data; use only in development.')
-@option('-d', '--dir', 'path', type=DirectoryParamType(), default='.',
-        help='Directory containing configuration, data and logging.')
-@version_option(prog_name='SoftFab', version=VERSION,
-                message='%(prog)s version %(version)s')
-@pass_context
-def main(ctx: Context, debug: bool, path: Path) -> None:
-    """Command line interface to SoftFab."""
-    ctx.obj = GlobalOptions(debug=debug, path=path)
-
-main.add_command(init)
-main.add_command(server)
-main.add_command(migrate)
