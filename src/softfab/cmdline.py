@@ -221,8 +221,13 @@ def server(
 
     if IReactorUNIX.providedBy(reactor):
         from softfab.newapi import createAPIRoot
+        socketPath = globalOptions.path / 'ctrl.sock'
+        if socketPath.is_socket():
+            # Remove stale socket.
+            # TODO: Check it is actually stale.
+            socketPath.unlink()
         reactor.listenUNIX(
-            str(globalOptions.path / 'ctrl.sock'),
+            str(socketPath),
             ControlSocket(createAPIRoot()),
             mode=0o600
             )
