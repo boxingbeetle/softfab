@@ -3,7 +3,8 @@ SoftFab
 
 *Web application for orchestrating build and test execution*
 
-<https://boxingbeetle.com/tools/softfab/>
+Read [here](https://boxingbeetle.com/tools/softfab/) more about SoftFab.
+You also can take a look in the [SoftFab factory](https://softfab.io/sf/) where we build and test SoftFab itself.
 
 Work in Progress
 ----------------
