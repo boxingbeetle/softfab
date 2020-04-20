@@ -501,6 +501,8 @@ class TaskResource(FactoryResource):
             presenter = createPresenter(
                             partial(openGzip, filePath.path), fileName)
             if presenter is not None:
+                # pylint: disable=too-many-function-args
+                # https://github.com/PyCQA/pylint/issues/3492
                 return ReportResource(presenter, fileName)
 
         # Redirect to sandbox to serve the report as-is.
