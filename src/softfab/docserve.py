@@ -139,7 +139,7 @@ class DocErrors(Flag):
     RENDERING = auto()
     """Markdown content failed to render."""
 
-    def present(self) -> str:
+    def __str__(self) -> str:
         """Return a user-readable string listing the errors that happened."""
         value = self.value
         return ', '.join(
@@ -379,7 +379,7 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
         proc.content = self.postProcess()
         if self.errors:
             message = xhtml.p(class_='notice')[
-                'Error in documentation ', self.errors.present(), '. ',
+                f"Error in documentation {self.errors}.",
                 xhtml.br,
                 'Please check the Control Center log for details.'
                 ]
