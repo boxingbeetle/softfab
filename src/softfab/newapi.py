@@ -20,6 +20,7 @@ class UserResource(Resource):
     """HTTP resource for an existing user account."""
 
     def __init__(self, user: UserInfo):
+        super().__init__()
         self._user = user
 
     def getChildWithDefault(self, path: bytes, request: Request) -> Resource:
@@ -37,6 +38,7 @@ class NoUserResource(Resource):
     """HTTP resource for a non-existing user account."""
 
     def __init__(self, name: str):
+        super().__init__()
         self._name = name
 
     def getChildWithDefault(self, path: bytes, request: Request) -> Resource:
