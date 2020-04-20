@@ -13,7 +13,7 @@ from typing import (
     Sequence, Tuple, TypeVar, Union, cast
 )
 from xml.etree import ElementTree
-from zlib import adler32
+from zlib import adler32  # pylint: disable=no-name-in-module
 import logging
 
 from softfab.compat import NoReturn

@@ -4,7 +4,8 @@ from functools import partial
 from gzip import GzipFile, open as openGzip
 from mimetypes import guess_type
 from os import fsync, replace
-from struct import Struct
+# https://github.com/PyCQA/pylint/issues/3499
+from struct import Struct  # pylint: disable=no-name-in-module
 from typing import IO, Dict, Iterable, Iterator, Optional, Tuple, Union
 from urllib.parse import unquote_plus
 from zipfile import ZIP_DEFLATED, BadZipFile, ZipFile, ZipInfo
