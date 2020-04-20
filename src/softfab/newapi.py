@@ -25,6 +25,7 @@ class UserResource(Resource):
         return NotFoundResource('Records do not support subpaths')
 
     def render_GET(self, request: Request) -> bytes:
+        request.setHeader(b'Content-Type', b'application/json; charset=UTF-8')
         user = self._user
         return json.dumps({
             'name': user.name,
@@ -56,6 +57,7 @@ class UsersResource(Resource):
             return UserResource(user)
 
     def render_GET(self, request: Request) -> bytes:
+        request.setHeader(b'Content-Type', b'text/plain; charset=UTF-8')
         return b'User index not implemented yet\n'
 
 def createAPIRoot() -> Resource:
