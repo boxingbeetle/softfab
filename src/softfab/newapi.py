@@ -17,6 +17,7 @@ from softfab.userlib import UserInfo, userDB
 
 
 class UserResource(Resource):
+    """HTTP resource for an existing user account."""
 
     def __init__(self, user: UserInfo):
         self._user = user
@@ -31,6 +32,20 @@ class UserResource(Resource):
             'name': user.name,
             'role': user.uiRole.name.lower()
             }).encode()
+
+class NoUserResource(Resource):
+    """HTTP resource for a non-existing user account."""
+
+    def __init__(self, name: str):
+        self._name = name
+
+    def getChildWithDefault(self, path: bytes, request: Request) -> Resource:
+        return NotFoundResource('Records do not support subpaths')
+
+    def render_GET(self, request: Request) -> bytes:
+        request.setResponseCode(404)
+        request.setHeader(b'Content-Type', b'text/plain; charset=UTF-8')
+        return f"User not found: {self._name}\n".encode()
 
 class UsersResource(Resource):
 
@@ -52,7 +67,7 @@ class UsersResource(Resource):
         try:
             user = userDB[name]
         except KeyError:
-            return NotFoundResource(f"User not found: {name}")
+            return NoUserResource(name)
         else:
             return UserResource(user)
 
