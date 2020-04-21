@@ -109,6 +109,7 @@ class ScheduleIndex_GET(FabPage['ScheduleIndex_GET.Processor',
                     req: Request['ScheduleIndex_GET.Arguments'],
                     user: User
                     ) -> None:
+            # pylint: disable=attribute-defined-outside-init
             self.finishedSchedules = any(
                 schedule.isDone() for schedule in scheduleDB
                 )
