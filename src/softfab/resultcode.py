@@ -32,6 +32,8 @@ class ResultCode(Enum):
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, ResultCode):
+            # pylint: disable=comparison-with-callable
+            # https://github.com/PyCQA/pylint/issues/2306
             return self.value == other.value
         elif other is None:
             return False
@@ -40,6 +42,7 @@ class ResultCode(Enum):
 
     def __gt__(self, other: object) -> bool:
         if isinstance(other, ResultCode):
+            # pylint: disable=comparison-with-callable
             return self.value > other.value
         elif other is None:
             return True
