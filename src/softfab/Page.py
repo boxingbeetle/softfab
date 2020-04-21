@@ -90,6 +90,9 @@ class PageProcessor(Generic[ArgsT]):
     """Abstract base class for processors.
     """
 
+    # Workaround for PyLint bug: https://github.com/PyCQA/pylint/issues/2981
+    args: ArgsT
+
     error: Optional[XML] = None
     """Page-specific error."""
 
