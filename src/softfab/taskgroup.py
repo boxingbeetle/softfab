@@ -427,7 +427,7 @@ class LocalGroup(TaskGroup[TaskT]):
                  tasks: Iterable[TaskT],
                  localAt: Optional[str]
                  ):
-        TaskGroup.__init__(self, parent, tasks)
+        super().__init__(parent, tasks)
         self.__name: Optional[str] = None
         self.__runnerId: Optional[str] = None
         self.__runners: Optional[AbstractSet[str]] = None
