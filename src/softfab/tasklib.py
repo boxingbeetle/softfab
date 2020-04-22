@@ -7,7 +7,6 @@ from typing import (
     Sequence, Set, Type, Union, cast
 )
 
-from softfab.compat import Protocol
 from softfab.resreq import ResourceClaim
 from softfab.restypelib import taskRunnerResourceTypeName
 from softfab.resultcode import ResultCode
@@ -85,15 +84,13 @@ class TaskStateMixin:
     def result(self) -> Optional[ResultCode]:
         return cast(Optional[ResultCode], self._properties.get('result'))
 
-class ResourceRequirementsABC(Protocol):
+class ResourceRequirementsMixin:
 
     @abstractmethod
     def getFramework(self) -> Framework: ...
 
     @abstractmethod
     def getDef(self) -> TaskDef: ...
-
-class ResourceRequirementsMixin(ResourceRequirementsABC):
 
     @property
     def resourceClaim(self) -> ResourceClaim:
