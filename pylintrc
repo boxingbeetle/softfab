@@ -111,6 +111,10 @@ disable=bad-continuation,
         # This causes false positives on ellipsis.
         # Will be fixed in 2.5.0, but that is not released yet.
         #   https://github.com/PyCQA/pylint/issues/3224
+        duplicate-code,
+        # This spots some real design issues, but also unavoidable or
+        # superficial repetition. Might be worth revisiting at some point,
+        # but not useful to have enabled all the time.
 
 [REPORTS]
 
