@@ -162,14 +162,16 @@ class SimpleConfigTable(DataTable[Config]):
         DataColumn[Config](keyName = 'description')
         )
 
-    def iterColumns(self, **kwargs: object) -> Iterator[DataColumn[Config]]:
+    def iterColumns( # pylint: disable=unused-argument
+                    self, **kwargs: object) -> Iterator[DataColumn[Config]]:
         yield from self.fixedColumns
         if self.showTargets and project.showTargets:
             yield TargetsColumn.instance
         if self.showOwner and project.showOwners:
             yield OwnerColumn[Config].instance
 
-    def iterRowStyles(self, rowNr: int, record: Config, **kwargs: object
+    def iterRowStyles( # pylint: disable=unused-argument
+                      self, rowNr: int, record: Config, **kwargs: object
                       ) -> Iterator[str]:
         if self.showConflictAsError and not record.hasValidInputs():
             yield 'error'

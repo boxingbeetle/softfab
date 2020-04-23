@@ -66,7 +66,8 @@ class TaskRunsTable(DataTable[Task]):
     ownerColumn = OwnerColumn[Task].instance
     summaryColumn = SummaryColumn.instance
 
-    def iterRowStyles(self,
+    def iterRowStyles( # pylint: disable=unused-argument
+                      self,
                       rowNr: int,
                       record: Task,
                       **kwargs: object
@@ -80,7 +81,8 @@ class TaskRunsTable(DataTable[Task]):
         '''
         return project.showTargets
 
-    def iterColumns(self, **kwargs: object) -> Iterator[DataColumn[Task]]:
+    def iterColumns( # pylint: disable=unused-argument
+                    self, **kwargs: object) -> Iterator[DataColumn[Task]]:
         yield self.startTimeColumn
         yield self.durationColumn
         yield self.taskColumn

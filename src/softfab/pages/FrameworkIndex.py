@@ -35,7 +35,7 @@ class FrameworksTable(DataTable[TaskDefBase]):
     editColumn = LinkColumn[TaskDefBase]('Edit', 'FrameworkEdit')
     deleteColumn = LinkColumn[TaskDefBase]('Delete', 'FrameworkDelete')
 
-    def iterColumns(self,
+    def iterColumns(self, # pylint: disable=unused-argument
                     **kwargs: object
                     ) -> Iterator[DataColumn[TaskDefBase]]:
         yield self.nameColumn

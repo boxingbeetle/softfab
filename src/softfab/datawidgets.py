@@ -122,7 +122,7 @@ class LinkColumn(DataColumn[DBRecord]):
             )
         self.__urlBase = f'{page}?{extraArgsStr}{idArg}='
 
-    def presentLink(self,
+    def presentLink(self, # pylint: disable=unused-argument
                     record: DBRecord,
                     **kwargs: object
                     ) -> XMLSubscriptable:

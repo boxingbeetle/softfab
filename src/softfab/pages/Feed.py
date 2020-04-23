@@ -75,7 +75,8 @@ class SingleJobTable(JobsSubTable):
         self.__job = job
         super().__init__()
 
-    def getRecordsToQuery(self, proc: PageProcessor) -> Collection[Job]:
+    def getRecordsToQuery( # pylint: disable=unused-argument
+                          self, proc: PageProcessor) -> Collection[Job]:
         return [ self.__job ]
 
 class TasksTable(Table):

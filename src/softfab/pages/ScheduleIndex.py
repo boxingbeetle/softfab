@@ -73,11 +73,13 @@ class ScheduleTable(DataTable[Scheduled]):
     autoUpdate = True
     db = scheduleDB
 
-    def iterRowStyles(self, rowNr: int, record: Scheduled, **kwargs: object
+    def iterRowStyles( # pylint: disable=unused-argument
+                      self, rowNr: int, record: Scheduled, **kwargs: object
                       ) -> Iterator[str]:
         yield getScheduleStatus(record)
 
-    def iterColumns(self, **kwargs: object) -> Iterator[DataColumn[Scheduled]]:
+    def iterColumns( # pylint: disable=unused-argument
+                    self, **kwargs: object) -> Iterator[DataColumn[Scheduled]]:
         yield NameColumn.instance
         yield LastRunColumn.instance
         yield NextRunColumn.instance

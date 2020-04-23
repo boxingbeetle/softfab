@@ -195,11 +195,13 @@ class JobsTable(DataTable[Job]):
     def showTargetColumn(self) -> bool:
         return project.showTargets
 
-    def iterRowStyles(self, rowNr: int, record: Job, **kwargs: object
+    def iterRowStyles( # pylint: disable=unused-argument
+                      self, rowNr: int, record: Job, **kwargs: object
                       ) -> Iterator[str]:
         yield getJobStatus(record)
 
-    def iterColumns(self, **kwargs: object) -> Iterator[DataColumn[Job]]:
+    def iterColumns( # pylint: disable=unused-argument
+                    self, **kwargs: object) -> Iterator[DataColumn[Job]]:
         yield CreateTimeColumn[Job].instance
         yield self.leadTimeColumn
         yield _DescriptionColumn.instance

@@ -117,7 +117,10 @@ class CapabilitiesTable(DataTable[CapInfo]):
         TaskDefinitionsColumn('Required for Tasks'),
         )
 
-    def iterRowStyles(self, rowNr: int, record: CapInfo, **kwargs: object
+    def iterRowStyles(self,
+                      rowNr: int, # pylint: disable=unused-argument
+                      record: CapInfo,
+                      **kwargs: object
                       ) -> Iterator[str]:
         args = cast(CapFilterArgs, getattr(kwargs['proc'], 'args'))
         if record.capability == args.cap:
