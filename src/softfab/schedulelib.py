@@ -137,7 +137,7 @@ class ScheduleManager(RecordObserver['Scheduled']):
 
         # Initialize heap.
         self.__heap: Heap[Scheduled] = Heap(key=lambda schedule:
-            (schedule.startTime, schedule._properties['id'])
+            (schedule.startTime, schedule.getId())
             )
         for schedule in scheduleDB:
             self.added(schedule)
