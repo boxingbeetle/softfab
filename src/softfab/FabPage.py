@@ -196,7 +196,8 @@ class FabPage(BasePage[ProcT, ArgsT]):
     def pageTitle(self, proc: ProcT) -> str:
         return self.description
 
-    def activeDescription(self, args: Optional[ArgsT]) -> str:
+    def activeDescription( # pylint: disable=unused-argument
+                          self, args: Optional[ArgsT]) -> str:
         """Gets the label for the current page's link bar button.
         The default implementation returns the `description` field.
         This is only called for the current page; for other pages the
@@ -204,7 +205,8 @@ class FabPage(BasePage[ProcT, ArgsT]):
         """
         return self.description
 
-    def activeIconModifier(self, args: Optional[ArgsT]) -> IconModifier:
+    def activeIconModifier( # pylint: disable=unused-argument
+                           self, args: Optional[ArgsT]) -> IconModifier:
         """Gets the modifier to apply to the current page's icon.
         The default implementation returns the `iconModifier` field.
         This is only called for the current page; for other pages the
