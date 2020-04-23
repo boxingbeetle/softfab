@@ -77,7 +77,9 @@ def process() -> Optional[Deferred]:
     else:
         return None
 
-def presentGraph(name: str, **kwargs: object) -> XMLContent:
+def presentGraph( # pylint: disable=unused-argument
+                 name: str, **kwargs: object
+                 ) -> XMLContent:
     try:
         svg = graphRenders[name]
     except KeyError:
