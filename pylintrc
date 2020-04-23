@@ -107,6 +107,10 @@ disable=bad-continuation,
         # point, but are not urgent enough to be included in every run.
         no-else-raise,
         # Satisfying this rule doesn't always improve code readability.
+        multiple-statements,
+        # This causes false positives on ellipsis.
+        # Will be fixed in 2.5.0, but that is not released yet.
+        #   https://github.com/PyCQA/pylint/issues/3224
 
 [REPORTS]
 
