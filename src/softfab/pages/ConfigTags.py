@@ -159,7 +159,6 @@ class ConfigTags_POST(ConfigTagsBase['ConfigTags_POST.Arguments']):
 
             for config in configs:
                 config.updateTags(changes)
-                config._notify()
 
             # Case changes must be done on all instances of a tag;
             # even configurations that were not selected must be updated.
@@ -176,7 +175,6 @@ class ConfigTags_POST(ConfigTagsBase['ConfigTags_POST.Arguments']):
                                 config.updateTags({
                                     tagKey: { cvalue: uvalue },
                                     })
-                                config._notify()
 
     def presentContent(self, **kwargs: object) -> XMLContent:
         proc = cast(ConfigTagsBase.Processor, kwargs['proc'])

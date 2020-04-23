@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from abc import ABC
+from abc import ABC, abstractmethod
 from collections import defaultdict
 from typing import (
     AbstractSet, Callable, ClassVar, Dict, ItemsView, Iterable, Mapping,
@@ -25,6 +25,10 @@ class SelectableABC(Selectable, ABC):
     def __init__(self) -> None:
         super().__init__()
         self.__tags: Dict[str, Dict[str, str]] = {}
+
+    @abstractmethod
+    def _notify(self) -> None:
+        raise NotImplementedError
 
     def _addTag(self, attributes: Mapping[str, str]) -> None:
         key = attributes['key']
@@ -97,6 +101,7 @@ class SelectableABC(Selectable, ABC):
                     if values is None:
                         self.__tags[tagKey] = values = {}
                     values[cvalue] = dvalue
+        self._notify()
 
 class TagCache:
 
