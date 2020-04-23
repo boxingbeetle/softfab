@@ -9,19 +9,16 @@ from typing import IO, Callable, Dict, Optional, Union, cast
 from urllib.parse import unquote_plus, urljoin
 import logging
 
-from softfab.compat import Protocol
 from softfab.config import dbDir
 
 artifactsPath = Path(dbDir) / 'artifacts'
 
-class StorageURLABC(Protocol):
+class StorageURLMixin:
+
+    _properties: Dict[str, Union[str, int, Enum]]
 
     @abstractmethod
     def _notify(self) -> None: ...
-
-class StorageURLMixin(StorageURLABC):
-
-    _properties: Dict[str, Union[str, int, Enum]]
 
     def setInternalStorage(self, path: str) -> None:
         """Use the Control Center's internal storage pool.
