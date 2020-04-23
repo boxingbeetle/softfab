@@ -22,7 +22,7 @@ from softfab.paramview import ParamOverrideTable
 from softfab.request import Request
 from softfab.resourcelib import TaskRunner
 from softfab.selectview import SelectArgs
-from softfab.taskgroup import LocalGroup
+from softfab.taskgroup import LocalGroup, ProductProto
 from softfab.userlib import User, checkPrivilege
 from softfab.webgui import decoration
 from softfab.xmlgen import XMLContent, xhtml
@@ -97,6 +97,12 @@ class FakeTaskSet(TaskSetWithInputs[FakeTask]):
 
     def getTargets(self, inp: Input) -> AbstractSet[str]:
         return self.__targets[inp.getName()]
+
+    def getProduct(self, name: str) -> ProductProto:
+        return self._inputs[name]
+
+    def getRunners(self) -> AbstractSet[str]:
+        return set()
 
 class BatchConfigTable(SimpleConfigTable):
     # Disable tabs and sorting because it would clear the forms.
