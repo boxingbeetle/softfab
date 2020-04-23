@@ -126,7 +126,7 @@ class Feed_GET(ControlPage[ControlPage.Arguments, 'Feed_GET.Processor']):
             self.presentFeed(proc, rootURL)
             ])
 
-    def presentFeed(self, proc: Processor, rootURL: str) -> XMLContent:
+    def presentFeed(self, proc: Processor, ccURL: str) -> XMLContent:
         projectName = project.name
         yield atom.title[ f'{projectName} SoftFab - Recent Jobs' ]
         yield atom.subtitle[
@@ -137,30 +137,30 @@ class Feed_GET(ControlPage[ControlPage.Arguments, 'Feed_GET.Processor']):
         yield atom.generator(uri=HOMEPAGE, version=VERSION)[ 'SoftFab' ]
         # TODO: Akregator for KDE4 won't show the icon, no matter what I try.
         #       Might be related to Konqueror often losing the icon.
-        yield atom.icon[ rootURL + 'styles/SoftFabIcon.png' ]
+        yield atom.icon[ ccURL + 'styles/SoftFabIcon.png' ]
         #yield atom.link(
             #rel = 'shortcut icon',
-            #href = rootURL + 'styles/SoftFabIcon.png',
+            #href = ccURL + 'styles/SoftFabIcon.png',
             #type = 'image/png',
             #)
         # Link to the Control Center.
         yield atom.link(
             rel = 'alternate',
-            href = rootURL + 'Home',
+            href = ccURL + 'Home',
             type = 'text/html',
             )
         # Link to the feed itself.
         yield atom.link(
             rel = 'self',
-            href = rootURL + pageURL(self.name, proc.args),
+            href = ccURL + pageURL(self.name, proc.args),
             type = 'application/atom+xml',
             )
         for job, jobTable in zip(proc.jobs, proc.tables):
-            yield atom.entry[ self.presentJob(proc, rootURL, job, jobTable) ]
+            yield atom.entry[ self.presentJob(proc, ccURL, job, jobTable) ]
 
     def presentJob(self,
                    proc: Processor,
-                   rootURL: str,
+                   ccURL: str,
                    job: Job,
                    jobTable: SingleJobTable
                    ) -> XMLContent:
@@ -170,7 +170,7 @@ class Feed_GET(ControlPage[ControlPage.Arguments, 'Feed_GET.Processor']):
         projectName = project.name
         jobComment = CommentPanel(job.comment)
         yield atom.title[ f'{job.getDescription()}: ', jobResult ]
-        yield atom.link(href = rootURL + createJobURL(jobId))
+        yield atom.link(href = ccURL + createJobURL(jobId))
         yield atom.id[ f'softfab:{factoryId}/jobs/{jobId}' ]
         yield atom.published[ self.presentTime(job.getCreateTime()) ]
         # TODO: More accurate last-modified time.
@@ -178,15 +178,15 @@ class Feed_GET(ControlPage[ControlPage.Arguments, 'Feed_GET.Processor']):
         if owner is not None:
             yield atom.author[
                 atom.name[ owner ],
-                atom.uri[ rootURL + createUserDetailsURL(owner) ],
+                atom.uri[ ccURL + createUserDetailsURL(owner) ],
                 ]
         else:
             yield atom.author[
                 atom.name[ f'{projectName} SoftFab' ],
-                atom.uri[ rootURL + createJobURL(jobId) ],
+                atom.uri[ ccURL + createJobURL(jobId) ],
                 ]
         # Note: The Atom spec requires all XHTML to be inside a single <div>.
-        styleURL = rootURL + styleRoot.relativeURL
+        styleURL = ccURL + styleRoot.relativeURL
         presentationArgs = dict(proc=proc, styleURL=styleURL)
         yield atom.summary(type = 'xhtml')[ xhtml.div[
             # TODO: Does xhtml.style work with other RSS readers too?

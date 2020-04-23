@@ -95,14 +95,14 @@ class ProjectDB(Database['Project']):
 
         # Create singleton record if it doesn't exist already.
         if len(self) == 0:
-            project = Project({'name': 'Nameless'})
-            project.updateVersion()
-            self.add(project)
+            record = Project({'name': 'Nameless'})
+            record.updateVersion()
+            self.add(record)
         else:
-            project = self['singleton']
+            record = self['singleton']
 
         # Call observers, no matter whether we loaded or created the record.
-        self._notifyAdded(project)
+        self._notifyAdded(record)
 
 _projectDB = ProjectDB()
 
