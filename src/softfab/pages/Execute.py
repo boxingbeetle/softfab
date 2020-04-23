@@ -2,8 +2,8 @@
 
 from enum import Enum
 from typing import (
-    TYPE_CHECKING, AbstractSet, Dict, Iterable, Iterator, List, Mapping,
-    Optional, Sequence, Tuple, Type, cast
+    AbstractSet, Dict, Iterable, Iterator, List, Mapping, Optional, Sequence,
+    Tuple, Type, cast
 )
 
 from softfab.FabPage import IconModifier
@@ -375,10 +375,7 @@ EntranceSteps = Enum('EntranceSteps', 'EDIT')
 
 class ExecuteProcessorMixin:
     __config: Optional[Config] = None
-
-    if TYPE_CHECKING:
-        def __init__(self) -> None:
-            self.user = cast(User, None)
+    user: User
 
     def iterTasks(self) -> Iterator[Task]:
         args = cast(Execute_POST.Arguments, getattr(self, 'args'))
