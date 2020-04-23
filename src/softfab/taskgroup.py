@@ -195,6 +195,12 @@ class PriorityMixin(PriorityABC):
     getPriority() and secondarily on the value returned by getName().
     '''
 
+    @abstractmethod
+    def getName(self) -> str: ...
+
+    @abstractmethod
+    def getPriority(self) -> int: ...
+
     def __hash__(self) -> int:
         return hash(self.getName())
 
