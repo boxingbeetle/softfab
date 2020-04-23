@@ -1,6 +1,5 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from abc import ABC
 from collections import defaultdict
 from typing import (
     TYPE_CHECKING, DefaultDict, Dict, Generic, Iterator, Optional, Set, TypeVar
@@ -195,7 +194,7 @@ class HTTPAuthenticator(Responder):
         response.setStatus(401, self.__message)
         response.setHeader('WWW-Authenticate', f'Basic realm="{self.__realm}"')
 
-class FabResource(ABC, Generic[ArgsT, ProcT]):
+class FabResource(Generic[ArgsT, ProcT]):
     '''Abstract base class for Control Center pages.
     '''
     authenticator: Authenticator = abstract
