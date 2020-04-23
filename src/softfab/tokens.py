@@ -54,8 +54,7 @@ class Token(XMLTag, DatabaseElem):
 
     def __init__(self, properties: Mapping[str, XMLAttributeValue]):
         self.__params: Dict[str, str] = {}
-        XMLTag.__init__(self, properties)
-        DatabaseElem.__init__(self)
+        super().__init__(properties)
         self.__owner: Optional[User] = None
 
     def getId(self) -> str:
@@ -144,6 +143,7 @@ class TokenUser(User):
     """
 
     def __init__(self, token: Token):
+        super().__init__()
         self.__token = token
 
     @property

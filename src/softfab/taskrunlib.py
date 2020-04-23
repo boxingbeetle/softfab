@@ -59,9 +59,7 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
                  attributes: Mapping[str, str],
                  task: Optional[Task] = None
                  ):
-        XMLTag.__init__(self, attributes)
-        DatabaseElem.__init__(self)
-        TaskStateMixin.__init__(self)
+        super().__init__(attributes)
         self.__task = task
         if task is None:
             self.__job: Optional[Job] = None
@@ -85,8 +83,6 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
         if 'alert' in self._properties and \
         self._properties['state'] != 'running':
             del self._properties['alert']
-
-        StorageURLMixin.__init__(self)
 
     def __getitem__(self, key: str) -> object:
         if key == 'state':

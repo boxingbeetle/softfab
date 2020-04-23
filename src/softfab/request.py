@@ -26,6 +26,7 @@ class RequestBase:
     '''
 
     def __init__(self, request: TwistedRequest):
+        super().__init__()
         self._request = request
 
     def __repr__(self) -> str:
@@ -269,4 +270,5 @@ class ISessionData(Interface): # pylint: disable=inherit-non-class
 class SessionData:
 
     def __init__(self, user: User):
+        super().__init__()
         self.user = user

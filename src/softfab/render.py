@@ -56,7 +56,7 @@ class ErrorPage(UIPage[ProcT]):
     title: ClassVar[str] = abstract
 
     def __init__(self, messageText: Optional[str] = None):
-        UIPage.__init__(self)
+        super().__init__()
 
         if messageText is None:
             messageText = self.title
@@ -80,7 +80,7 @@ class BadRequestPage(ErrorPage[ProcT]):
     title = 'Bad Request'
 
     def __init__(self, messageText: str, messageHTML: XMLContent):
-        ErrorPage.__init__(self, messageText)
+        super().__init__(messageText)
         self.messageHTML = messageHTML
 
     def presentContent(self, **kwargs: object) -> XMLContent:
@@ -128,6 +128,7 @@ class InternalErrorPage(ErrorPage[ProcT]):
 class _PlainTextResponder(Responder):
 
     def __init__(self, status: int, message: str):
+        super().__init__()
         self.__status = status
         self.__message = message
 

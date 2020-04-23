@@ -92,6 +92,7 @@ class ParamMixin(Parameterized):
     '''
 
     def __init__(self) -> None:
+        super().__init__()
         self.__parameters: Dict[str, str] = {}
         self.__finalParameters: Set[str] = set()
 

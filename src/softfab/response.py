@@ -76,6 +76,7 @@ class ResponseHeaders:
                  request: IRequest,
                  frameAncestors: str,
                  userAgent: UserAgent):
+        super().__init__()
 
         self._request = request
         self._frameAncestors = frameAncestors
@@ -143,7 +144,7 @@ class Response(ResponseHeaders):
                  request: IRequest,
                  frameAncestors: str,
                  userAgent: UserAgent):
-        ResponseHeaders.__init__(self, request, frameAncestors, userAgent)
+        super().__init__(request, frameAncestors, userAgent)
 
         # Present entire page before deciding whether and how to send it
         # to the client.

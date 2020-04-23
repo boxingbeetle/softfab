@@ -38,6 +38,7 @@ class _FormPresenter:
         #         (is it clear to the user which ones require ID?)
         #       - auto-generate ID?
         #         (how do we guarantee uniqueness?)
+        super().__init__()
         self.__id = formId
         self.__autoFocus = autoFocus
         self.__controls: Set[str] = set()

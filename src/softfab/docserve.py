@@ -60,6 +60,7 @@ class ExtractedInfo:
     """Fragments extracted from a documentation page."""
 
     def __init__(self, title: str, abstract: XML):
+        super().__init__()
         self.title = title
         self.abstract = abstract
 

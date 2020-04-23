@@ -296,7 +296,7 @@ def adaptToXML(obj: XMLContent) -> XML:
 class _PresentationWrapper(_XMLSerializable):
 
     def __init__(self, func: Callable[..., XMLContent]):
-        _XMLSerializable.__init__(self)
+        super().__init__()
         self.__func = func
 
     def _toFragments(self, defaultNamespace: Optional[str]) -> NoReturn:
@@ -312,7 +312,7 @@ class _PresentationWrapper(_XMLSerializable):
 class _Text(_XMLSerializable):
 
     def __init__(self, text: str):
-        _XMLSerializable.__init__(self)
+        super().__init__()
         self.__text = text
 
     def _toFragments(self, defaultNamespace: Optional[str]) -> Iterator[str]:
@@ -329,7 +329,7 @@ class _XMLSequence(_XMLSerializable):
         The given children must all be _XMLSerializable instances;
         if that is not guaranteed, apply _adaptSequence() first.
         '''
-        _XMLSerializable.__init__(self)
+        super().__init__()
         self._children: Sequence[XML] = tuple(children)
 
     def __bool__(self) -> bool:
@@ -392,7 +392,7 @@ class XMLNode(_XMLSerializable):
             self, namespace: Optional[str], name: str,
             attrs: Mapping[str, str], children: _XMLSequence
             ):
-        _XMLSerializable.__init__(self)
+        super().__init__()
         self._namespace = namespace
         self._name = name
         self._attributes = attrs
@@ -606,6 +606,7 @@ class _XMLNodeFactory:
     '''
 
     def __init__(self, namespace: Optional[str]):
+        super().__init__()
         self._namespace = None if namespace is None else intern(namespace)
         _nodeFactories[namespace] = self
 

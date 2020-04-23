@@ -30,14 +30,12 @@ class FrameworkDB(VersionedDatabase['Framework']):
     uniqueKeys = ( 'id', )
 frameworkDB = FrameworkDB()
 
-class TaskDefBase(ParamMixin, XMLTag, SelectableRecordABC):
+class TaskDefBase(XMLTag, ParamMixin, SelectableRecordABC):
     tagName = 'taskdef'
     cache: ClassVar[TagCache] = abstract
 
     def __init__(self, properties: Mapping[str, Optional[str]]):
-        ParamMixin.__init__(self)
-        XMLTag.__init__(self, properties)
-        SelectableRecordABC.__init__(self)
+        super().__init__(properties)
         self.__resources: List[ResourceSpec] = []
         self.__resourceClaim: Optional[ResourceClaim] = None
 
@@ -104,7 +102,7 @@ class Framework(TaskDefBase):
         return framework
 
     def __init__(self, properties: Mapping[str, str]):
-        TaskDefBase.__init__(self, properties)
+        super().__init__(properties)
         self.__inputs: Set[str] = set()
         self.__outputs: Set[str] = set()
 

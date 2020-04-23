@@ -81,6 +81,7 @@ class PresenterFunction:
     '''
 
     def __init__(self, func: Callable[..., XMLContent]):
+        super().__init__()
         self._func = func
 
     def present(self, **kwargs: object) -> XMLContent:
@@ -93,6 +94,7 @@ class Container:
     '''
 
     def __init__(self, contents: Iterable[XMLPresentable]):
+        super().__init__()
         self._contents = contents
 
     def _replaceContents(
@@ -335,6 +337,7 @@ class Column:
             colSpan: int = 1,
             cellStyle: Optional[str] = None
             ):
+        super().__init__()
         if label is not None:
             self.label = label
         if colSpan != 1:
@@ -700,7 +703,7 @@ def svgIcon(fileName: str, data: Optional[bytes]) -> Image:
 class ShortcutIcon(Widget):
 
     def __init__(self, name: str):
-        Widget.__init__(self)
+        super().__init__()
         self.__name = name
 
     def iterFiles(self) -> Iterator[Tuple[str, str]]:
@@ -724,7 +727,7 @@ class ShortcutIcon(Widget):
 class StyleSheet(Widget):
 
     def __init__(self, fileName: str, data: Optional[bytes]):
-        Widget.__init__(self)
+        super().__init__()
         self.path = addChecksum(fileName, data)
 
     def present(self, **kwargs: object) -> XMLNode:

@@ -63,8 +63,7 @@ class ResType(XMLTag, DatabaseElem):
         return resType
 
     def __init__(self, properties: Mapping[str, XMLAttributeValue]):
-        XMLTag.__init__(self, properties)
-        DatabaseElem.__init__(self)
+        super().__init__(properties)
         self.__description = ''
 
     def __getitem__(self, key: str) -> object:

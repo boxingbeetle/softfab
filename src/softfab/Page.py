@@ -82,7 +82,7 @@ class Redirect(BaseException):
     page.
     '''
     def __init__(self, url: str):
-        BaseException.__init__(self)
+        super().__init__()
         self.url = url
 
 class PageProcessor(Generic[ArgsT]):
@@ -104,6 +104,7 @@ class PageProcessor(Generic[ArgsT]):
                  args: ArgsT,
                  user: User
                  ):
+        super().__init__()
         self.page = page
         self.req = req
         self.args = args
@@ -177,7 +178,7 @@ class Responder:
 class Redirector(Responder):
 
     def __init__(self, url: str):
-        Responder.__init__(self)
+        super().__init__()
         self.__url = url
 
     def respond(self, response: Response) -> None:
@@ -186,7 +187,7 @@ class Redirector(Responder):
 class HTTPAuthenticator(Responder):
 
     def __init__(self, realm: str, message: Optional[str] = None):
-        Responder.__init__(self)
+        super().__init__()
         self.__realm = realm
         self.__message = message
 

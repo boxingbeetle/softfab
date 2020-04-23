@@ -49,6 +49,7 @@ class AbstractPhase(Generic[EditProcT, EditArgsT, DBRecord]):
     '''
 
     def __init__(self, page: 'EditPage[EditArgsT, DBRecord]'):
+        super().__init__()
         self.page = page
 
     def process(self, proc: EditProcT) -> None:
@@ -436,7 +437,7 @@ class EditPage(FabPage[EditProcessorBase[EditArgsT, DBRecord], EditArgsT], ABC):
         raise NotImplementedError
 
     def __init__(self) -> None:
-        FabPage.__init__(self)
+        super().__init__()
         self.editPhase = EditPhase[EditArgsT, DBRecord](self)
         self.savePhase = SavePhase[EditArgsT, DBRecord](self)
         self.saveAsPhase = SaveAsPhase[EditArgsT, DBRecord](self)

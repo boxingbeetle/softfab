@@ -40,6 +40,7 @@ class ChunkCaller:
             gen: Iterator[Union[Generator, Callable[[], None], None]],
             deferred: Deferred
             ):
+        super().__init__()
         self.__gen = gen
         self.__deferred = deferred
         self.scheduleNext()
@@ -97,6 +98,7 @@ class DatabaseLoader:
     recordChunks = 100
 
     def __init__(self, root: 'SoftFabRoot'):
+        super().__init__()
         self.root = root
 
     def process(self) -> Iterator[None]:
@@ -111,6 +113,7 @@ class DatabaseLoader:
 class PageLoader:
 
     def __init__(self, root: 'SoftFabRoot'):
+        super().__init__()
         self.root = root
 
     def __addPage(self, module: ModuleType, pageName: str) -> None:
@@ -271,7 +274,7 @@ class SoftFabRoot(Resource):
             #       overhauled before we'll even consider multiple roots.
             DocPage.authenticator = DisabledAuthPage.instance
 
-        Resource.__init__(self)
+        super().__init__()
         self.putChild(b'', PageRedirect('Home'))
         self.putChild(styleRoot.relativeURL.encode(), styleRoot)
 

@@ -299,7 +299,7 @@ class FabPage(BasePage[ProcT, ArgsT]):
 class _WidgetResponder(Responder):
 
     def __init__(self, page: BasePage, widget: Widget, proc: PageProcessor):
-        Responder.__init__(self)
+        super().__init__()
         self.__page = page
         self.__widget = widget
         self.__proc = proc
@@ -326,6 +326,7 @@ class LinkBarButton:
                  modifier: IconModifier = IconModifier.NONE,
                  active: bool = False
                  ):
+        super().__init__()
         self.label = label
         self.url = url
         self.icon = icon

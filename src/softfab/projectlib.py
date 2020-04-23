@@ -115,8 +115,7 @@ class Project(XMLTag, SingletonElem):
     enumProperties = {'embed': EmbeddingPolicy}
 
     def __init__(self, properties: Mapping[str, XMLAttributeValue]):
-        XMLTag.__init__(self, properties)
-        SingletonElem.__init__(self)
+        super().__init__(properties)
         self._properties.setdefault('maxjobs', defaultMaxJobs)
         self._properties.setdefault('embed', EmbeddingPolicy.NONE)
         self._properties.setdefault('embedcustom', '')

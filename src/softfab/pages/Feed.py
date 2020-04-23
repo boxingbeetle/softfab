@@ -41,7 +41,7 @@ class MostRecent(RecordObserver[Job]):
     '''
 
     def __init__(self, db: JobDB, key: str, number: int):
-        RecordObserver.__init__(self)
+        super().__init__()
         self.number = number
         query: List[RecordProcessor] = [
             CustomFilter(Job.hasFinalResult),

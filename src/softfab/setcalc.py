@@ -73,6 +73,7 @@ class UnionFind(Generic[VT]):
     # is done.
 
     def __init__(self) -> None:
+        super().__init__()
         self.__representants: Dict[VT, VT] = {}
 
     def add(self, elem: VT) -> None:

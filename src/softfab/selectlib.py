@@ -23,6 +23,7 @@ class SelectableABC(Selectable, ABC):
     cache: ClassVar['TagCache'] = abstract
 
     def __init__(self) -> None:
+        super().__init__()
         self.__tags: Dict[str, Dict[str, str]] = {}
 
     def _addTag(self, attributes: Mapping[str, str]) -> None:
@@ -103,6 +104,7 @@ class TagCache:
                  items: Iterable[Selectable],
                  getKeys: Callable[[], Sequence[str]]
                  ):
+        super().__init__()
         self.__getKeys = getKeys
         self.__items = items
         self.__tags: Dict[str, Dict[str, str]] = defaultdict(dict)
@@ -172,10 +174,6 @@ class SelectableRecordABC(DatabaseElem, SelectableABC):
 
     cache: ClassVar[TagCache] = abstract
 
-    def __init__(self) -> None:
-        DatabaseElem.__init__(self)
-        SelectableABC.__init__(self)
-
     # Mark this class as abstract:
     def getId(self) -> str:
         raise NotImplementedError
@@ -188,8 +186,7 @@ class ObservingTagCache(TagCache, RecordObserver[SelectableRecord]):
                  db: Database[SelectableRecord],
                  getKeys: Callable[[], Sequence[str]]
                  ):
-        TagCache.__init__(self, db, getKeys)
-        RecordObserver.__init__(self)
+        super().__init__(db, getKeys)
         db.addObserver(self)
 
     def added(self, record: SelectableRecord) -> None:

@@ -25,7 +25,7 @@ from softfab.xmlgen import XMLContent, xml
 
 ResourceT = TypeVar('ResourceT', bound='ResourceBase')
 
-class ResourceBase(ParamMixin, XMLTag, DatabaseElem):
+class ResourceBase(XMLTag, ParamMixin, DatabaseElem):
     """Base class for Resource and TaskRunner.
     """
     tagName: ClassVar[str] = abstract
@@ -33,13 +33,11 @@ class ResourceBase(ParamMixin, XMLTag, DatabaseElem):
     intProperties = ('changedtime',)
 
     def __init__(self, properties: Mapping[str, str]):
-        ParamMixin.__init__(self)
         if 'locator' in properties:
             # COMPAT 2.x.x: Make locator into a parameter.
             properties = dict(properties)
             self.addParameter('locator', properties.pop('locator'))
-        XMLTag.__init__(self, properties)
-        DatabaseElem.__init__(self)
+        super().__init__(properties)
         self._capabilities: AbstractSet[str] = set()
         self.__token: Optional[Token] = None
 
@@ -253,7 +251,7 @@ class TaskRunnerData(XMLTag):
     tagName = 'data'
 
     def __init__(self, properties: Mapping[str, str]):
-        XMLTag.__init__(self, properties)
+        super().__init__(properties)
         self._properties.setdefault('host', '?')
         self.__run = cast(RunInfo, None)
 
@@ -319,7 +317,7 @@ class ExecutionObserver(RecordObserver[TaskRun]):
                  taskRunner: 'TaskRunner',
                  callback: Callable[[Optional[TaskRun]], None]
                  ):
-        RecordObserver.__init__(self)
+        super().__init__()
         self.__taskRunner = taskRunner
         self.__callback: Callable[[Optional[TaskRun]], None] = callback
         self._run: Optional[TaskRun] = None
@@ -441,7 +439,7 @@ class TaskRunner(ResourceBase):
             properties = dict(properties, suspended=properties['paused'])
             del properties['paused']
 
-        ResourceBase.__init__(self, properties)
+        super().__init__(properties)
         self._properties.setdefault('description', '')
         self._properties.setdefault('status', ConnectionStatus.NEW)
         self.__data: Optional[TaskRunnerData] = None

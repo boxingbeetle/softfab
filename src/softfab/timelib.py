@@ -23,6 +23,7 @@ class TimeSource:
     '''
 
     def __init__(self) -> None:
+        super().__init__()
         self.__timeSource = lambda: int(time())
 
     def getTime(self) -> int:

@@ -24,7 +24,7 @@ class PageRedirect(Resource):
     isLeaf = True
 
     def __init__(self, page: str):
-        Resource.__init__(self)
+        super().__init__()
         self.page = page
 
     def render(self, request: IRequest) -> bytes:
@@ -42,6 +42,7 @@ class ClientErrorResource:
     # pylint: disable=unused-argument
 
     def __init__(self, message: str):
+        super().__init__()
         self.message = message
 
     def getChildWithDefault(self,

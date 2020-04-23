@@ -71,7 +71,7 @@ class ReasonForWaiting:
 class InputReason(ReasonForWaiting):
 
     def __init__(self, inputs: Sequence[str]):
-        ReasonForWaiting.__init__(self)
+        super().__init__()
         self.__inputs = inputs
 
     @property
@@ -89,7 +89,7 @@ class InputReason(ReasonForWaiting):
 class ResourceMissingReason(ReasonForWaiting):
 
     def __init__(self, resourceId: str):
-        ReasonForWaiting.__init__(self)
+        super().__init__()
         self.__resourceId = resourceId
 
     @property
@@ -104,7 +104,7 @@ class ResourceReason(ReasonForWaiting, ABC):
     prioMinor: ClassVar[int] = abstract
 
     def __init__(self, level: StatusLevel):
-        ReasonForWaiting.__init__(self)
+        super().__init__()
         self._level = level
 
     @property
@@ -119,7 +119,7 @@ class ResourceCapsReason(ResourceReason):
     prioMinor = 0
 
     def __init__(self, typeName: str, level: StatusLevel):
-        ResourceReason.__init__(self, level)
+        super().__init__(level)
         self.__type = typeName
 
     @property
@@ -132,7 +132,7 @@ class ResourceSpecReason(ResourceReason):
     prioMinor = 1
 
     def __init__(self, spec: ResourceSpec, level: StatusLevel):
-        ResourceReason.__init__(self, level)
+        super().__init__(level)
         self.__spec = spec
 
     @property
@@ -145,7 +145,7 @@ class ResourceTypeReason(ResourceReason):
     prioMinor = 2
 
     def __init__(self, typeName: str, shortage: int, level: StatusLevel):
-        ResourceReason.__init__(self, level)
+        super().__init__(level)
         self.__type = typeName
         self.__shortage = shortage
 
@@ -167,7 +167,7 @@ class ResourceTypeReason(ResourceReason):
 class BoundReason(ReasonForWaiting):
 
     def __init__(self, boundRunnerId: str):
-        ReasonForWaiting.__init__(self)
+        super().__init__()
         self.__boundRunnerId = boundRunnerId
 
     @property
@@ -185,7 +185,7 @@ class _CapabilitiesReason(ReasonForWaiting, ABC):
                  missingOnAll: AbstractSet[str],
                  missingOnAny: AbstractSet[str]
                  ):
-        ReasonForWaiting.__init__(self)
+        super().__init__()
         self._missingOnAll = missingOnAll
         self._missingOnAny = missingOnAny
 
@@ -217,7 +217,7 @@ class TRCapsReason(_CapabilitiesReason):
 class TRStateReason(ReasonForWaiting):
 
     def __init__(self, level: StatusLevel):
-        ReasonForWaiting.__init__(self)
+        super().__init__()
         self.__level = level
 
     @property
@@ -243,7 +243,7 @@ class UnboundGroupCapsReason(_CapabilitiesReason):
 class UnboundGroupStateReason(ReasonForWaiting):
 
     def __init__(self, level: StatusLevel):
-        ReasonForWaiting.__init__(self)
+        super().__init__()
         self.__level = level
 
     @property
@@ -258,7 +258,7 @@ class UnboundGroupStateReason(ReasonForWaiting):
 class BoundGroupTargetReason(ReasonForWaiting):
 
     def __init__(self, boundRunnerId: str, target: str):
-        ReasonForWaiting.__init__(self)
+        super().__init__()
         self.__boundRunnerId = boundRunnerId
         self.__target = target
 
@@ -277,7 +277,7 @@ class BoundGroupCapsReason(_CapabilitiesReason):
 
     def __init__(self, boundRunnerId: str, *args: AbstractSet[str]):
         self.__boundRunnerId = boundRunnerId
-        _CapabilitiesReason.__init__(self, *args)
+        super().__init__(*args)
 
     @property
     def description(self) -> str:
@@ -290,7 +290,7 @@ class BoundGroupCapsReason(_CapabilitiesReason):
 class BoundGroupStateReason(ReasonForWaiting):
 
     def __init__(self, boundRunnerId: str, level: StatusLevel):
-        ReasonForWaiting.__init__(self)
+        super().__init__()
         self.__boundRunnerId = boundRunnerId
         self.__level = level
 

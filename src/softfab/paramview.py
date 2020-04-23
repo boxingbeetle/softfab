@@ -51,7 +51,7 @@ class ParamCell(RadioTable):
     columns = None, None
 
     def __init__(self, key: str, value: str, parentValue: str):
-        RadioTable.__init__(self)
+        super().__init__()
         self.__key = key
         self.__value = value
         self.__parentValue = parentValue
@@ -202,7 +202,7 @@ class ParametersTable(Table):
     style = 'hollow'
 
     def __init__(self, fieldName: str):
-        Table.__init__(self)
+        super().__init__()
         self.__fieldName = fieldName
 
     def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:

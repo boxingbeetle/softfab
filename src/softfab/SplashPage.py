@@ -14,6 +14,7 @@ from softfab.xmlgen import XMLContent, xhtml
 class _StartupMessages:
 
     def __init__(self) -> None:
+        super().__init__()
         self.__messages = [ 'Server startup initiated' ]
 
     def __iter__(self) -> Iterator[str]:

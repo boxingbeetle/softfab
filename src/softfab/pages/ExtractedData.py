@@ -180,7 +180,7 @@ def visualizeBarChart(key: str,
 class ExtractedDataColumn(DataColumn[Task]):
 
     def __init__(self, key: str):
-        DataColumn.__init__(self, key, cellStyle = 'rightalign')
+        super().__init__(key, cellStyle = 'rightalign')
         self.__key = key
 
     def presentCell(self, record: Task, **kwargs: object) -> XMLContent:

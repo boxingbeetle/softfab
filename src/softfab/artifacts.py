@@ -278,6 +278,7 @@ class ArtifactAuthWrapper:
     isLeaf = False
 
     def __init__(self, path: SandboxedPath, anonOperator: bool):
+        super().__init__()
         self.path = path
         self.anonOperator = anonOperator
 
@@ -632,6 +633,7 @@ class FileProducer:
         yield footer
 
     def __init__(self, blockGen: Iterator[bytes], request: TwistedRequest):
+        super().__init__()
         self.blockGen = blockGen
         self.request = request
 
@@ -974,6 +976,7 @@ class ZipTreeNode:
         return root
 
     def __init__(self) -> None:
+        super().__init__()
         self.children: Dict[str, Union[ZipTreeNode, ZipInfo]] = {}
 
     def add(self, name: str, remainder: Iterator[str], info: ZipInfo) -> None:
@@ -1039,6 +1042,7 @@ class ZipTree:
             logging.warning('Error closing ZIP file "%s": %s', path, ex)
 
     def __init__(self, zipFile: ZipFile):
+        super().__init__()
         self.zipFile = zipFile
         self.root = ZipTreeNode.build(zipFile)
 

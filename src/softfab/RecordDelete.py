@@ -21,7 +21,7 @@ class RecordInUseError(Exception):
                  refererName: str,
                  presenter: Callable[[str], XMLContent],
                  referers: Collection[str]):
-        Exception.__init__(self, 'record in use')
+        super().__init__('record in use')
         self.refererName = refererName
         self.presenter = presenter
         self.referers = referers

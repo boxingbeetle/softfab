@@ -44,7 +44,7 @@ class DataColumn(Column, Generic[Record]):
                     label = keyName.capitalize()
             else:
                 label = self.label
-        Column.__init__(self, label, **kwargs)
+        super().__init__(label, **kwargs)
         if keyName is not None:
             # Override class-scope default.
             self.keyName = keyName
@@ -115,7 +115,7 @@ class LinkColumn(DataColumn[DBRecord]):
                  extraArgs: Sequence[Tuple[str, str]] = (),
                  **kwargs: Any
                  ):
-        DataColumn.__init__(self, label, **kwargs)
+        super().__init__(label, **kwargs)
         extraArgsStr = ''.join(
             f'{name}={escapeURL(value)}&'
             for name, value in extraArgs
@@ -145,7 +145,7 @@ class TimeColumn(DataColumn[Record]):
             # Override class-scope default.
             self.keyDisplay = keyDisplay
         assert self.keyDisplay is not None
-        DataColumn.__init__(self, label, keyName, **kwargs)
+        super().__init__(label, keyName, **kwargs)
 
     def presentCell(self, record: Record, **kwargs: object) -> XMLContent:
         key = self.keyDisplay
@@ -165,6 +165,8 @@ class DurationColumn(DataColumn[Record]):
 class TableData(Generic[Record]):
 
     def __init__(self, table: 'DataTable[Record]', proc: PageProcessor):
+        super().__init__()
+
         columns = tuple(table.iterColumns(proc=proc, data=None))
 
         records = table.getRecordsToQuery(proc)
@@ -309,7 +311,7 @@ class DataTable(Table, Generic[Record]):
     __maxNrTabs = 10
 
     def __init__(self) -> None:
-        Table.__init__(self)
+        super().__init__()
         if self.objectName is None:
             assert self.db is not None
             self.objectName = pluralize(self.db.description, 42)

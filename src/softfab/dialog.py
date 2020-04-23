@@ -51,6 +51,7 @@ class DialogStep(ABC, Generic[DialogProcT]):
     title: ClassVar[str] = abstract
 
     def __init__(self, page: 'DialogPage'):
+        super().__init__()
         self._page = page
         self._formBodyPresenter = PresenterFunction(self.presentFormBody)
 
@@ -272,7 +273,7 @@ class DialogPage(FabPage[DialogProcessorBase, 'DialogPage.Arguments'], ABC):
         error = StrArg(None) # back button on error page
 
     def __init__(self) -> None:
-        FabPage.__init__(self)
+        super().__init__()
         self.stepObjects = {
             stepClass.name: stepClass(self)
             for stepClass in self.steps

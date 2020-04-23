@@ -77,6 +77,7 @@ class TokenAuthPage(Authenticator):
     '''
 
     def __init__(self, role: TokenRole):
+        super().__init__()
         self.__role = role
 
     def authenticate(self, req: Request) -> Deferred:

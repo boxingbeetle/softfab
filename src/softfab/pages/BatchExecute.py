@@ -36,6 +36,7 @@ class InputConflict(Exception):
 class FakeTask:
 
     def __init__(self, name: str, inputs: Mapping[str, Input]):
+        super().__init__()
         self.__inputs = inputs
         self.__name = name
 
@@ -60,7 +61,7 @@ class FakeTask:
 class FakeTaskSet(TaskSetWithInputs[FakeTask]):
 
     def __init__(self) -> None:
-        TaskSetWithInputs.__init__(self)
+        super().__init__()
         self.__targets: DefaultDict[str, Set[str]] = defaultdict(set)
         self.__index = 0
 

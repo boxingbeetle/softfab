@@ -30,10 +30,6 @@ def _load(fileName: str) -> Optional[bytes]:
 
 class _StyleResource(Data):
 
-    def __init__(self, data: bytes, mediaType: str):
-        # Implementing this to work around mypy complaining.
-        Data.__init__(self, data, mediaType)
-
     def render(self, request: IRequest) -> bytes:
         # File expires a long time from now.
         # RFC-2616 section 14.21: "HTTP/1.1 servers SHOULD NOT send Expires
@@ -46,7 +42,7 @@ class _StyleResource(Data):
 class _CompressedStyleResource(_StyleResource):
 
     def __init__(self, data: bytes, mediaType: str):
-        _StyleResource.__init__(self, data, mediaType)
+        super().__init__(data, mediaType)
 
         # Note: Because we only compress these resources once, we might as well
         #       do it with maximum compression.
@@ -82,7 +78,7 @@ class _StyleRoot(Resource):
     relativeURL = 'styles'
 
     def __init__(self) -> None:
-        Resource.__init__(self)
+        super().__init__()
         self.__icons: Dict[str, Image] = {}
 
     def __addFile(self, fileName: str, mediaType: str) -> Optional[bytes]:

@@ -128,9 +128,7 @@ class Task(
                  attributes: Mapping[str, XMLAttributeValue],
                  job: 'Job'
                  ):
-        XMLTag.__init__(self, attributes)
-        TaskRunnerSet.__init__(self)
-        TaskStateMixin.__init__(self)
+        super().__init__(attributes)
         self._properties.setdefault('priority', 0)
         self._parameters: Dict[str, str] = {}
         self.__taskRun: Optional[TaskRun] = None
@@ -424,7 +422,7 @@ class Task(
     def getAlert(self) -> Optional[str]:
         return self.getLatestRun().getAlert()
 
-class Job(TaskRunnerSet, TaskSet[Task], XMLTag, DatabaseElem):
+class Job(XMLTag, TaskRunnerSet, TaskSet[Task], DatabaseElem):
     '''A collection of tasks and their input and output products.
     Contains information about what should be executed,
     what has been executed and what the result was.
@@ -462,10 +460,7 @@ class Job(TaskRunnerSet, TaskSet[Task], XMLTag, DatabaseElem):
     def __init__(self, properties: Mapping[str, XMLAttributeValue]):
         # Note: if the "comment" tag is empty, the XML parser does not call the
         #       <text> handler, so we have to use '' rather than None here.
-        TaskSet.__init__(self)
-        TaskRunnerSet.__init__(self)
-        XMLTag.__init__(self, properties)
-        DatabaseElem.__init__(self)
+        super().__init__(properties)
         self.__comment = ''
         self.__inputSet: Optional[AbstractSet[str]] = None
         self.__products: Dict[str, str] = {}
@@ -1057,7 +1052,7 @@ class _TaskToJobs(RecordObserver[Job]):
     '''For each task ID, keep track of the IDs of all jobs containing that task.
     '''
     def __init__(self) -> None:
-        RecordObserver.__init__(self)
+        super().__init__()
         self.__taskToJobs: Optional[DefaultDict[str, List[str]]] = None
 
     def __call__(self, taskId: str) -> Iterator[Task]:

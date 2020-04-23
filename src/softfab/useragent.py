@@ -110,6 +110,7 @@ class UserAgent:
                 yield part
 
     def __init__(self, userAgentHeader: str, acceptHeader: str):
+        super().__init__()
         self.__userAgentHeader = userAgentHeader
         self.__acceptHeader = acceptHeader
 

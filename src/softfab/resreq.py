@@ -31,7 +31,7 @@ class ResourceSpec(XMLTag):
         return spec
 
     def __init__(self, properties: Mapping[str, str]):
-        XMLTag.__init__(self, properties)
+        super().__init__(properties)
         self.__capabilities: AbstractSet[str] = set()
 
     def __repr__(self) -> str:
@@ -76,6 +76,7 @@ class ResourceClaim:
 
     def __init__(self, specsByRef: Mapping[str, ResourceSpec]):
         """Do not call directly; use `create` instead."""
+        super().__init__()
         self.__specsByRef = specsByRef
 
     def __iter__(self) -> Iterator[ResourceSpec]:

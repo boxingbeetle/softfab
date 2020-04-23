@@ -48,6 +48,7 @@ svgNSPrefix = '{%s}' % svgNamespace
 class GraphFormat(Enum):
 
     def __init__(self, ext: str, description: str, mediaType: str):
+        super().__init__()
         self.ext = ext
         self.description = description
         self.mediaType = mediaType
@@ -200,6 +201,7 @@ class DotProcess(ProcessProtocol):
     """Handles the execution of the Graphviz 'dot' tool."""
 
     def __init__(self, fmt: GraphFormat):
+        super().__init__()
         self.format = fmt
         self.queue: List[DotWork] = []
         self.state = _ProcessState.NOT_RUNNING
@@ -328,6 +330,7 @@ class Graph:
     '''
 
     def __init__(self, graph: Digraph):
+        super().__init__()
         self.__graph = graph
 
     @property
@@ -345,6 +348,7 @@ class GraphBuilder:
     """Holds the data for creating a graph."""
 
     def __init__(self, name: str, links: bool):
+        super().__init__()
         self._name = name
         self._links = links
 
@@ -379,7 +383,7 @@ class ExecutionGraphBuilder(GraphBuilder):
                  products: Iterable[ProductDef] = (),
                  frameworks: Iterable[Framework] = ()
                  ):
-        GraphBuilder.__init__(self, name, links)
+        super().__init__(name, links)
         self._products = tuple(products)
         self._frameworks = tuple(frameworks)
 
@@ -507,7 +511,7 @@ class _GraphResponder(Responder):
                  fmt: GraphFormat,
                  export: bool
                  ):
-        Responder.__init__(self)
+        super().__init__()
         self.__builder = builder
         self.__fileName = fileName
         self.__format = fmt

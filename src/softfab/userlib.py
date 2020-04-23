@@ -340,6 +340,7 @@ class TaskRunnerUser(User):
     '''
 
     def __init__(self, runnerId: str):
+        super().__init__()
         self.__runnerId = runnerId
 
     @property
@@ -407,8 +408,7 @@ class UserInfo(XMLTag, DatabaseElem, User):
     tagName = 'user'
 
     def __init__(self, properties: Mapping[str, str]):
-        XMLTag.__init__(self, properties)
-        DatabaseElem.__init__(self)
+        super().__init__(properties)
         self.__roles: Union[FrozenSet[str], Set[str]] = set()
 
     def __getitem__(self, key: str) -> Any:

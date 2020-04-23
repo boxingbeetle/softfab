@@ -57,6 +57,7 @@ class Heap(Generic[T]):
     def __init__(self, key: Callable[[T], Comparable]):
         ...
     def __init__(self, key: Optional[Callable[[T], Comparable]] = None):
+        super().__init__()
         self.__array: List[Optional[T]] = [ None ]
         self.__count = 1
         # Note: We won't actually pass None to the key function,
@@ -366,6 +367,7 @@ class _CachedProperty(Generic[C, T]):
     '''
 
     def __init__(self, method: Callable[[C], T]):
+        super().__init__()
         self.__method = method
         self.__name: Optional[str] = None
 

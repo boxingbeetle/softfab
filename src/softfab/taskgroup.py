@@ -49,6 +49,7 @@ TaskElem = Union[TaskT, 'TaskGroup[TaskT]']
 class TaskSet(Generic[TaskT]):
 
     def __init__(self) -> None:
+        super().__init__()
         self._tasks: Dict[str, TaskT] = {}
 
     def isEmpty(self) -> bool:
@@ -249,6 +250,7 @@ class TaskGroup(PriorityMixin, Generic[TaskT]):
     '''
 
     def __init__(self, parent: TaskSet[TaskT], tasks: Iterable[TaskElem]):
+        super().__init__()
         self._parent = parent
         self.__tasks = {task.getName(): task for task in tasks}
         self.__inputs: Optional[FrozenSet[str]] = None

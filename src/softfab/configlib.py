@@ -32,7 +32,7 @@ else:
 class _ObserverProxy(RecordObserver[DBRecord]):
 
     def __init__(self, subjectDb: Database[DBRecord]):
-        RecordObserver.__init__(self)
+        super().__init__()
         # Mapping from configId to set of keys observed by that config.
         self.__subjects: DefaultDict[str, MutableSet[str]] = \
             defaultdict(set)
@@ -119,8 +119,7 @@ class Task(PriorityMixin, ResourceRequirementsMixin, XMLTag, TaskRunnerSet):
         return task
 
     def __init__(self, attributes: Mapping[str, XMLAttributeValue]):
-        XMLTag.__init__(self, attributes)
-        TaskRunnerSet.__init__(self)
+        super().__init__(attributes)
         self._properties.setdefault('priority', 0)
         self.__params: Dict[str, _Param] = {}
 
@@ -251,6 +250,7 @@ class Output:
     '''
 
     def __init__(self, name: str):
+        super().__init__()
         self.__productDef = productDefDB[name]
 
     def isLocal(self) -> bool:
@@ -262,7 +262,7 @@ class Output:
 class TaskSetWithInputs(TaskSet[TaskT]):
 
     def __init__(self) -> None:
-        TaskSet.__init__(self)
+        super().__init__()
         self._inputs: Dict[str, Input] = {}
 
     # Mark class as abstract:
@@ -322,7 +322,7 @@ class TaskSetWithInputs(TaskSet[TaskT]):
     def hasLocalInputs(self) -> bool:
         return any(inp.isLocal() for inp in self._inputs.values())
 
-class Config(TaskRunnerSet, TaskSetWithInputs[Task], XMLTag,
+class Config(XMLTag, TaskRunnerSet, TaskSetWithInputs[Task],
              SelectableRecordABC):
     tagName = 'config'
     boolProperties = ('trselect',)
@@ -364,10 +364,7 @@ class Config(TaskRunnerSet, TaskSetWithInputs[Task], XMLTag,
     def __init__(self, attributes: Mapping[str, XMLAttributeValue]):
         # Note: if the "comment" tag is empty, the XML parser does not call the
         #       <text> handler, so we have to use '' rather than None here.
-        TaskSetWithInputs.__init__(self)
-        TaskRunnerSet.__init__(self)
-        XMLTag.__init__(self, attributes)
-        SelectableRecordABC.__init__(self)
+        super().__init__(attributes)
         self.__targets: MutableSet[str] = set()
         self.__comment = ''
         self.__params: Dict[str, str] = {}

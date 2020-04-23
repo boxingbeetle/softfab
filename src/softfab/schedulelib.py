@@ -105,7 +105,7 @@ class JobDBObserver(RecordObserver[Job]):
     instance: ClassVar[SharedInstance] = SharedInstance()
 
     def __init__(self) -> None:
-        RecordObserver.__init__(self)
+        super().__init__()
         self.__observers: List[Callable[[Job, 'Scheduled'], None]] = []
         jobDB.addObserver(self)
 
@@ -130,7 +130,7 @@ class ScheduleManager(RecordObserver['Scheduled']):
     instance = None # Singleton instance.
 
     def __init__(self) -> None:
-        RecordObserver.__init__(self)
+        super().__init__()
         # Initialize singleton instance.
         assert ScheduleManager.instance is None
         ScheduleManager.instance = self
@@ -234,8 +234,7 @@ class Scheduled(XMLTag, SelectableRecordABC):
             properties = dict(properties, repeat=repeat)
             del properties['sequence']
 
-        XMLTag.__init__(self, properties)
-        SelectableRecordABC.__init__(self)
+        super().__init__(properties)
         self.__lastJobIds: List[str] = []
         # Cached value: True means "might be running", False means "certainly
         # not running", since jobs can go from not fixed to fixed but not

@@ -43,7 +43,7 @@ class TaskDef(frameworklib.TaskDefBase):
         return taskDef
 
     def __init__(self, properties: Mapping[str, Optional[str]]):
-        frameworklib.TaskDefBase.__init__(self, properties)
+        super().__init__(properties)
         self.__title = ''
         self.__description = ''
 

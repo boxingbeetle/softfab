@@ -23,6 +23,7 @@ else:
 class TaskRunnerSet:
 
     def __init__(self) -> None:
+        super().__init__()
         self._runners: Set[str] = set()
 
     def _addRunner(self, attributes: Mapping[str, str]) -> None:

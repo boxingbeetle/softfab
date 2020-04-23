@@ -73,7 +73,7 @@ class ParseError(Exception):
 class _XMLHandler(ContentHandler):
 
     def __init__(self, factory: object):
-        ContentHandler.__init__(self)
+        super().__init__()
 
         # Initial values are just to satisfy the type checker.
         self.__text = False
@@ -177,6 +177,8 @@ class XMLTag(ABC):
                 yield value
 
     def __init__(self, attributes: Mapping[str, XMLAttributeValue]):
+        super().__init__()
+
         self._properties = {
             key: value
             for key, value in attributes.items()
@@ -266,6 +268,7 @@ class XMLProperty(Generic[Host, Value]):
         returns the value from the properties dictionary.
         If no set function is specified, the property is read-only.
         '''
+        super().__init__()
         self.__fget = fget
         self.__fset = fset
 

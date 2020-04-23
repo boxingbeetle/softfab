@@ -198,7 +198,7 @@ class SortedJobsByConfig(SortedQueue):
 
     def __init__(self, configId: str):
         self.__configId = configId
-        SortedQueue.__init__(self, jobDB)
+        super().__init__(jobDB)
 
     def _filter(self, record: Job) -> bool:
         return record.configId == self.__configId

@@ -39,8 +39,7 @@ class SortedQueue(RecordSubjectMixin[DBRecord], RecordObserver[DBRecord], ABC):
     compareField: ClassVar[str] = abstract
 
     def __init__(self, db: Database[DBRecord]):
-        RecordSubjectMixin.__init__(self)
-        RecordObserver.__init__(self)
+        super().__init__()
         self.__db = db
         self.__keyFunc = keyFunc = self._getKeyFunc()
 

@@ -61,8 +61,7 @@ class ProductDef(XMLTag, DatabaseElem):
         if properties.get('type') == 'file':
             properties = dict(properties, type='string')
 
-        XMLTag.__init__(self, properties)
-        DatabaseElem.__init__(self)
+        super().__init__(properties)
 
     def getId(self) -> str:
         return cast(str, self['id'])

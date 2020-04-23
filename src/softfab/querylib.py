@@ -28,7 +28,7 @@ class RecordFilter(Generic[Record]):
 class CustomFilter(RecordFilter[Record]):
 
     def __init__(self, func: Callable[[Record], bool]):
-        RecordFilter.__init__(self)
+        super().__init__()
         self.__func = func
 
     def __call__(self, records: Iterable[Record]) -> Iterable[Record]:
@@ -53,7 +53,7 @@ class ValueFilter(RecordFilter[Record], Generic[Record, Comparable]):
                  value: Comparable,
                  db: Optional[Database] = None
                  ):
-        RecordFilter.__init__(self)
+        super().__init__()
         self.__retriever: Retriever[Record, Comparable] = _getRetriever(db, key)
         self.__value = value
 
@@ -83,7 +83,7 @@ class WildcardFilter(RecordFilter[Record]):
                  pattern: str,
                  db: Optional[Database] = None
                  ):
-        RecordFilter.__init__(self)
+        super().__init__()
         self.__retriever: Retriever[Record, str] = _getRetriever(db, key)
         self.__matcher = wildcardMatcher(pattern)
 
@@ -160,7 +160,7 @@ class SetFilter(RecordFilter[Record], Generic[Record, Comparable]):
                  selected: AbstractSet[Comparable],
                  db: Optional[Database[DBRecord]]
                  ):
-        RecordFilter.__init__(self)
+        super().__init__()
         self.__retriever: Retriever[Record, Comparable] = _getRetriever(db, key)
         self.__selected = selected
 
@@ -232,7 +232,7 @@ class KeySorter(RecordSorter[Record]):
                  getRetriever: Callable[[str], Retriever],
                  uniqueKeys: Collection[str]
                  ):
-        RecordSorter.__init__(self)
+        super().__init__()
         retrievers: List[Retriever] = []
         for key in keyOrder:
             retrievers.append(_substMissingForNone(

@@ -39,6 +39,7 @@ class DatabaseElem:
     '''
 
     def __init__(self: DBRecord) -> None:
+        super().__init__()
         self.__observers: List[Callable[[DBRecord], None]] = []
 
     def __hash__(self) -> int:
@@ -152,6 +153,7 @@ class RecordObserver(Generic[DBRecord]):
 class RecordSubjectMixin(Generic[DBRecord]):
 
     def __init__(self) -> None:
+        super().__init__()
         self._observers: List[RecordObserver[DBRecord]] = []
 
     def _notifyAdded(self, record: DBRecord) -> None:
@@ -585,7 +587,7 @@ class VersionedDatabase(Database[DBRecord]):
                                 + '0' * self.versionDigits + '.xml', # dst
                             )
 
-        Database.__init__(self)
+        super().__init__()
         self.__latestVersionOf: Dict[str, str] = {}
         self.__removedRecords: Dict[str, str] = {}
 
@@ -795,6 +797,7 @@ class SingletonWrapper(Generic[DBRecord]):
         '''Creates a singleton wrapper for the given database.
         The database must already contain its single record.
         '''
+        super().__init__()
         self.__db = db
 
     def __getattr__(self, name: str) -> object:
@@ -846,6 +849,7 @@ def checkWrapperVarName(name: str) -> None:
 class _IdCreator:
 
     def __init__(self) -> None:
+        super().__init__()
         self.__lastId = 0
 
     def __call__(self, internal: bool) -> str:

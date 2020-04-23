@@ -34,7 +34,7 @@ class ParseCorrected(Generic[ValueT], Exception):
     '''
 
     def __init__(self, correctValue: ValueT):
-        Exception.__init__(self)
+        super().__init__()
         self.correctValue = correctValue
 
 class ArgsCorrected(Generic[ArgsT], Exception):
@@ -44,7 +44,7 @@ class ArgsCorrected(Generic[ArgsT], Exception):
     '''
 
     def __init__(self, args: ArgsT, **kwargs: object):
-        Exception.__init__(self)
+        super().__init__()
         # Note: The Exception base class has an attribute named "args", so we
         #       should use a different name.
         self.correctedArgs = args.override(**kwargs) if kwargs else args
@@ -60,7 +60,7 @@ class ArgsInvalid(Exception):
     '''
 
     def __init__(self) -> None:
-        Exception.__init__(self)
+        super().__init__()
         self.errors: Dict[str, str] = {}
 
     def addError(self, name: str, message: str) -> 'ArgsInvalid':
@@ -86,6 +86,7 @@ class _ArgumentFactory(Generic[ArgsT]):
             argsClass: Type[ArgsT],
             fields: Mapping[str, Iterable[bytes]]
             ):
+        super().__init__()
         self.__argsClass = argsClass
         self.__data: Dict[str, object] = {}
         self.__unclaimedFields, self.__correctedArgs = \
@@ -305,6 +306,7 @@ class PageArgs:
         Raises TypeError if a value's type does not match the corresponding
         argument's type.
         '''
+        super().__init__()
 
         # Merge the given argument objects (if any) into kwargs.
         for args in reversed(vargs):
@@ -1085,6 +1087,7 @@ class Query:
         return cls(dict(args.externalize()))
 
     def __init__(self, data: Mapping[str, Sequence[str]]):
+        super().__init__()
         self._data = data
 
     def __bool__(self) -> bool:
@@ -1198,7 +1201,7 @@ class RefererArg(QueryArg):
             page: str, *,
             shared: Union[None, Type[PageArgs], Iterable[str]] = None
             ):
-        QueryArg.__init__(self, shared=shared)
+        super().__init__(shared=shared)
         self.__page = page
 
     def _sameArg(self, other: Argument) -> bool:
@@ -1223,6 +1226,7 @@ class RenameToArg:
     '''
 
     def __init__(self, newName: str):
+        super().__init__()
         self.__newName = newName
 
     @property

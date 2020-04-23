@@ -15,7 +15,7 @@ class RefreshScript(Script):
             assert targetId is not None
             targetIds.append(targetId)
         self.targetIds = targetIds
-        Script.__init__(self)
+        super().__init__()
 
     def iterLines(self, **kwargs: object) -> Iterator[str]:
         proc = cast(PageProcessor, kwargs['proc'])

@@ -238,6 +238,7 @@ class CommentPanel(Panel):
 class _JobOverviewPresenter(NotificationPresenter):
 
     def __init__(self, job: Job):
+        super().__init__()
         self.__job = job
 
     @property
