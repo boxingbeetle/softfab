@@ -92,6 +92,7 @@ class GetTaggedTaskInfo_GET(ControlPage['GetTaggedTaskInfo_GET.Arguments',
             if task is not None:
                 run = task.getLatestRun()
                 yield xml.run(
+                    # pylint: disable=protected-access
                     execstate = run._getState(),
                     result = run.result,
                     alert = run.getAlert(),

@@ -104,6 +104,7 @@ class DatabaseLoader:
     def process(self) -> Iterator[None]:
         for db in iterDatabases():
             startupMessages.addMessage(f'Loading {db.description} database')
+            # pylint: disable=protected-access
             db._prepareLoad()
             for idx, dummy_ in enumerate(db._iterLoad(startupLogger)):
                 if idx % self.recordChunks == 0:

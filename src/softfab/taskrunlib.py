@@ -481,6 +481,7 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
             if locator is not None:
                 product.storeLocator(locator, self.getName())
             # Is the product done now?
+            # pylint: disable=protected-access
             if product.isCombined():
                 if self.getJob()._isProductFixed(product):
                     product.done()

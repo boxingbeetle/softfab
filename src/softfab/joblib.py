@@ -180,7 +180,7 @@ class Task(
         result = taskRun['result']
         if result is not None:
             self._properties['result'] = cast(ResultCode, result)
-        self.__job._notify()
+        self.__job._notify() # pylint: disable=protected-access
 
     def getJob(self) -> 'Job':
         return self.__job
@@ -532,6 +532,7 @@ class Job(XMLTag, TaskRunnerSet, TaskSet[Task], DatabaseElem):
                 #
                 # This code relies on the task always having 'state' cached if
                 # it is fixed, which is currently true, but not future-proof.
+                # pylint: disable=protected-access
                 taskState = task._properties.get('state')
                 if taskState is None or not task.isExecutionFinished():
                     tasks.add(name)
