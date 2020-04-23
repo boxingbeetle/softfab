@@ -250,7 +250,7 @@ def createPresenter(opener: Callable[[], IO[bytes]],
 
     # Only use source highlighting for text formats, except for HTML.
     if message is None:
-        contentType, contentEncoding = guess_type(fileName, strict=False)
+        contentType, contentEncoding_ = guess_type(fileName, strict=False)
         if not contentType or not contentType.startswith('text/'):
             return None
         if contentType == 'text/html':

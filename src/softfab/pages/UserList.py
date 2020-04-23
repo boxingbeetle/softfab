@@ -75,7 +75,6 @@ class FilterTable(SingleCheckBoxTable):
     label = 'Show inactive users'
 
     def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
-        proc = cast(UserList_GET.Processor, kwargs['proc'])
         yield from super().iterRows(**kwargs)
         yield submitButton[ 'Apply' ].present(**kwargs),
 
@@ -84,7 +83,6 @@ class AnonGuestTable(SingleCheckBoxTable):
     label = 'Anonymous guest access'
 
     def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
-        proc = cast(UserList_GET.Processor, kwargs['proc'])
         yield from super().iterRows(**kwargs)
         yield (
             'This grants visitors that are not logged in read-only access '
