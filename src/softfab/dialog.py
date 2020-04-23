@@ -225,7 +225,7 @@ class InitialDialogProcessor(DialogProcessorBase[DialogArgsT]):
 
     def process(self, req: Request, user: User) -> None:
         initialArgs = self.getInitial(self.args, user)
-        self.args = initialArgs # pylint: disable=attribute-defined-outside-init
+        self.args = initialArgs
         stepObjects = self.page.stepObjects
         self.walkSteps([stepObjects[name] for name in initialArgs.path.split()])
 
