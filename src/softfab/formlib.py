@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from collections.abc import Collection as CollectionABC
 from enum import Enum
 from typing import (
     TYPE_CHECKING, Any, ClassVar, Collection, Iterable, Iterator, List,
@@ -631,7 +632,7 @@ class CheckBoxesTable(Table):
         matches the submission name of this check boxes table.
         '''
         active = _argValue(kwargs['formArgs'], self.name)
-        if isinstance(active, Collection):
+        if isinstance(active, CollectionABC):
             return active
         else:
             raise TypeError(type(active))

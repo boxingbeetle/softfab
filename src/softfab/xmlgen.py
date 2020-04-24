@@ -37,6 +37,7 @@ If you are creating a long sequence, returning an iterable will perform better
 than repeated addition.
 '''
 
+from collections.abc import Iterable as IterableABC
 from enum import Enum
 from html.parser import HTMLParser
 from itertools import chain
@@ -274,7 +275,7 @@ def _adaptSequence(obj: XMLContent) -> Iterator[XML]:
         yield from _adaptSequence(cast(XMLConvertible, obj).toXML())
     elif hasattr(obj, 'present'):
         yield _PresentationWrapper(cast(XMLPresentable, obj).present)
-    elif isinstance(obj, Iterable):
+    elif isinstance(obj, IterableABC):
         if isinstance(obj, bytes):
             # While 'bytes' are iterable, for example b'abc' would be
             # flattened to '979899', which is more likely a bug than

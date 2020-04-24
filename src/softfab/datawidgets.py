@@ -1,8 +1,9 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from collections.abc import Sized as SizedABC
 from typing import (
     TYPE_CHECKING, Any, ClassVar, Dict, Generic, Iterable, Iterator, List,
-    Mapping, Optional, Sequence, Sized, Tuple, Union, cast
+    Mapping, Optional, Sequence, Tuple, Union, cast
 )
 
 from softfab.databaselib import DBRecord, Database, Retriever
@@ -170,7 +171,7 @@ class TableData(Generic[Record]):
         columns = tuple(table.iterColumns(proc=proc, data=None))
 
         records = table.getRecordsToQuery(proc)
-        if isinstance(records, Sized):
+        if isinstance(records, SizedABC):
             unfilteredNrRecords: Optional[int] = len(records)
         else:
             # We could store all records in a list or wrap a counting iterator
