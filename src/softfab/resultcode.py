@@ -28,6 +28,7 @@ class ResultCode(Enum):
     """Waiting for postponed inspection."""
 
     def __hash__(self) -> int:
+        # pylint: disable=invalid-hash-returned
         return self.value
 
     def __eq__(self, other: object) -> bool:
