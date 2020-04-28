@@ -88,10 +88,12 @@ class TaskStateMixin:
 class ResourceRequirementsMixin:
 
     @abstractmethod
-    def getFramework(self) -> Framework: ...
+    def getFramework(self) -> Framework:
+        ...
 
     @abstractmethod
-    def getDef(self) -> TaskDef: ...
+    def getDef(self) -> TaskDef:
+        ...
 
     @property
     def resourceClaim(self) -> ResourceClaim:

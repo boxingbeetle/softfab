@@ -94,12 +94,7 @@ disable=bad-continuation,
         not-callable,
         # Too many false positives.
         trailing-comma-tuple,
-        # Currently not reliable, so even if we wanted to, we couldn't enforce
-        # this rule consistently.
-        #   https://github.com/PyCQA/pylint/issues/2363
-        useless-return,
-        # Too many false positives currently, should improve soon.
-        #   https://github.com/PyCQA/pylint/issues/2300
+        # Undecided whether trailing commas are bad or useful.
         wrong-import-order,
         # We're not sticking to this PEP8 rule yet, maybe later.
         fixme,
@@ -107,10 +102,6 @@ disable=bad-continuation,
         # point, but are not urgent enough to be included in every run.
         no-else-raise,
         # Satisfying this rule doesn't always improve code readability.
-        multiple-statements,
-        # This causes false positives on ellipsis.
-        # Will be fixed in 2.5.0, but that is not released yet.
-        #   https://github.com/PyCQA/pylint/issues/3224
         duplicate-code,
         # This spots some real design issues, but also unavoidable or
         # superficial repetition. Might be worth revisiting at some point,

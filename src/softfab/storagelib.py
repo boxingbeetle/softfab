@@ -18,7 +18,8 @@ class StorageURLMixin:
     _properties: Dict[str, Union[str, int, Enum]]
 
     @abstractmethod
-    def _notify(self) -> None: ...
+    def _notify(self) -> None:
+        ...
 
     def setInternalStorage(self, path: str) -> None:
         """Use the Control Center's internal storage pool.
