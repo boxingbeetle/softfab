@@ -1,26 +1,19 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from platform import python_version
-from typing import Iterator, cast
-
-from passlib import __version__ as passlibVersion
-from twisted import __version__ as twistedVersion
+from typing import Iterator, List, cast
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
-from softfab.notification import sendmail
+from softfab.packaging import dependencies, getDistribution
 from softfab.projectlib import getBootTime, project
 from softfab.timeview import formatTime
 from softfab.userlib import User
 from softfab.utils import parseVersion
 from softfab.version import VERSION as softFabVersion
-from softfab.webgui import Table, docLink
+from softfab.webgui import Column, Table, docLink, maybeLink
 from softfab.xmlgen import XMLContent, xhtml
 
-try:
-    from pytz import VERSION as pytzVersion
-except ImportError:
-    pytzVersion = 'not installed'
 
 class About_GET(FabPage[FabPage.Processor, FabPage.Arguments]):
     icon = 'IconHome'
@@ -30,10 +23,16 @@ class About_GET(FabPage[FabPage.Processor, FabPage.Arguments]):
         pass
 
     def presentContent(self, **kwargs: object) -> XMLContent:
+        yield xhtml.h2[ 'SoftFab ', softFabVersion ]
+
         yield xhtml.h3[ 'Status' ]
         yield StatusTable.instance.present(**kwargs)
 
         yield xhtml.h3[ 'Installation' ]
+        yield xhtml.p[
+            'This Control Center runs on the following '
+            'open source software:'
+            ]
         yield InstallationTable.instance.present(**kwargs)
 
         proc = cast(FabPage.Processor, kwargs['proc'])
@@ -72,22 +71,48 @@ class StatusTable(Table):
             )
 
 class InstallationTable(Table):
-    columns = None, None
+    packageColumn = Column('Package')
+    versionColumn = Column('Version', cellStyle='centeralign')
+    descriptionColumn = Column('Description')
+
+    def showVersions(self, **kwargs: object) -> bool:
+        proc = cast(FabPage.Processor, kwargs['proc'])
+        return proc.user.hasPrivilege('sysver')
+
+    def iterColumns(self, **kwargs: object) -> Iterator[Column]:
+        yield self.packageColumn
+        if self.showVersions(**kwargs):
+            yield self.versionColumn
+        yield self.descriptionColumn
 
     def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
-        yield 'SoftFab version:', softFabVersion
+        showVersions = self.showVersions(**kwargs)
 
-        proc = cast(FabPage.Processor, kwargs['proc'])
-        if not proc.user.hasPrivilege('sysver'):
-            return
+        names = list(dependencies('softfab'))
+        names.append('Python')
+        names.sort(key=str.casefold)
 
-        yield 'Twisted version:', twistedVersion
-        yield 'twisted.mail package:', (
-            'not installed' if sendmail is None else 'installed'
-            )
-        yield 'Passlib version:', passlibVersion
-        yield 'pytz version:', pytzVersion
-        yield 'Python version:', python_version()
+        for name in names:
+            if name == 'Python':
+                version = python_version()
+                url = 'https://www.python.org/'
+                desc = "An interpreted, interactive, " \
+                       "object-oriented programming language"
+            else:
+                dist = getDistribution(name)
+                if dist is None:
+                    continue
+                version = dist.version
+                metadata = dist.metadata
+                url = metadata['Home-page']
+                desc = metadata['Summary'].rstrip('.')
+
+            row: List[XMLContent]
+            row = [ maybeLink(url)[name] ]
+            if showVersions:
+                row.append(version)
+            row.append(desc)
+            yield row
 
 class BrowserTable(Table):
     columns = None, None
