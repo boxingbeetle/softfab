@@ -41,7 +41,7 @@ softfab = 'softfab.cmdline:main'
 
 [tool.poetry.dependencies]
 python = '^3.6'
-Twisted = {version = '>=16.6', extras = ['tls']}
+Twisted = {version = '>=16.6'}
 passlib = {version = '^1.7', extras = ['bcrypt']}
 graphviz = ">=0.13.2"
 pytz = '*'
