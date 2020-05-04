@@ -139,6 +139,9 @@ privileges: Mapping[str, Sequence[str]] = {
     'p/m': ('operator', ),
 #    'p/d': (),
 
+    # Privileges not tied to DB records:
+    'sysver': ('operator', ), # View system version information.
+
     # Privileges that are only granted by tokens:
     'tr/*': (), # Non-standard privilege used by Task Runners.
 

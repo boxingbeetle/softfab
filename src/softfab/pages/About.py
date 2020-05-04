@@ -76,6 +76,11 @@ class InstallationTable(Table):
 
     def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
         yield 'SoftFab version:', softFabVersion
+
+        proc = cast(FabPage.Processor, kwargs['proc'])
+        if not proc.user.hasPrivilege('sysver'):
+            return
+
         yield 'Twisted version:', twistedVersion
         yield 'twisted.mail package:', (
             'not installed' if sendmail is None else 'installed'
