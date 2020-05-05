@@ -105,10 +105,10 @@ class LoadExecute_GET(FabPage['LoadExecute_GET.Processor',
                 yield 'tags', 'Edit Tags...', 'ConfigTags'
             yield 'execute', 'Execute...', 'BatchExecute'
 
-        def process(self,
-                    req: Request['LoadExecute_GET.Arguments'],
-                    user: User
-                    ) -> None:
+        async def process(self,
+                          req: Request['LoadExecute_GET.Arguments'],
+                          user: User
+                          ) -> None:
             self.processSelection()
 
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable[Config]]:

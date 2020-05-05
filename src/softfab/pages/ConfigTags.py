@@ -49,7 +49,7 @@ class ConfigTagsBase(FabPage['ConfigTagsBase.Processor', ArgsT]):
 
         notices: List[str]
 
-        def process(self, req: Request[ArgsT], user: User) -> None:
+        async def process(self, req: Request[ArgsT], user: User) -> None:
             self.notices = []
 
             self.findConfigs()
@@ -110,10 +110,10 @@ class ConfigTags_POST(ConfigTagsBase['ConfigTags_POST.Arguments']):
 
     class Processor(ConfigTagsBase.Processor):
 
-        def process(self,
-                    req: Request['ConfigTags_POST.Arguments'],
-                    user: User
-                    ) -> None:
+        async def process(self,
+                          req: Request['ConfigTags_POST.Arguments'],
+                          user: User
+                          ) -> None:
             args = req.args
             action = args.action
             if action is not Actions.APPLY:

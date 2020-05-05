@@ -40,10 +40,10 @@ class UserDetails_GET(FabPage['UserDetails_GET.Processor',
     class Processor(PageProcessor['UserDetails_GET.Arguments']):
         visibleJobs = 12
 
-        def process(self,
-                    req: Request['UserDetails_GET.Arguments'],
-                    user: User
-                    ) -> None:
+        async def process(self,
+                          req: Request['UserDetails_GET.Arguments'],
+                          user: User
+                          ) -> None:
             infoUserName = req.args.user
 
             try:

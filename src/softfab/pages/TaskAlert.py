@@ -21,10 +21,10 @@ class TaskAlert_POST(ControlPage['TaskAlert_POST.Arguments',
     class Processor(TaskProcessorMixin,
                     PageProcessor['TaskAlert_POST.Arguments']):
 
-        def process(self,
-                    req: Request['TaskAlert_POST.Arguments'],
-                    user: User
-                    ) -> None:
+        async def process(self,
+                          req: Request['TaskAlert_POST.Arguments'],
+                          user: User
+                          ) -> None:
             self.initTask(req)
 
             alert = req.args.alert

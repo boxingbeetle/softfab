@@ -64,7 +64,7 @@ ReportArgsT = TypeVar('ReportArgsT', bound=ReportArgs)
 class ReportProcessor(PageProcessor[ReportArgsT]):
     db: ClassVar[Optional[Database]] = None
 
-    def process(self, req: Request[ReportArgsT], user: User) -> None:
+    async def process(self, req: Request[ReportArgsT], user: User) -> None:
         # Set of targets for which jobs have run.
         targets = cast(AbstractSet[Optional[str]], jobDB.uniqueValues('target'))
         # Add targets that are available now.

@@ -25,10 +25,10 @@ class GetFactoryInfo_GET(ControlPage[ControlPage.Arguments,
 
     class Processor(PageProcessor[ControlPage.Arguments]):
 
-        def process(self,
-                    req: Request['GetFactoryInfo_GET.Arguments'],
-                    user: User
-                    ) -> None:
+        async def process(self,
+                          req: Request['GetFactoryInfo_GET.Arguments'],
+                          user: User
+                          ) -> None:
             pass
 
     async def writeReply(self, response: Response, proc: Processor) -> None:

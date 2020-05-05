@@ -34,10 +34,10 @@ class TaskDone_POST(ControlPage['TaskDone_POST.Arguments',
 
     class Processor(PageProcessor['TaskDone_POST.Arguments']):
 
-        def process(self,
-                    req: Request['TaskDone_POST.Arguments'],
-                    user: User
-                    ) -> None:
+        async def process(self,
+                          req: Request['TaskDone_POST.Arguments'],
+                          user: User
+                          ) -> None:
             # Verify arguments.
             try:
                 result = req.args.result

@@ -22,10 +22,10 @@ class Abort_POST(ControlPage['Abort_POST.Arguments', 'Abort_POST.Processor']):
 
     class Processor(PageProcessor['Abort_POST.Arguments']):
 
-        def process(self,
-                    req: Request['Abort_POST.Arguments'],
-                    user: User
-                    ) -> None:
+        async def process(self,
+                          req: Request['Abort_POST.Arguments'],
+                          user: User
+                          ) -> None:
             jobIds = req.args.jobId
             taskNames = req.args.taskName
             onlyWaiting = req.args.onlyWaiting

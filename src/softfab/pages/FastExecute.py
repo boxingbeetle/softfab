@@ -50,10 +50,10 @@ class FastExecute_GET(FabPage['FastExecute_GET.Processor',
 
     class Processor(PageProcessor['FastExecute_GET.Arguments']):
 
-        def process(self,
-                    req: Request['FastExecute_GET.Arguments'],
-                    user: User
-                    ) -> None:
+        async def process(self,
+                          req: Request['FastExecute_GET.Arguments'],
+                          user: User
+                          ) -> None:
             configId = req.args.configId
             tagkey = req.args.tagkey
             tagvalue = req.args.tagvalue
@@ -152,10 +152,10 @@ class FastExecute_POST(FabPage['FastExecute_POST.Processor',
 
     class Processor(PageProcessor['FastExecute_POST.Arguments']):
 
-        def process(self,
-                    req: Request['FastExecute_POST.Arguments'],
-                    user: User
-                    ) -> None:
+        async def process(self,
+                          req: Request['FastExecute_POST.Arguments'],
+                          user: User
+                          ) -> None:
             action = req.args.action
 
             if action is Actions.CANCEL:

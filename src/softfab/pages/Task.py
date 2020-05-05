@@ -58,7 +58,10 @@ class Task_GET(FabPage['Task_GET.Processor', 'Task_GET.Arguments']):
         pass
 
     class Processor(TaskProcessorMixin, PageProcessor[Arguments]):
-        def process(self, req: Request[TaskReportArgs], user: User) -> None:
+        async def process(self,
+                          req: Request[TaskReportArgs],
+                          user: User
+                          ) -> None:
             self.initTask(req)
             run = self.task.getLatestRun()
 
@@ -256,7 +259,7 @@ class DetailsTable(PropertiesTable):
 
 class TaskProcessor(TaskProcessorMixin, PageProcessor[TaskIdArgs]):
 
-    def process(self, req: Request[TaskIdArgs], user: User) -> None:
+    async def process(self, req: Request[TaskIdArgs], user: User) -> None:
         self.initTask(req)
 
 class InputTable(ProductTable[TaskProcessor]):

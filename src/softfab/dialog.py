@@ -131,7 +131,7 @@ class DialogProcessorBase(PageProcessor[DialogArgsT]):
         raise RuntimeError(f'dialog step {funcDesc} "{func.__name__}" '
                            f'keeps raising ArgsCorrected')
 
-    def process(self, req: Request, user: User) -> None:
+    async def process(self, req: Request, user: User) -> None:
         raise NotImplementedError
 
     def walkSteps(self,
@@ -224,7 +224,7 @@ class InitialDialogProcessor(DialogProcessorBase[DialogArgsT]):
         '''
         raise NotImplementedError
 
-    def process(self, req: Request, user: User) -> None:
+    async def process(self, req: Request, user: User) -> None:
         initialArgs = self.getInitial(self.args, user)
         self.args = initialArgs
         stepObjects = self.page.stepObjects
@@ -234,7 +234,7 @@ class ContinuedDialogProcessor(DialogProcessorBase[DialogArgsT]):
     """Processor handles the state for subsequent steps of `DialogPage`.
     """
 
-    def process(self, req: Request, user: User) -> None:
+    async def process(self, req: Request, user: User) -> None:
         # Determine navigation path.
         stepObjects = self.page.stepObjects
         requestedPath = []

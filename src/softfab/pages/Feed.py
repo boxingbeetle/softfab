@@ -103,10 +103,10 @@ class Feed_GET(ControlPage[ControlPage.Arguments, 'Feed_GET.Processor']):
     class Processor(PageProcessor[ControlPage.Arguments]):
         recentJobs = MostRecent(jobDB, 'recent', 50)
 
-        def process(self,
-                    req: Request['Feed_GET.Arguments'],
-                    user: User
-                    ) -> None:
+        async def process(self,
+                          req: Request['Feed_GET.Arguments'],
+                          user: User
+                          ) -> None:
             jobs = list(self.recentJobs.records)
 
             # pylint: disable=attribute-defined-outside-init

@@ -215,8 +215,11 @@ class TaskMatrix_GET(FabPage['TaskMatrix_GET.Processor',
 
     class Processor(TaskMatrixProcessor):
 
-        def process(self, req: Request[TaskMatrixArgs], user: User) -> None:
-            super().process(req, user)
+        async def process(self,
+                          req: Request[TaskMatrixArgs],
+                          user: User
+                          ) -> None:
+            await super().process(req, user)
 
             tasksByName: DefaultDict[str, List[Task]] = defaultdict(list)
             tasksByDay = []

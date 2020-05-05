@@ -219,11 +219,11 @@ class ExtractedData_GET(FabPage['ExtractedData_GET.Processor',
 
     class Processor(ReportProcessor[Arguments]):
 
-        def process(self,
-                    req: Request['ExtractedData_GET.Arguments'],
-                    user: User
-                    ) -> None:
-            super().process(req, user)
+        async def process(self,
+                          req: Request['ExtractedData_GET.Arguments'],
+                          user: User
+                          ) -> None:
+            await super().process(req, user)
 
             taskNames = req.args.task
 

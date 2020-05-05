@@ -27,7 +27,10 @@ class TaskRunnerDetails_GET(FabPage['TaskRunnerDetails_GET.Processor',
 
     class Processor(PageProcessor[TaskRunnerIdArgs]):
 
-        def process(self, req: Request[TaskRunnerIdArgs], user: User) -> None:
+        async def process(self,
+                          req: Request[TaskRunnerIdArgs],
+                          user: User
+                          ) -> None:
             runnerId = req.args.runnerId
             taskRunner: Optional[TaskRunner]
             try:

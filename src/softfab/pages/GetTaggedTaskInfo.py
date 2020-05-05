@@ -71,10 +71,10 @@ class GetTaggedTaskInfo_GET(ControlPage['GetTaggedTaskInfo_GET.Arguments',
 
     class Processor(PageProcessor['GetTaggedTaskInfo_GET.Arguments']):
 
-        def process(self,
-                    req: Request['GetTaggedTaskInfo_GET.Arguments'],
-                    user: User
-                    ) -> None:
+        async def process(self,
+                          req: Request['GetTaggedTaskInfo_GET.Arguments'],
+                          user: User
+                          ) -> None:
             # pylint: disable=attribute-defined-outside-init
             self.selected = filterTasks(
                 cast(DictArgInstance[AbstractSet[str]], req.args.tag),

@@ -51,10 +51,10 @@ class DelFinishedSchedules_POST(
 
     class Processor(PageProcessor['DelFinishedSchedules_POST.Arguments']):
 
-        def process(self,
-                    req: Request['DelFinishedSchedules_POST.Arguments'],
-                    user: User
-                    ) -> None:
+        async def process(self,
+                          req: Request['DelFinishedSchedules_POST.Arguments'],
+                          user: User
+                          ) -> None:
             action = req.args.action
             if action is Actions.CANCEL:
                 page = cast(DelFinishedSchedules_POST, self.page)

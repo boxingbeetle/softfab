@@ -22,11 +22,11 @@ class ReportTasksCSV_GET(CSVPage['ReportTasksCSV_GET.Processor']):
 
     class Processor(ReportProcessor[Arguments]):
 
-        def process(self,
-                    req: Request['ReportTasksCSV_GET.Arguments'],
-                    user: User
-                    ) -> None:
-            super().process(req, user)
+        async def process(self,
+                          req: Request['ReportTasksCSV_GET.Arguments'],
+                          user: User
+                          ) -> None:
+            await super().process(req, user)
 
             # Note: iterDoneTasks() can efficiently handle an empty (nothing
             #       matches) filter, no need for a special case here.

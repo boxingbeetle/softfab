@@ -25,10 +25,10 @@ class ResourceControl_POST(ControlPage['ResourceControl_POST.Arguments',
 
     class Processor(PageProcessor['ResourceControl_POST.Arguments']):
 
-        def process(self,
-                    req: Request['ResourceControl_POST.Arguments'],
-                    user: User
-                    ) -> None:
+        async def process(self,
+                          req: Request['ResourceControl_POST.Arguments'],
+                          user: User
+                          ) -> None:
             resNames = req.args.name
             suspend = req.args.action is Actions.SUSPEND
 

@@ -142,7 +142,10 @@ class Capabilities_GET(FabPage['Capabilities_GET.Processor',
 
     class Processor(PageProcessor['Capabilities_GET.Arguments']):
 
-        def process(self, req: Request[CapFilterArgs], user: User) -> None:
+        async def process(self,
+                          req: Request[CapFilterArgs],
+                          user: User
+                          ) -> None:
             args = req.args
             typeName = args.restype
 

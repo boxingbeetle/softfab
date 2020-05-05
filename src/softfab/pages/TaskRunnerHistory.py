@@ -43,10 +43,10 @@ class TaskRunnerHistory_GET(FabPage['TaskRunnerHistory_GET.Processor',
 
     class Processor(PageProcessor['TaskRunnerHistory_GET.Arguments']):
 
-        def process(self,
-                    req: Request['TaskRunnerHistory_GET.Arguments'],
-                    user: User
-                    ) -> None:
+        async def process(self,
+                          req: Request['TaskRunnerHistory_GET.Arguments'],
+                          user: User
+                          ) -> None:
             runnerId = req.args.runnerId
 
             jobs = list(jobDB.values())

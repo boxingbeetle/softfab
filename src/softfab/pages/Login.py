@@ -89,10 +89,10 @@ class Login_GET(LoginBase['Login_GET.Processor', 'Login_GET.Arguments']):
 
     class Processor(PageProcessor['Login_GET.Arguments']):
 
-        def process(self,
-                    req: Request['Login_GET.Arguments'],
-                    user: User
-                    ) -> None:
+        async def process(self,
+                          req: Request['Login_GET.Arguments'],
+                          user: User
+                          ) -> None:
             url = req.args.url
             if url is not None:
                 # Only accept relative URLs.
@@ -123,8 +123,6 @@ class Login_POST(LoginBase['Login_POST.Processor', 'Login_POST.Arguments']):
                           req: Request['Login_POST.Arguments'],
                           user: User
                           ) -> None:
-            super().process(req, user)
-
             if req.args.action is not Actions.LOG_IN:
                 raise Redirect(req.args.url or 'Home')
 

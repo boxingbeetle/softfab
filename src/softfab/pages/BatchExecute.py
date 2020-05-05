@@ -154,7 +154,7 @@ class BatchExecute_GET(FabPage['BatchExecute_GET.Processor',
             else:
                 self.taskSet = taskSet
 
-        def process(self, req: Request[ParentArgs], user: User) -> None:
+        async def process(self, req: Request[ParentArgs], user: User) -> None:
             # pylint: disable=attribute-defined-outside-init
             self.notices = []
             self.params: Dict[str, Mapping[str, Mapping[str, str]]] = {}
@@ -215,7 +215,7 @@ class BatchExecute_POST(BatchExecute_GET):
 
     class Processor(BatchExecute_GET.Processor):
 
-        def process(self, req: Request[ParentArgs], user: User) -> None:
+        async def process(self, req: Request[ParentArgs], user: User) -> None:
             args = cast(BatchExecute_POST.Arguments, req.args)
             action = args.action
 

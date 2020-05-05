@@ -26,11 +26,11 @@ class GetJobHistory_GET(ControlPage['GetJobHistory_GET.Arguments',
 
     class Processor(JobReportProcessor[Arguments]):
 
-        def process(self,
-                    req: Request['GetJobHistory_GET.Arguments'],
-                    user: User
-                    ) -> None:
-            super().process(req, user)
+        async def process(self,
+                          req: Request['GetJobHistory_GET.Arguments'],
+                          user: User
+                          ) -> None:
+            await super().process(req, user)
 
             jobs = runQuery(self.iterFilters(), jobDB)
 

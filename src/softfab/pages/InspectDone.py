@@ -26,10 +26,10 @@ class InspectDone_POST(ControlPage['InspectDone_POST.Arguments',
     class Processor(TaskProcessorMixin,
                     PageProcessor['InspectDone_POST.Arguments']):
 
-        def process(self,
-                    req: Request['InspectDone_POST.Arguments'],
-                    user: User
-                    ) -> None:
+        async def process(self,
+                          req: Request['InspectDone_POST.Arguments'],
+                          user: User
+                          ) -> None:
             # Fetch and check job and task.
             self.initTask(req)
             job = self.job

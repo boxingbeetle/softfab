@@ -25,10 +25,10 @@ class LoadExecuteDefault_POST(ControlPage['LoadExecuteDefault_POST.Arguments',
 
     class Processor(PageProcessor['LoadExecuteDefault_POST.Arguments']):
 
-        def process(self,
-                    req: Request['LoadExecuteDefault_POST.Arguments'],
-                    user: User
-                    ) -> None:
+        async def process(self,
+                          req: Request['LoadExecuteDefault_POST.Arguments'],
+                          user: User
+                          ) -> None:
             args = req.args
             products = cast(Mapping[str, str], args.prod)
             localAt = cast(Mapping[str, str], args.local)

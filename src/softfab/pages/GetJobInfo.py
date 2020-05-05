@@ -23,7 +23,7 @@ class GetJobInfo_GET(ControlPage['GetJobInfo_GET.Arguments',
 
     class Processor(PageProcessor[JobIdArgs]):
 
-        def process(self, req: Request[JobIdArgs], user: User) -> None:
+        async def process(self, req: Request[JobIdArgs], user: User) -> None:
             jobId = req.args.jobId
             try:
                 # pylint: disable=attribute-defined-outside-init

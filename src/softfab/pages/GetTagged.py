@@ -35,10 +35,10 @@ class GetTagged_GET(ControlPage['GetTagged_GET.Arguments',
 
     class Processor(PageProcessor['GetTagged_GET.Arguments']):
 
-        def process(self,
-                    req: Request['GetTagged_GET.Arguments'],
-                    user: User
-                    ) -> None:
+        async def process(self,
+                          req: Request['GetTagged_GET.Arguments'],
+                          user: User
+                          ) -> None:
             # Determine subject and access rights.
             try:
                 db = subjectToDB[req.args.subject]

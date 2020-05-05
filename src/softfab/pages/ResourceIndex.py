@@ -198,10 +198,10 @@ class ResourceIndex_POST(FabPage['ResourceIndex_POST.Processor',
 
     class Processor(PageProcessor['ResourceIndex_POST.Arguments']):
 
-        def process(self,
-                    req: Request['ResourceIndex_POST.Arguments'],
-                    user: User
-                    ) -> None:
+        async def process(self,
+                          req: Request['ResourceIndex_POST.Arguments'],
+                          user: User
+                          ) -> None:
             args = req.args
 
             # Get resource record.

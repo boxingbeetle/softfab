@@ -25,10 +25,10 @@ class Logout_GET(UIPage['Logout_GET.Processor'],
 
     class Processor(PageProcessor['Logout_GET.Arguments']):
 
-        def process(self,
-                    req: Request['Logout_GET.Arguments'],
-                    user: User
-                    ) -> None:
+        async def process(self,
+                          req: Request['Logout_GET.Arguments'],
+                          user: User
+                          ) -> None:
             url = req.args.url
             if url is not None:
                 # Only accept relative URLs.

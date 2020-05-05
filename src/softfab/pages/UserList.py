@@ -151,10 +151,10 @@ class UserList_GET(FabPage['UserList_GET.Processor', 'UserList_GET.Arguments']):
 
     class Processor(PageProcessor['UserList_GET.Arguments']):
 
-        def process(self,
-                    req: Request['UserList_GET.Arguments'],
-                    user: User
-                    ) -> None:
+        async def process(self,
+                          req: Request['UserList_GET.Arguments'],
+                          user: User
+                          ) -> None:
             # pylint: disable=attribute-defined-outside-init
             self.canChangeRoles = user.hasPrivilege('u/m')
             self.canChangeAnonGuest = user.hasPrivilege('p/m')
@@ -204,10 +204,10 @@ class UserList_POST(FabPage['UserList_POST.Processor',
 
     class Processor(PageProcessor['UserList_POST.Arguments']):
 
-        def process(self,
-                    req: Request['UserList_POST.Arguments'],
-                    user: User
-                    ) -> None:
+        async def process(self,
+                          req: Request['UserList_POST.Arguments'],
+                          user: User
+                          ) -> None:
             # Find user record.
             userName = req.args.user
             try:

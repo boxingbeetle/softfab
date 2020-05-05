@@ -46,10 +46,10 @@ class Synchronize_POST(ControlPage[ControlPage.Arguments,
 
     class Processor(PageProcessor[ControlPage.Arguments]):
 
-        def process(self,
-                    req: Request[ControlPage.Arguments],
-                    user: User
-                    ) -> None:
+        async def process(self,
+                          req: Request[ControlPage.Arguments],
+                          user: User
+                          ) -> None:
             # pylint: disable=attribute-defined-outside-init
 
             # Parse posted XML request.

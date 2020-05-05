@@ -62,7 +62,10 @@ class TaskDetails_GET(FabPage['TaskDetails_GET.Processor',
 
     class Processor(PageProcessor[TaskDefIdArgs]):
 
-        def process(self, req: Request[TaskDefIdArgs], user: User) -> None:
+        async def process(self,
+                          req: Request[TaskDefIdArgs],
+                          user: User
+                          ) -> None:
             taskDefId = req.args.id
 
             try:

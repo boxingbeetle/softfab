@@ -78,10 +78,10 @@ class ChangePassword_GET(FabPage['ChangePassword_GET.Processor',
 
     class Processor(PageProcessor['ChangePassword_GET.Arguments']):
 
-        def process(self,
-                    req: Request['ChangePassword_GET.Arguments'],
-                    user: User
-                    ) -> None:
+        async def process(self,
+                          req: Request['ChangePassword_GET.Arguments'],
+                          user: User
+                          ) -> None:
             # Validate input.
             userName = req.args.user
             reqUserName = user.name # get current logged-in user

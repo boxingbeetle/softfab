@@ -50,7 +50,10 @@ class ProductDetails_GET(
 
     class Processor(PageProcessor[ProductDefIdArgs]):
 
-        def process(self, req: Request[ProductDefIdArgs], user: User) -> None:
+        async def process(self,
+                          req: Request[ProductDefIdArgs],
+                          user: User
+                          ) -> None:
             productDefId = req.args.id
 
             try:

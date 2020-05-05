@@ -24,7 +24,10 @@ class LatestReport_GET(
 
     class Processor(PageProcessor[TaskDefIdArgs]):
 
-        def process(self, req: Request[TaskDefIdArgs], user: User) -> None:
+        async def process(self,
+                          req: Request[TaskDefIdArgs],
+                          user: User
+                          ) -> None:
             taskId = req.args.id
             taskTimes = (
                 ( task.startTime, task )

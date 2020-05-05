@@ -18,10 +18,10 @@ class TriggerSchedule_POST(ControlPage['TriggerSchedule_POST.Arguments',
 
     class Processor(PageProcessor['TriggerSchedule_POST.Arguments']):
 
-        def process(self,
-                    req: Request['TriggerSchedule_POST.Arguments'],
-                    user: User
-                    ) -> None:
+        async def process(self,
+                          req: Request['TriggerSchedule_POST.Arguments'],
+                          user: User
+                          ) -> None:
             scheduleId = req.args.scheduleId
             try:
                 schedule = scheduleDB[scheduleId]

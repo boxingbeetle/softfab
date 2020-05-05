@@ -107,10 +107,10 @@ class ScheduleIndex_GET(FabPage['ScheduleIndex_GET.Processor',
 
     class Processor(PageProcessor['ScheduleIndex_GET.Arguments']):
 
-        def process(self,
-                    req: Request['ScheduleIndex_GET.Arguments'],
-                    user: User
-                    ) -> None:
+        async def process(self,
+                          req: Request['ScheduleIndex_GET.Arguments'],
+                          user: User
+                          ) -> None:
             # pylint: disable=attribute-defined-outside-init
             self.finishedSchedules = any(
                 schedule.isDone() for schedule in scheduleDB
@@ -147,10 +147,10 @@ class ScheduleIndex_POST(FabPage['ScheduleIndex_POST.Processor',
 
     class Processor(PageProcessor['ScheduleIndex_POST.Arguments']):
 
-        def process(self,
-                    req: Request['ScheduleIndex_POST.Arguments'],
-                    user: User
-                    ) -> None:
+        async def process(self,
+                          req: Request['ScheduleIndex_POST.Arguments'],
+                          user: User
+                          ) -> None:
             actions = cast(Mapping[str, str], req.args.action)
             for scheduleId, action in actions.items():
                 # Toggle suspend.

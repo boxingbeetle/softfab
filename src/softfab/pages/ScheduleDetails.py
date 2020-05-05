@@ -107,7 +107,10 @@ class ScheduleDetails_GET(FabPage['ScheduleDetails_GET.Processor',
 
     class Processor(PageProcessor[ScheduleIdArgs]):
 
-        def process(self, req: Request[ScheduleIdArgs], user: User) -> None:
+        async def process(self,
+                          req: Request[ScheduleIdArgs],
+                          user: User
+                          ) -> None:
             scheduleId = req.args.id
             try:
                 # pylint: disable=attribute-defined-outside-init

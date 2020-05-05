@@ -174,10 +174,10 @@ class ConfigDetails_GET(
 
     class Processor(PageProcessor['ConfigDetails_GET.Arguments']):
 
-        def process(self,
-                    req: Request['ConfigDetails_GET.Arguments'],
-                    user: User
-                    ) -> None:
+        async def process(self,
+                          req: Request['ConfigDetails_GET.Arguments'],
+                          user: User
+                          ) -> None:
             configId = req.args.configId
             try:
                 config = configDB[configId]

@@ -27,10 +27,10 @@ class GetResourceInfo_GET(ControlPage['GetResourceInfo_GET.Arguments',
 
     class Processor(PageProcessor['GetResourceInfo_GET.Arguments']):
 
-        def process(self,
-                    req: Request['GetResourceInfo_GET.Arguments'],
-                    user: User
-                    ) -> None:
+        async def process(self,
+                          req: Request['GetResourceInfo_GET.Arguments'],
+                          user: User
+                          ) -> None:
             resTypeNames = req.args.type
             resNames = req.args.name
 

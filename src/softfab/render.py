@@ -247,9 +247,7 @@ async def _parseAndProcess(page: FabResource[ArgsT, PageProcessor[ArgsT]],
 
         # Processing step.
         try:
-            processingResult = proc.process(req, user)
-            if processingResult is not None:
-                await processingResult
+            await proc.process(req, user)
         except PresentableError as ex:
             proc.error = ex.args[0]
         else:

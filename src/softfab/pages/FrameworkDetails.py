@@ -66,7 +66,10 @@ class FrameworkDetails_GET(
 
     class Processor(PageProcessor[FrameworkIdArgs]):
 
-        def process(self, req: Request[FrameworkIdArgs], user: User) -> None:
+        async def process(self,
+                          req: Request[FrameworkIdArgs],
+                          user: User
+                          ) -> None:
             frameworkId = req.args.id
             try:
                 framework = frameworkDB[frameworkId]

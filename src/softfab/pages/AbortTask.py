@@ -52,10 +52,10 @@ class AbortTask_POST(FabPage['AbortTask_POST.Processor',
 
     class Processor(PageProcessor['AbortTask_POST.Arguments']):
 
-        def process(self,
-                    req: Request['AbortTask_POST.Arguments'],
-                    user: User
-                    ) -> None:
+        async def process(self,
+                          req: Request['AbortTask_POST.Arguments'],
+                          user: User
+                          ) -> None:
             # pylint: disable=attribute-defined-outside-init
             jobId = req.args.jobId
             taskName = req.args.taskName

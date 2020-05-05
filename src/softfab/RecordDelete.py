@@ -83,7 +83,7 @@ class RecordDelete_GET(FabPage['RecordDelete_GET.Processor',
         pass
 
     class Processor(PageProcessor[Arguments]):
-        def process(self, req: Request[DeleteArgs], user: User) -> None:
+        async def process(self, req: Request[DeleteArgs], user: User) -> None:
             page = cast(RecordDelete_GET, self.page)
             fetchRecordForDeletion(req.args.id, page)
 
@@ -133,7 +133,7 @@ class RecordDelete_POSTMixin:
         action = EnumArg(Actions)
 
     class ProcessorMixin:
-        def process(self, req: Request, user: User) -> None:
+        async def process(self, req: Request, user: User) -> None:
             page = cast(RecordDelete_GET, getattr(self, 'page'))
             action = req.args.action
             if action is not Actions.DELETE:

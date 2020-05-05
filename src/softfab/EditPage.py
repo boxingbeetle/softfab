@@ -200,7 +200,7 @@ class EditProcessorBase(PageProcessor[EditArgsT], Generic[EditArgsT, DBRecord]):
                  ) -> 'EditPage[EditArgsT, DBRecord]':
             ...
 
-    def process(self, req: Request[EditArgsT], user: User) -> None:
+    async def process(self, req: Request[EditArgsT], user: User) -> None:
         # pylint: disable=attribute-defined-outside-init
         checkPrivilege(user, self.page.db.privilegeObject + '/a')
 

@@ -69,10 +69,10 @@ class AddUser_GET(AddUserBase['AddUser_GET.Processor',
         indexQuery = RefererArg('UserList')
 
     class Processor(PageProcessor['AddUser_GET.Arguments']):
-        def process(self,
-                    req: Request['AddUser_GET.Arguments'],
-                    user: User
-                    ) -> None:
+        async def process(self,
+                          req: Request['AddUser_GET.Arguments'],
+                          user: User
+                          ) -> None:
             pass
 
     def presentContent(self, **kwargs: object) -> XMLContent:

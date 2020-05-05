@@ -163,10 +163,10 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
     class Processor(PageProcessor[Arguments]):
         content: Optional[XML] = None
 
-        def process(self,
-                    req: Request['DocPage.Arguments'],
-                    user: User
-                    ) -> Optional[Deferred]:
+        async def process(self,
+                          req: Request['DocPage.Arguments'],
+                          user: User
+                          ) -> Optional[Deferred]:
             page = cast(DocPage, self.page)
             func = getattr(page.module, 'process', None)
             return None if func is None else func()

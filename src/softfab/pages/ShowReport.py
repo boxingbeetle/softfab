@@ -23,7 +23,7 @@ from softfab.xmlgen import XMLContent, xhtml
 
 class JobProcessor(JobProcessorMixin, PageProcessor[JobIdArgs]):
 
-    def process(self, req: Request[JobIdArgs], user: User) -> None:
+    async def process(self, req: Request[JobIdArgs], user: User) -> None:
         self.initJob(req)
 
 class SelfJobsTable(JobsSubTable):

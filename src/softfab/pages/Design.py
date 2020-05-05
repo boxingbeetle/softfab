@@ -31,10 +31,10 @@ class Design_GET(
 
     class Processor(PageProcessor['Design_GET.Arguments']):
 
-        def process(self,
-                    req: Request['Design_GET.Arguments'],
-                    user: User
-                    ) -> None:
+        async def process(self,
+                          req: Request['Design_GET.Arguments'],
+                          user: User
+                          ) -> None:
             orphanProducts = set()
             orphanFrameworks = set()
             nonTrivialGraphs = []
