@@ -7,8 +7,7 @@ Build execution graphs using Graphviz.
 from enum import Enum, auto
 from io import BytesIO
 from typing import (
-    AbstractSet, Dict, Generator, Iterable, Iterator, List, Optional, Set,
-    Tuple, cast
+    AbstractSet, Dict, Iterable, Iterator, List, Optional, Set, Tuple, cast
 )
 from xml.etree import ElementTree
 import logging
@@ -16,7 +15,7 @@ import re
 
 from graphviz import Digraph
 from twisted.internet import reactor
-from twisted.internet.defer import Deferred, inlineCallbacks
+from twisted.internet.defer import Deferred, ensureDeferred
 from twisted.internet.error import ProcessExitedAlready
 from twisted.internet.protocol import ProcessProtocol
 from twisted.python.failure import Failure
@@ -305,10 +304,7 @@ def _runDot(data: bytes,
     proc.enqueue(work)
     return work.deferred
 
-@inlineCallbacks
-def _renderGraph(data: bytes,
-                 fmt: GraphFormat
-                 ) -> Generator[Deferred, RenderConsumer, bytes]:
+async def _renderGraph(data: bytes, fmt: GraphFormat) -> bytes:
     """Renders 'dot' data in the given format.
     Returns a `Deferred` that on success delivers the rendered graph data,
     which is of type `bytes`.
@@ -316,11 +312,11 @@ def _renderGraph(data: bytes,
     if fmt is GraphFormat.DOT:
         return data
     elif fmt is GraphFormat.SVG:
-        consumer = yield _runDot(data, GraphFormat.SVG, SVGRenderConsumer())
+        consumer = await _runDot(data, GraphFormat.SVG, SVGRenderConsumer())
         assert isinstance(consumer, SVGRenderConsumer), consumer
         return ElementTree.tostring(consumer.takeSVG(), encoding='utf-8')
     else:
-        consumer = yield _runDot(data, fmt, BufferingRenderConsumer())
+        consumer = await _runDot(data, fmt, BufferingRenderConsumer())
         assert isinstance(consumer, BufferingRenderConsumer), consumer
         return consumer.takeData()
 
@@ -527,7 +523,8 @@ class _GraphResponder(Responder):
             response.allowEmbedding()
         data = self.__builder.build(export).data
         response.setETag(createETag(data) + b'-dot')
-        return _renderGraph(data, fmt).addErrback(self.graphError, response)
+        return ensureDeferred(_renderGraph(data, fmt)
+                              ).addErrback(self.graphError, response)
 
     def graphError(self, reason: Failure, response: Response) -> str:
         response.setStatus(500, 'Graph rendering failed')

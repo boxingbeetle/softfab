@@ -1,13 +1,13 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from functools import partial
-from typing import Dict, Generator, Optional
+from typing import Dict, Optional
 
-from twisted.internet.defer import Deferred, DeferredList, inlineCallbacks
+from twisted.internet.defer import Deferred, DeferredList, ensureDeferred
 
 from softfab.docserve import piHandler
 from softfab.frameworklib import Framework
-from softfab.graphview import ExecutionGraphBuilder, SVGRenderConsumer
+from softfab.graphview import ExecutionGraphBuilder
 from softfab.productdeflib import ProductDef, ProductType
 from softfab.webgui import PresenterFunction
 from softfab.xmlgen import XML, XMLContent, xhtml
@@ -60,15 +60,13 @@ graphBuilders = (
 
 graphRenders: Dict[str, XML] = {}
 
-@inlineCallbacks
-def renderGraph(builder: ExecutionGraphBuilder
-                ) -> Generator[Deferred, SVGRenderConsumer, None]:
-    consumer = yield builder.build(export=False).toSVG()
+async def renderGraph(builder: ExecutionGraphBuilder) -> None:
+    consumer = await builder.build(export=False).toSVG()
     graphRenders[builder.name] = xhtml[ consumer.takeSVG() ]
 
 def process() -> Optional[Deferred]:
     deferreds = [
-        renderGraph(builder)
+        ensureDeferred(renderGraph(builder))
         for builder in graphBuilders
         if builder.name not in graphRenders
         ]
