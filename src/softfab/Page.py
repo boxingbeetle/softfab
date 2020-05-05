@@ -167,11 +167,8 @@ class Responder:
     generating a response to an HTTP request.
     '''
 
-    def respond(self, response: Response) -> Optional[Deferred]:
-        '''Respond to a request.
-        The output can either be written directly to the `response`
-        object, or a delayed presenter can be returned as a Deferred.
-        '''
+    async def respond(self, response: Response) -> None:
+        """Respond to a request by writing to the `response` object."""
         raise NotImplementedError
 
 class Redirector(Responder):
@@ -180,7 +177,7 @@ class Redirector(Responder):
         super().__init__()
         self.__url = url
 
-    def respond(self, response: Response) -> None:
+    async def respond(self, response: Response) -> None:
         response.sendRedirect(self.__url)
 
 class HTTPAuthenticator(Responder):
@@ -190,7 +187,7 @@ class HTTPAuthenticator(Responder):
         self.__realm = realm
         self.__message = message
 
-    def respond(self, response: Response) -> None:
+    async def respond(self, response: Response) -> None:
         response.setStatus(401, self.__message)
         response.setHeader('WWW-Authenticate', f'Basic realm="{self.__realm}"')
 

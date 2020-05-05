@@ -36,7 +36,7 @@ class UIResponder(Responder, Generic[ProcT]):
         self.page = page
         self.proc = proc
 
-    def respond(self, response: Response) -> None:
+    async def respond(self, response: Response) -> None:
         page = self.page
         proc = self.proc
         page.writeHTTPHeaders(response)
@@ -48,10 +48,10 @@ class _ErrorResponder(UIResponder):
         super().__init__(page, proc)
         self.__exception = ex
 
-    def respond(self, response: Response) -> None:
+    async def respond(self, response: Response) -> None:
         response.setStatus(500, 'Unexpected exception processing request')
         self.proc.processingError = self.__exception
-        super().respond(response)
+        await super().respond(response)
 
 class UIPage(Generic[ProcT]):
 

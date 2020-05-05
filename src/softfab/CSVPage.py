@@ -21,7 +21,7 @@ class CSVResponder(Responder, Generic[ProcT]):
         self.page = page
         self.proc = proc
 
-    def respond(self, response: Response) -> None:
+    async def respond(self, response: Response) -> None:
         page = self.page
         proc = self.proc
         response.setContentType('text/x-csv; charset=UTF-8')

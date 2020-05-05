@@ -15,7 +15,7 @@ import re
 
 from graphviz import Digraph
 from twisted.internet import reactor
-from twisted.internet.defer import Deferred, ensureDeferred
+from twisted.internet.defer import Deferred
 from twisted.internet.error import ProcessExitedAlready
 from twisted.internet.protocol import ProcessProtocol
 from twisted.python.failure import Failure
@@ -513,7 +513,7 @@ class _GraphResponder(Responder):
         self.__format = fmt
         self.__export = export
 
-    def respond(self, response: Response) -> Deferred:
+    async def respond(self, response: Response) -> None:
         export = self.__export
         fmt = self.__format
         response.setContentType(fmt.mediaType)
@@ -523,13 +523,14 @@ class _GraphResponder(Responder):
             response.allowEmbedding()
         data = self.__builder.build(export).data
         response.setETag(createETag(data) + b'-dot')
-        return ensureDeferred(_renderGraph(data, fmt)
-                              ).addErrback(self.graphError, response)
-
-    def graphError(self, reason: Failure, response: Response) -> str:
-        response.setStatus(500, 'Graph rendering failed')
-        response.setContentType('text/plain')
-        return f'Graph rendering failed: {reason.value}'
+        try:
+            rendered = await _renderGraph(data, fmt)
+        except Exception as ex:
+            response.setStatus(500, 'Graph rendering failed')
+            response.setContentType('text/plain')
+            response.write(f'Graph rendering failed: {ex}\n')
+        else:
+            response.write(rendered)
 
 
 class GraphPageMixin:

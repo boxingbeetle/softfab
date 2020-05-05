@@ -444,10 +444,10 @@ class DocErrorResponder(UIResponder[DocPage.Processor]):
         super().__init__(page, proc)
         self.error = error
 
-    def respond(self, response: Response) -> None:
+    async def respond(self, response: Response) -> None:
         response.setStatus(500)
         self.proc.error = self.error
-        super().respond(response)
+        await super().respond(response)
 
 class DocResource(Resource):
     """Twisted Resource that serves documentation pages."""

@@ -4,12 +4,11 @@
 Module to render the page
 '''
 
-from functools import partial
-from typing import ClassVar, Optional, Type, Union, cast
+from typing import ClassVar, Optional, Type, cast
 import logging
 
 from twisted.cred.error import LoginFailed, Unauthorized
-from twisted.internet.defer import Deferred, ensureDeferred
+from twisted.internet.defer import ensureDeferred
 from twisted.internet.error import ConnectionClosed
 from twisted.python.failure import Failure
 from twisted.web.http import Request as TwistedRequest
@@ -130,7 +129,7 @@ class _PlainTextResponder(Responder):
         self.__status = status
         self.__message = message
 
-    def respond(self, response: Response) -> None:
+    async def respond(self, response: Response) -> None:
         response.setStatus(self.__status, self.__message)
         response.setContentType('text/plain')
         response.write(self.__message + '\n')
@@ -191,9 +190,7 @@ async def renderAsync(page: FabResource, request: TwistedRequest) -> None:
 
     frameAncestors = project.frameAncestors
     response = Response(request, frameAncestors, req.userAgent)
-    presenter = _present(responder, response)
-    if presenter is not None:
-        await presenter
+    await _present(responder, response)
 
 def _checkActive(
         page: FabResource[ArgsT, PageProcessor[ArgsT]],
@@ -304,33 +301,27 @@ async def _parseAndProcess(page: FabResource[ArgsT, PageProcessor[ArgsT]],
     req.processEnd()
     return responder
 
-def _present(responder: Responder, response: Response) -> Optional[Deferred]:
-    '''Presentation step: write a response based on the processing results.
-    Returns None or a Deferred that does the actual presentation.
-    '''
-    try:
-        if _timeRender:
-            start = time()
-        if _profileRender:
-            profile = Profile()
-            presenter = profile.runcall(responder.respond, response)
-            profile.dump_stats('request.prof')
-        else:
-            presenter = responder.respond(response)
-        if _timeRender:
-            end = time()
-            print('Responding took %1.3f seconds' % (end - start))
-    except NotModified:
-        presenter = None
-
-    if isinstance(presenter, Deferred):
-        presenter.addCallback(partial(writeAndFinish, response=response))
-    elif presenter is None:
-        response.finish()
+async def _present(responder: Responder, response: Response) -> None:
+    """Presentation step: write a response based on the processing results."""
+    if _timeRender:
+        start = time()
+    if _profileRender:
+        profile = Profile()
+        # Note: This will only profile the execution until the first
+        #       'await' in the responder. However, a lot of pages do
+        #       their whole presentation in one go, so in many cases
+        #       this is good enough.
+        try:
+            await profile.runcall(responder.respond, response)
+        except NotModified:
+            pass
+        profile.dump_stats('request.prof')
     else:
-        assert False, presenter
-    return presenter
-
-def writeAndFinish(result: Union[None, bytes, str], response: Response) -> None:
-    response.write(result)
+        try:
+            await responder.respond(response)
+        except NotModified:
+            pass
+    if _timeRender:
+        end = time()
+        print('Responding took %1.3f seconds' % (end - start))
     response.finish()

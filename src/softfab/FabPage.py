@@ -306,7 +306,7 @@ class _WidgetResponder(Responder):
         self.__widget = widget
         self.__proc = proc
 
-    def respond(self, response: Response) -> None:
+    async def respond(self, response: Response) -> None:
         self.__page.writeHTTPHeaders(response)
         # TODO: This is copy-pasted from UIPage.
         #       I'm not sure yet where the proper location would be;
