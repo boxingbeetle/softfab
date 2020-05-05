@@ -16,6 +16,7 @@ from click import (
     pass_context, pass_obj, version_option
 )
 from twisted.application import strports
+from twisted.internet.defer import ensureDeferred
 from twisted.internet.interfaces import IReactorUNIX
 from twisted.logger import globalLogBeginner, textFileLogObserver
 from twisted.web.server import Session, Site
@@ -354,7 +355,7 @@ def show(globalOptions: GlobalOptions, name: str, fmt: OutputFormat) -> None:
         exitCode = 1
         reactor.stop()
 
-    d = run_GET(client, f'http://dummy/users/{name}.json')
+    d = ensureDeferred(run_GET(client, f'http://dummy/users/{name}.json'))
     d.addCallback(done).addErrback(failed) # pylint: disable=no-member
 
     reactor.run()

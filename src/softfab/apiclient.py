@@ -5,7 +5,6 @@
 from io import BytesIO
 from typing import Optional
 
-from twisted.internet.defer import Deferred, inlineCallbacks
 from twisted.internet.interfaces import IStreamClientEndpoint
 from twisted.web.client import HTTPDownloader
 
@@ -18,18 +17,19 @@ class Buffer(BytesIO):
         self.value = self.getvalue()
         super().close()
 
-@inlineCallbacks
-def run_GET(endpoint: IStreamClientEndpoint, url: str) -> Deferred:
+async def run_GET(endpoint: IStreamClientEndpoint, url: str) -> bytes:
     """Make an HTTP GET request."""
 
     buffer = Buffer()
     factory = HTTPDownloader(url.encode(), buffer)
-    yield endpoint.connect(factory)
+    await endpoint.connect(factory)
 
-    yield factory.deferred
+    await factory.deferred
     status = int(factory.status)
     if status == 200:
-        return buffer.value
+        data = buffer.value
+        assert data is not None
+        return data
     else:
         message = factory.message.decode()
         raise OSError(f"Unexpected result from HTTP GET: {status} {message}")
