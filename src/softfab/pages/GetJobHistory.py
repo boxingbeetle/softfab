@@ -2,8 +2,6 @@
 
 from typing import Iterator
 
-from twisted.internet.defer import Deferred, inlineCallbacks
-
 from softfab.ControlPage import ControlPage
 from softfab.ReportMixin import JobReportProcessor
 from softfab.joblib import jobDB
@@ -46,11 +44,7 @@ class GetJobHistory_GET(ControlPage['GetJobHistory_GET.Arguments',
             if configId:
                 yield SetFilter('configId', configId, jobDB)
 
-    @inlineCallbacks
-    def writeReply(self,
-                   response: Response,
-                   proc: Processor
-                   ) -> Iterator[Deferred]:
+    async def writeReply(self, response: Response, proc: Processor) -> None:
         jobs = proc.jobs
         response.write('<jobrefs>')
         for chunk in chop(jobs, 1000):
@@ -61,5 +55,5 @@ class GetJobHistory_GET(ControlPage['GetJobHistory_GET.Arguments',
                 for job in chunk
                 )
             # Return control to reactor.
-            yield response.returnToReactor()
+            await response.returnToReactor()
         response.write('</jobrefs>')

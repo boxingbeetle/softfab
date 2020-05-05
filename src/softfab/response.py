@@ -220,11 +220,10 @@ class Response(ResponseHeaders):
         disconnected.
 
         Example use:
-            @inlineCallbacks
-            def writeReply(self, response, proc):
+            async def writeReply(self, response, proc):
                 for chunk in chop(proc.records, 1000):
                     response.writeXML(record.format() for record in chunk)
-                    yield response.returnToReactor()
+                    await response.returnToReactor()
         '''
         d = Deferred()
         reactor.callLater(0, self.__resume, d)
