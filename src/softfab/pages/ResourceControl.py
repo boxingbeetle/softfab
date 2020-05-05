@@ -52,5 +52,5 @@ class ResourceControl_POST(ControlPage['ResourceControl_POST.Arguments',
             for res in resources:
                 res.setSuspend(suspend, userName or 'anonymous')
 
-    def writeReply(self, response: Response, proc: Processor) -> None:
+    async def writeReply(self, response: Response, proc: Processor) -> None:
         response.writeXML(xml.ok)

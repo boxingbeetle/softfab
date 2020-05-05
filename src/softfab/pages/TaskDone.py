@@ -106,5 +106,5 @@ class TaskDone_POST(ControlPage['TaskDone_POST.Arguments',
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'tr/*', 'set tasks results')
 
-    def writeReply(self, response: Response, proc: Processor) -> None:
+    async def writeReply(self, response: Response, proc: Processor) -> None:
         response.writeXML(xml.ok)

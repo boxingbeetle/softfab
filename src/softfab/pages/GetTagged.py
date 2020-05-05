@@ -89,7 +89,7 @@ class GetTagged_GET(ControlPage['GetTagged_GET.Arguments',
             # pylint: disable=attribute-defined-outside-init
             self.matches = matches
 
-    def writeReply(self, response: Response, proc: Processor) -> None:
+    async def writeReply(self, response: Response, proc: Processor) -> None:
         matches = proc.matches
         subjectIdName = proc.args.subject + 'id'
 

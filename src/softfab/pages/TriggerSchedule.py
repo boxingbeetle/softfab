@@ -45,5 +45,5 @@ class TriggerSchedule_POST(ControlPage['TriggerSchedule_POST.Arguments',
         # The processor will do additional checks.
         checkPrivilege(user, 's/a')
 
-    def writeReply(self, response: Response, proc: Processor) -> None:
+    async def writeReply(self, response: Response, proc: Processor) -> None:
         response.writeXML(xml.ok)

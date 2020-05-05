@@ -2,7 +2,7 @@
 
 from typing import Generic, Optional
 
-from twisted.internet.defer import Deferred
+from twisted.internet.defer import Deferred, ensureDeferred
 
 from softfab.Page import Authenticator, FabResource, ProcT, Responder
 from softfab.authentication import HTTPAuthPage
@@ -21,7 +21,7 @@ class ControlResponder(Responder, Generic[ArgsT, ProcT]):
         page = self.page
         proc = self.proc
         response.setContentType(page.getContentType(proc))
-        return page.writeReply(response, proc)
+        return ensureDeferred(page.writeReply(response, proc))
 
 class _ErrorResponder(Responder):
 
@@ -55,5 +55,5 @@ class ControlPage(FabResource[ArgsT, ProcT]):
     def errorResponder(self, ex: Exception, proc: ProcT) -> Responder:
         return plainTextErrorResponder
 
-    def writeReply(self, response: Response, proc: ProcT) -> Optional[Deferred]:
+    async def writeReply(self, response: Response, proc: ProcT) -> None:
         raise NotImplementedError

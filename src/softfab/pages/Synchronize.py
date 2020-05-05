@@ -94,5 +94,5 @@ class Synchronize_POST(ControlPage[ControlPage.Arguments,
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'tr/*', 'sync a Task Runner')
 
-    def writeReply(self, response: Response, proc: Processor) -> None:
+    async def writeReply(self, response: Response, proc: Processor) -> None:
         response.writeXML(xml.response[proc.createResponse()])

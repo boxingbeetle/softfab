@@ -20,7 +20,7 @@ class GetTaskDefParams_GET(ControlPage['GetTaskDefParams_GET.Arguments',
         checkPrivilege(user, 'td/l', 'list task definitions')
         checkPrivilege(user, 'td/a', 'access task definitions')
 
-    def writeReply(self,
+    async def writeReply(self,
                    response: Response,
                    proc: ControlPage.Processor
                    ) -> None:

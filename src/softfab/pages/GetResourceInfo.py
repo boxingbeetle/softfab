@@ -76,7 +76,7 @@ class GetResourceInfo_GET(ControlPage['GetResourceInfo_GET.Arguments',
             # pylint: disable=attribute-defined-outside-init
             self.resources = resources
 
-    def writeReply(self, response: Response, proc: Processor) -> None:
+    async def writeReply(self, response: Response, proc: Processor) -> None:
 
         def iterChangedBy(resource: ResourceBase) -> Iterator[XML]:
             user = resource.getChangedUser()

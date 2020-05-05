@@ -87,7 +87,7 @@ class GetTaggedTaskInfo_GET(ControlPage['GetTaggedTaskInfo_GET.Arguments',
         checkPrivilege(user, 't/l', 'list tasks')
         checkPrivilege(user, 't/a', 'access tasks')
 
-    def writeReply(self, response: Response, proc: Processor) -> None:
+    async def writeReply(self, response: Response, proc: Processor) -> None:
         def taskToXML(task: Optional[Task]) -> XMLContent:
             if task is not None:
                 run = task.getLatestRun()

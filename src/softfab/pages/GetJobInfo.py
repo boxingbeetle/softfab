@@ -34,7 +34,7 @@ class GetJobInfo_GET(ControlPage['GetJobInfo_GET.Arguments',
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'j/a')
 
-    def writeReply(self, response: Response, proc: Processor) -> None:
+    async def writeReply(self, response: Response, proc: Processor) -> None:
         taskprio = project['taskprio']
 
         def taskToXML(task: Task) -> XML:

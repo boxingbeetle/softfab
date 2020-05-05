@@ -29,7 +29,7 @@ class TaskRunnerExit_POST(ControlPage['TaskRunnerExit_POST.Arguments',
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'r/m', 'control resources')
 
-    def writeReply(self, response: Response, proc: Processor) -> None:
+    async def writeReply(self, response: Response, proc: Processor) -> None:
         response.writeXML(xml.ok)
         # TODO: Write error body in addition to result code.
         #response.writeXML(xml.error(message = error))

@@ -116,7 +116,7 @@ class Feed_GET(ControlPage[ControlPage.Arguments, 'Feed_GET.Processor']):
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
         yield from proc.tables
 
-    def writeReply(self, response: Response, proc: Processor) -> None:
+    async def writeReply(self, response: Response, proc: Processor) -> None:
         response.write('<?xml version="1.0" encoding="utf-8"?>')
         # Note: Using an "xml:base" attribute here and relative URLs in the rest
         #       of the feed works fine in Akregator (KDE4 version), but fails in

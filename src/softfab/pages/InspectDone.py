@@ -67,5 +67,5 @@ class InspectDone_POST(ControlPage['InspectDone_POST.Arguments',
         checkPrivilege(user, 'j/l')
         checkPrivilege(user, 't/l')
 
-    def writeReply(self, response: Response, proc: Processor) -> None:
+    async def writeReply(self, response: Response, proc: Processor) -> None:
         response.writeXML(xml.ok)

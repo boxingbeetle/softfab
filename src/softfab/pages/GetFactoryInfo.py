@@ -31,7 +31,7 @@ class GetFactoryInfo_GET(ControlPage[ControlPage.Arguments,
                     ) -> None:
             pass
 
-    def writeReply(self, response: Response, proc: Processor) -> None:
+    async def writeReply(self, response: Response, proc: Processor) -> None:
         response.writeXML(
             xml.factory(
                 name = project.name,

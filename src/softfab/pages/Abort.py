@@ -58,7 +58,7 @@ class Abort_POST(ControlPage['Abort_POST.Arguments', 'Abort_POST.Processor']):
             # pylint: disable=attribute-defined-outside-init
             self.abortedTasks = abortedTasks
 
-    def writeReply(self, response: Response, proc: Processor) -> None:
+    async def writeReply(self, response: Response, proc: Processor) -> None:
         response.writeXML(xml.abortedtasks[(
             xml.taskref(jobid = jobId, taskname = taskName)
             for jobId, taskNames in proc.abortedTasks.items()
