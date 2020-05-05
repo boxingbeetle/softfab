@@ -1,12 +1,11 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from enum import Enum
-from typing import Any, Generator, Iterable, Tuple, cast
+from typing import Iterable, Tuple, cast
 import re
 import time
 
 from twisted import version as twistedVersion
-from twisted.internet.defer import Deferred, inlineCallbacks
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor, PresentableError, Redirect
@@ -115,11 +114,10 @@ class Notifications_POST(FabPage['Notifications_POST.Processor',
 
     class Processor(PageProcessor['Notifications_POST.Arguments']):
 
-        @inlineCallbacks
-        def process(self,
-                    req: Request['Notifications_POST.Arguments'],
-                    user: User
-                    ) -> Generator[Deferred, Any, None]:
+        async def process(self,
+                          req: Request['Notifications_POST.Arguments'],
+                          user: User
+                          ) -> None:
             args = req.args
             action = args.action
             smtpRelay = args.smtpRelay
@@ -139,7 +137,7 @@ class Notifications_POST(FabPage['Notifications_POST.Processor',
                 self.mailTestTime = time.localtime()
                 try:
                     addresses: Iterable[Tuple[bytes, int, bytes]]
-                    numOk_, addresses = yield sendTestMail(
+                    numOk_, addresses = await sendTestMail(
                         smtpRelay, mailSender, args.mailRecipient
                         )
                 except Exception as ex:
