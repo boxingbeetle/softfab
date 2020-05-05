@@ -356,7 +356,7 @@ def show(globalOptions: GlobalOptions, name: str, fmt: OutputFormat) -> None:
         reactor.stop()
 
     d = ensureDeferred(run_GET(client, f'http://dummy/users/{name}.json'))
-    d.addCallback(done).addErrback(failed) # pylint: disable=no-member
+    d.addCallback(done).addErrback(failed)
 
     reactor.run()
     sys.exit(exitCode)

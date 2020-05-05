@@ -150,7 +150,7 @@ def renderAuthenticated(page: FabResource, request: TwistedRequest) -> object:
         # Returning None (implicitly) because the error is handled.
         # Otherwise, it will be logged twice.
     d = ensureDeferred(renderAsync(page, request))
-    d.addCallback(done).addErrback(failed) # pylint: disable=no-member
+    d.addCallback(done).addErrback(failed)
     return NOT_DONE_YET
 
 def _unauthorizedResponder(ex: Exception) -> Responder:
