@@ -5,13 +5,11 @@ Module to render the page
 '''
 
 from functools import partial
-from typing import (
-    Any, ClassVar, Generator, Iterator, Optional, Type, Union, cast
-)
+from typing import ClassVar, Optional, Type, Union, cast
 import logging
 
 from twisted.cred.error import LoginFailed, Unauthorized
-from twisted.internet.defer import Deferred, inlineCallbacks
+from twisted.internet.defer import Deferred, ensureDeferred
 from twisted.internet.error import ConnectionClosed
 from twisted.python.failure import Failure
 from twisted.web.http import Request as TwistedRequest
@@ -151,7 +149,7 @@ def renderAuthenticated(page: FabResource, request: TwistedRequest) -> object:
             request.processingFailed(reason)
         # Returning None (implicitly) because the error is handled.
         # Otherwise, it will be logged twice.
-    d = renderAsync(page, request)
+    d = ensureDeferred(renderAsync(page, request))
     d.addCallback(done).addErrback(failed) # pylint: disable=no-member
     return NOT_DONE_YET
 
@@ -161,16 +159,12 @@ def _unauthorizedResponder(ex: Exception) -> Responder:
                 "You are not authorized to perform this operation"
         )
 
-@inlineCallbacks
-def renderAsync(
-        page: FabResource, request: TwistedRequest
-        ) -> Generator[Deferred, Any, None]:
+async def renderAsync(page: FabResource, request: TwistedRequest) -> None:
     req: Request = Request(request)
     try:
         authenticator = page.authenticator
         try:
-            user: User
-            user = yield authenticator.authenticate(req)
+            user: User = await authenticator.authenticate(req)
         except LoginFailed as ex:
             if request.postpath:
                 # Widget requests should just fail immediately instead of
@@ -183,7 +177,7 @@ def renderAsync(
         except Unauthorized as ex:
             responder = _unauthorizedResponder(ex)
         else:
-            responder = yield parseAndProcess(page, req, user)
+            responder = await _parseAndProcess(page, req, user)
     except Redirect as ex:
         responder = Redirector(ex.url)
     except InternalError as ex:
@@ -197,7 +191,9 @@ def renderAsync(
 
     frameAncestors = project.frameAncestors
     response = Response(request, frameAncestors, req.userAgent)
-    yield present(responder, response)
+    presenter = _present(responder, response)
+    if presenter is not None:
+        await presenter
 
 def _checkActive(
         page: FabResource[ArgsT, PageProcessor[ArgsT]],
@@ -209,14 +205,12 @@ def _checkActive(
         if not page.isActive():
             raise Redirect(page.getParentURL(args))
 
-@inlineCallbacks
-def parseAndProcess(page: FabResource[ArgsT, PageProcessor[ArgsT]],
-                    req: Request[ArgsT],
-                    user: User
-                    ) -> Iterator[Deferred]:
+async def _parseAndProcess(page: FabResource[ArgsT, PageProcessor[ArgsT]],
+                           req: Request[ArgsT],
+                           user: User
+                           ) -> Responder:
     '''Parse step: determine values for page arguments.
     Processing step: database interaction.
-    Returns a `Deferred` which has a `Responder` as its result.
     '''
 
     # We might hit an error before argument parsing completes, for example
@@ -253,7 +247,9 @@ def parseAndProcess(page: FabResource[ArgsT, PageProcessor[ArgsT]],
 
         # Processing step.
         try:
-            yield proc.process(req, user)
+            processingResult = proc.process(req, user)
+            if processingResult is not None:
+                await processingResult
         except PresentableError as ex:
             proc.error = ex.args[0]
         else:
@@ -310,7 +306,7 @@ def parseAndProcess(page: FabResource[ArgsT, PageProcessor[ArgsT]],
     req.processEnd()
     return responder
 
-def present(responder: Responder, response: Response) -> Optional[Deferred]:
+def _present(responder: Responder, response: Response) -> Optional[Deferred]:
     '''Presentation step: write a response based on the processing results.
     Returns None or a Deferred that does the actual presentation.
     '''
