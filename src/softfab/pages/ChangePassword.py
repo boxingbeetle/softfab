@@ -1,10 +1,9 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from enum import Enum
-from typing import Generator, Iterator, Tuple, cast
+from typing import Iterator, Tuple, cast
 
 from twisted.cred.error import LoginFailed
-from twisted.internet.defer import Deferred, inlineCallbacks
 
 from softfab.FabPage import FabPage, IconModifier
 from softfab.Page import PageProcessor, PresentableError, Redirect
@@ -14,8 +13,8 @@ from softfab.formlib import (
 from softfab.pageargs import EnumArg, PasswordArg, RefererArg
 from softfab.request import Request
 from softfab.userlib import (
-    PasswordMessage, User, UserInfo, authenticateUser, checkPrivilege,
-    passwordQuality, setPassword, userDB
+    PasswordMessage, User, authenticateUser, checkPrivilege, passwordQuality,
+    setPassword, userDB
 )
 from softfab.userview import LoginPassArgs, PasswordMsgArgs, passwordStr
 from softfab.webgui import pageURL
@@ -144,11 +143,10 @@ class ChangePassword_POST(FabPage['ChangePassword_POST.Processor',
 
     class Processor(PageProcessor['ChangePassword_POST.Arguments']):
 
-        @inlineCallbacks
-        def process(self,
-                    req: Request['ChangePassword_POST.Arguments'],
-                    user: User
-                    ) -> Generator[Deferred, UserInfo, None]:
+        async def process(self,
+                          req: Request['ChangePassword_POST.Arguments'],
+                          user: User
+                          ) -> None:
             if req.args.action is Actions.CANCEL:
                 page = cast(ChangePassword_POST, self.page)
                 raise Redirect(page.getCancelURL(req.args))
@@ -182,7 +180,7 @@ class ChangePassword_POST(FabPage['ChangePassword_POST.Processor',
 
                 if reqUserName is not None:
                     try:
-                        user_ = yield authenticateUser(
+                        user_ = await authenticateUser(
                             reqUserName, req.args.loginpass
                             )
                     except LoginFailed as ex:

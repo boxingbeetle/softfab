@@ -13,7 +13,6 @@ import logging
 
 from passlib.apache import HtpasswdFile
 from twisted.cred.error import LoginFailed, UnauthorizedLogin
-from twisted.internet.defer import Deferred, inlineCallbacks
 
 from softfab.compat import Protocol
 from softfab.config import dbDir
@@ -192,8 +191,7 @@ def writePasswordFile(passwordFile: HtpasswdFile) -> None:
 
 _passwordFile = initPasswordFile(dbDir + '/passwords')
 
-@inlineCallbacks
-def authenticateUser(userName: str, password: str) -> Iterator[Deferred]:
+async def authenticateUser(userName: str, password: str) -> 'UserInfo':
     """Authenticates a user with the given password.
 
     Callback arguments: user object for the authenticated user.
@@ -201,7 +199,6 @@ def authenticateUser(userName: str, password: str) -> Iterator[Deferred]:
              combination is not accepted.
              `LoginFailed` if there was an internal error.
     """
-    yield # Force this to be a generator.
 
     # Twisted returns empty string if there is no "authorization" header,
     # it would be a waste of time to look that up in the password file.

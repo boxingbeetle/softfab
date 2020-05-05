@@ -1,10 +1,9 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from enum import Enum
-from typing import Generator, Iterator, Optional, Tuple, cast
+from typing import Iterator, Optional, Tuple, cast
 
 from twisted.cred.error import LoginFailed
-from twisted.internet.defer import Deferred, inlineCallbacks
 
 from softfab.FabPage import FabPage, IconModifier
 from softfab.Page import PageProcessor, PresentableError, ProcT, Redirect
@@ -15,8 +14,8 @@ from softfab.formlib import (
 from softfab.pageargs import ArgsT, EnumArg, PageArgs, RefererArg, StrArg
 from softfab.request import Request
 from softfab.userlib import (
-    PasswordMessage, User, UserInfo, addUserAccount, authenticateUser,
-    checkPrivilege, passwordQuality, setPassword
+    PasswordMessage, User, addUserAccount, authenticateUser, checkPrivilege,
+    passwordQuality, setPassword
 )
 from softfab.userview import (
     LoginPassArgs, UIRoleNames, passwordStr, uiRoleToSet
@@ -91,11 +90,10 @@ class AddUser_POST(AddUserBase['AddUser_POST.Processor',
 
     class Processor(PageProcessor['AddUser_POST.Arguments']):
 
-        @inlineCallbacks
-        def process(self,
-                    req: Request['AddUser_POST.Arguments'],
-                    user: User
-                    ) -> Generator[Deferred, UserInfo, None]:
+        async def process(self,
+                          req: Request['AddUser_POST.Arguments'],
+                          user: User
+                          ) -> None:
             if req.args.action is Actions.CANCEL:
                 page = cast(AddUser_POST, self.page)
                 raise Redirect(page.getCancelURL(req.args))
@@ -121,7 +119,7 @@ class AddUser_POST(AddUserBase['AddUser_POST.Processor',
                 reqUserName = user.name
                 if reqUserName is not None:
                     try:
-                        user_ = yield authenticateUser(
+                        user_ = await authenticateUser(
                             reqUserName, req.args.loginpass
                             )
                     except LoginFailed as ex:

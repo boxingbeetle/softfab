@@ -1,10 +1,9 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from enum import Enum, auto
-from typing import Generator, Iterator, Tuple, cast
+from typing import Iterator, Tuple, cast
 
 from twisted.cred.error import LoginFailed
-from twisted.internet.defer import Deferred, inlineCallbacks
 
 from softfab.Page import (
     FabResource, PageProcessor, PresentableError, ProcT, Redirect
@@ -19,7 +18,7 @@ from softfab.pagelinks import URLArgs
 from softfab.projectlib import project
 from softfab.request import Request
 from softfab.userlib import (
-    PasswordMessage, User, UserInfo, authenticateUser, passwordQuality
+    PasswordMessage, User, authenticateUser, passwordQuality
 )
 from softfab.userview import LoginPassArgs, PasswordMsgArgs
 from softfab.webgui import pageURL
@@ -120,11 +119,10 @@ class Login_POST(LoginBase['Login_POST.Processor', 'Login_POST.Arguments']):
 
     class Processor(PageProcessor['Login_POST.Arguments']):
 
-        @inlineCallbacks
-        def process(self,
-                    req: Request['Login_POST.Arguments'],
-                    user: User
-                    ) -> Generator[Deferred, UserInfo, None]:
+        async def process(self,
+                          req: Request['Login_POST.Arguments'],
+                          user: User
+                          ) -> None:
             super().process(req, user)
 
             if req.args.action is not Actions.LOG_IN:
@@ -134,7 +132,7 @@ class Login_POST(LoginBase['Login_POST.Processor', 'Login_POST.Arguments']):
             password = req.args.loginpass
 
             try:
-                user = yield authenticateUser(username, password)
+                user = await authenticateUser(username, password)
             except LoginFailed:
                 raise PresentableError(
                     xhtml.p(class_='notice')['Login failed']

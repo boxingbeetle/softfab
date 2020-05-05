@@ -3,7 +3,7 @@
 from typing import ClassVar, Optional
 
 from twisted.cred.error import LoginFailed, Unauthorized
-from twisted.internet.defer import Deferred, fail, succeed
+from twisted.internet.defer import Deferred, ensureDeferred, fail, succeed
 
 from softfab.Page import (
     Authenticator, HTTPAuthenticator, InternalError, Redirector, Responder
@@ -60,7 +60,7 @@ class HTTPAuthPage(Authenticator):
             return fail(LoginFailed(ex))
 
         if userName:
-            return authenticateUser(userName, password)
+            return ensureDeferred(authenticateUser(userName, password))
         elif project.anonguest:
             return succeed(AnonGuestUser())
         else:
