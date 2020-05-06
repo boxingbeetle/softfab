@@ -16,11 +16,13 @@ from click import (
     pass_context, pass_obj, version_option
 )
 from twisted.application import strports
-from twisted.internet.interfaces import IReactorUNIX
+from twisted.internet.endpoints import clientFromString
+from twisted.internet.interfaces import IReactorUNIX, IStreamClientEndpoint
 from twisted.logger import globalLogBeginner, textFileLogObserver
 from twisted.web.server import Session, Site
 import attr
 
+from softfab.apiclient import run_GET, runInReactor
 from softfab.version import VERSION
 
 
@@ -89,6 +91,10 @@ class GlobalOptions:
     path: Path
 
     def apply(self) -> None:
+        """Initialize Control Center configuration according to
+        the global options.
+        """
+
         path = self.path
         if not path.is_dir():
             echo(f"Path is not a directory: {path}", err=True)
@@ -111,6 +117,20 @@ class GlobalOptions:
             import warnings
             logging.captureWarnings(True)
             warnings.simplefilter('default')
+
+    def getClient(self) -> IStreamClientEndpoint:
+        """Return an endpoint for contacting the Control Center.
+        Raise OSError if there is no control socket in the data directory.
+        """
+
+        from twisted.internet import reactor
+
+        socketPath = (self.path / 'ctrl.sock').resolve()
+        if socketPath.is_socket():
+            return clientFromString(reactor, f'unix:{socketPath}:timeout=10')
+        else:
+            raise OSError(f"Control socket not found: {socketPath}")
+
 
 @group()
 @option('--debug', is_flag=True,
@@ -322,21 +342,10 @@ def user() -> None:
 def show(globalOptions: GlobalOptions, name: str, fmt: OutputFormat) -> None:
     """Show details of a single user account."""
 
-    from twisted.internet import reactor
-    from twisted.internet.endpoints import clientFromString
-
-    from softfab.apiclient import run_GET, runInReactor
-
-    socketPath = (globalOptions.path / 'ctrl.sock').absolute()
-    if socketPath.is_socket():
-        client = clientFromString(reactor, f'unix:{socketPath}:timeout=10')
-    else:
-        echo(f"Control socket not found: {socketPath}", err=True)
-        sys.exit(1)
-
     try:
         result = runInReactor(run_GET(
-                client, f'http://dummy/users/{name}.json'))
+                globalOptions.getClient(),
+                f'http://dummy/users/{name}.json'))
     except Exception as ex:
         echo(f"API call failed: {ex}", err=True)
         sys.exit(1)
