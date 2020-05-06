@@ -1,7 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 import time
-import unittest
 from collections import defaultdict
 from random import Random
 
@@ -158,7 +157,7 @@ def applyBitmask(sequence, bitmask):
             yield sequence[i]
 
 def simulateRandom(maxCaps, maxSpecs, maxResources, runsPerConfig, numConfigs,
-        verifyFunc, seed=None):
+                   verifyFunc, seed=None):
     if seed is None:
         seed = int(time.time())
     print('Random seed: %d' % seed)
@@ -198,304 +197,292 @@ def simulateRandom(maxCaps, maxSpecs, maxResources, runsPerConfig, numConfigs,
             claim = ResourceClaim.create(specs)
             verifyFunc(claim, resMap)
 
-class TestResourceMatching(unittest.TestCase):
-    """Test matching resource requirements to resources.
+def check(claim, resources, expected):
+    """Compares the match result against an expected value."""
+    resMap = {res.getId(): res for res in resources}
+
+    # Without reason-for-waiting.
+    match = pickResources(claim, resMap)
+    assert match == expected
+
+    # With reason-for-waiting.
+    whyNot = []
+    match = pickResources(claim, resMap, whyNot)
+    assert match == expected
+    if expected is None:
+        assert whyNot != []
+    else:
+        assert whyNot == []
+
+def checkAssignment(claim, assignment):
+    """Checks whether `assignment` matches `claim`.
     """
+    # Assigned references must match the claim's specs one-to-one.
+    assert len(claim) == len(assignment.keys())
 
-    def check(self, claim, resources, expected):
-        """Compares the match result against an expected value."""
-        resMap = {res.getId(): res for res in resources}
+    # Check whether each assigned resource matches its spec.
+    for spec in claim:
+        assigned = assignment[spec.reference]
+        assert spec.typeName == assigned.typeName
+        assert spec.capabilities.issubset(assigned.capabilities)
 
-        # Without reason-for-waiting.
-        match = pickResources(claim, resMap)
-        self.assertEqual(match, expected)
+    # Check whether all assigned resources are unique.
+    usedIds = set()
+    for resource in assignment.values():
+        resId = resource.getId()
+        assert resId not in usedIds
+        usedIds.add(resId)
 
-        # With reason-for-waiting.
-        whyNot = []
-        match = pickResources(claim, resMap, whyNot)
-        self.assertEqual(match, expected)
-        if expected is None:
-            self.assertNotEqual(whyNot, [])
-        else:
-            self.assertEqual(whyNot, [])
+    # Check whether all assigned resources are available.
+    for resource in assignment.values():
+        assert not resource.isReserved()
+        assert not resource.isSuspended()
+        assert resource.getConnectionStatus() == ConnectionStatus.CONNECTED
 
-    def checkAssignment(self, claim, assignment):
-        """Checks whether `assignment` matches `claim`.
-        """
-        # Assigned references must match the claim's specs one-to-one.
-        self.assertCountEqual(
-            (spec.reference for spec in claim),
-            assignment.keys()
-            )
+def checkSolve(claim, resMap):
+    """Check dispatchlib's resource pick by comparing it to the results
+    of our slow but simple reference implementation.
+    """
+    match = pickResources(claim, resMap)
+    if match is not None:
+        checkAssignment(claim, match)
 
-        # Check whether each assigned resource matches its spec.
-        for spec in claim:
-            assigned = assignment[spec.reference]
-            self.assertEqual(spec.typeName, assigned.typeName)
-            self.assertTrue(spec.capabilities.issubset(assigned.capabilities))
+    # Reason-for-waiting computations should not change which reservation
+    # is picked.
+    whyNot = []
+    match2 = pickResources(claim, resMap, whyNot)
+    assert match == match2
 
-        # Check whether all assigned resources are unique.
-        usedIds = set()
-        for resource in assignment.values():
-            resId = resource.getId()
-            self.assertNotIn(resId, usedIds)
-            usedIds.add(resId)
+    minCost = minimalCost(claim, resMap)
+    if minCost is None:
+        assert match is None
+        assert len(whyNot) != 0
+    else:
+        assert match is not None
+        assert len(whyNot) == 0
+        # Since checkAssignment() already verified that the pick is valid,
+        # all we have to do is check that it also has minimal cost.
+        cost = sum(res.cost for res in match.values())
+        assert cost == minCost
 
-        # Check whether all assigned resources are available.
-        for resource in assignment.values():
-            self.assertFalse(resource.isReserved())
-            self.assertFalse(resource.isSuspended())
-            self.assertEqual(
-                resource.getConnectionStatus(), ConnectionStatus.CONNECTED
-                )
+def checkValid(claim, resMap):
+    """Check dispatchlib's resource pick by applying sanity checks to it.
+    This is less thorough than `checkSolve`, but a lot faster.
+    """
+    match = pickResources(claim, resMap)
+    if match is None:
+        assert not hasSolution(claim, resMap)
+    else:
+        # Note: checkAssignment() is much faster than hasSolution()
+        #       and if it doesn't find problems in the assignment then
+        #       it is also established that a solution is possible.
+        #       The only reason to call hasSolution() is to test that
+        #       function itself, but we don't need to do that unless
+        #       we're working on the unit test.
+        #assert hasSolution(claim, resMap)
+        checkAssignment(claim, match)
 
-    def checkSolve(self, claim, resMap):
-        """Check dispatchlib's resource pick by comparing it to the results
-        of our slow but simple reference implementation.
-        """
-        match = pickResources(claim, resMap)
-        if match is not None:
-            self.checkAssignment(claim, match)
+def testNoResources():
+    """Test making a match without resources."""
+    claim = ResourceClaim.create((
+        ResourceSpec.create('ref0', 'typeA', ()),
+        ))
 
-        # Reason-for-waiting computations should not change which reservation
-        # is picked.
-        whyNot = []
-        match2 = pickResources(claim, resMap, whyNot)
-        self.assertEqual(match, match2)
+    check(claim, (), None)
 
-        minCost = minimalCost(claim, resMap)
-        if minCost is None:
-            self.assertIsNone(match)
-            self.assertNotEqual(len(whyNot), 0)
-        else:
-            self.assertIsNotNone(match)
-            self.assertEqual(len(whyNot), 0)
-            # Since checkAssignment() already verified that the pick is valid,
-            # all we have to do is check that it also has minimal cost.
-            cost = sum(res.cost for res in match.values())
-            self.assertEqual(cost, minCost)
+def testNoClaim():
+    """Test making a match without a claim."""
+    claim = ResourceClaim.create(())
 
-    def checkValid(self, claim, resMap):
-        """Check dispatchlib's resource pick by applying sanity checks to it.
-        This is less thorough than `checkSolve`, but a lot faster.
-        """
-        match = pickResources(claim, resMap)
-        if match is None:
-            self.assertFalse(hasSolution(claim, resMap))
-        else:
-            # Note: checkAssignment() is much faster than hasSolution()
-            #       and if it doesn't find problems in the assignment then
-            #       it is also established that a solution is possible.
-            #       The only reason to call hasSolution() is to test that
-            #       function itself, but we don't need to do that unless
-            #       we're working on the unit test.
-            #self.assertTrue(hasSolution(claim, resMap))
-            self.checkAssignment(claim, match)
+    check(claim, (), {})
 
-    def test0100NoResources(self):
-        """Test making a match without resources."""
-        claim = ResourceClaim.create((
-            ResourceSpec.create('ref0', 'typeA', ()),
-            ))
+def testOneResourcePossible():
+    """Test making a possible match with one resource."""
+    claim = ResourceClaim.create((
+        ResourceSpec.create('ref0', 'typeA', ()),
+        ))
+    res = FakeResource('typeA', ())
+    resources = (res,)
 
-        self.check(claim, (), None)
+    expected = {'ref0': res}
 
-    def test0110NoClaim(self):
-        """Test making a match without a claim."""
-        claim = ResourceClaim.create(())
+    check(claim, resources, expected)
 
-        self.check(claim, (), {})
+def testOneResourceImpossible():
+    """Test making a impossible match with one resource."""
+    claim = ResourceClaim.create((
+        ResourceSpec.create('ref0', 'typeA', ()),
+        ))
+    res = FakeResource('typeB', ())
+    resources = (res,)
 
-    def test0200OneResourcePossible(self):
-        """Test making a possible match with one resource."""
-        claim = ResourceClaim.create((
-            ResourceSpec.create('ref0', 'typeA', ()),
-            ))
-        res = FakeResource('typeA', ())
-        resources = (res,)
+    check(claim, resources, None)
 
-        expected = {'ref0': res}
+def testTwoResourcesDiffTypes():
+    """Test making a match with two resources of different types."""
+    claim = ResourceClaim.create((
+        ResourceSpec.create('ref0', 'typeA', ()),
+        ResourceSpec.create('ref1', 'typeB', ()),
+        ))
+    resA = FakeResource('typeA', ())
+    resB = FakeResource('typeB', ())
+    resources = (resA, resB)
 
-        self.check(claim, resources, expected)
+    expected = {'ref0': resA, 'ref1': resB}
 
-    def test0210OneResourceImpossible(self):
-        """Test making a impossible match with one resource."""
-        claim = ResourceClaim.create((
-            ResourceSpec.create('ref0', 'typeA', ()),
-            ))
-        res = FakeResource('typeB', ())
-        resources = (res,)
+    check(claim, resources, expected)
 
-        self.check(claim, resources, None)
+def testTwoResourcesSameType():
+    """Test making a match with two resources of the same types."""
+    claim = ResourceClaim.create((
+        ResourceSpec.create('ref0', 'typeA', ()),
+        ResourceSpec.create('ref1', 'typeA', ()),
+        ))
+    resA = FakeResource('typeA', ())
+    resB = FakeResource('typeA', ())
+    resources = (resA, resB)
 
-    def test0300TwoResourcesDiffTypes(self):
-        """Test making a match with two resources of different types."""
-        claim = ResourceClaim.create((
-            ResourceSpec.create('ref0', 'typeA', ()),
-            ResourceSpec.create('ref1', 'typeB', ()),
-            ))
-        resA = FakeResource('typeA', ())
-        resB = FakeResource('typeB', ())
-        resources = (resA, resB)
+    resMap = {res.getId(): res for res in resources}
+    match = pickResources(claim, resMap)
+    assert match is not None
 
-        expected = {'ref0': resA, 'ref1': resB}
+def testTwoResourcesUniqueCaps():
+    """Test making a match with two resources with unique capabilities."""
+    claim = ResourceClaim.create((
+        ResourceSpec.create('ref0', 'typeA', ('capY',)),
+        ResourceSpec.create('ref1', 'typeA', ('capX',)),
+        ))
+    resX = FakeResource('typeA', ('capX',))
+    resY = FakeResource('typeA', ('capY',))
+    resources = (resX, resY)
 
-        self.check(claim, resources, expected)
+    expected = {'ref0': resY, 'ref1': resX}
 
-    def test0310TwoResourcesSameType(self):
-        """Test making a match with two resources of the same types."""
-        claim = ResourceClaim.create((
-            ResourceSpec.create('ref0', 'typeA', ()),
-            ResourceSpec.create('ref1', 'typeA', ()),
-            ))
-        resA = FakeResource('typeA', ())
-        resB = FakeResource('typeA', ())
-        resources = (resA, resB)
+    check(claim, resources, expected)
 
-        resMap = {res.getId(): res for res in resources}
-        match = pickResources(claim, resMap)
-        self.assertIsNotNone(match)
+def testOverlappingCaps():
+    """Test making a match with overlapping capabilities."""
+    claim = ResourceClaim.create((
+        ResourceSpec.create('ref2', 'typeA', ('capY',)),
+        ResourceSpec.create('ref0', 'typeA', ('capW',)),
+        ResourceSpec.create('ref1', 'typeA', ('capX',)),
+        ResourceSpec.create('ref3', 'typeA', ('capZ',)),
+        ))
+    resW = FakeResource('typeA', ('capW',))
+    resX = FakeResource('typeA', ('capW', 'capX'))
+    resY = FakeResource('typeA', ('capW', 'capX', 'capY'))
+    resZ = FakeResource('typeA', ('capW', 'capX', 'capY', 'capZ'))
+    resources = (resW, resX, resY, resZ)
 
-    def test0320TwoResourcesUniqueCaps(self):
-        """Test making a match with two resources with unique capabilities."""
-        claim = ResourceClaim.create((
-            ResourceSpec.create('ref0', 'typeA', ('capY',)),
-            ResourceSpec.create('ref1', 'typeA', ('capX',)),
-            ))
-        resX = FakeResource('typeA', ('capX',))
-        resY = FakeResource('typeA', ('capY',))
-        resources = (resX, resY)
+    expected = {'ref0': resW, 'ref1': resX, 'ref2': resY, 'ref3': resZ}
 
-        expected = {'ref0': resY, 'ref1': resX}
+    check(claim, resources, expected)
 
-        self.check(claim, resources, expected)
+def testUnequalValue():
+    """Test making a match with two resources with differing value.
+    A resource without capabilities should be picked before resources
+    with capabilities.
+    """
+    claim = ResourceClaim.create((
+        ResourceSpec.create('ref0', 'typeA', ()),
+        ))
+    resources = []
+    for _ in range(50):
+        resources.append(FakeResource('typeA', ('capX',)))
+    resNoCaps = FakeResource('typeA', ())
+    resources[29] = resNoCaps
 
-    def test0400OverlappingCaps(self):
-        """Test making a match with overlapping capabilities."""
-        claim = ResourceClaim.create((
-            ResourceSpec.create('ref2', 'typeA', ('capY',)),
-            ResourceSpec.create('ref0', 'typeA', ('capW',)),
-            ResourceSpec.create('ref1', 'typeA', ('capX',)),
-            ResourceSpec.create('ref3', 'typeA', ('capZ',)),
-            ))
-        resW = FakeResource('typeA', ('capW',))
-        resX = FakeResource('typeA', ('capW', 'capX'))
-        resY = FakeResource('typeA', ('capW', 'capX', 'capY'))
-        resZ = FakeResource('typeA', ('capW', 'capX', 'capY', 'capZ'))
-        resources = (resW, resX, resY, resZ)
+    expected = {'ref0': resNoCaps}
 
-        expected = {'ref0': resW, 'ref1': resX, 'ref2': resY, 'ref3': resZ}
+    check(claim, resources, expected)
 
-        self.check(claim, resources, expected)
+def testMissingType():
+    """Test a claim that can be honored for one type but not for another.
+    """
+    claim = ResourceClaim.create((
+        ResourceSpec.create('ref%d' % i, 'typeA', ('cap%d' % (i % 4),))
+        for i in range(10)
+        ))
+    resources = []
+    for i in range(24):
+        resources.append(FakeResource('typeA', ('cap%d' % (i % 4),)))
 
-    def test0410UnequalValue(self):
-        """Test making a match with two resources with differing value.
-        A resource without capabilities should be picked before resources
-        with capabilities.
-        """
-        claim = ResourceClaim.create((
-            ResourceSpec.create('ref0', 'typeA', ()),
-            ))
-        resources = []
-        for _ in range(50):
-            resources.append(FakeResource('typeA', ('capX',)))
-        resNoCaps = FakeResource('typeA', ())
-        resources[29] = resNoCaps
+    # Sanity check for our test data.
+    resMap = {res.getId(): res for res in resources}
+    match = pickResources(claim, resMap)
+    assert match is not None
 
-        expected = {'ref0': resNoCaps}
+    claim = claim.merge(ResourceClaim.create((
+        ResourceSpec.create('refB', 'typeB', ('cap0',)),
+        )))
+    check(claim, resources, None)
 
-        self.check(claim, resources, expected)
+def testAllCombinations():
+    """Test all possible claims on all possible resources, at small size.
+    It is feasible to do this for low numbers of claims, capabilities and
+    resources, but it becomes expotentially slower at larger sizes.
+    """
+    numCaps = 3
+    numSpecs = 3
+    numResources = 3
 
-    def test0420MissingType(self):
-        """Test a claim that can be honored for one type but not for another.
-        """
-        claim = ResourceClaim.create((
-            ResourceSpec.create('ref%d' % i, 'typeA', ('cap%d' % (i % 4),))
-            for i in range(10)
-            ))
-        resources = []
-        for i in range(24):
-            resources.append(FakeResource('typeA', ('cap%d' % (i % 4),)))
+    caps = tuple('cap%d' % i for i in range(numCaps))
+    refs = tuple('ref%d' % i for i in range(numSpecs))
 
-        # Sanity check for our test data.
-        resMap = {res.getId(): res for res in resources}
-        match = pickResources(claim, resMap)
-        self.assertIsNotNone(match)
-
-        claim = claim.merge(ResourceClaim.create((
-            ResourceSpec.create('refB', 'typeB', ('cap0',)),
-            )))
-        self.check(claim, resources, None)
-
-    def test1000AllCombinations(self):
-        """Test all possible claims on all possible resources, at small size.
-        It is feasible to do this for low numbers of claims, capabilities and
-        resources, but it becomes expotentially slower at larger sizes.
-        """
-        numCaps = 3
-        numSpecs = 3
-        numResources = 3
-
-        caps = tuple('cap%d' % i for i in range(numCaps))
-        refs = tuple('ref%d' % i for i in range(numSpecs))
-
-        claims = tuple(
-            ResourceClaim.create((
-                ResourceSpec.create(refs[i], 'typeA', (
-                    caps[j]
-                    for j in range(numCaps)
-                    if (claimBits >> (i * numCaps + j)) & 1
-                    ))
-                for i in range(numSpecs)
+    claims = tuple(
+        ResourceClaim.create((
+            ResourceSpec.create(refs[i], 'typeA', (
+                caps[j]
+                for j in range(numCaps)
+                if (claimBits >> (i * numCaps + j)) & 1
                 ))
-            for claimBits in range(1 << (numSpecs * numCaps))
-            )
+            for i in range(numSpecs)
+            ))
+        for claimBits in range(1 << (numSpecs * numCaps))
+        )
 
-        resourceMaps = []
-        for resBits in range(1 << (numResources * numCaps)):
-            resources = [
-                FakeResource('typeA', (
-                    caps[j]
-                    for j in range(numCaps)
-                    if (resBits >> (i * numCaps + j)) & 1
-                    ))
-                for i in range(numResources)
-                ]
-            resourceMaps.append({res.getId(): res for res in resources})
+    resourceMaps = []
+    for resBits in range(1 << (numResources * numCaps)):
+        resources = [
+            FakeResource('typeA', (
+                caps[j]
+                for j in range(numCaps)
+                if (resBits >> (i * numCaps + j)) & 1
+                ))
+            for i in range(numResources)
+            ]
+        resourceMaps.append({res.getId(): res for res in resources})
 
-        for claim in claims:
-            for resMap in resourceMaps:
-                self.checkSolve(claim, resMap)
+    for claim in claims:
+        for resMap in resourceMaps:
+            checkSolve(claim, resMap)
 
-    def test1100RandomMedium(self):
-        """Test randomly generated medium-size claims.
-        At medium size, we can use the `minimalCost` function to verify that
-        the assignment produced by `dispatchlib` is indeed of minimal cost.
-        """
-        simulateRandom(
-            maxCaps=6,
-            maxSpecs=5,
-            maxResources=15,
-            runsPerConfig=100,
-            numConfigs=100,
-            verifyFunc=self.checkSolve,
-            seed=int(time.time())
-            )
+def testRandomMedium():
+    """Test randomly generated medium-size claims.
+    At medium size, we can use the `minimalCost` function to verify that
+    the assignment produced by `dispatchlib` is indeed of minimal cost.
+    """
+    simulateRandom(
+        maxCaps=6,
+        maxSpecs=5,
+        maxResources=15,
+        runsPerConfig=100,
+        numConfigs=100,
+        verifyFunc=checkSolve,
+        seed=int(time.time())
+        )
 
-    def test1200RandomLarge(self):
-        """Test randomly generated large-size claims.
-        At large size, we have no way to verify that a found assignment is
-        of minimal cost, but we can still verify whether it is valid.
-        """
-        simulateRandom(
-            maxCaps=8,
-            maxSpecs=12,
-            maxResources=100,
-            runsPerConfig=100,
-            numConfigs=100,
-            verifyFunc=self.checkValid,
-            seed=int(time.time())
-            )
-
-if __name__ == '__main__':
-    unittest.main()
+def testRandomLarge():
+    """Test randomly generated large-size claims.
+    At large size, we have no way to verify that a found assignment is
+    of minimal cost, but we can still verify whether it is valid.
+    """
+    simulateRandom(
+        maxCaps=8,
+        maxSpecs=12,
+        maxResources=100,
+        runsPerConfig=100,
+        numConfigs=100,
+        verifyFunc=checkValid,
+        seed=int(time.time())
+        )
