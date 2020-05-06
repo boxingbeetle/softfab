@@ -3,9 +3,11 @@
 """Functions for accessing the SoftFab API."""
 
 from io import BytesIO
-from typing import Optional
+from typing import Awaitable, Optional, TypeVar
 
+from twisted.internet.defer import ensureDeferred
 from twisted.internet.interfaces import IStreamClientEndpoint
+from twisted.python.failure import Failure
 from twisted.web.client import HTTPDownloader
 
 
@@ -33,3 +35,36 @@ async def run_GET(endpoint: IStreamClientEndpoint, url: str) -> bytes:
     else:
         message = factory.message.decode()
         raise OSError(f"Unexpected result from HTTP GET: {status} {message}")
+
+T = TypeVar('T')
+
+def runInReactor(call: Awaitable[T]) -> T:
+    # pylint: disable=import-outside-toplevel
+    from twisted.internet import reactor
+
+    def run() -> None:
+        ensureDeferred(call).addCallbacks(done, failed)
+
+    output: T
+
+    def done(result: T) -> None:
+        nonlocal output
+        output = result
+        reactor.stop()
+
+    failure: Optional[Failure] = None
+
+    def failed(reason: Failure) -> None:
+        nonlocal failure
+        failure = reason
+        reactor.stop()
+
+    reactor.callWhenRunning(run)
+    reactor.run()
+    if failure is None:
+        return output
+    else:
+        failure.raiseException()
+        # Neither pylint nor mypy knows that raiseException() does not return.
+        assert False
+        return None

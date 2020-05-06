@@ -16,7 +16,6 @@ from click import (
     pass_context, pass_obj, version_option
 )
 from twisted.application import strports
-from twisted.internet.defer import ensureDeferred
 from twisted.internet.interfaces import IReactorUNIX
 from twisted.logger import globalLogBeginner, textFileLogObserver
 from twisted.web.server import Session, Site
@@ -325,9 +324,8 @@ def show(globalOptions: GlobalOptions, name: str, fmt: OutputFormat) -> None:
 
     from twisted.internet import reactor
     from twisted.internet.endpoints import clientFromString
-    from twisted.python.failure import Failure
 
-    from softfab.apiclient import run_GET
+    from softfab.apiclient import run_GET, runInReactor
 
     socketPath = (globalOptions.path / 'ctrl.sock').absolute()
     if socketPath.is_socket():
@@ -336,9 +334,13 @@ def show(globalOptions: GlobalOptions, name: str, fmt: OutputFormat) -> None:
         echo(f"Control socket not found: {socketPath}", err=True)
         sys.exit(1)
 
-    exitCode = 0
-
-    def done(result: bytes) -> None:
+    try:
+        result = runInReactor(run_GET(
+                client, f'http://dummy/users/{name}.json'))
+    except Exception as ex:
+        echo(f"API call failed: {ex}", err=True)
+        sys.exit(1)
+    else:
         if fmt is OutputFormat.TEXT:
             import json
             data = json.loads(result)
@@ -346,17 +348,4 @@ def show(globalOptions: GlobalOptions, name: str, fmt: OutputFormat) -> None:
                 echo(f"{key}: {value}")
         else:
             echo(result.decode())
-        reactor.stop()
-
-    def failed(reason: Failure) -> None:
-        ex = reason.value
-        echo(f"API call failed: {ex}", err=True)
-        nonlocal exitCode
-        exitCode = 1
-        reactor.stop()
-
-    d = ensureDeferred(run_GET(client, f'http://dummy/users/{name}.json'))
-    d.addCallback(done).addErrback(failed)
-
-    reactor.run()
-    sys.exit(exitCode)
+        sys.exit(0)
