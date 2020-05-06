@@ -16,6 +16,14 @@ from softfab.TwistedUtil import ClientErrorResource, NotFoundResource
 from softfab.userlib import UserInfo, userDB
 
 
+def textReply(request: Request, status: int, message: str) -> bytes:
+    """Replies to an HTTP request with a plain text message.
+    The reply body is returned.
+    """
+    request.setResponseCode(status)
+    request.setHeader(b'Content-Type', b'text/plain; charset=UTF-8')
+    return message.encode()
+
 class UserResource(Resource):
     """HTTP resource for an existing user account."""
 
@@ -45,9 +53,7 @@ class NoUserResource(Resource):
         return NotFoundResource('Records do not support subpaths')
 
     def render_GET(self, request: Request) -> bytes:
-        request.setResponseCode(404)
-        request.setHeader(b'Content-Type', b'text/plain; charset=UTF-8')
-        return f"User not found: {self._name}\n".encode()
+        return textReply(request, 404, f"User not found: {self._name}\n")
 
 class UsersResource(Resource):
 
