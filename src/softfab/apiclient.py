@@ -3,34 +3,14 @@
 """Functions for accessing the SoftFab API."""
 
 from cgi import parse_header
-from io import BytesIO
 from typing import Awaitable, Optional, TypeVar
 
-from twisted.internet.defer import Deferred, ensureDeferred
-from twisted.internet.protocol import Protocol, connectionDone
+from twisted.internet.defer import ensureDeferred
 from twisted.python.failure import Failure
-from twisted.web.client import Agent, ResponseDone
+from twisted.web.client import Agent, readBody
 from twisted.web.http_headers import Headers
 from twisted.web.iweb import IAgentEndpointFactory
 
-
-class Buffer(Protocol):
-
-    def __init__(self) -> None:
-        self.buffer = BytesIO()
-        self.done = Deferred()
-
-    def dataReceived(self, data: bytes) -> None:
-        self.buffer.write(data)
-
-    def connectionLost(self, reason: Failure = connectionDone) -> None:
-        if isinstance(reason.value, ResponseDone):
-            buffer = self.buffer
-            data = buffer.getvalue()
-            buffer.close()
-            self.done.callback(data)
-        else:
-            self.done.errback(reason)
 
 async def run_GET(endpointFactory: IAgentEndpointFactory, url: str) -> bytes:
     """Make an HTTP GET request."""
@@ -52,9 +32,7 @@ async def run_GET(endpointFactory: IAgentEndpointFactory, url: str) -> bytes:
     if contentTypeParams.get('charset', 'utf-8').lower() != 'utf-8':
         raise OSError("Response not encoded in UTF-8")
 
-    buffer = Buffer()
-    response.deliverBody(buffer)
-    body = await buffer.done
+    body = await readBody(response)
 
     code = response.code
     if code == 200:
