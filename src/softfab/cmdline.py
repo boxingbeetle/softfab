@@ -19,10 +19,13 @@ from twisted.application import strports
 from twisted.internet.endpoints import clientFromString
 from twisted.internet.interfaces import IReactorUNIX, IStreamClientEndpoint
 from twisted.logger import globalLogBeginner, textFileLogObserver
+from twisted.web.client import URI
+from twisted.web.iweb import IAgentEndpointFactory
 from twisted.web.server import Session, Site
+from zope.interface import implementer
 import attr
 
-from softfab.apiclient import run_GET, runInReactor
+from softfab.apiclient import runInReactor, run_GET
 from softfab.version import VERSION
 
 
@@ -85,6 +88,7 @@ class OutputFormat(Enum):
 # loading modules, but that is an issue we want to eliminate at some point.
 # pylint: disable=import-outside-toplevel
 
+@implementer(IAgentEndpointFactory)
 @attr.s(auto_attribs=True)
 class GlobalOptions:
     debug: bool
@@ -118,7 +122,9 @@ class GlobalOptions:
             logging.captureWarnings(True)
             warnings.simplefilter('default')
 
-    def getClient(self) -> IStreamClientEndpoint:
+    def endpointForURI(self,
+                       uri: URI # pylint: disable=unused-argument
+                       ) -> IStreamClientEndpoint:
         """Return an endpoint for contacting the Control Center.
         Raise OSError if there is no control socket in the data directory.
         """
@@ -344,10 +350,11 @@ def show(globalOptions: GlobalOptions, name: str, fmt: OutputFormat) -> None:
 
     try:
         result = runInReactor(run_GET(
-                globalOptions.getClient(),
-                f'http://dummy/users/{name}.json'))
+                globalOptions, f'http://dummy/users/{name}.json'))
     except Exception as ex:
-        echo(f"API call failed: {ex}", err=True)
+        message = str(ex)
+        message = message[message.find('\n') + 1:]
+        echo(f"softfab: {message}", err=True)
         sys.exit(1)
     else:
         if fmt is OutputFormat.TEXT:
