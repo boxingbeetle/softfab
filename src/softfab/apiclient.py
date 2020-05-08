@@ -23,6 +23,12 @@ async def run_GET(endpointFactory: IAgentEndpointFactory, url: str) -> bytes:
     headers = Headers()
     response = await agent.request(b'GET', url.encode(), headers, None)
 
+    # Note: We read the full body even if we're not going to decode it,
+    #       to make sure the connection will be closed.
+    #       We could do the same with a custom Protocol, but that is
+    #       a lot of work for a situation that should never occur.
+    body = await readBody(response)
+
     contentTypeHeaders = response.headers.getRawHeaders('Content-Type')
     if not contentTypeHeaders:
         raise OSError("Response lacks Content-Type header")
@@ -31,8 +37,6 @@ async def run_GET(endpointFactory: IAgentEndpointFactory, url: str) -> bytes:
         raise OSError(f"Response has unsupported content type: {contentType}")
     if contentTypeParams.get('charset', 'utf-8').lower() != 'utf-8':
         raise OSError("Response not encoded in UTF-8")
-
-    body = await readBody(response)
 
     code = response.code
     if code == 200:
