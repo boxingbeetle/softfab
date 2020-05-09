@@ -2,7 +2,6 @@
 
 from abc import ABC
 from enum import Enum
-from functools import total_ordering
 from os import makedirs
 from os.path import dirname, exists
 from typing import (
@@ -17,27 +16,10 @@ from twisted.cred.error import LoginFailed, UnauthorizedLogin
 from softfab.compat import Protocol
 from softfab.config import dbDir
 from softfab.databaselib import Database, DatabaseElem
+from softfab.roles import UIRoleNames, roleNames
 from softfab.utils import atomicWrite, iterable
 from softfab.xmlbind import XMLTag
 from softfab.xmlgen import XML, xml
-
-roleNames = frozenset([ 'guest', 'user', 'operator' ])
-
-# This only defines UI ordering.
-# The content of the list must be consistent with roleNames.
-@total_ordering
-class UIRoleNames(Enum):
-    INACTIVE = 1
-    GUEST = 2
-    USER = 3
-    OPERATOR = 4
-    def __lt__(self, other: object) -> bool:
-        if self.__class__ is other.__class__:
-            # pylint: disable=comparison-with-callable
-            # https://github.com/PyCQA/pylint/issues/2757
-            return self.value < cast(Enum, other).value
-        return NotImplemented
-assert {elem.name.lower() for elem in list(UIRoleNames)[1:]} == roleNames
 
 # Privileges are designated as '<object>/<action>' where object can be:
 #   j(job), t(task), c(config), td(task definition),
