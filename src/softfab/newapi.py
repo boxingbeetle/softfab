@@ -6,13 +6,16 @@ only used as an internal API by the command line interface.
 """
 
 from os.path import splitext
+from typing import Mapping
 from urllib.parse import unquote_plus
 import json
 
 from twisted.web.http import Request
 from twisted.web.resource import Resource
+import attr
 
 from softfab.TwistedUtil import ClientErrorResource, NotFoundResource
+from softfab.roles import UIRoleNames
 from softfab.userlib import UserInfo, userDB
 
 
@@ -24,10 +27,25 @@ def textReply(request: Request, status: int, message: str) -> bytes:
     request.setHeader(b'Content-Type', b'text/plain; charset=UTF-8')
     return message.encode()
 
+@attr.s(auto_attribs=True)
+class UserData:
+    name: str
+    role: UIRoleNames
+
+    @classmethod
+    def fromUserInfo(cls, user: UserInfo) -> 'UserData':
+        return cls(user.name, user.uiRole)
+
+def dataToJSON(data: UserData) -> Mapping[str, str]:
+    return {
+        'name': data.name,
+        'role': data.role.name.lower()
+        }
+
 class UserResource(Resource):
     """HTTP resource for an existing user account."""
 
-    def __init__(self, user: UserInfo):
+    def __init__(self, user: UserData):
         super().__init__()
         self._user = user
 
@@ -36,11 +54,7 @@ class UserResource(Resource):
 
     def render_GET(self, request: Request) -> bytes:
         request.setHeader(b'Content-Type', b'application/json; charset=UTF-8')
-        user = self._user
-        return json.dumps({
-            'name': user.name,
-            'role': user.uiRole.name.lower()
-            }).encode()
+        return json.dumps(dataToJSON(self._user)).encode()
 
 class NoUserResource(Resource):
     """HTTP resource for a non-existing user account."""
@@ -77,7 +91,7 @@ class UsersResource(Resource):
         except KeyError:
             return NoUserResource(name)
         else:
-            return UserResource(user)
+            return UserResource(UserData.fromUserInfo(user))
 
     def render_GET(self, request: Request) -> bytes:
         request.setHeader(b'Content-Type', b'text/plain; charset=UTF-8')

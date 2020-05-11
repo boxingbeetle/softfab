@@ -443,7 +443,7 @@ class UserInfo(XMLTag, DatabaseElem, User):
         return self['id']
 
     @property
-    def name(self) -> Optional[str]:
+    def name(self) -> str:
         return self.getId()
 
     def isInRole(self, role: str) -> bool:
