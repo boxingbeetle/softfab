@@ -6,7 +6,6 @@ only used as an internal API by the command line interface.
 """
 
 from os.path import splitext
-from typing import Mapping
 from urllib.parse import unquote_plus
 import json
 
@@ -15,6 +14,7 @@ from twisted.web.resource import Resource
 import attr
 
 from softfab.TwistedUtil import ClientErrorResource, NotFoundResource
+from softfab.json import dataToJSON
 from softfab.roles import UIRoleNames
 from softfab.userlib import UserInfo, userDB
 
@@ -35,12 +35,6 @@ class UserData:
     @classmethod
     def fromUserInfo(cls, user: UserInfo) -> 'UserData':
         return cls(user.name, user.uiRole)
-
-def dataToJSON(data: UserData) -> Mapping[str, str]:
-    return {
-        'name': data.name,
-        'role': data.role.name.lower()
-        }
 
 class UserResource(Resource):
     """HTTP resource for an existing user account."""
