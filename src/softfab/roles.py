@@ -2,7 +2,7 @@
 
 from enum import Enum
 from functools import total_ordering
-from typing import cast
+from typing import AbstractSet, cast
 
 roleNames = frozenset([ 'guest', 'user', 'operator' ])
 
@@ -21,3 +21,8 @@ class UIRoleNames(Enum):
             return self.value < cast(Enum, other).value
         return NotImplemented
 assert {elem.name.lower() for elem in list(UIRoleNames)[1:]} == roleNames
+
+def uiRoleToSet(role: UIRoleNames) -> AbstractSet[str]:
+    '''The opposite transformation of `UserInfo.uiRole`.
+    '''
+    return set() if role is UIRoleNames.INACTIVE else { role.name.lower() }

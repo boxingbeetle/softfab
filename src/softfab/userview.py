@@ -1,13 +1,12 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import AbstractSet, cast
+from typing import cast
 
 from softfab.datawidgets import DataColumn
 from softfab.pageargs import EnumArg, PageArgs, PasswordArg
 from softfab.pagelinks import UserIdArgs, createUserDetailsLink
 from softfab.projectlib import project
 from softfab.querylib import Record
-from softfab.roles import UIRoleNames
 from softfab.userlib import PasswordMessage, minimumPasswordLength
 from softfab.xmlgen import XMLContent, xhtml
 
@@ -35,11 +34,6 @@ class LoginPassArgs(PageArgs):
     #       Using a stored password does not compromise security any more
     #       than storing the password in the first place.
     loginpass = PasswordArg()
-
-def uiRoleToSet(role: UIRoleNames) -> AbstractSet[str]:
-    '''The opposite transformation of `UserInfo.uiRole`.
-    '''
-    return set() if role is UIRoleNames.INACTIVE else { role.name.lower() }
 
 def presentAnonGuestSetting() -> XMLContent:
     return xhtml.p[
