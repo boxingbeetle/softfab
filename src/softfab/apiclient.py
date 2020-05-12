@@ -3,17 +3,25 @@
 """Functions for accessing the SoftFab API."""
 
 from cgi import parse_header
-from typing import Awaitable, Optional, TypeVar
+from io import BytesIO
+from typing import Awaitable, Optional, Tuple, TypeVar
 
 from twisted.internet.defer import ensureDeferred
 from twisted.python.failure import Failure
-from twisted.web.client import Agent, readBody
+from twisted.web.client import Agent, FileBodyProducer, Response, readBody
 from twisted.web.http_headers import Headers
 from twisted.web.iweb import IAgentEndpointFactory
 
 
-async def run_GET(endpointFactory: IAgentEndpointFactory, url: str) -> bytes:
-    """Make an HTTP GET request."""
+async def _runRequest(endpointFactory: IAgentEndpointFactory,
+                      url: str,
+                      method: bytes,
+                      payload: Optional[bytes] = None
+                      ) -> Tuple[Response, bytes]:
+    """Make an HTTP request.
+    All buffering is done in-memory, so this function should only be used
+    for requests with a small payload and a small reply body.
+    """
 
     # pylint: disable=import-outside-toplevel
     from twisted.internet import reactor
@@ -21,7 +29,12 @@ async def run_GET(endpointFactory: IAgentEndpointFactory, url: str) -> bytes:
     agent = Agent.usingEndpointFactory(reactor, endpointFactory)
 
     headers = Headers()
-    response = await agent.request(b'GET', url.encode(), headers, None)
+    if payload is None:
+        bodyProducer = None
+    else:
+        bodyProducer = FileBodyProducer(BytesIO(payload))
+        headers.addRawHeader('Content-Type', 'application/json; charset=UTF-8')
+    response = await agent.request(method, url.encode(), headers, bodyProducer)
 
     # Note: We read the full body even if we're not going to decode it,
     #       to make sure the connection will be closed.
@@ -38,6 +51,13 @@ async def run_GET(endpointFactory: IAgentEndpointFactory, url: str) -> bytes:
     if contentTypeParams.get('charset', 'utf-8').lower() != 'utf-8':
         raise OSError("Response not encoded in UTF-8")
 
+    return response, body
+
+async def run_GET(endpointFactory: IAgentEndpointFactory, url: str) -> bytes:
+    """Make an HTTP GET request."""
+
+    response, body = await _runRequest(endpointFactory, url, b'GET')
+
     code = response.code
     if code == 200:
         return body
@@ -45,6 +65,21 @@ async def run_GET(endpointFactory: IAgentEndpointFactory, url: str) -> bytes:
         phrase = response.phrase.decode(errors='replace')
         message = body.decode(errors='replace').rstrip()
         raise OSError(f"Unexpected result from HTTP GET: {code} {phrase}\n"
+                      f"{message}")
+
+async def run_PUT(endpointFactory: IAgentEndpointFactory,
+                  url: str,
+                  payload: bytes
+                  ) -> None:
+    """Make an HTTP PUT request."""
+
+    response, body = await _runRequest(endpointFactory, url, b'PUT', payload)
+
+    code = response.code
+    if code not in (200, 201, 204):
+        phrase = response.phrase.decode(errors='replace')
+        message = body.decode(errors='replace').rstrip()
+        raise OSError(f"Unexpected result from HTTP PUT: {code} {phrase}\n"
                       f"{message}")
 
 T = TypeVar('T')
