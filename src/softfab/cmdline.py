@@ -9,6 +9,7 @@ from enum import Enum, auto
 from os import getpid
 from pathlib import Path
 from typing import Callable, Optional, TypeVar
+import json
 import sys
 
 from click import (
@@ -25,7 +26,8 @@ from twisted.web.server import Session, Site
 from zope.interface import implementer
 import attr
 
-from softfab.apiclient import runInReactor, run_GET
+from softfab.apiclient import runInReactor, run_GET, run_PUT
+from softfab.roles import UIRoleNames
 from softfab.version import VERSION
 
 
@@ -338,6 +340,10 @@ def migrate(globalOptions: GlobalOptions) -> None:
 def user() -> None:
     """Query and modify user accounts."""
 
+roleDoc = f"""
+ROLE can be {', '.join(f"'{role.name.lower()}'" for role in UIRoleNames)}.
+"""
+
 @user.command()
 @argument('name')
 @option('--text', 'fmt', flag_value=OutputFormat.TEXT, default=True,
@@ -358,10 +364,28 @@ def show(globalOptions: GlobalOptions, name: str, fmt: OutputFormat) -> None:
         sys.exit(1)
     else:
         if fmt is OutputFormat.TEXT:
-            import json
             data = json.loads(result)
             for key, value in data.items():
                 echo(f"{key}: {value}")
         else:
             echo(result.decode())
+        sys.exit(0)
+
+@user.command(help=f"Create a new user account.\n{roleDoc}")
+@argument('name')
+@argument('role')
+@pass_obj
+def add(globalOptions: GlobalOptions, name: str, role: str) -> None:
+    payload = json.dumps(dict(name=name, role=role)).encode()
+    try:
+        result_ = runInReactor(run_PUT(
+                globalOptions, f'http://dummy/users/{name}.json', payload))
+    except Exception as ex:
+        message = str(ex)
+        message = message[message.find('\n') + 1:]
+        echo(f"softfab: {message}", err=True)
+        sys.exit(1)
+    else:
+        echo(f"softfab: {role.title()} account '{name}' created", err=True)
+        # TODO: Produce a password reset link.
         sys.exit(0)

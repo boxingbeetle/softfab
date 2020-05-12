@@ -14,9 +14,9 @@ from twisted.web.resource import Resource
 import attr
 
 from softfab.TwistedUtil import ClientErrorResource, NotFoundResource
-from softfab.json import dataToJSON
-from softfab.roles import UIRoleNames
-from softfab.userlib import UserInfo, userDB
+from softfab.json import dataToJSON, jsonToData
+from softfab.roles import UIRoleNames, uiRoleToSet
+from softfab.userlib import UserInfo, addUserAccount, userDB
 
 
 def textReply(request: Request, status: int, message: str) -> bytes:
@@ -29,6 +29,7 @@ def textReply(request: Request, status: int, message: str) -> bytes:
 
 @attr.s(auto_attribs=True)
 class UserData:
+    # TODO: Name is redundant on PUT; accept a default of None?
     name: str
     role: UIRoleNames
 
@@ -50,6 +51,14 @@ class UserResource(Resource):
         request.setHeader(b'Content-Type', b'application/json; charset=UTF-8')
         return json.dumps(dataToJSON(self._user)).encode()
 
+    def render_PUT(self, request: Request) -> bytes:
+        # TODO: We could modify an existing user instead.
+        #       The client can set "If-None-Match: *" to prevent that
+        #       in cases where only creation is allowed, such as the
+        #       "user add" command.
+        return textReply(request, 409,
+                         f"User already exists: {self._user.name}\n")
+
 class NoUserResource(Resource):
     """HTTP resource for a non-existing user account."""
 
@@ -62,6 +71,30 @@ class NoUserResource(Resource):
 
     def render_GET(self, request: Request) -> bytes:
         return textReply(request, 404, f"User not found: {self._name}\n")
+
+    def render_PUT(self, request: Request) -> bytes:
+        try:
+            jsonNode = json.load(request.content)
+        except json.JSONDecodeError as ex:
+            return textReply(request, 400, f"Invalid JSON: {ex}\n")
+
+        try:
+            data = jsonToData(jsonNode, UserData)
+        except ValueError as ex:
+            return textReply(request, 400, f"Not a valid record: {ex}\n")
+
+        name = data.name
+        if name != self._name:
+            return textReply(request, 400,
+                             f"User name in body ({name}) does not match "
+                             f"name in path ({self._name})\n")
+
+        try:
+            addUserAccount(name, uiRoleToSet(data.role))
+        except ValueError as ex:
+            return textReply(request, 400, f"Error creating user: {ex}\n")
+        else:
+            return textReply(request, 201, f"User created: {name}\n")
 
 class UsersResource(Resource):
 
