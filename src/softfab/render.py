@@ -294,8 +294,7 @@ async def _parseAndProcess(page: FabResource[ArgsT, PageProcessor[ArgsT]],
         try:
             responder = page.getResponder(req.getSubPath(), proc)
         except KeyError:
-            notFoundPage: ErrorPage[PageProcessor[ArgsT]] = NotFoundPage(
-                    )
+            notFoundPage: ErrorPage[PageProcessor[ArgsT]] = NotFoundPage()
             responder = UIResponder(notFoundPage, proc)
 
     req.processEnd()
