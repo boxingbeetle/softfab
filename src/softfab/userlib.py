@@ -271,6 +271,9 @@ def removeUserAccount(name: str) -> None:
     """Removes a user account."""
 
     user = userDB[name]
+    # Revoke all roles prior to removal, to make sure active sessions
+    # of this user will not have any permissions.
+    user.roles = ()
     userDB.remove(user)
 
     # Remove the user's password.
