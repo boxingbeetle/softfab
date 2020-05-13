@@ -11,7 +11,7 @@ from typing import (
 import logging
 
 from passlib.apache import HtpasswdFile
-from twisted.cred.error import LoginFailed, UnauthorizedLogin
+from twisted.cred.error import UnauthorizedLogin
 
 from softfab.compat import Protocol
 from softfab.config import dbDir
