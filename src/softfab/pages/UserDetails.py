@@ -68,10 +68,12 @@ class UserDetails_GET(FabPage['UserDetails_GET.Processor',
         pass
 
     def iterWidgets(self, proc: Processor) -> Iterator[Widget]:
-        yield OwnedJobsTable.instance
+        if proc.error is None:
+            yield OwnedJobsTable.instance
 
     def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
-        yield OwnedJobsTable.instance
+        if proc.error is None:
+            yield OwnedJobsTable.instance
 
     def presentContent(self, **kwargs: object) -> XMLContent:
         proc = cast(UserDetails_GET.Processor, kwargs['proc'])
