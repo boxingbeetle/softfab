@@ -267,6 +267,17 @@ def addUserAccount(userName: str, roles: Iterable[str]) -> None:
     userInfo.roles = roles
     userDB.add(userInfo)
 
+def removeUserAccount(name: str) -> None:
+    """Removes a user account."""
+
+    user = userDB[name]
+    userDB.remove(user)
+
+    # Remove the user's password.
+    _passwordFile.load_if_changed()
+    _passwordFile.delete(name)
+    writePasswordFile(_passwordFile)
+
 def setPassword(userName: str, password: str) -> None:
     '''Sets the password for an existing user account.
     @param userName: The name of the user account.

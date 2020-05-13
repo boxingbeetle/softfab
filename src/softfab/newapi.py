@@ -17,7 +17,7 @@ import attr
 from softfab.TwistedUtil import ClientErrorResource, NotFoundResource
 from softfab.json import dataToJSON, jsonToData
 from softfab.roles import UIRoleNames, uiRoleToSet
-from softfab.userlib import UserInfo, addUserAccount, userDB
+from softfab.userlib import UserInfo, addUserAccount, removeUserAccount, userDB
 
 
 class DataFormat(Enum):
@@ -68,8 +68,7 @@ class UserResource(Resource):
 
     def render_DELETE(self, request: Request) -> bytes:
         name = self._user.name
-        user = userDB[name]
-        userDB.remove(user)
+        removeUserAccount(name)
         return textReply(request, 200, f"User removed: {name}\n")
 
 class NoUserResource(Resource):
