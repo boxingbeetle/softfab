@@ -8,7 +8,7 @@ Command line interface.
 from enum import Enum, auto
 from os import getpid
 from pathlib import Path
-from typing import Callable, Optional, TypeVar
+from typing import Awaitable, Callable, Optional, TypeVar
 import json
 import sys
 
@@ -145,6 +145,20 @@ class GlobalOptions:
         # Scheme and host are ignored since we connect through a UNIX socket,
         # but we need to include them to make a valid URL.
         return f'http://cmdline/{path}'
+
+T = TypeVar('T')
+
+def callAPI(request: Awaitable[T]) -> T:
+    """Make an API call and report errors to the user.
+    Return the call's result.
+    """
+    try:
+        return runInReactor(request)
+    except Exception as ex:
+        message = str(ex)
+        message = message[message.find('\n') + 1:]
+        echo(f"softfab: {message}", err=True)
+        sys.exit(1)
 
 
 @group()
@@ -361,41 +375,26 @@ ROLE can be {', '.join(f"'{role.name.lower()}'" for role in UIRoleNames)}.
 def show(globalOptions: GlobalOptions, name: str, fmt: OutputFormat) -> None:
     """Show details of a single user account."""
 
-    try:
-        result = runInReactor(run_GET(
-                globalOptions,
-                globalOptions.urlForPath(f'users/{name}.json')))
-    except Exception as ex:
-        message = str(ex)
-        message = message[message.find('\n') + 1:]
-        echo(f"softfab: {message}", err=True)
-        sys.exit(1)
+    result = callAPI(run_GET(
+            globalOptions,
+            globalOptions.urlForPath(f'users/{name}.json')
+            ))
+    if fmt is OutputFormat.TEXT:
+        data = json.loads(result)
+        for key, value in data.items():
+            echo(f"{key}: {value}")
     else:
-        if fmt is OutputFormat.TEXT:
-            data = json.loads(result)
-            for key, value in data.items():
-                echo(f"{key}: {value}")
-        else:
-            echo(result.decode())
-        sys.exit(0)
+        echo(result.decode())
 
 @user.command(help=f"Create a new user account.\n{roleDoc}")
 @argument('name')
 @argument('role')
 @pass_obj
 def add(globalOptions: GlobalOptions, name: str, role: str) -> None:
-    payload = json.dumps(dict(name=name, role=role)).encode()
-    try:
-        result_ = runInReactor(run_PUT(
-                globalOptions,
-                globalOptions.urlForPath(f'users/{name}.json'),
-                payload))
-    except Exception as ex:
-        message = str(ex)
-        message = message[message.find('\n') + 1:]
-        echo(f"softfab: {message}", err=True)
-        sys.exit(1)
-    else:
-        echo(f"softfab: {role.title()} account '{name}' created", err=True)
-        # TODO: Produce a password reset link.
-        sys.exit(0)
+    callAPI(run_PUT(
+            globalOptions,
+            globalOptions.urlForPath(f'users/{name}.json'),
+            json.dumps(dict(name=name, role=role)).encode()
+            ))
+    echo(f"softfab: {role.title()} account '{name}' created", err=True)
+    # TODO: Produce a password reset link.
