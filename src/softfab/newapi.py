@@ -66,6 +66,12 @@ class UserResource(Resource):
         return textReply(request, 409,
                          f"User already exists: {self._user.name}\n")
 
+    def render_DELETE(self, request: Request) -> bytes:
+        name = self._user.name
+        user = userDB[name]
+        userDB.remove(user)
+        return textReply(request, 200, f"User removed: {name}\n")
+
 class NoUserResource(Resource):
     """HTTP resource for a non-existing user account."""
 
@@ -102,6 +108,9 @@ class NoUserResource(Resource):
             return textReply(request, 400, f"Error creating user: {ex}\n")
         else:
             return textReply(request, 201, f"User created: {name}\n")
+
+    def render_DELETE(self, request: Request) -> bytes:
+        return textReply(request, 404, f"User not found: {self._name}\n")
 
 class UsersResource(Resource):
 
