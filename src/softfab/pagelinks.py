@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from enum import Enum
-from typing import Iterable, Optional, Sequence
+from typing import Iterable, Optional, Sequence, cast
 
 from softfab.configlib import configDB
 from softfab.pageargs import (
@@ -11,9 +11,26 @@ from softfab.request import Request
 from softfab.resourcelib import TaskRunner
 from softfab.restypelib import resTypeDB, taskRunnerResourceTypeName
 from softfab.taskrunlib import TaskRun
-from softfab.webgui import pageLink, pageURL
-from softfab.xmlgen import XMLContent, XMLNode, xhtml
+from softfab.webgui import AttrContainer, pageLink, pageURL
+from softfab.xmlgen import XMLContent, XMLNode, XMLPresentable, xhtml
 
+
+class _CCLink(AttrContainer):
+    """Implementation of `ccLink`."""
+
+    def present(self, **kwargs: object) -> XMLNode:
+        node = xhtml.a(**self._attributes)[ self._presentContents(**kwargs) ]
+        ccURL = cast(Optional[str], kwargs.get('ccURL'))
+        if ccURL is None:
+            return node
+        else:
+            return node(href=ccURL + node.attrs['href'])
+
+ccLink = _CCLink((), {})
+"""Link to a page on this Control Center.
+The URL is updated on presentation when the page is not
+at the top level of the URL namespace.
+"""
 
 class ProductDefIdArgs(PageArgs):
     '''Identifies a particular product definition.
@@ -244,8 +261,8 @@ class AnonGuestArgs(PageArgs):
 def createUserDetailsURL(userId: str) -> str:
     return pageURL('UserDetails', UserIdArgs(user = userId))
 
-def createUserDetailsLink(userId: str) -> XMLNode:
-    return xhtml.a(href = createUserDetailsURL(userId))[ userId ]
+def createUserDetailsLink(userId: str) -> XMLPresentable:
+    return ccLink(href=createUserDetailsURL(userId))[ userId ]
 
 class URLArgs(PageArgs):
     """Remembers a URL on this Control Center that we can return to.

@@ -169,7 +169,8 @@ class UIPage(Generic[ProcT]):
             xhtml.div(class_ = 'info')[
                 xhtml.a(href=ccURL + loginURL(proc.req))[ 'log in' ]
                 if userName is None else (
-                    createUserDetailsLink(userName), ' \u2013 ',
+                    createUserDetailsLink(userName).present(**kwargs),
+                    ' \u2013 ',
                     xhtml.a(href=ccURL + logoutURL(proc.req))[ 'log out' ]
                     ),
                 xhtml.br,
