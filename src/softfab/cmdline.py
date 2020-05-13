@@ -14,7 +14,8 @@ import sys
 
 from click import (
     BadParameter, Context, ParamType, Parameter, argument, echo,
-    get_current_context, group, option, pass_context, pass_obj, version_option
+    get_current_context, group, option, pass_context, pass_obj, version_option,
+    wrap_text
 )
 from twisted.application import strports
 from twisted.internet.endpoints import clientFromString
@@ -26,7 +27,7 @@ from twisted.web.server import Session, Site
 from zope.interface import implementer
 import attr
 
-from softfab.apiclient import runInReactor, run_GET, run_PUT
+from softfab.apiclient import runInReactor, run_DELETE, run_GET, run_PUT
 from softfab.roles import UIRoleNames
 from softfab.version import VERSION
 
@@ -145,6 +146,10 @@ class GlobalOptions:
         # Scheme and host are ignored since we connect through a UNIX socket,
         # but we need to include them to make a valid URL.
         return f'http://cmdline/{path}'
+
+def formatDetails(message: str) -> str:
+    """Format text explaining details for display below a main result."""
+    return wrap_text(message, initial_indent='  ', subsequent_indent='  ')
 
 T = TypeVar('T')
 
@@ -398,3 +403,26 @@ def add(globalOptions: GlobalOptions, name: str, role: str) -> None:
             ))
     echo(f"softfab: {role.title()} account '{name}' created", err=True)
     # TODO: Produce a password reset link.
+
+userRemoveDoc = """
+To preserve a meaningful history, we recommend to not remove user accounts
+that are no longer in use, but instead set their role to 'inactive'.
+If you are certain you want to remove the account completely,
+use the --force flag.
+""".strip().replace('\n', ' ')
+
+@user.command(help=f"Remove a user account.\n\n{userRemoveDoc}")
+@option('-f', '--force', is_flag=True, help='Force removal.')
+@argument('name')
+@pass_obj
+def remove(globalOptions: GlobalOptions, name: str, force: bool) -> None:
+    if not force:
+        echo(f"softfab: user account was NOT removed\n\n"
+             f"{formatDetails(userRemoveDoc)}", err=True)
+        get_current_context().exit(2)
+
+    callAPI(run_DELETE(
+            globalOptions,
+            globalOptions.urlForPath(f'users/{name}')
+            ))
+    echo(f"softfab: user account '{name}' removed", err=True)
