@@ -139,6 +139,13 @@ class GlobalOptions:
         else:
             raise OSError(f"Control socket not found: {socketPath}")
 
+    def urlForPath(self, path: str) -> str:
+        """Return a full URL for accessing the given API path."""
+
+        # Scheme and host are ignored since we connect through a UNIX socket,
+        # but we need to include them to make a valid URL.
+        return f'http://cmdline/{path}'
+
 
 @group()
 @option('--debug', is_flag=True,
@@ -356,7 +363,8 @@ def show(globalOptions: GlobalOptions, name: str, fmt: OutputFormat) -> None:
 
     try:
         result = runInReactor(run_GET(
-                globalOptions, f'http://dummy/users/{name}.json'))
+                globalOptions,
+                globalOptions.urlForPath(f'users/{name}.json')))
     except Exception as ex:
         message = str(ex)
         message = message[message.find('\n') + 1:]
@@ -379,7 +387,9 @@ def add(globalOptions: GlobalOptions, name: str, role: str) -> None:
     payload = json.dumps(dict(name=name, role=role)).encode()
     try:
         result_ = runInReactor(run_PUT(
-                globalOptions, f'http://dummy/users/{name}.json', payload))
+                globalOptions,
+                globalOptions.urlForPath(f'users/{name}.json'),
+                payload))
     except Exception as ex:
         message = str(ex)
         message = message[message.find('\n') + 1:]
