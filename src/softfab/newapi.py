@@ -5,6 +5,7 @@ This should become the public API at some point, but for now it is
 only used as an internal API by the command line interface.
 """
 
+from enum import Enum, auto
 from os.path import splitext
 from urllib.parse import unquote_plus
 import json
@@ -18,6 +19,11 @@ from softfab.json import dataToJSON, jsonToData
 from softfab.roles import UIRoleNames, uiRoleToSet
 from softfab.userlib import UserInfo, addUserAccount, userDB
 
+
+class DataFormat(Enum):
+    """The data format to use for presenting a resource."""
+    AUTO = auto()
+    JSON = auto()
 
 def textReply(request: Request, status: int, message: str) -> bytes:
     """Replies to an HTTP request with a plain text message.
@@ -40,9 +46,10 @@ class UserData:
 class UserResource(Resource):
     """HTTP resource for an existing user account."""
 
-    def __init__(self, user: UserData):
+    def __init__(self, user: UserData, fmt: DataFormat):
         super().__init__()
         self._user = user
+        self._format = fmt
 
     def getChildWithDefault(self, path: bytes, request: Request) -> Resource:
         return NotFoundResource('Records do not support subpaths')
@@ -109,8 +116,10 @@ class UsersResource(Resource):
 
         name, ext = splitext(segment)
         if not ext:
-            return NotFoundResource('Missing file name extension')
-        if ext != '.json':
+            fmt = DataFormat.AUTO
+        elif ext == '.json':
+            fmt = DataFormat.JSON
+        else:
             return NotFoundResource('Currently only ".json" is supported')
 
         try:
@@ -118,7 +127,7 @@ class UsersResource(Resource):
         except KeyError:
             return NoUserResource(name)
         else:
-            return UserResource(UserData.fromUserInfo(user))
+            return UserResource(UserData.fromUserInfo(user), fmt)
 
     def render_GET(self, request: Request) -> bytes:
         request.setHeader(b'Content-Type', b'text/plain; charset=UTF-8')
