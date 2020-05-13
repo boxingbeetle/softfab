@@ -85,7 +85,14 @@ async def run_PUT(endpointFactory: IAgentEndpointFactory,
 async def run_DELETE(endpointFactory: IAgentEndpointFactory, url: str) -> None:
     """Make an HTTP DELETE request."""
 
-    raise OSError("Unimplemented")
+    response, body = await _runRequest(endpointFactory, url, b'DELETE')
+
+    code = response.code
+    if code not in (200, 202, 204):
+        phrase = response.phrase.decode(errors='replace')
+        message = body.decode(errors='replace').rstrip()
+        raise OSError(f"Unexpected result from HTTP DELETE: {code} {phrase}\n"
+                      f"{message}")
 
 T = TypeVar('T')
 
