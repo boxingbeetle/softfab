@@ -13,8 +13,8 @@ import json
 import sys
 
 from click import (
-    BadParameter, Context, ParamType, Parameter, argument, echo, group, option,
-    pass_context, pass_obj, version_option
+    BadParameter, Context, ParamType, Parameter, argument, echo,
+    get_current_context, group, option, pass_context, pass_obj, version_option
 )
 from twisted.application import strports
 from twisted.internet.endpoints import clientFromString
@@ -104,7 +104,7 @@ class GlobalOptions:
         path = self.path
         if not path.is_dir():
             echo(f"Path is not a directory: {path}", err=True)
-            sys.exit(1)
+            get_current_context().exit(1)
 
         # Read the config first.
         # This doubles as a sanity check of the 'path' option.
@@ -113,7 +113,7 @@ class GlobalOptions:
             softfab.config.initConfig(path)
         except Exception as ex:
             echo(f"Error reading configuration: {ex}", err=True)
-            sys.exit(1)
+            get_current_context().exit(1)
 
         from softfab.initlog import initLogging
         initLogging(path)
@@ -158,7 +158,7 @@ def callAPI(request: Awaitable[T]) -> T:
         message = str(ex)
         message = message[message.find('\n') + 1:]
         echo(f"softfab: {message}", err=True)
-        sys.exit(1)
+        get_current_context().exit(1)
 
 
 @group()
@@ -215,10 +215,10 @@ def init(
                   file=file)
     except FileExistsError:
         echo("Refusing to overwrite existing configuration file.", err=True)
-        sys.exit(1)
+        get_current_context().exit(1)
     except Exception as ex:
         echo(f"Failed to create configuration file: {ex}", err=True)
-        sys.exit(1)
+        get_current_context().exit(1)
 
     echo(f"Control Center created in {path}.", err=True)
 
@@ -256,13 +256,13 @@ def server(
         service = strports.service(softfab.config.endpointDesc, site)
     except ValueError as ex:
         echo(f"Invalid socket specification: {ex}", err=True)
-        sys.exit(1)
+        get_current_context().exit(1)
 
     try:
         service.startService()
     except Exception as ex:
         echo(f"Failed to listen on socket: {ex}", err=True)
-        sys.exit(1)
+        get_current_context().exit(1)
     else:
         reactor.addSystemEventTrigger('before', 'shutdown', service.stopService)
 
@@ -271,7 +271,7 @@ def server(
         writePIDFile(pidfilePath)
     except OSError as ex:
         echo(f"Failed to create PID file '{pidfilePath}': {ex}", err=True)
-        sys.exit(1)
+        get_current_context().exit(1)
 
     if IReactorUNIX.providedBy(reactor):
         from softfab.newapi import createAPIRoot
@@ -309,7 +309,7 @@ def migrate(globalOptions: GlobalOptions) -> None:
     if pidfilePath.is_file():
         echo(f"PID file exists: {pidfilePath}", err=True)
         echo("Stop the Control Center before migrating the data.", err=True)
-        sys.exit(1)
+        get_current_context().exit(1)
 
     # Avoid calling fsync on record rewrites.
     # Syncing on every file would make migrations of large databases take
@@ -336,13 +336,13 @@ def migrate(globalOptions: GlobalOptions) -> None:
     except ValueError as ex:
         echo(f"Failed to parse database version: {ex}\n"
              f"Migration aborted.", err=True)
-        sys.exit(1)
+        get_current_context().exit(1)
     if dbVersion < (2, 16, 0):
         echo(f"Cannot migrate database because its format "
              f"({versionStr}) is too old.\n"
              f"Please upgrade to an earlier SoftFab version first.\n"
              f"See release notes for details.", err=True)
-        sys.exit(1)
+        get_current_context().exit(1)
 
     setConversionFlagsForVersion(dbVersion)
 
