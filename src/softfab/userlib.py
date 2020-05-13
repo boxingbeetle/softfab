@@ -196,10 +196,9 @@ async def authenticateUser(userName: str, password: str) -> 'UserInfo':
             'User "%s" exists in the password file but not in the user DB',
             userName
             )
-        # Note: The "Internal error" message is not very helpful, but I am
-        #       reluctant to provide helpful messages to potential attackers.
-        #       If you ever encounter it, look in the log for the real info.
-        raise LoginFailed('Internal error')
+        # Note: We return the same error as for an incorrect password,
+        #       to reduce the chance attackers learn anything helpful.
+        raise UnauthorizedLogin('Authentication failed')
 
 def authenticate(passwordFile: HtpasswdFile, name: str, password: str) -> None:
     """Checks a name and password combination against a password file.
