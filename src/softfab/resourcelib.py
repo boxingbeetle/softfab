@@ -33,8 +33,9 @@ class ResourceBase(XMLTag, ParamMixin, DatabaseElem):
     intProperties = ('changedtime',)
 
     def __init__(self, properties: Mapping[str, str]):
+        # COMPAT 2.x.x: Make locator into a parameter.
+        locator: Optional[str]
         if 'locator' in properties:
-            # COMPAT 2.x.x: Make locator into a parameter.
             properties = dict(properties)
             locator = properties.pop('locator')
         else:
