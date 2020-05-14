@@ -8,7 +8,7 @@ from twisted.cred.error import LoginFailed
 from softfab.FabPage import FabPage, IconModifier
 from softfab.Page import PageProcessor, PresentableError, ProcT, Redirect
 from softfab.formlib import (
-    FormTable, actionButtons, dropDownList, emptyOption, hiddenInput, makeForm,
+    FormTable, actionButtons, dropDownList, hiddenInput, makeForm,
     passwordInput, textInput
 )
 from softfab.pageargs import ArgsT, EnumArg, PageArgs, RefererArg, StrArg
@@ -75,15 +75,17 @@ class AddUser_GET(AddUserBase['AddUser_GET.Processor',
             pass
 
     def presentContent(self, **kwargs: object) -> XMLContent:
-        yield self.presentForm(None, **kwargs)
+        yield self.presentForm(RoleArgs(role=UIRoleNames.USER), **kwargs)
+
+class RoleArgs(PageArgs):
+    role = EnumArg(UIRoleNames)
 
 class AddUser_POST(AddUserBase['AddUser_POST.Processor',
                                'AddUser_POST.Arguments']):
 
-    class Arguments(AddUser_GET.Arguments, LoginPassArgs):
+    class Arguments(AddUser_GET.Arguments, LoginPassArgs, RoleArgs):
         action = EnumArg(Actions)
         user = StrArg()
-        role = EnumArg(UIRoleNames, None)
         password = StrArg()
         password2 = StrArg()
 
@@ -101,10 +103,6 @@ class AddUser_POST(AddUserBase['AddUser_POST.Processor',
                 userName = req.args.user
                 if not userName:
                     raise PresentableError(xhtml['User name cannot be empty.'])
-                role = req.args.role
-                if role is None:
-                    # Not all browsers implement the 'required' attribute.
-                    raise PresentableError(xhtml['No role assigned.'])
 
                 password = req.args.password
                 if password == req.args.password2:
@@ -130,7 +128,7 @@ class AddUser_POST(AddUserBase['AddUser_POST.Processor',
 
                 # Create new user account.
                 try:
-                    addUserAccount(userName, uiRoleToSet(role))
+                    addUserAccount(userName, uiRoleToSet(req.args.role))
                     setPassword(userName, password)
                 except ValueError as ex:
                     raise PresentableError(xhtml[f'{ex}.'])
@@ -160,9 +158,7 @@ class UserTable(FormTable):
 
     def iterFields(self, **kwargs: object) -> Iterator[Tuple[str, XMLContent]]:
         yield 'User name', textInput(name = 'user')
-        yield 'Role', dropDownList(name = 'role', required = True)[
-            emptyOption[ '(not set)' ], UIRoleNames
-            ]
+        yield 'Role', dropDownList(name = 'role')[ UIRoleNames ]
         yield 'New password', passwordInput(name = 'password')
         yield 'New password (again)', passwordInput(name = 'password2')
 
