@@ -36,8 +36,12 @@ class ResourceBase(XMLTag, ParamMixin, DatabaseElem):
         if 'locator' in properties:
             # COMPAT 2.x.x: Make locator into a parameter.
             properties = dict(properties)
-            self.addParameter('locator', properties.pop('locator'))
+            locator = properties.pop('locator')
+        else:
+            locator = None
         super().__init__(properties)
+        if locator is not None:
+            self.addParameter('locator', locator)
         self._capabilities: AbstractSet[str] = set()
         self.__token: Optional[Token] = None
 
