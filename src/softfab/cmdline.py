@@ -23,7 +23,6 @@ from twisted.logger import globalLogBeginner, textFileLogObserver
 from twisted.web.client import URI
 from twisted.web.iweb import IAgentEndpointFactory
 from zope.interface import implementer
-import attr
 
 from softfab.apiclient import runInReactor, run_DELETE, run_GET, run_PUT
 from softfab.roles import UIRoleNames
@@ -64,10 +63,11 @@ class OutputFormat(Enum):
 # pylint: disable=import-outside-toplevel
 
 @implementer(IAgentEndpointFactory)
-@attr.s(auto_attribs=True)
 class GlobalOptions:
-    debug: bool
-    path: Path
+
+    def __init__(self, debug: bool, path: Path):
+        self.debug = debug
+        self.path = path
 
     def apply(self) -> None:
         """Initialize Control Center configuration according to
