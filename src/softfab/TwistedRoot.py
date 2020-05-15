@@ -12,10 +12,15 @@ import logging
 
 from twisted.internet import reactor
 from twisted.internet.defer import Deferred
+from twisted.internet.endpoints import clientFromString
+from twisted.internet.interfaces import IStreamClientEndpoint
 from twisted.python.failure import Failure
+from twisted.web.client import URI
 from twisted.web.http import Request as TwistedRequest
+from twisted.web.iweb import IAgentEndpointFactory
 from twisted.web.resource import Resource
 from twisted.web.server import Session, Site
+from zope.interface import implementer
 
 from softfab import static
 from softfab.Page import FabResource, PageProcessor, Responder
@@ -55,6 +60,25 @@ class ControlSocket(Site):
 
     def __repr__(self) -> str:
         return 'ControlSocket'
+
+@implementer(IAgentEndpointFactory)
+class ControlSocketFactory:
+
+    def __init__(self, path: Path):
+        self.path = path
+
+    def endpointForURI(self,
+                       uri: URI # pylint: disable=unused-argument
+                       ) -> IStreamClientEndpoint:
+        """Return an endpoint for contacting the Control Center.
+        Raise OSError if there is no control socket in the data directory.
+        """
+
+        socketPath = (self.path / 'ctrl.sock').resolve()
+        if socketPath.is_socket():
+            return clientFromString(reactor, f'unix:{socketPath}:timeout=10')
+        else:
+            raise OSError(f"Control socket not found: {socketPath}")
 
 def writePIDFile(path: Path) -> None:
     """Write our process ID to a text file.

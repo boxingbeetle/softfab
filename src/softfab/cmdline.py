@@ -17,12 +17,9 @@ from click import (
     wrap_text
 )
 from twisted.application import strports
-from twisted.internet.endpoints import clientFromString
-from twisted.internet.interfaces import IReactorUNIX, IStreamClientEndpoint
+from twisted.internet.interfaces import IReactorUNIX
 from twisted.logger import globalLogBeginner, textFileLogObserver
-from twisted.web.client import URI
 from twisted.web.iweb import IAgentEndpointFactory
-from zope.interface import implementer
 
 from softfab.apiclient import runInReactor, run_DELETE, run_GET, run_PUT
 from softfab.roles import UIRoleNames
@@ -62,27 +59,6 @@ class OutputFormat(Enum):
 # loading modules, but that is an issue we want to eliminate at some point.
 # pylint: disable=import-outside-toplevel
 
-@implementer(IAgentEndpointFactory)
-class ControlSocketFactory:
-
-    def __init__(self, path: Path):
-        self.path = path
-
-    def endpointForURI(self,
-                       uri: URI # pylint: disable=unused-argument
-                       ) -> IStreamClientEndpoint:
-        """Return an endpoint for contacting the Control Center.
-        Raise OSError if there is no control socket in the data directory.
-        """
-
-        from twisted.internet import reactor
-
-        socketPath = (self.path / 'ctrl.sock').resolve()
-        if socketPath.is_socket():
-            return clientFromString(reactor, f'unix:{socketPath}:timeout=10')
-        else:
-            raise OSError(f"Control socket not found: {socketPath}")
-
 class GlobalOptions:
 
     def __init__(self, debug: bool, path: Path):
@@ -91,6 +67,8 @@ class GlobalOptions:
 
     @property
     def endpointFactory(self) -> IAgentEndpointFactory:
+        from softfab.TwistedRoot import ControlSocketFactory
+
         return ControlSocketFactory(self.path)
 
     def apply(self) -> None:
