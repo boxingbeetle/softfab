@@ -7,7 +7,7 @@ Command line interface.
 
 from enum import Enum, auto
 from pathlib import Path
-from typing import TYPE_CHECKING, Awaitable, Callable, Optional, TypeVar
+from typing import TYPE_CHECKING, Awaitable, Optional, TypeVar
 import sys
 
 from click import (
@@ -47,9 +47,6 @@ class DirectoryParamType(ParamType):
             raise BadParameter(f'Path is not a directory: {path}')
         else:
             return path
-
-Decorated = TypeVar('Decorated', bound=Callable)
-Decorator = Callable[[Decorated], Decorated]
 
 class OutputFormat(Enum):
     TEXT = auto()
