@@ -7,8 +7,7 @@ Command line interface.
 
 from enum import Enum, auto
 from pathlib import Path
-from typing import Awaitable, Callable, Optional, TypeVar
-import json
+from typing import TYPE_CHECKING, Awaitable, Callable, Optional, TypeVar
 import sys
 
 from click import (
@@ -16,14 +15,17 @@ from click import (
     get_current_context, group, option, pass_context, pass_obj, version_option,
     wrap_text
 )
-from twisted.application import strports
-from twisted.internet.interfaces import IReactorUNIX
-from twisted.logger import globalLogBeginner, textFileLogObserver
-from twisted.web.iweb import IAgentEndpointFactory
 
-from softfab.apiclient import runInReactor, run_DELETE, run_GET, run_PUT
 from softfab.roles import UIRoleNames
 
+if TYPE_CHECKING:
+    from twisted.web.iweb import IAgentEndpointFactory
+
+
+# We import inside functions to avoid wasting time importing modules that the
+# issued command doesn't need. Another reason is to avoid side effects from
+# loading modules, but that is an issue we want to eliminate at some point.
+# pylint: disable=import-outside-toplevel
 
 class DirectoryParamType(ParamType):
     """Parameter type for specifying directories."""
@@ -53,11 +55,6 @@ class OutputFormat(Enum):
     TEXT = auto()
     JSON = auto()
 
-# We import inside functions to avoid wasting time importing modules that the
-# issued command doesn't need. Another reason is to avoid side effects from
-# loading modules, but that is an issue we want to eliminate at some point.
-# pylint: disable=import-outside-toplevel
-
 class GlobalOptions:
 
     def __init__(self, debug: bool, path: Path):
@@ -65,7 +62,7 @@ class GlobalOptions:
         self.path = path
 
     @property
-    def endpointFactory(self) -> IAgentEndpointFactory:
+    def endpointFactory(self) -> 'IAgentEndpointFactory':
         from softfab.TwistedRoot import ControlSocketFactory
 
         return ControlSocketFactory(self.path)
@@ -115,6 +112,9 @@ def callAPI(request: Awaitable[T]) -> T:
     """Make an API call and report errors to the user.
     Return the call's result.
     """
+
+    from softfab.apiclient import runInReactor
+
     try:
         return runInReactor(request)
     except Exception as ex:
@@ -195,13 +195,10 @@ def server(
         ) -> None:
     """Run a Control Center server."""
 
-    # Inline import because this also starts the reactor,
-    # which we don't need for every subcommand.
-    from twisted.internet import reactor
-
     globalOptions.apply()
 
     # Set up Twisted's logging.
+    from twisted.logger import globalLogBeginner, textFileLogObserver
     observers = [textFileLogObserver(sys.stderr)]
     globalLogBeginner.beginLoggingTo(observers)
 
@@ -216,12 +213,14 @@ def server(
     site.secureCookie = not softfab.config.rootURL.startswith('http://')
     site.displayTracebacks = globalOptions.debug
 
+    from twisted.application import strports
     try:
         service = strports.service(softfab.config.endpointDesc, site)
     except ValueError as ex:
         echo(f"Invalid socket specification: {ex}", err=True)
         get_current_context().exit(1)
 
+    from twisted.internet import reactor
     try:
         service.startService()
     except Exception as ex:
@@ -237,6 +236,7 @@ def server(
         echo(f"Failed to create PID file '{pidfilePath}': {ex}", err=True)
         get_current_context().exit(1)
 
+    from twisted.internet.interfaces import IReactorUNIX
     if IReactorUNIX.providedBy(reactor):
         from softfab.newapi import createAPIRoot
         socketPath = globalOptions.path / 'ctrl.sock'
@@ -340,11 +340,14 @@ ROLE can be {', '.join(f"'{role.name.lower()}'" for role in UIRoleNames)}.
 def show(globalOptions: GlobalOptions, name: str, fmt: OutputFormat) -> None:
     """Show details of a single user account."""
 
+    from softfab.apiclient import run_GET
+
     result = callAPI(run_GET(
             globalOptions.endpointFactory,
             globalOptions.urlForPath(f'users/{name}.json')
             ))
     if fmt is OutputFormat.TEXT:
+        import json
         data = json.loads(result)
         for key, value in data.items():
             echo(f"{key}: {value}")
@@ -356,6 +359,9 @@ def show(globalOptions: GlobalOptions, name: str, fmt: OutputFormat) -> None:
 @argument('role')
 @pass_obj
 def add(globalOptions: GlobalOptions, name: str, role: str) -> None:
+    import json
+    from softfab.apiclient import run_PUT
+
     callAPI(run_PUT(
             globalOptions.endpointFactory,
             globalOptions.urlForPath(f'users/{name}.json'),
@@ -376,6 +382,8 @@ use the --force flag.
 @argument('name')
 @pass_obj
 def remove(globalOptions: GlobalOptions, name: str, force: bool) -> None:
+    from softfab.apiclient import run_DELETE
+
     if not force:
         echo(f"softfab: user account was NOT removed\n\n"
              f"{formatDetails(userRemoveDoc)}", err=True)
