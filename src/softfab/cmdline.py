@@ -23,7 +23,6 @@ from twisted.web.iweb import IAgentEndpointFactory
 
 from softfab.apiclient import runInReactor, run_DELETE, run_GET, run_PUT
 from softfab.roles import UIRoleNames
-from softfab.version import VERSION
 
 
 class DirectoryParamType(ParamType):
@@ -130,8 +129,7 @@ def callAPI(request: Awaitable[T]) -> T:
         help='Enable debug features. Can leak data; use only in development.')
 @option('-d', '--dir', 'path', type=DirectoryParamType(), default='.',
         help='Directory containing configuration, data and logging.')
-@version_option(prog_name='SoftFab', version=VERSION,
-                message='%(prog)s version %(version)s')
+@version_option(prog_name='SoftFab', message='%(prog)s version %(version)s')
 @pass_context
 def main(ctx: Context, debug: bool, path: Path) -> None:
     """Command line interface to SoftFab."""
@@ -313,6 +311,7 @@ def migrate(globalOptions: GlobalOptions) -> None:
     setConversionFlagsForVersion(dbVersion)
 
     import logging
+    from softfab.version import VERSION
     logging.info("Migrating from version %s to version %s", versionStr, VERSION)
     try:
         from softfab.databases import convertAll
