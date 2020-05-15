@@ -6,7 +6,6 @@ Command line interface.
 
 
 from enum import Enum, auto
-from os import getpid
 from pathlib import Path
 from typing import Awaitable, Callable, Optional, TypeVar
 import json
@@ -23,7 +22,6 @@ from twisted.internet.interfaces import IReactorUNIX, IStreamClientEndpoint
 from twisted.logger import globalLogBeginner, textFileLogObserver
 from twisted.web.client import URI
 from twisted.web.iweb import IAgentEndpointFactory
-from twisted.web.server import Session, Site
 from zope.interface import implementer
 import attr
 
@@ -31,32 +29,6 @@ from softfab.apiclient import runInReactor, run_DELETE, run_GET, run_PUT
 from softfab.roles import UIRoleNames
 from softfab.version import VERSION
 
-
-class LongSession(Session):
-    sessionTimeout = 60 * 60 * 24 * 7 # one week in seconds
-
-class ControlCenter(Site):
-    sessionFactory = LongSession
-
-    secureCookie: bool
-    """Mark session cookie as secure.
-    When True, the browser will only transmit it over HTTPS.
-    """
-
-    def __repr__(self) -> str:
-        return 'ControlCenter'
-
-class ControlSocket(Site):
-
-    def __repr__(self) -> str:
-        return 'ControlSocket'
-
-def writePIDFile(path: Path) -> None:
-    """Write our process ID to a text file.
-    Raise OSError if writing the file failed.
-    """
-    with open(path, 'w', encoding='utf-8') as out:
-        out.write(f'{getpid():d}\n')
 
 class DirectoryParamType(ParamType):
     """Parameter type for specifying directories."""
@@ -249,7 +221,9 @@ def server(
     globalLogBeginner.beginLoggingTo(observers)
 
     # This must happen after logging has been initialized.
-    from softfab.TwistedRoot import SoftFabRoot
+    from softfab.TwistedRoot import (
+        ControlCenter, ControlSocket, SoftFabRoot, writePIDFile
+    )
     root = SoftFabRoot(anonOperator=anonoper)
 
     import softfab.config
