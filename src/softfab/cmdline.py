@@ -63,11 +63,35 @@ class OutputFormat(Enum):
 # pylint: disable=import-outside-toplevel
 
 @implementer(IAgentEndpointFactory)
+class ControlSocketFactory:
+
+    def __init__(self, path: Path):
+        self.path = path
+
+    def endpointForURI(self,
+                       uri: URI # pylint: disable=unused-argument
+                       ) -> IStreamClientEndpoint:
+        """Return an endpoint for contacting the Control Center.
+        Raise OSError if there is no control socket in the data directory.
+        """
+
+        from twisted.internet import reactor
+
+        socketPath = (self.path / 'ctrl.sock').resolve()
+        if socketPath.is_socket():
+            return clientFromString(reactor, f'unix:{socketPath}:timeout=10')
+        else:
+            raise OSError(f"Control socket not found: {socketPath}")
+
 class GlobalOptions:
 
     def __init__(self, debug: bool, path: Path):
         self.debug = debug
         self.path = path
+
+    @property
+    def endpointFactory(self) -> IAgentEndpointFactory:
+        return ControlSocketFactory(self.path)
 
     def apply(self) -> None:
         """Initialize Control Center configuration according to
@@ -96,21 +120,6 @@ class GlobalOptions:
             import warnings
             logging.captureWarnings(True)
             warnings.simplefilter('default')
-
-    def endpointForURI(self,
-                       uri: URI # pylint: disable=unused-argument
-                       ) -> IStreamClientEndpoint:
-        """Return an endpoint for contacting the Control Center.
-        Raise OSError if there is no control socket in the data directory.
-        """
-
-        from twisted.internet import reactor
-
-        socketPath = (self.path / 'ctrl.sock').resolve()
-        if socketPath.is_socket():
-            return clientFromString(reactor, f'unix:{socketPath}:timeout=10')
-        else:
-            raise OSError(f"Control socket not found: {socketPath}")
 
     def urlForPath(self, path: str) -> str:
         """Return a full URL for accessing the given API path."""
@@ -355,7 +364,7 @@ def show(globalOptions: GlobalOptions, name: str, fmt: OutputFormat) -> None:
     """Show details of a single user account."""
 
     result = callAPI(run_GET(
-            globalOptions,
+            globalOptions.endpointFactory,
             globalOptions.urlForPath(f'users/{name}.json')
             ))
     if fmt is OutputFormat.TEXT:
@@ -371,7 +380,7 @@ def show(globalOptions: GlobalOptions, name: str, fmt: OutputFormat) -> None:
 @pass_obj
 def add(globalOptions: GlobalOptions, name: str, role: str) -> None:
     callAPI(run_PUT(
-            globalOptions,
+            globalOptions.endpointFactory,
             globalOptions.urlForPath(f'users/{name}.json'),
             json.dumps(dict(name=name, role=role)).encode()
             ))
@@ -396,7 +405,7 @@ def remove(globalOptions: GlobalOptions, name: str, force: bool) -> None:
         get_current_context().exit(2)
 
     callAPI(run_DELETE(
-            globalOptions,
+            globalOptions.endpointFactory,
             globalOptions.urlForPath(f'users/{name}')
             ))
     echo(f"softfab: user account '{name}' removed", err=True)
