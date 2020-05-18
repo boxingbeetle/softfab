@@ -178,7 +178,7 @@ class PageLoader:
         startupMessages.addMessage('Registering pages')
         root = self.root
         root.putChild(b'docs', DocResource.registerDocs('softfab.docs'))
-        createArtifactRoots(self.root, dbDir + '/artifacts',
+        createArtifactRoots(self.root, dbDir / 'artifacts',
                             self.root.anonOperator)
         root.putChild(b'webhook', createWebhooks(startupLogger))
 

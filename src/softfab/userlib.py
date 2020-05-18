@@ -171,7 +171,7 @@ def writePasswordFile(passwordFile: HtpasswdFile) -> None:
     with atomicWrite(passwordFile.path, 'wb') as out:
         out.write(data)
 
-_passwordFile = initPasswordFile(dbDir + '/passwords')
+_passwordFile = initPasswordFile(str(dbDir / 'passwords'))
 
 async def authenticateUser(userName: str, password: str) -> 'UserInfo':
     """Authenticates a user with the given password.
@@ -396,7 +396,7 @@ class UserDB(Database['UserInfo']):
         """
         return sum(user.isActive() for user in self)
 
-userDB = UserDB(dbDir + '/users')
+userDB = UserDB(dbDir / 'users')
 
 class UserInfo(XMLTag, DatabaseElem, User):
     tagName = 'user'

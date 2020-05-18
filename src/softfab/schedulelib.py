@@ -97,7 +97,7 @@ class ScheduleDB(Database['Scheduled']):
     description = 'schedule'
     uniqueKeys = ( 'id', )
 
-scheduleDB = ScheduleDB(dbDir + '/scheduled')
+scheduleDB = ScheduleDB(dbDir / 'scheduled')
 
 class JobDBObserver(RecordObserver[Job]):
     '''Send notifications if a job related to a schedule is new or changed.

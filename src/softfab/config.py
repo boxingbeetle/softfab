@@ -17,7 +17,7 @@ from urllib.parse import SplitResult, urlsplit, urlunsplit
 #       for the code to be accepted by Python < 3.8.0.
 #       https://github.com/python/cpython/commit/de2aea0f
 
-dbDir: str
+dbDir: Path
 """Directory this factory's database is located in."""
 
 rootURL = 'https://softfab.example.com/projname/'
@@ -105,7 +105,7 @@ def initConfig(path: Path) -> None:
     """
 
     global dbDir
-    dbDir = str(path)
+    dbDir = path
 
     with openConfig(path, 'r') as file:
         loadConfig(file)

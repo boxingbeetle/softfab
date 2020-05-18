@@ -9,7 +9,7 @@ from softfab.initlog import initLogging
 
 def removeDB():
     """Removes all database test directories."""
-    _removeRec(config.dbDir)
+    _removeRec(str(config.dbDir))
 
 def _removeRec(path):
     """Removes a directory and the files it contains, recursively."""
@@ -29,6 +29,6 @@ initLogging(Path.cwd())
 
 dbDir = Path('testdb')
 assert not dbDir.exists(), f'dir already exists: {dbDir}'
-config.dbDir = str(dbDir)
+config.dbDir = dbDir
 
 config.dbAtomicWrites = False

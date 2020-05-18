@@ -4,6 +4,7 @@ from functools import partial
 from gzip import GzipFile, open as openGzip
 from mimetypes import guess_type
 from os import fsync, replace
+from pathlib import Path
 # https://github.com/PyCQA/pylint/issues/3499
 from struct import Struct  # pylint: disable=no-name-in-module
 from typing import IO, Dict, Iterable, Iterator, Optional, Tuple, Union
@@ -1062,10 +1063,10 @@ class ZipTree:
         return node
 
 def createArtifactRoots(parent: Resource,
-                        baseDir: str,
+                        baseDir: Path,
                         anonOperator: bool
                         ) -> None:
-    path = FilePath(baseDir)
+    path = FilePath(str(baseDir))
     sandbox = ArtifactSandbox(path)
     parent.putChild(b'sandbox', sandbox)
     auth = ArtifactAuthWrapper(sandbox.rootPath.child('jobs'), anonOperator)

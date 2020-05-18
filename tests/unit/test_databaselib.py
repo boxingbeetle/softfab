@@ -59,7 +59,7 @@ class Observer:
 
 @fixture
 def createDB(tmp_path, request):
-    dbDir = str(tmp_path)
+    dbDir = tmp_path
     dbClass = request.param
 
     def dbFactory(recordFactory=RecordFactory(), keyChecker=None):

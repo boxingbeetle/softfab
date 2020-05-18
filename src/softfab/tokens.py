@@ -21,7 +21,7 @@ class TokenRole(Enum):
     """
     RESOURCE = 1
 
-_passwordFile = initPasswordFile(dbDir + '/tokens/passwords')
+_passwordFile = initPasswordFile(str(dbDir / 'tokens/passwords'))
 
 class Token(XMLTag, DatabaseElem):
     """Access token that authorizes API calls to perform operations
@@ -135,7 +135,7 @@ class TokenDB(Database[Token]):
         if _passwordFile.delete(tokenId):
             writePasswordFile(_passwordFile)
 
-tokenDB = TokenDB(dbDir + '/tokens')
+tokenDB = TokenDB(dbDir / 'tokens')
 
 class TokenUser(User):
     """User represented by an access token.

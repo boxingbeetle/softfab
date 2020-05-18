@@ -28,7 +28,7 @@ class FrameworkDB(VersionedDatabase['Framework']):
     description = 'framework'
     uniqueKeys = ( 'id', )
 
-frameworkDB = FrameworkDB(dbDir + '/frameworks')
+frameworkDB = FrameworkDB(dbDir / 'frameworks')
 
 class TaskDefBase(XMLTag, ParamMixin, SelectableRecordABC):
     tagName = 'taskdef'

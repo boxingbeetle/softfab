@@ -2,6 +2,7 @@
 
 from abc import ABC
 from operator import itemgetter
+from pathlib import Path
 from typing import (
     Callable, ClassVar, Dict, FrozenSet, Generic, Iterable, Iterator, KeysView,
     List, Mapping, Optional, Sequence, Set, Tuple, TypeVar, cast
@@ -231,10 +232,10 @@ class Database(Generic[DBRecord], RecordSubjectMixin[DBRecord], ABC):
     def retrieverFor(cls, key: str) -> Retriever:
         return cls.keyRetrievers.get(key) or itemgetter(key)
 
-    def __init__(self, baseDir: str):
+    def __init__(self, baseDir: Path):
         super().__init__()
 
-        self.baseDir = baseDir
+        self.baseDir = str(baseDir)
         """Directory in which the records of this database are kept."""
 
         self._cache: Dict[str, DBRecord] = {}
@@ -564,7 +565,7 @@ class VersionedDatabase(Database[DBRecord]):
     # Number of digits in version string.
     versionDigits = 4
 
-    def __init__(self, baseDir: str):
+    def __init__(self, baseDir: Path):
         super().__init__(baseDir)
         self.__latestVersionOf: Dict[str, str] = {}
         self.__removedRecords: Dict[str, str] = {}

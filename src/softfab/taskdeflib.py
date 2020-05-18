@@ -21,7 +21,7 @@ class TaskDefDB(VersionedDatabase['TaskDef']):
     description = 'task definition'
     uniqueKeys = ( 'id', )
 
-taskDefDB = TaskDefDB(dbDir + '/taskdefs')
+taskDefDB = TaskDefDB(dbDir / 'taskdefs')
 
 class TaskDef(frameworklib.TaskDefBase):
     cache = ObservingTagCache(taskDefDB, lambda: ())

@@ -24,7 +24,7 @@ class ProductDefDB(VersionedDatabase['ProductDef']):
     def _customCheckId(self, key: str) -> None:
         checkWrapperVarName(key)
 
-productDefDB = ProductDefDB(dbDir + '/productdefs')
+productDefDB = ProductDefDB(dbDir / 'productdefs')
 
 class ProductType(Enum):
     """Available product locator types.

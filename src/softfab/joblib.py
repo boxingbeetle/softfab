@@ -83,7 +83,7 @@ class JobDB(Database['Job']):
             for productID in orphanedProductIDs:
                 productDB.remove(productDB[productID])
 
-jobDB = JobDB(dbDir + '/jobs')
+jobDB = JobDB(dbDir / 'jobs')
 taskrunlib.jobDB = jobDB
 
 def unifyJobId(jobId: str) -> str:

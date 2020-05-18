@@ -35,7 +35,7 @@ class ResTypeDB(VersionedDatabase['ResType']):
                 repoResourceTypeName, pertask=False, perjob=False
                 ))
 
-resTypeDB = ResTypeDB(dbDir + '/restypes')
+resTypeDB = ResTypeDB(dbDir / 'restypes')
 
 class ResType(XMLTag, DatabaseElem):
     '''Represents a resource type with the properties common for all resources.

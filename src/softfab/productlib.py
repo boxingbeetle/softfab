@@ -22,7 +22,7 @@ class ProductDB(Database['Product']):
     uniqueKeys = ( 'id', )
     alwaysInMemory = False
 
-productDB = ProductDB(dbDir + '/products')
+productDB = ProductDB(dbDir / 'products')
 
 @total_ordering
 class Product(XMLTag, DatabaseElem):

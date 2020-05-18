@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from collections import defaultdict
+from pathlib import Path
 from typing import (
     TYPE_CHECKING, AbstractSet, Callable, ClassVar, Collection, DefaultDict,
     Iterable, Iterator, Mapping, Optional, Set, Tuple, TypeVar, cast
@@ -731,7 +732,7 @@ class ResourceDB(Database[ResourceBase]):
     description = 'resource'
     uniqueKeys = ( 'id', )
 
-    def __init__(self, baseDir: str):
+    def __init__(self, baseDir: Path):
         super().__init__(baseDir)
         self.__resourcesByType: DefaultDict[str, Set[str]] = \
                 defaultdict(set)
@@ -766,7 +767,7 @@ class ResourceDB(Database[ResourceBase]):
         if 'tokenId' in value._properties: # pylint: disable=protected-access
             tokenDB.remove(value.token)
 
-resourceDB = ResourceDB(dbDir + '/resources')
+resourceDB = ResourceDB(dbDir / 'resources')
 
 def iterTaskRunners() -> Iterator[TaskRunner]:
     """Iterates through all Task Runner records.

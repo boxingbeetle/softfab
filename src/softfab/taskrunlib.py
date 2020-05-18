@@ -668,7 +668,7 @@ class TaskRunDB(Database[TaskRun]):
     description = 'task run'
     uniqueKeys = ( 'id', )
 
-taskRunDB = TaskRunDB(dbDir + '/taskruns')
+taskRunDB = TaskRunDB(dbDir / 'taskruns')
 
 def newTaskRun(task: Task) -> TaskRun:
     taskRun = TaskRun({'id': createInternalId()}, task)

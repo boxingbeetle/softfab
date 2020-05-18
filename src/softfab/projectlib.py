@@ -103,7 +103,7 @@ class ProjectDB(Database['Project']):
         # Call observers, no matter whether we loaded or created the record.
         self._notifyAdded(record)
 
-_projectDB = ProjectDB(dbDir + '/project')
+_projectDB = ProjectDB(dbDir / 'project')
 
 class Project(XMLTag, SingletonElem):
     '''Overall project settings.

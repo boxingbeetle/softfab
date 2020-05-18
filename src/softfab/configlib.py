@@ -93,7 +93,7 @@ class _ConfigDB(Database['Config']):
     description = 'configuration'
     uniqueKeys = ( 'name', )
 
-configDB = _ConfigDB(dbDir + '/configs')
+configDB = _ConfigDB(dbDir / 'configs')
 
 class _Param(XMLTag):
     tagName = 'param'
