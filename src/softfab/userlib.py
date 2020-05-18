@@ -4,6 +4,7 @@ from abc import ABC
 from enum import Enum
 from os import makedirs
 from os.path import dirname, exists
+from pathlib import Path
 from typing import (
     Any, FrozenSet, Iterable, Iterator, Mapping, Optional, Sequence, Set,
     Tuple, Union, cast
@@ -137,8 +138,8 @@ PasswordMessage = Enum('PasswordMessage', 'SUCCESS POOR SHORT EMPTY MISMATCH')
 
 minimumPasswordLength = 8
 
-def initPasswordFile(path: str) -> HtpasswdFile:
-    passwordFile = HtpasswdFile(path, default_scheme='portable', new=True)
+def initPasswordFile(path: Path) -> HtpasswdFile:
+    passwordFile = HtpasswdFile(str(path), default_scheme='portable', new=True)
 
     # Marking schemes as deprecated tells passlib to re-hash when a password
     # is successfully verified. Instead of marking only known insecure schemes
@@ -156,11 +157,9 @@ def initPasswordFile(path: str) -> HtpasswdFile:
     try:
         passwordFile.load()
     except FileNotFoundError:
-        dirPath = dirname(path)
-        if not exists(dirPath):
-            makedirs(dirPath)
+        path.parent.mkdir(parents=True, exist_ok=True)
         # Create empty file.
-        with open(path, 'a'):
+        with path.open('a'):
             pass
 
     return passwordFile
@@ -171,7 +170,7 @@ def writePasswordFile(passwordFile: HtpasswdFile) -> None:
     with atomicWrite(passwordFile.path, 'wb') as out:
         out.write(data)
 
-_passwordFile = initPasswordFile(str(dbDir / 'passwords'))
+_passwordFile = initPasswordFile(dbDir / 'passwords')
 
 async def authenticateUser(userName: str, password: str) -> 'UserInfo':
     """Authenticates a user with the given password.
