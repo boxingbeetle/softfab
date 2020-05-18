@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Awaitable, Optional, TypeVar
 import sys
 
 from click import (
-    BadParameter, Context, ParamType, Parameter, argument, echo,
+    BadParameter, Choice, Context, ParamType, Parameter, argument, echo,
     get_current_context, group, option, pass_context, pass_obj, version_option,
     wrap_text
 )
@@ -322,10 +322,6 @@ def migrate(globalOptions: GlobalOptions) -> None:
 def user() -> None:
     """Query and modify user accounts."""
 
-roleDoc = f"""
-ROLE can be {', '.join(f"'{role.name.lower()}'" for role in UIRoleNames)}.
-"""
-
 @user.command()
 @argument('name')
 @option('--text', 'fmt', flag_value=OutputFormat.TEXT, default=True,
@@ -350,11 +346,18 @@ def show(globalOptions: GlobalOptions, name: str, fmt: OutputFormat) -> None:
     else:
         echo(result.decode())
 
-@user.command(help=f"Create a new user account.\n{roleDoc}")
+@user.command()
 @argument('name')
-@argument('role')
+@option('-r', '--role',
+        type=Choice([role.name.lower()
+                     for role in UIRoleNames
+                     if role is not UIRoleNames.INACTIVE]),
+        default='user', show_default=True,
+        help="New user's role, which determines access permissions.")
 @pass_obj
 def add(globalOptions: GlobalOptions, name: str, role: str) -> None:
+    """Create a new user account."""
+
     import json
     from softfab.apiclient import run_PUT
 
