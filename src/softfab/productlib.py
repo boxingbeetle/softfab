@@ -16,13 +16,13 @@ class ProductFactory:
         return Product(attributes)
 
 class ProductDB(Database['Product']):
-    baseDir = dbDir + '/products'
     factory = ProductFactory()
     privilegeObject = 'j' # every product is a part of a job
     description = 'product'
     uniqueKeys = ( 'id', )
     alwaysInMemory = False
-productDB = ProductDB()
+
+productDB = ProductDB(dbDir + '/products')
 
 @total_ordering
 class Product(XMLTag, DatabaseElem):

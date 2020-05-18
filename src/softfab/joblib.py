@@ -57,7 +57,6 @@ class JobFactory:
         return Job(attributes)
 
 class JobDB(Database['Job']):
-    baseDir = dbDir + '/jobs'
     factory = JobFactory()
     privilegeObject = 'j'
     description = 'job'
@@ -84,7 +83,7 @@ class JobDB(Database['Job']):
             for productID in orphanedProductIDs:
                 productDB.remove(productDB[productID])
 
-jobDB = JobDB()
+jobDB = JobDB(dbDir + '/jobs')
 taskrunlib.jobDB = jobDB
 
 def unifyJobId(jobId: str) -> str:

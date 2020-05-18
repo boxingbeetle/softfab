@@ -726,14 +726,13 @@ class ResourceFactory:
         return TaskRunner(attributes)
 
 class ResourceDB(Database[ResourceBase]):
-    baseDir = dbDir + '/resources'
     factory = ResourceFactory()
     privilegeObject = 'r'
     description = 'resource'
     uniqueKeys = ( 'id', )
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, baseDir: str):
+        super().__init__(baseDir)
         self.__resourcesByType: DefaultDict[str, Set[str]] = \
                 defaultdict(set)
 
@@ -767,7 +766,7 @@ class ResourceDB(Database[ResourceBase]):
         if 'tokenId' in value._properties: # pylint: disable=protected-access
             tokenDB.remove(value.token)
 
-resourceDB = ResourceDB()
+resourceDB = ResourceDB(dbDir + '/resources')
 
 def iterTaskRunners() -> Iterator[TaskRunner]:
     """Iterates through all Task Runner records.

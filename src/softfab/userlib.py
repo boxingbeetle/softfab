@@ -384,7 +384,6 @@ class UserInfoFactory:
         return UserInfo(attributes)
 
 class UserDB(Database['UserInfo']):
-    baseDir = dbDir + '/users'
     factory = UserInfoFactory()
     privilegeObject = 'u'
     description = 'user'
@@ -397,7 +396,7 @@ class UserDB(Database['UserInfo']):
         """
         return sum(user.isActive() for user in self)
 
-userDB = UserDB()
+userDB = UserDB(dbDir + '/users')
 
 class UserInfo(XMLTag, DatabaseElem, User):
     tagName = 'user'

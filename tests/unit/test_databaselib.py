@@ -76,14 +76,13 @@ class BasicTests:
 
     def createDB(self, recordFactory=RecordFactory(), keyChecker=None):
         class DB(self.dbClass):
-            baseDir = self.dbDir
             factory = recordFactory
             description = 'test'
             privilegeObject = 'x' # dummy
             if keyChecker is not None:
                 def _customCheckId(self, key):
                     keyChecker(key)
-        db = DB()
+        db = DB(self.dbDir)
         db.preload()
         observer = Observer()
         db.addObserver(observer)

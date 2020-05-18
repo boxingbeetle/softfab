@@ -16,7 +16,6 @@ class ProductFactory:
         return ProductDef(attributes)
 
 class ProductDefDB(VersionedDatabase['ProductDef']):
-    baseDir = dbDir + '/productdefs'
     factory = ProductFactory()
     privilegeObject = 'pd'
     description = 'product definition'
@@ -25,7 +24,7 @@ class ProductDefDB(VersionedDatabase['ProductDef']):
     def _customCheckId(self, key: str) -> None:
         checkWrapperVarName(key)
 
-productDefDB = ProductDefDB()
+productDefDB = ProductDefDB(dbDir + '/productdefs')
 
 class ProductType(Enum):
     """Available product locator types.

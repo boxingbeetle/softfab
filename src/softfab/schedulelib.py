@@ -92,12 +92,12 @@ class ScheduledFactory:
         return Scheduled(attributes)
 
 class ScheduleDB(Database['Scheduled']):
-    baseDir = dbDir + '/scheduled'
     factory = ScheduledFactory()
     privilegeObject = 's'
     description = 'schedule'
     uniqueKeys = ( 'id', )
-scheduleDB = ScheduleDB()
+
+scheduleDB = ScheduleDB(dbDir + '/scheduled')
 
 class JobDBObserver(RecordObserver[Job]):
     '''Send notifications if a job related to a schedule is new or changed.

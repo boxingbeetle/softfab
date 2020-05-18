@@ -88,12 +88,12 @@ class _ConfigFactory:
         return Config(attributes)
 
 class _ConfigDB(Database['Config']):
-    baseDir = dbDir + '/configs'
     factory = _ConfigFactory()
     privilegeObject = 'c'
     description = 'configuration'
     uniqueKeys = ( 'name', )
-configDB = _ConfigDB()
+
+configDB = _ConfigDB(dbDir + '/configs')
 
 class _Param(XMLTag):
     tagName = 'param'

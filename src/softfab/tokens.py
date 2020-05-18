@@ -124,7 +124,6 @@ class TokenFactory:
         return Token(attributes)
 
 class TokenDB(Database[Token]):
-    baseDir = dbDir + '/tokens'
     factory = TokenFactory()
     privilegeObject = 'tk'
     description = 'token'
@@ -136,7 +135,7 @@ class TokenDB(Database[Token]):
         if _passwordFile.delete(tokenId):
             writePasswordFile(_passwordFile)
 
-tokenDB = TokenDB()
+tokenDB = TokenDB(dbDir + '/tokens')
 
 class TokenUser(User):
     """User represented by an access token.

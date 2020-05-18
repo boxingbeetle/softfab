@@ -17,7 +17,6 @@ taskRunnerResourceTypeName = 'sf.tr'
 repoResourceTypeName = 'sf.repo'
 
 class ResTypeDB(VersionedDatabase['ResType']):
-    baseDir = dbDir + '/restypes'
     factory = ResTypeFactory()
     privilegeObject = 'rt'
     description = 'resource type'
@@ -36,7 +35,7 @@ class ResTypeDB(VersionedDatabase['ResType']):
                 repoResourceTypeName, pertask=False, perjob=False
                 ))
 
-resTypeDB = ResTypeDB()
+resTypeDB = ResTypeDB(dbDir + '/restypes')
 
 class ResType(XMLTag, DatabaseElem):
     '''Represents a resource type with the properties common for all resources.

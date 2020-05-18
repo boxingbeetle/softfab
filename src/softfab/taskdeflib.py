@@ -16,12 +16,12 @@ class TaskDefFactory:
         return TaskDef(attributes)
 
 class TaskDefDB(VersionedDatabase['TaskDef']):
-    baseDir = dbDir + '/taskdefs'
     factory = TaskDefFactory()
     privilegeObject = 'td'
     description = 'task definition'
     uniqueKeys = ( 'id', )
-taskDefDB = TaskDefDB()
+
+taskDefDB = TaskDefDB(dbDir + '/taskdefs')
 
 class TaskDef(frameworklib.TaskDefBase):
     cache = ObservingTagCache(taskDefDB, lambda: ())

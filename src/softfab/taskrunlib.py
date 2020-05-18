@@ -663,12 +663,12 @@ class TaskRunFactory:
         return TaskRun(attributes)
 
 class TaskRunDB(Database[TaskRun]):
-    baseDir = dbDir + '/taskruns'
     factory = TaskRunFactory()
     privilegeObject = 't'
     description = 'task run'
     uniqueKeys = ( 'id', )
-taskRunDB = TaskRunDB()
+
+taskRunDB = TaskRunDB(dbDir + '/taskruns')
 
 def newTaskRun(task: Task) -> TaskRun:
     taskRun = TaskRun({'id': createInternalId()}, task)

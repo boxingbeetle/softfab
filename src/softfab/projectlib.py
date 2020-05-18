@@ -85,7 +85,6 @@ class ProjectFactory:
         return Project(attributes)
 
 class ProjectDB(Database['Project']):
-    baseDir = dbDir + '/project'
     factory = ProjectFactory()
     privilegeObject = 'p'
     description = 'project configuration'
@@ -104,7 +103,7 @@ class ProjectDB(Database['Project']):
         # Call observers, no matter whether we loaded or created the record.
         self._notifyAdded(record)
 
-_projectDB = ProjectDB()
+_projectDB = ProjectDB(dbDir + '/project')
 
 class Project(XMLTag, SingletonElem):
     '''Overall project settings.

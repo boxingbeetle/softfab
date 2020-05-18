@@ -33,7 +33,6 @@ class RecordFactory:
 
 class DB(Database):
     description = 'test'
-    baseDir = 'testdb'
     factory = RecordFactory()
     privilegeObject = 'x' # dummy
 
@@ -61,8 +60,9 @@ class EvenQueue(SortedQueue):
 class TestSortedQueue(unittest.TestCase):
 
     def setUp(self):
-        assert not os.path.exists(DB.baseDir)
-        self.db = db = DB()
+        baseDir = 'testdb'
+        assert not os.path.exists(baseDir)
+        self.db = db = DB(baseDir)
         db.preload()
         self.observer = observer = Observer()
         self.queue = queue = EvenQueue(db)
@@ -70,12 +70,13 @@ class TestSortedQueue(unittest.TestCase):
         self.seqID = 0
 
     def tearDown(self):
+        baseDir = self.db.baseDir
         del self.db
         del self.observer
-        prefix = DB.baseDir + '/'
-        for name in os.listdir(DB.baseDir):
+        prefix = baseDir + '/'
+        for name in os.listdir(baseDir):
             os.remove(prefix + name)
-        os.rmdir(DB.baseDir)
+        os.rmdir(baseDir)
 
     def addRecord(self, value):
         record = Record({

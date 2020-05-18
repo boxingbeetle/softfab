@@ -23,12 +23,12 @@ class FrameworkFactory:
         return Framework(attributes)
 
 class FrameworkDB(VersionedDatabase['Framework']):
-    baseDir = dbDir + '/frameworks'
     factory = FrameworkFactory()
     privilegeObject = 'fd'
     description = 'framework'
     uniqueKeys = ( 'id', )
-frameworkDB = FrameworkDB()
+
+frameworkDB = FrameworkDB(dbDir + '/frameworks')
 
 class TaskDefBase(XMLTag, ParamMixin, SelectableRecordABC):
     tagName = 'taskdef'

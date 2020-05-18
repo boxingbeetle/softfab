@@ -177,9 +177,6 @@ class Database(Generic[DBRecord], RecordSubjectMixin[DBRecord], ABC):
     root tag(s) in the fashion prescribed by the xmlbind module.
     """
 
-    baseDir: ClassVar[str] = abstract
-    """Directory in which the records of this database are kept."""
-
     factory: ClassVar[object] = abstract
     """Parser for the root XML tag."""
 
@@ -234,8 +231,12 @@ class Database(Generic[DBRecord], RecordSubjectMixin[DBRecord], ABC):
     def retrieverFor(cls, key: str) -> Retriever:
         return cls.keyRetrievers.get(key) or itemgetter(key)
 
-    def __init__(self) -> None:
+    def __init__(self, baseDir: str):
         super().__init__()
+
+        self.baseDir = baseDir
+        """Directory in which the records of this database are kept."""
+
         self._cache: Dict[str, DBRecord] = {}
         self.__uniqueValuesFor: Dict[str, Set[object]] = {
             key: set() for key in self.cachedUniqueValues
@@ -550,7 +551,6 @@ class VersionedDatabase(Database[DBRecord]):
     If you attempt to modify the record object (DatabaseElem) and
     call _notify() on it, you will get a RuntimeError.
     """
-    baseDir: ClassVar[str] = abstract
     description: ClassVar[str] = abstract
     factory: ClassVar[object] = abstract
     privilegeObject: ClassVar[str] = abstract
@@ -564,8 +564,8 @@ class VersionedDatabase(Database[DBRecord]):
     # Number of digits in version string.
     versionDigits = 4
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, baseDir: str):
+        super().__init__(baseDir)
         self.__latestVersionOf: Dict[str, str] = {}
         self.__removedRecords: Dict[str, str] = {}
 
