@@ -17,11 +17,6 @@ from softfab.utils import Comparable, abstract, atomicWrite, cachedProperty
 from softfab.xmlbind import parse
 from softfab.xmlgen import XML
 
-# Automatically convert non-versioned DB directory to versioned if
-# a VersionedDatabase class uses it.
-# Turn this on just after upgrading, then disable it again.
-autoVersion = False
-
 _changeLogger = logging.getLogger('ControlCenter.datachange')
 _changeLogger.setLevel(logging.INFO if logChanges else logging.ERROR)
 
@@ -562,31 +557,6 @@ class VersionedDatabase(Database[DBRecord]):
     versionDigits = 4
 
     def __init__(self) -> None:
-        # Backwards compatibility.
-        if autoVersion and os.path.exists(self.baseDir):
-            versioned = False
-            for fileName in os.listdir(self.baseDir):
-                if ( fileName.endswith('.xml')
-                and len(fileName) > (1 + self.versionDigits + 4)
-                and fileName[-(1 + self.versionDigits + 4)] == '.'
-                and fileName[-(self.versionDigits + 4) : -4].isdigit()
-                ):
-                    versioned = True
-                elif fileName.endswith('.removed'):
-                    versioned = True
-            if len(os.listdir(self.baseDir)) == 0:
-                versioned = True
-            if not versioned:
-                # Convert to versioned DB.
-                for fileName in os.listdir(self.baseDir):
-                    if fileName.endswith('.xml'):
-                        key = Database._keyForFileName(self, fileName)
-                        os.rename(
-                            self.baseDir + '/' + key + '.xml', # src
-                            self.baseDir + '/' + key + '.'
-                                + '0' * self.versionDigits + '.xml', # dst
-                            )
-
         super().__init__()
         self.__latestVersionOf: Dict[str, str] = {}
         self.__removedRecords: Dict[str, str] = {}
