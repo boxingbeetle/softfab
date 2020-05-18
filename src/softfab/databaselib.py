@@ -177,50 +177,58 @@ class Database(Generic[DBRecord], RecordSubjectMixin[DBRecord], ABC):
     root tag(s) in the fashion prescribed by the xmlbind module.
     """
 
-    # Directory in which the records of this database are kept.
     baseDir: ClassVar[str] = abstract
+    """Directory in which the records of this database are kept."""
 
-    # Parser for the root XML tag.
     factory: ClassVar[object] = abstract
+    """Parser for the root XML tag."""
 
-    # The object part of privilege strings that apply to this database.
-    # See userlib.privileges for details.
     privilegeObject: ClassVar[str] = abstract
+    """The object part of privilege strings that apply to this database.
+    See userlib.privileges for details.
+    """
 
-    # Describes the type of records contained in this database.
     description: ClassVar[str] = abstract
+    """Describes the type of records contained in this database."""
 
-    # Lists the column keys that are unique: every record will have a different
-    # value for the listed keys.
     uniqueKeys: Sequence[str] = ()
+    """Lists the column keys that are unique: every record will have
+    a different value for the listed keys.
+    """
 
-    # Cache the unique values for the given column keys.
-    # The mechanism which does this is a bit limited: for every loaded record,
-    # the set of seen values will be updated. This means that:
-    # 1. it will only work for preloaded databases
-    # 2. for versioned databases, it will look at both old and recent versions
-    # 3. when records are removed, there is no check whether the last use of
-    #    a value is removed
-    # So basically it works fine for joblib, where it is needed most, but is
-    # not guaranteed to work for every database.
-    # If we would keep track of how often a value occurs, we could guarantee
-    # values disappear from the cache when they no longer occur (fixes 2 + 3).
-    # If we would persist the cached unique values, we no longer rely on
-    # preloading (fixes 1).
-    # Using weak references, 3 could be solved easily, 2 with some additional
-    # effort, but 1 could never be solved, so I decided against it.
     cachedUniqueValues: Sequence[str] = ()
+    """Cache of the unique values for the given column keys.
+    The mechanism which does this is a bit limited: for every loaded record,
+    the set of seen values will be updated. This means that:
+      1. it will only work for preloaded databases
+      2. for versioned databases, it will look at both old and recent versions
+      3. when records are removed, there is no check whether the last use of
+         a value is removed
+    So basically it works fine for joblib, where it is needed most, but is
+    not guaranteed to work for every database.
+    If we would keep track of how often a value occurs, we could guarantee
+    values disappear from the cache when they no longer occur (fixes 2 + 3).
+    If we would persist the cached unique values, we no longer rely on
+    preloading (fixes 1).
+    Using weak references, 3 could be solved easily, 2 with some additional
+    effort, but 1 could never be solved, so I decided against it.
+    """
 
     keyRetrievers: ClassVar[Mapping[str, Retriever]] = {}
     """Contains optimized value retriever functions for certain column keys.
     """
 
-    # Regular expression with defines all valid database keys.
     __reKey = re.compile('^[@A-Za-z0-9+_-][@A-Za-z0-9.+_ -]*$')
-    # Regular expression with defines characters disallowed in database keys.
+    """Regular expression with defines all valid database keys."""
+
     __reKeySub = re.compile('(?:^[^A-Za-z0-9+_-]|[^A-Za-z0-9.+_ -])')
-    # Regular expression for multiple spaces (to be replaced with a single one)
+    """Regular expression with defines characters disallowed in database keys.
+    """
+
     __reSpaces = re.compile(' {2,}')
+    """Regular expression for multiple spaces.
+    This is used to replace multiple spaces with a single one.
+    """
 
     @classmethod
     def retrieverFor(cls, key: str) -> Retriever:
