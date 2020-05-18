@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from enum import Enum
+from pathlib import Path
 from typing import Dict, Iterator, Mapping, Optional, cast
 
 from passlib.pwd import genword
@@ -20,8 +21,6 @@ class TokenRole(Enum):
     """The purpose for which a token can be used.
     """
     RESOURCE = 1
-
-_passwordFile = initPasswordFile(dbDir / 'tokens' / 'passwords')
 
 class Token(XMLTag, DatabaseElem):
     """Access token that authorizes API calls to perform operations
@@ -113,9 +112,10 @@ class Token(XMLTag, DatabaseElem):
         password database, it is not possible to retrieve it later.
         """
         password = genword(length=16)
-        _passwordFile.load_if_changed()
-        _passwordFile.set_password(self.getId(), password)
-        writePasswordFile(_passwordFile)
+        passwordFile = tokenDB.passwordFile
+        passwordFile.load_if_changed()
+        passwordFile.set_password(self.getId(), password)
+        writePasswordFile(passwordFile)
         return password
 
 class TokenFactory:
@@ -129,11 +129,16 @@ class TokenDB(Database[Token]):
     description = 'token'
     uniqueKeys = ('id',)
 
+    def __init__(self, baseDir: Path):
+        super().__init__(baseDir)
+        self.passwordFile = initPasswordFile(baseDir / 'passwords')
+
     def remove(self, value: Token) -> None:
         tokenId = value.getId()
         super().remove(value)
-        if _passwordFile.delete(tokenId):
-            writePasswordFile(_passwordFile)
+        passwordFile = self.passwordFile
+        if passwordFile.delete(tokenId):
+            writePasswordFile(passwordFile)
 
 tokenDB = TokenDB(dbDir / 'tokens')
 
@@ -169,6 +174,6 @@ def authenticateToken(tokenId: str, password: str) -> Token:
     # user friendly here.
     token = tokenDB[tokenId]
 
-    authenticate(_passwordFile, tokenId, password)
+    authenticate(tokenDB.passwordFile, tokenId, password)
 
     return token

@@ -170,8 +170,6 @@ def writePasswordFile(passwordFile: HtpasswdFile) -> None:
     with atomicWrite(passwordFile.path, 'wb') as out:
         out.write(data)
 
-_passwordFile = initPasswordFile(dbDir / 'passwords')
-
 async def authenticateUser(userName: str, password: str) -> 'UserInfo':
     """Authenticates a user with the given password.
 
@@ -186,7 +184,7 @@ async def authenticateUser(userName: str, password: str) -> 'UserInfo':
     if not userName:
         raise UnauthorizedLogin('No user name specified')
 
-    authenticate(_passwordFile, userName, password)
+    authenticate(userDB.passwordFile, userName, password)
 
     try:
         return userDB[userName]
@@ -276,9 +274,10 @@ def removeUserAccount(name: str) -> None:
     userDB.remove(user)
 
     # Remove the user's password.
-    _passwordFile.load_if_changed()
-    _passwordFile.delete(name)
-    writePasswordFile(_passwordFile)
+    passwordFile = userDB.passwordFile
+    passwordFile.load_if_changed()
+    passwordFile.delete(name)
+    writePasswordFile(passwordFile)
 
 def setPassword(userName: str, password: str) -> None:
     '''Sets the password for an existing user account.
@@ -296,9 +295,10 @@ def setPassword(userName: str, password: str) -> None:
     _checkPassword(password)
 
     # Commit the new password.
-    _passwordFile.load_if_changed()
-    _passwordFile.set_password(userName, password)
-    writePasswordFile(_passwordFile)
+    passwordFile = userDB.passwordFile
+    passwordFile.load_if_changed()
+    passwordFile.set_password(userName, password)
+    writePasswordFile(passwordFile)
 
 def passwordQuality(userName: str, password: str) -> PasswordMessage:
     '''Performs sanity checks on a username/password combination.
@@ -387,6 +387,10 @@ class UserDB(Database['UserInfo']):
     privilegeObject = 'u'
     description = 'user'
     uniqueKeys = ( 'id', )
+
+    def __init__(self, baseDir: Path):
+        super().__init__(baseDir)
+        self.passwordFile = initPasswordFile(baseDir.parent / 'passwords')
 
     @property
     def numActiveUsers(self) -> int:
