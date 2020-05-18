@@ -1,9 +1,11 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from pytest import fixture
+
 from softfab.databaselib import Database, DatabaseElem
 from softfab.sortedqueue import SortedQueue
 from softfab.xmlgen import xml
-import os, os.path, unittest
+
 
 class Record(DatabaseElem):
     "Minimal implementation of DatabaseElem."
@@ -36,6 +38,26 @@ class DB(Database):
     factory = RecordFactory()
     privilegeObject = 'x' # dummy
 
+    def __init__(self, baseDir):
+        super().__init__(baseDir)
+        self.seqID = 0
+
+    def addRecord(self, value):
+        record = Record({
+            'id': '%08d' % self.seqID,
+            'value': value,
+            'flag': True
+            })
+        self.add(record)
+        self.seqID += 1
+        return record
+
+@fixture
+def db(tmp_path):
+    db = DB(str(tmp_path))
+    db.preload()
+    return db
+
 class Observer:
     "Counts observer notifications from DB."
     def __init__(self):
@@ -57,161 +79,130 @@ class EvenQueue(SortedQueue):
     def _filter(self, record):
         return (record['value'] % 2 == 0) == record['flag']
 
-class TestSortedQueue(unittest.TestCase):
-
-    def setUp(self):
-        baseDir = 'testdb'
-        assert not os.path.exists(baseDir)
-        self.db = db = DB(baseDir)
-        db.preload()
-        self.observer = observer = Observer()
-        self.queue = queue = EvenQueue(db)
-        queue.addObserver(observer)
-        self.seqID = 0
-
-    def tearDown(self):
-        baseDir = self.db.baseDir
-        del self.db
-        del self.observer
-        prefix = baseDir + '/'
-        for name in os.listdir(baseDir):
-            os.remove(prefix + name)
-        os.rmdir(baseDir)
-
-    def addRecord(self, value):
-        record = Record({
-            'id': '%08d' % self.seqID,
-            'value': value,
-            'flag': True
-            })
-        self.db.add(record)
-        self.seqID += 1
-        return record
+    @property
+    def observer(self):
+        observer, = self._observers
+        return observer
 
     def checkRecords(self):
         prevKey = None
-        for record in self.queue:
+        for record in self:
             value = record['value']
-            self.assertTrue(self.queue._filter(record))
+            assert self._filter(record)
             key = value, record.getId()
             if prevKey is not None:
-                self.assertLess(prevKey, key)
+                assert prevKey < key
             prevKey = key
 
     def checkAddOnly(self):
-        self.assertSetEqual(set(self.observer.addedRecords), set(self.queue))
-        self.assertListEqual(self.observer.removedRecords, [])
-        self.assertListEqual(self.observer.updatedRecords, [])
+        observer = self.observer
+        assert set(observer.addedRecords) == set(self)
+        assert observer.removedRecords == []
+        assert observer.updatedRecords == []
 
-    def test0100ZeroToHundred(self):
-        "Check values counting from 0 to 100."
-        for value in range(101):
-            self.addRecord(value)
-        self.assertListEqual(
-            [record['value'] for record in self.queue],
-            list(range(0, 101, 2))
-            )
-        self.checkRecords()
-        self.checkAddOnly()
+@fixture
+def queue(db):
+    observer = Observer()
+    queue = EvenQueue(db)
+    queue.addObserver(observer)
+    return queue
 
-    def test0110HundredToZero(self):
-        "Check values counting from 100 to 0."
-        for value in range(100, -1, -1):
-            self.addRecord(value)
-        self.assertListEqual(
-            [record['value'] for record in self.queue],
-            list(range(0, 101, 2))
-            )
-        self.checkRecords()
-        self.checkAddOnly()
+def testZeroToHundred(db, queue):
+    "Check values counting from 0 to 100."
+    for value in range(101):
+        db.addRecord(value)
+    assert [record['value'] for record in queue] == list(range(0, 101, 2))
+    queue.checkRecords()
+    queue.checkAddOnly()
 
-    def test0120ZeroToHundred(self):
-        "Check values from 0 to 100, inserted in pseudo-random order."
-        for value in range(101):
-            self.addRecord((value * 13) % 101)
-        self.assertListEqual(
-            [record['value'] for record in self.queue],
-            list(range(0, 101, 2))
-            )
-        self.checkRecords()
-        self.checkAddOnly()
+def testHundredToZero(db, queue):
+    "Check values counting from 100 to 0."
+    for value in range(100, -1, -1):
+        db.addRecord(value)
+    assert [record['value'] for record in queue] == list(range(0, 101, 2))
+    queue.checkRecords()
+    queue.checkAddOnly()
 
-    def test0130Duplicates(self):
-        "Check values from 0 to 9, inserted multiple times."
-        for value in range(100):
-            self.addRecord(value % 10)
-        self.assertListEqual(
-            [record['value'] for record in self.queue],
-            [x for x in range(10) for y in range(10) if x % 2 == 0]
-            )
-        self.checkRecords()
-        self.checkAddOnly()
+def testZeroToHundredShuffle(db, queue):
+    "Check values from 0 to 100, inserted in pseudo-random order."
+    for value in range(101):
+        db.addRecord((value * 13) % 101)
+    assert [record['value'] for record in queue] == list(range(0, 101, 2))
+    queue.checkRecords()
+    queue.checkAddOnly()
 
-    def test0200Delete(self):
-        "Check deletion of some of the added values."
-        added = []
-        for value in range(101):
-            value = (value * 13) % 101
-            record = self.addRecord(value)
+def testDuplicates(db, queue):
+    "Check values from 0 to 9, inserted multiple times."
+    for value in range(100):
+        db.addRecord(value % 10)
+    assert [record['value'] for record in queue] == [
+        x for x in range(10) for y in range(10) if x % 2 == 0
+        ]
+    queue.checkRecords()
+    queue.checkAddOnly()
+
+def testDelete(db, queue):
+    "Check deletion of some of the added values."
+    added = []
+    for value in range(101):
+        value = (value * 13) % 101
+        record = db.addRecord(value)
+        if value % 2 == 0:
+            added.append(record)
+    removed = []
+    for record in list(db.values()):
+        value = record['value']
+        if value % 3 != 0:
+            db.remove(record)
             if value % 2 == 0:
-                added.append(record)
-        removed = []
-        for record in list(self.db.values()):
-            value = record['value']
-            if value % 3 != 0:
-                self.db.remove(record)
-                if value % 2 == 0:
-                    removed.append(record)
-        self.assertListEqual(
-            [record['value'] for record in self.queue],
-            list(range(0, 101, 6))
-            )
-        self.checkRecords()
-        self.assertListEqual(self.observer.addedRecords, added)
-        self.assertListEqual(self.observer.removedRecords, removed)
-        self.assertListEqual(self.observer.updatedRecords, [])
+                removed.append(record)
+    assert [record['value'] for record in queue] == list(range(0, 101, 6))
+    queue.checkRecords()
+    observer = queue.observer
+    assert observer.addedRecords == added
+    assert observer.removedRecords == removed
+    assert observer.updatedRecords == []
 
-    def test0300Update(self):
-        "Check records that are updated."
-        added = []
-        for value in range(101):
-            value = (value * 13) % 101
-            record = self.addRecord(value)
+def testUpdate(db, queue):
+    "Check records that are updated."
+    added = []
+    for value in range(101):
+        value = (value * 13) % 101
+        record = db.addRecord(value)
+        if value % 2 == 0:
+            added.append(record)
+    updated = []
+    for record in list(db.values()):
+        value = record['value']
+        if value % 3 == 0:
+            record['dummy'] = 'no effect'
             if value % 2 == 0:
-                added.append(record)
-        updated = []
-        for record in list(self.db.values()):
-            value = record['value']
-            if value % 3 == 0:
-                record['dummy'] = 'no effect'
-                if value % 2 == 0:
-                    updated.append(record)
-        self.checkRecords()
-        self.assertListEqual(self.observer.addedRecords, added)
-        self.assertListEqual(self.observer.removedRecords, [])
-        self.assertListEqual(self.observer.updatedRecords, updated)
+                updated.append(record)
+    queue.checkRecords()
+    observer = queue.observer
+    assert observer.addedRecords == added
+    assert observer.removedRecords == []
+    assert observer.updatedRecords == updated
 
-    def test0310UpdateFilter(self):
-        "Check records that are filtered in/out when they update."
-        added = []
-        for value in range(101):
-            value = (value * 13) % 101
-            record = self.addRecord(value)
+def testUpdateFilter(db, queue):
+    "Check records that are filtered in/out when they update."
+    added = []
+    for value in range(101):
+        value = (value * 13) % 101
+        record = db.addRecord(value)
+        if value % 2 == 0:
+            added.append(record)
+    removed = []
+    for record in list(db.values()):
+        value = record['value']
+        if value % 3 == 0:
+            record['flag'] = False
             if value % 2 == 0:
+                removed.append(record)
+            else:
                 added.append(record)
-        removed = []
-        for record in list(self.db.values()):
-            value = record['value']
-            if value % 3 == 0:
-                record['flag'] = False
-                if value % 2 == 0:
-                    removed.append(record)
-                else:
-                    added.append(record)
-        self.checkRecords()
-        self.assertListEqual(self.observer.addedRecords, added)
-        self.assertListEqual(self.observer.removedRecords, removed)
-        self.assertListEqual(self.observer.updatedRecords, [])
-
-if __name__ == '__main__':
-    unittest.main()
+    queue.checkRecords()
+    observer = queue.observer
+    assert observer.addedRecords == added
+    assert observer.removedRecords == removed
+    assert observer.updatedRecords == []
