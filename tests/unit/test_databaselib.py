@@ -1,16 +1,26 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-import os, os.path, random, time, unittest
+"""Test Database and VersionedDatabase functionality.
 
-from initconfig import config, removeDB
+Every test case checks both the in-memory database (same db object on which
+operations were performed) and the on-disk database (call to createDB()
+after operations were performed).
+"""
 
-from softfab import databaselib
+from pytest import fixture, mark, raises
+
+import random, time
+
+from softfab.databaselib import Database, DatabaseElem, VersionedDatabase
 from softfab.xmlgen import xml
 
-class Record(databaselib.DatabaseElem):
+
+RECORD_ID = 'id_abc'
+
+class Record(DatabaseElem):
     "Minimal implementation of DatabaseElem."
     def __init__(self, properties):
-        databaselib.DatabaseElem.__init__(self)
+        super().__init__()
         self.properties = dict(properties)
         self.retired = False
     def getId(self):
@@ -21,13 +31,13 @@ class Record(databaselib.DatabaseElem):
         assert not self.retired
         self.retired = True
 
-class IntentionalError(Exception):
-    "Thrown to test handling of arbitrary errors."
-    pass
+    @classmethod
+    def create(cls):
+        return cls({'id': RECORD_ID, 'a': '1', 'b': '2'})
 
-class FaultyRecord(Record):
-    def toXML(self):
-        raise IntentionalError('broken on purpose')
+    @classmethod
+    def createOld(cls):
+        return cls({'id': RECORD_ID, 'ver': 'old'})
 
 class RecordFactory:
     "Factory for Record class."
@@ -47,396 +57,377 @@ class Observer:
     def updated(self, record):
         self.updatedRecords.append(record)
 
-class BasicTests:
-    """Test basic Database functionality.
-    Contains reusable implementation for TestDatabase and
-    TestVersionedDatabase, but should not be run in itself,
-    therefore does not extend TestCase.
+@fixture
+def createDB(tmp_path, request):
+    dbDir = str(tmp_path)
+    dbClass = request.param
 
-    Every test case checks both the in-memory database (same db object on which
-    operations were performed) and the on-disk database (call to createDB()
-    after operations were performed).
-    """
-
-    def __init__(self):
-        pass
-
-    def setUp(self):
-        self.dbDir = config.dbDir + '/testdb'
-        self.record = Record( { 'id': 'id_abc', 'a': '1', 'b': '2' } )
-        self.faultyRecord = FaultyRecord(
-            { 'id': 'id_abc', 'a': '1', 'b': '2' }
-            )
-        self.putRecord1 = Record( { 'id': self.record.getId(), 'ver': 'old' } )
-        self.putRecord2 = self.record
-        assert not os.path.exists(self.dbDir)
-
-    def tearDown(self):
-        removeDB()
-
-    def createDB(self, recordFactory=RecordFactory(), keyChecker=None):
-        class DB(self.dbClass):
+    def dbFactory(recordFactory=RecordFactory(), keyChecker=None):
+        class DB(dbClass):
             factory = recordFactory
             description = 'test'
             privilegeObject = 'x' # dummy
             if keyChecker is not None:
                 def _customCheckId(self, key):
                     keyChecker(key)
-        db = DB(self.dbDir)
+        db = DB(dbDir)
         db.preload()
         observer = Observer()
         db.addObserver(observer)
         return db, observer
 
-    def checkEmpty(self, db):
-        "Check that given database has no records."
-        self.assertEqual(len(db), 0)
-        self.assertRaises(KeyError, lambda: db[self.record.getId()])
-        self.assertEqual(db.get(self.record.getId()), None)
-        self.assertEqual(len(list(db.keys())), 0)
-        self.assertEqual(len(list(db.values())), 0)
-        self.assertEqual(len(list(db.items())), 0)
-        self.assertEqual([ record for record in db ], [])
-        self.assertRaises(KeyError, lambda: db.remove(self.record))
+    return dbFactory
 
-    def checkOne(self, db):
-        "Check that given database has one record."
-        self.assertEqual(len(db), 1)
-        self.assertEqual(db[self.record.getId()], self.record)
-        self.assertEqual(db.get(self.record.getId()), self.record)
-        self.assertEqual(
-            db[self.record.getId()].properties,
-            self.record.properties
-            )
-        self.assertEqual(
-            db.get(self.record.getId()).properties,
-            self.record.properties
-            )
-        self.assertEqual(list(db.keys()), [ self.record.getId() ])
-        self.assertEqual(list(db.values()), [ self.record ])
-        self.assertEqual(
-            list(db.items()), [ (self.record.getId(), self.record) ]
-            )
-        self.assertEqual([ record for record in db ], [ self.record ])
-        self.assertRaises(KeyError, lambda: db.add(self.record))
+def checkEmpty(db):
+    "Check that given database has no records."
+    assert len(db) == 0
+    with raises(KeyError):
+        db[RECORD_ID]
+    assert db.get(RECORD_ID) == None
+    assert len(list(db.keys())) == 0
+    assert len(list(db.values())) == 0
+    assert len(list(db.items())) == 0
+    assert [record for record in db] == []
+    with raises(KeyError):
+        db.remove(Record.create())
 
-    def checkNotify(self, observer, added = [], removed = [], updated = []):
-        self.assertEqual(observer.addedRecords, added)
-        self.assertEqual(observer.removedRecords, removed)
-        self.assertEqual(observer.updatedRecords, updated)
+def checkOne(db, record):
+    "Check that given database has one record."
+    assert len(db) == 1
+    assert db[record.getId()] == record
+    assert db.get(record.getId()) == record
+    assert db[record.getId()].properties == record.properties
+    assert db.get(record.getId()).properties == record.properties
+    assert list(db.keys()) == [record.getId()]
+    assert list(db.values()) == [record]
+    assert list(db.items()) == [(record.getId(), record)]
+    assert [record for record in db] == [record]
+    with raises(KeyError):
+        db.add(record)
 
-    def runMixedAction(self, db, rnd):
-        keys = []
-        dataDict = {}
-        removed = set()
+def checkVersions(db, version1, record1, version2, record2):
+    checkOne(db, record2)
+    assert version1 != version2
+    assert db.getVersion(version1).properties == record1.properties
+    assert db.getVersion(version2).properties == record2.properties
 
-        def add():
-            while True:
-                key = ''.join( [
-                    chr(rnd.randrange(ord('a'), ord('z') + 1))
-                    for i in range(10)
-                    ] )
-                if key not in keys and key not in removed:
-                    break
-            data = rnd.randrange(1 << 30)
-            db.add(Record( { 'id': key, 'data': data } ))
-            keys.append(key)
-            dataDict[key] = data
+def checkNotify(observer, added=[], removed=[], updated=[]):
+    assert observer.addedRecords == added
+    assert observer.removedRecords == removed
+    assert observer.updatedRecords == updated
 
-        def resurrect():
-            if len(removed) == 0:
-                return
-            key = list(removed)[rnd.randrange(len(removed))]
-            data = rnd.randrange(1 << 30)
-            db.add(Record( { 'id': key, 'data': data } ))
-            keys.append(key)
-            dataDict[key] = data
-            removed.remove(key)
+@mark.parametrize('createDB', [Database, VersionedDatabase], indirect=True)
+def testEmpty(createDB):
+    "Test empty DB."
+    db, observer = createDB()
+    checkEmpty(db)
+    checkNotify(observer)
+    db, observer = createDB()
+    checkEmpty(db)
 
-        def remove():
-            if len(keys) == 0:
-                return add()
-            i = rnd.randrange(len(keys))
-            key = keys[i]
-            record = db[key]
-            db.remove(record)
-            del keys[i]
-            del dataDict[key]
-            removed.add(key)
+@mark.parametrize('createDB', [Database, VersionedDatabase], indirect=True)
+def testAdd(createDB):
+    "Test adding of one record."
+    db, observer = createDB()
+    record = Record.create()
+    db.add(record)
+    checkOne(db, record)
+    checkNotify(observer, added=[record])
+    db, observer = createDB()
+    checkOne(db, record)
 
-        def update():
-            if len(keys) == 0:
-                return add()
-            i = rnd.randrange(len(keys))
-            key = keys[i]
-            data = rnd.randrange(1 << 30)
-            db.update(Record( { 'id': key, 'data': data } ))
-            dataDict[key] = data
+class IntentionalError(Exception):
+    "Thrown to test handling of arbitrary errors."
 
-        choices = (add,) * 4 + (resurrect,) * 1 + (remove,) * 2 + (update,) * 8
-        for i in range(1000):
-            rnd.choice(choices)()
+class FaultyRecord(Record):
+    def toXML(self):
+        raise IntentionalError('broken on purpose')
 
-        # Check that the test itself is consistent.
-        self.assertEqual(sorted(keys), sorted(dataDict.keys()))
+@mark.parametrize('createDB', [Database, VersionedDatabase], indirect=True)
+def testAddFaulty(createDB):
+    "Test handling of faulty record."
+    db, observer = createDB()
+    faultyRecord = FaultyRecord({'id': 'id_abc', 'a': '1', 'b': '2'})
+    with raises(IntentionalError):
+        db.add(faultyRecord)
+    checkEmpty(db)
+    checkNotify(observer)
+    db, observer = createDB()
+    checkEmpty(db)
 
-        return dataDict
+invalidKeys = [
+        '',
+        '/abc', '../abc',
+        'abc/def', 'abc>def', 'abc!def', 'abc:def',
+        'abc|0001',
+        r'c:\temp\abc', r'\temp\abc',
+        '*.xml',
+        'abc\ndef',
+        ' abc', 'abc ', 'ab  cd',
+        ]
 
-    def runMixedCheck(self, db, dataDict):
-        dbDict = {}
-        for record in db:
-            dbDict[record.getId()] = int(record.properties['data'])
-        # Compare keys first, to make problems easier to find.
-        self.assertEqual(sorted(dbDict.keys()), sorted(dataDict.keys()))
-        # Now compare complete dictionary.
-        self.assertEqual(dbDict, dataDict)
-
-    def runMixed(self, seed):
-        db, observer = self.createDB()
-        dataDict = self.runMixedAction(db, random.Random(seed))
-        self.runMixedCheck(db, dataDict)
-        db, observer = self.createDB()
-        self.runMixedCheck(db, dataDict)
-
-    def test0010Empty(self):
-        "Test empty DB."
-        db, observer = self.createDB()
-        self.checkEmpty(db)
-        self.checkNotify(observer)
-        db, observer = self.createDB()
-        self.checkEmpty(db)
-
-    def test0020Add(self):
-        "Test adding of one record."
-        db, observer = self.createDB()
-        db.add(self.record)
-        self.checkOne(db)
-        self.checkNotify(observer, added = [ self.record ] )
-        db, observer = self.createDB()
-        self.checkOne(db)
-
-    def test0021AddFaulty(self):
-        "Test handling of faulty record."
-        db, observer = self.createDB()
-        self.assertRaises(IntentionalError, lambda: db.add(self.faultyRecord))
-        self.checkEmpty(db)
-        self.checkNotify(observer)
-        db, observer = self.createDB()
-        self.checkEmpty(db)
-
-    __invalidKeys = [
-            '',
-            '/abc', '../abc',
-            'abc/def', 'abc>def', 'abc!def', 'abc:def',
-            'abc|0001',
-            r'c:\temp\abc', r'\temp\abc',
-            '*.xml',
-            'abc\ndef',
-            ' abc', 'abc ', 'ab  cd',
-            ]
-
-    def test0022AddInvalidKey(self):
-        "Test handling of invalid characters in key."
-        db, observer = self.createDB()
-        for key in self.__invalidKeys:
-            record = Record( { 'id': key, 'a': '1', 'b': '2' } )
-            self.assertRaises(KeyError, lambda: db.add(record))
-        self.checkEmpty(db)
-        self.checkNotify(observer)
-        db, observer = self.createDB()
-        self.checkEmpty(db)
-
-    def test0023AddCustomKeyChecker(self):
-        "Test custom key checker handling of valid key."
-        def customChecker(key):
-            if len(key) != 3:
-                raise KeyError('letters in key must be three')
-        db, observer = self.createDB(keyChecker = customChecker)
-        validKeys = ['abc', '123', 'foo']
-        records = []
-        for key in validKeys:
-            record = Record( { 'id': key, 'a': '1', 'b': '2' } )
+@mark.parametrize('createDB', [Database, VersionedDatabase], indirect=True)
+def testAddInvalidKey(createDB):
+    "Test handling of invalid characters in key."
+    db, observer = createDB()
+    for key in invalidKeys:
+        record = Record({'id': key, 'a': '1', 'b': '2'})
+        with raises(KeyError):
             db.add(record)
-            records.append(record)
-        self.assertEqual(sorted(db.keys()), sorted(validKeys))
-        self.checkNotify(observer, added = records)
-        db, observer = self.createDB()
-        self.assertEqual(sorted(db.keys()), sorted(validKeys))
+    checkEmpty(db)
+    checkNotify(observer)
+    db, observer = createDB()
+    checkEmpty(db)
 
-    def test0024AddCustomKeyCheckerInvalidKey(self):
-        "Test custom key checker handling of invalid characters in key."
-        def customChecker(key):
-            if len(key) != 3:
-                raise KeyError('letters in key must be three')
-        db, observer = self.createDB(keyChecker = customChecker)
-        for key in self.__invalidKeys + [
-            'a', 'ab', 'abcd', 'abcde'
-            ]:
-            record = Record( { 'id': key, 'a': '1', 'b': '2' } )
-            self.assertRaises(KeyError, lambda: db.add(record))
-        self.checkEmpty(db)
-        self.checkNotify(observer)
-        db, observer = self.createDB()
-        self.checkEmpty(db)
-
-    def test0030Remove(self):
-        "Test removal of one record."
-        db, observer = self.createDB()
-        db.add(self.record)
-        db.remove(self.record)
-        self.checkEmpty(db)
-        self.checkNotify(observer,
-            added = [ self.record ], removed = [ self.record ] )
-        self.assertTrue(self.record.retired)
-        db, observer = self.createDB()
-        self.checkEmpty(db)
-
-    def test0040Update(self):
-        "Test explicit update of a record."
-        db, observer = self.createDB()
-        key = self.record.getId()
-        db.add(self.putRecord1)
-        db.update(self.putRecord2)
-        self.checkOne(db)
-        self.checkNotify(observer,
-            added = [ self.putRecord1 ], updated = [ self.putRecord2 ] )
-        self.assertTrue(self.putRecord1.retired)
-        self.assertTrue(not self.putRecord2.retired)
-        db, observer = self.createDB()
-        self.checkOne(db)
-
-    def test0041UpdateInvalid(self):
-        "Test explicit update of non-existant record."
-        db, observer = self.createDB()
-        self.assertRaises(KeyError, lambda: db.update(self.record))
-        self.checkEmpty(db)
-        self.checkNotify(observer)
-        db, observer = self.createDB()
-        self.checkEmpty(db)
-
-    def test0050Mixed(self):
-        "Test mixed addition, update and removal."
-        seed = int(time.time())
-        # Printing random seed makes it possible to reproduce a problem
-        # if it only occurs for certain seeds.
-        # I'm not sure how likely this is, but it's better to have the seed
-        # than to find it lost forever in case it does make a difference.
-        print('Random seed: %d' % seed)
-        self.runMixed(seed)
-
-    def test0051Mixed(self):
-        "Test mixed addition, update and removal."
-        self.runMixed(0)
-
-    def test0052Mixed(self):
-        "Test mixed addition, update and removal."
-        self.runMixed(1234567890)
-
-class TestDatabase(BasicTests, unittest.TestCase):
-    "Test basic Database functionality."
-
-    dbClass = databaselib.Database
-
-    def __init__(self, methodName = 'runTest'):
-        BasicTests.__init__(self)
-        unittest.TestCase.__init__(self, methodName)
-
-    def test0060Modify(self):
-        "Test auto-saving of modified record."
-        db, observer = self.createDB()
-        record = Record( { 'id': 'id_mod' } )
+@mark.parametrize('createDB', [Database, VersionedDatabase], indirect=True)
+def testAddCustomKeyChecker(createDB):
+    "Test custom key checker handling of valid key."
+    def customChecker(key):
+        if len(key) != 3:
+            raise KeyError('letters in key must be three')
+    db, observer = createDB(keyChecker = customChecker)
+    validKeys = ['abc', '123', 'foo']
+    records = []
+    for key in validKeys:
+        record = Record({'id': key, 'a': '1', 'b': '2'})
         db.add(record)
-        record.properties['modified'] = 'true'
+        records.append(record)
+    assert sorted(db.keys()) == sorted(validKeys)
+    checkNotify(observer, added = records)
+    db, observer = createDB()
+    assert sorted(db.keys()) == sorted(validKeys)
+
+@mark.parametrize('createDB', [Database, VersionedDatabase], indirect=True)
+def testAddCustomKeyCheckerInvalidKey(createDB):
+    "Test custom key checker handling of invalid characters in key."
+    def customChecker(key):
+        if len(key) != 3:
+            raise KeyError('letters in key must be three')
+    db, observer = createDB(keyChecker = customChecker)
+    for key in invalidKeys + ['a', 'ab', 'abcd', 'abcde']:
+        record = Record({'id': key, 'a': '1', 'b': '2'})
+        with raises(KeyError):
+            db.add(record)
+    checkEmpty(db)
+    checkNotify(observer)
+    db, observer = createDB()
+    checkEmpty(db)
+
+@mark.parametrize('createDB', [Database, VersionedDatabase], indirect=True)
+def testRemove(createDB):
+    "Test removal of one record."
+    db, observer = createDB()
+    record = Record.create()
+    db.add(record)
+    db.remove(record)
+    checkEmpty(db)
+    checkNotify(observer, added=[record], removed=[record])
+    assert record.retired
+    db, observer = createDB()
+    checkEmpty(db)
+
+@mark.parametrize('createDB', [Database, VersionedDatabase], indirect=True)
+def testUpdate(createDB):
+    "Test explicit update of a record."
+    db, observer = createDB()
+    oldRecord = Record.createOld()
+    db.add(oldRecord)
+    record = Record.create()
+    db.update(record)
+    checkOne(db, record)
+    checkNotify(observer, added=[oldRecord],
+                               updated=[record])
+    assert oldRecord.retired
+    assert not record.retired
+    db, observer = createDB()
+    checkOne(db, record)
+
+@mark.parametrize('createDB', [Database, VersionedDatabase], indirect=True)
+def testUpdateInvalid(createDB):
+    "Test explicit update of non-existant record."
+    db, observer = createDB()
+    record = Record.create()
+    with raises(KeyError):
+        db.update(record)
+    checkEmpty(db)
+    checkNotify(observer)
+    db, observer = createDB()
+    checkEmpty(db)
+
+def runMixedAction(db, rnd):
+    keys = []
+    dataDict = {}
+    removed = set()
+
+    def add():
+        while True:
+            key = ''.join(
+                chr(rnd.randrange(ord('a'), ord('z') + 1))
+                for i in range(10)
+                )
+            if key not in keys and key not in removed:
+                break
+        data = rnd.randrange(1 << 30)
+        db.add(Record({'id': key, 'data': data}))
+        keys.append(key)
+        dataDict[key] = data
+
+    def resurrect():
+        if len(removed) == 0:
+            return
+        key = list(removed)[rnd.randrange(len(removed))]
+        data = rnd.randrange(1 << 30)
+        db.add(Record({'id': key, 'data': data}))
+        keys.append(key)
+        dataDict[key] = data
+        removed.remove(key)
+
+    def remove():
+        if len(keys) == 0:
+            return add()
+        i = rnd.randrange(len(keys))
+        key = keys[i]
+        record = db[key]
+        db.remove(record)
+        del keys[i]
+        del dataDict[key]
+        removed.add(key)
+
+    def update():
+        if len(keys) == 0:
+            return add()
+        i = rnd.randrange(len(keys))
+        key = keys[i]
+        data = rnd.randrange(1 << 30)
+        db.update(Record({'id': key, 'data': data}))
+        dataDict[key] = data
+
+    choices = (add,) * 4 + (resurrect,) * 1 + (remove,) * 2 + (update,) * 8
+    for i in range(1000):
+        rnd.choice(choices)()
+
+    # Check that the test itself is consistent.
+    assert sorted(keys) == sorted(dataDict.keys())
+
+    return dataDict
+
+def runMixedCheck(db, dataDict):
+    dbDict = {}
+    for record in db:
+        dbDict[record.getId()] = int(record.properties['data'])
+    # Compare keys first, to make problems easier to find.
+    assert sorted(dbDict.keys()) == sorted(dataDict.keys())
+    # Now compare complete dictionary.
+    assert dbDict == dataDict
+
+def runMixed(seed, createDB):
+    db, observer = createDB()
+    dataDict = runMixedAction(db, random.Random(seed))
+    runMixedCheck(db, dataDict)
+    db, observer = createDB()
+    runMixedCheck(db, dataDict)
+
+@mark.parametrize('createDB', [Database, VersionedDatabase], indirect=True)
+def testMixed0(createDB):
+    "Test mixed addition, update and removal."
+    runMixed(0, createDB)
+
+@mark.parametrize('createDB', [Database, VersionedDatabase], indirect=True)
+def testMixed1234567890(createDB):
+    "Test mixed addition, update and removal."
+    runMixed(1234567890, createDB)
+
+@mark.parametrize('createDB', [Database, VersionedDatabase], indirect=True)
+def testMixedRandom(createDB):
+    "Test mixed addition, update and removal."
+    seed = int(time.time())
+    # Printing random seed makes it possible to reproduce a problem
+    # if it only occurs for certain seeds.
+    # I'm not sure how likely this is, but it's better to have the seed
+    # than to find it lost forever in case it does make a difference.
+    print('Random seed: %d' % seed)
+    runMixed(seed, createDB)
+
+@mark.parametrize('createDB', [Database], indirect=True)
+def testUnversionedModify(createDB):
+    "Test auto-saving of modified record."
+    db, observer = createDB()
+    record = Record({'id': 'id_mod'})
+    db.add(record)
+    record.properties['modified'] = 'true'
+    record._notify()
+    checkNotify(observer, added=[record], updated=[record])
+    db, observer = createDB()
+    savedRecord = db['id_mod']
+    assert savedRecord.properties.get('modified') == 'true'
+
+@mark.parametrize('createDB', [VersionedDatabase], indirect=True)
+def testVersionedModify(createDB):
+    "Test modification detection of versioned record."
+    db, observer = createDB()
+    record = Record({'id': 'id_mod'})
+    db.add(record)
+    with raises(RuntimeError):
         record._notify()
-        self.checkNotify(observer, added = [ record ], updated = [ record ] )
-        db, observer = self.createDB()
-        savedRecord = db['id_mod']
-        self.assertEqual(savedRecord.properties.get('modified'), 'true')
+    checkNotify(observer, added=[record])
 
-class TestVersionedDatabase(BasicTests, unittest.TestCase):
-    "Test functionality of VersionedDatabase."
+@mark.parametrize('createDB', [VersionedDatabase], indirect=True)
+def testVersionedUpdate(createDB):
+    "Test explicit update of a versioned record."
+    db, observer = createDB()
 
-    dbClass = databaselib.VersionedDatabase
+    oldRecord = Record.createOld()
+    db.add(oldRecord)
+    key = oldRecord.getId()
+    version1 = db.latestVersion(key)
 
-    def __init__(self, methodName = 'runTest'):
-        BasicTests.__init__(self)
-        unittest.TestCase.__init__(self, methodName)
+    record = Record.create()
+    assert record.getId() == key
+    db.update(record)
+    version2 = db.latestVersion(key)
 
-    def checkVersions(self, db, version1, version2):
-        self.checkOne(db)
-        self.assertNotEqual(version1, version2)
-        self.assertEqual(
-            db.getVersion(version1).properties, self.putRecord1.properties )
-        self.assertEqual(
-            db.getVersion(version2).properties, self.putRecord2.properties )
+    checkVersions(db, version1, oldRecord, version2, record)
+    checkNotify(observer, added=[oldRecord], updated=[record])
+    assert oldRecord.retired
+    assert not record.retired
+    db, observer = createDB()
+    checkVersions(db, version1, oldRecord, version2, record)
 
-    def test0060Modify(self):
-        "Test modification detection of versioned record."
-        db, observer = self.createDB()
-        record = Record( { 'id': 'id_mod' } )
-        db.add(record)
-        self.assertRaises(RuntimeError, lambda: record._notify())
-        self.checkNotify(observer, added = [ record ])
+@mark.parametrize('createDB', [VersionedDatabase], indirect=True)
+def testVersionedRemove(createDB):
+    "Test accessiblity of old version of removed record."
+    db, observer = createDB()
+    record = Record.create()
+    db.add(record)
+    version = db.latestVersion(record.getId())
+    db.remove(record)
 
-    # Test versioning:
+    assert db.getVersion(version).properties == record.properties
+    checkNotify(observer, added=[record], removed=[record])
+    assert record.retired
+    db, observer = createDB()
+    assert db.getVersion(version).properties == record.properties
 
-    def test0100Update(self):
-        "Test explicit update of a versioned record."
-        db, observer = self.createDB()
-        key = self.record.getId()
-        db.add(self.putRecord1)
-        version1 = db.latestVersion(key)
-        db.update(self.putRecord2)
-        version2 = db.latestVersion(key)
+@mark.parametrize('createDB', [VersionedDatabase], indirect=True)
+def testResurrect(createDB):
+    "Test add / remove / add."
+    db, observer = createDB()
 
-        self.checkVersions(db, version1, version2)
-        self.checkNotify(observer,
-            added = [ self.putRecord1 ], updated = [ self.putRecord2 ] )
-        self.assertTrue(self.putRecord1.retired)
-        self.assertTrue(not self.putRecord2.retired)
-        db, observer = self.createDB()
-        self.checkVersions(db, version1, version2)
+    oldRecord = Record.createOld()
+    key = oldRecord.getId()
+    db.add(oldRecord)
+    version1 = db.latestVersion(key)
 
-    def test0110Remove(self):
-        "Test accessiblity of old version of removed record."
-        db, observer = self.createDB()
-        db.add(self.record)
-        version = db.latestVersion(self.record.getId())
-        db.remove(self.record)
+    db.remove(oldRecord)
+    record = Record.create()
+    assert record.getId() == key
+    db.add(record)
+    version2 = db.latestVersion(key)
+    assert version1 != version2
 
-        self.assertEqual(
-            db.getVersion(version).properties,
-            self.record.properties
-            )
-        self.checkNotify(observer,
-            added = [ self.record ], removed = [ self.record ] )
-        self.assertTrue(self.record.retired)
-        db, observer = self.createDB()
-        self.assertEqual(
-            db.getVersion(version).properties,
-            self.record.properties
-            )
-
-    def test0120Resurrect(self):
-        "Test add / remove / add."
-        db, observer = self.createDB()
-        key = self.record.getId()
-        db.add(self.putRecord1)
-        version1 = db.latestVersion(key)
-        db.remove(self.putRecord1)
-        db.add(self.putRecord2)
-        version2 = db.latestVersion(key)
-        self.assertNotEqual(version1, version2)
-
-        self.checkVersions(db, version1, version2)
-        self.checkNotify(observer,
-            added = [ self.putRecord1, self.putRecord2 ],
-            removed = [ self.putRecord1 ]
-            )
-        self.assertTrue(self.putRecord1.retired)
-        self.assertTrue(not self.putRecord2.retired)
-        db, observer = self.createDB()
-        self.checkVersions(db, version1, version2)
-
-if __name__ == '__main__':
-    unittest.main()
+    checkVersions(db, version1, oldRecord, version2, record)
+    checkNotify(observer, added=[oldRecord, record], removed=[oldRecord])
+    assert oldRecord.retired
+    assert not record.retired
+    db, observer = createDB()
+    checkVersions(db, version1, oldRecord, version2, record)
