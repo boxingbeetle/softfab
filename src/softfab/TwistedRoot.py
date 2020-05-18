@@ -2,8 +2,6 @@
 
 from functools import partial
 from mimetypes import guess_type
-from os import getpid
-from pathlib import Path
 from types import GeneratorType, ModuleType
 from typing import (
     Callable, Dict, Generator, Iterator, Mapping, Optional, Type, Union, cast
@@ -12,15 +10,9 @@ import logging
 
 from twisted.internet import reactor
 from twisted.internet.defer import Deferred
-from twisted.internet.endpoints import clientFromString
-from twisted.internet.interfaces import IStreamClientEndpoint
 from twisted.python.failure import Failure
-from twisted.web.client import URI
 from twisted.web.http import Request as TwistedRequest
-from twisted.web.iweb import IAgentEndpointFactory
 from twisted.web.resource import Resource
-from twisted.web.server import Session, Site
-from zope.interface import implementer
 
 from softfab import static
 from softfab.Page import FabResource, PageProcessor, Responder
@@ -40,52 +32,6 @@ from softfab.schedulelib import ScheduleManager
 from softfab.userlib import User
 from softfab.utils import iterModules
 from softfab.webhooks import createWebhooks
-
-
-class LongSession(Session):
-    sessionTimeout = 60 * 60 * 24 * 7 # one week in seconds
-
-class ControlCenter(Site):
-    sessionFactory = LongSession
-
-    secureCookie: bool
-    """Mark session cookie as secure.
-    When True, the browser will only transmit it over HTTPS.
-    """
-
-    def __repr__(self) -> str:
-        return 'ControlCenter'
-
-class ControlSocket(Site):
-
-    def __repr__(self) -> str:
-        return 'ControlSocket'
-
-@implementer(IAgentEndpointFactory)
-class ControlSocketFactory:
-
-    def __init__(self, path: Path):
-        self.path = path
-
-    def endpointForURI(self,
-                       uri: URI # pylint: disable=unused-argument
-                       ) -> IStreamClientEndpoint:
-        """Return an endpoint for contacting the Control Center.
-        Raise OSError if there is no control socket in the data directory.
-        """
-
-        socketPath = (self.path / 'ctrl.sock').resolve()
-        if socketPath.is_socket():
-            return clientFromString(reactor, f'unix:{socketPath}:timeout=10')
-        else:
-            raise OSError(f"Control socket not found: {socketPath}")
-
-def writePIDFile(path: Path) -> None:
-    """Write our process ID to a text file.
-    Raise OSError if writing the file failed.
-    """
-    with open(path, 'w', encoding='utf-8') as out:
-        out.write(f'{getpid():d}\n')
 
 startupLogger = logging.getLogger('ControlCenter.startup')
 

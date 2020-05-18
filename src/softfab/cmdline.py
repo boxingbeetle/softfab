@@ -60,7 +60,7 @@ class GlobalOptions:
 
     @property
     def endpointFactory(self) -> 'IAgentEndpointFactory':
-        from softfab.TwistedRoot import ControlSocketFactory
+        from softfab.site import ControlSocketFactory
 
         return ControlSocketFactory(self.path)
 
@@ -200,9 +200,8 @@ def server(
     globalLogBeginner.beginLoggingTo(observers)
 
     # This must happen after logging has been initialized.
-    from softfab.TwistedRoot import (
-        ControlCenter, ControlSocket, SoftFabRoot, writePIDFile
-    )
+    from softfab.TwistedRoot import SoftFabRoot
+    from softfab.site import ControlCenter, ControlSocket, writePIDFile
     root = SoftFabRoot(anonOperator=anonoper)
 
     import softfab.config
