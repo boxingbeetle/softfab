@@ -124,5 +124,5 @@ class GetTaggedTaskInfo_GET(ControlPage['GetTaggedTaskInfo_GET.Arguments',
             xml.info[(
                 xml('tag-key')(name = tagKey)[ taggedToXML(tagKey, tagged) ]
                 for tagKey, tagged in proc.selected.items()
-                )].flattenIndented()
+                )]
             )

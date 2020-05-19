@@ -101,5 +101,5 @@ class GetTagged_GET(ControlPage['GetTagged_GET.Arguments',
                     'value': value,
                     })
                 for recordId, key, value in matches
-                )].flattenIndented()
+                )]
             )
