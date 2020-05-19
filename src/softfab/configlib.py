@@ -82,18 +82,18 @@ _pdObserver = _ObserverProxy(productDefDB)
 _fdObserver = _ObserverProxy(frameworkDB)
 _tdObserver = _ObserverProxy(taskDefDB)
 
-class _ConfigFactory:
+class ConfigFactory:
     @staticmethod
     def createConfig(attributes: Mapping[str, str]) -> 'Config':
         return Config(attributes)
 
-class _ConfigDB(Database['Config']):
-    factory = _ConfigFactory()
+class ConfigDB(Database['Config']):
+    factory = ConfigFactory()
     privilegeObject = 'c'
     description = 'configuration'
     uniqueKeys = ( 'name', )
 
-configDB = _ConfigDB(dbDir / 'configs')
+configDB = ConfigDB(dbDir / 'configs')
 
 class _Param(XMLTag):
     tagName = 'param'

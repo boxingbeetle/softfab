@@ -1,25 +1,20 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Mapping, Optional, cast
+from typing import ClassVar, Optional, cast
 
 from softfab.ControlPage import ControlPage
 from softfab.Page import InvalidRequest, PageProcessor
-from softfab.configlib import configDB
+from softfab.configlib import ConfigDB
 from softfab.databaselib import Database
 from softfab.pageargs import PageArgs, SetArg, StrArg
 from softfab.request import Request
 from softfab.response import Response
-from softfab.schedulelib import scheduleDB
+from softfab.schedulelib import ScheduleDB
 from softfab.selectlib import SelectableRecordABC, TagCache
-from softfab.taskdeflib import taskDefDB
+from softfab.taskdeflib import TaskDefDB
 from softfab.userlib import User, checkPrivilege
 from softfab.xmlgen import xml
 
-subjectToDB: Mapping[str, Database[SelectableRecordABC]] = dict(
-    config = cast(Database[SelectableRecordABC], configDB),
-    schedule = cast(Database[SelectableRecordABC], scheduleDB),
-    taskdef = cast(Database[SelectableRecordABC], taskDefDB),
-    )
 
 class GetTagged_GET(ControlPage['GetTagged_GET.Arguments',
                                 'GetTagged_GET.Processor']):
@@ -35,13 +30,28 @@ class GetTagged_GET(ControlPage['GetTagged_GET.Arguments',
 
     class Processor(PageProcessor['GetTagged_GET.Arguments']):
 
+        configDB: ClassVar[ConfigDB]
+        scheduleDB: ClassVar[ScheduleDB]
+        taskDefDB: ClassVar[TaskDefDB]
+
+        @classmethod
+        def subjectToDB(cls, subject: str) -> Database[SelectableRecordABC]:
+            if subject == 'config':
+                return cast(Database[SelectableRecordABC], cls.configDB)
+            elif subject == 'schedule':
+                return cast(Database[SelectableRecordABC], cls.scheduleDB)
+            elif subject == 'taskdef':
+                return cast(Database[SelectableRecordABC], cls.taskDefDB)
+            else:
+                raise KeyError(subject)
+
         async def process(self,
                           req: Request['GetTagged_GET.Arguments'],
                           user: User
                           ) -> None:
             # Determine subject and access rights.
             try:
-                db = subjectToDB[req.args.subject]
+                db = self.subjectToDB(req.args.subject)
             except KeyError:
                 raise InvalidRequest(
                     f'Invalid subject type "{req.args.subject}"'
