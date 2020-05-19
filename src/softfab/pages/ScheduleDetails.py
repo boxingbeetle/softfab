@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Iterator, cast
+from typing import ClassVar, Iterator, cast
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor, PresentableError
@@ -9,7 +9,7 @@ from softfab.configlib import configDB
 from softfab.pagelinks import ConfigIdArgs, createConfigDetailsLink
 from softfab.projectlib import project
 from softfab.request import Request
-from softfab.schedulelib import ScheduleRepeat, Scheduled, scheduleDB
+from softfab.schedulelib import ScheduleDB, ScheduleRepeat, Scheduled
 from softfab.schedulerefs import ScheduleIdArgs
 from softfab.scheduleview import (
     createLastJobLink, describeNextRun, getScheduleStatus, stringToListDays
@@ -107,6 +107,8 @@ class ScheduleDetails_GET(FabPage['ScheduleDetails_GET.Processor',
 
     class Processor(PageProcessor[ScheduleIdArgs]):
 
+        scheduleDB: ClassVar[ScheduleDB]
+
         async def process(self,
                           req: Request[ScheduleIdArgs],
                           user: User
@@ -114,7 +116,7 @@ class ScheduleDetails_GET(FabPage['ScheduleDetails_GET.Processor',
             scheduleId = req.args.id
             try:
                 # pylint: disable=attribute-defined-outside-init
-                self.scheduled = scheduleDB[scheduleId]
+                self.scheduled = self.scheduleDB[scheduleId]
             except KeyError:
                 raise PresentableError(xhtml[
                     'Schedule ', xhtml.b[ scheduleId ], ' does not exist.'

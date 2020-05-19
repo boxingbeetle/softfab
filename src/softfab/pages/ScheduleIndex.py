@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from enum import Enum
-from typing import Iterator, Mapping, cast
+from typing import ClassVar, Iterator, Mapping, cast
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor, Redirect
@@ -10,7 +10,7 @@ from softfab.formlib import makeForm
 from softfab.pageargs import DictArg, EnumArg, IntArg, PageArgs, SortArg
 from softfab.projectlib import project
 from softfab.request import Request
-from softfab.schedulelib import Scheduled, scheduleDB
+from softfab.schedulelib import ScheduleDB, Scheduled, scheduleDB
 from softfab.schedulerefs import createScheduleDetailsLink
 from softfab.scheduleview import (
     createLastJobLink, describeNextRun, getScheduleStatus
@@ -107,13 +107,15 @@ class ScheduleIndex_GET(FabPage['ScheduleIndex_GET.Processor',
 
     class Processor(PageProcessor['ScheduleIndex_GET.Arguments']):
 
+        scheduleDB: ClassVar[ScheduleDB]
+
         async def process(self,
                           req: Request['ScheduleIndex_GET.Arguments'],
                           user: User
                           ) -> None:
             # pylint: disable=attribute-defined-outside-init
             self.finishedSchedules = any(
-                schedule.isDone() for schedule in scheduleDB
+                schedule.isDone() for schedule in self.scheduleDB
                 )
 
     def checkAccess(self, user: User) -> None:
@@ -147,6 +149,8 @@ class ScheduleIndex_POST(FabPage['ScheduleIndex_POST.Processor',
 
     class Processor(PageProcessor['ScheduleIndex_POST.Arguments']):
 
+        scheduleDB: ClassVar[ScheduleDB]
+
         async def process(self,
                           req: Request['ScheduleIndex_POST.Arguments'],
                           user: User
@@ -154,7 +158,7 @@ class ScheduleIndex_POST(FabPage['ScheduleIndex_POST.Processor',
             actions = cast(Mapping[str, str], req.args.action)
             for scheduleId, action in actions.items():
                 # Toggle suspend.
-                scheduled = scheduleDB.get(scheduleId)
+                scheduled = self.scheduleDB.get(scheduleId)
                 # TODO: Report when action is not possible, instead of ignoring.
                 if scheduled is not None:
                     checkPrivilegeForOwned(

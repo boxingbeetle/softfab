@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Iterable, Iterator, List, Set, cast
+from typing import ClassVar, Iterable, Iterator, List, Set, cast
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor, PresentableError
@@ -18,7 +18,7 @@ from softfab.productlib import Product
 from softfab.productview import formatLocator
 from softfab.projectlib import project
 from softfab.request import Request
-from softfab.schedulelib import scheduleDB
+from softfab.schedulelib import ScheduleDB
 from softfab.schedulerefs import createScheduleDetailsLink
 from softfab.selectview import TagArgs
 from softfab.userlib import User, checkPrivilege
@@ -174,6 +174,8 @@ class ConfigDetails_GET(
 
     class Processor(PageProcessor['ConfigDetails_GET.Arguments']):
 
+        scheduleDB: ClassVar[ScheduleDB]
+
         async def process(self,
                           req: Request['ConfigDetails_GET.Arguments'],
                           user: User
@@ -201,7 +203,7 @@ class ConfigDetails_GET(
                 )
             scheduleIds = tuple(
                 scheduleId
-                for scheduleId, schedule in scheduleDB.items()
+                for scheduleId, schedule in self.scheduleDB.items()
                 if configId in schedule.getMatchingConfigIds()
                 )
 

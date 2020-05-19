@@ -1,14 +1,14 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from enum import Enum
-from typing import cast
+from typing import ClassVar, cast
 
 from softfab.FabPage import FabPage, IconModifier
 from softfab.Page import PageProcessor, ProcT, Redirect
 from softfab.formlib import actionButtons, makeForm
 from softfab.pageargs import ArgsT, EnumArg, PageArgs
 from softfab.request import Request
-from softfab.schedulelib import scheduleDB
+from softfab.schedulelib import ScheduleDB
 from softfab.userlib import User, checkPrivilege
 from softfab.xmlgen import XMLContent, xhtml
 
@@ -51,6 +51,8 @@ class DelFinishedSchedules_POST(
 
     class Processor(PageProcessor['DelFinishedSchedules_POST.Arguments']):
 
+        scheduleDB: ClassVar[ScheduleDB]
+
         async def process(self,
                           req: Request['DelFinishedSchedules_POST.Arguments'],
                           user: User
@@ -61,6 +63,7 @@ class DelFinishedSchedules_POST(
                 raise Redirect(page.getParentURL(req.args))
             elif action is Actions.DELETE:
                 checkPrivilege(user, 's/d', 'delete all finished schedules')
+                scheduleDB = self.scheduleDB
                 finishedSchedules = [
                     schedule for schedule in scheduleDB if schedule.isDone()
                     ]

@@ -1,11 +1,13 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from typing import ClassVar
+
 from softfab.ControlPage import ControlPage
 from softfab.Page import InvalidRequest, PageProcessor
 from softfab.pageargs import PageArgs, StrArg
 from softfab.request import Request
 from softfab.response import Response
-from softfab.schedulelib import scheduleDB
+from softfab.schedulelib import ScheduleDB
 from softfab.userlib import User, checkPrivilege, checkPrivilegeForOwned
 from softfab.xmlgen import xml
 
@@ -18,13 +20,15 @@ class TriggerSchedule_POST(ControlPage['TriggerSchedule_POST.Arguments',
 
     class Processor(PageProcessor['TriggerSchedule_POST.Arguments']):
 
+        scheduleDB: ClassVar[ScheduleDB]
+
         async def process(self,
                           req: Request['TriggerSchedule_POST.Arguments'],
                           user: User
                           ) -> None:
             scheduleId = req.args.scheduleId
             try:
-                schedule = scheduleDB[scheduleId]
+                schedule = self.scheduleDB[scheduleId]
             except KeyError:
                 raise InvalidRequest(
                     f'Schedule "{scheduleId}" does not exist'
