@@ -24,12 +24,13 @@ from softfab.artifacts import createArtifactRoots
 from softfab.authentication import DisabledAuthPage, NoAuthPage, TokenAuthPage
 from softfab.compat import importlib_resources
 from softfab.config import dbDir
+from softfab.databaselib import Database
 from softfab.databases import iterDatabases
 from softfab.docserve import DocPage, DocResource
 from softfab.pageargs import PageArgs
 from softfab.render import NotFoundPage, renderAuthenticated
 from softfab.schedulelib import ScheduleManager
-from softfab.userlib import User, userDB
+from softfab.userlib import User
 from softfab.utils import iterModules
 from softfab.webhooks import createWebhooks
 
@@ -97,13 +98,14 @@ def callInChunks(gen: Generator) -> Deferred:
 class DatabaseLoader:
     recordChunks = 100
 
-    def __init__(self, root: 'SoftFabRoot'):
-        super().__init__()
-        self.root = root
+    def __init__(self) -> None:
+        self.databases: Dict[str, Database] = {}
 
     def process(self) -> Iterator[None]:
         for db in iterDatabases():
             startupMessages.addMessage(f'Loading {db.description} database')
+            name = db.__class__.__name__.lstrip('_')
+            self.databases[name[0].lower() + name[1:]] = db
             # pylint: disable=protected-access
             db._prepareLoad()
             for idx, dummy_ in enumerate(db._iterLoad(startupLogger)):
@@ -113,9 +115,10 @@ class DatabaseLoader:
 
 class PageLoader:
 
-    def __init__(self, root: 'SoftFabRoot'):
+    def __init__(self, root: 'SoftFabRoot', databases: Mapping[str, Database]):
         super().__init__()
         self.root = root
+        self.databases = databases
 
     def __addPage(self, module: ModuleType, pageName: str) -> None:
         pageNamePrefix = pageName + '_'
@@ -134,6 +137,7 @@ class PageLoader:
         pagesByMethod: Dict[str, FabResource] = {}
         name = None
         root = self.root
+        databases = self.databases
         for pageClass in pageClasses:
             try:
                 page = pageClass()
@@ -160,9 +164,13 @@ class PageLoader:
                     processorClass.__qualname__,
                     PageProcessor.__module__, PageProcessor.__name__
                     )
-            # TODO: Generalize this for all DBs.
-            if 'userDB' in processorClass.__annotations__:
-                setattr(processorClass, 'userDB', userDB)
+
+            # Inject the databases this processor declared.
+            for annName in processorClass.__annotations__:
+                if not hasattr(processorClass, annName):
+                    db = databases.get(annName)
+                    if db is not None:
+                        setattr(processorClass, annName, db)
 
             className = pageClass.__name__
             index = className.index('_')
@@ -289,8 +297,9 @@ class SoftFabRoot(Resource):
         d.addErrback(self.startupFailed)
 
     def startup(self) -> Generator:
-        yield DatabaseLoader(self).process()
-        yield PageLoader(self).process
+        databaseLoader = DatabaseLoader()
+        yield databaseLoader.process()
+        yield PageLoader(self, databaseLoader.databases).process
         # Start schedule processing.
         yield ScheduleManager().trigger
 
