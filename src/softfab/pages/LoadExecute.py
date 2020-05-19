@@ -1,10 +1,11 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from abc import abstractmethod
 from typing import Callable, Collection, Iterator, Optional, Tuple, cast
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
-from softfab.configlib import Config, configDB
+from softfab.configlib import Config, ConfigDB, configDB
 from softfab.configview import ConfigTable, SimpleConfigTable
 from softfab.datawidgets import DataColumn, DataTable
 from softfab.formlib import checkBox
@@ -98,7 +99,11 @@ class LoadExecute_GET(FabPage['LoadExecute_GET.Processor',
     class Processor(PageProcessor[Arguments],
                     SelectProcMixin[Arguments, Config]):
         tagCache = Config.cache
-        db = configDB
+
+        @property
+        @abstractmethod
+        def db(self) -> ConfigDB:
+            return configDB
 
         def iterActions(self) -> Iterator[Tuple[str, str, str]]:
             if project.getTagKeys():

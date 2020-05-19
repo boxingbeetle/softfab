@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from abc import ABC
+from abc import ABC, abstractmethod
 from itertools import chain
 from typing import (
     Callable, ClassVar, Collection, Generic, Iterable, Iterator, List,
@@ -122,7 +122,11 @@ BasketArgsT = TypeVar('BasketArgsT', bound=BasketArgs)
 
 class SelectProcMixin(Generic[BasketArgsT, SelectableRecord]):
     tagCache: ClassVar[TagCache] = abstract
-    db: Database[SelectableRecord] = abstract
+
+    @property
+    @abstractmethod
+    def db(self) -> Database[SelectableRecord]:
+        raise NotImplementedError
 
     args: BasketArgsT
 
