@@ -5,7 +5,7 @@ from typing import ClassVar, Iterator, cast
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor, PresentableError
 from softfab.RecordDelete import DeleteArgs
-from softfab.configlib import configDB
+from softfab.configlib import ConfigDB
 from softfab.pagelinks import ConfigIdArgs, createConfigDetailsLink
 from softfab.projectlib import project
 from softfab.request import Request
@@ -21,7 +21,7 @@ from softfab.webgui import PropertiesTable, Table, Widget, cell, pageLink, row
 from softfab.xmlgen import XML, XMLContent, xhtml
 
 
-def statusDescription(scheduled: Scheduled) -> XMLContent:
+def statusDescription(scheduled: Scheduled, configDB: ConfigDB) -> XMLContent:
     status = getScheduleStatus(scheduled)
     if status == 'error':
         return xhtml.br.join(
@@ -94,7 +94,7 @@ class DetailsTable(PropertiesTable):
             yield 'Owner', scheduled.owner or '-'
         yield 'Comment', xhtml.br.join(scheduled.comment.splitlines())
         yield row(class_ = getScheduleStatus(scheduled))[
-            'Status', statusDescription(scheduled)
+            'Status', statusDescription(scheduled, proc.configDB)
             ]
 
 class ScheduleDetails_GET(FabPage['ScheduleDetails_GET.Processor',
@@ -107,6 +107,7 @@ class ScheduleDetails_GET(FabPage['ScheduleDetails_GET.Processor',
 
     class Processor(PageProcessor[ScheduleIdArgs]):
 
+        configDB: ClassVar[ConfigDB]
         scheduleDB: ClassVar[ScheduleDB]
 
         async def process(self,

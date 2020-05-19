@@ -3,13 +3,13 @@
 from collections import defaultdict
 from enum import Enum
 from typing import (
-    AbstractSet, Collection, DefaultDict, Dict, Iterator, List, Mapping,
-    Optional, Set, cast
+    AbstractSet, ClassVar, Collection, DefaultDict, Dict, Iterator, List,
+    Mapping, Optional, Set, cast
 )
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor, Redirect
-from softfab.configlib import Config, Input, TaskSetWithInputs, configDB
+from softfab.configlib import Config, ConfigDB, Input, TaskSetWithInputs
 from softfab.configview import (
     InputTable, SelectConfigsMixin, SimpleConfigTable, presentMissingConfigs
 )
@@ -215,6 +215,8 @@ class BatchExecute_POST(BatchExecute_GET):
 
     class Processor(BatchExecute_GET.Processor):
 
+        configDB: ClassVar[ConfigDB]
+
         async def process(self, req: Request[ParentArgs], user: User) -> None:
             args = cast(BatchExecute_POST.Arguments, req.args)
             action = args.action
@@ -239,7 +241,7 @@ class BatchExecute_POST(BatchExecute_GET):
             configs = []
             for index, configId in cast(Mapping[str, str], args.config).items():
                 try:
-                    config = configDB[configId]
+                    config = self.configDB[configId]
                 except KeyError:
                     missingIds.append(configId)
                 else:

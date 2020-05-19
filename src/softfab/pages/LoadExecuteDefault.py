@@ -1,10 +1,10 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Mapping, cast
+from typing import ClassVar, Mapping, cast
 
 from softfab.ControlPage import ControlPage
 from softfab.Page import InvalidRequest, PageProcessor
-from softfab.configlib import configDB
+from softfab.configlib import ConfigDB
 from softfab.joblib import jobDB
 from softfab.pageargs import DictArg, PageArgs, StrArg
 from softfab.request import Request
@@ -25,6 +25,8 @@ class LoadExecuteDefault_POST(ControlPage['LoadExecuteDefault_POST.Arguments',
 
     class Processor(PageProcessor['LoadExecuteDefault_POST.Arguments']):
 
+        configDB: ClassVar[ConfigDB]
+
         async def process(self,
                           req: Request['LoadExecuteDefault_POST.Arguments'],
                           user: User
@@ -36,7 +38,7 @@ class LoadExecuteDefault_POST(ControlPage['LoadExecuteDefault_POST.Arguments',
             if 'notify' in params and ':' not in params['notify']:
                 raise InvalidRequest('Invalid value of \'notify\' parameter')
             try:
-                jobConfig = configDB[args.config]
+                jobConfig = self.configDB[args.config]
             except KeyError:
                 raise InvalidRequest(
                     f'Configuration "{args.config}" does not exist'

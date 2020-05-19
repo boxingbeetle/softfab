@@ -1,11 +1,11 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from enum import Enum
-from typing import Collection, Iterator, cast
+from typing import ClassVar, Collection, Iterator, cast
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor, PresentableError, Redirect
-from softfab.configlib import Config, configDB, iterConfigsByTag
+from softfab.configlib import Config, ConfigDB, iterConfigsByTag
 from softfab.configview import SimpleConfigTable
 from softfab.datawidgets import DataTable
 from softfab.formlib import actionButtons, makeForm
@@ -50,6 +50,8 @@ class FastExecute_GET(FabPage['FastExecute_GET.Processor',
 
     class Processor(PageProcessor['FastExecute_GET.Arguments']):
 
+        configDB: ClassVar[ConfigDB]
+
         async def process(self,
                           req: Request['FastExecute_GET.Arguments'],
                           user: User
@@ -87,7 +89,7 @@ class FastExecute_GET(FabPage['FastExecute_GET.Processor',
                         ])
                 # Look up configId.
                 try:
-                    self.configs = [ configDB[configId] ]
+                    self.configs = [ self.configDB[configId] ]
                 except KeyError:
                     self.configs = []
 
@@ -152,6 +154,8 @@ class FastExecute_POST(FabPage['FastExecute_POST.Processor',
 
     class Processor(PageProcessor['FastExecute_POST.Arguments']):
 
+        configDB: ClassVar[ConfigDB]
+
         async def process(self,
                           req: Request['FastExecute_POST.Arguments'],
                           user: User
@@ -174,7 +178,7 @@ class FastExecute_POST(FabPage['FastExecute_POST.Processor',
                     #       silently ignored. Since this is a rare situation,
                     #       it is a minor problem, but still bad behaviour.
                     try:
-                        config = configDB[configId]
+                        config = self.configDB[configId]
                     except KeyError:
                         pass
                     else:

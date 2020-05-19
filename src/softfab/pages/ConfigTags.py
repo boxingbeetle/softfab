@@ -2,12 +2,13 @@
 
 from enum import Enum
 from typing import (
-    Collection, Dict, FrozenSet, Iterator, List, Mapping, Optional, cast
+    ClassVar, Collection, Dict, FrozenSet, Iterator, List, Mapping, Optional,
+    cast
 )
 
 from softfab.FabPage import FabPage, IconModifier
 from softfab.Page import PageProcessor, Redirect
-from softfab.configlib import Config, configDB
+from softfab.configlib import Config, ConfigDB
 from softfab.configview import SelectConfigsMixin, SimpleConfigTable
 from softfab.datawidgets import DataTable
 from softfab.formlib import actionButtons, hiddenInput, makeForm
@@ -110,6 +111,8 @@ class ConfigTags_POST(ConfigTagsBase['ConfigTags_POST.Arguments']):
 
     class Processor(ConfigTagsBase.Processor):
 
+        configDB: ClassVar[ConfigDB]
+
         async def process(self,
                           req: Request['ConfigTags_POST.Arguments'],
                           user: User
@@ -170,7 +173,7 @@ class ConfigTags_POST(ConfigTagsBase['ConfigTags_POST.Arguments']):
                         tagKey, uvalue
                         )
                     if uvalue != dvalue:
-                        for config in configDB:
+                        for config in self.configDB:
                             if config.hasTagValue(tagKey, cvalue):
                                 config.updateTags({
                                     tagKey: { cvalue: uvalue },

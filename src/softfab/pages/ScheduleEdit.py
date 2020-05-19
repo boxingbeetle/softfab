@@ -4,7 +4,8 @@ from collections import defaultdict
 from enum import Enum
 from time import localtime
 from typing import (
-    DefaultDict, Dict, Iterator, List, Mapping, Optional, Sequence, Tuple, cast
+    ClassVar, DefaultDict, Dict, Iterator, List, Mapping, Optional, Sequence,
+    Tuple, cast
 )
 
 from softfab.EditPage import (
@@ -12,7 +13,7 @@ from softfab.EditPage import (
     InitialEditProcessor
 )
 from softfab.Page import PresentableError
-from softfab.configlib import Config, configDB
+from softfab.configlib import Config, ConfigDB, configDB
 from softfab.formlib import (
     CheckBoxesTable, DropDownList, Option, RadioTable, checkBox, dropDownList,
     textArea, textInput
@@ -152,6 +153,8 @@ class ScheduleEdit_POST(ScheduleEditBase):
 
     class Processor(EditProcessor[ScheduleEditArgs, Scheduled]):
 
+        configDB: ClassVar[ConfigDB]
+
         def _checkState(self) -> None:
             args = self.args
 
@@ -161,7 +164,7 @@ class ScheduleEdit_POST(ScheduleEditBase):
                     raise PresentableError(xhtml.p[
                         'Please select a configuration.'
                         ])
-                if configId not in configDB:
+                if configId not in self.configDB:
                     raise PresentableError(xhtml.p[
                         'Configuration does not exist (anymore).'
                         ])

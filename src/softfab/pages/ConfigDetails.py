@@ -5,7 +5,7 @@ from typing import ClassVar, Iterable, Iterator, List, Set, cast
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor, PresentableError
 from softfab.RecordDelete import DeleteArgs
-from softfab.configlib import configDB
+from softfab.configlib import ConfigDB
 from softfab.graphview import (
     GraphPageMixin, GraphPanel, createExecutionGraphBuilder
 )
@@ -174,6 +174,7 @@ class ConfigDetails_GET(
 
     class Processor(PageProcessor['ConfigDetails_GET.Arguments']):
 
+        configDB: ClassVar[ConfigDB]
         scheduleDB: ClassVar[ScheduleDB]
 
         async def process(self,
@@ -182,7 +183,7 @@ class ConfigDetails_GET(
                           ) -> None:
             configId = req.args.configId
             try:
-                config = configDB[configId]
+                config = self.configDB[configId]
             except KeyError:
                 raise PresentableError(xhtml[
                     'Configuration ', xhtml.b[ configId ], ' does not exist.'

@@ -2,7 +2,7 @@
 
 from collections import defaultdict
 from typing import (
-    DefaultDict, Iterable, Iterator, List, Optional, Sequence, cast
+    ClassVar, DefaultDict, Iterable, Iterator, List, Optional, Sequence, cast
 )
 import time
 
@@ -11,7 +11,7 @@ from softfab.FabPage import FabPage
 from softfab.TaskMatrixCommon import (
     TaskMatrixArgs, TaskMatrixCSVArgs, TaskMatrixProcessor, dateRange
 )
-from softfab.configlib import configDB
+from softfab.configlib import ConfigDB
 from softfab.formlib import dropDownList, emptyOption, makeForm, submitButton
 from softfab.joblib import Task
 from softfab.jobview import createStatusBar
@@ -32,7 +32,7 @@ class NavigationBar(Table):
     columns = None, None, None, None
 
     def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
-        proc = cast(TaskMatrixProcessor, kwargs['proc'])
+        proc = cast(TaskMatrix_GET.Processor, kwargs['proc'])
         args = proc.args
         week = args.week
         assert isinstance(week, int)
@@ -67,7 +67,7 @@ class NavigationBar(Table):
                 'Configuration: ',
                 dropDownList(name = 'config')[
                     emptyOption[ '(All - no filter)' ],
-                    sorted(configDB.uniqueValues('name'))
+                    sorted(proc.configDB.uniqueValues('name'))
                     ]
                 ],
             cell[
@@ -117,7 +117,7 @@ class Matrix(Table):
         # when they didn't run.
         if configId:
             try:
-                config = configDB[configId]
+                config = proc.configDB[configId]
             except KeyError:
                 pass
             else:
@@ -214,6 +214,8 @@ class TaskMatrix_GET(FabPage['TaskMatrix_GET.Processor',
         pass
 
     class Processor(TaskMatrixProcessor):
+
+        configDB: ClassVar[ConfigDB]
 
         async def process(self,
                           req: Request[TaskMatrixArgs],
