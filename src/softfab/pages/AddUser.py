@@ -15,10 +15,11 @@ from softfab.pageargs import ArgsT, EnumArg, PageArgs, RefererArg, StrArg
 from softfab.request import Request
 from softfab.roles import UIRoleNames, uiRoleToSet
 from softfab.userlib import (
-    PasswordMessage, User, addUserAccount, authenticateUser, checkPrivilege,
-    passwordQuality, setPassword
+    User, addUserAccount, authenticateUser, checkPrivilege, setPassword
 )
-from softfab.userview import LoginPassArgs, passwordStr
+from softfab.userview import (
+    LoginPassArgs, PasswordMessage, passwordQuality, passwordStr
+)
 from softfab.xmlgen import XML, XMLContent, xhtml
 
 Actions = Enum('Actions', 'ADD CANCEL')

@@ -1,7 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from abc import ABC
-from enum import Enum
 from pathlib import Path
 from typing import (
     Any, FrozenSet, Iterable, Iterator, Mapping, Optional, Sequence, Set,
@@ -130,12 +129,6 @@ privileges: Mapping[str, Sequence[str]] = {
 def rolesGrantPrivilege(roles: Iterable[str], priv: str) -> bool:
     return any(role in roles for role in privileges[priv])
 
-PasswordMessage = Enum('PasswordMessage', 'SUCCESS POOR SHORT EMPTY MISMATCH')
-'''Reasons for rejecting a password.
-'''
-
-minimumPasswordLength = 8
-
 def initPasswordFile(path: Path) -> HtpasswdFile:
     passwordFile = HtpasswdFile(str(path), default_scheme='portable', new=True)
 
@@ -184,20 +177,6 @@ def _checkPassword(password: str) -> None:
             'The password contains invalid character codes: ' +
             ', '.join(f'{code:d}' for code in sorted(invalidCodes))
             )
-
-def passwordQuality(userName: str, password: str) -> PasswordMessage:
-    '''Performs sanity checks on a username/password combination.
-    '''
-    if not password:
-        return PasswordMessage.EMPTY
-
-    if len(password) < minimumPasswordLength:
-        return PasswordMessage.SHORT
-
-    if userName == password:
-        return PasswordMessage.POOR
-
-    return PasswordMessage.SUCCESS
 
 class User(ABC):
     '''A user account.

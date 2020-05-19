@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from enum import Enum
 from typing import cast
 
 from softfab.datawidgets import DataColumn
@@ -7,8 +8,27 @@ from softfab.pageargs import EnumArg, PageArgs, PasswordArg
 from softfab.pagelinks import UserIdArgs, createUserDetailsLink
 from softfab.projectlib import project
 from softfab.querylib import Record
-from softfab.userlib import PasswordMessage, minimumPasswordLength
 from softfab.xmlgen import XMLContent, xhtml
+
+PasswordMessage = Enum('PasswordMessage', 'SUCCESS POOR SHORT EMPTY MISMATCH')
+'''Reasons for rejecting a password.
+'''
+
+minimumPasswordLength = 8
+
+def passwordQuality(userName: str, password: str) -> PasswordMessage:
+    '''Performs sanity checks on a username/password combination.
+    '''
+    if not password:
+        return PasswordMessage.EMPTY
+
+    if len(password) < minimumPasswordLength:
+        return PasswordMessage.SHORT
+
+    if userName == password:
+        return PasswordMessage.POOR
+
+    return PasswordMessage.SUCCESS
 
 passwordStr = {
     PasswordMessage.SUCCESS  : 'The password has been changed successfully.',

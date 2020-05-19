@@ -17,10 +17,10 @@ from softfab.pageargs import ArgsCorrected, ArgsT, EnumArg, StrArg
 from softfab.pagelinks import URLArgs
 from softfab.projectlib import project
 from softfab.request import Request
-from softfab.userlib import (
-    PasswordMessage, User, authenticateUser, passwordQuality
+from softfab.userlib import User, authenticateUser
+from softfab.userview import (
+    LoginPassArgs, PasswordMessage, PasswordMsgArgs, passwordQuality
 )
-from softfab.userview import LoginPassArgs, PasswordMsgArgs
 from softfab.webgui import pageURL
 from softfab.xmlgen import XML, XMLContent, xhtml
 

@@ -13,10 +13,12 @@ from softfab.formlib import (
 from softfab.pageargs import EnumArg, PasswordArg, RefererArg
 from softfab.request import Request
 from softfab.userlib import (
-    PasswordMessage, User, authenticateUser, checkPrivilege, passwordQuality,
-    setPassword, userDB
+    User, authenticateUser, checkPrivilege, setPassword, userDB
 )
-from softfab.userview import LoginPassArgs, PasswordMsgArgs, passwordStr
+from softfab.userview import (
+    LoginPassArgs, PasswordMessage, PasswordMsgArgs, passwordQuality,
+    passwordStr
+)
 from softfab.webgui import pageURL
 from softfab.xmlgen import XML, XMLContent, xhtml
 
