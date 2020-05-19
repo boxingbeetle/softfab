@@ -29,7 +29,7 @@ from softfab.docserve import DocPage, DocResource
 from softfab.pageargs import PageArgs
 from softfab.render import NotFoundPage, renderAuthenticated
 from softfab.schedulelib import ScheduleManager
-from softfab.userlib import User
+from softfab.userlib import User, userDB
 from softfab.utils import iterModules
 from softfab.webhooks import createWebhooks
 
@@ -153,12 +153,16 @@ class PageLoader:
                     page.Arguments.__qualname__,
                     PageArgs.__module__, PageArgs.__name__
                     )
-            if not issubclass(page.Processor, PageProcessor):
+            processorClass = page.Processor
+            if not issubclass(processorClass, PageProcessor):
                 startupLogger.error(
                     '%s does not inherit from %s.%s',
-                    page.Processor.__qualname__,
+                    processorClass.__qualname__,
                     PageProcessor.__module__, PageProcessor.__name__
                     )
+            # TODO: Generalize this for all DBs.
+            if 'userDB' in processorClass.__annotations__:
+                setattr(processorClass, 'userDB', userDB)
 
             className = pageClass.__name__
             index = className.index('_')

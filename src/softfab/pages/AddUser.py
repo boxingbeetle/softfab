@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from enum import Enum
-from typing import Iterator, Optional, Tuple, cast
+from typing import ClassVar, Iterator, Optional, Tuple, cast
 
 from twisted.cred.error import LoginFailed
 
@@ -15,7 +15,7 @@ from softfab.pageargs import ArgsT, EnumArg, PageArgs, RefererArg, StrArg
 from softfab.request import Request
 from softfab.roles import UIRoleNames, uiRoleToSet
 from softfab.userlib import (
-    User, addUserAccount, authenticateUser, checkPrivilege, setPassword, userDB
+    User, UserDB, addUserAccount, authenticateUser, checkPrivilege, setPassword
 )
 from softfab.userview import (
     LoginPassArgs, PasswordMessage, passwordQuality, passwordStr
@@ -92,6 +92,8 @@ class AddUser_POST(AddUserBase['AddUser_POST.Processor',
 
     class Processor(PageProcessor['AddUser_POST.Arguments']):
 
+        userDB: ClassVar[UserDB]
+
         async def process(self,
                           req: Request['AddUser_POST.Arguments'],
                           user: User
@@ -100,6 +102,8 @@ class AddUser_POST(AddUserBase['AddUser_POST.Processor',
                 page = cast(AddUser_POST, self.page)
                 raise Redirect(page.getCancelURL(req.args))
             elif req.args.action is Actions.ADD:
+                userDB = self.userDB
+
                 # Validate input.
                 userName = req.args.user
                 if not userName:

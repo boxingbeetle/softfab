@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Any, Collection, Iterator, cast
+from typing import Any, ClassVar, Collection, Iterator, cast
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor, PresentableError
@@ -11,7 +11,7 @@ from softfab.pageargs import PageArgs, StrArg
 from softfab.pagelinks import ReportArgs, UserIdArgs
 from softfab.querylib import KeySorter, ValueFilter, runQuery
 from softfab.request import Request
-from softfab.userlib import User, userDB
+from softfab.userlib import User, UserDB
 from softfab.webgui import PropertiesTable, Widget, pageLink
 from softfab.xmlgen import XML, XMLContent, xhtml
 
@@ -39,6 +39,7 @@ class UserDetails_GET(FabPage['UserDetails_GET.Processor',
 
     class Processor(PageProcessor['UserDetails_GET.Arguments']):
         visibleJobs = 12
+        userDB: ClassVar[UserDB]
 
         async def process(self,
                           req: Request['UserDetails_GET.Arguments'],
@@ -47,7 +48,7 @@ class UserDetails_GET(FabPage['UserDetails_GET.Processor',
             infoUserName = req.args.user
 
             try:
-                infoUser = userDB[infoUserName]
+                infoUser = self.userDB[infoUserName]
             except KeyError:
                 raise PresentableError(xhtml[
                     'User ', xhtml.b[ infoUserName ], ' does not exist.'

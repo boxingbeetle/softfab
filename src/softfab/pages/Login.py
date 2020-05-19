@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from enum import Enum, auto
-from typing import Iterator, Tuple, cast
+from typing import ClassVar, Iterator, Tuple, cast
 
 from twisted.cred.error import LoginFailed
 
@@ -17,7 +17,7 @@ from softfab.pageargs import ArgsCorrected, ArgsT, EnumArg, StrArg
 from softfab.pagelinks import URLArgs
 from softfab.projectlib import project
 from softfab.request import Request
-from softfab.userlib import User, authenticateUser, userDB
+from softfab.userlib import User, UserDB, authenticateUser
 from softfab.userview import (
     LoginPassArgs, PasswordMessage, PasswordMsgArgs, passwordQuality
 )
@@ -119,6 +119,8 @@ class Login_POST(LoginBase['Login_POST.Processor', 'Login_POST.Arguments']):
 
     class Processor(PageProcessor['Login_POST.Arguments']):
 
+        userDB: ClassVar[UserDB]
+
         async def process(self,
                           req: Request['Login_POST.Arguments'],
                           user: User
@@ -130,7 +132,7 @@ class Login_POST(LoginBase['Login_POST.Processor', 'Login_POST.Arguments']):
             password = req.args.loginpass
 
             try:
-                user = await authenticateUser(userDB, username, password)
+                user = await authenticateUser(self.userDB, username, password)
             except LoginFailed:
                 raise PresentableError(
                     xhtml.p(class_='notice')['Login failed']

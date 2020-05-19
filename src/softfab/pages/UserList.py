@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Iterator, cast
+from typing import ClassVar, Iterator, cast
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor, PresentableError, Redirect
@@ -17,7 +17,7 @@ from softfab.querylib import CustomFilter, RecordFilter
 from softfab.request import Request
 from softfab.roles import UIRoleNames, uiRoleToSet
 from softfab.userlib import (
-    User, UserInfo, checkPrivilege, rolesGrantPrivilege, userDB
+    User, UserDB, UserInfo, checkPrivilege, rolesGrantPrivilege, userDB
 )
 from softfab.userview import presentAnonGuestSetting
 from softfab.webgui import pageLink, pageURL, script
@@ -205,6 +205,8 @@ class UserList_POST(FabPage['UserList_POST.Processor',
 
     class Processor(PageProcessor['UserList_POST.Arguments']):
 
+        userDB: ClassVar[UserDB]
+
         async def process(self,
                           req: Request['UserList_POST.Arguments'],
                           user: User
@@ -212,7 +214,7 @@ class UserList_POST(FabPage['UserList_POST.Processor',
             # Find user record.
             userName = req.args.user
             try:
-                subject = userDB[userName]
+                subject = self.userDB[userName]
             except KeyError:
                 raise PresentableError(
                     xhtml.p(class_ = 'notice')[

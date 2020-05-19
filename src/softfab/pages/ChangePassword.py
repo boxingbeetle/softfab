@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from enum import Enum
-from typing import Iterator, Tuple, cast
+from typing import ClassVar, Iterator, Tuple, cast
 
 from twisted.cred.error import LoginFailed
 
@@ -13,7 +13,7 @@ from softfab.formlib import (
 from softfab.pageargs import EnumArg, PasswordArg, RefererArg
 from softfab.request import Request
 from softfab.userlib import (
-    User, authenticateUser, checkPrivilege, setPassword, userDB
+    User, UserDB, authenticateUser, checkPrivilege, setPassword
 )
 from softfab.userview import (
     LoginPassArgs, PasswordMessage, PasswordMsgArgs, passwordQuality,
@@ -80,10 +80,14 @@ class ChangePassword_GET(FabPage['ChangePassword_GET.Processor',
 
     class Processor(PageProcessor['ChangePassword_GET.Arguments']):
 
+        userDB: ClassVar[UserDB]
+
         async def process(self,
                           req: Request['ChangePassword_GET.Arguments'],
                           user: User
                           ) -> None:
+            userDB = self.userDB
+
             # Validate input.
             userName = req.args.user
             reqUserName = user.name # get current logged-in user
@@ -145,6 +149,8 @@ class ChangePassword_POST(FabPage['ChangePassword_POST.Processor',
 
     class Processor(PageProcessor['ChangePassword_POST.Arguments']):
 
+        userDB: ClassVar[UserDB]
+
         async def process(self,
                           req: Request['ChangePassword_POST.Arguments'],
                           user: User
@@ -153,6 +159,8 @@ class ChangePassword_POST(FabPage['ChangePassword_POST.Processor',
                 page = cast(ChangePassword_POST, self.page)
                 raise Redirect(page.getCancelURL(req.args))
             elif req.args.action is Actions.CHANGE:
+                userDB = self.userDB
+
                 # Validate input.
                 userName = req.args.user
                 reqUserName = user.name # get current logged-in user

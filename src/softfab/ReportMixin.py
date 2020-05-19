@@ -17,7 +17,7 @@ from softfab.projectlib import project
 from softfab.querylib import CustomFilter, RecordFilter, SetFilter
 from softfab.request import Request
 from softfab.timeview import formatTime
-from softfab.userlib import User, userDB
+from softfab.userlib import User, UserDB
 from softfab.utils import SharedInstance, abstract
 from softfab.webgui import script
 from softfab.xmlgen import XMLContent, XMLPresentable, xhtml
@@ -63,6 +63,7 @@ ReportArgsT = TypeVar('ReportArgsT', bound=ReportArgs)
 
 class ReportProcessor(PageProcessor[ReportArgsT]):
     db: ClassVar[Optional[Database]] = None
+    userDB: ClassVar[UserDB]
 
     async def process(self, req: Request[ReportArgsT], user: User) -> None:
         # Set of targets for which jobs have run.
@@ -74,7 +75,7 @@ class ReportProcessor(PageProcessor[ReportArgsT]):
         # Set of users that have initiated jobs.
         owners = cast(AbstractSet[Optional[str]], jobDB.uniqueValues('owner'))
         # Add users that are available now.
-        owners |= userDB.keys()
+        owners |= self.userDB.keys()
         uiOwners = noneToEmpty(owners)
 
         # Reject unknown targets and/or owners.
