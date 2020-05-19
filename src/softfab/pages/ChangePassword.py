@@ -183,7 +183,7 @@ class ChangePassword_POST(FabPage['ChangePassword_POST.Processor',
                 if reqUserName is not None:
                     try:
                         user_ = await authenticateUser(
-                            reqUserName, req.args.loginpass
+                            userDB, reqUserName, req.args.loginpass
                             )
                     except LoginFailed as ex:
                         self.retry = True # pylint: disable=attribute-defined-outside-init
@@ -197,7 +197,7 @@ class ChangePassword_POST(FabPage['ChangePassword_POST.Processor',
 
                 # Apply changes.
                 try:
-                    setPassword(userName, password)
+                    setPassword(userDB, userName, password)
                 except ValueError as ex:
                     self.retry = True # pylint: disable=attribute-defined-outside-init
                     raise PresentableError(xhtml[str(ex)])

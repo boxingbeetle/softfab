@@ -341,7 +341,10 @@ class UserDB(Database[UserInfo]):
 
 userDB = UserDB(dbDir / 'users')
 
-def addUserAccount(userName: str, roles: Iterable[str]) -> None:
+# The global name should go away eventually.
+# pylint: disable=redefined-outer-name
+
+def addUserAccount(userDB: UserDB, userName: str, roles: Iterable[str]) -> None:
     '''Creates a new user account.
     @param userName: The name of the new user account.
     @param roles: The initial roles for the new user.
@@ -361,7 +364,7 @@ def addUserAccount(userName: str, roles: Iterable[str]) -> None:
     userInfo.roles = roles
     userDB.add(userInfo)
 
-def removeUserAccount(name: str) -> None:
+def removeUserAccount(userDB: UserDB, name: str) -> None:
     """Removes a user account."""
 
     user = userDB[name]
@@ -376,7 +379,7 @@ def removeUserAccount(name: str) -> None:
     passwordFile.delete(name)
     writePasswordFile(passwordFile)
 
-def setPassword(userName: str, password: str) -> None:
+def setPassword(userDB: UserDB, userName: str, password: str) -> None:
     '''Sets the password for an existing user account.
     @param userName: The name of the user account.
     @param password: New password for the user.
@@ -397,7 +400,10 @@ def setPassword(userName: str, password: str) -> None:
     passwordFile.set_password(userName, password)
     writePasswordFile(passwordFile)
 
-async def authenticateUser(userName: str, password: str) -> UserInfo:
+async def authenticateUser(userDB: UserDB,
+                           userName: str,
+                           password: str
+                           ) -> UserInfo:
     """Authenticates a user with the given password.
 
     Callback arguments: user object for the authenticated user.

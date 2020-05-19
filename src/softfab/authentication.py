@@ -13,7 +13,7 @@ from softfab.projectlib import project
 from softfab.request import Request
 from softfab.tokens import TokenRole, TokenUser, authenticateToken
 from softfab.userlib import (
-    AnonGuestUser, SuperUser, UnknownUser, authenticateUser
+    AnonGuestUser, SuperUser, UnknownUser, authenticateUser, userDB
 )
 from softfab.utils import SharedInstance
 
@@ -60,7 +60,7 @@ class HTTPAuthPage(Authenticator):
             return fail(LoginFailed(ex))
 
         if userName:
-            return ensureDeferred(authenticateUser(userName, password))
+            return ensureDeferred(authenticateUser(userDB, userName, password))
         elif project.anonguest:
             return succeed(AnonGuestUser())
         else:

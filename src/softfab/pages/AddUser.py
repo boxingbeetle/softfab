@@ -15,7 +15,7 @@ from softfab.pageargs import ArgsT, EnumArg, PageArgs, RefererArg, StrArg
 from softfab.request import Request
 from softfab.roles import UIRoleNames, uiRoleToSet
 from softfab.userlib import (
-    User, addUserAccount, authenticateUser, checkPrivilege, setPassword
+    User, addUserAccount, authenticateUser, checkPrivilege, setPassword, userDB
 )
 from softfab.userview import (
     LoginPassArgs, PasswordMessage, passwordQuality, passwordStr
@@ -118,7 +118,7 @@ class AddUser_POST(AddUserBase['AddUser_POST.Processor',
                 if reqUserName is not None:
                     try:
                         user_ = await authenticateUser(
-                            reqUserName, req.args.loginpass
+                            userDB, reqUserName, req.args.loginpass
                             )
                     except LoginFailed as ex:
                         raise PresentableError(xhtml[
@@ -129,8 +129,9 @@ class AddUser_POST(AddUserBase['AddUser_POST.Processor',
 
                 # Create new user account.
                 try:
-                    addUserAccount(userName, uiRoleToSet(req.args.role))
-                    setPassword(userName, password)
+                    roles = uiRoleToSet(req.args.role)
+                    addUserAccount(userDB, userName, roles)
+                    setPassword(userDB, userName, password)
                 except ValueError as ex:
                     raise PresentableError(xhtml[f'{ex}.'])
             else:

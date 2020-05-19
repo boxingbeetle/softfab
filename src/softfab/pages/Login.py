@@ -17,7 +17,7 @@ from softfab.pageargs import ArgsCorrected, ArgsT, EnumArg, StrArg
 from softfab.pagelinks import URLArgs
 from softfab.projectlib import project
 from softfab.request import Request
-from softfab.userlib import User, authenticateUser
+from softfab.userlib import User, authenticateUser, userDB
 from softfab.userview import (
     LoginPassArgs, PasswordMessage, PasswordMsgArgs, passwordQuality
 )
@@ -130,7 +130,7 @@ class Login_POST(LoginBase['Login_POST.Processor', 'Login_POST.Arguments']):
             password = req.args.loginpass
 
             try:
-                user = await authenticateUser(username, password)
+                user = await authenticateUser(userDB, username, password)
             except LoginFailed:
                 raise PresentableError(
                     xhtml.p(class_='notice')['Login failed']

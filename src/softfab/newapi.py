@@ -68,7 +68,7 @@ class UserResource(Resource):
 
     def render_DELETE(self, request: Request) -> bytes:
         name = self._user.name
-        removeUserAccount(name)
+        removeUserAccount(userDB, name)
         return textReply(request, 200, f"User removed: {name}\n")
 
 class NoUserResource(Resource):
@@ -102,7 +102,7 @@ class NoUserResource(Resource):
                              f"name in path ({self._name})\n")
 
         try:
-            addUserAccount(name, uiRoleToSet(data.role))
+            addUserAccount(userDB, name, uiRoleToSet(data.role))
         except ValueError as ex:
             return textReply(request, 400, f"Error creating user: {ex}\n")
         else:
