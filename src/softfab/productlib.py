@@ -10,30 +10,6 @@ from softfab.xmlbind import XMLTag
 from softfab.xmlgen import XMLContent, xml
 
 
-class ProductFactory:
-    @staticmethod
-    def createProduct(attributes: Mapping[str, str]) -> 'Product':
-        return Product(attributes)
-
-class ProductDB(Database['Product']):
-    factory = ProductFactory()
-    privilegeObject = 'j' # every product is a part of a job
-    description = 'product'
-    uniqueKeys = ( 'id', )
-    alwaysInMemory = False
-
-    def create(self, name: str) -> 'Product':
-        product = Product(dict(
-            id = createInternalId(),
-            name = name,
-            state = 'waiting',
-            pdKey = productDefDB.latestVersion(name)
-            ))
-        self.add(product)
-        return product
-
-productDB = ProductDB(dbDir / 'products')
-
 @total_ordering
 class Product(XMLTag, DatabaseElem):
     tagName = 'product'
@@ -149,3 +125,27 @@ class Product(XMLTag, DatabaseElem):
         if self._properties['state'] == 'waiting':
             self._properties['state'] = 'blocked'
             self._notify()
+
+class ProductFactory:
+    @staticmethod
+    def createProduct(attributes: Mapping[str, str]) -> Product:
+        return Product(attributes)
+
+class ProductDB(Database[Product]):
+    factory = ProductFactory()
+    privilegeObject = 'j' # every product is a part of a job
+    description = 'product'
+    uniqueKeys = ( 'id', )
+    alwaysInMemory = False
+
+    def create(self, name: str) -> Product:
+        product = Product(dict(
+            id = createInternalId(),
+            name = name,
+            state = 'waiting',
+            pdKey = productDefDB.latestVersion(name)
+            ))
+        self.add(product)
+        return product
+
+productDB = ProductDB(dbDir / 'products')
