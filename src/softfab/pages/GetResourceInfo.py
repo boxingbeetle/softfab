@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Iterator, List, Optional, cast
+from typing import ClassVar, Iterator, List, Optional, cast
 
 from softfab.ControlPage import ControlPage
 from softfab.Page import InvalidRequest, PageProcessor
@@ -9,7 +9,7 @@ from softfab.querylib import RecordProcessor, SetFilter, runQuery
 from softfab.request import Request
 from softfab.resourcelib import ResourceBase, TaskRunner, resourceDB
 from softfab.response import Response
-from softfab.restypelib import resTypeDB
+from softfab.restypelib import ResTypeDB
 from softfab.timeview import formatTimeAttr
 from softfab.userlib import User, checkPrivilege
 from softfab.xmlgen import XML, xml
@@ -27,6 +27,8 @@ class GetResourceInfo_GET(ControlPage['GetResourceInfo_GET.Arguments',
 
     class Processor(PageProcessor['GetResourceInfo_GET.Arguments']):
 
+        resTypeDB: ClassVar[ResTypeDB]
+
         async def process(self,
                           req: Request['GetResourceInfo_GET.Arguments'],
                           user: User
@@ -35,6 +37,7 @@ class GetResourceInfo_GET(ControlPage['GetResourceInfo_GET.Arguments',
             resNames = req.args.name
 
             # Check validity of optional typenames
+            resTypeDB = self.resTypeDB
             invalidTypeNames = sorted(
                 name for name in resTypeNames if name not in resTypeDB
                 )

@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Collection, Iterator, MutableSet, cast
+from typing import ClassVar, Collection, Iterator, MutableSet, cast
 
 import attr
 
@@ -18,7 +18,7 @@ from softfab.resourcelib import ResourceBase, resourceDB
 from softfab.resourceview import (
     ResourceNameColumn, StatusColumn, presentCapabilities
 )
-from softfab.restypelib import resTypeDB
+from softfab.restypelib import ResTypeDB
 from softfab.restypeview import ResTypeTableMixin
 from softfab.taskdeflib import taskDefDB
 from softfab.userlib import User, checkPrivilege
@@ -142,6 +142,8 @@ class Capabilities_GET(FabPage['Capabilities_GET.Processor',
 
     class Processor(PageProcessor['Capabilities_GET.Arguments']):
 
+        resTypeDB: ClassVar[ResTypeDB]
+
         async def process(self,
                           req: Request[CapFilterArgs],
                           user: User
@@ -183,7 +185,7 @@ class Capabilities_GET(FabPage['Capabilities_GET.Processor',
 
     def presentContent(self, **kwargs: object) -> XMLContent:
         proc = cast(Capabilities_GET.Processor, kwargs['proc'])
-        resType = resTypeDB[proc.args.restype]
+        resType = proc.resTypeDB[proc.args.restype]
         yield vgroup[
             ResTypeTable.instance,
             xhtml.h3[
