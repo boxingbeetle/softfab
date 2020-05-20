@@ -119,10 +119,6 @@ def runInReactor(call: Awaitable[T]) -> T:
 
     reactor.callWhenRunning(run)
     reactor.run()
-    if failure is None:
-        return output
-    else:
+    if failure is not None:
         failure.raiseException()
-        # Neither pylint nor mypy knows that raiseException() does not return.
-        assert False
-        return None
+    return output
