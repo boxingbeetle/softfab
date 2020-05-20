@@ -2,7 +2,7 @@
 
 from collections import defaultdict
 from enum import Enum
-from typing import DefaultDict, Iterator, List, Sequence, cast
+from typing import ClassVar, DefaultDict, Iterator, List, Sequence, cast
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor, PresentableError, Redirect
@@ -20,7 +20,7 @@ from softfab.resourceview import (
     ResourceNameColumn, StatusColumn, getResourceStatus, presentCapabilities
 )
 from softfab.restypeview import iterResourceTypes, reservedTypes
-from softfab.taskrunlib import taskRunDB
+from softfab.taskrunlib import TaskRunDB
 from softfab.userlib import User, checkPrivilege
 from softfab.webgui import Widget, docLink, header, pageLink, pageURL, row
 from softfab.xmlgen import XML, XMLContent, xhtml
@@ -58,7 +58,8 @@ class ReservedByColumn(DataColumn[ResourceBase]):
                 if reservedType == 'J': # job
                     return createJobLink(reservedId)
                 elif reservedType == 'T': # task
-                    run = taskRunDB[reservedId]
+                    proc = cast(ResourceIndex_GET.Processor, kwargs['proc'])
+                    run = proc.taskRunDB[reservedId]
                     return createTaskInfoLink(
                         run.getJob().getId(), run.getName()
                         )
@@ -159,7 +160,7 @@ class ResourceIndex_GET(FabPage['ResourceIndex_GET.Processor',
         sort = SortArg()
 
     class Processor(PageProcessor['ResourceIndex_GET.Arguments']):
-        pass
+        taskRunDB: ClassVar[TaskRunDB]
 
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'r/l')
