@@ -1,11 +1,11 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Iterable, Iterator, List, cast
+from typing import ClassVar, Iterable, Iterator, List, cast
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
 from softfab.datawidgets import DataTable
-from softfab.joblib import Job, Task, jobDB
+from softfab.joblib import Job, JobDB, Task
 from softfab.pageargs import IntArg, SortArg
 from softfab.pagelinks import TaskRunnerIdArgs
 from softfab.querylib import runQuery
@@ -43,12 +43,15 @@ class TaskRunnerHistory_GET(FabPage['TaskRunnerHistory_GET.Processor',
 
     class Processor(PageProcessor['TaskRunnerHistory_GET.Arguments']):
 
+        jobDB: ClassVar[JobDB]
+
         async def process(self,
                           req: Request['TaskRunnerHistory_GET.Arguments'],
                           user: User
                           ) -> None:
             runnerId = req.args.runnerId
 
+            jobDB = self.jobDB
             jobs = list(jobDB.values())
             jobs.sort(key = jobDB.retrieverFor('recent'))
             reachedJobsLimit = len(jobs) > _jobsLimit

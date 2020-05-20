@@ -1,12 +1,12 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Mapping, cast
+from typing import ClassVar, Mapping, cast
 import logging
 
 from softfab.ControlPage import ControlPage
 from softfab.Page import InvalidRequest, PageProcessor
 from softfab.authentication import TokenAuthPage
-from softfab.joblib import jobDB
+from softfab.joblib import JobDB
 from softfab.pageargs import DictArg, EnumArg, ListArg, PageArgs, StrArg
 from softfab.request import Request
 from softfab.resourcelib import runnerFromToken
@@ -33,6 +33,8 @@ class TaskDone_POST(ControlPage['TaskDone_POST.Arguments',
         data = DictArg(StrArg())
 
     class Processor(PageProcessor['TaskDone_POST.Arguments']):
+
+        jobDB: ClassVar[JobDB]
 
         async def process(self,
                           req: Request['TaskDone_POST.Arguments'],
@@ -64,7 +66,7 @@ class TaskDone_POST(ControlPage['TaskDone_POST.Arguments',
                         f'is not running a task'
                         )
                 try:
-                    job = jobDB[jobId]
+                    job = self.jobDB[jobId]
                 except KeyError:
                     raise InvalidRequest(
                         f'No job exists with ID "{jobId}"'

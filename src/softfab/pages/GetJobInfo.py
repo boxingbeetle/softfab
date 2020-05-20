@@ -1,8 +1,10 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from typing import ClassVar
+
 from softfab.ControlPage import ControlPage
 from softfab.Page import InvalidRequest, PageProcessor
-from softfab.joblib import Task, jobDB
+from softfab.joblib import JobDB, Task
 from softfab.pagelinks import JobIdArgs
 from softfab.productdeflib import ProductType
 from softfab.productlib import Product
@@ -23,11 +25,13 @@ class GetJobInfo_GET(ControlPage['GetJobInfo_GET.Arguments',
 
     class Processor(PageProcessor[JobIdArgs]):
 
+        jobDB: ClassVar[JobDB]
+
         async def process(self, req: Request[JobIdArgs], user: User) -> None:
             jobId = req.args.jobId
             try:
                 # pylint: disable=attribute-defined-outside-init
-                self.job = jobDB[jobId]
+                self.job = self.jobDB[jobId]
             except KeyError:
                 raise InvalidRequest(f'Job "{jobId}" does not exist')
 

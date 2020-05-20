@@ -7,7 +7,7 @@ Its specification is in RFC 4287:  http://tools.ietf.org/html/rfc4287
 
 from os.path import basename
 from time import gmtime, strftime
-from typing import Any, Collection, Iterator, List
+from typing import Any, ClassVar, Collection, Iterator, List
 
 from softfab.ControlPage import ControlPage
 from softfab.Page import PageProcessor
@@ -17,7 +17,7 @@ from softfab.compat import NoReturn
 from softfab.config import dbDir, rootURL
 from softfab.databaselib import RecordObserver
 from softfab.datawidgets import DataColumn, DataTable
-from softfab.joblib import Job, JobDB, jobDB
+from softfab.joblib import Job, JobDB
 from softfab.jobview import CommentPanel, JobsSubTable, presentJobCaption
 from softfab.pagelinks import createJobURL, createUserDetailsURL
 from softfab.projectlib import project
@@ -101,7 +101,18 @@ class Feed_GET(ControlPage[ControlPage.Arguments, 'Feed_GET.Processor']):
         checkPrivilege(user, 'j/a')
 
     class Processor(PageProcessor[ControlPage.Arguments]):
-        recentJobs = MostRecent(jobDB, 'recent', 50)
+
+        jobDB: ClassVar[JobDB]
+        _mostRecent: ClassVar[MostRecent]
+
+        @property
+        def recentJobs(self) -> MostRecent:
+            try:
+                return getattr(self, '_mostRecent')
+            except AttributeError:
+                mostRecent = MostRecent(self.jobDB, 'recent', 50)
+                self.__class__._mostRecent = mostRecent
+                return mostRecent
 
         async def process(self,
                           req: Request['Feed_GET.Arguments'],

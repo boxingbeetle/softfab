@@ -1,13 +1,13 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Collection, Iterator, List, Optional, cast
+from typing import ClassVar, Collection, Iterator, List, Optional, cast
 
 from softfab.FabPage import FabPage, LinkBarButton
 from softfab.Page import PageProcessor
 from softfab.StyleResources import styleRoot
 from softfab.databaselib import RecordObserver
 from softfab.datawidgets import DataTable
-from softfab.joblib import Job, JobDB, jobDB
+from softfab.joblib import Job, JobDB
 from softfab.jobview import JobsSubTable
 from softfab.querylib import KeySorter, RecordProcessor, runQuery
 from softfab.userlib import User, checkPrivilege
@@ -56,7 +56,18 @@ class Home_GET(FabPage['Home_GET.Processor', FabPage.Arguments]):
     docsButton = LinkBarButton('Docs', 'docs/', styleRoot.addIcon('IconHome'))
 
     class Processor(PageProcessor[FabPage.Arguments]):
-        recentJobs = MostRecent(jobDB, 'recent', 50)
+
+        jobDB: ClassVar[JobDB]
+        _mostRecent: ClassVar[MostRecent]
+
+        @property
+        def recentJobs(self) -> MostRecent:
+            try:
+                return getattr(self, '_mostRecent')
+            except AttributeError:
+                mostRecent = MostRecent(self.jobDB, 'recent', 50)
+                self.__class__._mostRecent = mostRecent
+                return mostRecent
 
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'j/l')
@@ -89,7 +100,8 @@ class Home_GET(FabPage['Home_GET.Processor', FabPage.Arguments]):
         yield xhtml.h3[ 'Recent Jobs ', atomFeedLink ]
         yield RecentJobsTable.instance.present(**kwargs)
 
-        if len(jobDB) < 20:
+        proc = cast(Home_GET.Processor, kwargs['proc'])
+        if len(proc.jobDB) < 20:
             yield xhtml.p[
                 'For help to get started, please read the ',
                 docLink('/start/')[ 'Getting Started' ],

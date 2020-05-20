@@ -9,7 +9,7 @@ from softfab.configlib import Config, ConfigDB, iterConfigsByTag
 from softfab.configview import SimpleConfigTable
 from softfab.datawidgets import DataTable
 from softfab.formlib import actionButtons, makeForm
-from softfab.joblib import jobDB
+from softfab.joblib import JobDB
 from softfab.pageargs import EnumArg, PageArgs, RefererArg, SetArg, StrArg
 from softfab.pagelinks import createJobsURL
 from softfab.request import Request
@@ -155,6 +155,7 @@ class FastExecute_POST(FabPage['FastExecute_POST.Processor',
     class Processor(PageProcessor['FastExecute_POST.Arguments']):
 
         configDB: ClassVar[ConfigDB]
+        jobDB: ClassVar[JobDB]
 
         async def process(self,
                           req: Request['FastExecute_POST.Arguments'],
@@ -183,6 +184,7 @@ class FastExecute_POST(FabPage['FastExecute_POST.Processor',
                         pass
                     else:
                         if config.hasValidInputs():
+                            jobDB = self.jobDB
                             for job in config.createJobs(userName):
                                 jobDB.add(job)
                                 jobIds.append(job.getId())

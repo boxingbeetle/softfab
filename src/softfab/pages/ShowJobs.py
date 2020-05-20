@@ -1,11 +1,11 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Iterable, Iterator, cast
+from typing import ClassVar, Iterable, Iterator, cast
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
 from softfab.datawidgets import DataTable
-from softfab.joblib import Job, jobDB
+from softfab.joblib import Job, JobDB
 from softfab.jobview import JobsSubTable
 from softfab.pagelinks import JobIdSetArgs
 from softfab.request import Request
@@ -33,9 +33,12 @@ class ShowJobs_GET(FabPage['ShowJobs_GET.Processor', 'ShowJobs_GET.Arguments']):
 
     class Processor(PageProcessor[JobIdSetArgs]):
 
+        jobDB: ClassVar[JobDB]
+
         async def process(self, req: Request[JobIdSetArgs], user: User) -> None:
             jobs = []
             invalidJobIds = []
+            jobDB = self.jobDB
             for jobId in req.args.jobId:
                 try:
                     jobs.append(jobDB[jobId])

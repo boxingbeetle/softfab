@@ -1,12 +1,12 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from enum import Enum
-from typing import cast
+from typing import ClassVar, cast
 
 from softfab.FabPage import FabPage, IconModifier
 from softfab.Page import PageProcessor, Redirect
 from softfab.formlib import actionButtons, makeForm
-from softfab.joblib import jobDB
+from softfab.joblib import JobDB
 from softfab.pageargs import EnumArg
 from softfab.pagelinks import TaskIdArgs
 from softfab.request import Request
@@ -52,6 +52,8 @@ class AbortTask_POST(FabPage['AbortTask_POST.Processor',
 
     class Processor(PageProcessor['AbortTask_POST.Arguments']):
 
+        jobDB: ClassVar[JobDB]
+
         async def process(self,
                           req: Request['AbortTask_POST.Arguments'],
                           user: User
@@ -66,7 +68,7 @@ class AbortTask_POST(FabPage['AbortTask_POST.Processor',
                 raise Redirect(page.getParentURL(req.args))
             assert action is Actions.ABORT, action
 
-            job = jobDB[jobId]
+            job = self.jobDB[jobId]
             checkPrivilegeForOwned(
                 user, 't/d', job, ('abort tasks in this job', 'abort tasks')
                 )

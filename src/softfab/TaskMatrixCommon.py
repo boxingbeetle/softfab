@@ -1,13 +1,13 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from collections import defaultdict
-from typing import DefaultDict, Iterable, List, Optional
+from typing import ClassVar, DefaultDict, Iterable, List, Optional
 import time
 
 from softfab.CSVPage import CSVPage
 from softfab.Page import PageProcessor
 from softfab.databaselib import RecordObserver
-from softfab.joblib import Job, Task, jobDB
+from softfab.joblib import Job, JobDB, Task, jobDB
 from softfab.pageargs import ArgsCorrected, IntArg, PageArgs, StrArg, dynamic
 from softfab.querylib import CustomFilter, runQuery
 from softfab.request import Request
@@ -123,6 +123,8 @@ class TaskMatrixCSVArgs(TaskMatrixArgs, CSVPage.Arguments):
 
 class TaskMatrixProcessor(PageProcessor[TaskMatrixArgs]):
 
+    jobDB: ClassVar[JobDB]
+
     async def process(self, req: Request[TaskMatrixArgs], user: User) -> None:
         # TODO: It would be useful to have these as method arguments.
         year = req.args.year
@@ -154,6 +156,6 @@ class TaskMatrixProcessor(PageProcessor[TaskMatrixArgs]):
         self.beginWeek = beginWeek
         self.endWeek = endWeek
         self.taskData = groupTasks(
-            filterJobs(jobDB, beginWeek, endWeek, req.args.config),
+            filterJobs(self.jobDB, beginWeek, endWeek, req.args.config),
             beginWeek
             )

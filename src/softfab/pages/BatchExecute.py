@@ -15,7 +15,7 @@ from softfab.configview import (
 )
 from softfab.datawidgets import DataTable
 from softfab.formlib import actionButtons, hiddenInput, makeForm, textInput
-from softfab.joblib import Job, jobDB
+from softfab.joblib import Job, JobDB
 from softfab.pageargs import DictArg, EnumArg, RefererArg, StrArg
 from softfab.pagelinks import createJobsURL
 from softfab.paramview import ParamOverrideTable
@@ -216,6 +216,7 @@ class BatchExecute_POST(BatchExecute_GET):
     class Processor(BatchExecute_GET.Processor):
 
         configDB: ClassVar[ConfigDB]
+        jobDB: ClassVar[JobDB]
 
         async def process(self, req: Request[ParentArgs], user: User) -> None:
             args = cast(BatchExecute_POST.Arguments, req.args)
@@ -287,6 +288,7 @@ class BatchExecute_POST(BatchExecute_GET):
 
                 if not notices:
                     # Commit created jobs to database and show them to user.
+                    jobDB = self.jobDB
                     jobIds = []
                     for job in jobs:
                         jobDB.add(job)

@@ -5,7 +5,7 @@ from typing import Any, ClassVar, Collection, Iterator, cast
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor, PresentableError
 from softfab.datawidgets import DataTable
-from softfab.joblib import Job, jobDB
+from softfab.joblib import Job, JobDB
 from softfab.jobview import JobsSubTable
 from softfab.pageargs import PageArgs, StrArg
 from softfab.pagelinks import ReportArgs, UserIdArgs
@@ -40,6 +40,7 @@ class UserDetails_GET(FabPage['UserDetails_GET.Processor',
     class Processor(PageProcessor['UserDetails_GET.Arguments']):
         visibleJobs = 12
         userDB: ClassVar[UserDB]
+        jobDB: ClassVar[JobDB]
 
         async def process(self,
                           req: Request['UserDetails_GET.Arguments'],
@@ -54,6 +55,7 @@ class UserDetails_GET(FabPage['UserDetails_GET.Processor',
                     'User ', xhtml.b[ infoUserName ], ' does not exist.'
                     ])
 
+            jobDB = self.jobDB
             jobs = runQuery(
                 [ ValueFilter('owner', infoUserName, jobDB),
                   KeySorter.forDB(['recent'], jobDB)

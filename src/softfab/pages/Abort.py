@@ -1,8 +1,10 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from typing import ClassVar
+
 from softfab.ControlPage import ControlPage
 from softfab.Page import InvalidRequest, PageProcessor
-from softfab.joblib import Task, jobDB
+from softfab.joblib import JobDB, Task
 from softfab.pageargs import BoolArg, PageArgs, SetArg
 from softfab.request import Request
 from softfab.response import Response
@@ -22,6 +24,8 @@ class Abort_POST(ControlPage['Abort_POST.Arguments', 'Abort_POST.Processor']):
 
     class Processor(PageProcessor['Abort_POST.Arguments']):
 
+        jobDB: ClassVar[JobDB]
+
         async def process(self,
                           req: Request['Abort_POST.Arguments'],
                           user: User
@@ -29,6 +33,7 @@ class Abort_POST(ControlPage['Abort_POST.Arguments', 'Abort_POST.Processor']):
             jobIds = req.args.jobId
             taskNames = req.args.taskName
             onlyWaiting = req.args.onlyWaiting
+            jobDB = self.jobDB
 
             # Expect at least 1 jobId
             if not jobIds:

@@ -1,10 +1,10 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Iterator
+from typing import ClassVar, Iterator
 
 from softfab.ControlPage import ControlPage
 from softfab.ReportMixin import JobReportProcessor
-from softfab.joblib import jobDB
+from softfab.joblib import JobDB
 from softfab.pageargs import SetArg
 from softfab.pagelinks import ReportArgs
 from softfab.querylib import RecordFilter, SetFilter, runQuery
@@ -26,13 +26,15 @@ class GetJobHistory_GET(ControlPage['GetJobHistory_GET.Arguments',
 
     class Processor(JobReportProcessor[Arguments]):
 
+        jobDB: ClassVar[JobDB]
+
         async def process(self,
                           req: Request['GetJobHistory_GET.Arguments'],
                           user: User
                           ) -> None:
             await super().process(req, user)
 
-            jobs = runQuery(self.iterFilters(), jobDB)
+            jobs = runQuery(self.iterFilters(), self.jobDB)
 
             # pylint: disable=attribute-defined-outside-init
             self.jobs = jobs
@@ -42,7 +44,7 @@ class GetJobHistory_GET(ControlPage['GetJobHistory_GET.Arguments',
 
             configId = self.args.configId
             if configId:
-                yield SetFilter('configId', configId, jobDB)
+                yield SetFilter('configId', configId, self.jobDB)
 
     async def writeReply(self, response: Response, proc: Processor) -> None:
         jobs = proc.jobs

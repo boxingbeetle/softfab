@@ -5,7 +5,7 @@ from typing import ClassVar, Mapping, cast
 from softfab.ControlPage import ControlPage
 from softfab.Page import InvalidRequest, PageProcessor
 from softfab.configlib import ConfigDB
-from softfab.joblib import jobDB
+from softfab.joblib import JobDB
 from softfab.pageargs import DictArg, PageArgs, StrArg
 from softfab.request import Request
 from softfab.response import Response
@@ -26,6 +26,7 @@ class LoadExecuteDefault_POST(ControlPage['LoadExecuteDefault_POST.Arguments',
     class Processor(PageProcessor['LoadExecuteDefault_POST.Arguments']):
 
         configDB: ClassVar[ConfigDB]
+        jobDB: ClassVar[JobDB]
 
         async def process(self,
                           req: Request['LoadExecuteDefault_POST.Arguments'],
@@ -44,6 +45,7 @@ class LoadExecuteDefault_POST(ControlPage['LoadExecuteDefault_POST.Arguments',
                     f'Configuration "{args.config}" does not exist'
                     )
             else:
+                jobDB = self.jobDB
                 for job in jobConfig.createJobs(
                         user.name, None, products, params, localAt
                         ):
