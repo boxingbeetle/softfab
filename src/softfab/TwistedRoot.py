@@ -4,7 +4,8 @@ from functools import partial
 from mimetypes import guess_type
 from types import GeneratorType, ModuleType
 from typing import (
-    Callable, Dict, Generator, Iterator, Mapping, Optional, Type, Union, cast
+    Callable, Dict, Generator, Iterator, Mapping, Optional, Type, Union, cast,
+    get_type_hints
 )
 import logging
 
@@ -166,7 +167,7 @@ class PageLoader:
                     )
 
             # Inject the databases this processor declared.
-            for annName in processorClass.__annotations__:
+            for annName in get_type_hints(processorClass):
                 if not hasattr(processorClass, annName):
                     db = databases.get(annName)
                     if db is not None:
