@@ -570,7 +570,7 @@ class Job(XMLTag, TaskRunnerSet, TaskSet[Task], DatabaseElem):
 
     def __checkProduct(self, name: str) -> None:
         if not name in self.__products:
-            self.__products[name] = Product.create(name).getId()
+            self.__products[name] = productDB.create(name).getId()
 
     def _addParam(self, attributes: Mapping[str, str]) -> None:
         self.__params[attributes['name']] = attributes['value']

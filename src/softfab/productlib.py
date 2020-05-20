@@ -22,22 +22,21 @@ class ProductDB(Database['Product']):
     uniqueKeys = ( 'id', )
     alwaysInMemory = False
 
-productDB = ProductDB(dbDir / 'products')
-
-@total_ordering
-class Product(XMLTag, DatabaseElem):
-    tagName = 'product'
-
-    @classmethod
-    def create(cls, name: str) -> 'Product':
-        product = cls(dict(
+    def create(self, name: str) -> 'Product':
+        product = Product(dict(
             id = createInternalId(),
             name = name,
             state = 'waiting',
             pdKey = productDefDB.latestVersion(name)
             ))
-        productDB.add(product)
+        self.add(product)
         return product
+
+productDB = ProductDB(dbDir / 'products')
+
+@total_ordering
+class Product(XMLTag, DatabaseElem):
+    tagName = 'product'
 
     def __init__(self, attributes: Mapping[str, Optional[str]]):
         super().__init__(attributes)
