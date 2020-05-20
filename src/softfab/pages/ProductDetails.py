@@ -1,16 +1,16 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Iterable, Iterator, cast
+from typing import ClassVar, Iterable, Iterator, cast
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor, PresentableError
 from softfab.RecordDelete import DeleteArgs
-from softfab.frameworklib import frameworkDB
+from softfab.frameworklib import FrameworkDB
 from softfab.graphview import (
     GraphPageMixin, GraphPanel, createExecutionGraphBuilder
 )
 from softfab.pagelinks import ProductDefIdArgs, createFrameworkDetailsLink
-from softfab.productdeflib import productDefDB
+from softfab.productdeflib import ProductDefDB
 from softfab.request import Request
 from softfab.userlib import User, checkPrivilege
 from softfab.utils import pluralize
@@ -50,6 +50,9 @@ class ProductDetails_GET(
 
     class Processor(PageProcessor[ProductDefIdArgs]):
 
+        frameworkDB: ClassVar[FrameworkDB]
+        productDefDB: ClassVar[ProductDefDB]
+
         async def process(self,
                           req: Request[ProductDefIdArgs],
                           user: User
@@ -57,7 +60,7 @@ class ProductDetails_GET(
             productDefId = req.args.id
 
             try:
-                productDef = productDefDB[productDefId]
+                productDef = self.productDefDB[productDefId]
             except KeyError:
                 raise PresentableError(xhtml[
                     'Product ', xhtml.b[ productDefId ], ' does not exist.'
@@ -65,7 +68,7 @@ class ProductDetails_GET(
 
             producers = []
             consumers = []
-            for frameworkId, framework in frameworkDB.items():
+            for frameworkId, framework in self.frameworkDB.items():
                 if productDefId in framework.getInputs():
                     consumers.append(frameworkId)
                 if productDefId in framework.getOutputs():
