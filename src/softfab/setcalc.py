@@ -18,16 +18,17 @@ def union(seq: Iterable[AbstractSet[VT]]) -> Set[VT]:
     return ret
 
 def intersection(seq: Iterable[AbstractSet[VT]]) -> Optional[Set[VT]]:
-    '''Calculate the intersection of multiple sets.
+    """Calculate the intersection of multiple sets.
     Returns None if the sequence is empty
-      (intersection is undefined in that case).
-    '''
-    ret = None
-    for elem in seq:
-        if ret is None:
-            ret = set(elem)
-        else:
-            ret &= elem
+    (intersection is undefined in that case).
+    """
+    it = iter(seq)
+    try:
+        ret = set(next(it))
+    except StopIteration:
+        return None
+    for elem in it:
+        ret &= elem
     return ret
 
 def categorizedLists(
