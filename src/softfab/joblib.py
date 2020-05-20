@@ -2,6 +2,7 @@
 
 from collections import defaultdict
 from itertools import chain
+from time import localtime
 from typing import (
     TYPE_CHECKING, AbstractSet, Callable, DefaultDict, Dict, Iterable,
     Iterator, List, Mapping, MutableSet, Optional, Sequence, Tuple, Union, cast
@@ -1126,3 +1127,53 @@ def iterUnfinishedTasks(taskFilter: Iterable[str]) -> Iterator[Task]:
         for task in iterAllTasks(taskFilter)
         if not task.hasResult()
         )
+
+class DateRangeMonitor(RecordObserver[Job]):
+    @property
+    def minTime(self) -> int:
+        return self.__minTime
+
+    @property
+    def maxTime(self) -> int:
+        return self.__maxTime
+
+    @property
+    def minYear(self) -> int:
+        return self.__minYear
+
+    @property
+    def maxYear(self) -> int:
+        return self.__maxYear
+
+    def __init__(self) -> None:
+        super().__init__()
+        # Determine minimum and maximum job time.
+        createTimes = [ job.getCreateTime() for job in jobDB ]
+        if createTimes:
+            self.__minTime = min(createTimes)
+            self.__maxTime = max(createTimes)
+        else:
+            now = getTime()
+            self.__minTime = now
+            self.__maxTime = now
+        self.__minYear = localtime(self.__minTime)[0]
+        self.__maxYear = localtime(self.__maxTime)[0]
+
+        # Register for updates.
+        jobDB.addObserver(self)
+
+    def added(self, record: Job) -> None:
+        createTime = record.getCreateTime()
+        self.__maxTime = createTime
+        year = localtime(createTime)[0]
+        if year > self.__maxYear:
+            self.__maxYear = year
+
+    def removed(self, record: Job) -> None:
+        assert False, 'job was removed'
+
+    def updated(self, record: Job) -> None:
+        # Create time cannot change, so we don't care.
+        pass
+
+dateRange = DateRangeMonitor()

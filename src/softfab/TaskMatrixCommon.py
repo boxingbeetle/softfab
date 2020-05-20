@@ -1,71 +1,18 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from collections import defaultdict
+from time import localtime
 from typing import ClassVar, DefaultDict, Iterable, List, Optional
-import time
 
 from softfab.CSVPage import CSVPage
 from softfab.Page import PageProcessor
-from softfab.databaselib import RecordObserver
-from softfab.joblib import Job, JobDB, Task, jobDB
+from softfab.joblib import Job, JobDB, Task, dateRange
 from softfab.pageargs import ArgsCorrected, IntArg, PageArgs, StrArg, dynamic
 from softfab.querylib import CustomFilter, runQuery
 from softfab.request import Request
-from softfab.timelib import (
-    getTime, getWeekNr, secondsPerDay, weekRange, weeksInYear
-)
+from softfab.timelib import getWeekNr, secondsPerDay, weekRange, weeksInYear
 from softfab.userlib import User
 
-
-class DateRangeMonitor(RecordObserver[Job]):
-    @property
-    def minTime(self) -> int:
-        return self.__minTime
-
-    @property
-    def maxTime(self) -> int:
-        return self.__maxTime
-
-    @property
-    def minYear(self) -> int:
-        return self.__minYear
-
-    @property
-    def maxYear(self) -> int:
-        return self.__maxYear
-
-    def __init__(self) -> None:
-        super().__init__()
-        # Determine minimum and maximum job time.
-        createTimes = [ job.getCreateTime() for job in jobDB ]
-        if createTimes:
-            self.__minTime = min(createTimes)
-            self.__maxTime = max(createTimes)
-        else:
-            now = getTime()
-            self.__minTime = now
-            self.__maxTime = now
-        self.__minYear = time.localtime(self.__minTime)[0]
-        self.__maxYear = time.localtime(self.__maxTime)[0]
-
-        # Register for updates.
-        jobDB.addObserver(self)
-
-    def added(self, record: Job) -> None:
-        createTime = record.getCreateTime()
-        self.__maxTime = createTime
-        year = time.localtime(createTime)[0]
-        if year > self.__maxYear:
-            self.__maxYear = year
-
-    def removed(self, record: Job) -> None:
-        assert False, 'job was removed'
-
-    def updated(self, record: Job) -> None:
-        # Create time cannot change, so we don't care.
-        pass
-
-dateRange = DateRangeMonitor()
 
 def filterJobs(jobs: Iterable[Job],
                beginWeek: int,
@@ -133,7 +80,7 @@ class TaskMatrixProcessor(PageProcessor[TaskMatrixArgs]):
         # Use week of last report as default.
         if year is dynamic or week is dynamic:
             year = dateRange.maxYear
-            week = getWeekNr(time.localtime(dateRange.maxTime))
+            week = getWeekNr(localtime(dateRange.maxTime))
         else:
             assert isinstance(year, int)
             assert isinstance(week, int)
@@ -142,10 +89,10 @@ class TaskMatrixProcessor(PageProcessor[TaskMatrixArgs]):
         beginWeek, endWeek = weekRange(year, week)
         if beginWeek < dateRange.minTime:
             year = dateRange.minYear
-            week = getWeekNr(time.localtime(dateRange.minTime))
+            week = getWeekNr(localtime(dateRange.minTime))
         elif beginWeek > dateRange.maxTime:
             year = dateRange.maxYear
-            week = getWeekNr(time.localtime(dateRange.maxTime))
+            week = getWeekNr(localtime(dateRange.maxTime))
         week = max(1, min(week, weeksInYear(year)))
 
         if year != req.args.year or week != req.args.week:
