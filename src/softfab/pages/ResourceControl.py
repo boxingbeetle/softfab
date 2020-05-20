@@ -1,12 +1,13 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from enum import Enum
+from typing import ClassVar
 
 from softfab.ControlPage import ControlPage
 from softfab.Page import InvalidRequest, PageProcessor
 from softfab.pageargs import EnumArg, PageArgs, SetArg
 from softfab.request import Request
-from softfab.resourcelib import resourceDB
+from softfab.resourcelib import ResourceDB
 from softfab.response import Response
 from softfab.userlib import User, checkPrivilege
 from softfab.xmlgen import xml
@@ -25,6 +26,8 @@ class ResourceControl_POST(ControlPage['ResourceControl_POST.Arguments',
 
     class Processor(PageProcessor['ResourceControl_POST.Arguments']):
 
+        resourceDB: ClassVar[ResourceDB]
+
         async def process(self,
                           req: Request['ResourceControl_POST.Arguments'],
                           user: User
@@ -37,6 +40,7 @@ class ResourceControl_POST(ControlPage['ResourceControl_POST.Arguments',
 
             invalidNames = []
             resources = []
+            resourceDB = self.resourceDB
             for name in resNames:
                 try:
                     resources.append(resourceDB[name])

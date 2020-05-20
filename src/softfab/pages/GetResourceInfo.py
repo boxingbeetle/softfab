@@ -7,7 +7,7 @@ from softfab.Page import InvalidRequest, PageProcessor
 from softfab.pageargs import PageArgs, SetArg
 from softfab.querylib import RecordProcessor, SetFilter, runQuery
 from softfab.request import Request
-from softfab.resourcelib import ResourceBase, TaskRunner, resourceDB
+from softfab.resourcelib import ResourceBase, ResourceDB, TaskRunner
 from softfab.response import Response
 from softfab.restypelib import ResTypeDB
 from softfab.timeview import formatTimeAttr
@@ -28,6 +28,7 @@ class GetResourceInfo_GET(ControlPage['GetResourceInfo_GET.Arguments',
     class Processor(PageProcessor['GetResourceInfo_GET.Arguments']):
 
         resTypeDB: ClassVar[ResTypeDB]
+        resourceDB: ClassVar[ResourceDB]
 
         async def process(self,
                           req: Request['GetResourceInfo_GET.Arguments'],
@@ -48,6 +49,7 @@ class GetResourceInfo_GET(ControlPage['GetResourceInfo_GET.Arguments',
                     )
 
             # Check validity of optional names
+            resourceDB = self.resourceDB
             invalidNames = [
                 name
                 for name in resNames

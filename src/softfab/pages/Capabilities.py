@@ -14,7 +14,7 @@ from softfab.pagelinks import (
 from softfab.projectlib import project
 from softfab.querylib import CustomFilter, RecordFilter
 from softfab.request import Request
-from softfab.resourcelib import ResourceBase, resourceDB
+from softfab.resourcelib import ResourceBase, ResourceDB, resourceDB
 from softfab.resourceview import (
     ResourceNameColumn, StatusColumn, presentCapabilities
 )
@@ -143,6 +143,7 @@ class Capabilities_GET(FabPage['Capabilities_GET.Processor',
     class Processor(PageProcessor['Capabilities_GET.Arguments']):
 
         resTypeDB: ClassVar[ResTypeDB]
+        resourceDB: ClassVar[ResourceDB]
 
         async def process(self,
                           req: Request[CapFilterArgs],
@@ -165,6 +166,7 @@ class Capabilities_GET(FabPage['Capabilities_GET.Processor',
                             capMap[rcap].taskDefIds.add(taskDefId)
 
             # Determine which resources are necessary for each task.
+            resourceDB = self.resourceDB
             for resourceId in resourceDB.resourcesOfType(typeName):
                 for cap in resourceDB[resourceId].capabilities:
                     capMap[cap].resourceIds.add(resourceId)

@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Optional, cast
+from typing import ClassVar, Optional, cast
 
 from softfab.ControlPage import ControlPage
 from softfab.Page import InvalidRequest, PageProcessor
@@ -8,7 +8,7 @@ from softfab.authentication import TokenAuthPage
 from softfab.jobview import unfinishedJobs
 from softfab.request import Request
 from softfab.resourcelib import (
-    RequestFactory, TaskRunner, TaskRunnerData, resourceDB, runnerFromToken
+    RequestFactory, ResourceDB, TaskRunner, TaskRunnerData, runnerFromToken
 )
 from softfab.response import Response
 from softfab.taskrunlib import TaskRun
@@ -46,6 +46,8 @@ class Synchronize_POST(ControlPage[ControlPage.Arguments,
 
     class Processor(PageProcessor[ControlPage.Arguments]):
 
+        resourceDB: ClassVar[ResourceDB]
+
         async def process(self,
                           req: Request[ControlPage.Arguments],
                           user: User
@@ -79,6 +81,7 @@ class Synchronize_POST(ControlPage[ControlPage.Arguments,
 
         def createResponse(self) -> XMLContent:
             taskRunner = self.taskRunner
+            resourceDB = self.resourceDB
             if self.abort:
                 yield xml.abort
             if self.exit:
