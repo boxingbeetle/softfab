@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Iterator, cast
+from typing import ClassVar, Iterator, cast
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
@@ -15,7 +15,7 @@ from softfab.pageargs import IntArg, SortArg
 from softfab.pagelinks import ExecutionState, ReportTaskArgs
 from softfab.querylib import RecordFilter
 from softfab.setcalc import intersection, union
-from softfab.taskdeflib import taskDefDB
+from softfab.taskdeflib import TaskDefDB
 from softfab.taskrunlib import getKeys
 from softfab.tasktables import TaskRunsTable
 from softfab.userlib import User, checkPrivilege
@@ -52,7 +52,7 @@ class FilterForm(ReportFilterForm):
         yield xhtml.td(colspan = 4)[
             selectionList(
                 name='task', selected=proc.args.task, size=numListItems
-                )[ sorted(taskDefDB.keys()) ]
+                )[ sorted(proc.taskDefDB.keys()) ]
             ]
 
 class ReportTasks_GET(FabPage['ReportTasks_GET.Processor',
@@ -66,7 +66,7 @@ class ReportTasks_GET(FabPage['ReportTasks_GET.Processor',
         sort = SortArg()
 
     class Processor(ReportProcessor[Arguments]):
-        pass
+        taskDefDB: ClassVar[TaskDefDB]
 
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'j/a', 'view the task list')
@@ -78,7 +78,7 @@ class ReportTasks_GET(FabPage['ReportTasks_GET.Processor',
         proc = cast(ReportTasks_GET.Processor, kwargs['proc'])
         taskFilter = proc.args.task
 
-        if len(taskDefDB) == 0:
+        if len(proc.taskDefDB) == 0:
             yield xhtml.p[
                 'No tasks have been defined yet.'
                 ]

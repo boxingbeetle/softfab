@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Dict, Iterator, Mapping, Optional, cast
+from typing import ClassVar, Dict, Iterator, Mapping, Optional, cast
 
 from softfab.EditPage import (
     EditArgs, EditPage, EditProcessor, EditProcessorBase, InitialEditArgs,
@@ -8,7 +8,7 @@ from softfab.EditPage import (
 )
 from softfab.Page import PresentableError
 from softfab.formlib import dropDownList, emptyOption, textArea, textInput
-from softfab.frameworklib import Framework, frameworkDB
+from softfab.frameworklib import Framework, FrameworkDB, frameworkDB
 from softfab.pageargs import IntArg, StrArg
 from softfab.paramlib import Parameterized, paramTop
 from softfab.paramview import (
@@ -106,6 +106,8 @@ class TaskEdit_POST(TaskEditBase):
 
     class Processor(EditProcessor[TaskEditArgs, TaskDef]):
 
+        frameworkDB: ClassVar[FrameworkDB]
+
         def createElement(self,
                           recordId: str,
                           args: TaskEditArgs,
@@ -133,7 +135,7 @@ class TaskEdit_POST(TaskEditBase):
                     ])
             else:
                 try:
-                    parent = frameworkDB[framework]
+                    parent = self.frameworkDB[framework]
                 except KeyError:
                     raise PresentableError(xhtml.p[
                         f'Framework "{framework}" does not exist (anymore).'

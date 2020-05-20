@@ -3,7 +3,7 @@
 from collections import OrderedDict
 from os.path import splitext
 from typing import (
-    Collection, Dict, Iterable, Iterator, Optional, Sequence, cast
+    ClassVar, Collection, Dict, Iterable, Iterator, Optional, Sequence, cast
 )
 import re
 
@@ -12,7 +12,7 @@ from softfab.Page import InvalidRequest, PageProcessor
 from softfab.StyleResources import styleRoot
 from softfab.artifacts import SANDBOX_RULES
 from softfab.datawidgets import DataTable
-from softfab.frameworklib import frameworkDB
+from softfab.frameworklib import FrameworkDB
 from softfab.joblib import Task
 from softfab.pageargs import ArgsCorrected
 from softfab.pagelinks import (
@@ -26,7 +26,7 @@ from softfab.productview import ProductTable
 from softfab.reportview import ReportPresenter, createPresenter
 from softfab.request import Request
 from softfab.resourceview import InlineResourcesTable
-from softfab.taskdeflib import taskDefDB
+from softfab.taskdeflib import TaskDefDB
 from softfab.taskdefview import formatTimeout
 from softfab.taskrunlib import getData, getKeys
 from softfab.tasktables import JobTaskRunsTable, TaskProcessorMixin
@@ -58,6 +58,10 @@ class Task_GET(FabPage['Task_GET.Processor', 'Task_GET.Arguments']):
         pass
 
     class Processor(TaskProcessorMixin, PageProcessor[Arguments]):
+
+        frameworkDB: ClassVar[FrameworkDB]
+        taskDefDB: ClassVar[TaskDefDB]
+
         async def process(self,
                           req: Request[TaskReportArgs],
                           user: User
@@ -205,8 +209,8 @@ class DetailsTable(PropertiesTable):
         taskDef = task.getDef()
         taskDefId = taskDef.getId()
         frameworkId = cast(str, taskDef['parent'])
-        tdLatest = taskDefDB.latestVersion(taskDefId)
-        fdLatest = frameworkDB.latestVersion(frameworkId)
+        tdLatest = proc.taskDefDB.latestVersion(taskDefId)
+        fdLatest = proc.frameworkDB.latestVersion(frameworkId)
 
         yield 'Title', taskDef['title']
         yield 'Description', taskDef['description']

@@ -1,11 +1,11 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Iterable, Iterator, cast
+from typing import ClassVar, Iterable, Iterator, cast
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor, PresentableError
 from softfab.RecordDelete import DeleteArgs
-from softfab.frameworklib import frameworkDB
+from softfab.frameworklib import FrameworkDB
 from softfab.frameworkview import taskDefsUsingFramework
 from softfab.graphview import (
     GraphPageMixin, GraphPanel, createExecutionGraphBuilder
@@ -66,13 +66,15 @@ class FrameworkDetails_GET(
 
     class Processor(PageProcessor[FrameworkIdArgs]):
 
+        frameworkDB: ClassVar[FrameworkDB]
+
         async def process(self,
                           req: Request[FrameworkIdArgs],
                           user: User
                           ) -> None:
             frameworkId = req.args.id
             try:
-                framework = frameworkDB[frameworkId]
+                framework = self.frameworkDB[frameworkId]
             except KeyError:
                 raise PresentableError(xhtml[
                     'Framework ', xhtml.b[ frameworkId ], ' does not exist.'

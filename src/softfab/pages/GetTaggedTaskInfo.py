@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from typing import (
-    AbstractSet, Dict, Iterable, List, Mapping, Optional, Tuple, cast
+    AbstractSet, ClassVar, Dict, Iterable, List, Mapping, Optional, Tuple, cast
 )
 
 from softfab.ControlPage import ControlPage
@@ -10,7 +10,7 @@ from softfab.joblib import Task, getAllTasksWithId
 from softfab.pageargs import DictArg, DictArgInstance, PageArgs, SetArg, StrArg
 from softfab.request import Request
 from softfab.response import Response
-from softfab.taskdeflib import TaskDef, taskDefDB
+from softfab.taskdeflib import TaskDef, TaskDefDB
 from softfab.timeview import formatTimeAttr
 from softfab.userlib import User, checkPrivilege
 from softfab.xmlgen import XMLContent, xml
@@ -18,6 +18,7 @@ from softfab.xmlgen import XMLContent, xml
 DefRunPair = Tuple[TaskDef, Optional[Task]]
 
 def filterTasks(
+        taskDefDB: TaskDefDB,
         tag: Mapping[str, Iterable[str]],
         owner: Optional[str]
         ) -> Mapping[str, Mapping[str, Iterable[DefRunPair]]]:
@@ -71,12 +72,15 @@ class GetTaggedTaskInfo_GET(ControlPage['GetTaggedTaskInfo_GET.Arguments',
 
     class Processor(PageProcessor['GetTaggedTaskInfo_GET.Arguments']):
 
+        taskDefDB: ClassVar[TaskDefDB]
+
         async def process(self,
                           req: Request['GetTaggedTaskInfo_GET.Arguments'],
                           user: User
                           ) -> None:
             # pylint: disable=attribute-defined-outside-init
             self.selected = filterTasks(
+                self.taskDefDB,
                 cast(DictArgInstance[AbstractSet[str]], req.args.tag),
                 req.args.owner
                 )

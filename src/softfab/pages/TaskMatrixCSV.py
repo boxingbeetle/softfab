@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Iterator, Mapping, Optional, Sequence, Set, cast
+from typing import ClassVar, Iterator, Mapping, Optional, Sequence, Set, cast
 import time
 
 from softfab.CSVPage import CSVPage
@@ -8,7 +8,7 @@ from softfab.TaskMatrixCommon import TaskMatrixCSVArgs, TaskMatrixProcessor
 from softfab.joblib import Task
 from softfab.querylib import KeySorter
 from softfab.resultcode import ResultCode
-from softfab.taskdeflib import taskDefDB
+from softfab.taskdeflib import TaskDefDB
 from softfab.timelib import secondsPerDay
 from softfab.userlib import User, checkPrivilege
 
@@ -19,7 +19,7 @@ class TaskMatrixCSV_GET(CSVPage['TaskMatrixCSV_GET.Processor']):
         pass
 
     class Processor(TaskMatrixProcessor):
-        pass
+        taskDefDB: ClassVar[TaskDefDB]
 
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'j/a', 'view the task list')
@@ -51,7 +51,7 @@ class TaskMatrixCSV_GET(CSVPage['TaskMatrixCSV_GET.Processor']):
             taskNames: Set[str] = set()
         else:
             # Get list of names of current task definitions.
-            taskNames = set(taskDefDB.keys())
+            taskNames = set(proc.taskDefDB.keys())
         # Add task names for task runs that were created in the selected
         # week.
         for taskDict in taskData:

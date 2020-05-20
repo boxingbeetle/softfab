@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Iterable, Iterator, cast
+from typing import ClassVar, Iterable, Iterator, cast
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor, PresentableError
@@ -12,7 +12,7 @@ from softfab.pagelinks import (
 from softfab.paramview import ParametersTable
 from softfab.request import Request
 from softfab.resourceview import InlineResourcesTable
-from softfab.taskdeflib import taskDefDB
+from softfab.taskdeflib import TaskDefDB
 from softfab.taskdefview import configsUsingTaskDef, formatTimeout
 from softfab.userlib import User, checkPrivilege
 from softfab.utils import pluralize
@@ -62,6 +62,8 @@ class TaskDetails_GET(FabPage['TaskDetails_GET.Processor',
 
     class Processor(PageProcessor[TaskDefIdArgs]):
 
+        taskDefDB: ClassVar[TaskDefDB]
+
         async def process(self,
                           req: Request[TaskDefIdArgs],
                           user: User
@@ -69,7 +71,7 @@ class TaskDetails_GET(FabPage['TaskDetails_GET.Processor',
             taskDefId = req.args.id
 
             try:
-                taskDef = taskDefDB[taskDefId]
+                taskDef = self.taskDefDB[taskDefId]
             except KeyError:
                 raise PresentableError(xhtml[
                     'Task Definition ', xhtml.b[ taskDefId ], ' does not exist.'
