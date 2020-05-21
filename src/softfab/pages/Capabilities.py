@@ -20,7 +20,7 @@ from softfab.resourceview import (
 )
 from softfab.restypelib import ResTypeDB
 from softfab.restypeview import ResTypeTableMixin
-from softfab.taskdeflib import taskDefDB
+from softfab.taskdeflib import TaskDefDB
 from softfab.userlib import User, checkPrivilege
 from softfab.utils import ResultKeeper
 from softfab.webgui import Table, pageLink, row, vgroup
@@ -144,6 +144,7 @@ class Capabilities_GET(FabPage['Capabilities_GET.Processor',
 
         resTypeDB: ClassVar[ResTypeDB]
         resourceDB: ClassVar[ResourceDB]
+        taskDefDB: ClassVar[TaskDefDB]
 
         async def process(self,
                           req: Request[CapFilterArgs],
@@ -159,7 +160,7 @@ class Capabilities_GET(FabPage['Capabilities_GET.Processor',
                 capMap[target] # pylint: disable=pointless-statement
 
             # Determine capabilities required for each task.
-            for taskDefId, taskDef in taskDefDB.items():
+            for taskDefId, taskDef in self.taskDefDB.items():
                 for record in (taskDef, taskDef.getFramework()):
                     for spec in record.resourceClaim.iterSpecsOfType(typeName):
                         for rcap in spec.capabilities:
