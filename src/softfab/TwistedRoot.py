@@ -167,10 +167,21 @@ class PageLoader:
                     )
 
             # Inject the databases this processor declared.
-            for annName in get_type_hints(processorClass):
+            for annName, annType in get_type_hints(processorClass).items():
                 if not hasattr(processorClass, annName):
-                    db = databases.get(annName)
-                    if db is not None:
+                    if annName.startswith('_'):
+                        continue
+                    if not str(annType).startswith('typing.ClassVar'):
+                        continue
+                    try:
+                        db = databases[annName]
+                    except KeyError:
+                        startupLogger.warning(
+                            '%s declares unknown value %s',
+                            processorClass.__qualname__,
+                            annName
+                            )
+                    else:
                         setattr(processorClass, annName, db)
 
             className = pageClass.__name__
