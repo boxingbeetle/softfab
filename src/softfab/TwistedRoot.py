@@ -4,8 +4,8 @@ from functools import partial
 from mimetypes import guess_type
 from types import GeneratorType, ModuleType
 from typing import (
-    Callable, Dict, Generator, Iterator, Mapping, Optional, Type, Union, cast,
-    get_type_hints
+    Any, Callable, Dict, Generator, Iterator, Mapping, Optional, Type, Union,
+    cast, get_type_hints
 )
 import logging
 
@@ -121,6 +121,28 @@ class PageLoader:
         self.root = root
         self.databases = databases
 
+    def injectDatabases(self, obj: Any) -> None:
+        """Inject the databases that the given object declared."""
+
+        databases = self.databases
+        isClass = isinstance(obj, type)
+        for annName, annType in get_type_hints(obj).items():
+            if not hasattr(obj, annName):
+                if annName.startswith('_'):
+                    continue
+                if str(annType).startswith('typing.ClassVar') != isClass:
+                    continue
+                try:
+                    db = databases[annName]
+                except KeyError:
+                    startupLogger.warning(
+                        '%s declares unknown value %s',
+                        (obj if isClass else obj.__class__).__qualname__,
+                        annName
+                        )
+                else:
+                    setattr(obj, annName, db)
+
     def __addPage(self, module: ModuleType, pageName: str) -> None:
         pageNamePrefix = pageName + '_'
         pageClasses = tuple(
@@ -166,23 +188,7 @@ class PageLoader:
                     PageProcessor.__module__, PageProcessor.__name__
                     )
 
-            # Inject the databases this processor declared.
-            for annName, annType in get_type_hints(processorClass).items():
-                if not hasattr(processorClass, annName):
-                    if annName.startswith('_'):
-                        continue
-                    if not str(annType).startswith('typing.ClassVar'):
-                        continue
-                    try:
-                        db = databases[annName]
-                    except KeyError:
-                        startupLogger.warning(
-                            '%s declares unknown value %s',
-                            processorClass.__qualname__,
-                            annName
-                            )
-                    else:
-                        setattr(processorClass, annName, db)
+            self.injectDatabases(processorClass)
 
             className = pageClass.__name__
             index = className.index('_')
