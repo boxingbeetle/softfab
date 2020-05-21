@@ -3,6 +3,7 @@
 from typing import Iterator, Tuple
 
 from softfab.FabPage import FabPage, IconModifier
+from softfab.restypelib import presentResTypeName
 from softfab.restypeview import reservedTypes
 from softfab.userlib import User, checkPrivilege
 from softfab.webgui import pageLink
@@ -28,7 +29,9 @@ class ResourceNew_GET(FabPage[FabPage.Processor, FabPage.Arguments]):
         for resType in reservedTypes:
             record = resType.record
             yield (
-                pageLink(resType.editPage)[record.presentationName],
+                pageLink(resType.editPage)[
+                    presentResTypeName(record.getId())
+                    ],
                 f'{record.description}.'
                 )
         yield (

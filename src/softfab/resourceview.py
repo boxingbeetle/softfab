@@ -20,7 +20,9 @@ from softfab.resourcelib import ResourceBase, TaskRunner
 from softfab.resreq import (
     ResourceClaim, ResourceSpec, taskRunnerResourceRefName
 )
-from softfab.restypelib import resTypeDB, taskRunnerResourceTypeName
+from softfab.restypelib import (
+    presentResTypeName, resTypeDB, taskRunnerResourceTypeName
+)
 from softfab.restypeview import createCapabilityLink, iterResourceTypes
 from softfab.webgui import Panel, Table, cell, rowManagerInstanceScript
 from softfab.xmlgen import XMLContent, xhtml
@@ -185,7 +187,9 @@ def resTypeOptions() -> Iterator[XMLContent]:
     for resType in iterResourceTypes():
         resTypeName = resType.getId()
         if resTypeName != taskRunnerResourceTypeName:
-            yield option(value=resTypeName)[resType.presentationName]
+            yield option(value=resTypeName)[
+                presentResTypeName(resTypeName)
+                ]
 
 def resourceRequirementsWidget(parentClaim: Optional[ResourceClaim] = None
                                ) -> XMLContent:
@@ -250,7 +254,7 @@ class ResourceRequirementsTable(Table):
                 if inherited or resTypeName == taskRunnerResourceTypeName:
                     # Type and reference are fixed.
                     typeControl: XMLContent = (
-                        resType.presentationName,
+                        presentResTypeName(resTypeName),
                         hiddenInput(name='type', value=resTypeName)
                         )
                     refControl: XMLContent = (

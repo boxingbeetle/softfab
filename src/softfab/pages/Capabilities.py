@@ -18,7 +18,7 @@ from softfab.resourcelib import ResourceBase, ResourceDB, resourceDB
 from softfab.resourceview import (
     ResourceNameColumn, StatusColumn, presentCapabilities
 )
-from softfab.restypelib import ResTypeDB
+from softfab.restypelib import ResTypeDB, presentResTypeName
 from softfab.restypeview import ResTypeTableMixin
 from softfab.taskdeflib import TaskDefDB
 from softfab.userlib import User, checkPrivilege
@@ -188,12 +188,11 @@ class Capabilities_GET(FabPage['Capabilities_GET.Processor',
 
     def presentContent(self, **kwargs: object) -> XMLContent:
         proc = cast(Capabilities_GET.Processor, kwargs['proc'])
-        resType = proc.resTypeDB[proc.args.restype]
         yield vgroup[
             ResTypeTable.instance,
             xhtml.h3[
                 'Resources of type ',
-                xhtml.b[resType.presentationName], ':'
+                xhtml.b[presentResTypeName(proc.args.restype)], ':'
                 ],
             ResourcesTable.instance,
             CapabilitiesTable.instance

@@ -37,6 +37,17 @@ class ResTypeDB(VersionedDatabase['ResType']):
 
 resTypeDB = ResTypeDB(dbDir / 'restypes')
 
+# TODO: This should be moved to restypeview, but that is only possible
+#       after we replace the __getitem__ mechanism.
+def presentResTypeName(name: str) -> str:
+    if name.startswith('sf.'):
+        return {
+            taskRunnerResourceTypeName: 'Task Runner',
+            repoResourceTypeName: 'Repository',
+            }[name]
+    else:
+        return name
+
 class ResType(XMLTag, DatabaseElem):
     '''Represents a resource type with the properties common for all resources.
     '''
@@ -67,23 +78,12 @@ class ResType(XMLTag, DatabaseElem):
 
     def __getitem__(self, key: str) -> object:
         if key == 'presentationName':
-            return self.presentationName
+            return presentResTypeName(self.getId())
         else:
             return super().__getitem__(key)
 
     def _textDescription(self, text: str) -> None:
         self.__description = text
-
-    @property
-    def presentationName(self) -> str:
-        name = cast(str, self._properties['name'])
-        if name.startswith('sf.'):
-            return {
-                taskRunnerResourceTypeName: 'Task Runner',
-                repoResourceTypeName: 'Repository',
-                }[name]
-        else:
-            return name
 
     def getId(self) -> str:
         return cast(str, self._properties['name'])

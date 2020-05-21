@@ -19,6 +19,7 @@ from softfab.resourcelib import ResourceBase, TaskRunner, resourceDB
 from softfab.resourceview import (
     ResourceNameColumn, StatusColumn, getResourceStatus, presentCapabilities
 )
+from softfab.restypelib import presentResTypeName
 from softfab.restypeview import iterResourceTypes, reservedTypes
 from softfab.taskrunlib import TaskRunDB
 from softfab.userlib import User, checkPrivilege
@@ -137,7 +138,7 @@ class ResourcesTable(DataTable[ResourceBase]):
             resTypeName = resType.getId()
             if resTypeName in recordsByType:
                 yield row[header(colspan=numColumns, class_='section')[
-                    resType.presentationName
+                    presentResTypeName(resTypeName)
                     ]]
                 for record in recordsByType[resTypeName]:
                     yield row(class_=getResourceStatus(record))[(

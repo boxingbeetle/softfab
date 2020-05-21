@@ -6,7 +6,8 @@ import attr
 
 from softfab.pagelinks import CapFilterArgs, pageLink
 from softfab.restypelib import (
-    ResType, repoResourceTypeName, resTypeDB, taskRunnerResourceTypeName
+    ResType, presentResTypeName, repoResourceTypeName, resTypeDB,
+    taskRunnerResourceTypeName
 )
 from softfab.webgui import Column
 from softfab.xmlgen import XMLContent, XMLNode
@@ -14,7 +15,7 @@ from softfab.xmlgen import XMLContent, XMLNode
 
 def createCapabilityLink(typeName: str, cap: str = '') -> XMLNode:
     return pageLink('Capabilities', CapFilterArgs(restype=typeName, cap=cap))[
-        cap or resTypeDB[typeName].presentationName
+        cap or presentResTypeName(typeName)
         ]
 
 def createTargetLink(target: str) -> XMLNode:
@@ -66,4 +67,5 @@ class ResTypeTableMixin:
                     **_kwargs: object
                     ) -> Iterator[Tuple[str, XMLContent, XMLContent]]:
         for resType in iterResourceTypes(self.reserved):
-            yield resType.getId(), resType.presentationName, resType.description
+            name = resType.getId()
+            yield name, presentResTypeName(name), resType.description
