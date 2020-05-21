@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from pathlib import Path
 from typing import Mapping, Optional, cast
 
 from softfab import frameworklib
@@ -16,10 +17,12 @@ class TaskDefFactory:
         return TaskDef(attributes)
 
 class TaskDefDB(VersionedDatabase['TaskDef']):
-    factory = TaskDefFactory()
     privilegeObject = 'td'
     description = 'task definition'
     uniqueKeys = ( 'id', )
+
+    def __init__(self, baseDir: Path):
+        super().__init__(baseDir, TaskDefFactory())
 
 taskDefDB = TaskDefDB(dbDir / 'taskdefs')
 

@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from functools import total_ordering
+from pathlib import Path
 from typing import Dict, Iterator, Mapping, Optional, Tuple, cast
 
 from softfab.config import dbDir
@@ -132,11 +133,13 @@ class ProductFactory:
         return Product(attributes)
 
 class ProductDB(Database[Product]):
-    factory = ProductFactory()
     privilegeObject = 'j' # every product is a part of a job
     description = 'product'
     uniqueKeys = ( 'id', )
     alwaysInMemory = False
+
+    def __init__(self, baseDir: Path):
+        super().__init__(baseDir, ProductFactory())
 
     def create(self, name: str) -> Product:
         product = Product(dict(

@@ -727,13 +727,12 @@ class ResourceFactory:
         return TaskRunner(attributes)
 
 class ResourceDB(Database[ResourceBase]):
-    factory = ResourceFactory()
     privilegeObject = 'r'
     description = 'resource'
     uniqueKeys = ( 'id', )
 
     def __init__(self, baseDir: Path):
-        super().__init__(baseDir)
+        super().__init__(baseDir, ResourceFactory())
         self.__resourcesByType: DefaultDict[str, Set[str]] = \
                 defaultdict(set)
 

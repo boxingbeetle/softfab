@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from pathlib import Path
 from typing import (
     TYPE_CHECKING, Dict, Iterable, Iterator, List, Mapping, Optional, Set,
     Tuple, cast
@@ -663,10 +664,12 @@ class TaskRunFactory:
         return TaskRun(attributes)
 
 class TaskRunDB(Database[TaskRun]):
-    factory = TaskRunFactory()
     privilegeObject = 't'
     description = 'task run'
     uniqueKeys = ( 'id', )
+
+    def __init__(self, baseDir: Path):
+        super().__init__(baseDir, TaskRunFactory())
 
 taskRunDB = TaskRunDB(dbDir / 'taskruns')
 

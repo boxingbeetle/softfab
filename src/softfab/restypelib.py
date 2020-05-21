@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from pathlib import Path
 from typing import Mapping, cast
 
 from softfab.config import dbDir
@@ -17,10 +18,12 @@ taskRunnerResourceTypeName = 'sf.tr'
 repoResourceTypeName = 'sf.repo'
 
 class ResTypeDB(VersionedDatabase['ResType']):
-    factory = ResTypeFactory()
     privilegeObject = 'rt'
     description = 'resource type'
     uniqueKeys = ( 'name', )
+
+    def __init__(self, baseDir: Path):
+        super().__init__(baseDir, ResTypeFactory())
 
     def _postLoad(self) -> None:
         super()._postLoad()

@@ -2,6 +2,7 @@
 
 from collections import defaultdict
 from itertools import chain
+from pathlib import Path
 from time import localtime
 from typing import (
     TYPE_CHECKING, AbstractSet, Callable, DefaultDict, Dict, Iterable,
@@ -58,11 +59,13 @@ class JobFactory:
         return Job(attributes)
 
 class JobDB(Database['Job']):
-    factory = JobFactory()
     privilegeObject = 'j'
     description = 'job'
     cachedUniqueValues = ( 'owner', 'target' )
     uniqueKeys = ( 'recent', 'jobId' )
+
+    def __init__(self, baseDir: Path):
+        super().__init__(baseDir, JobFactory())
 
     def convert(self,
                 visitor: Optional[Callable[['Job'], None]] = None

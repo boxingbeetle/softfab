@@ -124,13 +124,12 @@ class TokenFactory:
         return Token(attributes)
 
 class TokenDB(Database[Token]):
-    factory = TokenFactory()
     privilegeObject = 'tk'
     description = 'token'
     uniqueKeys = ('id',)
 
     def __init__(self, baseDir: Path):
-        super().__init__(baseDir)
+        super().__init__(baseDir, TokenFactory())
         self.passwordFile = initPasswordFile(baseDir / 'passwords')
 
     def remove(self, value: Token) -> None:

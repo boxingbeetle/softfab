@@ -323,13 +323,12 @@ class UserInfoFactory:
         return UserInfo(attributes)
 
 class UserDB(Database[UserInfo]):
-    factory = UserInfoFactory()
     privilegeObject = 'u'
     description = 'user'
     uniqueKeys = ( 'id', )
 
     def __init__(self, baseDir: Path):
-        super().__init__(baseDir)
+        super().__init__(baseDir, UserInfoFactory())
         self.passwordFile = initPasswordFile(baseDir.parent / 'passwords')
 
     @property

@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from pathlib import Path
 from typing import (
     AbstractSet, ClassVar, Dict, Iterable, List, Mapping, Optional, Set, cast
 )
@@ -23,10 +24,12 @@ class FrameworkFactory:
         return Framework(attributes)
 
 class FrameworkDB(VersionedDatabase['Framework']):
-    factory = FrameworkFactory()
     privilegeObject = 'fd'
     description = 'framework'
     uniqueKeys = ( 'id', )
+
+    def __init__(self, baseDir: Path):
+        super().__init__(baseDir, FrameworkFactory())
 
 frameworkDB = FrameworkDB(dbDir / 'frameworks')
 

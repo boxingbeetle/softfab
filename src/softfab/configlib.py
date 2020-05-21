@@ -2,6 +2,7 @@
 
 from collections import defaultdict
 from functools import total_ordering
+from pathlib import Path
 from typing import (
     TYPE_CHECKING, AbstractSet, DefaultDict, Dict, Iterable, Iterator, List,
     Mapping, MutableSet, Optional, Sequence, Tuple, Union, cast
@@ -88,10 +89,12 @@ class ConfigFactory:
         return Config(attributes)
 
 class ConfigDB(Database['Config']):
-    factory = ConfigFactory()
     privilegeObject = 'c'
     description = 'configuration'
     uniqueKeys = ( 'name', )
+
+    def __init__(self, baseDir: Path):
+        super().__init__(baseDir, ConfigFactory())
 
 configDB = ConfigDB(dbDir / 'configs')
 

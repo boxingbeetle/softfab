@@ -64,13 +64,12 @@ def createDB(tmp_path, request):
 
     def dbFactory(recordFactory=RecordFactory(), keyChecker=None):
         class DB(dbClass):
-            factory = recordFactory
             description = 'test'
             privilegeObject = 'x' # dummy
             if keyChecker is not None:
                 def _customCheckId(self, key):
                     keyChecker(key)
-        db = DB(dbDir)
+        db = DB(dbDir, recordFactory)
         db.preload()
         observer = Observer()
         db.addObserver(observer)

@@ -49,6 +49,7 @@ A: For repeating schedules, advance to next time.
 '''
 
 from enum import Enum
+from pathlib import Path
 from typing import (
     Callable, ClassVar, List, Mapping, Optional, Sequence, Tuple, cast
 )
@@ -92,10 +93,12 @@ class ScheduledFactory:
         return Scheduled(attributes)
 
 class ScheduleDB(Database['Scheduled']):
-    factory = ScheduledFactory()
     privilegeObject = 's'
     description = 'schedule'
     uniqueKeys = ( 'id', )
+
+    def __init__(self, baseDir: Path):
+        super().__init__(baseDir, ScheduledFactory())
 
 scheduleDB = ScheduleDB(dbDir / 'scheduled')
 

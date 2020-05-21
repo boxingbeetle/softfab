@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from enum import Enum
+from pathlib import Path
 from typing import Mapping, cast
 
 from softfab.config import dbDir
@@ -16,10 +17,12 @@ class ProductFactory:
         return ProductDef(attributes)
 
 class ProductDefDB(VersionedDatabase['ProductDef']):
-    factory = ProductFactory()
     privilegeObject = 'pd'
     description = 'product definition'
     uniqueKeys = ( 'id', )
+
+    def __init__(self, baseDir: Path):
+        super().__init__(baseDir, ProductFactory())
 
     def _customCheckId(self, key: str) -> None:
         checkWrapperVarName(key)

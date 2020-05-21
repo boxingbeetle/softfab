@@ -2,6 +2,7 @@
 
 from enum import Enum
 from getpass import getuser
+from pathlib import Path
 from socket import getfqdn
 from typing import (
     AbstractSet, Iterable, List, Mapping, MutableSet, Sequence, cast
@@ -85,9 +86,11 @@ class ProjectFactory:
         return Project(attributes)
 
 class ProjectDB(Database['Project']):
-    factory = ProjectFactory()
     privilegeObject = 'p'
     description = 'project configuration'
+
+    def __init__(self, baseDir: Path):
+        super().__init__(baseDir, ProjectFactory())
 
     def _postLoad(self) -> None:
         super()._postLoad()
