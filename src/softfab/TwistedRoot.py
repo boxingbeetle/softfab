@@ -210,7 +210,8 @@ class PageLoader:
         root.putChild(b'docs', DocResource.registerDocs('softfab.docs'))
         createArtifactRoots(self.root, dbDir / 'artifacts',
                             self.root.anonOperator)
-        root.putChild(b'webhook', createWebhooks(startupLogger))
+        root.putChild(b'webhook',
+                      createWebhooks(startupLogger, self.injectDatabases))
 
         # Add files from the 'softfab.static' package.
         for resource in importlib_resources.contents(static):

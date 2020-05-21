@@ -11,9 +11,9 @@ from twisted.web.http import Request as TwistedRequest
 from twisted.web.resource import Resource
 
 from softfab.request import RequestBase
-from softfab.resourcelib import resourceDB
+from softfab.resourcelib import ResourceDB
 from softfab.restypelib import repoResourceTypeName
-from softfab.schedulelib import scheduleDB
+from softfab.schedulelib import ScheduleDB
 from softfab.utils import iterModules
 
 
@@ -23,6 +23,9 @@ class WebhookEvents(Enum):
     UNSUPPORTED = auto()
 
 class WebhookResource(Resource):
+
+    resourceDB: ResourceDB
+    scheduleDB: ScheduleDB
 
     def __init__(self, name: str, webhook: ModuleType):
         super().__init__()
@@ -88,6 +91,7 @@ class WebhookResource(Resource):
             request.setResponseCode(400)
             return b'Missing key in JSON: %s\n' % str(ex).encode()
         repoMatch = None
+        resourceDB = self.resourceDB
         for repoId in resourceDB.resourcesOfType(repoResourceTypeName):
             repo = resourceDB[repoId]
             locator = repo.getParameter('locator')
@@ -152,7 +156,7 @@ class WebhookResource(Resource):
         #       filters on two branches that only differ in case.
         tagValues = {f'{repoId}/{branch}' for branch in branches}
         scheduleIds = []
-        for scheduleId, schedule in scheduleDB.items():
+        for scheduleId, schedule in self.scheduleDB.items():
             if tagValues & schedule.getTagValues('sf.trigger'):
                 schedule.setTrigger()
                 scheduleIds.append(scheduleId)
@@ -168,11 +172,14 @@ class WebhookIndexResource(Resource):
         request.setHeader(b'Content-Type', b'text/plain; charset=UTF-8')
         return b'\n'.join(sorted(self.children)) + b'\n'
 
-def createWebhooks(log: Logger) -> Resource:
+def createWebhooks(log: Logger,
+                   injector: Callable[[Resource], None]
+                   ) -> Resource:
     index = WebhookIndexResource()
     for name, module in iterModules(__name__, log):
         try:
             resource = WebhookResource(name, module)
+            injector(resource)
         except AttributeError as ex:
             log.error('Error creating webhook: %s', ex)
         else:
