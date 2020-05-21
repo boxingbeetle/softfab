@@ -4,12 +4,21 @@ from typing import Iterator, Tuple
 
 import attr
 
+from softfab.pagelinks import CapFilterArgs, pageLink
 from softfab.restypelib import (
     ResType, repoResourceTypeName, resTypeDB, taskRunnerResourceTypeName
 )
 from softfab.webgui import Column
 from softfab.xmlgen import XMLContent, XMLNode
 
+
+def createCapabilityLink(typeName: str, cap: str = '') -> XMLNode:
+    return pageLink('Capabilities', CapFilterArgs(restype=typeName, cap=cap))[
+        cap or resTypeDB[typeName].presentationName
+        ]
+
+def createTargetLink(target: str) -> XMLNode:
+    return createCapabilityLink(taskRunnerResourceTypeName, target)
 
 @attr.s(auto_attribs=True, frozen=True, kw_only=True)
 class ResourceTypeInfo:

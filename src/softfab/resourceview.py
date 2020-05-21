@@ -15,13 +15,13 @@ from softfab.formlib import (
 )
 from softfab.frameworklib import TaskDefBase
 from softfab.pageargs import ListArg, PageArgs
-from softfab.pagelinks import createCapabilityLink, createTaskRunnerDetailsLink
+from softfab.pagelinks import createTaskRunnerDetailsLink
 from softfab.resourcelib import ResourceBase, TaskRunner
 from softfab.resreq import (
     ResourceClaim, ResourceSpec, taskRunnerResourceRefName
 )
 from softfab.restypelib import resTypeDB, taskRunnerResourceTypeName
-from softfab.restypeview import iterResourceTypes
+from softfab.restypeview import createCapabilityLink, iterResourceTypes
 from softfab.webgui import Panel, Table, cell, rowManagerInstanceScript
 from softfab.xmlgen import XMLContent, xhtml
 

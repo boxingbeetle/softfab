@@ -9,7 +9,7 @@ from softfab.pageargs import (
 )
 from softfab.request import Request
 from softfab.resourcelib import TaskRunner
-from softfab.restypelib import resTypeDB, taskRunnerResourceTypeName
+from softfab.restypelib import taskRunnerResourceTypeName
 from softfab.taskrunlib import TaskRun
 from softfab.webgui import AttrContainer, pageLink, pageURL
 from softfab.xmlgen import XMLContent, XMLNode, XMLPresentable, xhtml
@@ -230,14 +230,6 @@ class TaskRunnerIdArgs(PageArgs):
 class CapFilterArgs(PageArgs):
     restype = StrArg(taskRunnerResourceTypeName)
     cap = StrArg('')
-
-def createCapabilityLink(typeName: str, cap: str = '') -> XMLNode:
-    return pageLink('Capabilities', CapFilterArgs(restype=typeName, cap=cap))[
-        cap or resTypeDB[typeName].presentationName
-        ]
-
-def createTargetLink(target: str) -> XMLNode:
-    return createCapabilityLink(taskRunnerResourceTypeName, target)
 
 def createTaskRunnerDetailsLink(taskRunnerId: Optional[str]) -> XMLContent:
     if not taskRunnerId:

@@ -11,13 +11,13 @@ from softfab.graphview import (
 )
 from softfab.jobview import CommentPanel
 from softfab.pagelinks import (
-    ConfigIdArgs, createTargetLink, createTaskDetailsLink,
-    createTaskRunnerDetailsLink
+    ConfigIdArgs, createTaskDetailsLink, createTaskRunnerDetailsLink
 )
 from softfab.productlib import Product
 from softfab.productview import formatLocator
 from softfab.projectlib import project
 from softfab.request import Request
+from softfab.restypeview import createTargetLink
 from softfab.schedulelib import ScheduleDB
 from softfab.schedulerefs import createScheduleDetailsLink
 from softfab.selectview import TagArgs

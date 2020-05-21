@@ -6,10 +6,11 @@ from softfab.configlib import Config, Input, TaskSetWithInputs, configDB
 from softfab.datawidgets import DataColumn, DataTable, LinkColumn
 from softfab.formlib import dropDownList, emptyOption, hiddenInput, textInput
 from softfab.joblib import Job, jobDB
-from softfab.pagelinks import createConfigDetailsLink, createTargetLink
+from softfab.pagelinks import createConfigDetailsLink
 from softfab.productdeflib import ProductType
 from softfab.projectlib import project
 from softfab.resourcelib import TaskRunner, iterTaskRunners
+from softfab.restypeview import createTargetLink
 from softfab.schedulelib import scheduleDB
 from softfab.selectview import SelectArgs
 from softfab.sortedqueue import SortedQueue
