@@ -160,7 +160,6 @@ class PageLoader:
         pagesByMethod: Dict[str, FabResource] = {}
         name = None
         root = self.root
-        databases = self.databases
         for pageClass in pageClasses:
             try:
                 page = pageClass()

@@ -66,7 +66,7 @@ class Home_GET(FabPage['Home_GET.Processor', FabPage.Arguments]):
                 return getattr(self, '_mostRecent')
             except AttributeError:
                 mostRecent = MostRecent(self.jobDB, 'recent', 50)
-                self.__class__._mostRecent = mostRecent
+                self.__class__._mostRecent = mostRecent # pylint: disable=protected-access
                 return mostRecent
 
     def checkAccess(self, user: User) -> None:
