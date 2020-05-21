@@ -3,7 +3,7 @@
 from enum import Enum
 from typing import Iterable, Optional, Sequence, cast
 
-from softfab.configlib import configDB
+from softfab.configlib import ConfigDB
 from softfab.pageargs import (
     BoolArg, DateTimeArg, EnumArg, IntArg, PageArgs, SetArg, SortArg, StrArg
 )
@@ -79,7 +79,8 @@ class ConfigIdArgs(PageArgs):
     '''
     configId = StrArg()
 
-def createConfigDetailsLink(configId: str,
+def createConfigDetailsLink(configDB: ConfigDB,
+                            configId: str,
                             label: Optional[str] = None
                             ) -> XMLContent:
     if label is None:

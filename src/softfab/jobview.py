@@ -7,6 +7,7 @@ from typing import (
 
 from softfab.StyleResources import styleRoot
 from softfab.config import rootURL
+from softfab.configlib import configDB
 from softfab.databaselib import RecordObserver
 from softfab.datawidgets import (
     DataColumn, DataTable, DurationColumn, TimeColumn
@@ -99,7 +100,9 @@ def presentJobCaption(job: Job) -> XMLContent:
     if configId is None:
         yield 'scratch'
     else:
-        yield 'configuration ', xhtml.b[ createConfigDetailsLink(configId) ]
+        yield 'configuration ', xhtml.b[
+            createConfigDetailsLink(configDB, configId)
+            ]
     numTasks = len(job.getTaskSequence())
     yield f" and contains {numTasks} {pluralize('task', numTasks)}:"
 

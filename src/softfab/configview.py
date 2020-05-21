@@ -126,7 +126,7 @@ class _NameColumn(DataColumn[Config]):
     label = 'Configuration ID'
     keyName = 'name'
     def presentCell(self, record: Config, **kwargs: object) -> XMLContent:
-        return createConfigDetailsLink(record.getId())
+        return createConfigDetailsLink(configDB, record.getId())
 
 class TargetsColumn(DataColumn[Config]):
     keyName = 'targets'

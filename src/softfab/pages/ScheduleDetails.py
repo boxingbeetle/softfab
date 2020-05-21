@@ -25,7 +25,8 @@ def statusDescription(scheduled: Scheduled, configDB: ConfigDB) -> XMLContent:
     status = getScheduleStatus(scheduled)
     if status == 'error':
         return xhtml.br.join(
-            ( 'configuration ', xhtml.b[ createConfigDetailsLink(configId) ],
+            ( 'configuration ',
+              xhtml.b[ createConfigDetailsLink(configDB, configId) ],
               ' is inconsistent' )
             for configId in scheduled.getMatchingConfigIds()
             if not configDB[configId].hasValidInputs()
@@ -68,7 +69,7 @@ class DetailsTable(PropertiesTable):
             yield 'Tag', TagsTable.instance.present(**kwargs)
         else:
             yield 'Configuration', (
-                createConfigDetailsLink(configId, 'view'),
+                createConfigDetailsLink(proc.configDB, configId, 'view'),
                 ' or ',
                 pageLink('FastExecute', ConfigIdArgs(configId = configId))[
                     'execute'

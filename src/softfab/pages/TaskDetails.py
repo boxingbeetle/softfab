@@ -5,6 +5,7 @@ from typing import ClassVar, Iterable, Iterator, cast
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor, PresentableError
 from softfab.RecordDelete import DeleteArgs
+from softfab.configlib import ConfigDB
 from softfab.pagelinks import (
     TaskDefIdArgs, createConfigDetailsLink, createFrameworkDetailsLink,
     createTaskHistoryLink
@@ -30,7 +31,7 @@ class DetailsTable(PropertiesTable):
 
         def formatConfigs(configIds: Iterable[str]) -> XMLContent:
             return xhtml.br.join(
-                createConfigDetailsLink(configId)
+                createConfigDetailsLink(proc.configDB, configId)
                 for configId in sorted(configIds)
                 )
 
@@ -63,6 +64,7 @@ class TaskDetails_GET(FabPage['TaskDetails_GET.Processor',
     class Processor(PageProcessor[TaskDefIdArgs]):
 
         taskDefDB: ClassVar[TaskDefDB]
+        configDB: ClassVar[ConfigDB]
 
         async def process(self,
                           req: Request[TaskDefIdArgs],

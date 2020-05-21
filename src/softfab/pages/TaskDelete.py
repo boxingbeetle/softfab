@@ -1,9 +1,12 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from functools import partial
+
 from softfab.Page import PageProcessor
 from softfab.RecordDelete import (
     RecordDelete_GET, RecordDelete_POSTMixin, RecordInUseError
 )
+from softfab.configlib import configDB
 from softfab.pageargs import RefererArg
 from softfab.pagelinks import createConfigDetailsLink
 from softfab.taskdeflib import TaskDef, taskDefDB
@@ -29,7 +32,9 @@ class TaskDelete_GET(RecordDelete_GET):
         configs = list(configsUsingTaskDef(record.getId()))
         if configs:
             raise RecordInUseError(
-                'configuration', createConfigDetailsLink, configs
+                'configuration',
+                partial(createConfigDetailsLink, configDB),
+                configs
                 )
 
 class TaskDelete_POST(RecordDelete_POSTMixin, TaskDelete_GET):
