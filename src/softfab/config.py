@@ -52,6 +52,12 @@ def loadConfig(file: IO[str]) -> None:
         elif name != DEFAULTSECT:
             raise NameError(f'Unknown section "{name}"')
 
+def _parseBool(key: str, value: str) -> bool:
+    try:
+        return ConfigParser.BOOLEAN_STATES[value.casefold()]
+    except KeyError:
+        raise ValueError(f'Value "{value}" for key "{key}" is not a Boolean')
+
 def _loadServer(name: str, section: Mapping[str, str]) -> None:
     """Load the server configuration from an INI section.
     Can raise the same exceptions as loadConfig().
@@ -78,6 +84,12 @@ def _loadServer(name: str, section: Mapping[str, str]) -> None:
                 raise ValueError(f'Root URL "{value}" contains fragment')
         elif key == 'listen':
             listen = value
+        elif key == 'atomicwrites':
+            global dbAtomicWrites
+            dbAtomicWrites = _parseBool(key, value)
+        elif key == 'logchanges':
+            global logChanges
+            logChanges = _parseBool(key, value)
         else:
             raise NameError(f'Unknown key "{key}" in section "{name}"')
 
