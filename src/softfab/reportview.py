@@ -4,7 +4,8 @@ from codecs import getreader
 from collections import defaultdict
 from mimetypes import guess_type
 from typing import (
-    IO, Any, Callable, DefaultDict, Iterable, Iterator, List, Optional, Tuple
+    IO, Any, Callable, DefaultDict, Iterable, Iterator, List, Optional,
+    Sequence, Tuple
 )
 
 from pygments.lexer import Lexer
@@ -15,7 +16,9 @@ import attr
 
 from softfab.StyleResources import pygmentsFormatter, pygmentsSheet
 from softfab.UIPage import factoryStyleSheet
-from softfab.reportlib import JUnitCase, JUnitReport, JUnitSuite, parseReport
+from softfab.reportlib import (
+    JUnitCase, JUnitDetail, JUnitReport, JUnitSuite, parseReport
+)
 from softfab.resultcode import ResultCode
 from softfab.webgui import Column, Table, cell
 from softfab.xmlgen import XMLContent, xhtml
@@ -110,6 +113,7 @@ class PygmentedPresenter(ReportPresenter):
 resultMap = {
     ResultCode.OK: 'pass',
     ResultCode.WARNING: 'fail',
+    ResultCode.ERROR: 'error',
     }
 
 @attr.s(auto_attribs=True)
@@ -132,29 +136,41 @@ class JUnitPresenter(ReportPresenter):
             yield xhtml.h2[suite.name]
             yield JUnitSuiteTable.instance.present(suite=suite)
 
+            anyErrors = False
+            yield xhtml.h3['Errors']
+            for case in suite.testcase:
+                if case.result is ResultCode.ERROR:
+                    anyErrors = True
+                    yield self.presentDetails(case, case.error)
+            if not anyErrors:
+                yield xhtml.p['None.']
+
             anyFailures = False
             yield xhtml.h3['Failures']
             for case in suite.testcase:
                 if case.result is ResultCode.WARNING:
                     anyFailures = True
-                    yield self.presentFailure(case)
+                    yield self.presentDetails(case, case.failure)
             if not anyFailures:
                 yield xhtml.p['None.']
 
     headerSep = xhtml[' \u25B8 ']
 
-    def presentFailure(self, case: JUnitCase) -> XMLContent:
-        for number, failure in enumerate(case.failure, start=1):
+    def presentDetails(self,
+                       case: JUnitCase,
+                       details: Sequence[JUnitDetail]
+                       ) -> XMLContent:
+        for number, detail in enumerate(details, start=1):
             header = [case.classname, case.name]
-            if len(case.failure) > 1:
-                header.append(f'{number} of {len(case.failure)}')
+            if len(details) > 1:
+                header.append(f'{number} of {len(details)}')
             yield xhtml.h4[self.headerSep.join(header)]
 
-            message = failure.message
+            message = detail.message
             if message:
                 yield xhtml.p[message]
 
-            text = failure.text
+            text = detail.text
             if text:
                 yield xhtml.pre[xhtml.code[text]]
 

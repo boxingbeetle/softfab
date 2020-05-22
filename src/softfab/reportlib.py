@@ -36,7 +36,7 @@ class Report:
         raise NotImplementedError
 
 @attr.s(auto_attribs=True)
-class JUnitFailure:
+class JUnitDetail:
     message: str = ''
     text: str = ''
 
@@ -47,11 +47,14 @@ class JUnitCase:
     file: str = ''
     line: int = 0
     time: float = 0
-    failure: List[JUnitFailure] = attr.ib(factory=list)
+    error: List[JUnitDetail] = attr.ib(factory=list)
+    failure: List[JUnitDetail] = attr.ib(factory=list)
 
     @property
     def result(self) -> ResultCode:
-        if self.failure:
+        if self.error:
+            return ResultCode.ERROR
+        elif self.failure:
             return ResultCode.WARNING
         else:
             return ResultCode.OK
