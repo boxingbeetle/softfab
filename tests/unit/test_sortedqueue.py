@@ -35,11 +35,10 @@ class RecordFactory:
 
 class DB(Database):
     description = 'test'
-    factory = RecordFactory()
     privilegeObject = 'x' # dummy
 
     def __init__(self, baseDir):
-        super().__init__(baseDir)
+        super().__init__(baseDir, RecordFactory())
         self.seqID = 0
 
     def addRecord(self, value):
