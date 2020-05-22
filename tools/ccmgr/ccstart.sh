@@ -23,11 +23,10 @@ if [ -f "$PID_FILE" ]; then
 fi
 
 if [ -z $VIRTUAL_ENV ]; then
-    if [ ! -f "$FACDIR/venv/bin/activate" ]; then
-        echo "Not possible to create VENV"
+    if ! source "$FACDIR"/venv/bin/activate; then
+        echo "Could not activate virtualenv: $FACDIR/venv"
         exit 1
     fi
-    source "$FACDIR"/venv/bin/activate
 fi
 
 softfab --dir "$DBDIR" server 2> "$LOG_FILE" &
