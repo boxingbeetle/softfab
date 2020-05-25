@@ -98,7 +98,6 @@ class ScheduleFixtureMixin:
         # The patching has to be done here because reloadDatabases() reloads
         # all the modules.
         schedulelib.reactor = DummyReactor()
-        scheduleview.configDB = configlib.configDB
         # Create singleton instance.
         schedulelib.ScheduleManager()
 
@@ -201,7 +200,8 @@ class ScheduleFixtureMixin:
         if self.__missingConfig:
             self.assertEqual(len(schedule.getMatchingConfigIds()), 0)
         self.assertEqual(schedule.isSuspended(), self.__suspended)
-        self.assertEqual(getScheduleStatus(schedule), self.expectedStatus())
+        self.assertEqual(getScheduleStatus(configlib.configDB, schedule),
+                         self.expectedStatus())
         self.assertEqual(len(joblib.jobDB), self.__nrCreatedJobs)
         finishedJobs = [
             job for job in joblib.jobDB if job.isExecutionFinished()
@@ -413,7 +413,7 @@ class Test0400StartTime(ScheduleFixtureMixin, unittest.TestCase):
         # We could perform the check below, but it slows down the test a lot
         # and it doesn't provide much value in return.
         #for schedule in schedulelib.scheduleDB:
-        #    self.assertEqual(getScheduleStatus(schedule), 'ok')
+        #    self.assertEqual(getScheduleStatus(configlib.configDB, schedule), 'ok')
 
     def test0400DailyStart(self):
         '''Test daily schedule.
@@ -421,7 +421,7 @@ class Test0400StartTime(ScheduleFixtureMixin, unittest.TestCase):
         # Schedule starts Monday 2007-01-01 at 13:01.
         startTime = int(time.mktime(( 2007, 1, 1, 13, 1, 0, 0, 0, 0 )))
         self.prepare(startTime - self.preparedTime, sequence = 'daily')
-        self.assertEqual(getScheduleStatus(self.scheduled), 'ok')
+        self.assertEqual(getScheduleStatus(configlib.configDB, self.scheduled), 'ok')
 
         # Run simulation for 1 week.
         self.wait(secondsPerWeek)
@@ -469,7 +469,7 @@ class Test0400StartTime(ScheduleFixtureMixin, unittest.TestCase):
                 configFactory = sharedConfigFactory(configId)
                 )
             scheduled = schedulelib.scheduleDB.get(schedId)
-            self.assertEqual(getScheduleStatus(scheduled), 'ok')
+            self.assertEqual(getScheduleStatus(configlib.configDB, scheduled), 'ok')
 
         # Run simulation for 2 weeks.
         self.wait(2 * secondsPerWeek)
@@ -507,7 +507,7 @@ class Test0400StartTime(ScheduleFixtureMixin, unittest.TestCase):
                 configFactory = sharedConfigFactory(configId)
                 )
             scheduled = schedulelib.scheduleDB.get(schedId)
-            self.assertEqual(getScheduleStatus(scheduled), 'ok')
+            self.assertEqual(getScheduleStatus(configlib.configDB, scheduled), 'ok')
 
         # Run simulation for 2 weeks.
         self.wait(2 * secondsPerWeek)
@@ -554,7 +554,7 @@ class Test0400StartTime(ScheduleFixtureMixin, unittest.TestCase):
                 configFactory = sharedConfigFactory(configId)
                 )
             scheduled = schedulelib.scheduleDB.get(schedId)
-            self.assertEqual(getScheduleStatus(scheduled), 'ok')
+            self.assertEqual(getScheduleStatus(configlib.configDB, scheduled), 'ok')
 
         # Run simulation for 4 weeks.
         self.wait(4 * secondsPerWeek)
