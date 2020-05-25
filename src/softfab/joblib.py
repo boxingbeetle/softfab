@@ -1148,7 +1148,7 @@ class DateRangeMonitor(RecordObserver[Job]):
     def maxYear(self) -> int:
         return self.__maxYear
 
-    def __init__(self) -> None:
+    def __init__(self, jobDB: JobDB) -> None:
         super().__init__()
         # Determine minimum and maximum job time.
         createTimes = [ job.getCreateTime() for job in jobDB ]
@@ -1178,5 +1178,3 @@ class DateRangeMonitor(RecordObserver[Job]):
     def updated(self, record: Job) -> None:
         # Create time cannot change, so we don't care.
         pass
-
-dateRange = DateRangeMonitor()

@@ -28,6 +28,7 @@ from softfab.config import dbDir
 from softfab.databaselib import Database
 from softfab.databases import iterDatabases
 from softfab.docserve import DocPage, DocResource
+from softfab.joblib import DateRangeMonitor, JobDB
 from softfab.pageargs import PageArgs
 from softfab.render import NotFoundPage, renderAuthenticated
 from softfab.schedulelib import ScheduleManager
@@ -317,7 +318,12 @@ class SoftFabRoot(Resource):
     def startup(self) -> Generator:
         databaseLoader = DatabaseLoader()
         yield databaseLoader.process()
-        yield PageLoader(self, databaseLoader.databases).process
+        databases = databaseLoader.databases
+        dependencies: Dict[str, object] = dict(
+            databases,
+            dateRange=DateRangeMonitor(cast(JobDB, databases['jobDB']))
+            )
+        yield PageLoader(self, dependencies).process
         # Start schedule processing.
         yield ScheduleManager().trigger
 

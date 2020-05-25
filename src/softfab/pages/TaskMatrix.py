@@ -9,7 +9,7 @@ import time
 from softfab.CSVPage import presentCSVLink
 from softfab.FabPage import FabPage
 from softfab.TaskMatrixCommon import (
-    TaskMatrixArgs, TaskMatrixCSVArgs, TaskMatrixProcessor, dateRange
+    TaskMatrixArgs, TaskMatrixCSVArgs, TaskMatrixProcessor
 )
 from softfab.configlib import ConfigDB
 from softfab.formlib import dropDownList, emptyOption, makeForm, submitButton
@@ -38,6 +38,7 @@ class NavigationBar(Table):
         assert isinstance(week, int)
         year = args.year
         assert isinstance(year, int)
+        dateRange = proc.dateRange
         yield (
             cell[
                 'Year: ',

@@ -6,7 +6,7 @@ from typing import ClassVar, DefaultDict, Iterable, List, Optional
 
 from softfab.CSVPage import CSVPage
 from softfab.Page import PageProcessor
-from softfab.joblib import Job, JobDB, Task, dateRange
+from softfab.joblib import DateRangeMonitor, Job, JobDB, Task
 from softfab.pageargs import ArgsCorrected, IntArg, PageArgs, StrArg, dynamic
 from softfab.querylib import CustomFilter, runQuery
 from softfab.request import Request
@@ -71,11 +71,13 @@ class TaskMatrixCSVArgs(TaskMatrixArgs, CSVPage.Arguments):
 class TaskMatrixProcessor(PageProcessor[TaskMatrixArgs]):
 
     jobDB: ClassVar[JobDB]
+    dateRange: ClassVar[DateRangeMonitor]
 
     async def process(self, req: Request[TaskMatrixArgs], user: User) -> None:
         # TODO: It would be useful to have these as method arguments.
         year = req.args.year
         week = req.args.week
+        dateRange = self.dateRange
 
         # Use week of last report as default.
         if year is dynamic or week is dynamic:
