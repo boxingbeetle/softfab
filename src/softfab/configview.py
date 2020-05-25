@@ -5,7 +5,6 @@ from typing import Generic, Iterator, List, Optional, Sequence, TypeVar, cast
 from softfab.configlib import Config, Input, TaskSetWithInputs, configDB
 from softfab.datawidgets import DataColumn, DataTable, LinkColumn
 from softfab.formlib import dropDownList, emptyOption, hiddenInput, textInput
-from softfab.joblib import Job, jobDB
 from softfab.pagelinks import createConfigDetailsLink
 from softfab.productdeflib import ProductType
 from softfab.projectlib import project
@@ -13,7 +12,6 @@ from softfab.resourcelib import TaskRunner, iterTaskRunners
 from softfab.restypeview import createTargetLink
 from softfab.schedulelib import scheduleDB
 from softfab.selectview import SelectArgs
-from softfab.sortedqueue import SortedQueue
 from softfab.taskgroup import LocalGroup
 from softfab.userview import OwnerColumn
 from softfab.webgui import Column, Table, cell
@@ -195,13 +193,3 @@ def schedulesUsingConfig(configId: str) -> Iterator[str]:
     for scheduleId, schedule in scheduleDB.items():
         if schedule.configId == configId:
             yield scheduleId
-
-class SortedJobsByConfig(SortedQueue):
-    compareField = 'recent'
-
-    def __init__(self, configId: str):
-        self.__configId = configId
-        super().__init__(jobDB)
-
-    def _filter(self, record: Job) -> bool:
-        return record.configId == self.__configId
