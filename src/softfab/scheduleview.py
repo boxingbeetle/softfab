@@ -2,7 +2,7 @@
 
 from typing import Iterable, List
 
-from softfab.configlib import configDB
+from softfab.configlib import ConfigDB
 from softfab.pagelinks import createJobsURL
 from softfab.schedulelib import ScheduleRepeat, Scheduled, asap
 from softfab.timeview import formatTime
@@ -83,7 +83,7 @@ def describeNextRun(schedule: Scheduled) -> XMLContent:
     # is really short, it is unlikely the user will see this value.
     return 'now'
 
-def getScheduleStatus(schedule: Scheduled) -> str:
+def getScheduleStatus(configDB: ConfigDB, schedule: Scheduled) -> str:
     '''Returns the status of the given schedule.
     The familiar color coding is used:
     'done' (gray) means: job will not run anymore

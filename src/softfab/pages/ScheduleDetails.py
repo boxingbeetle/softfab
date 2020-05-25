@@ -22,7 +22,7 @@ from softfab.xmlgen import XML, XMLContent, xhtml
 
 
 def statusDescription(scheduled: Scheduled, configDB: ConfigDB) -> XMLContent:
-    status = getScheduleStatus(scheduled)
+    status = getScheduleStatus(configDB, scheduled)
     if status == 'error':
         return xhtml.br.join(
             ( 'configuration ',
@@ -64,12 +64,13 @@ class DetailsTable(PropertiesTable):
     def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
         proc = cast(ScheduleDetails_GET.Processor, kwargs['proc'])
         scheduled = proc.scheduled
+        configDB = proc.configDB
         configId = scheduled.configId
         if configId is None:
             yield 'Tag', TagsTable.instance.present(**kwargs)
         else:
             yield 'Configuration', (
-                createConfigDetailsLink(proc.configDB, configId, 'view'),
+                createConfigDetailsLink(configDB, configId, 'view'),
                 ' or ',
                 pageLink('FastExecute', ConfigIdArgs(configId = configId))[
                     'execute'
@@ -94,8 +95,8 @@ class DetailsTable(PropertiesTable):
         if project.showOwners:
             yield 'Owner', scheduled.owner or '-'
         yield 'Comment', xhtml.br.join(scheduled.comment.splitlines())
-        yield row(class_ = getScheduleStatus(scheduled))[
-            'Status', statusDescription(scheduled, proc.configDB)
+        yield row(class_ = getScheduleStatus(configDB, scheduled))[
+            'Status', statusDescription(scheduled, configDB)
             ]
 
 class ScheduleDetails_GET(FabPage['ScheduleDetails_GET.Processor',

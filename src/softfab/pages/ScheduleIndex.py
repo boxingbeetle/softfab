@@ -5,6 +5,7 @@ from typing import ClassVar, Iterator, Mapping, cast
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor, Redirect
+from softfab.configlib import ConfigDB
 from softfab.datawidgets import DataColumn, DataTable, LinkColumn
 from softfab.formlib import makeForm
 from softfab.pageargs import DictArg, EnumArg, IntArg, PageArgs, SortArg
@@ -76,7 +77,8 @@ class ScheduleTable(DataTable[Scheduled]):
     def iterRowStyles( # pylint: disable=unused-argument
                       self, rowNr: int, record: Scheduled, **kwargs: object
                       ) -> Iterator[str]:
-        yield getScheduleStatus(record)
+        proc = cast(ScheduleIndex_GET.Processor, kwargs['proc'])
+        yield getScheduleStatus(proc.configDB, record)
 
     def iterColumns( # pylint: disable=unused-argument
                     self, **kwargs: object) -> Iterator[DataColumn[Scheduled]]:
@@ -108,6 +110,7 @@ class ScheduleIndex_GET(FabPage['ScheduleIndex_GET.Processor',
     class Processor(PageProcessor['ScheduleIndex_GET.Arguments']):
 
         scheduleDB: ClassVar[ScheduleDB]
+        configDB: ClassVar[ConfigDB]
 
         async def process(self,
                           req: Request['ScheduleIndex_GET.Arguments'],
