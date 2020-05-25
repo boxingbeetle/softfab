@@ -116,15 +116,15 @@ class DatabaseLoader:
 
 class PageLoader:
 
-    def __init__(self, root: 'SoftFabRoot', databases: Mapping[str, Database]):
+    def __init__(self, root: 'SoftFabRoot', dependencies: Mapping[str, object]):
         super().__init__()
         self.root = root
-        self.databases = databases
+        self.dependencies = dependencies
 
-    def injectDatabases(self, obj: Any) -> None:
-        """Inject the databases that the given object declared."""
+    def injectDependencies(self, obj: Any) -> None:
+        """Inject the dependencies that the given object declared."""
 
-        databases = self.databases
+        dependencies = self.dependencies
         isClass = isinstance(obj, type)
         for annName, annType in get_type_hints(obj).items():
             if not hasattr(obj, annName):
@@ -133,7 +133,7 @@ class PageLoader:
                 if str(annType).startswith('typing.ClassVar') != isClass:
                     continue
                 try:
-                    db = databases[annName]
+                    dep = dependencies[annName]
                 except KeyError:
                     startupLogger.warning(
                         '%s declares unknown value %s',
@@ -141,7 +141,7 @@ class PageLoader:
                         annName
                         )
                 else:
-                    setattr(obj, annName, db)
+                    setattr(obj, annName, dep)
 
     def __addPage(self, module: ModuleType, pageName: str) -> None:
         pageNamePrefix = pageName + '_'
@@ -187,7 +187,7 @@ class PageLoader:
                     PageProcessor.__module__, PageProcessor.__name__
                     )
 
-            self.injectDatabases(processorClass)
+            self.injectDependencies(processorClass)
 
             className = pageClass.__name__
             index = className.index('_')
@@ -210,7 +210,7 @@ class PageLoader:
         createArtifactRoots(self.root, dbDir / 'artifacts',
                             self.root.anonOperator)
         root.putChild(b'webhook',
-                      createWebhooks(startupLogger, self.injectDatabases))
+                      createWebhooks(startupLogger, self.injectDependencies))
 
         # Add files from the 'softfab.static' package.
         for resource in importlib_resources.contents(static):
