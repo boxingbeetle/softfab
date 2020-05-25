@@ -24,6 +24,7 @@ from softfab.resourceview import (
     checkResourceRequirementsState, initResourceRequirementsArgs,
     resourceRequirementsWidget, validateResourceRequirementsState
 )
+from softfab.restypelib import ResTypeDB
 from softfab.taskdeflib import taskDefDB
 from softfab.utils import abstract
 from softfab.webgui import (
@@ -114,6 +115,8 @@ class FrameworkEdit_POST(FrameworkEditBase):
 
     class Processor(EditProcessor[FrameworkEditArgs, Framework]):
 
+        resTypeDB: ClassVar[ResTypeDB]
+
         def createElement(self,
                           recordId: str,
                           args: FrameworkEditArgs,
@@ -158,7 +161,7 @@ class FrameworkEdit_POST(FrameworkEditBase):
                     ])
 
             checkParamState(args, paramTop)
-            checkResourceRequirementsState(args)
+            checkResourceRequirementsState(self.resTypeDB, args)
 
         def _validateState(self) -> None:
             self.args = self.args.override(input=self.args.input - {''},

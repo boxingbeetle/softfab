@@ -20,6 +20,7 @@ from softfab.resourceview import (
     checkResourceRequirementsState, initResourceRequirementsArgs,
     resourceRequirementsWidget, validateResourceRequirementsState
 )
+from softfab.restypelib import ResTypeDB
 from softfab.taskdeflib import TaskDef, taskDefDB
 from softfab.webgui import PropertiesTable
 from softfab.xmlgen import XMLContent, xhtml
@@ -107,6 +108,7 @@ class TaskEdit_POST(TaskEditBase):
     class Processor(EditProcessor[TaskEditArgs, TaskDef]):
 
         frameworkDB: ClassVar[FrameworkDB]
+        resTypeDB: ClassVar[ResTypeDB]
 
         def createElement(self,
                           recordId: str,
@@ -142,7 +144,7 @@ class TaskEdit_POST(TaskEditBase):
                         ])
 
             checkParamState(args, parent)
-            checkResourceRequirementsState(args)
+            checkResourceRequirementsState(self.resTypeDB, args)
 
         def _validateState(self) -> None:
             parent = getParent(self.args)

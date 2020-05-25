@@ -21,7 +21,7 @@ from softfab.resreq import (
     ResourceClaim, ResourceSpec, taskRunnerResourceRefName
 )
 from softfab.restypelib import (
-    presentResTypeName, resTypeDB, taskRunnerResourceTypeName
+    ResTypeDB, presentResTypeName, taskRunnerResourceTypeName
 )
 from softfab.restypeview import createCapabilityLink, iterResourceTypes
 from softfab.webgui import Panel, Table, cell, rowManagerInstanceScript
@@ -128,7 +128,9 @@ def initResourceRequirementsArgs(element: Optional[TaskDefBase]
         caps=[' '.join(sorted(spec.capabilities)) for spec in claim]
         )
 
-def checkResourceRequirementsState(args: ResourceRequirementsArgsMixin) -> None:
+def checkResourceRequirementsState(resTypeDB: ResTypeDB,
+                                   args: ResourceRequirementsArgsMixin
+                                   ) -> None:
     args = cast(_ResourceRequirementsArgs, args)
     if args.type.count(taskRunnerResourceTypeName) != 1:
         # Even though the UI can only produce one Task Runner entry,
