@@ -7,6 +7,7 @@ from softfab.RecordDelete import (
 from softfab.configlib import Config, configDB
 from softfab.configview import schedulesUsingConfig
 from softfab.pageargs import RefererArg
+from softfab.schedulelib import scheduleDB
 from softfab.schedulerefs import createScheduleDetailsLink
 
 
@@ -23,7 +24,7 @@ class DelJobConfig_GET(RecordDelete_GET):
         indexQuery = RefererArg('LoadExecute')
 
     def checkState(self, record: Config) -> None:
-        schedules = list(schedulesUsingConfig(record.getId()))
+        schedules = list(schedulesUsingConfig(scheduleDB, record.getId()))
         if schedules:
             raise RecordInUseError(
                 'schedule', createScheduleDetailsLink, schedules

@@ -10,7 +10,7 @@ from softfab.productdeflib import ProductType
 from softfab.projectlib import project
 from softfab.resourcelib import TaskRunner, iterTaskRunners
 from softfab.restypeview import createTargetLink
-from softfab.schedulelib import scheduleDB
+from softfab.schedulelib import ScheduleDB
 from softfab.selectview import SelectArgs
 from softfab.taskgroup import LocalGroup
 from softfab.userview import OwnerColumn
@@ -185,7 +185,9 @@ class ConfigTable(SimpleConfigTable):
             )
         yield LinkColumn('Delete', 'DelJobConfig')
 
-def schedulesUsingConfig(configId: str) -> Iterator[str]:
+def schedulesUsingConfig(scheduleDB: ScheduleDB,
+                         configId: str
+                         ) -> Iterator[str]:
     '''Iterates through the IDs of those schedules that explicitly refer to the
     configuration with the given ID. Tagged schedules are never included, no
     matter whether the configuration matches the tag or not.
