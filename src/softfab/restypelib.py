@@ -63,11 +63,6 @@ class ResType(XMLTag, DatabaseElem):
                perjob: bool,
                description: str = ''
                ) -> 'ResType':
-        if name.startswith('sf.'):
-            description = {
-                taskRunnerResourceTypeName: 'SoftFab task execution agent',
-                repoResourceTypeName: 'Version control repository',
-                }[name]
         resType = ResType(dict(
             name=name, pertask=pertask, perjob=perjob
             ))
@@ -93,7 +88,14 @@ class ResType(XMLTag, DatabaseElem):
 
     @property
     def description(self) -> str:
-        return self.__description
+        name = self.getId()
+        if name.startswith('sf.'):
+            return {
+                taskRunnerResourceTypeName: 'SoftFab task execution agent',
+                repoResourceTypeName: 'Version control repository',
+                }[name]
+        else:
+            return self.__description
 
     def _getContent(self) -> XMLContent:
         if self.__description:
