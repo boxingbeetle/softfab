@@ -17,6 +17,11 @@ class ResTypeFactory:
 taskRunnerResourceTypeName = 'sf.tr'
 repoResourceTypeName = 'sf.repo'
 
+reservedResourceTypeDescriptions = {
+    taskRunnerResourceTypeName: 'SoftFab task execution agent',
+    repoResourceTypeName: 'Version control repository',
+    }
+
 class ResTypeDB(VersionedDatabase['ResType']):
     privilegeObject = 'rt'
     description = 'resource type'
@@ -90,10 +95,7 @@ class ResType(XMLTag, DatabaseElem):
     def description(self) -> str:
         name = self.getId()
         if name.startswith('sf.'):
-            return {
-                taskRunnerResourceTypeName: 'SoftFab task execution agent',
-                repoResourceTypeName: 'Version control repository',
-                }[name]
+            return reservedResourceTypeDescriptions[name]
         else:
             return self.__description
 

@@ -3,7 +3,9 @@
 from typing import Iterator, Tuple
 
 from softfab.FabPage import FabPage, IconModifier
-from softfab.restypelib import presentResTypeName
+from softfab.restypelib import (
+    presentResTypeName, reservedResourceTypeDescriptions
+)
 from softfab.restypeview import reservedTypes
 from softfab.userlib import User, checkPrivilege
 from softfab.webgui import pageLink
@@ -27,12 +29,12 @@ class ResourceNew_GET(FabPage[FabPage.Processor, FabPage.Arguments]):
 
     def iterOptions(self) -> Iterator[Tuple[XMLContent, XMLContent]]:
         for resType in reservedTypes:
-            record = resType.record
+            name = resType.name
             yield (
                 pageLink(resType.editPage)[
-                    presentResTypeName(record.getId())
+                    presentResTypeName(name)
                     ],
-                f'{record.description}.'
+                f'{reservedResourceTypeDescriptions[name]}.'
                 )
         yield (
             pageLink('ResourceEdit')['Custom'],
