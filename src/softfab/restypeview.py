@@ -6,7 +6,7 @@ import attr
 
 from softfab.pagelinks import CapFilterArgs, pageLink
 from softfab.restypelib import (
-    ResType, presentResTypeName, repoResourceTypeName, resTypeDB,
+    ResType, ResTypeDB, presentResTypeName, repoResourceTypeName,
     taskRunnerResourceTypeName
 )
 from softfab.webgui import Column
@@ -26,10 +26,6 @@ class ResourceTypeInfo:
     name: str
     editPage: str
 
-    @property
-    def record(self) -> ResType:
-        return resTypeDB[self.name]
-
 reservedTypes = (
     ResourceTypeInfo(
         name=taskRunnerResourceTypeName,
@@ -41,12 +37,14 @@ reservedTypes = (
         ),
     )
 
-def iterResourceTypes(reserved: bool = True) -> Iterator[ResType]:
+def iterResourceTypes(resTypeDB: ResTypeDB,
+                      reserved: bool = True
+                      ) -> Iterator[ResType]:
     """The resource types in this factory, in presentation order.
     """
     if reserved:
         for resType in reservedTypes:
-            yield resType.record
+            yield resTypeDB[resType.name]
     for recordId in sorted(recordId
                            for recordId in resTypeDB.keys()
                            if not recordId.startswith('sf.')):
@@ -64,8 +62,9 @@ class ResTypeTableMixin:
     reserved = True
 
     def iterOptions(self,
-                    **_kwargs: object
+                    **kwargs: object
                     ) -> Iterator[Tuple[str, XMLContent, XMLContent]]:
-        for resType in iterResourceTypes(self.reserved):
+        resTypeDB: ResTypeDB = getattr(kwargs['proc'], 'resTypeDB')
+        for resType in iterResourceTypes(resTypeDB, self.reserved):
             name = resType.getId()
             yield name, presentResTypeName(name), resType.description

@@ -79,6 +79,8 @@ class TaskEdit_GET(TaskEditBase):
     class Processor(InitialEditProcessor[TaskEditArgs, TaskDef]):
         argsClass = TaskEditArgs
 
+        resTypeDB: ClassVar[ResTypeDB]
+
         def _initArgs(self, element: Optional[TaskDef]) -> Mapping[str, object]:
             if element is None:
                 overrides: Dict[str, object] = {}

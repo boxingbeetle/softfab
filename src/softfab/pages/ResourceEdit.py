@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Mapping, Optional, cast
+from typing import ClassVar, Mapping, Optional, cast
 
 from softfab.EditPage import (
     EditArgs, EditPage, EditProcessor, EditProcessorBase, InitialEditArgs,
@@ -12,7 +12,7 @@ from softfab.formlib import RadioTable, textInput
 from softfab.pageargs import StrArg
 from softfab.resourcelib import Resource, resourceDB
 from softfab.resourceview import CapabilitiesPanel, CommentPanel
-from softfab.restypelib import resTypeDB, taskRunnerResourceTypeName
+from softfab.restypelib import ResTypeDB, resTypeDB, taskRunnerResourceTypeName
 from softfab.restypeview import ResTypeTableMixin
 from softfab.webgui import Panel, pageLink, vgroup
 from softfab.xmlgen import XMLContent, xhtml
@@ -63,6 +63,8 @@ class ResourceEdit_GET(ResourceEditBase):
 
     class Processor(InitialEditProcessor[ResourceEditArgs, Resource]):
         argsClass = ResourceEditArgs
+
+        resTypeDB: ClassVar[ResTypeDB]
 
         def _initArgs(self, element: Optional[Resource]) -> Mapping[str, str]:
             if element is None:

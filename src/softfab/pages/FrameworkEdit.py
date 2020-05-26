@@ -88,6 +88,8 @@ class FrameworkEdit_GET(FrameworkEditBase):
     class Processor(InitialEditProcessor[FrameworkEditArgs, Framework]):
         argsClass = FrameworkEditArgs
 
+        resTypeDB: ClassVar[ResTypeDB]
+
         def _initArgs(self,
                       element: Optional[Framework]
                       ) -> Mapping[str, object]:

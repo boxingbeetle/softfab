@@ -184,9 +184,9 @@ def checkResourceRequirementsState(resTypeDB: ResTypeDB,
 
 NONE_TEXT = '(none)'
 
-def resTypeOptions() -> Iterator[XMLContent]:
+def resTypeOptions(resTypeDB: ResTypeDB) -> Iterator[XMLContent]:
     yield emptyOption[NONE_TEXT]
-    for resType in iterResourceTypes():
+    for resType in iterResourceTypes(resTypeDB):
         resTypeName = resType.getId()
         if resTypeName != taskRunnerResourceTypeName:
             yield option(value=resTypeName)[
@@ -225,7 +225,8 @@ class ResourceRequirementsTable(Table):
 
     def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
         proc = cast(PageProcessor, kwargs['proc'])
-        resWidget = dropDownList(name='type')[resTypeOptions()]
+        resTypeDB: ResTypeDB = getattr(proc, 'resTypeDB')
+        resWidget = dropDownList(name='type')[resTypeOptions(resTypeDB)]
 
         # pylint: disable=line-too-long
         reqMap: DefaultDict[str, DefaultDict[str, List[Tuple[bool, List[str]]]]] = defaultdict(
@@ -246,7 +247,7 @@ class ResourceRequirementsTable(Table):
                 (False, sorted(caps.split()))
                 )
 
-        for resType in iterResourceTypes():
+        for resType in iterResourceTypes(resTypeDB):
             resTypeName = resType.getId()
             refMap = reqMap[resTypeName]
 

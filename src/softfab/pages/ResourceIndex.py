@@ -19,7 +19,7 @@ from softfab.resourcelib import ResourceBase, TaskRunner, resourceDB
 from softfab.resourceview import (
     ResourceNameColumn, StatusColumn, getResourceStatus, presentCapabilities
 )
-from softfab.restypelib import presentResTypeName
+from softfab.restypelib import ResTypeDB, presentResTypeName
 from softfab.restypeview import iterResourceTypes, reservedTypes
 from softfab.taskrunlib import TaskRunDB
 from softfab.userlib import User, checkPrivilege
@@ -132,9 +132,10 @@ class ResourcesTable(DataTable[ResourceBase]):
         for record in data.records:
             recordsByType[record.typeName].append(record)
 
+        proc = cast(ResourceIndex_GET.Processor, kwargs['proc'])
         columns = data.columns
         numColumns = sum(column.colSpan for column in columns)
-        for resType in iterResourceTypes():
+        for resType in iterResourceTypes(proc.resTypeDB):
             resTypeName = resType.getId()
             if resTypeName in recordsByType:
                 yield row[header(colspan=numColumns, class_='section')[
@@ -161,6 +162,7 @@ class ResourceIndex_GET(FabPage['ResourceIndex_GET.Processor',
         sort = SortArg()
 
     class Processor(PageProcessor['ResourceIndex_GET.Arguments']):
+        resTypeDB: ClassVar[ResTypeDB]
         taskRunDB: ClassVar[TaskRunDB]
 
     def checkAccess(self, user: User) -> None:
