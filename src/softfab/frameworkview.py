@@ -5,7 +5,7 @@ from typing import Iterator, cast
 from softfab.datawidgets import DataColumn
 from softfab.frameworklib import TaskDefBase
 from softfab.pagelinks import createFrameworkDetailsLink
-from softfab.taskdeflib import taskDefDB
+from softfab.taskdeflib import TaskDefDB
 from softfab.xmlgen import XMLContent
 
 
@@ -15,7 +15,9 @@ class FrameworkColumn(DataColumn[TaskDefBase]):
         assert key is not None
         return createFrameworkDetailsLink(cast(str, record[key]))
 
-def taskDefsUsingFramework(frameworkId: str) -> Iterator[str]:
+def taskDefsUsingFramework(taskDefDB: TaskDefDB,
+                           frameworkId: str
+                           ) -> Iterator[str]:
     '''Iterates through the IDs of those task definitions that inherit from
     the framework with the given ID.
     '''

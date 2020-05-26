@@ -8,6 +8,7 @@ from softfab.frameworklib import Framework, frameworkDB
 from softfab.frameworkview import taskDefsUsingFramework
 from softfab.pageargs import RefererArg
 from softfab.pagelinks import createTaskDetailsLink
+from softfab.taskdeflib import taskDefDB
 
 
 class FrameworkDelete_GET(RecordDelete_GET):
@@ -23,7 +24,7 @@ class FrameworkDelete_GET(RecordDelete_GET):
         detailsQuery = RefererArg('FrameworkDetails')
 
     def checkState(self, record: Framework) -> None:
-        taskDefs = list(taskDefsUsingFramework(record.getId()))
+        taskDefs = list(taskDefsUsingFramework(taskDefDB, record.getId()))
         if taskDefs:
             raise RecordInUseError(
                 'task definition', createTaskDetailsLink, taskDefs

@@ -16,6 +16,7 @@ from softfab.pagelinks import (
 from softfab.paramview import ParametersTable
 from softfab.request import Request
 from softfab.resourceview import InlineResourcesTable
+from softfab.taskdeflib import TaskDefDB
 from softfab.userlib import User, checkPrivilege
 from softfab.utils import pluralize
 from softfab.webgui import PropertiesTable, pageLink
@@ -67,6 +68,7 @@ class FrameworkDetails_GET(
     class Processor(PageProcessor[FrameworkIdArgs]):
 
         frameworkDB: ClassVar[FrameworkDB]
+        taskDefDB: ClassVar[TaskDefDB]
 
         async def process(self,
                           req: Request[FrameworkIdArgs],
@@ -79,7 +81,7 @@ class FrameworkDetails_GET(
                 raise PresentableError(xhtml[
                     'Framework ', xhtml.b[ frameworkId ], ' does not exist.'
                     ])
-            taskDefs = list(taskDefsUsingFramework(frameworkId))
+            taskDefs = list(taskDefsUsingFramework(self.taskDefDB, frameworkId))
 
             graphBuilder = createExecutionGraphBuilder(
                 'graph',
