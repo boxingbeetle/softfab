@@ -4,14 +4,16 @@
 The Design page containing the execution graph(s).
 '''
 
-from typing import Sized, Tuple, cast
+from typing import ClassVar, Sized, Tuple, cast
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
+from softfab.frameworklib import FrameworkDB
 from softfab.graphview import (
-    GraphPageMixin, GraphPanel, createExecutionGraphBuilder,
+    ExecutionGraphBuilder, GraphPageMixin, GraphPanel,
     iterConnectedExecutionGraphs, legendBuilder
 )
+from softfab.productdeflib import ProductDefDB
 from softfab.request import Request
 from softfab.userlib import User, checkPrivilege
 from softfab.utils import pluralize
@@ -31,14 +33,21 @@ class Design_GET(
 
     class Processor(PageProcessor['Design_GET.Arguments']):
 
+        frameworkDB: ClassVar[FrameworkDB]
+        productDefDB: ClassVar[ProductDefDB]
+
         async def process(self,
                           req: Request['Design_GET.Arguments'],
                           user: User
                           ) -> None:
+            frameworkDB = self.frameworkDB
+            productDefDB = self.productDefDB
+
             orphanProducts = set()
             orphanFrameworks = set()
             nonTrivialGraphs = []
-            for productIds, frameworkIds in iterConnectedExecutionGraphs():
+            for productIds, frameworkIds in iterConnectedExecutionGraphs(
+                                                    frameworkDB, productDefDB):
                 numProducts = len(productIds)
                 numFrameworks = len(frameworkIds)
                 if numProducts == 1 and numFrameworks == 0:
@@ -59,8 +68,10 @@ class Design_GET(
             if orphanProducts:
                 graphNodes.append((orphanProducts, set()))
             graphBuilders = [
-                createExecutionGraphBuilder(
-                    f'graph{index:d}', productIds, frameworkIds
+                ExecutionGraphBuilder(
+                    f'graph{index:d}',
+                    products=(productDefDB[pid] for pid in productIds),
+                    frameworks=(frameworkDB[fid] for fid in frameworkIds)
                     )
                 for index, (productIds, frameworkIds) in enumerate(graphNodes)
                 ]

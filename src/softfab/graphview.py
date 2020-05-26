@@ -22,11 +22,11 @@ from twisted.python.failure import Failure
 import attr
 
 from softfab.Page import PageProcessor, Responder
-from softfab.frameworklib import Framework, frameworkDB
+from softfab.frameworklib import Framework, FrameworkDB
 from softfab.pagelinks import (
     createFrameworkDetailsURL, createProductDetailsURL
 )
-from softfab.productdeflib import ProductDef, ProductType, productDefDB
+from softfab.productdeflib import ProductDef, ProductDefDB, ProductType
 from softfab.response import Response, createETag
 from softfab.setcalc import UnionFind
 from softfab.webgui import Widget
@@ -72,7 +72,9 @@ _defaultGraphAttrib = dict(
     ranksep = '0.6 equally',
     )
 
-def iterConnectedExecutionGraphs() -> Iterator[Tuple[Set[str], Set[str]]]:
+def iterConnectedExecutionGraphs(frameworkDB: FrameworkDB,
+                                 productDefDB: ProductDefDB
+                                 ) -> Iterator[Tuple[Set[str], Set[str]]]:
     '''Returns a collection of (weakly) connected execution graphs.
     For each execution graph, the collection contains a pair with the products
     and frameworks in that connected graph.
@@ -443,16 +445,6 @@ class ExecutionGraphBuilder(GraphBuilder):
         for outputDefId in framework.getOutputs():
             if outputDefId in productIds:
                 graph.edge(frameworkNodeId, f'prod.{outputDefId}')
-
-def createExecutionGraphBuilder(name: str,
-                                productIds: Iterable[str],
-                                frameworkIds: Iterable[str]
-                                ) -> ExecutionGraphBuilder:
-    return ExecutionGraphBuilder(
-        name,
-        products=(productDefDB[productId] for productId in productIds),
-        frameworks=(frameworkDB[frameworkId] for frameworkId in frameworkIds)
-        )
 
 legendBuilder = ExecutionGraphBuilder(
     'legend',

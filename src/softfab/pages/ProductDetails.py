@@ -6,9 +6,7 @@ from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor, PresentableError
 from softfab.RecordDelete import DeleteArgs
 from softfab.frameworklib import FrameworkDB
-from softfab.graphview import (
-    GraphPageMixin, GraphPanel, createExecutionGraphBuilder
-)
+from softfab.graphview import ExecutionGraphBuilder, GraphPageMixin, GraphPanel
 from softfab.pagelinks import ProductDefIdArgs, createFrameworkDetailsLink
 from softfab.productdeflib import ProductDefDB
 from softfab.request import Request
@@ -58,9 +56,11 @@ class ProductDetails_GET(
                           user: User
                           ) -> None:
             productDefId = req.args.id
+            frameworkDB = self.frameworkDB
+            productDefDB = self.productDefDB
 
             try:
-                productDef = self.productDefDB[productDefId]
+                productDef = productDefDB[productDefId]
             except KeyError:
                 raise PresentableError(xhtml[
                     'Product ', xhtml.b[ productDefId ], ' does not exist.'
@@ -68,16 +68,16 @@ class ProductDetails_GET(
 
             producers = []
             consumers = []
-            for frameworkId, framework in self.frameworkDB.items():
+            for frameworkId, framework in frameworkDB.items():
                 if productDefId in framework.getInputs():
                     consumers.append(frameworkId)
                 if productDefId in framework.getOutputs():
                     producers.append(frameworkId)
 
-            graphBuilder = createExecutionGraphBuilder(
+            graphBuilder = ExecutionGraphBuilder(
                 'graph',
-                [ productDefId ],
-                producers + consumers,
+                products=[productDef],
+                frameworks=(frameworkDB[fid] for fid in producers + consumers),
                 )
 
             # pylint: disable=attribute-defined-outside-init

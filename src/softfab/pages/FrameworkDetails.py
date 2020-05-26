@@ -7,13 +7,12 @@ from softfab.Page import PageProcessor, PresentableError
 from softfab.RecordDelete import DeleteArgs
 from softfab.frameworklib import FrameworkDB
 from softfab.frameworkview import taskDefsUsingFramework
-from softfab.graphview import (
-    GraphPageMixin, GraphPanel, createExecutionGraphBuilder
-)
+from softfab.graphview import ExecutionGraphBuilder, GraphPageMixin, GraphPanel
 from softfab.pagelinks import (
     FrameworkIdArgs, createProductDetailsLink, createTaskDetailsLink
 )
 from softfab.paramview import ParametersTable
+from softfab.productdeflib import ProductDefDB
 from softfab.request import Request
 from softfab.resourceview import InlineResourcesTable
 from softfab.taskdeflib import TaskDefDB
@@ -68,6 +67,7 @@ class FrameworkDetails_GET(
     class Processor(PageProcessor[FrameworkIdArgs]):
 
         frameworkDB: ClassVar[FrameworkDB]
+        productDefDB: ClassVar[ProductDefDB]
         taskDefDB: ClassVar[TaskDefDB]
 
         async def process(self,
@@ -75,18 +75,23 @@ class FrameworkDetails_GET(
                           user: User
                           ) -> None:
             frameworkId = req.args.id
+            frameworkDB = self.frameworkDB
+            productDefDB = self.productDefDB
+            taskDefDB = self.taskDefDB
+
             try:
-                framework = self.frameworkDB[frameworkId]
+                framework = frameworkDB[frameworkId]
             except KeyError:
                 raise PresentableError(xhtml[
                     'Framework ', xhtml.b[ frameworkId ], ' does not exist.'
                     ])
-            taskDefs = list(taskDefsUsingFramework(self.taskDefDB, frameworkId))
+            taskDefs = list(taskDefsUsingFramework(taskDefDB, frameworkId))
 
-            graphBuilder = createExecutionGraphBuilder(
+            productIds = framework.getInputs() | framework.getOutputs()
+            graphBuilder = ExecutionGraphBuilder(
                 'graph',
-                framework.getInputs() | framework.getOutputs(),
-                [ frameworkId ]
+                products=(productDefDB[pid] for pid in productIds),
+                frameworks=[framework]
                 )
 
             # pylint: disable=attribute-defined-outside-init

@@ -6,13 +6,13 @@ from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor, PresentableError
 from softfab.RecordDelete import DeleteArgs
 from softfab.configlib import ConfigDB
-from softfab.graphview import (
-    GraphPageMixin, GraphPanel, createExecutionGraphBuilder
-)
+from softfab.frameworklib import FrameworkDB
+from softfab.graphview import ExecutionGraphBuilder, GraphPageMixin, GraphPanel
 from softfab.jobview import CommentPanel
 from softfab.pagelinks import (
     ConfigIdArgs, createTaskDetailsLink, createTaskRunnerDetailsLink
 )
+from softfab.productdeflib import ProductDefDB
 from softfab.productlib import Product
 from softfab.productview import formatLocator
 from softfab.projectlib import project
@@ -175,6 +175,8 @@ class ConfigDetails_GET(
     class Processor(PageProcessor['ConfigDetails_GET.Arguments']):
 
         configDB: ClassVar[ConfigDB]
+        frameworkDB: ClassVar[FrameworkDB]
+        productDefDB: ClassVar[ProductDefDB]
         scheduleDB: ClassVar[ScheduleDB]
 
         async def process(self,
@@ -182,8 +184,13 @@ class ConfigDetails_GET(
                           user: User
                           ) -> None:
             configId = req.args.configId
+            configDB = self.configDB
+            frameworkDB = self.frameworkDB
+            productDefDB = self.productDefDB
+            scheduleDB = self.scheduleDB
+
             try:
-                config = self.configDB[configId]
+                config = configDB[configId]
             except KeyError:
                 raise PresentableError(xhtml[
                     'Configuration ', xhtml.b[ configId ], ' does not exist.'
@@ -197,14 +204,14 @@ class ConfigDetails_GET(
                     frameworkIds.append(framework.getId())
                 productIds |= framework.getInputs()
                 productIds |= framework.getOutputs()
-            graphBuilder = createExecutionGraphBuilder(
+            graphBuilder = ExecutionGraphBuilder(
                 'graph',
-                productIds,
-                frameworkIds,
+                products=(productDefDB[pid] for pid in productIds),
+                frameworks=(frameworkDB[fid] for fid in frameworkIds),
                 )
             scheduleIds = tuple(
                 scheduleId
-                for scheduleId, schedule in self.scheduleDB.items()
+                for scheduleId, schedule in scheduleDB.items()
                 if configId in schedule.getMatchingConfigIds()
                 )
 
