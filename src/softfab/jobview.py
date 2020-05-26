@@ -7,7 +7,7 @@ from typing import (
 
 from softfab.StyleResources import styleRoot
 from softfab.config import rootURL
-from softfab.configlib import configDB
+from softfab.configlib import ConfigDB
 from softfab.databaselib import RecordObserver
 from softfab.datawidgets import (
     DataColumn, DataTable, DurationColumn, TimeColumn
@@ -17,7 +17,7 @@ from softfab.notification import NotificationPresenter, sendNotification
 from softfab.pagelinks import createConfigDetailsLink, createJobURL
 from softfab.projectlib import project
 from softfab.resultcode import ResultCode
-from softfab.schedulelib import scheduleDB
+from softfab.schedulelib import ScheduleDB
 from softfab.schedulerefs import createScheduleDetailsURL
 from softfab.sortedqueue import SortedQueue
 from softfab.taskview import getTaskStatus
@@ -93,7 +93,7 @@ class _ResultlessJobs(SortedQueue[Job]):
 
 resultlessJobs = _ResultlessJobs(jobDB)
 
-def presentJobCaption(job: Job) -> XMLContent:
+def presentJobCaption(configDB: ConfigDB, job: Job) -> XMLContent:
     jobId = job.getId()
     yield 'Job ', jobId, ' was created from '
     configId = job.configId
@@ -151,6 +151,7 @@ class _DescriptionColumn(DataColumn[Job]):
         else:
             yield record.getDescription()
 
+        scheduleDB: ScheduleDB = getattr(kwargs['proc'], 'scheduleDB')
         scheduleId = record.getScheduledBy()
         if scheduleId is not None:
             schedule = scheduleDB.get(scheduleId)

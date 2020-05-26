@@ -15,6 +15,7 @@ from softfab.StyleResources import styleRoot
 from softfab.UIPage import factoryStyleSheet
 from softfab.compat import NoReturn
 from softfab.config import dbDir, rootURL
+from softfab.configlib import ConfigDB
 from softfab.databaselib import RecordObserver
 from softfab.datawidgets import DataColumn, DataTable
 from softfab.joblib import Job, JobDB
@@ -24,6 +25,7 @@ from softfab.projectlib import project
 from softfab.querylib import CustomFilter, KeySorter, RecordProcessor, runQuery
 from softfab.request import Request
 from softfab.response import Response
+from softfab.schedulelib import ScheduleDB
 from softfab.taskview import taskSummary
 from softfab.timelib import getTime
 from softfab.timeview import formatDuration, formatTime
@@ -102,7 +104,9 @@ class Feed_GET(ControlPage[ControlPage.Arguments, 'Feed_GET.Processor']):
 
     class Processor(PageProcessor[ControlPage.Arguments]):
 
+        configDB: ClassVar[ConfigDB]
         jobDB: ClassVar[JobDB]
+        scheduleDB: ClassVar[ScheduleDB]
         _mostRecent: ClassVar[MostRecent]
 
         @property
@@ -206,7 +210,7 @@ class Feed_GET(ControlPage[ControlPage.Arguments, 'Feed_GET.Processor']):
                 f'@import url({styleURL}/{factoryStyleSheet.path});'
                 )],
             jobTable.present(**presentationArgs),
-            xhtml.p[ presentJobCaption(job) ],
+            xhtml.p[ presentJobCaption(proc.configDB, job) ],
             TasksTable.instance.present(job=job, **presentationArgs),
             jobComment.present(**presentationArgs),
             ] ]

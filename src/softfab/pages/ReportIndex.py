@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Iterator, cast
+from typing import ClassVar, Iterator, cast
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
@@ -12,6 +12,7 @@ from softfab.jobview import JobsTable
 from softfab.pageargs import IntArg, SortArg, StrArg
 from softfab.pagelinks import ReportArgs
 from softfab.querylib import RecordFilter, WildcardFilter
+from softfab.schedulelib import ScheduleDB
 from softfab.userlib import User, checkPrivilege
 from softfab.xmlgen import XMLContent, xhtml
 
@@ -49,6 +50,8 @@ class ReportIndex_GET(FabPage['ReportIndex_GET.Processor',
         desc = StrArg(None)
 
     class Processor(JobReportProcessor[Arguments]):
+
+        scheduleDB: ClassVar[ScheduleDB]
 
         def iterFilters(self) -> Iterator[RecordFilter]:
             yield from super().iterFilters()

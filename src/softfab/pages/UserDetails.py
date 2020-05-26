@@ -11,6 +11,7 @@ from softfab.pageargs import PageArgs, StrArg
 from softfab.pagelinks import ReportArgs, UserIdArgs
 from softfab.querylib import KeySorter, ValueFilter, runQuery
 from softfab.request import Request
+from softfab.schedulelib import ScheduleDB
 from softfab.userlib import User, UserDB
 from softfab.webgui import PropertiesTable, Widget, pageLink
 from softfab.xmlgen import XML, XMLContent, xhtml
@@ -41,6 +42,7 @@ class UserDetails_GET(FabPage['UserDetails_GET.Processor',
         visibleJobs = 12
         userDB: ClassVar[UserDB]
         jobDB: ClassVar[JobDB]
+        scheduleDB: ClassVar[ScheduleDB]
 
         async def process(self,
                           req: Request['UserDetails_GET.Arguments'],

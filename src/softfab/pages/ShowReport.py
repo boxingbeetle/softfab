@@ -1,9 +1,10 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Collection, Iterator, Sequence, cast
+from typing import ClassVar, Collection, Iterator, Sequence, cast
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
+from softfab.configlib import ConfigDB
 from softfab.datawidgets import DataTable
 from softfab.joblib import Job
 from softfab.jobview import CommentPanel, JobsSubTable, presentJobCaption
@@ -15,6 +16,7 @@ from softfab.productview import ProductTable
 from softfab.request import Request
 from softfab.resourcelib import getTaskRunner
 from softfab.resourceview import getResourceStatus
+from softfab.schedulelib import ScheduleDB
 from softfab.tasktables import JobProcessorMixin, JobTaskRunsTable
 from softfab.userlib import User, checkPrivilege
 from softfab.webgui import Table, Widget, cell, pageLink
@@ -40,8 +42,8 @@ class TaskRunsTable(JobTaskRunsTable):
     autoUpdate = True
 
     def presentCaptionParts(self, **kwargs: object) -> XMLContent:
-        proc = cast(JobProcessor, kwargs['proc'])
-        return presentJobCaption(proc.job)
+        proc = cast(ShowReport_GET.Processor, kwargs['proc'])
+        return presentJobCaption(proc.configDB, proc.job)
 
 class ShowReport_GET(FabPage['ShowReport_GET.Processor',
                              'ShowReport_GET.Arguments']):
@@ -53,7 +55,8 @@ class ShowReport_GET(FabPage['ShowReport_GET.Processor',
         pass
 
     class Processor(JobProcessor):
-        pass
+        configDB: ClassVar[ConfigDB]
+        scheduleDB: ClassVar[ScheduleDB]
 
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'j/a')

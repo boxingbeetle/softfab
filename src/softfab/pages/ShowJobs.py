@@ -9,6 +9,7 @@ from softfab.joblib import Job, JobDB
 from softfab.jobview import JobsSubTable
 from softfab.pagelinks import JobIdSetArgs
 from softfab.request import Request
+from softfab.schedulelib import ScheduleDB
 from softfab.userlib import User, checkPrivilege
 from softfab.utils import pluralize
 from softfab.webgui import Widget, unorderedList
@@ -34,6 +35,7 @@ class ShowJobs_GET(FabPage['ShowJobs_GET.Processor', 'ShowJobs_GET.Arguments']):
     class Processor(PageProcessor[JobIdSetArgs]):
 
         jobDB: ClassVar[JobDB]
+        scheduleDB: ClassVar[ScheduleDB]
 
         async def process(self, req: Request[JobIdSetArgs], user: User) -> None:
             jobs = []
