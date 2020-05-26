@@ -81,7 +81,7 @@ class TaskDetails_GET(FabPage['TaskDetails_GET.Processor',
 
             # pylint: disable=attribute-defined-outside-init
             self.taskDef = taskDef
-            self.configs = list(configsUsingTaskDef(taskDefId))
+            self.configs = list(configsUsingTaskDef(self.configDB, taskDefId))
 
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'td/a')

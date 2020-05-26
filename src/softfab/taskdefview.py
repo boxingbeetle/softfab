@@ -2,11 +2,11 @@
 
 from typing import Iterator, Optional
 
-from softfab.configlib import configDB
+from softfab.configlib import ConfigDB
 from softfab.utils import pluralize
 
 
-def configsUsingTaskDef(taskDefId: str) -> Iterator[str]:
+def configsUsingTaskDef(configDB: ConfigDB, taskDefId: str) -> Iterator[str]:
     '''Iterates through the IDs of those configurations that contain the given
     task definition.
     '''

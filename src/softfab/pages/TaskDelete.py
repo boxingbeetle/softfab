@@ -29,7 +29,7 @@ class TaskDelete_GET(RecordDelete_GET):
         pass
 
     def checkState(self, record: TaskDef) -> None:
-        configs = list(configsUsingTaskDef(record.getId()))
+        configs = list(configsUsingTaskDef(configDB, record.getId()))
         if configs:
             raise RecordInUseError(
                 'configuration',
