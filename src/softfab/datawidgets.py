@@ -287,36 +287,50 @@ def _buildKeyMap(columns: Iterable[DataColumn[Record]]
     return keyMap
 
 class DataTable(Table, Generic[Record]):
-    '''A table filled with data from a database.
-    '''
-    # Database to fetch records from.
-    # This field is allowed to be None if getRecordsToQuery() is overridden,
-    # but specifying a Database object allows more efficient sorting.
+    """A table filled with data from a database."""
+
     db: ClassVar[Optional[Database]] = abstract
-    # Keys for which the value will be unique for each record.
-    # If None, the unique keys from the database will be used,
-    # unless 'db' is None as well.
+    """Database to fetch records from.
+    This field is allowed to be None if getRecordsToQuery() is overridden,
+    but specifying a Database object allows more efficient sorting.
+    """
+
     uniqueKeys: Optional[Sequence[str]] = None
-    # Name of field in Arguments that contains the sort order for this table,
-    # or None to not sort the table. We never want to show records in random
-    # order, so if this field is None, getRecordsToQuery() must return already
-    # sorted records.
-    # It is possible to refer to a non-argument member of Arguments if you want
-    # a fixed sort order.
+    """Keys for which the value will be unique for each record.
+    If None, the unique keys from the database will be used,
+    unless 'db' is None as well.
+    """
+
     sortField: Optional[str] = 'sort'
-    # Name of field in Arguments that contains the record number to show
-    # in the current tab, or None to not use tabs.
+    """Name of field in Arguments that contains the sort order for this table,
+    or None to not sort the table. We never want to show records in random
+    order, so if this field is None, getRecordsToQuery() must return already
+    sorted records.
+    It is possible to refer to a non-argument member of Arguments if you want
+    a fixed sort order.
+    """
+
     tabOffsetField: Optional[str] = 'first'
-    # Maximum number of records to display at once.
-    # Ignored if tabOffsetField is None.
+    """Name of field in Arguments that contains the record number to show
+    in the current tab, or None to not use tabs.
+    """
+
     recordsPerPage = 100
-    # Name of type (plural) of the records in this table. Used to display the
-    # total record count. If None, it is based on "db.description".
+    """Maximum number of records to display at once.
+    Ignored if tabOffsetField is None.
+    """
+
     objectName: Optional[str] = None
-    # Print total record count above this table?
+    """Name of type (plural) of the records in this table.
+    Used to display the total record count.
+    If None, it is based on `db.description`.
+    """
+
     printRecordCount = True
-    # Maximum number of tabs that can be put above a table.
+    """Print total record count above this table?"""
+
     __maxNrTabs = 10
+    """Maximum number of tabs that can be put above a table."""
 
     def getRecordsToQuery(self, proc: PageProcessor) -> Iterable[Record]:
         '''Returns the initial record set on which filters will be applied.
