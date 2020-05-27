@@ -18,7 +18,7 @@ from softfab.resourcelib import getTaskRunner
 from softfab.resourceview import getResourceStatus
 from softfab.schedulelib import ScheduleDB
 from softfab.tasktables import JobProcessorMixin, JobTaskRunsTable
-from softfab.userlib import User, checkPrivilege
+from softfab.userlib import User, UserDB, checkPrivilege
 from softfab.webgui import Table, Widget, cell, pageLink
 from softfab.xmlgen import XMLContent, xhtml
 
@@ -57,6 +57,7 @@ class ShowReport_GET(FabPage['ShowReport_GET.Processor',
     class Processor(JobProcessor):
         configDB: ClassVar[ConfigDB]
         scheduleDB: ClassVar[ScheduleDB]
+        userDB: ClassVar[UserDB]
 
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'j/a')

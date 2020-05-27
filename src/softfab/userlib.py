@@ -338,6 +338,14 @@ class UserDB(Database[UserInfo]):
         """
         return sum(user.isActive() for user in self)
 
+    @property
+    def showOwners(self) -> bool:
+        """Should owners be shown in the user interface?
+
+        Returns True iff there are multiple active users.
+        """
+        return self.numActiveUsers > 1
+
 userDB = UserDB(dbDir / 'users')
 
 # The global name should go away eventually.

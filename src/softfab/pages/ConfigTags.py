@@ -21,7 +21,9 @@ from softfab.selectlib import getCommonTags
 from softfab.selectview import (
     SelectArgs, TagValueEditTable, textToValues, valuesToText
 )
-from softfab.userlib import User, checkPrivilege, checkPrivilegeForOwned
+from softfab.userlib import (
+    User, UserDB, checkPrivilege, checkPrivilegeForOwned
+)
 from softfab.xmlgen import XMLContent, xhtml
 
 
@@ -112,6 +114,7 @@ class ConfigTags_POST(ConfigTagsBase['ConfigTags_POST.Arguments']):
     class Processor(ConfigTagsBase.Processor):
 
         configDB: ClassVar[ConfigDB]
+        userDB: ClassVar[UserDB]
 
         async def process(self,
                           req: Request['ConfigTags_POST.Arguments'],

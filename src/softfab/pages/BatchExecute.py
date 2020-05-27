@@ -23,7 +23,7 @@ from softfab.request import Request
 from softfab.resourcelib import TaskRunner
 from softfab.selectview import SelectArgs
 from softfab.taskgroup import LocalGroup, ProductProto
-from softfab.userlib import User, checkPrivilege
+from softfab.userlib import User, UserDB, checkPrivilege
 from softfab.webgui import decoration
 from softfab.xmlgen import XMLContent, xhtml
 
@@ -134,6 +134,8 @@ class BatchExecute_GET(FabPage['BatchExecute_GET.Processor',
         pass
 
     class Processor(SelectConfigsMixin[ParentArgs], PageProcessor[ParentArgs]):
+
+        userDB: ClassVar[UserDB]
 
         notices: List[str]
 

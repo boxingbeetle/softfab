@@ -18,7 +18,7 @@ from softfab.setcalc import intersection, union
 from softfab.taskdeflib import TaskDefDB
 from softfab.taskrunlib import getKeys
 from softfab.tasktables import TaskRunsTable
-from softfab.userlib import User, checkPrivilege
+from softfab.userlib import User, UserDB, checkPrivilege
 from softfab.utils import pluralize
 from softfab.webgui import pageLink
 from softfab.xmlgen import XMLContent, xhtml
@@ -67,6 +67,7 @@ class ReportTasks_GET(FabPage['ReportTasks_GET.Processor',
 
     class Processor(ReportProcessor[Arguments]):
         taskDefDB: ClassVar[TaskDefDB]
+        userDB: ClassVar[UserDB]
 
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'j/a', 'view the task list')

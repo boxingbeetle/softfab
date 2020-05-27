@@ -13,7 +13,7 @@ from softfab.pageargs import IntArg, SortArg, StrArg
 from softfab.pagelinks import ReportArgs
 from softfab.querylib import RecordFilter, WildcardFilter
 from softfab.schedulelib import ScheduleDB
-from softfab.userlib import User, checkPrivilege
+from softfab.userlib import User, UserDB, checkPrivilege
 from softfab.xmlgen import XMLContent, xhtml
 
 
@@ -52,6 +52,7 @@ class ReportIndex_GET(FabPage['ReportIndex_GET.Processor',
     class Processor(JobReportProcessor[Arguments]):
 
         scheduleDB: ClassVar[ScheduleDB]
+        userDB: ClassVar[UserDB]
 
         def iterFilters(self) -> Iterator[RecordFilter]:
             yield from super().iterFilters()

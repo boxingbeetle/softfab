@@ -9,14 +9,15 @@ from softfab.configlib import ConfigDB
 from softfab.datawidgets import DataColumn, DataTable, LinkColumn
 from softfab.formlib import makeForm
 from softfab.pageargs import DictArg, EnumArg, IntArg, PageArgs, SortArg
-from softfab.projectlib import project
 from softfab.request import Request
 from softfab.schedulelib import ScheduleDB, Scheduled, scheduleDB
 from softfab.schedulerefs import createScheduleDetailsLink
 from softfab.scheduleview import (
     createLastJobLink, describeNextRun, getScheduleStatus
 )
-from softfab.userlib import User, checkPrivilege, checkPrivilegeForOwned
+from softfab.userlib import (
+    User, UserDB, checkPrivilege, checkPrivilegeForOwned
+)
 from softfab.userview import OwnerColumn
 from softfab.webgui import Widget, pageLink, pageURL
 from softfab.xmlgen import XMLContent, xhtml
@@ -82,11 +83,12 @@ class ScheduleTable(DataTable[Scheduled]):
 
     def iterColumns( # pylint: disable=unused-argument
                     self, **kwargs: object) -> Iterator[DataColumn[Scheduled]]:
+        proc = cast(ScheduleIndex_GET.Processor, kwargs['proc'])
         yield NameColumn.instance
         yield LastRunColumn.instance
         yield NextRunColumn.instance
         yield RepeatColumn.instance
-        if project.showOwners:
+        if proc.userDB.showOwners:
             yield OwnerColumn[Scheduled].instance
         yield LinkColumn('Edit', 'ScheduleEdit')
         yield LinkColumn('Delete', 'DelSchedule')
@@ -111,6 +113,7 @@ class ScheduleIndex_GET(FabPage['ScheduleIndex_GET.Processor',
 
         scheduleDB: ClassVar[ScheduleDB]
         configDB: ClassVar[ConfigDB]
+        userDB: ClassVar[UserDB]
 
         async def process(self,
                           req: Request['ScheduleIndex_GET.Arguments'],

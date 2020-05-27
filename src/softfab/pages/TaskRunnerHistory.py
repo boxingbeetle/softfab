@@ -11,7 +11,7 @@ from softfab.pagelinks import TaskRunnerIdArgs
 from softfab.querylib import runQuery
 from softfab.request import Request
 from softfab.tasktables import TaskRunsTable
-from softfab.userlib import User, checkPrivilege
+from softfab.userlib import User, UserDB, checkPrivilege
 from softfab.webgui import pageLink
 from softfab.xmlgen import XMLContent, xhtml
 
@@ -44,6 +44,7 @@ class TaskRunnerHistory_GET(FabPage['TaskRunnerHistory_GET.Processor',
     class Processor(PageProcessor['TaskRunnerHistory_GET.Arguments']):
 
         jobDB: ClassVar[JobDB]
+        userDB: ClassVar[UserDB]
 
         async def process(self,
                           req: Request['TaskRunnerHistory_GET.Arguments'],

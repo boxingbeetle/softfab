@@ -15,7 +15,7 @@ from softfab.pageargs import IntArg, SortArg
 from softfab.projectlib import project
 from softfab.request import Request
 from softfab.selectview import BasketArgs, SelectProcMixin, selectDialog
-from softfab.userlib import User, checkPrivilege
+from softfab.userlib import User, UserDB, checkPrivilege
 from softfab.webgui import docLink
 from softfab.xmlgen import XMLContent, xhtml
 
@@ -102,6 +102,7 @@ class LoadExecute_GET(FabPage['LoadExecute_GET.Processor',
                     SelectProcMixin[Arguments, Config]):
 
         configDB: ClassVar[ConfigDB]
+        userDB: ClassVar[UserDB]
         tagCache = Config.cache
 
         @property

@@ -21,6 +21,7 @@ from softfab.schedulelib import ScheduleDB
 from softfab.schedulerefs import createScheduleDetailsURL
 from softfab.sortedqueue import SortedQueue
 from softfab.taskview import getTaskStatus
+from softfab.userlib import UserDB
 from softfab.userview import OwnerColumn
 from softfab.utils import pluralize
 from softfab.webgui import Panel, cell
@@ -206,12 +207,13 @@ class JobsTable(DataTable[Job]):
 
     def iterColumns( # pylint: disable=unused-argument
                     self, **kwargs: object) -> Iterator[DataColumn[Job]]:
+        userDB = cast(UserDB, getattr(kwargs['proc'], 'userDB'))
         yield CreateTimeColumn[Job].instance
         yield self.leadTimeColumn
         yield _DescriptionColumn.instance
         if self.showTargetColumn():
             yield TargetColumn[Job].instance
-        if project.showOwners:
+        if userDB.showOwners:
             yield OwnerColumn[Job].instance
         yield self.statusColumn
 

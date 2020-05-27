@@ -30,7 +30,7 @@ from softfab.taskdeflib import TaskDefDB
 from softfab.taskdefview import formatTimeout
 from softfab.taskrunlib import getData, getKeys
 from softfab.tasktables import JobTaskRunsTable, TaskProcessorMixin
-from softfab.userlib import User, checkPrivilege
+from softfab.userlib import User, UserDB, checkPrivilege
 from softfab.webgui import PropertiesTable, Table, Widget, cell, pageLink
 from softfab.xmlgen import XMLContent, xhtml
 
@@ -61,6 +61,7 @@ class Task_GET(FabPage['Task_GET.Processor', 'Task_GET.Arguments']):
 
         frameworkDB: ClassVar[FrameworkDB]
         taskDefDB: ClassVar[TaskDefDB]
+        userDB: ClassVar[UserDB]
 
         async def process(self,
                           req: Request[TaskReportArgs],

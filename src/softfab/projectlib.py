@@ -17,7 +17,7 @@ from softfab.databaselib import (
     Database, SingletonElem, SingletonObserver, SingletonWrapper
 )
 from softfab.timelib import getTime
-from softfab.userlib import AnonGuestUser, UnknownUser, User, userDB
+from softfab.userlib import AnonGuestUser, UnknownUser, User
 from softfab.utils import cachedProperty
 from softfab.version import VERSION
 from softfab.xmlbind import XMLTag
@@ -153,14 +153,6 @@ class Project(XMLTag, SingletonElem):
 
     def setTagKeys(self, tagKeys: Iterable[str]) -> None:
         self.__tagKeys = list(tagKeys)
-
-    @property
-    def showOwners(self) -> bool:
-        """Should owners be shown in the user interface?
-
-        Returns True iff there are multiple active users.
-        """
-        return userDB.numActiveUsers > 1
 
     @property
     def showTargets(self) -> bool:

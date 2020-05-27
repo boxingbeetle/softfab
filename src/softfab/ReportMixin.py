@@ -166,6 +166,7 @@ class ReportFilterForm:
 
         targets = proc.uiTargets
         owners = proc.uiOwners
+        showOwners = proc.userDB.showOwners
         objectName = self.objectName
 
         def columns1() -> XMLContent:
@@ -174,7 +175,7 @@ class ReportFilterForm:
                 ]
             if len(targets) > 1:
                 yield xhtml.td[ 'Targets:' ]
-            if len(owners) > 1 and project.showOwners:
+            if len(owners) > 1 and showOwners:
                 yield xhtml.td[ 'Owners:' ]
         yield xhtml.tr[ columns1() ]
 
@@ -189,7 +190,7 @@ class ReportFilterForm:
                         (target or noneOption for target in sorted(targets))
                         ]
                     ]
-            if len(owners) > 1 and project.showOwners:
+            if len(owners) > 1 and showOwners:
                 yield xhtml.td(rowspan=4, style='vertical-align:top')[
                     selectionList(name='owner',
                                   size=numListItems,

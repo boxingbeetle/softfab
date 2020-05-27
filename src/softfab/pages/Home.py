@@ -11,7 +11,7 @@ from softfab.joblib import Job, JobDB
 from softfab.jobview import JobsSubTable
 from softfab.querylib import KeySorter, RecordProcessor, runQuery
 from softfab.schedulelib import ScheduleDB
-from softfab.userlib import User, checkPrivilege
+from softfab.userlib import User, UserDB, checkPrivilege
 from softfab.webgui import Widget, docLink, pageLink, pageURL
 from softfab.xmlgen import XMLContent, xhtml
 
@@ -60,6 +60,7 @@ class Home_GET(FabPage['Home_GET.Processor', FabPage.Arguments]):
 
         jobDB: ClassVar[JobDB]
         scheduleDB: ClassVar[ScheduleDB]
+        userDB: ClassVar[UserDB]
         _mostRecent: ClassVar[MostRecent]
 
         @property

@@ -15,6 +15,7 @@ from softfab.projectlib import project
 from softfab.request import Request
 from softfab.resourcelib import iterTaskRunners
 from softfab.taskview import getTaskStatus, taskSummary
+from softfab.userlib import UserDB
 from softfab.userview import OwnerColumn
 from softfab.webgui import pageLink
 from softfab.xmlgen import XMLContent
@@ -83,12 +84,13 @@ class TaskRunsTable(DataTable[Task]):
 
     def iterColumns( # pylint: disable=unused-argument
                     self, **kwargs: object) -> Iterator[DataColumn[Task]]:
+        userDB: UserDB = getattr(kwargs['proc'], 'userDB')
         yield self.startTimeColumn
         yield self.durationColumn
         yield self.taskColumn
         if self.showTargetColumn():
             yield self.targetColumn
-        if project.showOwners:
+        if userDB.showOwners:
             yield self.ownerColumn
         yield self.summaryColumn
 

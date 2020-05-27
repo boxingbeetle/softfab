@@ -28,6 +28,7 @@ from softfab.schedulelib import (
 from softfab.scheduleview import listToStringDays, stringToListDays, weekDays
 from softfab.timelib import getTime, stringToTime
 from softfab.timeview import formatTime
+from softfab.userlib import UserDB
 from softfab.webgui import (
     Column, Container, Panel, Script, Table, addRemoveStyleScript, docLink,
     groupItem, pageLink, vgroup
@@ -108,6 +109,8 @@ class ScheduleEdit_GET(ScheduleEditBase):
 
     class Processor(InitialEditProcessor[ScheduleEditArgs, Scheduled]):
         argsClass = ScheduleEditArgs
+
+        userDB: ClassVar[UserDB]
 
         def _initArgs(self,
                       element: Optional[Scheduled]

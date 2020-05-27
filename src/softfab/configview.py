@@ -13,6 +13,7 @@ from softfab.restypeview import createTargetLink
 from softfab.schedulelib import ScheduleDB
 from softfab.selectview import SelectArgs
 from softfab.taskgroup import LocalGroup
+from softfab.userlib import UserDB
 from softfab.userview import OwnerColumn
 from softfab.webgui import Column, Table, cell
 from softfab.xmlgen import XMLContent, xhtml
@@ -163,10 +164,11 @@ class SimpleConfigTable(DataTable[Config]):
 
     def iterColumns( # pylint: disable=unused-argument
                     self, **kwargs: object) -> Iterator[DataColumn[Config]]:
+        userDB: UserDB = getattr(kwargs['proc'], 'userDB')
         yield from self.fixedColumns
         if self.showTargets and project.showTargets:
             yield TargetsColumn.instance
-        if self.showOwner and project.showOwners:
+        if self.showOwner and userDB.showOwners:
             yield OwnerColumn[Config].instance
 
     def iterRowStyles( # pylint: disable=unused-argument

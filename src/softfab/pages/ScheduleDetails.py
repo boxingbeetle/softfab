@@ -7,7 +7,6 @@ from softfab.Page import PageProcessor, PresentableError
 from softfab.RecordDelete import DeleteArgs
 from softfab.configlib import ConfigDB
 from softfab.pagelinks import ConfigIdArgs, createConfigDetailsLink
-from softfab.projectlib import project
 from softfab.request import Request
 from softfab.schedulelib import ScheduleDB, ScheduleRepeat, Scheduled
 from softfab.schedulerefs import ScheduleIdArgs
@@ -15,7 +14,7 @@ from softfab.scheduleview import (
     createLastJobLink, describeNextRun, getScheduleStatus, stringToListDays
 )
 from softfab.selectview import TagArgs
-from softfab.userlib import User, checkPrivilege
+from softfab.userlib import User, UserDB, checkPrivilege
 from softfab.utils import pluralize
 from softfab.webgui import PropertiesTable, Table, Widget, cell, pageLink, row
 from softfab.xmlgen import XML, XMLContent, xhtml
@@ -92,7 +91,7 @@ class DetailsTable(PropertiesTable):
             yield 'Triggers', xhtml.br.join(
                 sorted(scheduled.getTagValues('sf.trigger'))
                 )
-        if project.showOwners:
+        if proc.userDB.showOwners:
             yield 'Owner', scheduled.owner or '-'
         yield 'Comment', xhtml.br.join(scheduled.comment.splitlines())
         yield row(class_ = getScheduleStatus(configDB, scheduled))[
@@ -111,6 +110,7 @@ class ScheduleDetails_GET(FabPage['ScheduleDetails_GET.Processor',
 
         configDB: ClassVar[ConfigDB]
         scheduleDB: ClassVar[ScheduleDB]
+        userDB: ClassVar[UserDB]
 
         async def process(self,
                           req: Request[ScheduleIdArgs],
