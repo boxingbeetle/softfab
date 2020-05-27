@@ -5,12 +5,11 @@ from typing import (
 )
 
 from softfab.Page import PageProcessor
-from softfab.databaselib import Database
 from softfab.formlib import (
     clearButton, dropDownList, emptyOption, makeForm, option, resetButton,
     selectionList, submitButton, textInput
 )
-from softfab.joblib import jobDB
+from softfab.joblib import JobDB
 from softfab.pageargs import ArgsCorrected
 from softfab.pagelinks import ExecutionState, ReportArgs
 from softfab.projectlib import project
@@ -62,10 +61,16 @@ def emptyToNone(values: AbstractSet[str]) -> AbstractSet[Optional[str]]:
 ReportArgsT = TypeVar('ReportArgsT', bound=ReportArgs)
 
 class ReportProcessor(PageProcessor[ReportArgsT]):
-    db: ClassVar[Optional[Database]] = None
+    jobDB: ClassVar[JobDB]
     userDB: ClassVar[UserDB]
 
+    @property
+    def db(self) -> Optional[JobDB]:
+        return None
+
     async def process(self, req: Request[ReportArgsT], user: User) -> None:
+        jobDB = self.jobDB
+
         # Set of targets for which jobs have run.
         targets = cast(AbstractSet[Optional[str]], jobDB.uniqueValues('target'))
         # Add targets that are available now.
@@ -135,7 +140,10 @@ class ReportProcessor(PageProcessor[ReportArgsT]):
                 )
 
 class JobReportProcessor(ReportProcessor[ReportArgsT]):
-    db = jobDB
+
+    @property
+    def db(self) -> JobDB:
+        return self.jobDB
 
     def iterFilters(self) -> Iterator[RecordFilter]:
         yield from super().iterFilters()
