@@ -67,7 +67,6 @@ class ReportTasks_GET(FabPage['ReportTasks_GET.Processor',
 
     class Processor(ReportProcessor[Arguments]):
         taskDefDB: ClassVar[TaskDefDB]
-        userDB: ClassVar[UserDB]
 
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'j/a', 'view the task list')

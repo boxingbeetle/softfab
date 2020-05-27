@@ -219,8 +219,6 @@ class ExtractedData_GET(FabPage['ExtractedData_GET.Processor',
 
     class Processor(ReportProcessor[Arguments]):
 
-        userDB: ClassVar[UserDB]
-
         async def process(self,
                           req: Request['ExtractedData_GET.Arguments'],
                           user: User
