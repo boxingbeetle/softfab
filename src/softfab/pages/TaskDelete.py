@@ -1,15 +1,15 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from functools import partial
+from typing import ClassVar
 
-from softfab.Page import PageProcessor
 from softfab.RecordDelete import (
     RecordDelete_GET, RecordDelete_POSTMixin, RecordInUseError
 )
-from softfab.configlib import configDB
+from softfab.configlib import ConfigDB
 from softfab.pageargs import RefererArg
 from softfab.pagelinks import createConfigDetailsLink
-from softfab.taskdeflib import TaskDef, taskDefDB
+from softfab.taskdeflib import TaskDef, TaskDefDB
 from softfab.taskdefview import configsUsingTaskDef
 
 
@@ -18,24 +18,31 @@ class ParentArgs:
     detailsQuery = RefererArg('TaskDetails')
 
 class TaskDelete_GET(RecordDelete_GET):
-    db = taskDefDB
-    recordName = 'task definition'
-    denyText = 'task definitions'
-
     description = 'Delete Task Definition'
     icon = 'TaskDef2'
 
     class Arguments(RecordDelete_GET.Arguments, ParentArgs):
         pass
 
-    def checkState(self, record: TaskDef) -> None:
-        configs = list(configsUsingTaskDef(configDB, record.getId()))
-        if configs:
-            raise RecordInUseError(
-                'configuration',
-                partial(createConfigDetailsLink, configDB),
-                configs
-                )
+    class Processor(RecordDelete_GET.Processor[TaskDef]):
+        configDB: ClassVar[ConfigDB]
+        taskDefDB: ClassVar[TaskDefDB]
+        recordName = 'task definition'
+        denyText = 'task definitions'
+
+        @property
+        def db(self) -> TaskDefDB:
+            return self.taskDefDB
+
+        def checkState(self, record: TaskDef) -> None:
+            configDB = self.configDB
+            configs = list(configsUsingTaskDef(configDB, record.getId()))
+            if configs:
+                raise RecordInUseError(
+                    'configuration',
+                    partial(createConfigDetailsLink, configDB),
+                    configs
+                    )
 
 class TaskDelete_POST(RecordDelete_POSTMixin, TaskDelete_GET):
 
@@ -44,5 +51,5 @@ class TaskDelete_POST(RecordDelete_POSTMixin, TaskDelete_GET):
         pass
 
     class Processor(RecordDelete_POSTMixin.ProcessorMixin,
-                    PageProcessor['TaskDelete_POST.Arguments']):
+                    TaskDelete_GET.Processor):
         pass

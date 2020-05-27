@@ -1,18 +1,17 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Callable
+from typing import Callable, ClassVar
 
-from softfab.Page import PageProcessor
 from softfab.RecordDelete import (
     RecordDelete_GET, RecordDelete_POSTMixin, RecordInUseError
 )
 from softfab.databaselib import Database
-from softfab.frameworklib import frameworkDB
+from softfab.frameworklib import FrameworkDB
 from softfab.pageargs import RefererArg
 from softfab.pagelinks import createFrameworkDetailsLink, createTaskDetailsLink
-from softfab.resourcelib import resourceDB
-from softfab.restypelib import ResType, resTypeDB
-from softfab.taskdeflib import taskDefDB
+from softfab.resourcelib import ResourceDB
+from softfab.restypelib import ResType, ResTypeDB
+from softfab.taskdeflib import TaskDefDB
 from softfab.xmlgen import XMLContent
 
 
@@ -29,31 +28,41 @@ def checkRequirements(db: Database,
         raise RecordInUseError(db.description, linkFunc, usedBy)
 
 class ResTypeDelete_GET(RecordDelete_GET):
-    db = resTypeDB
-    recordName = 'resource type'
-    denyText = 'resource types'
-
     description = 'Delete Resource Type'
     icon = 'IconResources'
 
     class Arguments(RecordDelete_GET.Arguments):
         indexQuery = RefererArg('ResTypeIndex')
 
-    def checkState(self, record: ResType) ->  None:
-        name = record.getId()
+    class Processor(RecordDelete_GET.Processor[ResType]):
+        frameworkDB: ClassVar[FrameworkDB]
+        resTypeDB: ClassVar[ResTypeDB]
+        resourceDB: ClassVar[ResourceDB]
+        taskDefDB: ClassVar[TaskDefDB]
+        recordName = 'resource type'
+        denyText = 'resource types'
 
-        # Check for resources of this type.
-        resourcesIds = resourceDB.resourcesOfType(name)
-        if resourcesIds:
-            # Note: There is currently no details page for resources,
-            #       so we present just the name.
-            raise RecordInUseError(
-                'resource', lambda resourceId: resourceId, resourcesIds
-                )
+        @property
+        def db(self) -> ResTypeDB:
+            return self.resTypeDB
 
-        # Check for resource requirements of this type.
-        checkRequirements(frameworkDB, name, createFrameworkDetailsLink)
-        checkRequirements(taskDefDB, name, createTaskDetailsLink)
+        def checkState(self, record: ResType) ->  None:
+            name = record.getId()
+
+            # Check for resources of this type.
+            resourcesIds = self.resourceDB.resourcesOfType(name)
+            if resourcesIds:
+                # Note: There is currently no details page for resources,
+                #       so we present just the name.
+                raise RecordInUseError(
+                    'resource', lambda resourceId: resourceId, resourcesIds
+                    )
+
+            # Check for resource requirements of this type.
+            checkRequirements(self.frameworkDB, name,
+                              createFrameworkDetailsLink)
+            checkRequirements(self.taskDefDB, name,
+                              createTaskDetailsLink)
 
 class ResTypeDelete_POST(RecordDelete_POSTMixin, ResTypeDelete_GET):
 
@@ -62,5 +71,5 @@ class ResTypeDelete_POST(RecordDelete_POSTMixin, ResTypeDelete_GET):
         pass
 
     class Processor(RecordDelete_POSTMixin.ProcessorMixin,
-                    PageProcessor['ResTypeDelete_POST.Arguments']):
+                    ResTypeDelete_GET.Processor):
         pass

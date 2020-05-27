@@ -1,22 +1,28 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from softfab.Page import PageProcessor
+from typing import ClassVar
+
 from softfab.RecordDelete import RecordDelete_GET, RecordDelete_POSTMixin
 from softfab.pageargs import RefererArg
-from softfab.schedulelib import scheduleDB
+from softfab.schedulelib import ScheduleDB, Scheduled
 
 
 class DelSchedule_GET(RecordDelete_GET):
-    db = scheduleDB
-    recordName = 'schedule'
-    denyText = 'schedules'
-
     description = 'Delete Schedule'
     icon = 'IconSchedule'
 
     class Arguments(RecordDelete_GET.Arguments):
         indexQuery = RefererArg('ScheduleIndex')
         detailsQuery = RefererArg('ScheduleDetails')
+
+    class Processor(RecordDelete_GET.Processor[Scheduled]):
+        scheduleDB: ClassVar[ScheduleDB]
+        recordName = 'schedule'
+        denyText = 'schedules'
+
+        @property
+        def db(self) -> ScheduleDB:
+            return self.scheduleDB
 
 class DelSchedule_POST(RecordDelete_POSTMixin, DelSchedule_GET):
 
@@ -25,5 +31,5 @@ class DelSchedule_POST(RecordDelete_POSTMixin, DelSchedule_GET):
         pass
 
     class Processor(RecordDelete_POSTMixin.ProcessorMixin,
-                    PageProcessor['DelSchedule_POST.Arguments']):
+                    DelSchedule_GET.Processor):
         pass

@@ -1,20 +1,17 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from softfab.Page import PageProcessor
+from typing import ClassVar
+
 from softfab.RecordDelete import (
     RecordDelete_GET, RecordDelete_POSTMixin, RecordInUseError
 )
-from softfab.frameworklib import frameworkDB
+from softfab.frameworklib import FrameworkDB
 from softfab.pageargs import RefererArg
 from softfab.pagelinks import createFrameworkDetailsLink
-from softfab.productdeflib import ProductDef, productDefDB
+from softfab.productdeflib import ProductDef, ProductDefDB
 
 
 class ProductDelete_GET(RecordDelete_GET):
-    db = productDefDB
-    recordName = 'product'
-    denyText = 'product definitions'
-
     description = 'Delete Product'
     icon = 'Product1'
 
@@ -22,18 +19,29 @@ class ProductDelete_GET(RecordDelete_GET):
         indexQuery = RefererArg('ProductIndex')
         detailsQuery = RefererArg('ProductDetails')
 
-    def checkState(self, record: ProductDef) -> None:
-        # TODO: The following code partially duplicates FrameworkDelete
-        name = record.getId()
-        frameworksIds = [
-            frameworkId
-            for frameworkId, framework in frameworkDB.items()
-            if name in framework.getInputs() or name in framework.getOutputs()
-            ]
-        if frameworksIds:
-            raise RecordInUseError(
-                'framework', createFrameworkDetailsLink, frameworksIds
-                )
+    class Processor(RecordDelete_GET.Processor[ProductDef]):
+        productDefDB: ClassVar[ProductDefDB]
+        frameworkDB: ClassVar[FrameworkDB]
+        recordName = 'product'
+        denyText = 'product definitions'
+
+        @property
+        def db(self) -> ProductDefDB:
+            return self.productDefDB
+
+        def checkState(self, record: ProductDef) -> None:
+            # TODO: The following code partially duplicates FrameworkDelete
+            name = record.getId()
+            frameworksIds = [
+                frameworkId
+                for frameworkId, framework in self.frameworkDB.items()
+                if name in framework.getInputs() or
+                   name in framework.getOutputs()
+                ]
+            if frameworksIds:
+                raise RecordInUseError(
+                    'framework', createFrameworkDetailsLink, frameworksIds
+                    )
 
 class ProductDelete_POST(RecordDelete_POSTMixin, ProductDelete_GET):
 
@@ -42,5 +50,5 @@ class ProductDelete_POST(RecordDelete_POSTMixin, ProductDelete_GET):
         pass
 
     class Processor(RecordDelete_POSTMixin.ProcessorMixin,
-                    PageProcessor['ProductDelete_POST.Arguments']):
+                    ProductDelete_GET.Processor):
         pass

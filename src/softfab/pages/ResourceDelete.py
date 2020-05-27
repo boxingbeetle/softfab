@@ -1,21 +1,27 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from softfab.Page import PageProcessor
+from typing import ClassVar
+
 from softfab.RecordDelete import RecordDelete_GET, RecordDelete_POSTMixin
 from softfab.pageargs import RefererArg
-from softfab.resourcelib import resourceDB
+from softfab.resourcelib import ResourceBase, ResourceDB
 
 
 class ResourceDelete_GET(RecordDelete_GET):
-    db = resourceDB
-    recordName = 'resource'
-    denyText = 'resources'
-
     description = 'Delete Resource'
     icon = 'IconResources'
 
     class Arguments(RecordDelete_GET.Arguments):
         indexQuery = RefererArg('ResourceIndex')
+
+    class Processor(RecordDelete_GET.Processor[ResourceBase]):
+        resourceDB: ClassVar[ResourceDB]
+        recordName = 'resource'
+        denyText = 'resources'
+
+        @property
+        def db(self) -> ResourceDB:
+            return self.resourceDB
 
 class ResourceDelete_POST(RecordDelete_POSTMixin, ResourceDelete_GET):
 
@@ -24,5 +30,5 @@ class ResourceDelete_POST(RecordDelete_POSTMixin, ResourceDelete_GET):
         pass
 
     class Processor(RecordDelete_POSTMixin.ProcessorMixin,
-                    PageProcessor['ResourceDelete_POST.Arguments']):
+                    ResourceDelete_GET.Processor):
         pass

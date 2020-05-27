@@ -1,7 +1,8 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from abc import abstractmethod
 from enum import Enum
-from typing import Callable, ClassVar, Collection, Generic, cast
+from typing import Callable, ClassVar, Collection, Generic, TypeVar, cast
 
 from softfab.FabPage import FabPage, IconModifier
 from softfab.Page import PageProcessor, PresentableError, Redirect
@@ -29,28 +30,57 @@ class RecordInUseError(Exception):
 class DeleteArgs(PageArgs):
     id = StrArg()
 
+DeleteArgsT = TypeVar('DeleteArgsT', bound=DeleteArgs)
+
+class RecordDeleteProcessor(PageProcessor[DeleteArgsT],
+                            Generic[DeleteArgsT, DBRecord]):
+
+    @property
+    @abstractmethod
+    def db(self) -> Database[DBRecord]:
+        """Database to delete record from."""
+        raise NotImplementedError
+
+    recordName: ClassVar[str] = abstract
+    """Name under which user knows this record type."""
+
+    denyText: ClassVar[str] = abstract
+    """Text that appears in the 'access denied' message."""
+
+    async def process(self, req: Request[DeleteArgsT], user: User) -> None:
+        fetchRecordForDeletion(self, req.args.id)
+
+    def checkState(self, record: DBRecord) -> None:
+        """Checks whether the given record can be deleted.
+        It is possible deletion is not allowed if other records depend on it.
+        If deletion is allowed, do nothing, otherwise raise PresentableError
+        or RecordInUseError.
+        The default implementation does nothing.
+        """
+
 Actions = Enum('Actions', 'DELETE CANCEL')
 
-def fetchRecordForDeletion(recordId: str,
-                           page: 'RecordDelete_GET[DBRecord]'
+def fetchRecordForDeletion(proc: RecordDeleteProcessor[DeleteArgsT, DBRecord],
+                           recordId: str
                            ) -> DBRecord:
-    '''Tries to fetch the record with the given ID.
+    """Tries to fetch the record with the given ID.
     Raises PresentableError if the record does not exist or can currently
     not be deleted.
-    '''
+    """
+
     try:
-        record = page.db[recordId]
+        record = proc.db[recordId]
     except KeyError:
         raise PresentableError(xhtml.p[
-            'Cannot delete ', page.recordName, ' ', xhtml.b[ recordId ],
+            'Cannot delete ', proc.recordName, ' ', xhtml.b[ recordId ],
             ' because it does not exist (anymore).'
             ])
 
     try:
-        page.checkState(record)
+        proc.checkState(record)
     except RecordInUseError as ex:
         raise PresentableError(xhtml.p[
-            'Cannot delete ', page.recordName, ' ', xhtml.b[ recordId ],
+            'Cannot delete ', proc.recordName, ' ', xhtml.b[ recordId ],
             ' because it is used in the following ',
             pluralize(ex.refererName, ex.referers), ':'
             ] + unorderedList[(
@@ -61,18 +91,9 @@ def fetchRecordForDeletion(recordId: str,
     return record
 
 class RecordDelete_GET(FabPage['RecordDelete_GET.Processor',
-                               'RecordDelete_GET.Arguments'],
-                       Generic[DBRecord]):
+                               'RecordDelete_GET.Arguments']):
     """Reusable implementation for handling a GET of a "delete record" dialog.
-    Inherit from RecordDelete_GET and define the following fields:
-        db = database to delete record from
-        recordName = name under which user knows this record type
-        denyText = text that appears in the 'access denied' message
-    You can define these at class scope (since they are constants).
     """
-    db: Database[DBRecord] = abstract
-    recordName: ClassVar[str] = abstract
-    denyText: ClassVar[str] = abstract
 
     description = abstract
     linkDescription = False
@@ -82,14 +103,12 @@ class RecordDelete_GET(FabPage['RecordDelete_GET.Processor',
     class Arguments(DeleteArgs):
         pass
 
-    class Processor(PageProcessor[Arguments]):
-        async def process(self, req: Request[DeleteArgs], user: User) -> None:
-            page = cast(RecordDelete_GET, self.page)
-            fetchRecordForDeletion(req.args.id, page)
+    class Processor(RecordDeleteProcessor[Arguments, DBRecord]):
+        pass
 
     def pageTitle(self, proc: Processor) -> str:
         return 'Delete ' + ' '.join(
-            word.capitalize() for word in self.recordName.split()
+            word.capitalize() for word in proc.recordName.split()
             )
 
     def checkAccess(self, user: User) -> None:
@@ -105,7 +124,7 @@ class RecordDelete_GET(FabPage['RecordDelete_GET.Processor',
     def presentContent(self, **kwargs: object) -> XMLContent:
         proc = cast(RecordDelete_GET.Processor, kwargs['proc'])
         yield xhtml.p[
-            'Delete ', self.recordName, ' ', xhtml.b[ proc.args.id ], '?'
+            'Delete ', proc.recordName, ' ', xhtml.b[ proc.args.id ], '?'
             ]
         yield makeForm(args = proc.args)[
             xhtml.p[ actionButtons(Actions) ]
@@ -115,14 +134,6 @@ class RecordDelete_GET(FabPage['RecordDelete_GET.Processor',
         proc = cast(RecordDelete_GET.Processor, kwargs['proc'])
         yield message
         yield self.backToReferer(proc.args)
-
-    def checkState(self, record: DBRecord) -> None:
-        '''Checks whether the given record can be deleted.
-        It is possible deletion is not allowed if other records depend on it.
-        If deletion is allowed, do nothing, otherwise raise PresentableError
-        or RecordInUseError.
-        The default implementation does nothing.
-        '''
 
 class RecordDelete_POSTMixin:
     """Mixin for implementing the POST handling of a "delete record" dialog.
@@ -140,22 +151,23 @@ class RecordDelete_POSTMixin:
                 assert action is Actions.CANCEL, action
                 raise Redirect(page.getCancelURL(req.args))
 
-            record = fetchRecordForDeletion(req.args.id, page)
+            assert isinstance(self, RecordDeleteProcessor), self
+            record = fetchRecordForDeletion(self, req.args.id)
             checkPrivilegeForOwned(
                 user,
-                page.db.privilegeObject + '/d',
+                self.db.privilegeObject + '/d',
                 record,
-                ( 'delete this ' + page.recordName,
-                    'delete ' + page.denyText )
+                ( 'delete this ' + self.recordName,
+                  'delete ' + self.denyText )
                 )
-            page.db.remove(record)
+            self.db.remove(record)
 
     def presentContent(self, **kwargs: object) -> XMLContent:
-        proc = cast(PageProcessor, kwargs['proc'])
+        proc = cast(RecordDeleteProcessor, kwargs['proc'])
         assert isinstance(self, RecordDelete_GET), self # indirect type hint
         yield (
             xhtml.p[
-                self.recordName.capitalize(), ' ',
+                proc.recordName.capitalize(), ' ',
                 xhtml.b[ proc.args.id ], ' has been deleted.'
                 ],
             self.backToParent(proc.args)

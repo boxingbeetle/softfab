@@ -1,21 +1,18 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from softfab.Page import PageProcessor
+from typing import ClassVar
+
 from softfab.RecordDelete import (
     RecordDelete_GET, RecordDelete_POSTMixin, RecordInUseError
 )
-from softfab.configlib import Config, configDB
+from softfab.configlib import Config, ConfigDB
 from softfab.configview import schedulesUsingConfig
 from softfab.pageargs import RefererArg
-from softfab.schedulelib import scheduleDB
+from softfab.schedulelib import ScheduleDB
 from softfab.schedulerefs import createScheduleDetailsLink
 
 
 class DelJobConfig_GET(RecordDelete_GET):
-    db = configDB
-    recordName = 'configuration'
-    denyText = 'configurations'
-
     description = 'Delete Configuration'
     icon = 'IconExec'
 
@@ -23,12 +20,24 @@ class DelJobConfig_GET(RecordDelete_GET):
         detailsQuery = RefererArg('ConfigDetails')
         indexQuery = RefererArg('LoadExecute')
 
-    def checkState(self, record: Config) -> None:
-        schedules = list(schedulesUsingConfig(scheduleDB, record.getId()))
-        if schedules:
-            raise RecordInUseError(
-                'schedule', createScheduleDetailsLink, schedules
+    class Processor(RecordDelete_GET.Processor[Config]):
+        configDB: ClassVar[ConfigDB]
+        scheduleDB: ClassVar[ScheduleDB]
+        recordName = 'configuration'
+        denyText = 'configurations'
+
+        @property
+        def db(self) -> ConfigDB:
+            return self.configDB
+
+        def checkState(self, record: Config) -> None:
+            schedules = list(
+                schedulesUsingConfig(self.scheduleDB, record.getId())
                 )
+            if schedules:
+                raise RecordInUseError(
+                    'schedule', createScheduleDetailsLink, schedules
+                    )
 
 class DelJobConfig_POST(RecordDelete_POSTMixin, DelJobConfig_GET):
 
@@ -37,5 +46,5 @@ class DelJobConfig_POST(RecordDelete_POSTMixin, DelJobConfig_GET):
         pass
 
     class Processor(RecordDelete_POSTMixin.ProcessorMixin,
-                    PageProcessor['DelJobConfig_POST.Arguments']):
+                    DelJobConfig_GET.Processor):
         pass
