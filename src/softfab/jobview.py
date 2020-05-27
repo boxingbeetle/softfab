@@ -197,7 +197,9 @@ class JobsTable(DataTable[Job]):
     leadTimeColumn = DurationColumn[Job](label='Lead Time', keyName='leadtime')
     statusColumn: ClassVar[DataColumn[Job]] = _StatusColumn.instance
 
-    def showTargetColumn(self, **kwargs: object) -> bool:
+    def showTargetColumn( # pylint: disable=unused-argument
+                         self, **kwargs: object
+                         ) -> bool:
         return project.showTargets
 
     def iterRowStyles( # pylint: disable=unused-argument

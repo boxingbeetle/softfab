@@ -18,7 +18,7 @@ from softfab.setcalc import intersection, union
 from softfab.taskdeflib import TaskDefDB
 from softfab.taskrunlib import getKeys
 from softfab.tasktables import TaskRunsTable
-from softfab.userlib import User, UserDB, checkPrivilege
+from softfab.userlib import User, checkPrivilege
 from softfab.utils import pluralize
 from softfab.webgui import pageLink
 from softfab.xmlgen import XMLContent, xhtml

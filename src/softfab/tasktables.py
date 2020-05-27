@@ -75,7 +75,9 @@ class TaskRunsTable(DataTable[Task]):
                       ) -> Iterator[str]:
         yield getTaskStatus(record)
 
-    def showTargetColumn(self, **kwargs: object) -> bool:
+    def showTargetColumn( # pylint: disable=unused-argument
+                         self, **kwargs: object
+                         ) -> bool:
         '''Returns True iff the target column should be included.
         Default implementation returns True iff there are multiple targets
         defined for this project.
