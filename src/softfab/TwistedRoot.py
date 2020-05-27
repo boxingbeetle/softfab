@@ -170,9 +170,11 @@ class PageLoader:
                     module.__name__, pageClass.__name__
                     )
                 continue
+
             if root.anonOperator:
                 if not isinstance(page.authenticator, TokenAuthPage):
                     page.authenticator = DisabledAuthPage.instance
+            self.injectDependencies(page.authenticator.__class__)
 
             if not issubclass(page.Arguments, PageArgs):
                 startupLogger.error(

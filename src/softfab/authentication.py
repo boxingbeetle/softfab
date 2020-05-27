@@ -11,9 +11,9 @@ from softfab.Page import (
 from softfab.pagelinks import loginURL
 from softfab.projectlib import project
 from softfab.request import Request
-from softfab.tokens import TokenRole, TokenUser, authenticateToken, tokenDB
+from softfab.tokens import TokenDB, TokenRole, TokenUser, authenticateToken
 from softfab.userlib import (
-    AnonGuestUser, SuperUser, UnknownUser, authenticateUser, userDB
+    AnonGuestUser, SuperUser, UnknownUser, UserDB, authenticateUser
 )
 from softfab.utils import SharedInstance
 
@@ -47,6 +47,7 @@ class HTTPAuthPage(Authenticator):
     '''
 
     instance: ClassVar[SharedInstance] = SharedInstance()
+    userDB: ClassVar[UserDB]
 
     def authenticate(self, req: Request) -> Deferred:
         # To avoid cross-site request forgery, we must authenticate every API
@@ -60,7 +61,9 @@ class HTTPAuthPage(Authenticator):
             return fail(LoginFailed(ex))
 
         if userName:
-            return ensureDeferred(authenticateUser(userDB, userName, password))
+            return ensureDeferred(
+                authenticateUser(self.userDB, userName, password)
+                )
         elif project.anonguest:
             return succeed(AnonGuestUser())
         else:
@@ -76,6 +79,8 @@ class TokenAuthPage(Authenticator):
     '''Authenticator that performs HTTP authentication using an access token.
     '''
 
+    tokenDB: ClassVar[TokenDB]
+
     def __init__(self, role: TokenRole):
         super().__init__()
         self.__role = role
@@ -88,7 +93,7 @@ class TokenAuthPage(Authenticator):
 
         if tokenId:
             try:
-                token = authenticateToken(tokenDB, tokenId, password)
+                token = authenticateToken(self.tokenDB, tokenId, password)
             except KeyError:
                 return fail(LoginFailed(
                     f'Token "{tokenId}" does not exist'
