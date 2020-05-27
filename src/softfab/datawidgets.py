@@ -170,9 +170,12 @@ class TableData(Generic[Record]):
 
         columns = tuple(table.iterColumns(proc=proc, data=None))
 
+        db = table.db
         records = table.getRecordsToQuery(proc)
         if isinstance(records, SizedABC):
             unfilteredNrRecords: Optional[int] = len(records)
+        elif db is not None:
+            unfilteredNrRecords = len(db)
         else:
             # We could store all records in a list or wrap a counting iterator
             # around it, but so far that has not been necessary.
@@ -204,7 +207,6 @@ class TableData(Generic[Record]):
             #       records that are not DBRecords or to keep track of
             #       a subset of a full DB. Then 'uniqueKeys' could be moved
             #       from DataTable to RecordCollection.
-            db = table.db
             if db is None:
                 query.append(KeySorter.forCustom(sortKeys, table.uniqueKeys))
             else:
@@ -238,7 +240,6 @@ class TableData(Generic[Record]):
 
         objectName = table.objectName
         if objectName is None:
-            db = table.db
             assert db is not None
             objectName = pluralize(db.description, 42)
         self.objectName = objectName
@@ -395,13 +396,11 @@ class DataTable(Table, Generic[Record]):
             # Table subclass declares it does not want record count.
             return None
 
-        originalNrRecords = (
-            data.unfilteredNrRecords if self.db is None else len(self.db)
-            )
         # Note: None (unknown) is treated the same as False (not filtered).
-        if data.filtered and originalNrRecords is not None:
+        unfilteredNrRecords = data.unfilteredNrRecords
+        if data.filtered and unfilteredNrRecords is not None:
             return f'Number of {data.objectName} matching: ' \
-                   f'{data.totalNrRecords:d} of {originalNrRecords:d}'
+                   f'{data.totalNrRecords:d} of {unfilteredNrRecords:d}'
         else:
             return f'Number of {data.objectName} found: ' \
                    f'{data.totalNrRecords:d}'
