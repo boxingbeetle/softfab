@@ -236,6 +236,13 @@ class TableData(Generic[Record]):
                     ))
             records = records[tabOffset : tabOffset + table.recordsPerPage]
 
+        objectName = table.objectName
+        if objectName is None:
+            db = table.db
+            assert db is not None
+            objectName = pluralize(db.description, 42)
+        self.objectName = objectName
+
         self.columns = columns
         self.records = records
         self.unfilteredNrRecords = unfilteredNrRecords
@@ -311,12 +318,6 @@ class DataTable(Table, Generic[Record]):
     # Maximum number of tabs that can be put above a table.
     __maxNrTabs = 10
 
-    def __init__(self) -> None:
-        super().__init__()
-        if self.objectName is None:
-            assert self.db is not None
-            self.objectName = pluralize(self.db.description, 42)
-
     def getRecordsToQuery(self, proc: PageProcessor) -> Iterable[Record]:
         '''Returns the initial record set on which filters will be applied.
         If "sortField" is None, the initial record set must be already sorted.
@@ -385,10 +386,10 @@ class DataTable(Table, Generic[Record]):
             )
         # Note: None (unknown) is treated the same as False (not filtered).
         if data.filtered and originalNrRecords is not None:
-            return f'Number of {self.objectName} matching: ' \
+            return f'Number of {data.objectName} matching: ' \
                    f'{data.totalNrRecords:d} of {originalNrRecords:d}'
         else:
-            return f'Number of {self.objectName} found: ' \
+            return f'Number of {data.objectName} found: ' \
                    f'{data.totalNrRecords:d}'
 
     def __presentTabs(self,
