@@ -82,8 +82,7 @@ class TaskRunsTable(DataTable[Task]):
         '''
         return project.showTargets
 
-    def iterColumns( # pylint: disable=unused-argument
-                    self, **kwargs: object) -> Iterator[DataColumn[Task]]:
+    def iterColumns(self, **kwargs: object) -> Iterator[DataColumn[Task]]:
         userDB: UserDB = getattr(kwargs['proc'], 'userDB')
         yield self.startTimeColumn
         yield self.durationColumn

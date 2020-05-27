@@ -81,8 +81,7 @@ class ScheduleTable(DataTable[Scheduled]):
         proc = cast(ScheduleIndex_GET.Processor, kwargs['proc'])
         yield getScheduleStatus(proc.configDB, record)
 
-    def iterColumns( # pylint: disable=unused-argument
-                    self, **kwargs: object) -> Iterator[DataColumn[Scheduled]]:
+    def iterColumns(self, **kwargs: object) -> Iterator[DataColumn[Scheduled]]:
         proc = cast(ScheduleIndex_GET.Processor, kwargs['proc'])
         yield NameColumn.instance
         yield LastRunColumn.instance

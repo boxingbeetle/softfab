@@ -205,8 +205,7 @@ class JobsTable(DataTable[Job]):
                       ) -> Iterator[str]:
         yield getJobStatus(record)
 
-    def iterColumns( # pylint: disable=unused-argument
-                    self, **kwargs: object) -> Iterator[DataColumn[Job]]:
+    def iterColumns(self, **kwargs: object) -> Iterator[DataColumn[Job]]:
         userDB = cast(UserDB, getattr(kwargs['proc'], 'userDB'))
         yield CreateTimeColumn[Job].instance
         yield self.leadTimeColumn

@@ -104,7 +104,10 @@ class RecordDelete_GET(FabPage['RecordDelete_GET.Processor',
         pass
 
     class Processor(RecordDeleteProcessor[Arguments, DBRecord]):
-        pass
+        @property
+        @abstractmethod
+        def db(self) -> Database[DBRecord]:
+            raise NotImplementedError
 
     def pageTitle(self, proc: Processor) -> str:
         return 'Delete ' + ' '.join(

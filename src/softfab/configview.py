@@ -162,8 +162,7 @@ class SimpleConfigTable(DataTable[Config]):
         DataColumn[Config](keyName = 'description')
         )
 
-    def iterColumns( # pylint: disable=unused-argument
-                    self, **kwargs: object) -> Iterator[DataColumn[Config]]:
+    def iterColumns(self, **kwargs: object) -> Iterator[DataColumn[Config]]:
         userDB: UserDB = getattr(kwargs['proc'], 'userDB')
         yield from self.fixedColumns
         if self.showTargets and project.showTargets:
