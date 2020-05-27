@@ -48,7 +48,6 @@ class Token(XMLTag, DatabaseElem):
             role=role,
             ))
         token.__params = dict(params) # pylint: disable=protected-access
-        tokenDB.add(token)
         return token
 
     def __init__(self, properties: Mapping[str, XMLAttributeValue]):
@@ -105,19 +104,6 @@ class Token(XMLTag, DatabaseElem):
         for name, value in self.__params.items():
             yield xml.param(name=name, value=value)
 
-    def resetPassword(self) -> str:
-        """Sets the password for this token to a new random string.
-
-        Returns the new password. Since only a hash is stored in the
-        password database, it is not possible to retrieve it later.
-        """
-        password = genword(length=16)
-        passwordFile = tokenDB.passwordFile
-        passwordFile.load_if_changed()
-        passwordFile.set_password(self.getId(), password)
-        writePasswordFile(passwordFile)
-        return password
-
 class TokenFactory:
     @staticmethod
     def createToken(attributes: Mapping[str, str]) -> Token:
@@ -160,7 +146,7 @@ class TokenUser(User):
     def hasPrivilege(self, priv: str) -> bool:
         return self.__token.owner.hasPrivilege(priv)
 
-def authenticateToken(tokenId: str, password: str) -> Token:
+def authenticateToken(tokenDB: TokenDB, tokenId: str, password: str) -> Token:
     """Looks up a token with the give ID and password.
 
     Returns the token if the password was correct.
@@ -176,3 +162,16 @@ def authenticateToken(tokenId: str, password: str) -> Token:
     authenticate(tokenDB.passwordFile, tokenId, password)
 
     return token
+
+def resetTokenPassword(tokenDB: TokenDB, token: Token) -> str:
+    """Sets the password for this token to a new random string.
+
+    Returns the new password. Since only a hash is stored in the
+    password database, it is not possible to retrieve it later.
+    """
+    password = genword(length=16)
+    passwordFile = tokenDB.passwordFile
+    passwordFile.load_if_changed()
+    passwordFile.set_password(token.getId(), password)
+    writePasswordFile(passwordFile)
+    return password

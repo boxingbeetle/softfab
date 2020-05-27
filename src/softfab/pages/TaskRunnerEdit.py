@@ -12,6 +12,7 @@ from softfab.formlib import SingleCheckBoxTable
 from softfab.pageargs import BoolArg, StrArg
 from softfab.resourcelib import TaskRunner, resourceDB
 from softfab.resourceview import CapabilitiesPanel, CommentPanel
+from softfab.tokens import resetTokenPassword, tokenDB
 from softfab.webgui import Table, vgroup
 from softfab.xmlgen import XMLContent, xhtml
 
@@ -45,7 +46,7 @@ class TaskRunnerSavePhase(SavePhase[TaskRunnerEditArgs, TaskRunner]):
         token = element.token
         proc.tokenId = token.getId()
         if proc.args.resetpass:
-            proc.password = token.resetPassword()
+            proc.password = resetTokenPassword(tokenDB, token)
         else:
             proc.password = None
 

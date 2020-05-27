@@ -37,7 +37,7 @@ from softfab.reportview import ReportPresenter, createPresenter
 from softfab.request import Request
 from softfab.resourcelib import runnerFromToken
 from softfab.taskrunlib import TaskRun
-from softfab.tokens import TokenRole, TokenUser, authenticateToken
+from softfab.tokens import TokenRole, TokenUser, authenticateToken, tokenDB
 from softfab.useragent import AcceptedEncodings
 from softfab.userlib import (
     AccessDenied, AnonGuestUser, SuperUser, UnauthorizedLogin, User,
@@ -312,7 +312,7 @@ class ArtifactAuthWrapper:
 
             if tokenId:
                 try:
-                    token = authenticateToken(tokenId, password)
+                    token = authenticateToken(tokenDB, tokenId, password)
                 except KeyError:
                     return AccessDeniedResource(
                         f'Token "{tokenId}" does not exist'

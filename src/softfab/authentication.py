@@ -11,7 +11,7 @@ from softfab.Page import (
 from softfab.pagelinks import loginURL
 from softfab.projectlib import project
 from softfab.request import Request
-from softfab.tokens import TokenRole, TokenUser, authenticateToken
+from softfab.tokens import TokenRole, TokenUser, authenticateToken, tokenDB
 from softfab.userlib import (
     AnonGuestUser, SuperUser, UnknownUser, authenticateUser, userDB
 )
@@ -88,7 +88,7 @@ class TokenAuthPage(Authenticator):
 
         if tokenId:
             try:
-                token = authenticateToken(tokenId, password)
+                token = authenticateToken(tokenDB, tokenId, password)
             except KeyError:
                 return fail(LoginFailed(
                     f'Token "{tokenId}" does not exist'

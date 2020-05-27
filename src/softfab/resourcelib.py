@@ -115,6 +115,7 @@ class ResourceBase(XMLTag, ParamMixin, DatabaseElem):
                 token = Token.create(TokenRole.RESOURCE, {
                     'resourceId': self.getId()
                     })
+                tokenDB.add(token)
                 self._properties['tokenId'] = token.getId()
                 self._notify()
             assert token.role is TokenRole.RESOURCE, token
