@@ -7,7 +7,7 @@ from softfab.Page import PageProcessor
 from softfab.ReportMixin import JobReportProcessor, ReportFilterForm
 from softfab.datawidgets import DataTable
 from softfab.formlib import textInput
-from softfab.joblib import jobDB
+from softfab.joblib import JobDB
 from softfab.jobview import JobsTable
 from softfab.pageargs import IntArg, SortArg, StrArg
 from softfab.pagelinks import ReportArgs
@@ -20,6 +20,7 @@ from softfab.xmlgen import XMLContent, xhtml
 class FilteredJobsTable(JobsTable):
 
     def showTargetColumn(self, **kwargs: object) -> bool:
+        jobDB: JobDB = getattr(kwargs['proc'], 'jobDB')
         return super().showTargetColumn(**kwargs) \
             or bool(jobDB.uniqueValues('target'))
 
@@ -52,6 +53,7 @@ class ReportIndex_GET(FabPage['ReportIndex_GET.Processor',
 
     class Processor(JobReportProcessor[Arguments]):
 
+        jobDB: ClassVar[JobDB]
         scheduleDB: ClassVar[ScheduleDB]
 
         def iterFilters(self) -> Iterator[RecordFilter]:

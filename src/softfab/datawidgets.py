@@ -170,7 +170,9 @@ class TableData(Generic[Record]):
 
         columns = tuple(table.iterColumns(proc=proc, data=None))
 
-        db = table.db
+        dbName = table.dbName
+        db: Optional[Database] = None if dbName is None \
+                                      else getattr(proc, dbName)
         records = table.getRecordsToQuery(proc)
         if isinstance(records, SizedABC):
             unfilteredNrRecords: Optional[int] = len(records)
@@ -290,10 +292,11 @@ def _buildKeyMap(columns: Iterable[DataColumn[Record]]
 class DataTable(Table, Generic[Record]):
     """A table filled with data from a database."""
 
-    db: ClassVar[Optional[Database]] = abstract
-    """Database to fetch records from.
+    dbName: ClassVar[Optional[str]] = abstract
+    """Name of database to fetch records from.
+    If specified, a field with this name must exist on the Processor.
     This field is allowed to be None if getRecordsToQuery() is overridden,
-    but specifying a Database object allows more efficient sorting.
+    but specifying a database allows more efficient sorting.
     """
 
     uniqueKeys: Optional[Sequence[str]] = None
@@ -337,9 +340,9 @@ class DataTable(Table, Generic[Record]):
         '''Returns the initial record set on which filters will be applied.
         If "sortField" is None, the initial record set must be already sorted.
         '''
-        db = self.db
-        assert db is not None
-        return db
+        dbName = self.dbName
+        assert dbName is not None
+        return getattr(proc, dbName)
 
     def iterFilters(self,
                     proc: PageProcessor

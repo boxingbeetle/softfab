@@ -15,7 +15,7 @@ from softfab.formlib import makeForm, submitButton
 from softfab.pageargs import EnumArg, IntArg, PageArgs, SortArg, StrArg
 from softfab.pagelinks import createJobLink, createTaskInfoLink, createTaskLink
 from softfab.request import Request
-from softfab.resourcelib import ResourceBase, TaskRunner, resourceDB
+from softfab.resourcelib import ResourceBase, ResourceDB, TaskRunner
 from softfab.resourceview import (
     ResourceNameColumn, StatusColumn, getResourceStatus, presentCapabilities
 )
@@ -98,7 +98,7 @@ class EditColumn(DataColumn[ResourceBase]):
 class ResourcesTable(DataTable[ResourceBase]):
     widgetId = 'resourcesTable'
     autoUpdate = True
-    db = resourceDB
+    dbName = 'resourceDB'
     fixedColumns: Sequence[DataColumn[ResourceBase]] = (
         ResourceNameColumn.instance,
         CapabilitiesColumn(keyName = 'capabilities'),
@@ -162,6 +162,7 @@ class ResourceIndex_GET(FabPage['ResourceIndex_GET.Processor',
         sort = SortArg()
 
     class Processor(PageProcessor['ResourceIndex_GET.Arguments']):
+        resourceDB: ClassVar[ResourceDB]
         resTypeDB: ClassVar[ResTypeDB]
         taskRunDB: ClassVar[TaskRunDB]
 
@@ -202,6 +203,8 @@ class ResourceIndex_POST(FabPage['ResourceIndex_POST.Processor',
 
     class Processor(PageProcessor['ResourceIndex_POST.Arguments']):
 
+        resourceDB: ClassVar[ResourceDB]
+
         async def process(self,
                           req: Request['ResourceIndex_POST.Arguments'],
                           user: User
@@ -225,7 +228,7 @@ class ResourceIndex_POST(FabPage['ResourceIndex_POST.Processor',
 
         def getResource(self, resourceId: str) -> ResourceBase:
             try:
-                return resourceDB[resourceId]
+                return self.resourceDB[resourceId]
             except KeyError:
                 raise PresentableError(xhtml.p[
                     'Resource ', xhtml.b[ resourceId ],

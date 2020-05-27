@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Iterator
+from typing import ClassVar, Iterator
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
@@ -9,7 +9,7 @@ from softfab.datawidgets import (
 )
 from softfab.pageargs import IntArg, PageArgs, SortArg
 from softfab.pagelinks import createProductDetailsLink
-from softfab.productdeflib import ProductDef, productDefDB
+from softfab.productdeflib import ProductDef, ProductDefDB
 from softfab.userlib import User, checkPrivilege
 from softfab.webgui import docLink
 from softfab.xmlgen import XMLContent, xhtml
@@ -33,7 +33,7 @@ class TypeColumn(DataColumn[ProductDef]):
     sortKey = typeName
 
 class ProductDefTable(DataTable[ProductDef]):
-    db = productDefDB
+    dbName = 'productDefDB'
     columns = (
         NameColumn.instance,
         TypeColumn.instance,
@@ -54,7 +54,7 @@ class ProductIndex_GET(FabPage['ProductIndex_GET.Processor',
         sort = SortArg()
 
     class Processor(PageProcessor['ProductIndex_GET.Arguments']):
-        pass
+        productDefDB: ClassVar[ProductDefDB]
 
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'pd/l')

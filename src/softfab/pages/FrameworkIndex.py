@@ -1,13 +1,13 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Iterable, Iterator, cast
+from typing import ClassVar, Iterable, Iterator, cast
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
 from softfab.datawidgets import (
     DataColumn, DataTable, LinkColumn, ListDataColumn
 )
-from softfab.frameworklib import TaskDefBase, frameworkDB
+from softfab.frameworklib import FrameworkDB, TaskDefBase
 from softfab.frameworkview import FrameworkColumn
 from softfab.pageargs import IntArg, PageArgs, SortArg
 from softfab.pagelinks import createProductDetailsLink
@@ -26,7 +26,7 @@ class ProductColumn(DataColumn[TaskDefBase]):
             )
 
 class FrameworksTable(DataTable[TaskDefBase]):
-    db = frameworkDB
+    dbName = 'frameworkDB'
     nameColumn = FrameworkColumn('Framework ID', 'id')
     wrapperColumn = DataColumn[TaskDefBase]('Wrapper', 'wrapper')
     inputColumn = ProductColumn('Input Products', 'inputs')
@@ -57,7 +57,7 @@ class FrameworkIndex_GET(FabPage['FrameworkIndex_GET.Processor',
         sort = SortArg()
 
     class Processor(PageProcessor['FrameworkIndex_GET.Arguments']):
-        pass
+        frameworkDB: ClassVar[FrameworkDB]
 
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'fd/l')

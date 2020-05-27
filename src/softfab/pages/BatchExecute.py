@@ -135,6 +135,7 @@ class BatchExecute_GET(FabPage['BatchExecute_GET.Processor',
 
     class Processor(SelectConfigsMixin[ParentArgs], PageProcessor[ParentArgs]):
 
+        configDB: ClassVar[ConfigDB]
         userDB: ClassVar[UserDB]
 
         notices: List[str]
@@ -217,7 +218,6 @@ class BatchExecute_POST(BatchExecute_GET):
 
     class Processor(BatchExecute_GET.Processor):
 
-        configDB: ClassVar[ConfigDB]
         jobDB: ClassVar[JobDB]
 
         async def process(self, req: Request[ParentArgs], user: User) -> None:

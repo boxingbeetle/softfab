@@ -10,7 +10,7 @@ from softfab.datawidgets import DataColumn, DataTable, LinkColumn
 from softfab.formlib import makeForm
 from softfab.pageargs import DictArg, EnumArg, IntArg, PageArgs, SortArg
 from softfab.request import Request
-from softfab.schedulelib import ScheduleDB, Scheduled, scheduleDB
+from softfab.schedulelib import ScheduleDB, Scheduled
 from softfab.schedulerefs import createScheduleDetailsLink
 from softfab.scheduleview import (
     createLastJobLink, describeNextRun, getScheduleStatus
@@ -73,7 +73,7 @@ class SuspendColumn(DataColumn[Scheduled]):
 class ScheduleTable(DataTable[Scheduled]):
     widgetId = 'scheduleTable'
     autoUpdate = True
-    db = scheduleDB
+    dbName = 'scheduleDB'
 
     def iterRowStyles( # pylint: disable=unused-argument
                       self, rowNr: int, record: Scheduled, **kwargs: object

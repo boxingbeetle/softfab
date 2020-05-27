@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Iterator
+from typing import ClassVar, Iterator
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
@@ -10,7 +10,7 @@ from softfab.datawidgets import (
 from softfab.frameworkview import FrameworkColumn
 from softfab.pageargs import IntArg, PageArgs, SortArg
 from softfab.pagelinks import createTaskDetailsLink
-from softfab.taskdeflib import TaskDef, taskDefDB
+from softfab.taskdeflib import TaskDef, TaskDefDB
 from softfab.userlib import User, checkPrivilege
 from softfab.webgui import docLink
 from softfab.xmlgen import XMLContent, xhtml
@@ -23,7 +23,7 @@ class NameColumn(DataColumn[TaskDef]):
         return createTaskDetailsLink(record.getId())
 
 class TasksTable(DataTable[TaskDef]):
-    db = taskDefDB
+    dbName = 'taskDefDB'
     columns = (
         NameColumn.instance,
         DataColumn[TaskDef]('Title', 'title'),
@@ -44,7 +44,7 @@ class TaskIndex_GET(FabPage['TaskIndex_GET.Processor',
         sort = SortArg()
 
     class Processor(PageProcessor['TaskIndex_GET.Arguments']):
-        pass
+        taskDefDB: ClassVar[TaskDefDB]
 
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'td/l')

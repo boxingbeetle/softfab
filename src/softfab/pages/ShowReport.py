@@ -6,7 +6,7 @@ from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
 from softfab.configlib import ConfigDB
 from softfab.datawidgets import DataTable
-from softfab.joblib import Job
+from softfab.joblib import Job, JobDB
 from softfab.jobview import CommentPanel, JobsSubTable, presentJobCaption
 from softfab.pagelinks import (
     JobIdArgs, TaskIdArgs, createTaskInfoLink, createTaskRunnerDetailsLink
@@ -56,6 +56,7 @@ class ShowReport_GET(FabPage['ShowReport_GET.Processor',
 
     class Processor(JobProcessor):
         configDB: ClassVar[ConfigDB]
+        jobDB: ClassVar[JobDB]
         scheduleDB: ClassVar[ScheduleDB]
         userDB: ClassVar[UserDB]
 

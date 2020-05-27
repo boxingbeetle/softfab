@@ -17,7 +17,7 @@ from softfab.querylib import CustomFilter, RecordFilter
 from softfab.request import Request
 from softfab.roles import UIRoleNames, uiRoleToSet
 from softfab.userlib import (
-    User, UserDB, UserInfo, checkPrivilege, rolesGrantPrivilege, userDB
+    User, UserDB, UserInfo, checkPrivilege, rolesGrantPrivilege
 )
 from softfab.userview import presentAnonGuestSetting
 from softfab.webgui import pageLink, pageURL, script
@@ -92,7 +92,7 @@ class AnonGuestTable(SingleCheckBoxTable):
         yield submitButton[ 'Apply' ].present(**kwargs),
 
 class UserTable(DataTable[UserInfo]):
-    db = userDB
+    dbName = 'userDB'
     objectName = 'users'
 
     def iterFilters(self,
@@ -151,6 +151,8 @@ class UserList_GET(FabPage['UserList_GET.Processor', 'UserList_GET.Arguments']):
         sort = SortArg()
 
     class Processor(PageProcessor['UserList_GET.Arguments']):
+
+        userDB: ClassVar[UserDB]
 
         async def process(self,
                           req: Request['UserList_GET.Arguments'],

@@ -142,7 +142,7 @@ class TargetsColumn(DataColumn[Config]):
             return '-'
 
 class SimpleConfigTable(DataTable[Config]):
-    db = configDB
+    dbName = 'configDB'
     printRecordCount = False
     showConflictAsError = False
     '''If True, rows containing a configuration that is in conflict will be

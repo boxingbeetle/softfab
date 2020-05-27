@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Iterator
+from typing import ClassVar, Iterator
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
@@ -9,7 +9,7 @@ from softfab.datawidgets import (
 )
 from softfab.pageargs import IntArg, PageArgs, SortArg
 from softfab.resourcelib import resourceDB
-from softfab.restypelib import ResType, resTypeDB
+from softfab.restypelib import ResType, ResTypeDB
 from softfab.userlib import User, checkPrivilege
 from softfab.xmlgen import XMLContent
 
@@ -41,7 +41,7 @@ class ResTypeLinkColumn(LinkColumn[ResType]):
             return super().presentCell(record, **kwargs)
 
 class ResTypeTable(DataTable[ResType]):
-    db = resTypeDB
+    dbName = 'resTypeDB'
     columns = (
         DataColumn[ResType](keyName = 'presentationName', label = 'Name'),
         ResCountLinkColumn(),
@@ -62,7 +62,7 @@ class ResTypeIndex_GET(FabPage['ResTypeIndex_GET.Processor',
         sort = SortArg()
 
     class Processor(PageProcessor['ResTypeIndex_GET.Arguments']):
-        pass
+        resTypeDB: ClassVar[ResTypeDB]
 
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'rt/l')

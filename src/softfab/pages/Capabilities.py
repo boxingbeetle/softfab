@@ -14,7 +14,7 @@ from softfab.pagelinks import (
 from softfab.projectlib import project
 from softfab.querylib import CustomFilter, RecordFilter
 from softfab.request import Request
-from softfab.resourcelib import ResourceBase, ResourceDB, resourceDB
+from softfab.resourcelib import ResourceBase, ResourceDB
 from softfab.resourceview import (
     ResourceNameColumn, StatusColumn, presentCapabilities
 )
@@ -53,7 +53,7 @@ class CapabilitiesColumn(DataColumn[ResourceBase]):
         return presentCapabilities(record.capabilities, args.restype, highlight)
 
 class ResourcesTable(DataTable[ResourceBase]):
-    db = resourceDB
+    dbName = 'resourceDB'
     columns = (
         ResourceNameColumn.instance,
         CapabilitiesColumn('Capabilities'),
@@ -105,7 +105,7 @@ class TaskDefinitionsColumn(DataColumn[CapInfo]):
             )
 
 class CapabilitiesTable(DataTable[CapInfo]):
-    db = None
+    dbName = None
     uniqueKeys = ('capability',)
     objectName = 'capabilities'
     tabOffsetField = 'first_cap'

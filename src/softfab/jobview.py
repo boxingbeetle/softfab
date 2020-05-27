@@ -190,7 +190,7 @@ class CreateTimeColumn(TimeColumn[JobOrTask]):
 
 class JobsTable(DataTable[Job]):
     bodyId = 'jobs'
-    db = jobDB
+    dbName = 'jobDB'
     descriptionLink = True
     objectName = 'jobs'
 

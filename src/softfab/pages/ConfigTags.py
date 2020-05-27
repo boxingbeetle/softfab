@@ -50,6 +50,8 @@ class ConfigTagsBase(FabPage['ConfigTagsBase.Processor', ArgsT]):
 
     class Processor(SelectConfigsMixin[ParentArgs], PageProcessor[ArgsT]):
 
+        configDB: ClassVar[ConfigDB]
+
         notices: List[str]
 
         async def process(self, req: Request[ArgsT], user: User) -> None:
@@ -113,7 +115,6 @@ class ConfigTags_POST(ConfigTagsBase['ConfigTags_POST.Arguments']):
 
     class Processor(ConfigTagsBase.Processor):
 
-        configDB: ClassVar[ConfigDB]
         userDB: ClassVar[UserDB]
 
         async def process(self,

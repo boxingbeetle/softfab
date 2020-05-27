@@ -55,7 +55,7 @@ class AbortColumn(DataColumn[Task]):
             return '-'
 
 class TaskRunsTable(DataTable[Task]):
-    db = None
+    dbName = None
     objectName = 'tasks'
     taskNameLink = True
     startTimeColumn = TimeColumn[Task](
