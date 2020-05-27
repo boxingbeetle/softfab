@@ -26,8 +26,9 @@ from softfab.xmlgen import XMLContent, xhtml
 
 class FilteredTaskRunsTable(TaskRunsTable):
 
-    def showTargetColumn(self) -> bool:
-        return super().showTargetColumn() or bool(jobDB.uniqueValues('target'))
+    def showTargetColumn(self, **kwargs: object) -> bool:
+        return super().showTargetColumn(**kwargs) \
+            or bool(jobDB.uniqueValues('target'))
 
     def getRecordsToQuery(self, proc: PageProcessor) -> Iterator[Task]:
         args = cast(ReportTasks_GET.Processor, proc).args

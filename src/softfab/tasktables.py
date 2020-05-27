@@ -75,7 +75,7 @@ class TaskRunsTable(DataTable[Task]):
                       ) -> Iterator[str]:
         yield getTaskStatus(record)
 
-    def showTargetColumn(self) -> bool:
+    def showTargetColumn(self, **kwargs: object) -> bool:
         '''Returns True iff the target column should be included.
         Default implementation returns True iff there are multiple targets
         defined for this project.
@@ -87,7 +87,7 @@ class TaskRunsTable(DataTable[Task]):
         yield self.startTimeColumn
         yield self.durationColumn
         yield self.taskColumn
-        if self.showTargetColumn():
+        if self.showTargetColumn(**kwargs):
             yield self.targetColumn
         if userDB.showOwners:
             yield self.ownerColumn

@@ -19,8 +19,9 @@ from softfab.xmlgen import XMLContent, xhtml
 
 class FilteredJobsTable(JobsTable):
 
-    def showTargetColumn(self) -> bool:
-        return super().showTargetColumn() or bool(jobDB.uniqueValues('target'))
+    def showTargetColumn(self, **kwargs: object) -> bool:
+        return super().showTargetColumn(**kwargs) \
+            or bool(jobDB.uniqueValues('target'))
 
     def iterFilters(self, proc: PageProcessor) -> Iterator[RecordFilter]:
         return cast(ReportIndex_GET.Processor, proc).iterFilters()

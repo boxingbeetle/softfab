@@ -27,7 +27,7 @@ class HistoryTable(TaskRunsTable):
         proc = cast(TaskRunnerHistory_GET.Processor, proc)
         return proc.tasks
 
-    def showTargetColumn(self) -> bool:
+    def showTargetColumn(self, **kwargs: object) -> bool:
         # Typically a Task Runner has the same target for all of its life,
         # so this column is not useful.
         return False

@@ -197,7 +197,7 @@ class JobsTable(DataTable[Job]):
     leadTimeColumn = DurationColumn[Job](label='Lead Time', keyName='leadtime')
     statusColumn: ClassVar[DataColumn[Job]] = _StatusColumn.instance
 
-    def showTargetColumn(self) -> bool:
+    def showTargetColumn(self, **kwargs: object) -> bool:
         return project.showTargets
 
     def iterRowStyles( # pylint: disable=unused-argument
@@ -210,7 +210,7 @@ class JobsTable(DataTable[Job]):
         yield CreateTimeColumn[Job].instance
         yield self.leadTimeColumn
         yield _DescriptionColumn.instance
-        if self.showTargetColumn():
+        if self.showTargetColumn(**kwargs):
             yield TargetColumn[Job].instance
         if userDB.showOwners:
             yield OwnerColumn[Job].instance
