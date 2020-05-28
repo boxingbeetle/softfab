@@ -162,7 +162,7 @@ class BatchExecute_GET(FabPage['BatchExecute_GET.Processor',
             self.notices = []
             self.params: Dict[str, Mapping[str, Mapping[str, str]]] = {}
 
-            self.findConfigs()
+            self.findConfigs(self.configDB)
             self.initTaskSet()
 
     def checkAccess(self, user: User) -> None:

@@ -2,7 +2,7 @@
 
 from typing import Generic, Iterator, List, Optional, Sequence, TypeVar, cast
 
-from softfab.configlib import Config, Input, TaskSetWithInputs, configDB
+from softfab.configlib import Config, ConfigDB, Input, TaskSetWithInputs
 from softfab.datawidgets import DataColumn, DataTable, LinkColumn
 from softfab.formlib import dropDownList, emptyOption, hiddenInput, textInput
 from softfab.pagelinks import createConfigDetailsLink
@@ -28,7 +28,7 @@ class SelectConfigsMixin(Generic[SelectArgsT]):
     args: SelectArgsT
     notices: List[str]
 
-    def findConfigs(self) -> None:
+    def findConfigs(self, configDB: ConfigDB) -> None:
         configs = []
         missingIds = []
         for configId in sorted(self.args.sel):
@@ -126,6 +126,7 @@ class _NameColumn(DataColumn[Config]):
     label = 'Configuration ID'
     keyName = 'name'
     def presentCell(self, record: Config, **kwargs: object) -> XMLContent:
+        configDB: ConfigDB = getattr(kwargs['proc'], 'configDB')
         return createConfigDetailsLink(configDB, record.getId())
 
 class TargetsColumn(DataColumn[Config]):

@@ -57,7 +57,7 @@ class ConfigTagsBase(FabPage['ConfigTagsBase.Processor', ArgsT]):
         async def process(self, req: Request[ArgsT], user: User) -> None:
             self.notices = []
 
-            self.findConfigs()
+            self.findConfigs(self.configDB)
 
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'c/a')
@@ -128,7 +128,7 @@ class ConfigTags_POST(ConfigTagsBase['ConfigTags_POST.Arguments']):
                 raise Redirect(args.refererURL or parentPage)
 
             self.notices = []
-            self.findConfigs()
+            self.findConfigs(self.configDB)
             if self.notices:
                 return
             configs = self.configs
