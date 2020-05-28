@@ -8,8 +8,7 @@ from softfab.ReportMixin import ReportFilterForm, ReportProcessor
 from softfab.datawidgets import DataTable
 from softfab.formlib import selectionList
 from softfab.joblib import (
-    Task, iterAllTasks, iterDoneTasks, iterFinishedTasks, iterUnfinishedTasks,
-    jobDB
+    Task, iterAllTasks, iterDoneTasks, iterFinishedTasks, iterUnfinishedTasks
 )
 from softfab.pageargs import IntArg, SortArg
 from softfab.pagelinks import ExecutionState, ReportTaskArgs
@@ -27,8 +26,9 @@ from softfab.xmlgen import XMLContent, xhtml
 class FilteredTaskRunsTable(TaskRunsTable):
 
     def showTargetColumn(self, **kwargs: object) -> bool:
+        proc = cast(ReportTasks_GET.Processor, kwargs['proc'])
         return super().showTargetColumn(**kwargs) \
-            or bool(jobDB.uniqueValues('target'))
+            or bool(proc.jobDB.uniqueValues('target'))
 
     def getRecordsToQuery(self, proc: PageProcessor) -> Iterator[Task]:
         args = cast(ReportTasks_GET.Processor, proc).args
