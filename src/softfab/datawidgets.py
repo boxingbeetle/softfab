@@ -1,18 +1,20 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from collections.abc import Sized as SizedABC
+from operator import itemgetter
 from typing import (
-    TYPE_CHECKING, Any, ClassVar, Dict, Generic, Iterable, Iterator, List,
-    Mapping, Optional, Sequence, Tuple, Union, cast
+    TYPE_CHECKING, Any, Callable, ClassVar, Dict, Generic, Iterable, Iterator,
+    List, Mapping, Optional, Sequence, Tuple, Union, cast
 )
 
 from softfab.databaselib import DBRecord, Database, Retriever
 from softfab.pageargs import ArgsCorrected
 from softfab.querylib import (
-    KeySorter, Record, RecordFilter, RecordProcessor, runQuery
+    KeySorter, Record, RecordFilter, RecordProcessor, runQuery,
+    substMissingForNone
 )
 from softfab.timeview import formatDuration, formatTime
-from softfab.utils import abstract, escapeURL, pluralize
+from softfab.utils import Comparable, abstract, escapeURL, pluralize
 from softfab.webgui import Column, Table, cell, pageLink, pageURL, row
 from softfab.xmlgen import XMLContent, XMLNode, XMLSubscriptable, xhtml
 
@@ -209,11 +211,26 @@ class TableData(Generic[Record]):
             #       records that are not DBRecords or to keep track of
             #       a subset of a full DB. Then 'uniqueKeys' could be moved
             #       from DataTable to RecordCollection.
+            getRetriever: Callable[[str], Retriever[Record, Comparable]]
             if db is None:
-                query.append(KeySorter.forCustom(sortKeys, table.uniqueKeys))
+                getRetriever = itemgetter
+                uniqueKeys = table.uniqueKeys or ()
             else:
+                getRetriever = db.retrieverFor
                 assert table.uniqueKeys is None, "table's uniqueKeys is ignored"
-                query.append(KeySorter.forDB(sortKeys, db))
+                uniqueKeys = db.uniqueKeys
+            retrievers: List[Retriever] = []
+            for key in sortKeys:
+                if callable(key):
+                    retrievers.append(substMissingForNone(key))
+                else:
+                    retrievers.append(substMissingForNone(getRetriever(key)))
+                    if key in uniqueKeys:
+                        break
+            else:
+                retrievers.append(cast(Callable[[Record], Record],
+                                       lambda record: record))
+            query.append(KeySorter(retrievers))
             records = runQuery(query, records)
 
         totalNrRecords = len(records)

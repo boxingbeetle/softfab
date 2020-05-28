@@ -183,7 +183,7 @@ class RecordSorter(Generic[Record]):
 #       longer comparable, but probably not the most efficient. Check
 #       whether putting support for 'missing' deeper into the call stack
 #       would make an extra step like this unnecessary.
-def _substMissingForNone(
+def substMissingForNone(
         retriever: Retriever[Record, Optional[Comparable]]
         ) -> Retriever[Record, Union[Comparable, Missing]]:
     def wrap(record: Record,
@@ -193,19 +193,16 @@ def _substMissingForNone(
         return missing if value is None else value
     return wrap
 
-def _iterRetrievers(keyOrder: Iterable[Union[str, Retriever]],
+def _iterRetrievers(keyOrder: Iterable[str],
                     getRetriever: Callable[[str], Retriever],
                     uniqueKeys: Collection[str]
                     ) -> Iterator[Retriever]:
     for key in keyOrder:
-        if callable(key):
-            yield _substMissingForNone(key)
-        else:
-            yield _substMissingForNone(getRetriever(key))
-            if key in uniqueKeys:
-                # There is no point in another key after a unique key,
-                # since the values will never be equal.
-                break
+        yield substMissingForNone(getRetriever(key))
+        if key in uniqueKeys:
+            # There is no point in another key after a unique key,
+            # since the values will never be equal.
+            break
     else:
         # As a last resort, use the default sort order of records.
         yield cast(Callable[[Record], Record], lambda record: record)
@@ -232,7 +229,7 @@ class KeySorter(RecordSorter[Record]):
 
     @classmethod
     def forCustom(cls: Type['KeySorter[Record]'],
-                  keyOrder: Iterable[Union[str, Retriever]],
+                  keyOrder: Iterable[str],
                   uniqueKeys: Optional[Collection[str]] = None
                   ) -> 'KeySorter[Record]':
         return KeySorter(_iterRetrievers(
@@ -241,7 +238,7 @@ class KeySorter(RecordSorter[Record]):
 
     @classmethod
     def forDB(cls: Type['KeySorter[DBRecord]'],
-              keyOrder: Iterable[Union[str, Retriever]],
+              keyOrder: Iterable[str],
               db: Database[DBRecord]
               ) -> 'KeySorter[DBRecord]':
         return KeySorter(_iterRetrievers(
