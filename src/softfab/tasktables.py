@@ -1,12 +1,12 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Collection, Iterator, cast
+from typing import ClassVar, Collection, Iterator, cast
 
 from softfab.Page import InvalidRequest, PageProcessor
 from softfab.datawidgets import (
     DataColumn, DataTable, DurationColumn, TimeColumn
 )
-from softfab.joblib import Task, jobDB
+from softfab.joblib import JobDB, Task
 from softfab.jobview import TargetColumn
 from softfab.pagelinks import (
     JobIdArgs, TaskIdArgs, createTaskInfoLink, createTaskRunnerDetailsLink
@@ -103,11 +103,13 @@ class TaskRunnerColumn(DataColumn[Task]):
 
 class JobProcessorMixin:
 
+    jobDB: ClassVar[JobDB]
+
     def initJob(self, req: Request[JobIdArgs]) -> None:
         jobId = req.args.jobId
 
         try:
-            job = jobDB[jobId]
+            job = self.jobDB[jobId]
         except KeyError:
             raise InvalidRequest(f'No job exists with ID "{jobId}"')
         job.updateSummaries(tuple(iterTaskRunners()))
