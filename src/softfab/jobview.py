@@ -12,14 +12,13 @@ from softfab.databaselib import RecordObserver
 from softfab.datawidgets import (
     DataColumn, DataTable, DurationColumn, TimeColumn
 )
-from softfab.joblib import Job, Task, jobDB
+from softfab.joblib import Job, Task, resultlessJobs
 from softfab.notification import NotificationPresenter, sendNotification
 from softfab.pagelinks import createConfigDetailsLink, createJobURL
 from softfab.projectlib import project
 from softfab.resultcode import ResultCode
 from softfab.schedulelib import ScheduleDB
 from softfab.schedulerefs import createScheduleDetailsURL
-from softfab.sortedqueue import SortedQueue
 from softfab.taskview import getTaskStatus
 from softfab.userlib import UserDB
 from softfab.userview import OwnerColumn
@@ -74,25 +73,6 @@ def getJobStatus(job: Job) -> str:
             # Status will never change again, so store it.
             _finalJobStatus[jobId] = status
     return status
-
-# Note: Originally "unfinishedJobs" and "resultlessJobs" were located in joblib,
-#       but that led to problems with the circular import of joblib and tasklib.
-
-class _UnfinishedJobs(SortedQueue[Job]):
-    compareField = 'timestamp'
-
-    def _filter(self, record: Job) -> bool:
-        return not record.isExecutionFinished()
-
-unfinishedJobs = _UnfinishedJobs(jobDB)
-
-class _ResultlessJobs(SortedQueue[Job]):
-    compareField = 'timestamp'
-
-    def _filter(self, record: Job) -> bool:
-        return not record.hasFinalResult()
-
-resultlessJobs = _ResultlessJobs(jobDB)
 
 def presentJobCaption(configDB: ConfigDB, job: Job) -> XMLContent:
     jobId = job.getId()

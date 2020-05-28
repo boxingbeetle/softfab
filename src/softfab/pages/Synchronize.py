@@ -5,7 +5,7 @@ from typing import ClassVar, Optional, cast
 from softfab.ControlPage import ControlPage
 from softfab.Page import InvalidRequest, PageProcessor
 from softfab.authentication import TokenAuthPage
-from softfab.jobview import unfinishedJobs
+from softfab.joblib import unfinishedJobs
 from softfab.request import Request
 from softfab.resourcelib import (
     RequestFactory, ResourceDB, TaskRunner, TaskRunnerData, runnerFromToken

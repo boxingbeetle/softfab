@@ -21,6 +21,7 @@ from softfab.productlib import Product, productDB
 from softfab.resourcelib import resourceDB
 from softfab.resreq import ResourceClaim, ResourceSpec
 from softfab.restypelib import resTypeDB
+from softfab.sortedqueue import SortedQueue
 from softfab.taskgroup import PriorityMixin, TaskSet
 from softfab.tasklib import (
     ResourceRequirementsMixin, TaskRunnerSet, TaskStateMixin
@@ -1178,3 +1179,19 @@ class DateRangeMonitor(RecordObserver[Job]):
     def updated(self, record: Job) -> None:
         # Create time cannot change, so we don't care.
         pass
+
+class _UnfinishedJobs(SortedQueue[Job]):
+    compareField = 'timestamp'
+
+    def _filter(self, record: Job) -> bool:
+        return not record.isExecutionFinished()
+
+unfinishedJobs = _UnfinishedJobs(jobDB)
+
+class _ResultlessJobs(SortedQueue[Job]):
+    compareField = 'timestamp'
+
+    def _filter(self, record: Job) -> bool:
+        return not record.hasFinalResult()
+
+resultlessJobs = _ResultlessJobs(jobDB)
