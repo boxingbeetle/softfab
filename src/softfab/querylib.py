@@ -2,8 +2,8 @@
 
 from operator import itemgetter
 from typing import (
-    AbstractSet, Callable, Collection, Generic, Iterable, List, Optional, Type,
-    TypeVar, Union, cast, overload
+    AbstractSet, Callable, Collection, Generic, Iterable, Iterator, List,
+    Optional, Type, TypeVar, Union, cast, overload
 )
 
 from softfab.compat import Protocol
@@ -193,6 +193,23 @@ def _substMissingForNone(
         return missing if value is None else value
     return wrap
 
+def _iterRetrievers(keyOrder: Iterable[Union[str, Retriever]],
+                    getRetriever: Callable[[str], Retriever],
+                    uniqueKeys: Collection[str]
+                    ) -> Iterator[Retriever]:
+    for key in keyOrder:
+        if callable(key):
+            yield _substMissingForNone(key)
+        else:
+            yield _substMissingForNone(getRetriever(key))
+            if key in uniqueKeys:
+                # There is no point in another key after a unique key,
+                # since the values will never be equal.
+                break
+    else:
+        # As a last resort, use the default sort order of records.
+        yield cast(Callable[[Record], Record], lambda record: record)
+
 class KeySorter(RecordSorter[Record]):
     '''When called, returns a sorted list of the given database records.
     The keyOrder is a list of the keys by which the records should be sorted,
@@ -218,37 +235,22 @@ class KeySorter(RecordSorter[Record]):
                   keyOrder: Iterable[Union[str, Retriever]],
                   uniqueKeys: Optional[Collection[str]] = None
                   ) -> 'KeySorter[Record]':
-        return KeySorter(keyOrder, itemgetter, uniqueKeys or ())
+        return KeySorter(_iterRetrievers(
+            keyOrder, itemgetter, uniqueKeys or ()
+            ))
 
     @classmethod
     def forDB(cls: Type['KeySorter[DBRecord]'],
               keyOrder: Iterable[Union[str, Retriever]],
               db: Database[DBRecord]
               ) -> 'KeySorter[DBRecord]':
-        return KeySorter(keyOrder, db.retrieverFor, db.uniqueKeys)
+        return KeySorter(_iterRetrievers(
+            keyOrder, db.retrieverFor, db.uniqueKeys
+            ))
 
-    def __init__(self,
-                 keyOrder: Iterable[Union[str, Retriever]],
-                 getRetriever: Callable[[str], Retriever],
-                 uniqueKeys: Collection[str]
-                 ):
+    def __init__(self, retrievers: Iterable[Retriever]):
         super().__init__()
-        retrievers: List[Retriever] = []
-        for key in keyOrder:
-            retrievers.append(_substMissingForNone(
-                key if callable(key) else getRetriever(key)
-                ))
-            if key in uniqueKeys:
-                # There is no point in another key after a unique key,
-                # since the values will never be equal.
-                break
-        else:
-            # As a last resort, use the default sort order of records.
-            retrievers.append(cast(
-                Callable[[Record], Record],
-                lambda record: record
-                ))
-        self.__retrievers = retrievers
+        self.__retrievers = tuple(retrievers)
 
     def __call__(self, records: Iterable[Record]) -> List[Record]:
         # Radix sort: start with least important key and end with most
