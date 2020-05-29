@@ -91,13 +91,6 @@ class JobDB(Database['Job']):
 jobDB = JobDB(dbDir / 'jobs')
 taskrunlib.jobDB = jobDB
 
-def unifyJobId(jobId: str) -> str:
-    if jobId[4] == '-':
-        return jobId[2 : 4] + jobId[5 : 7] + jobId[8 : 10] + '-' + \
-            jobId[11 : 13] + jobId[14 : 16] + '-' + jobId[17 : ]
-    else:
-        return jobId
-
 class Task(
         PriorityMixin, ResourceRequirementsMixin, TaskStateMixin,
         XMLTag, TaskRunnerSet
@@ -486,13 +479,9 @@ class Job(XMLTag, TaskRunnerSet, TaskSet[Task], DatabaseElem):
             )
 
         # Create a sort key which places the most recent jobs first.
-        # This code ignores the fact that the job IDs converted from the old
-        # format are two characters longer than the new ones, therefore the old
-        # jobs will always have greater reversed ID, which is no problem in
-        # this particular case, but might not work as expected in general.
         self.__recent = int(''.join(
             '%1X' % (15 - int(char, 16))
-            for char in unifyJobId(self.getId())
+            for char in self.getId()
             if char != '-'
             ), 16)
 
