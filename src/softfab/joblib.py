@@ -54,43 +54,6 @@ else:
     TaskRun = object
 
 
-class JobFactory:
-    @staticmethod
-    def createJob(attributes: Mapping[str, str]) -> 'Job':
-        return Job(attributes)
-
-class JobDB(Database['Job']):
-    privilegeObject = 'j'
-    description = 'job'
-    cachedUniqueValues = ( 'owner', 'target' )
-    uniqueKeys = ( 'recent', 'jobId' )
-
-    def __init__(self, baseDir: Path):
-        super().__init__(baseDir, JobFactory())
-
-    def convert(self,
-                visitor: Optional[Callable[['Job'], None]] = None
-                ) -> None:
-        # Find orphaned products.
-        orphanedProductIDs = set(productDB.keys())
-        def checkJob(job: 'Job') -> None:
-            if visitor:
-                visitor(job)
-            for product in chain(job.getInputs(), job.getProduced()):
-                orphanedProductIDs.discard(product.getId())
-
-        super().convert(checkJob)
-
-        if orphanedProductIDs:
-            logging.warning(
-                'Removing %d obsolete product(s)...', len(orphanedProductIDs)
-                )
-            for productID in orphanedProductIDs:
-                productDB.remove(productDB[productID])
-
-jobDB = JobDB(dbDir / 'jobs')
-taskrunlib.jobDB = jobDB
-
 class Task(
         PriorityMixin, ResourceRequirementsMixin, TaskStateMixin,
         XMLTag, TaskRunnerSet
@@ -1023,24 +986,62 @@ def _releaseResources(reserved: Iterable[str]) -> None:
             if resType['perjob'] or resType['pertask']:
                 resource.free()
 
+class JobFactory:
+    @staticmethod
+    def createJob(attributes: Mapping[str, str]) -> Job:
+        return Job(attributes)
+
 # Work around lack of knowledge of @property in mypy.
 #   https://github.com/python/mypy/issues/7974
 if TYPE_CHECKING:
     _ownerRetreiver = Job.owner
     _configIdRetriever = Job.configId
 else:
-    _ownerRetreiver = Job.owner.__get__
-    _configIdRetriever = Job.configId.__get__
+    # PyLint doesn't understand @property either.
+    _ownerRetreiver = Job.owner.__get__ # pylint: disable=no-member
+    _configIdRetriever = Job.configId.__get__ # pylint: disable=no-member
 
-JobDB.keyRetrievers = {
-    'recent': Job.getRecent,
-    'timestamp': Job.getCreateTime,
-    'leadtime': Job.getLeadTime,
-    'target': Job.getTarget,
-    'description': Job.getDescription,
-    'owner': _ownerRetreiver,
-    'configId': _configIdRetriever,
-    }
+class JobDB(Database[Job]):
+    privilegeObject = 'j'
+    description = 'job'
+    cachedUniqueValues = ( 'owner', 'target' )
+    uniqueKeys = ( 'recent', 'jobId' )
+
+    keyRetrievers = {
+        'recent': Job.getRecent,
+        'timestamp': Job.getCreateTime,
+        'leadtime': Job.getLeadTime,
+        'target': Job.getTarget,
+        'description': Job.getDescription,
+        'owner': _ownerRetreiver,
+        'configId': _configIdRetriever,
+        }
+
+    def __init__(self, baseDir: Path):
+        super().__init__(baseDir, JobFactory())
+
+    def convert(self,
+                visitor: Optional[Callable[[Job], None]] = None
+                ) -> None:
+        # Find orphaned products.
+        orphanedProductIDs = set(productDB.keys())
+        def checkJob(job: Job) -> None:
+            if visitor:
+                visitor(job)
+            for product in chain(job.getInputs(), job.getProduced()):
+                orphanedProductIDs.discard(product.getId())
+
+        super().convert(checkJob)
+
+        if orphanedProductIDs:
+            logging.warning(
+                'Removing %d obsolete product(s)...', len(orphanedProductIDs)
+                )
+            for productID in orphanedProductIDs:
+                productDB.remove(productDB[productID])
+
+jobDB = JobDB(dbDir / 'jobs')
+taskrunlib.jobDB = jobDB
 
 class _TaskToJobs(RecordObserver[Job]):
     '''For each task ID, keep track of the IDs of all jobs containing that task.
