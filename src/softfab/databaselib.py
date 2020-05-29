@@ -14,7 +14,7 @@ import re
 import time
 
 from softfab.config import dbAtomicWrites, logChanges
-from softfab.utils import Comparable, abstract, atomicWrite, cachedProperty
+from softfab.utils import ComparableT, abstract, atomicWrite, cachedProperty
 from softfab.xmlbind import parse
 from softfab.xmlgen import XML
 
@@ -28,7 +28,7 @@ class ObsoleteRecordError(Exception):
 
 DBRecord = TypeVar('DBRecord', bound='DatabaseElem')
 R2 = TypeVar('R2', bound='DatabaseElem')
-Retriever = Callable[[DBRecord], Comparable]
+Retriever = Callable[[DBRecord], ComparableT]
 
 class DatabaseElem:
     '''Abstract base class for database elements.

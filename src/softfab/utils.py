@@ -30,7 +30,7 @@ class IllegalStateError(Exception):
     current state of the object.
     '''
 
-class ComparableProto(Protocol):
+class Comparable(Protocol):
     def __eq__(self, other: Any) -> bool: ...
     def __ne__(self, other: Any) -> bool: ...
     def __lt__(self, other: Any) -> bool: ...
@@ -38,7 +38,7 @@ class ComparableProto(Protocol):
     def __gt__(self, other: Any) -> bool: ...
     def __ge__(self, other: Any) -> bool: ...
 
-Comparable = TypeVar('Comparable', bound=ComparableProto)
+ComparableT = TypeVar('ComparableT', bound=Comparable)
 
 class Heap(Generic[T]):
     """Implements the heap data structure:
@@ -50,12 +50,12 @@ class Heap(Generic[T]):
     """
 
     @overload
-    def __init__(self: 'Heap[Comparable]'):
+    def __init__(self: 'Heap[ComparableT]'):
         ...
     @overload
-    def __init__(self, key: Callable[[T], Comparable]):
+    def __init__(self, key: Callable[[T], ComparableT]):
         ...
-    def __init__(self, key: Optional[Callable[[T], Comparable]] = None):
+    def __init__(self, key: Optional[Callable[[T], ComparableT]] = None):
         super().__init__()
         self.__array: List[Optional[T]] = [ None ]
         self.__count = 1
@@ -63,7 +63,7 @@ class Heap(Generic[T]):
         #       but there is no efficient way to tell mypy that,
         #       so instead we pretend the key function can handle None.
         self.__keyFunc = cast(
-            Callable[[Optional[T]], Comparable],
+            Callable[[Optional[T]], ComparableT],
             (lambda x: x) if key is None else key
             )
 

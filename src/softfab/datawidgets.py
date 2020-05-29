@@ -14,7 +14,7 @@ from softfab.querylib import (
     substMissingForNone
 )
 from softfab.timeview import formatDuration, formatTime
-from softfab.utils import Comparable, abstract, escapeURL, pluralize
+from softfab.utils import ComparableT, abstract, escapeURL, pluralize
 from softfab.webgui import Column, Table, cell, pageLink, pageURL, row
 from softfab.xmlgen import XMLContent, XMLNode, XMLSubscriptable, xhtml
 
@@ -211,7 +211,7 @@ class TableData(Generic[Record]):
             #       records that are not DBRecords or to keep track of
             #       a subset of a full DB. Then 'uniqueKeys' could be moved
             #       from DataTable to RecordCollection.
-            getRetriever: Callable[[str], Retriever[Record, Comparable]]
+            getRetriever: Callable[[str], Retriever[Record, ComparableT]]
             if db is None:
                 getRetriever = itemgetter
                 uniqueKeys = table.uniqueKeys or ()

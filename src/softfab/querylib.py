@@ -8,7 +8,7 @@ from typing import (
 
 from softfab.compat import Protocol
 from softfab.databaselib import DBRecord, Database, Retriever
-from softfab.utils import Comparable, Missing, missing, wildcardMatcher
+from softfab.utils import ComparableT, Missing, missing, wildcardMatcher
 
 
 class KeyValueStoreProto(Protocol):
@@ -34,27 +34,27 @@ class CustomFilter(RecordFilter[Record]):
     def __call__(self, records: Iterable[Record]) -> Iterable[Record]:
         return filter(self.__func, records)
 
-class ValueFilter(RecordFilter[Record], Generic[Record, Comparable]):
+class ValueFilter(RecordFilter[Record], Generic[Record, ComparableT]):
     '''Filter that passes only those records that have the given value for
     the given key.
     '''
 
     @overload
-    def __init__(self, key: str, value: Comparable, db: None = None):
+    def __init__(self, key: str, value: ComparableT, db: None = None):
         ...
 
     @overload
-    def __init__(self: 'ValueFilter[DBRecord, Comparable]',
-                 key: str, value: Comparable, db: Database[DBRecord]):
+    def __init__(self: 'ValueFilter[DBRecord, ComparableT]',
+                 key: str, value: ComparableT, db: Database[DBRecord]):
         ...
 
     def __init__(self: 'ValueFilter',
                  key: str,
-                 value: Comparable,
+                 value: ComparableT,
                  db: Optional[Database] = None
                  ):
         super().__init__()
-        self.__retriever: Retriever[Record, Comparable] = _getRetriever(db, key)
+        self.__retriever: Retriever[Record, ComparableT] = _getRetriever(db, key)
         self.__value = value
 
     def __call__(self, records: Iterable[Record]) -> Iterable[Record]:
@@ -110,24 +110,24 @@ class _PassFilter(RecordFilter[Record]):
     def __call__(self, records: Iterable[Record]) -> Iterable[Record]:
         return iter(records)
 
-class SetFilter(RecordFilter[Record], Generic[Record, Comparable]):
+class SetFilter(RecordFilter[Record], Generic[Record, ComparableT]):
 
     @overload
     @classmethod
     def create(cls,
                key: str,
-               selected: AbstractSet[Comparable],
-               choices: AbstractSet[Comparable],
+               selected: AbstractSet[ComparableT],
+               choices: AbstractSet[ComparableT],
                db: None = None
                ) -> RecordFilter[Record]:
         ...
 
     @overload
     @classmethod
-    def create(cls: Type['SetFilter[DBRecord, Comparable]'],
+    def create(cls: Type['SetFilter[DBRecord, ComparableT]'],
                key: str,
-               selected: AbstractSet[Comparable],
-               choices: AbstractSet[Comparable],
+               selected: AbstractSet[ComparableT],
+               choices: AbstractSet[ComparableT],
                db: Database[DBRecord]
                ) -> RecordFilter[DBRecord]:
         ...
@@ -135,8 +135,8 @@ class SetFilter(RecordFilter[Record], Generic[Record, Comparable]):
     @classmethod
     def create(cls: Type['SetFilter'],
                key: str,
-               selected: AbstractSet[Comparable],
-               choices: AbstractSet[Comparable],
+               selected: AbstractSet[ComparableT],
+               choices: AbstractSet[ComparableT],
                db: Optional[Database] = None
                ) -> RecordFilter:
         '''Creates a set filter.
@@ -157,11 +157,11 @@ class SetFilter(RecordFilter[Record], Generic[Record, Comparable]):
 
     def __init__(self,
                  key: str,
-                 selected: AbstractSet[Comparable],
+                 selected: AbstractSet[ComparableT],
                  db: Optional[Database[DBRecord]]
                  ):
         super().__init__()
-        self.__retriever: Retriever[Record, Comparable] = _getRetriever(db, key)
+        self.__retriever: Retriever[Record, ComparableT] = _getRetriever(db, key)
         self.__selected = selected
 
     def __call__(self, records: Iterable[Record]) -> Iterable[Record]:
@@ -184,11 +184,11 @@ class RecordSorter(Generic[Record]):
 #       whether putting support for 'missing' deeper into the call stack
 #       would make an extra step like this unnecessary.
 def substMissingForNone(
-        retriever: Retriever[Record, Optional[Comparable]]
-        ) -> Retriever[Record, Union[Comparable, Missing]]:
+        retriever: Retriever[Record, Optional[ComparableT]]
+        ) -> Retriever[Record, Union[ComparableT, Missing]]:
     def wrap(record: Record,
-             retriever: Retriever[Record, Optional[Comparable]] = retriever
-             ) -> Union[Comparable, Missing]:
+             retriever: Retriever[Record, Optional[ComparableT]] = retriever
+             ) -> Union[ComparableT, Missing]:
         value = retriever(record)
         return missing if value is None else value
     return wrap
