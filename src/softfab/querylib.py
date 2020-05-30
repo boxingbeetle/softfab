@@ -8,7 +8,9 @@ from typing import (
 
 from softfab.compat import Protocol
 from softfab.databaselib import DBRecord, Database, Retriever
-from softfab.utils import ComparableT, Missing, missing, wildcardMatcher, Comparable
+from softfab.utils import (
+    Comparable, ComparableT, Missing, missing, wildcardMatcher
+)
 
 
 class KeyValueStoreProto(Protocol):
@@ -54,7 +56,8 @@ class ValueFilter(RecordFilter[Record], Generic[Record, ComparableT]):
                  db: Optional[Database] = None
                  ):
         super().__init__()
-        self.__retriever: Retriever[Record, ComparableT] = _getRetriever(db, key)
+        self.__retriever: Retriever[Record, ComparableT] \
+                        = _getRetriever(db, key)
         self.__value = value
 
     def __call__(self, records: Iterable[Record]) -> Iterable[Record]:
