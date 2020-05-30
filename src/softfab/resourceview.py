@@ -59,7 +59,8 @@ def getResourceStatus(resource: ResourceBase) -> str:
         return connectionStatus.name.lower()
 
 class StatusColumn(DataColumn[ResourceBase]):
-    sortKey = cast(Retriever, staticmethod(getResourceStatus))
+    sortKey = cast(Retriever[ResourceBase, str],
+                   staticmethod(getResourceStatus))
     def presentCell(self, record: ResourceBase, **kwargs: object) -> XMLContent:
         status = getResourceStatus(record)
         return cell(class_=status)[ status ]

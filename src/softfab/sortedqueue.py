@@ -6,12 +6,12 @@ from typing import Callable, ClassVar, Iterator, Sequence, Tuple
 from softfab.databaselib import (
     DBRecord, Database, RecordObserver, RecordSubjectMixin, Retriever
 )
-from softfab.utils import ComparableT, abstract
+from softfab.utils import Comparable, abstract
 
 
 def binarySearch(lst: Sequence[DBRecord],
                  elem: DBRecord,
-                 key: Retriever[DBRecord, ComparableT]
+                 key: Retriever[DBRecord, Comparable]
                  ) -> Tuple[bool, int]:
     high = len(lst)
     if high == 0:
@@ -74,7 +74,7 @@ class SortedQueue(RecordSubjectMixin[DBRecord], RecordObserver[DBRecord], ABC):
         '''
         return True
 
-    def _getKeyFunc(self) -> Retriever:
+    def _getKeyFunc(self) -> Retriever[DBRecord, Comparable]:
         '''Returns a key function that, when passed a record in this queue,
         returns the sort key for that record.
         The primary ordering is done using the "compareField" class-scope
@@ -92,8 +92,8 @@ class SortedQueue(RecordSubjectMixin[DBRecord], RecordObserver[DBRecord], ABC):
             return retriever
         else:
             def keyFunc(record: DBRecord,
-                        retriever: Callable[[DBRecord], ComparableT] = retriever
-                        ) -> Tuple[ComparableT, str]:
+                        retriever: Callable[[DBRecord], Comparable] = retriever
+                        ) -> Tuple[Comparable, str]:
                 return retriever(record), record.getId()
             return keyFunc
 

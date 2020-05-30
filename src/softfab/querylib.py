@@ -8,7 +8,7 @@ from typing import (
 
 from softfab.compat import Protocol
 from softfab.databaselib import DBRecord, Database, Retriever
-from softfab.utils import ComparableT, Missing, missing, wildcardMatcher
+from softfab.utils import ComparableT, Missing, missing, wildcardMatcher, Comparable
 
 
 class KeyValueStoreProto(Protocol):
@@ -84,7 +84,9 @@ class WildcardFilter(RecordFilter[Record]):
                  db: Optional[Database] = None
                  ):
         super().__init__()
-        self.__retriever: Retriever[Record, str] = _getRetriever(db, key)
+        # Note: The caller should only pass keys that have string values,
+        #       but the type system cannot enforce that.
+        self.__retriever = cast(Retriever[Record, str], _getRetriever(db, key))
         self.__matcher = wildcardMatcher(pattern)
 
     def __call__(self, records: Iterable[Record]) -> Iterable[Record]:
@@ -161,7 +163,10 @@ class SetFilter(RecordFilter[Record], Generic[Record, ComparableT]):
                  db: Optional[Database[DBRecord]]
                  ):
         super().__init__()
-        self.__retriever: Retriever[Record, ComparableT] = _getRetriever(db, key)
+        # Note: The caller should only pass keys for which the value type
+        #       matches 'selected', but the type system cannot enforce that.
+        self.__retriever = cast(Retriever[Record, ComparableT],
+                                _getRetriever(db, key))
         self.__selected = selected
 
     def __call__(self, records: Iterable[Record]) -> Iterable[Record]:
@@ -194,9 +199,10 @@ def substMissingForNone(
     return wrap
 
 def _iterRetrievers(keyOrder: Iterable[str],
-                    getRetriever: Callable[[str], Retriever],
+                    getRetriever: Callable[[str],
+                                           Retriever[Record, Comparable]],
                     uniqueKeys: Collection[str]
-                    ) -> Iterator[Retriever]:
+                    ) -> Iterator[Retriever[Record, Comparable]]:
     for key in keyOrder:
         yield substMissingForNone(getRetriever(key))
         if key in uniqueKeys:
@@ -205,7 +211,7 @@ def _iterRetrievers(keyOrder: Iterable[str],
             break
     else:
         # As a last resort, use the default sort order of records.
-        yield cast(Callable[[Record], Record], lambda record: record)
+        yield cast(Callable[[Record], Comparable], lambda record: record)
 
 class KeySorter(RecordSorter[Record]):
     '''When called, returns a sorted list of the given database records.
@@ -245,7 +251,7 @@ class KeySorter(RecordSorter[Record]):
             keyOrder, db.retrieverFor, db.uniqueKeys
             ))
 
-    def __init__(self, retrievers: Iterable[Retriever]):
+    def __init__(self, retrievers: Iterable[Retriever[Record, Comparable]]):
         super().__init__()
         self.__retrievers = tuple(retrievers)
 
@@ -261,7 +267,9 @@ class KeySorter(RecordSorter[Record]):
         assert sortList is not None
         return sortList
 
-def _getRetriever(db: Optional[Database[DBRecord]], key: str) -> Retriever:
+def _getRetriever(db: Optional[Database[DBRecord]],
+                  key: str
+                  ) -> Retriever[DBRecord, Comparable]:
     '''Returns a function that will retrieve the given key from a record that
     belongs to the given database.
     It is allowed for "db" to be None.

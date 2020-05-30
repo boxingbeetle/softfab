@@ -13,7 +13,7 @@ import logging
 from softfab import frameworklib, taskdeflib, taskrunlib
 from softfab.config import dbDir
 from softfab.databaselib import (
-    Database, DatabaseElem, RecordObserver, createUniqueId
+    Database, DatabaseElem, RecordObserver, Retriever, createUniqueId
 )
 from softfab.dispatchlib import pickResources
 from softfab.paramlib import specialParameters
@@ -27,6 +27,7 @@ from softfab.tasklib import (
     ResourceRequirementsMixin, TaskRunnerSet, TaskStateMixin
 )
 from softfab.timelib import getTime
+from softfab.utils import Comparable
 from softfab.waiting import (
     InputReason, ReasonForWaiting, ResourceMissingReason, StatusLevel,
     TRStateReason, checkRunners
@@ -1007,14 +1008,16 @@ class JobDB(Database[Job]):
     cachedUniqueValues = ( 'owner', 'target' )
     uniqueKeys = ( 'recent', 'jobId' )
 
+    # TODO: These casts are lies to paper over the fact that these retrievers
+    #       can return None, which is not a Comparable.
     keyRetrievers = {
         'recent': Job.getRecent,
         'timestamp': Job.getCreateTime,
         'leadtime': Job.getLeadTime,
-        'target': Job.getTarget,
+        'target': cast(Retriever[Job, Comparable], Job.getTarget),
         'description': Job.getDescription,
-        'owner': _ownerRetreiver,
-        'configId': _configIdRetriever,
+        'owner': cast(Retriever[Job, Comparable], _ownerRetreiver),
+        'configId': cast(Retriever[Job, Comparable], _configIdRetriever),
         }
 
     def __init__(self, baseDir: Path):

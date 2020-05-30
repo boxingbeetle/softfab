@@ -14,7 +14,7 @@ from softfab.querylib import (
     substMissingForNone
 )
 from softfab.timeview import formatDuration, formatTime
-from softfab.utils import ComparableT, abstract, escapeURL, pluralize
+from softfab.utils import Comparable, abstract, escapeURL, pluralize
 from softfab.webgui import Column, Table, cell, pageLink, pageURL, row
 from softfab.xmlgen import XMLContent, XMLNode, XMLSubscriptable, xhtml
 
@@ -28,7 +28,7 @@ else:
 class DataColumn(Column, Generic[Record]):
     label: Optional[str] = None
     keyName: Optional[str] = None
-    sortKey: Union[None, str, Retriever] = None
+    sortKey: Union[None, str, Retriever[Record, Comparable]] = None
     '''Can be used to override the comparison key for sorting, using either
     the name of a record item or a static method that, when called with
     a record, returns the comparison key.
@@ -211,7 +211,7 @@ class TableData(Generic[Record]):
             #       records that are not DBRecords or to keep track of
             #       a subset of a full DB. Then 'uniqueKeys' could be moved
             #       from DataTable to RecordCollection.
-            getRetriever: Callable[[str], Retriever[Record, ComparableT]]
+            getRetriever: Callable[[str], Retriever[Record, Comparable]]
             if db is None:
                 getRetriever = itemgetter
                 uniqueKeys = table.uniqueKeys or ()
@@ -219,7 +219,7 @@ class TableData(Generic[Record]):
                 getRetriever = db.retrieverFor
                 assert table.uniqueKeys is None, "table's uniqueKeys is ignored"
                 uniqueKeys = db.uniqueKeys
-            retrievers: List[Retriever] = []
+            retrievers: List[Retriever[Record, Comparable]] = []
             for key in sortKeys:
                 if callable(key):
                     retrievers.append(substMissingForNone(key))
@@ -228,7 +228,7 @@ class TableData(Generic[Record]):
                     if key in uniqueKeys:
                         break
             else:
-                retrievers.append(cast(Callable[[Record], Record],
+                retrievers.append(cast(Callable[[Record], Comparable],
                                        lambda record: record))
             query.append(KeySorter(retrievers))
             records = runQuery(query, records)
@@ -293,7 +293,7 @@ class TableData(Generic[Record]):
         return tuple(cleanSortOrder)
 
 def _buildKeyMap(columns: Iterable[DataColumn[Record]]
-                 ) -> Mapping[str, Union[str, Retriever]]:
+                 ) -> Mapping[str, Union[str, Retriever[Record, Comparable]]]:
     '''Returns a mapping from column key name to a key name or key function
     used to retrieve the comparison key.
     '''

@@ -14,7 +14,9 @@ import re
 import time
 
 from softfab.config import dbAtomicWrites, logChanges
-from softfab.utils import ComparableT, abstract, atomicWrite, cachedProperty
+from softfab.utils import (
+    Comparable, ComparableT, abstract, atomicWrite, cachedProperty
+)
 from softfab.xmlbind import parse
 from softfab.xmlgen import XML
 
@@ -209,7 +211,7 @@ class Database(Generic[DBRecord], RecordSubjectMixin[DBRecord], ABC):
     effort, but 1 could never be solved, so I decided against it.
     """
 
-    keyRetrievers: ClassVar[Mapping[str, Retriever]] = {}
+    keyRetrievers: ClassVar[Mapping[str, Retriever[DBRecord, Comparable]]] = {}
     """Contains optimized value retriever functions for certain column keys.
     """
 
@@ -226,7 +228,7 @@ class Database(Generic[DBRecord], RecordSubjectMixin[DBRecord], ABC):
     """
 
     @classmethod
-    def retrieverFor(cls, key: str) -> Retriever:
+    def retrieverFor(cls, key: str) -> Retriever[DBRecord, Comparable]:
         return cls.keyRetrievers.get(key) or itemgetter(key)
 
     def __init__(self, baseDir: Path, factory: object):
