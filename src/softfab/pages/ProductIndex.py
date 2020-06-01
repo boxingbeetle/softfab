@@ -4,6 +4,7 @@ from typing import ClassVar, Iterator
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
+from softfab.databaselib import Retriever
 from softfab.datawidgets import (
     BoolDataColumn, DataColumn, DataTable, LinkColumn
 )
@@ -26,11 +27,10 @@ class TypeColumn(DataColumn[ProductDef]):
     label = 'Type'
     keyName = 'type'
 
-    @staticmethod
-    def typeName(record: ProductDef) -> str:
-        return record.getType().name
-
-    sortKey = typeName
+    def getSortKey(self, proc: PageProcessor) -> Retriever[ProductDef, str]:
+        def typeName(record: ProductDef) -> str:
+            return record.getType().name
+        return typeName
 
 class ProductDefTable(DataTable[ProductDef]):
     dbName = 'productDefDB'

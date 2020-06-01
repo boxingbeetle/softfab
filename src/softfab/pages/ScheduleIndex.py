@@ -6,6 +6,7 @@ from typing import ClassVar, Iterator, Mapping, cast
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor, Redirect
 from softfab.configlib import ConfigDB
+from softfab.databaselib import Retriever
 from softfab.datawidgets import DataColumn, DataTable, LinkColumn
 from softfab.formlib import makeForm
 from softfab.pageargs import DictArg, EnumArg, IntArg, PageArgs, SortArg
@@ -50,11 +51,10 @@ class RepeatColumn(DataColumn[Scheduled]):
     label = 'Repeat'
     keyName = 'repeat'
 
-    @staticmethod
-    def repeatName(record: Scheduled) -> str:
-        return record.repeat.name
-
-    sortKey = repeatName
+    def getSortKey(self, proc: PageProcessor) -> Retriever[Scheduled, str]:
+        def repeatName(record: Scheduled) -> str:
+            return record.repeat.name
+        return repeatName
 
 class SuspendColumn(DataColumn[Scheduled]):
     label = 'Action'

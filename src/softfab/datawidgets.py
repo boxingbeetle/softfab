@@ -29,13 +29,15 @@ class DataColumn(Column, Generic[Record]):
     label: Optional[str] = None
     keyName: Optional[str] = None
 
-    sortKey: Optional[Retriever[Record, Comparable]] = None
-    """Custom comparison key function for sorting.
-    The value must be a function that, when called with a record,
-    returns the comparison key.
-    If None, `keyName` will be used to look up the comparison key
-    via a retriever or `__getitem__()`.
-    """
+    def getSortKey(self, proc: PageProcessor
+                   ) -> Optional[Retriever[Record, Comparable]]:
+        """Return a comparison key function for sorting.
+        The key function must, when called with a record,
+        return the comparison key for that record.
+        The default implementation returns None, which means
+        a key function based on `keyName` is used for sorting.
+        """
+        return None
 
     def __init__(self,
                  label: Optional[str] = None,
@@ -208,7 +210,7 @@ class TableData(Generic[Record]):
                     setattr(proc.args, sortField, cleanSortOrder)
             query: List[RecordProcessor] = list(table.iterFilters(proc))
             filtered = bool(query)
-            keyMap = _buildKeyMap(columns)
+            keyMap = _buildKeyMap(columns, proc)
             sortKeys = (keyMap.get(key, key) for key in cleanSortOrder)
             # TODO: Maybe we should have a class (RecordCollection?) for
             #       records that are not DBRecords or to keep track of
@@ -295,7 +297,8 @@ class TableData(Generic[Record]):
                 cleanSortOrder.append(key)
         return tuple(cleanSortOrder)
 
-def _buildKeyMap(columns: Iterable[DataColumn[Record]]
+def _buildKeyMap(columns: Iterable[DataColumn[Record]],
+                 proc: PageProcessor
                  ) -> Mapping[str, Union[str, Retriever[Record, Comparable]]]:
     '''Returns a mapping from column key name to a key name or key function
     used to retrieve the comparison key.
@@ -304,7 +307,7 @@ def _buildKeyMap(columns: Iterable[DataColumn[Record]]
     for column in columns:
         keyName = column.keyName
         if keyName is not None:
-            sortKey = column.sortKey
+            sortKey = column.getSortKey(proc)
             if sortKey is not None:
                 keyMap[keyName] = sortKey
     return keyMap

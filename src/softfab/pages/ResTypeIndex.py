@@ -1,35 +1,41 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import ClassVar, Iterator
+from functools import partial
+from typing import ClassVar, Iterator, cast
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
+from softfab.databaselib import Retriever
 from softfab.datawidgets import (
     BoolDataColumn, DataColumn, DataTable, LinkColumn
 )
 from softfab.pageargs import IntArg, PageArgs, SortArg
-from softfab.resourcelib import resourceDB
+from softfab.resourcelib import ResourceDB
 from softfab.restypelib import ResType, ResTypeDB
 from softfab.userlib import User, checkPrivilege
 from softfab.xmlgen import XMLContent
 
 
+def numResourcesOfType(resourceDB: ResourceDB, resType: ResType) -> int:
+    return len(resourceDB.resourcesOfType(resType.getId()))
+
 class ResCountLinkColumn(LinkColumn[ResType]):
     keyName = 'count'
     cellStyle = 'rightalign'
 
-    @staticmethod
-    def getCount(record: ResType) -> int:
-        return len(resourceDB.resourcesOfType(record.getId()))
-
-    sortKey = getCount
-
     def __init__(self) -> None:
         super().__init__('#', 'Capabilities', idArg='restype')
 
+    def getSortKey(self, proc: PageProcessor) -> Retriever[ResType, str]:
+        assert isinstance(proc, ResTypeIndex_GET.Processor)
+        return cast(Retriever[ResType, str],
+                    partial(numResourcesOfType, proc.resourceDB))
+
     def presentCell(self, record: ResType, **kwargs: object) -> XMLContent:
+        proc = kwargs['proc']
+        assert isinstance(proc, ResTypeIndex_GET.Processor)
         return self.presentLink(record, **kwargs)[
-            self.getCount(record)
+            numResourcesOfType(proc.resourceDB, record)
             ]
 
 class ResTypeLinkColumn(LinkColumn[ResType]):
@@ -63,6 +69,7 @@ class ResTypeIndex_GET(FabPage['ResTypeIndex_GET.Processor',
 
     class Processor(PageProcessor['ResTypeIndex_GET.Arguments']):
         resTypeDB: ClassVar[ResTypeDB]
+        resourceDB: ClassVar[ResourceDB]
 
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'rt/l')

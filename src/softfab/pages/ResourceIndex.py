@@ -46,8 +46,10 @@ def _getResourceReservedBy(resource: ResourceBase) -> str:
     return ''
 
 class ReservedByColumn(DataColumn[ResourceBase]):
-    sortKey = cast(Retriever[ResourceBase, str],
-                   staticmethod(_getResourceReservedBy))
+
+    def getSortKey(self, proc: PageProcessor) -> Retriever[ResourceBase, str]:
+        return _getResourceReservedBy
+
     def presentCell(self, record: ResourceBase, **kwargs: object) -> XMLContent:
         if record.isReserved():
             # TODO: Create a generic reserved-by system that works for all
