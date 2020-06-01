@@ -29,7 +29,8 @@ class DataColumn(Column, Generic[Record]):
     label: Optional[str] = None
     keyName: Optional[str] = None
 
-    def getSortKey(self, proc: PageProcessor
+    def getSortKey(self,
+                   proc: PageProcessor # pylint: disable=unused-argument
                    ) -> Optional[Retriever[Record, Comparable]]:
         """Return a comparison key function for sorting.
         The key function must, when called with a record,
