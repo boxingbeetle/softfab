@@ -28,11 +28,14 @@ else:
 class DataColumn(Column, Generic[Record]):
     label: Optional[str] = None
     keyName: Optional[str] = None
-    sortKey: Union[None, str, Retriever[Record, Comparable]] = None
-    '''Can be used to override the comparison key for sorting, using either
-    the name of a record item or a static method that, when called with
-    a record, returns the comparison key.
-    '''
+
+    sortKey: Optional[Retriever[Record, Comparable]] = None
+    """Custom comparison key function for sorting.
+    The value must be a function that, when called with a record,
+    returns the comparison key.
+    If None, `keyName` will be used to look up the comparison key
+    via a retriever or `__getitem__()`.
+    """
 
     def __init__(self,
                  label: Optional[str] = None,
