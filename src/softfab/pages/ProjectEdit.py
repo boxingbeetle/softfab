@@ -1,7 +1,8 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from typing import (
-    Iterable, Iterator, Mapping, Optional, Sequence, Tuple, cast, overload
+    ClassVar, Iterable, Iterator, Mapping, Optional, Sequence, Tuple, cast,
+    overload
 )
 from urllib.parse import urlparse
 import time
@@ -17,8 +18,8 @@ from softfab.formlib import (
 )
 from softfab.pageargs import ArgsCorrected, BoolArg, EnumArg, IntArg, StrArg
 from softfab.projectlib import (
-    EmbeddingPolicy, Project, defaultMaxJobs, getKnownTimezones, project,
-    projectDB
+    EmbeddingPolicy, Project, ProjectDB, defaultMaxJobs, getKnownTimezones,
+    project
 )
 from softfab.setcalc import categorizedLists
 from softfab.webgui import PropertiesTable, Widget, docLink
@@ -44,7 +45,7 @@ class ProjectEditBase(EditPage[ProjectEditArgs, Project]):
     # EditPage constants:
     elemTitle = 'Project Configuration'
     elemName = 'project configuration'
-    db = projectDB
+    dbName = 'projectDB'
     privDenyText = 'project configuration'
     useScript = False
     formId = 'project'
@@ -68,6 +69,8 @@ class ProjectEdit_GET(ProjectEditBase):
     class Processor(InitialEditProcessor[ProjectEditArgs, Project]):
         argsClass = ProjectEditArgs
 
+        projectDB: ClassVar[ProjectDB]
+
         def _initArgs(self, element: Optional[Project]) -> Mapping[str, object]:
             if element is None:
                 return {}
@@ -89,6 +92,8 @@ class ProjectEdit_POST(ProjectEditBase):
         pass
 
     class Processor(EditProcessor[ProjectEditArgs, Project]):
+
+        projectDB: ClassVar[ProjectDB]
 
         def createElement(self,
                           recordId: str,

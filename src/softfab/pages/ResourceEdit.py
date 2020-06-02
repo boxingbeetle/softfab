@@ -1,18 +1,17 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import ClassVar, Mapping, Optional, cast
+from typing import ClassVar, Mapping, Optional
 
 from softfab.EditPage import (
     EditArgs, EditPage, EditProcessor, EditProcessorBase, InitialEditArgs,
     InitialEditProcessor
 )
 from softfab.Page import InvalidRequest, PresentableError
-from softfab.databaselib import Database
 from softfab.formlib import RadioTable, textInput
 from softfab.pageargs import StrArg
-from softfab.resourcelib import Resource, resourceDB
+from softfab.resourcelib import Resource, ResourceDB
 from softfab.resourceview import CapabilitiesPanel, CommentPanel
-from softfab.restypelib import ResTypeDB, resTypeDB, taskRunnerResourceTypeName
+from softfab.restypelib import ResTypeDB, taskRunnerResourceTypeName
 from softfab.restypeview import ResTypeTableMixin
 from softfab.webgui import Panel, pageLink, vgroup
 from softfab.xmlgen import XMLContent, xhtml
@@ -33,7 +32,7 @@ class ResourceEditBase(EditPage[ResourceEditArgs, Resource]):
     # EditPage constants:
     elemTitle = 'Resource'
     elemName = 'resource'
-    db = cast(Database[Resource], resourceDB)
+    dbName = 'resourceDB'
     privDenyText = 'resources'
     useScript = False
     formId = 'resource'
@@ -64,6 +63,7 @@ class ResourceEdit_GET(ResourceEditBase):
     class Processor(InitialEditProcessor[ResourceEditArgs, Resource]):
         argsClass = ResourceEditArgs
 
+        resourceDB: ClassVar[ResourceDB]
         resTypeDB: ClassVar[ResTypeDB]
 
         def _initArgs(self, element: Optional[Resource]) -> Mapping[str, str]:
@@ -89,6 +89,9 @@ class ResourceEdit_POST(ResourceEditBase):
         pass
 
     class Processor(EditProcessor[ResourceEditArgs, Resource]):
+
+        resourceDB: ClassVar[ResourceDB]
+        resTypeDB: ClassVar[ResTypeDB]
 
         def createElement(self,
                           recordId: str,
@@ -117,7 +120,7 @@ class ResourceEdit_POST(ResourceEditBase):
                     'No resource type was selected.'
                     ])
             resTypeName = self.args.restype
-            if resTypeName not in resTypeDB:
+            if resTypeName not in self.resTypeDB:
                 raise PresentableError(xhtml.p[
                     'Resource type ', xhtml.b[resTypeName],
                     ' does not exist (anymore).'

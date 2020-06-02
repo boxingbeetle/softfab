@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Iterator, Mapping, Optional, Sequence, Tuple, cast
+from typing import ClassVar, Iterator, Mapping, Optional, Sequence, Tuple, cast
 
 from softfab.EditPage import (
     EditArgs, EditPage, EditProcessor, EditProcessorBase, InitialEditArgs,
@@ -8,7 +8,7 @@ from softfab.EditPage import (
 )
 from softfab.formlib import CheckBoxesTable, textInput
 from softfab.pageargs import SetArg, StrArg
-from softfab.restypelib import ResType, resTypeDB
+from softfab.restypelib import ResType, ResTypeDB
 from softfab.userlib import AccessDenied
 from softfab.webgui import Column, PropertiesTable, cell
 from softfab.xmlgen import XMLContent
@@ -27,7 +27,7 @@ class ResTypeEditBase(EditPage[ResTypeEditArgs, ResType]):
     # EditPage constants:
     elemTitle = 'Resource Type'
     elemName = 'resource type'
-    db = resTypeDB
+    dbName = 'resTypeDB'
     privDenyText = 'resource types'
     useScript = False
     formId = 'restype'
@@ -46,6 +46,8 @@ class ResTypeEdit_GET(ResTypeEditBase):
     class Processor(InitialEditProcessor[ResTypeEditArgs, ResType]):
         argsClass = ResTypeEditArgs
 
+        resTypeDB: ClassVar[ResTypeDB]
+
         def _initArgs(self, element: Optional[ResType]) -> Mapping[str, object]:
             if element is None:
                 return { 'type': ('pertask',) }
@@ -63,6 +65,8 @@ class ResTypeEdit_POST(ResTypeEditBase):
         pass
 
     class Processor(EditProcessor[ResTypeEditArgs, ResType]):
+
+        resTypeDB: ClassVar[ResTypeDB]
 
         def checkId(self, recordId: str) -> None:
             if recordId.startswith('sf.'):

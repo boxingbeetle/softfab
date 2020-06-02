@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Iterator, Mapping, Optional, cast
+from typing import ClassVar, Iterator, Mapping, Optional, cast
 
 from softfab.EditPage import (
     EditArgs, EditPage, EditProcessor, EditProcessorBase, InitialEditArgs,
@@ -8,7 +8,7 @@ from softfab.EditPage import (
 )
 from softfab.formlib import checkBox, dropDownList
 from softfab.pageargs import BoolArg, EnumArg
-from softfab.productdeflib import ProductDef, ProductType, productDefDB
+from softfab.productdeflib import ProductDef, ProductDefDB, ProductType
 from softfab.webgui import PropertiesTable, docLink
 from softfab.xmlgen import XMLContent
 
@@ -27,7 +27,7 @@ class ProductEditBase(EditPage[ProductEditArgs, ProductDef]):
     # EditPage constants:
     elemTitle = 'Product'
     elemName = 'product'
-    db = productDefDB
+    dbName = 'productDefDB'
     privDenyText = 'product definitions'
     useScript = False
     formId = 'product'
@@ -45,6 +45,8 @@ class ProductEdit_GET(ProductEditBase):
 
     class Processor(InitialEditProcessor[ProductEditArgs, ProductDef]):
         argsClass = ProductEditArgs
+
+        productDefDB: ClassVar[ProductDefDB]
 
         def _initArgs(self,
                       element: Optional[ProductDef]
@@ -64,6 +66,8 @@ class ProductEdit_POST(ProductEditBase):
         pass
 
     class Processor(EditProcessor[Arguments, ProductDef]):
+
+        productDefDB: ClassVar[ProductDefDB]
 
         def createElement(self,
                           recordId: str,

@@ -105,9 +105,11 @@ class SavePhase(AbstractPhase['EditProcessor[EditArgsT, DBRecord]',
         #       need to pass them?
         element = proc.createElement(args.newId, args, oldElement)
 
+        db = proc.db
+
         if proc.replace:
             try:
-                existingElement: Optional[DBRecord] = page.db[args.newId]
+                existingElement: Optional[DBRecord] = db[args.newId]
             except KeyError:
                 # Record is no longer in DB; create instead of replace.
                 existingElement = None
@@ -117,13 +119,13 @@ class SavePhase(AbstractPhase['EditProcessor[EditArgsT, DBRecord]',
         if existingElement is None:
             checkPrivilege(
                 proc.user,
-                page.db.privilegeObject + '/c', 'create ' + page.privDenyText
+                db.privilegeObject + '/c', 'create ' + page.privDenyText
                 )
             self.addRecord(proc, element)
         else:
             checkPrivilegeForOwned(
                 proc.user,
-                page.db.privilegeObject + '/m',
+                db.privilegeObject + '/m',
                 cast(Owned, existingElement),
                 ( 'modify this ' + page.elemName,
                   'modify ' + page.privDenyText )
@@ -134,13 +136,13 @@ class SavePhase(AbstractPhase['EditProcessor[EditArgsT, DBRecord]',
             proc: 'EditProcessor[EditArgsT, DBRecord]', # pylint: disable=unused-argument
             element: DBRecord
             ) -> None:
-        self.page.db.add(element)
+        proc.db.add(element)
 
     def updateRecord(self,
             proc: 'EditProcessor[EditArgsT, DBRecord]', # pylint: disable=unused-argument
             element: DBRecord
             ) -> None:
-        self.page.db.update(element)
+        proc.db.update(element)
 
     def presentContent(self, **kwargs: object) -> XMLContent:
         proc = cast(EditProcessor[EditArgsT, DBRecord], kwargs['proc'])
@@ -200,9 +202,14 @@ class EditProcessorBase(PageProcessor[EditArgsT], Generic[EditArgsT, DBRecord]):
                  ) -> 'EditPage[EditArgsT, DBRecord]':
             ...
 
+    @property
+    def db(self) -> Database[DBRecord]:
+        return getattr(self, self.page.dbName)
+
     async def process(self, req: Request[EditArgsT], user: User) -> None:
         # pylint: disable=attribute-defined-outside-init
-        checkPrivilege(user, self.page.db.privilegeObject + '/a')
+        db = self.db
+        checkPrivilege(user, db.privilegeObject + '/a')
 
         # Process "id" argument.
         # This is not editable, so if we reject it, there is nothing
@@ -222,7 +229,7 @@ class EditProcessorBase(PageProcessor[EditArgsT], Generic[EditArgsT, DBRecord]):
                 raise InvalidRequest('Missing ID')
 
         # Try to find existing record.
-        oldElement = self.page.db.get(recordId) if recordId else None
+        oldElement = db.get(recordId) if recordId else None
         self.oldElement = oldElement
 
         # State-dependent processing.
@@ -331,7 +338,7 @@ class EditProcessor(EditProcessorBase[EditArgsT, DBRecord]):
                     # Save under new and unconfirmed name.
                     self.__checkId()
                     # Is there already a record with this name?
-                    if page.db.get(args.newId) is None:
+                    if self.db.get(args.newId) is None:
                         self.replace = False
                         return page.savePhase
                     else:
@@ -384,9 +391,9 @@ class EditProcessor(EditProcessorBase[EditArgsT, DBRecord]):
     def checkId(self, recordId: str) -> None:
         '''Check whether the name is valid for saving a record under.
         Raises KeyError with a descriptive message if the name is invalid.
-        The default implementation defers to `page.db`.
+        The default implementation defers to `db`.
         '''
-        self.page.db.checkId(recordId)
+        self.db.checkId(recordId)
 
     def createElement(self,
                       recordId: str,
@@ -412,7 +419,7 @@ class EditPage(FabPage[EditProcessorBase[EditArgsT, DBRecord], EditArgsT], ABC):
     #       Pick one term and stick with it.
     elemTitle: ClassVar[str] = abstract
     elemName: ClassVar[str] = abstract
-    db: Database[DBRecord] = abstract
+    dbName: ClassVar[str] = abstract
     privDenyText: ClassVar[str] = abstract
     useScript: ClassVar[bool] = abstract
     formId: ClassVar[str] = abstract

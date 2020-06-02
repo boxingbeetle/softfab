@@ -13,17 +13,17 @@ from softfab.EditPage import (
     InitialEditProcessor
 )
 from softfab.Page import PresentableError
-from softfab.configlib import Config, ConfigDB, configDB
+from softfab.configlib import Config, ConfigDB
 from softfab.formlib import (
     CheckBoxesTable, DropDownList, Option, RadioTable, checkBox, dropDownList,
     textArea, textInput
 )
 from softfab.pageargs import BoolArg, DictArg, EnumArg, IntArg, SetArg, StrArg
 from softfab.projectlib import project
-from softfab.resourcelib import resourceDB
+from softfab.resourcelib import ResourceDB
 from softfab.restypelib import repoResourceTypeName
 from softfab.schedulelib import (
-    ScheduleRepeat, Scheduled, asap, endOfTime, scheduleDB
+    ScheduleDB, ScheduleRepeat, Scheduled, asap, endOfTime
 )
 from softfab.scheduleview import listToStringDays, stringToListDays, weekDays
 from softfab.timelib import getTime, stringToTime
@@ -63,7 +63,7 @@ class ScheduleEditBase(EditPage[ScheduleEditArgs, Scheduled]):
     # EditPage constants:
     elemTitle = 'Schedule'
     elemName = 'schedule'
-    db = scheduleDB
+    dbName = 'scheduleDB'
     privDenyText = 'Job scheduling'
     useScript = False
     formId = 'schedule'
@@ -110,6 +110,9 @@ class ScheduleEdit_GET(ScheduleEditBase):
     class Processor(InitialEditProcessor[ScheduleEditArgs, Scheduled]):
         argsClass = ScheduleEditArgs
 
+        configDB: ClassVar[ConfigDB]
+        resourceDB: ClassVar[ResourceDB]
+        scheduleDB: ClassVar[ScheduleDB]
         userDB: ClassVar[UserDB]
 
         def _initArgs(self,
@@ -157,6 +160,8 @@ class ScheduleEdit_POST(ScheduleEditBase):
     class Processor(EditProcessor[ScheduleEditArgs, Scheduled]):
 
         configDB: ClassVar[ConfigDB]
+        resourceDB: ClassVar[ResourceDB]
+        scheduleDB: ClassVar[ScheduleDB]
 
         def _checkState(self) -> None:
             args = self.args
@@ -244,7 +249,7 @@ class TagList(DropDownList):
 def _createGroupItem(visible: bool) -> Container:
     return groupItem(class_=None if visible else 'hidden')
 
-def _createConfigDropDownList() -> XMLPresentable:
+def _createConfigDropDownList(configDB: ConfigDB) -> XMLPresentable:
     return dropDownList(name='configId', style='width:100%')[
         sorted(configDB.uniqueValues('name'))
         ]
@@ -254,7 +259,8 @@ class ConfigTable(Table):
     columns = 'Configuration',
 
     def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
-        yield _createConfigDropDownList(),
+        configDB: ConfigDB = getattr(kwargs['proc'], 'configDB')
+        yield _createConfigDropDownList(configDB),
 
 class ConfigTagTable(RadioTable):
     name = 'selectBy'
@@ -262,10 +268,11 @@ class ConfigTagTable(RadioTable):
     columns = ('Configurations', )
 
     def iterOptions(self, **kwargs: object) -> Iterator[Sequence[XMLContent]]:
+        configDB: ConfigDB = getattr(kwargs['proc'], 'configDB')
         yield (
             SelectBy.NAME,
             'Configuration by name:',
-            _createConfigDropDownList()
+            _createConfigDropDownList(configDB)
             )
         yield (
             SelectBy.TAG,
@@ -330,6 +337,7 @@ class TriggerPanel(Panel):
     label = 'Trigger Filters'
 
     def presentContent(self, **kwargs: object) -> XMLContent:
+        resourceDB: ResourceDB = getattr(kwargs['proc'], 'resourceDB')
         anyRepo = False
         for repoId in sorted(resourceDB.resourcesOfType(repoResourceTypeName)):
             anyRepo = True

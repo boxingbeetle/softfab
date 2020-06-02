@@ -8,7 +8,7 @@ from softfab.EditPage import (
 )
 from softfab.Page import PresentableError
 from softfab.formlib import dropDownList, emptyOption, textArea, textInput
-from softfab.frameworklib import Framework, FrameworkDB, frameworkDB
+from softfab.frameworklib import Framework, FrameworkDB
 from softfab.pageargs import IntArg, StrArg
 from softfab.paramlib import Parameterized, paramTop
 from softfab.paramview import (
@@ -21,7 +21,7 @@ from softfab.resourceview import (
     resourceRequirementsWidget, validateResourceRequirementsState
 )
 from softfab.restypelib import ResTypeDB
-from softfab.taskdeflib import TaskDef, taskDefDB
+from softfab.taskdeflib import TaskDef, TaskDefDB
 from softfab.webgui import PropertiesTable
 from softfab.xmlgen import XMLContent, xhtml
 
@@ -42,7 +42,7 @@ class TaskEditBase(EditPage[TaskEditArgs, TaskDef]):
     # EditPage constants:
     elemTitle = 'Task Definition'
     elemName = 'task definition'
-    db = taskDefDB
+    dbName = 'taskDefDB'
     privDenyText = 'task definitions'
     useScript = True
     formId = 'taskdef'
@@ -60,7 +60,7 @@ class TaskEditBase(EditPage[TaskEditArgs, TaskDef]):
             else cast(Framework, parent).resourceClaim
             )
 
-def getParent(args: TaskEditArgs) -> Parameterized:
+def getParent(args: TaskEditArgs, frameworkDB: FrameworkDB) -> Parameterized:
     framework = args.framework
     if framework == '':
         return paramTop
@@ -79,7 +79,9 @@ class TaskEdit_GET(TaskEditBase):
     class Processor(InitialEditProcessor[TaskEditArgs, TaskDef]):
         argsClass = TaskEditArgs
 
+        frameworkDB: ClassVar[FrameworkDB]
         resTypeDB: ClassVar[ResTypeDB]
+        taskDefDB: ClassVar[TaskDefDB]
 
         def _initArgs(self, element: Optional[TaskDef]) -> Mapping[str, object]:
             if element is None:
@@ -96,7 +98,7 @@ class TaskEdit_GET(TaskEditBase):
             return overrides
 
         def _validateState(self) -> None:
-            parent = getParent(self.args)
+            parent = getParent(self.args, self.frameworkDB)
             # Add parent parameters and put them all in the right order.
             validateParamState(self, parent)
             # pylint: disable=attribute-defined-outside-init
@@ -111,6 +113,7 @@ class TaskEdit_POST(TaskEditBase):
 
         frameworkDB: ClassVar[FrameworkDB]
         resTypeDB: ClassVar[ResTypeDB]
+        taskDefDB: ClassVar[TaskDefDB]
 
         def createElement(self,
                           recordId: str,
@@ -149,7 +152,7 @@ class TaskEdit_POST(TaskEditBase):
             checkResourceRequirementsState(self.resTypeDB, args)
 
         def _validateState(self) -> None:
-            parent = getParent(self.args)
+            parent = getParent(self.args, self.frameworkDB)
 
             # Filter out empty lines.
             validateParamState(self, parent)
@@ -161,6 +164,7 @@ class TaskPropertiesTable(PropertiesTable):
 
     def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
         args = cast(EditProcessor[TaskEditArgs, TaskDef], kwargs['proc']).args
+        frameworkDB: FrameworkDB = getattr(kwargs['proc'], 'frameworkDB')
         yield 'Task ID', args.id or '(untitled)'
         yield 'Title', textInput(name='title', size=80)
         yield 'Description', textArea(name='descr', cols=80, rows=3)

@@ -1,16 +1,15 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Mapping, Optional, cast
+from typing import ClassVar, Mapping, Optional
 
 from softfab.EditPage import (
     EditArgs, EditPage, EditProcessor, EditProcessorBase, InitialEditArgs,
     InitialEditProcessor
 )
 from softfab.Page import InvalidRequest
-from softfab.databaselib import Database
 from softfab.formlib import textInput
 from softfab.pageargs import PasswordArg, StrArg
-from softfab.resourcelib import Resource, resourceDB
+from softfab.resourcelib import Resource, ResourceDB
 from softfab.resourceview import CommentPanel
 from softfab.restypelib import repoResourceTypeName
 from softfab.webgui import Panel, vgroup
@@ -32,7 +31,7 @@ class RepoEditBase(EditPage[RepoEditArgs, Resource]):
     # EditPage constants:
     elemTitle = 'Repository'
     elemName = 'repository'
-    db = cast(Database[Resource], resourceDB)
+    dbName = 'resourceDB'
     privDenyText = 'repositories'
     useScript = False
     formId = 'repo'
@@ -57,6 +56,8 @@ class RepoEdit_GET(RepoEditBase):
     class Processor(InitialEditProcessor[RepoEditArgs, Resource]):
         argsClass = RepoEditArgs
 
+        resourceDB: ClassVar[ResourceDB]
+
         def _initArgs(self,
                       element: Optional[Resource]
                       ) -> Mapping[str, object]:
@@ -80,6 +81,8 @@ class RepoEdit_POST(RepoEditBase):
         pass
 
     class Processor(EditProcessor[RepoEditArgs, Resource]):
+
+        resourceDB: ClassVar[ResourceDB]
 
         def createElement(self,
                           recordId: str,

@@ -1,18 +1,17 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Iterator, Mapping, Optional, cast
+from typing import ClassVar, Iterator, Mapping, Optional, cast
 
 from softfab.EditPage import (
     EditArgs, EditPage, EditProcessor, EditProcessorBase, InitialEditArgs,
     InitialEditProcessor, SavePhase
 )
 from softfab.Page import InvalidRequest
-from softfab.databaselib import Database
 from softfab.formlib import SingleCheckBoxTable
 from softfab.pageargs import BoolArg, StrArg
-from softfab.resourcelib import TaskRunner, resourceDB
+from softfab.resourcelib import ResourceDB, TaskRunner
 from softfab.resourceview import CapabilitiesPanel, CommentPanel
-from softfab.tokens import resetTokenPassword, tokenDB
+from softfab.tokens import TokenDB, resetTokenPassword
 from softfab.webgui import Table, vgroup
 from softfab.xmlgen import XMLContent, xhtml
 
@@ -46,7 +45,7 @@ class TaskRunnerSavePhase(SavePhase[TaskRunnerEditArgs, TaskRunner]):
         token = element.token
         proc.tokenId = token.getId()
         if proc.args.resetpass:
-            proc.password = resetTokenPassword(tokenDB, token)
+            proc.password = resetTokenPassword(proc.tokenDB, token)
         else:
             proc.password = None
 
@@ -63,7 +62,7 @@ class TaskRunnerEditBase(EditPage[TaskRunnerEditArgs, TaskRunner]):
     # EditPage constants:
     elemTitle = 'Task Runner'
     elemName = 'Task Runner'
-    db = cast(Database[TaskRunner], resourceDB)
+    dbName = 'resourceDB'
     privDenyText = 'Task Runners'
     useScript = False
     formId = 'runner'
@@ -89,6 +88,9 @@ class TaskRunnerEdit_GET(TaskRunnerEditBase):
     class Processor(InitialEditProcessor[TaskRunnerEditArgs, TaskRunner]):
         argsClass = TaskRunnerEditArgs
 
+        resourceDB: ClassVar[ResourceDB]
+        tokenDB: ClassVar[TokenDB]
+
         def _initArgs(self,
                       element: Optional[TaskRunner]
                       ) -> Mapping[str, object]:
@@ -110,6 +112,9 @@ class TaskRunnerEdit_POST(TaskRunnerEditBase):
         pass
 
     class Processor(EditProcessor[TaskRunnerEditArgs, TaskRunner]):
+
+        resourceDB: ClassVar[ResourceDB]
+        tokenDB: ClassVar[TokenDB]
 
         tokenId: str
         password: Optional[str]

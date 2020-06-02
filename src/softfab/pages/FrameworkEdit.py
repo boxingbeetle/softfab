@@ -11,21 +11,21 @@ from softfab.EditPage import (
 )
 from softfab.Page import PresentableError
 from softfab.formlib import dropDownList, emptyOption, textInput
-from softfab.frameworklib import Framework, frameworkDB
+from softfab.frameworklib import Framework, FrameworkDB
 from softfab.pageargs import DictArgInstance, SetArg, StrArg
 from softfab.paramlib import paramTop
 from softfab.paramview import (
     ParamArgsMixin, ParamDefTable, addParamsToElement, checkParamState,
     initParamArgs, validateParamState
 )
-from softfab.productdeflib import productDefDB
+from softfab.productdeflib import ProductDefDB
 from softfab.resourceview import (
     ResourceRequirementsArgsMixin, addResourceRequirementsToElement,
     checkResourceRequirementsState, initResourceRequirementsArgs,
     resourceRequirementsWidget, validateResourceRequirementsState
 )
 from softfab.restypelib import ResTypeDB
-from softfab.taskdeflib import taskDefDB
+from softfab.taskdeflib import TaskDefDB
 from softfab.utils import abstract
 from softfab.webgui import (
     PropertiesTable, Table, docLink, hgroup, rowManagerInstanceScript
@@ -49,7 +49,7 @@ class FrameworkEditBase(EditPage[FrameworkEditArgs, Framework]):
     # EditPage constants:
     elemTitle = 'Framework'
     elemName = 'framework'
-    db = frameworkDB
+    dbName = 'frameworkDB'
     privDenyText = 'framework definitions'
     useScript = True
     formId = 'framework'
@@ -88,6 +88,8 @@ class FrameworkEdit_GET(FrameworkEditBase):
     class Processor(InitialEditProcessor[FrameworkEditArgs, Framework]):
         argsClass = FrameworkEditArgs
 
+        frameworkDB: ClassVar[FrameworkDB]
+        productDefDB: ClassVar[ProductDefDB]
         resTypeDB: ClassVar[ResTypeDB]
 
         def _initArgs(self,
@@ -117,7 +119,10 @@ class FrameworkEdit_POST(FrameworkEditBase):
 
     class Processor(EditProcessor[FrameworkEditArgs, Framework]):
 
+        frameworkDB: ClassVar[FrameworkDB]
+        productDefDB: ClassVar[ProductDefDB]
         resTypeDB: ClassVar[ResTypeDB]
+        taskDefDB: ClassVar[TaskDefDB]
 
         def createElement(self,
                           recordId: str,
@@ -146,7 +151,7 @@ class FrameworkEdit_POST(FrameworkEditBase):
                     continue
                 final = index in cast(DictArgInstance[bool], args.final)
                 if final:
-                    for task in taskDefDB:
+                    for task in self.taskDefDB:
                         if task['parent'] == args.id and \
                                 name in task.getParametersSelf():
                             raise PresentableError(xhtml.p[
@@ -187,6 +192,7 @@ class ProductSetTable(Table, ABC):
         args = cast(
             EditProcessor[FrameworkEditArgs, Framework], kwargs['proc']
             ).args
+        productDefDB: ProductDefDB = getattr(kwargs['proc'], 'productDefDB')
         name = self.argName
         options: List[XMLContent] = [emptyOption[ '(none)' ]]
         options += sorted(cast(Iterable[str], productDefDB.uniqueValues('id')))
