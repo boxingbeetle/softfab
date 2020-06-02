@@ -212,7 +212,7 @@ class ConfigDetails_GET(
             scheduleIds = tuple(
                 scheduleId
                 for scheduleId, schedule in scheduleDB.items()
-                if configId in schedule.getMatchingConfigIds()
+                if configId in schedule.getMatchingConfigIds(configDB)
                 )
 
             # pylint: disable=attribute-defined-outside-init

@@ -183,7 +183,8 @@ class ScheduleFixtureMixin:
             return 'running'
         elif self.__isDone:
             return 'done'
-        elif self.__missingConfig or not self.scheduled.getMatchingConfigIds():
+        elif self.__missingConfig \
+                or not self.scheduled.getMatchingConfigIds(configlib.configDB):
             return 'warning'
         elif self.__suspended:
             return 'suspended'
@@ -198,7 +199,7 @@ class ScheduleFixtureMixin:
             )
         self.assertEqual(schedule.isDone(), self.__isDone)
         if self.__missingConfig:
-            self.assertEqual(len(schedule.getMatchingConfigIds()), 0)
+            assert len(schedule.getMatchingConfigIds(configlib.configDB)) == 0
         self.assertEqual(schedule.isSuspended(), self.__suspended)
         self.assertEqual(getScheduleStatus(configlib.configDB, schedule),
                          self.expectedStatus())
@@ -622,7 +623,7 @@ class Test0600Tagged(ScheduleFixtureMixin, unittest.TestCase):
             return { 'tagKey': 'nosuchkey', 'tagValue': 'dummy' }
         startOffset = 120
         self.prepare(startOffset, 'once', configFactory = configFactory)
-        self.assertEqual(len(self.scheduled.getMatchingConfigIds()), 0)
+        assert len(self.scheduled.getMatchingConfigIds(configlib.configDB)) == 0
         self.wait(startOffset)
         self.expectScheduleDone()
         self.wait(60)
@@ -636,9 +637,10 @@ class Test0600Tagged(ScheduleFixtureMixin, unittest.TestCase):
         self.prepare(startOffset, sequence, configFactory = configFactory)
         self.startTime = self.preparedTime + startOffset
         # Apply tag.
-        self.assertEqual(len(self.scheduled.getMatchingConfigIds()), 0)
+        assert len(self.scheduled.getMatchingConfigIds(configlib.configDB)) == 0
         configFactory.setTags()
-        self.assertEqual(len(self.scheduled.getMatchingConfigIds()), numConfigs)
+        assert len(self.scheduled.getMatchingConfigIds(configlib.configDB)) \
+                == numConfigs
         # Execution.
         self.wait(startOffset)
 

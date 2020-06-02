@@ -27,7 +27,7 @@ def statusDescription(scheduled: Scheduled, configDB: ConfigDB) -> XMLContent:
             ( 'configuration ',
               xhtml.b[ createConfigDetailsLink(configDB, configId) ],
               ' is inconsistent' )
-            for configId in scheduled.getMatchingConfigIds()
+            for configId in scheduled.getMatchingConfigIds(configDB)
             if not configDB[configId].hasValidInputs()
             )
     else:
@@ -45,7 +45,7 @@ class TagsTable(Table):
         proc = cast(ScheduleDetails_GET.Processor, kwargs['proc'])
         tagKey = proc.scheduled['tagKey']
         tagValue = proc.scheduled['tagValue']
-        numMatches = len(proc.scheduled.getMatchingConfigIds())
+        numMatches = len(proc.scheduled.getMatchingConfigIds(proc.configDB))
         yield 'key:\u00A0', tagKey
         yield 'value:\u00A0', tagValue
         tagArgs = TagArgs(tagkey = tagKey, tagvalue = tagValue)

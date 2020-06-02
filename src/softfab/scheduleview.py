@@ -97,7 +97,7 @@ def getScheduleStatus(configDB: ConfigDB, schedule: Scheduled) -> str:
         return 'running'
     if schedule.isDone():
         return 'done'
-    configIds = schedule.getMatchingConfigIds()
+    configIds = schedule.getMatchingConfigIds(configDB)
     if not configIds:
         return 'warning'
     for configId in configIds:

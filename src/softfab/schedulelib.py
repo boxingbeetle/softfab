@@ -59,7 +59,7 @@ import time
 from twisted.internet import reactor
 
 from softfab.config import dbDir
-from softfab.configlib import Config, configDB
+from softfab.configlib import Config, ConfigDB, configDB
 from softfab.databaselib import Database, RecordObserver
 from softfab.joblib import Job, jobDB
 from softfab.selectlib import ObservingTagCache, SelectableRecordABC
@@ -519,7 +519,7 @@ class Scheduled(XMLTag, SelectableRecordABC):
         else:
             self._properties['startTime'] = nextTime
 
-    def getMatchingConfigIds(self) -> Sequence[str]:
+    def getMatchingConfigIds(self, configDB: ConfigDB) -> Sequence[str]:
         '''Returns the IDs of configurations that will be instantiated by this
         schedule, if the schedule would be triggered right now.
         '''
@@ -563,7 +563,7 @@ class Scheduled(XMLTag, SelectableRecordABC):
     def __createJobs(self) -> None:
         # Create job from each matched configuration.
         jobIds = []
-        for configId in self.getMatchingConfigIds():
+        for configId in self.getMatchingConfigIds(configDB):
             try:
                 config = configDB[configId]
                 if config.hasValidInputs():
