@@ -59,7 +59,7 @@ import time
 from twisted.internet import reactor
 
 from softfab.config import dbDir
-from softfab.configlib import Config, configDB, iterConfigsByTag
+from softfab.configlib import Config, configDB
 from softfab.databaselib import Database, RecordObserver
 from softfab.joblib import Job, jobDB
 from softfab.selectlib import ObservingTagCache, SelectableRecordABC
@@ -527,7 +527,8 @@ class Scheduled(XMLTag, SelectableRecordABC):
         if configId is None:
             return tuple(
                 config.getId()
-                for config in iterConfigsByTag(self.tagKey, self.tagValue)
+                for config in configDB.iterConfigsByTag(self.tagKey,
+                                                        self.tagValue)
                 )
         else:
             if configId in configDB:

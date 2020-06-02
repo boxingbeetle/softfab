@@ -96,6 +96,12 @@ class ConfigDB(Database['Config']):
     def __init__(self, baseDir: Path):
         super().__init__(baseDir, ConfigFactory())
 
+    def iterConfigsByTag(self, key: str, value: str) -> Iterator['Config']:
+        cvalue, dvalue_ = Config.cache.toCanonical(key, value)
+        for config in self:
+            if config.hasTagValue(key, cvalue):
+                yield config
+
 configDB = ConfigDB(dbDir / 'configs')
 
 class _Param(XMLTag):
@@ -583,9 +589,3 @@ class Config(XMLTag, TaskRunnerSet, TaskSetWithInputs[Task],
         _tdObserver.delAllObservers(self)
         _fdObserver.delAllObservers(self)
         _pdObserver.delAllObservers(self)
-
-def iterConfigsByTag(key: str, value: str) -> Iterator[Config]:
-    cvalue, dvalue_ = Config.cache.toCanonical(key, value)
-    for config in configDB:
-        if config.hasTagValue(key, cvalue):
-            yield config

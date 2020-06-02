@@ -5,7 +5,7 @@ from typing import ClassVar, Collection, Iterator, cast
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor, PresentableError, Redirect
-from softfab.configlib import Config, ConfigDB, iterConfigsByTag
+from softfab.configlib import Config, ConfigDB
 from softfab.configview import SimpleConfigTable
 from softfab.datawidgets import DataTable
 from softfab.formlib import actionButtons, makeForm
@@ -81,7 +81,9 @@ class FastExecute_GET(FabPage['FastExecute_GET.Processor',
                         ])
                 assert tagvalue is not None
                 # Look up tag key+value.
-                self.configs = sorted(iterConfigsByTag(tagkey, tagvalue))
+                self.configs = sorted(
+                    self.configDB.iterConfigsByTag(tagkey, tagvalue)
+                    )
             else:
                 if tagkey is not None:
                     raise PresentableError(xhtml.p[
