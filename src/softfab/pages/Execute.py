@@ -2,14 +2,14 @@
 
 from enum import Enum
 from typing import (
-    AbstractSet, Dict, Iterable, Iterator, List, Mapping, Optional, Sequence,
-    Tuple, Type, cast
+    AbstractSet, ClassVar, Dict, Iterable, Iterator, List, Mapping, Optional,
+    Sequence, Tuple, Type, cast
 )
 
 from softfab.FabPage import IconModifier
 from softfab.Page import InternalError, InvalidRequest, PageProcessor, Redirect
 from softfab.compat import NoReturn
-from softfab.configlib import Config, Input, Task, TaskSetWithInputs, configDB
+from softfab.configlib import Config, ConfigDB, Input, Task, TaskSetWithInputs
 from softfab.configview import InputTable
 from softfab.dialog import (
     ContinuedDialogProcessor, DialogPage, DialogStep, InitialDialogProcessor,
@@ -19,7 +19,7 @@ from softfab.formlib import (
     CheckBoxesTable, RadioTable, SingleCheckBoxTable, selectionList, textArea,
     textInput
 )
-from softfab.joblib import jobDB
+from softfab.joblib import JobDB
 from softfab.pageargs import (
     ArgsCorrected, BoolArg, DictArg, DictArgInstance, EnumArg, IntArg,
     PageArgs, SetArg, StrArg
@@ -30,7 +30,7 @@ from softfab.productdeflib import ProductType
 from softfab.projectlib import project
 from softfab.resourcelib import TaskRunner, getTaskRunner, iterTaskRunners
 from softfab.selectview import TagValueEditTable, textToValues, valuesToText
-from softfab.taskdeflib import taskDefDB
+from softfab.taskdeflib import TaskDefDB
 from softfab.taskgroup import LocalGroup, TaskGroup
 from softfab.userlib import (
     AccessDenied, User, checkPrivilege, checkPrivilegeForOwned
@@ -163,6 +163,7 @@ class ParamStep(DialogStep):
     title = 'Parameters'
 
     def process(self, proc: 'Execute_POST.Processor') -> bool:
+        taskDefDB = proc.taskDefDB
         return (
                 # Task Runner should be selected per task.
                 proc.args.pertask and len(proc.args.tasks) > 0
@@ -194,6 +195,7 @@ class ParamStep(DialogStep):
         # Input products:
         yield ConfigInputTable.instance.present(taskSet=config, **kwargs)
         # Task parameters:
+        taskDefDB = proc.taskDefDB
         tasks = [
             ( taskId, taskDefDB[taskId],
               cast(Task, config.getTask(taskId)).getParameters() )
@@ -259,7 +261,7 @@ class ActionStep(DialogStep):
             return StartStep
         elif action is Actions.TAGS:
             try:
-                configDB.checkId(proc.args.config)
+                proc.configDB.checkId(proc.args.config)
             except KeyError as ex:
                 raise VerificationError(ex.args[0])
             return TagsStep
@@ -284,7 +286,7 @@ class StartStep(DialogStep):
         jobIds = []
         for _ in range(proc.args.multi):
             for job in config.createJobs(proc.user.name):
-                jobDB.add(job)
+                proc.jobDB.add(job)
                 jobIds.append(job.getId())
         raise Redirect(createJobsURL(jobIds))
 
@@ -325,7 +327,7 @@ class ConfirmStep(DialogStep):
     title = 'Save'
 
     def process(self, proc: 'Execute_POST.Processor') -> bool:
-        show = proc.args.config in configDB
+        show = proc.args.config in proc.configDB
         if show:
             proc.nextLabel = 'OK'
         return show
@@ -345,6 +347,7 @@ class SaveStep(DialogStep):
 
     def process(self, proc: 'Execute_POST.Processor') -> bool:
         config = proc.getConfig()
+        configDB = proc.configDB
         oldConfig = configDB.get(config.getId())
         if oldConfig is None:
             checkPrivilege(proc.user, 'c/c', 'create configurations')
@@ -374,6 +377,10 @@ EntranceSteps = Enum('EntranceSteps', 'EDIT')
 '''
 
 class ExecuteProcessorMixin:
+
+    configDB: ClassVar[ConfigDB]
+    taskDefDB: ClassVar[TaskDefDB]
+
     __config: Optional[Config] = None
     user: User
 
@@ -382,6 +389,7 @@ class ExecuteProcessorMixin:
         values = cast(Mapping[str, str], args.values)
         poverride = cast(Mapping[str, bool], args.poverride)
         prio = cast(Mapping[str, int], args.prio)
+        taskDefDB = self.taskDefDB
         for taskId in args.tasks:
             taskDef = taskDefDB[taskId]
             taskParams = {}
@@ -511,11 +519,14 @@ class Execute_GET(ExecuteBase, DialogPage):
                        ) -> 'Execute_POST.Arguments':
             argsGET = cast(Execute_GET.Arguments, args)
             if argsGET.step is EntranceSteps.EDIT:
-                return Execute_POST.Arguments.load(argsGET, user)
-            elif argsGET.config:
-                return Execute_POST.Arguments.load(argsGET, user).override(
-                    path=' '.join(step.name for step in self.page.steps[:2])
+                return Execute_POST.Arguments.load(
+                    self.configDB, self.taskDefDB, argsGET, user
                     )
+            elif argsGET.config:
+                path = ' '.join(step.name for step in self.page.steps[:2])
+                return Execute_POST.Arguments.load(
+                    self.configDB, self.taskDefDB, argsGET, user
+                    ).override(path=path)
             else:
                 return Execute_POST.Arguments()
 
@@ -545,6 +556,8 @@ class Execute_POST(ExecuteBase):
 
         @classmethod
         def load(cls,
+                 configDB: ConfigDB,
+                 taskDefDB: TaskDefDB,
                  args: Execute_GET.Arguments,
                  user: User
                  ) -> 'Execute_POST.Arguments':
@@ -625,7 +638,8 @@ class Execute_POST(ExecuteBase):
 
     class Processor(ExecuteProcessorMixin,
                     ContinuedDialogProcessor[Arguments]):
-        pass
+
+        jobDB: ClassVar[JobDB]
 
 class TargetTable(CheckBoxesTable):
     name = 'target'
@@ -661,6 +675,7 @@ class TaskTable(CheckBoxesTable):
                     ) -> Iterator[Tuple[str, Sequence[XMLContent]]]:
         proc = cast(Execute_POST.Processor, kwargs['proc'])
         prio = cast(DictArgInstance[int], proc.args.prio)
+        taskDefDB = proc.taskDefDB
 
         # Create separate lists for selected and unselected tasks.
         selectedTaskIds = []
