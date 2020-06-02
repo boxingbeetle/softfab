@@ -15,7 +15,7 @@ from softfab import (
 # TODO: Automatically order in this way, or at least detect if the order is
 #       invalid.
 def iterDatabases() -> Iterator[databaselib.Database]:
-    yield projectlib._projectDB # pylint: disable=protected-access
+    yield projectlib.projectDB
     yield restypelib.resTypeDB
     yield productdeflib.productDefDB
     yield frameworklib.frameworkDB

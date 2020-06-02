@@ -106,7 +106,7 @@ class ProjectDB(Database['Project']):
         # Call observers, no matter whether we loaded or created the record.
         self._notifyAdded(record)
 
-_projectDB = ProjectDB(dbDir / 'project')
+projectDB = ProjectDB(dbDir / 'project')
 
 class Project(XMLTag, SingletonElem):
     '''Overall project settings.
@@ -256,14 +256,14 @@ class Project(XMLTag, SingletonElem):
             return "'none'"
 
 # Note: SingletonWrapper is not a Project, but mimics it closely.
-project = cast(Project, SingletonWrapper(_projectDB))
+project = cast(Project, SingletonWrapper(projectDB))
 
 class _TimezoneUpdater(SingletonObserver):
 
     def updated(self, record: Project) -> None:
         _selectTimezone()
 
-_projectDB.addObserver(_TimezoneUpdater())
+projectDB.addObserver(_TimezoneUpdater())
 
 _bootTime = getTime()
 def getBootTime() -> int:

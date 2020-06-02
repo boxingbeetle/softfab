@@ -17,8 +17,8 @@ from softfab.formlib import (
 )
 from softfab.pageargs import ArgsCorrected, BoolArg, EnumArg, IntArg, StrArg
 from softfab.projectlib import (
-    EmbeddingPolicy, Project, _projectDB, defaultMaxJobs, getKnownTimezones,
-    project
+    EmbeddingPolicy, Project, defaultMaxJobs, getKnownTimezones, project,
+    projectDB
 )
 from softfab.setcalc import categorizedLists
 from softfab.webgui import PropertiesTable, Widget, docLink
@@ -44,7 +44,7 @@ class ProjectEditBase(EditPage[ProjectEditArgs, Project]):
     # EditPage constants:
     elemTitle = 'Project Configuration'
     elemName = 'project configuration'
-    db = _projectDB
+    db = projectDB
     privDenyText = 'project configuration'
     useScript = False
     formId = 'project'
