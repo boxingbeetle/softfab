@@ -51,8 +51,8 @@ A: For repeating schedules, advance to next time.
 from enum import Enum
 from pathlib import Path
 from typing import (
-    Callable, ClassVar, Iterable, Iterator, List, Mapping, Optional, Sequence,
-    Tuple, cast
+    Callable, Iterable, Iterator, List, Mapping, Optional, Sequence, Tuple,
+    cast
 )
 import logging
 import time
@@ -65,7 +65,7 @@ from softfab.databaselib import Database, RecordObserver
 from softfab.joblib import Job, JobDB, jobDB
 from softfab.selectlib import ObservingTagCache, SelectableRecordABC
 from softfab.timelib import endOfTime, getTime
-from softfab.utils import Heap, SharedInstance
+from softfab.utils import Heap
 from softfab.xmlbind import XMLTag
 from softfab.xmlgen import XMLAttributeValue, XMLContent, xml
 
@@ -106,12 +106,10 @@ scheduleDB = ScheduleDB(dbDir / 'scheduled')
 class JobDBObserver(RecordObserver[Job]):
     '''Send notifications if a job related to a schedule is new or changed.
     '''
-    instance: ClassVar[SharedInstance] = SharedInstance()
 
     def __init__(self) -> None:
         super().__init__()
         self.__observers: List[Callable[[Job, 'Scheduled'], None]] = []
-        jobDB.addObserver(self)
 
     def addObserver(self, observer: Callable[[Job, 'Scheduled'], None]) -> None:
         self.__observers.append(observer)
@@ -145,7 +143,9 @@ class ScheduleManager(RecordObserver['Scheduled']):
             self.added(schedule)
 
         scheduleDB.addObserver(self)
-        JobDBObserver.instance.addObserver(self.__jobUpdated)
+        jobDBObserver = JobDBObserver()
+        jobDBObserver.addObserver(self.__jobUpdated)
+        jobDB.addObserver(jobDBObserver)
 
     def __jobUpdated(self, job: Job, schedule: 'Scheduled') -> None:
         if job.isExecutionFinished() and job.getId() in schedule.getLastJobs() \
