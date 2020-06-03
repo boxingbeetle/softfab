@@ -28,7 +28,7 @@ from softfab.pagelinks import createJobsURL
 from softfab.paramview import ParamCell, ParamOverrideTable
 from softfab.productdeflib import ProductType
 from softfab.projectlib import project
-from softfab.resourcelib import ResourceDB, TaskRunner, getTaskRunner
+from softfab.resourcelib import ResourceDB, TaskRunner
 from softfab.selectview import TagValueEditTable, textToValues, valuesToText
 from softfab.taskdeflib import TaskDefDB
 from softfab.taskgroup import LocalGroup, TaskGroup
@@ -120,7 +120,7 @@ class RunnerStep(DialogStep):
             taskRunnerCaps = []
             for runnerId in proc.args.runners:
                 try:
-                    runner = getTaskRunner(runnerId)
+                    runner = proc.resourceDB.getTaskRunner(runnerId)
                 except KeyError:
                     pass
                 else:

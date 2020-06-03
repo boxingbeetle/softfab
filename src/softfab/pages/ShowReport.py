@@ -14,7 +14,7 @@ from softfab.pagelinks import (
 from softfab.productlib import Product
 from softfab.productview import ProductTable
 from softfab.request import Request
-from softfab.resourcelib import getTaskRunner
+from softfab.resourcelib import ResourceDB
 from softfab.resourceview import getResourceStatus
 from softfab.schedulelib import ScheduleDB
 from softfab.tasktables import JobProcessorMixin, JobTaskRunsTable
@@ -197,10 +197,10 @@ class OutputTable(ProductTable):
             'output' if numOutputs == 1 else f'{numOutputs:d} outputs'
             )
 
-def presentTaskRunner(runnerId: str) -> XMLContent:
+def presentTaskRunner(resourceDB: ResourceDB, runnerId: str) -> XMLContent:
     content: XMLContent
     try:
-        runner = getTaskRunner(runnerId)
+        runner = resourceDB.getTaskRunner(runnerId)
     except KeyError:
         status = 'lost'
         content = runnerId
@@ -209,7 +209,8 @@ def presentTaskRunner(runnerId: str) -> XMLContent:
         content = createTaskRunnerDetailsLink(runnerId)
     return cell(class_=status)[ content ]
 
-def presentTaskRunners(taskLabel: str,
+def presentTaskRunners(resourceDB: ResourceDB,
+                       taskLabel: str,
                        runnerIds: Collection[str]
                        ) -> Iterator[XMLContent]:
     first = True
@@ -217,11 +218,11 @@ def presentTaskRunners(taskLabel: str,
         if first:
             yield (
                 cell(rowspan = len(runnerIds))[ taskLabel ],
-                presentTaskRunner(runner)
+                presentTaskRunner(resourceDB, runner)
                 )
             first = False
         else:
-            yield presentTaskRunner(runner),
+            yield presentTaskRunner(resourceDB, runner),
 
 class TaskRunnerTable(Table):
     columns = 'Task', 'Task Runners'
@@ -235,17 +236,20 @@ class TaskRunnerTable(Table):
 
     def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
         proc = cast(JobProcessor, kwargs['proc'])
+        resourceDB = proc.resourceDB
         tasks = proc.job.getTaskSequence()
         trsPerTask = 0
         for task in tasks:
             trSet = task.getRunners()
             if trSet:
                 trsPerTask += 1
-                yield from presentTaskRunners(task.getName(), trSet)
+                yield from presentTaskRunners(
+                                resourceDB, task.getName(), trSet)
         if trsPerTask < len(tasks):
             taskLabel = 'all tasks' if trsPerTask == 0 else 'other tasks'
             defaultTRs = proc.job.getRunners()
             if defaultTRs:
-                yield from presentTaskRunners(taskLabel, defaultTRs)
+                yield from presentTaskRunners(
+                                resourceDB, taskLabel, defaultTRs)
             elif trsPerTask != 0:
                 yield taskLabel, 'any'

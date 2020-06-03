@@ -774,23 +774,23 @@ class ResourceDB(Database[ResourceBase]):
         for resourceId in self.resourcesOfType(taskRunnerResourceTypeName):
             yield cast(TaskRunner, self[resourceId])
 
-resourceDB = ResourceDB(dbDir / 'resources', tokenDB)
+    def getTaskRunner(self, runnerID: str) -> TaskRunner:
+        """Returns a Task Runner record for the given ID.
+        Raises KeyError if the ID does not exist or belongs to a resource
+        that is not a Task Runner.
+        """
+        try:
+            resource = self[runnerID]
+        except KeyError as ex:
+            raise KeyError(
+                f'Task Runner "{runnerID}" does not exist (anymore?)'
+                ) from ex
+        if isinstance(resource, TaskRunner):
+            return resource
+        else:
+            raise KeyError(f'resource "{runnerID}" is not a Task Runner')
 
-def getTaskRunner(runnerID: str) -> TaskRunner:
-    """Returns a Task Runner record for the given ID.
-    Raises KeyError if the ID does not exist or belongs to a resource
-    that is not a Task Runner.
-    """
-    try:
-        resource = resourceDB[runnerID]
-    except KeyError as ex:
-        raise KeyError(
-            f'Task Runner "{runnerID}" does not exist (anymore?)'
-            ) from ex
-    if isinstance(resource, TaskRunner):
-        return resource
-    else:
-        raise KeyError(f'resource "{runnerID}" is not a Task Runner')
+resourceDB = ResourceDB(dbDir / 'resources', tokenDB)
 
 def runnerFromToken(user: TokenUser) -> TaskRunner:
     """Returns the Task Runner associated with a token user.
@@ -801,7 +801,7 @@ def runnerFromToken(user: TokenUser) -> TaskRunner:
     """
     owner = user.token.owner
     if isinstance(owner, TaskRunnerUser):
-        return getTaskRunner(owner.name)
+        return resourceDB.getTaskRunner(owner.name)
     else:
         raise KeyError('Token does not represent a Task Runner')
 
@@ -827,7 +827,7 @@ def recomputeRunning() -> None:
                 run.failed('No associated Task Runner')
                 continue
             try:
-                runner = getTaskRunner(runnerId)
+                runner = resourceDB.getTaskRunner(runnerId)
             except KeyError as ex:
                 message = ex.args[0]
                 logging.warning(

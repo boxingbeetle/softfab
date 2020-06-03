@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Iterable, Iterator, Optional, cast
+from typing import ClassVar, Iterable, Iterator, Optional, cast
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
@@ -8,7 +8,7 @@ from softfab.pagelinks import (
     ResourceIdArgs, TaskRunnerIdArgs, createJobLink, createTaskLink
 )
 from softfab.request import Request
-from softfab.resourcelib import TaskRunner, getTaskRunner
+from softfab.resourcelib import ResourceDB, TaskRunner
 from softfab.resourceview import getResourceStatus, presentCapabilities
 from softfab.restypelib import taskRunnerResourceTypeName
 from softfab.timeview import formatDuration, formatTime
@@ -27,6 +27,8 @@ class TaskRunnerDetails_GET(FabPage['TaskRunnerDetails_GET.Processor',
 
     class Processor(PageProcessor[TaskRunnerIdArgs]):
 
+        resourceDB: ClassVar[ResourceDB]
+
         async def process(self,
                           req: Request[TaskRunnerIdArgs],
                           user: User
@@ -34,7 +36,7 @@ class TaskRunnerDetails_GET(FabPage['TaskRunnerDetails_GET.Processor',
             runnerId = req.args.runnerId
             taskRunner: Optional[TaskRunner]
             try:
-                taskRunner = getTaskRunner(runnerId)
+                taskRunner = self.resourceDB.getTaskRunner(runnerId)
             except KeyError:
                 taskRunner = None
             # pylint: disable=attribute-defined-outside-init
