@@ -6,7 +6,9 @@ from typing import Dict, Iterator, Mapping, Optional, Tuple, cast
 
 from softfab.config import dbDir
 from softfab.databaselib import Database, DatabaseElem, createInternalId
-from softfab.productdeflib import ProductDef, ProductType, productDefDB
+from softfab.productdeflib import (
+    ProductDef, ProductDefDB, ProductType, productDefDB
+)
 from softfab.xmlbind import XMLTag
 from softfab.xmlgen import XMLContent, xml
 
@@ -15,9 +17,12 @@ from softfab.xmlgen import XMLContent, xml
 class Product(XMLTag, DatabaseElem):
     tagName = 'product'
 
-    def __init__(self, attributes: Mapping[str, Optional[str]]):
+    def __init__(self,
+                 attributes: Mapping[str, Optional[str]],
+                 productDef: ProductDef):
         super().__init__(attributes)
         self.__producers: Dict[str, str] = {}
+        self.__productDef = productDef
 
     def __hash__(self) -> int:
         return hash(self.getName())
@@ -48,7 +53,7 @@ class Product(XMLTag, DatabaseElem):
         return cast(str, self._properties['name'])
 
     def getDef(self) -> ProductDef:
-        return productDefDB.getVersion(cast(str, self._properties['pdKey']))
+        return self.__productDef
 
     def getType(self) -> ProductType:
         return cast(ProductType, self.getDef()['type'])
@@ -128,9 +133,13 @@ class Product(XMLTag, DatabaseElem):
             self._notify()
 
 class ProductFactory:
-    @staticmethod
-    def createProduct(attributes: Mapping[str, str]) -> Product:
-        return Product(attributes)
+
+    def __init__(self, productDefDB: ProductDefDB):
+        self.productDefDB = productDefDB
+
+    def createProduct(self, attributes: Mapping[str, str]) -> Product:
+        productDef = self.productDefDB.getVersion(attributes['pdKey'])
+        return Product(attributes, productDef)
 
 class ProductDB(Database[Product]):
     privilegeObject = 'j' # every product is a part of a job
@@ -138,17 +147,23 @@ class ProductDB(Database[Product]):
     uniqueKeys = ( 'id', )
     alwaysInMemory = False
 
-    def __init__(self, baseDir: Path):
-        super().__init__(baseDir, ProductFactory())
+    def __init__(self, baseDir: Path, productDefDB: ProductDefDB):
+        super().__init__(baseDir, ProductFactory(productDefDB))
+        self.__productDefDB = productDefDB
 
     def create(self, name: str) -> Product:
-        product = Product(dict(
-            id = createInternalId(),
-            name = name,
-            state = 'waiting',
-            pdKey = productDefDB.latestVersion(name)
-            ))
+        productDefDB = self.__productDefDB
+        pdKey = productDefDB.latestVersion(name)
+        if pdKey is None:
+            raise KeyError(name)
+        product = Product(
+            dict(id=createInternalId(),
+                 name=name,
+                 state='waiting',
+                 pdKey=pdKey),
+            productDefDB.getVersion(pdKey)
+            )
         self.add(product)
         return product
 
-productDB = ProductDB(dbDir / 'products')
+productDB = ProductDB(dbDir / 'products', productDefDB)
