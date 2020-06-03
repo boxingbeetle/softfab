@@ -99,7 +99,7 @@ class ScheduleFixtureMixin:
         # all the modules.
         schedulelib.reactor = DummyReactor()
         # Create singleton instance.
-        schedulelib.ScheduleManager()
+        self.scheduleManager = schedulelib.ScheduleManager()
 
         self.__taskRunnerAvailableCallbacks = []
         self.__timedCallbacks = []
@@ -219,7 +219,7 @@ class ScheduleFixtureMixin:
             )
         assert self.__currentTime % 60 == 0
         assert newTime % 60 == 0
-        schedulelib.ScheduleManager.instance.trigger()
+        self.scheduleManager.trigger()
         self.__performCallbacks()
         while self.__currentTime < newTime:
             self.checkStatus()
@@ -228,7 +228,7 @@ class ScheduleFixtureMixin:
             # steps we ensure that we always check the state in between two
             # events that do not occur simultaneously.
             self.__currentTime += 30
-            schedulelib.ScheduleManager.instance.trigger()
+            self.scheduleManager.trigger()
             self.__performCallbacks()
 
     def wait(self, seconds):

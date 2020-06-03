@@ -130,13 +130,9 @@ class JobDBObserver(RecordObserver[Job]):
                     observer(record, schedule)
 
 class ScheduleManager(RecordObserver['Scheduled']):
-    instance = None # Singleton instance.
 
     def __init__(self) -> None:
         super().__init__()
-        # Initialize singleton instance.
-        assert ScheduleManager.instance is None
-        ScheduleManager.instance = self
 
         # Initialize heap.
         self.__heap: Heap[Scheduled] = Heap(key=lambda schedule:
