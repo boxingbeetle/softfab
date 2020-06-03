@@ -133,13 +133,13 @@ class SavePhase(AbstractPhase['EditProcessor[EditArgsT, DBRecord]',
             self.updateRecord(proc, element)
 
     def addRecord(self,
-            proc: 'EditProcessor[EditArgsT, DBRecord]', # pylint: disable=unused-argument
+            proc: 'EditProcessor[EditArgsT, DBRecord]',
             element: DBRecord
             ) -> None:
         proc.db.add(element)
 
     def updateRecord(self,
-            proc: 'EditProcessor[EditArgsT, DBRecord]', # pylint: disable=unused-argument
+            proc: 'EditProcessor[EditArgsT, DBRecord]',
             element: DBRecord
             ) -> None:
         proc.db.update(element)
