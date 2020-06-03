@@ -16,7 +16,7 @@ from softfab.databaselib import Database, DatabaseElem, RecordObserver
 from softfab.paramlib import GetParent, ParamMixin, Parameterized, paramTop
 from softfab.projectlib import project
 from softfab.restypelib import taskRunnerResourceTypeName
-from softfab.taskrunlib import RunInfo, TaskRun, taskRunDB
+from softfab.taskrunlib import RunInfo, TaskRun, TaskRunDB, taskRunDB
 from softfab.timelib import getTime
 from softfab.tokens import Token, TokenDB, TokenRole, TokenUser, tokenDB
 from softfab.userlib import TaskRunnerUser
@@ -805,7 +805,7 @@ class ResourceDB(Database[ResourceBase]):
 
 resourceDB = ResourceDB(dbDir / 'resources', tokenDB)
 
-def recomputeRunning() -> None:
+def recomputeRunning(resourceDB: ResourceDB, taskRunDB: TaskRunDB) -> None:
     '''Scan the task run database for running tasks.
     This is useful when:
     - jobs have been deleted manually

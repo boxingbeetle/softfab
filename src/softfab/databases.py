@@ -58,7 +58,7 @@ def convertAll() -> None:
         db.convert()
 
     print('Recomputing running tasks...')
-    resourcelib.recomputeRunning()
+    resourcelib.recomputeRunning(resourcelib.resourceDB, taskrunlib.taskRunDB)
 
     print('Updating database version tag...')
     projectlib.project.updateVersion()
