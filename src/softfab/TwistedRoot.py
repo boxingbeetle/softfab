@@ -322,14 +322,15 @@ class SoftFabRoot(Resource):
         databaseLoader = DatabaseLoader()
         yield databaseLoader.process()
         databases = databaseLoader.databases
+        configDB = cast(ConfigDB, databases['configDB'])
+        jobDB = cast(JobDB, databases['jobDB'])
         dependencies: Dict[str, object] = dict(
             databases,
-            dateRange=DateRangeMonitor(cast(JobDB, databases['jobDB']))
+            dateRange=DateRangeMonitor(jobDB)
             )
         yield PageLoader(self, dependencies).process
         # Start schedule processing.
-        configDB = cast(ConfigDB, databases['configDB'])
-        yield ScheduleManager(configDB).trigger
+        yield ScheduleManager(configDB, jobDB).trigger
 
     def startupComplete(self,
             result: None # pylint: disable=unused-argument

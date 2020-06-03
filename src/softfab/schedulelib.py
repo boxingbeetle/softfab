@@ -62,7 +62,7 @@ from twisted.internet import reactor
 from softfab.config import dbDir
 from softfab.configlib import Config, ConfigDB
 from softfab.databaselib import Database, RecordObserver
-from softfab.joblib import Job, jobDB
+from softfab.joblib import Job, JobDB, jobDB
 from softfab.selectlib import ObservingTagCache, SelectableRecordABC
 from softfab.timelib import endOfTime, getTime
 from softfab.utils import Heap, SharedInstance
@@ -132,9 +132,10 @@ class JobDBObserver(RecordObserver[Job]):
 
 class ScheduleManager(RecordObserver['Scheduled']):
 
-    def __init__(self, configDB: ConfigDB):
+    def __init__(self, configDB: ConfigDB, jobDB: JobDB):
         super().__init__()
         self.configDB = configDB
+        self.jobDB = jobDB
 
         # Initialize heap.
         self.__heap: Heap[Scheduled] = Heap(key=lambda schedule:
@@ -180,7 +181,7 @@ class ScheduleManager(RecordObserver['Scheduled']):
             next(self.__heap)
             nextSchedule.trigger(
                 untilSecs,
-                nextSchedule.createJobs(self.configDB)
+                nextSchedule.createJobs(self.configDB, self.jobDB)
                 )
 
     def added(self, record: 'Scheduled') -> None:
@@ -572,7 +573,7 @@ class Scheduled(XMLTag, SelectableRecordABC):
 
         self._notify()
 
-    def createJobs(self, configDB: ConfigDB) -> Iterator[str]:
+    def createJobs(self, configDB: ConfigDB, jobDB: JobDB) -> Iterator[str]:
         """Create a job from each matched configuration.
         Yield the IDs of the created jobs.
         """
