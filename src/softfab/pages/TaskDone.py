@@ -9,7 +9,7 @@ from softfab.authentication import TokenAuthPage
 from softfab.joblib import JobDB
 from softfab.pageargs import DictArg, EnumArg, ListArg, PageArgs, StrArg
 from softfab.request import Request
-from softfab.resourcelib import runnerFromToken
+from softfab.resourcelib import ResourceDB
 from softfab.response import Response
 from softfab.resultcode import ResultCode
 from softfab.resultlib import putData
@@ -35,6 +35,7 @@ class TaskDone_POST(ControlPage['TaskDone_POST.Arguments',
     class Processor(PageProcessor['TaskDone_POST.Arguments']):
 
         jobDB: ClassVar[JobDB]
+        resourceDB: ClassVar[ResourceDB]
 
         async def process(self,
                           req: Request['TaskDone_POST.Arguments'],
@@ -54,7 +55,7 @@ class TaskDone_POST(ControlPage['TaskDone_POST.Arguments',
                 # Find Task Runner.
                 assert isinstance(user, TokenUser), user
                 try:
-                    taskRunner = runnerFromToken(user)
+                    taskRunner = self.resourceDB.runnerFromToken(user)
                 except KeyError as ex:
                     raise InvalidRequest(*ex.args) from ex
 

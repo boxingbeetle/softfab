@@ -790,20 +790,20 @@ class ResourceDB(Database[ResourceBase]):
         else:
             raise KeyError(f'resource "{runnerID}" is not a Task Runner')
 
+    def runnerFromToken(self, user: TokenUser) -> TaskRunner:
+        """Returns the Task Runner associated with a token user.
+
+        Raises `KeyError` if the token user does not represent
+        a Task Runner, for example because it represents a different
+        type of resource.
+        """
+        owner = user.token.owner
+        if isinstance(owner, TaskRunnerUser):
+            return self.getTaskRunner(owner.name)
+        else:
+            raise KeyError('Token does not represent a Task Runner')
+
 resourceDB = ResourceDB(dbDir / 'resources', tokenDB)
-
-def runnerFromToken(user: TokenUser) -> TaskRunner:
-    """Returns the Task Runner associated with a token user.
-
-    Raises `KeyError` if the token user does not represent
-    a Task Runner, for example because it represents a different
-    type of resource.
-    """
-    owner = user.token.owner
-    if isinstance(owner, TaskRunnerUser):
-        return resourceDB.getTaskRunner(owner.name)
-    else:
-        raise KeyError('Token does not represent a Task Runner')
 
 def recomputeRunning() -> None:
     '''Scan the task run database for running tasks.

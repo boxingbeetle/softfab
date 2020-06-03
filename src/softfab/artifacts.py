@@ -35,7 +35,7 @@ from softfab.joblib import Job, jobDB
 from softfab.projectlib import project
 from softfab.reportview import ReportPresenter, createPresenter
 from softfab.request import Request
-from softfab.resourcelib import runnerFromToken
+from softfab.resourcelib import resourceDB
 from softfab.taskrunlib import TaskRun
 from softfab.tokens import TokenRole, TokenUser, authenticateToken, tokenDB
 from softfab.useragent import AcceptedEncodings
@@ -213,7 +213,7 @@ def _runForRunnerUser(user: User) -> TaskRun:
     if not isinstance(user, TokenUser):
         raise AccessDenied('This operation is exclusive to Task Runners')
     try:
-        runner = runnerFromToken(user)
+        runner = resourceDB.runnerFromToken(user)
     except KeyError as ex:
         raise AccessDenied(*ex.args) from ex
 

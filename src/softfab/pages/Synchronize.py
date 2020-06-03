@@ -8,7 +8,7 @@ from softfab.authentication import TokenAuthPage
 from softfab.joblib import unfinishedJobs
 from softfab.request import Request
 from softfab.resourcelib import (
-    RequestFactory, ResourceDB, TaskRunner, TaskRunnerData, runnerFromToken
+    RequestFactory, ResourceDB, TaskRunner, TaskRunnerData
 )
 from softfab.response import Response
 from softfab.taskrunlib import TaskRun
@@ -61,7 +61,7 @@ class Synchronize_POST(ControlPage[ControlPage.Arguments,
             # Sync Task Runner database.
             assert isinstance(user, TokenUser), user
             try:
-                taskRunner = runnerFromToken(user)
+                taskRunner = self.resourceDB.runnerFromToken(user)
             except KeyError as ex:
                 raise InvalidRequest(*ex.args) from ex
             self.taskRunner = taskRunner
