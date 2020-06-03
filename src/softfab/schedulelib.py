@@ -51,7 +51,8 @@ A: For repeating schedules, advance to next time.
 from enum import Enum
 from pathlib import Path
 from typing import (
-    Callable, ClassVar, List, Mapping, Optional, Sequence, Tuple, cast
+    Callable, ClassVar, Iterable, Iterator, List, Mapping, Optional, Sequence,
+    Tuple, cast
 )
 import logging
 import time
@@ -177,7 +178,10 @@ class ScheduleManager(RecordObserver['Scheduled']):
             if nextSchedule is None or nextSchedule.startTime > untilSecs:
                 break
             next(self.__heap)
-            nextSchedule.trigger(self.configDB, untilSecs)
+            nextSchedule.trigger(
+                untilSecs,
+                nextSchedule.createJobs(self.configDB)
+                )
 
     def added(self, record: 'Scheduled') -> None:
         self.__addToQueue(record)
@@ -536,7 +540,7 @@ class Scheduled(XMLTag, SelectableRecordABC):
                 # are schedules that point to non-existing configs.
                 return ()
 
-    def trigger(self, configDB: ConfigDB, currentTime: int) -> None:
+    def trigger(self, currentTime: int, jobIds: Iterable[str]) -> None:
         # To avoid an infinite loop in ScheduleManager, each invocation of
         # trigger() should either increase the schedule's start time or
         # cause isBlocked() to return False (which will lead to the schedule
@@ -544,22 +548,35 @@ class Scheduled(XMLTag, SelectableRecordABC):
 
         # Advance time for next run.
         self.__adjustStartTime(True, currentTime)
+        if not self.isSuspended():
+            repeat = self.repeat
+            if repeat is ScheduleRepeat.ONCE:
+                self._properties['done'] = True
+            elif repeat is ScheduleRepeat.TRIGGERED:
+                self._properties['trigger'] = False
+
+        # Update "last run" if any jobs were created.
         try:
-            if not self.isSuspended():
-                repeat = self.repeat
-                if repeat is ScheduleRepeat.ONCE:
-                    self._properties['done'] = True
-                elif repeat is ScheduleRepeat.TRIGGERED:
-                    self._properties['trigger'] = False
-                self.__createJobs(configDB)
-        finally:
+            jobIds = list(jobIds)
+        except Exception:
             # Make sure the schedule is updated in the DB even if job creation
             # failed.
-            self._notify()
+            logging.exception(
+                'Error creating jobs from schedule "%s"',
+                self.getId()
+                )
+        else:
+            if jobIds:
+                self.__lastJobIds = jobIds
+                self.__running = True
 
-    def __createJobs(self, configDB: ConfigDB) -> None:
-        # Create job from each matched configuration.
-        jobIds = []
+        self._notify()
+
+    def createJobs(self, configDB: ConfigDB) -> Iterator[str]:
+        """Create a job from each matched configuration.
+        Yield the IDs of the created jobs.
+        """
+
         for configId in self.getMatchingConfigIds(configDB):
             try:
                 config = configDB[configId]
@@ -568,7 +585,7 @@ class Scheduled(XMLTag, SelectableRecordABC):
                         job.comment += '\n' + self.comment
                         job.setScheduledBy(self.getId())
                         jobDB.add(job)
-                        jobIds.append(job.getId())
+                        yield job.getId()
                 else:
                     logging.warning(
                         'Schedule "%s" could not instantiate '
@@ -582,10 +599,6 @@ class Scheduled(XMLTag, SelectableRecordABC):
                     'Schedule "%s" failed to instantiate configuration "%s"',
                     self.getId(), configId
                     )
-        # Update "last run" if any jobs were created.
-        if jobIds:
-            self.__lastJobIds = jobIds
-            self.__running = True
 
     def _getContent(self) -> XMLContent:
         yield xml.comment[ self.__comment ]
