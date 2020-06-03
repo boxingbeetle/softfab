@@ -11,24 +11,6 @@ from softfab.databaselib import (
 from softfab.xmlbind import XMLAttributeValue, XMLTag
 
 
-class ProductFactory:
-    @staticmethod
-    def createProduct(attributes: Mapping[str, str]) -> 'ProductDef':
-        return ProductDef(attributes)
-
-class ProductDefDB(VersionedDatabase['ProductDef']):
-    privilegeObject = 'pd'
-    description = 'product definition'
-    uniqueKeys = ( 'id', )
-
-    def __init__(self, baseDir: Path):
-        super().__init__(baseDir, ProductFactory())
-
-    def _customCheckId(self, key: str) -> None:
-        checkWrapperVarName(key)
-
-productDefDB = ProductDefDB(dbDir / 'productdefs')
-
 class ProductType(Enum):
     """Available product locator types.
 
@@ -76,3 +58,21 @@ class ProductDef(XMLTag, DatabaseElem):
 
     def isCombined(self) -> bool:
         return cast(bool, self['combined'])
+
+class ProductFactory:
+    @staticmethod
+    def createProduct(attributes: Mapping[str, str]) -> ProductDef:
+        return ProductDef(attributes)
+
+class ProductDefDB(VersionedDatabase[ProductDef]):
+    privilegeObject = 'pd'
+    description = 'product definition'
+    uniqueKeys = ( 'id', )
+
+    def __init__(self, baseDir: Path):
+        super().__init__(baseDir, ProductFactory())
+
+    def _customCheckId(self, key: str) -> None:
+        checkWrapperVarName(key)
+
+productDefDB = ProductDefDB(dbDir / 'productdefs')
