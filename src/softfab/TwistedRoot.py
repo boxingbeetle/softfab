@@ -25,6 +25,7 @@ from softfab.artifacts import createArtifactRoots
 from softfab.authentication import DisabledAuthPage, NoAuthPage, TokenAuthPage
 from softfab.compat import importlib_resources
 from softfab.config import dbDir
+from softfab.configlib import ConfigDB
 from softfab.databaselib import Database
 from softfab.databases import iterDatabases
 from softfab.docserve import DocPage, DocResource
@@ -327,7 +328,8 @@ class SoftFabRoot(Resource):
             )
         yield PageLoader(self, dependencies).process
         # Start schedule processing.
-        yield ScheduleManager().trigger
+        configDB = cast(ConfigDB, databases['configDB'])
+        yield ScheduleManager(configDB).trigger
 
     def startupComplete(self,
             result: None # pylint: disable=unused-argument

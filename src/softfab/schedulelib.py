@@ -59,7 +59,7 @@ import time
 from twisted.internet import reactor
 
 from softfab.config import dbDir
-from softfab.configlib import Config, ConfigDB, configDB
+from softfab.configlib import Config, ConfigDB
 from softfab.databaselib import Database, RecordObserver
 from softfab.joblib import Job, jobDB
 from softfab.selectlib import ObservingTagCache, SelectableRecordABC
@@ -131,8 +131,9 @@ class JobDBObserver(RecordObserver[Job]):
 
 class ScheduleManager(RecordObserver['Scheduled']):
 
-    def __init__(self) -> None:
+    def __init__(self, configDB: ConfigDB):
         super().__init__()
+        self.configDB = configDB
 
         # Initialize heap.
         self.__heap: Heap[Scheduled] = Heap(key=lambda schedule:
@@ -176,7 +177,7 @@ class ScheduleManager(RecordObserver['Scheduled']):
             if nextSchedule is None or nextSchedule.startTime > untilSecs:
                 break
             next(self.__heap)
-            nextSchedule.trigger(untilSecs)
+            nextSchedule.trigger(self.configDB, untilSecs)
 
     def added(self, record: 'Scheduled') -> None:
         self.__addToQueue(record)
@@ -535,7 +536,7 @@ class Scheduled(XMLTag, SelectableRecordABC):
                 # are schedules that point to non-existing configs.
                 return ()
 
-    def trigger(self, currentTime: int) -> None:
+    def trigger(self, configDB: ConfigDB, currentTime: int) -> None:
         # To avoid an infinite loop in ScheduleManager, each invocation of
         # trigger() should either increase the schedule's start time or
         # cause isBlocked() to return False (which will lead to the schedule
@@ -550,13 +551,13 @@ class Scheduled(XMLTag, SelectableRecordABC):
                     self._properties['done'] = True
                 elif repeat is ScheduleRepeat.TRIGGERED:
                     self._properties['trigger'] = False
-                self.__createJobs()
+                self.__createJobs(configDB)
         finally:
             # Make sure the schedule is updated in the DB even if job creation
             # failed.
             self._notify()
 
-    def __createJobs(self) -> None:
+    def __createJobs(self, configDB: ConfigDB) -> None:
         # Create job from each matched configuration.
         jobIds = []
         for configId in self.getMatchingConfigIds(configDB):
