@@ -18,7 +18,7 @@ from softfab.projectlib import project
 from softfab.restypelib import taskRunnerResourceTypeName
 from softfab.taskrunlib import RunInfo, TaskRun, taskRunDB
 from softfab.timelib import getTime
-from softfab.tokens import Token, TokenRole, TokenUser, tokenDB
+from softfab.tokens import Token, TokenDB, TokenRole, TokenUser, tokenDB
 from softfab.userlib import TaskRunnerUser
 from softfab.utils import abstract, cachedProperty, parseVersion
 from softfab.xmlbind import XMLTag
@@ -732,8 +732,9 @@ class ResourceDB(Database[ResourceBase]):
     description = 'resource'
     uniqueKeys = ( 'id', )
 
-    def __init__(self, baseDir: Path):
+    def __init__(self, baseDir: Path, tokenDB: TokenDB):
         super().__init__(baseDir, ResourceFactory())
+        self.__tokenDB = tokenDB
         self.__resourcesByType: DefaultDict[str, Set[str]] = \
                 defaultdict(set)
 
@@ -765,9 +766,9 @@ class ResourceDB(Database[ResourceBase]):
     def remove(self, value: ResourceBase) -> None:
         super().remove(value)
         if 'tokenId' in value._properties: # pylint: disable=protected-access
-            tokenDB.remove(value.token)
+            self.__tokenDB.remove(value.token)
 
-resourceDB = ResourceDB(dbDir / 'resources')
+resourceDB = ResourceDB(dbDir / 'resources', tokenDB)
 
 def iterTaskRunners() -> Iterator[TaskRunner]:
     """Iterates through all Task Runner records.
