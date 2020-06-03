@@ -768,13 +768,13 @@ class ResourceDB(Database[ResourceBase]):
         if 'tokenId' in value._properties: # pylint: disable=protected-access
             self.__tokenDB.remove(value.token)
 
-resourceDB = ResourceDB(dbDir / 'resources', tokenDB)
+    def iterTaskRunners(self) -> Iterator[TaskRunner]:
+        """Iterates through all Task Runner records.
+        """
+        for resourceId in self.resourcesOfType(taskRunnerResourceTypeName):
+            yield cast(TaskRunner, self[resourceId])
 
-def iterTaskRunners() -> Iterator[TaskRunner]:
-    """Iterates through all Task Runner records.
-    """
-    for resourceId in resourceDB.resourcesOfType(taskRunnerResourceTypeName):
-        yield cast(TaskRunner, resourceDB[resourceId])
+resourceDB = ResourceDB(dbDir / 'resources', tokenDB)
 
 def getTaskRunner(runnerID: str) -> TaskRunner:
     """Returns a Task Runner record for the given ID.
@@ -813,7 +813,7 @@ def recomputeRunning() -> None:
     '''
     # pylint: disable=protected-access
     # The methods are protected on purpose, because no-one else should use them.
-    for runner in iterTaskRunners():
+    for runner in resourceDB.iterTaskRunners():
         runner._resetRuns()
 
     for run in taskRunDB:
@@ -845,5 +845,5 @@ def recomputeRunning() -> None:
                 else:
                     runner._initExecutionRun(run)
 
-    for runner in iterTaskRunners():
+    for runner in resourceDB.iterTaskRunners():
         runner._notify()

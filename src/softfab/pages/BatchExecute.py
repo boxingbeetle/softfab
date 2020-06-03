@@ -20,7 +20,7 @@ from softfab.pageargs import DictArg, EnumArg, RefererArg, StrArg
 from softfab.pagelinks import createJobsURL
 from softfab.paramview import ParamOverrideTable
 from softfab.request import Request
-from softfab.resourcelib import TaskRunner
+from softfab.resourcelib import ResourceDB, TaskRunner
 from softfab.selectview import SelectArgs
 from softfab.taskgroup import LocalGroup, ProductProto
 from softfab.userlib import User, UserDB, checkPrivilege
@@ -136,6 +136,7 @@ class BatchExecute_GET(FabPage['BatchExecute_GET.Processor',
     class Processor(SelectConfigsMixin[ParentArgs], PageProcessor[ParentArgs]):
 
         configDB: ClassVar[ConfigDB]
+        resourceDB: ClassVar[ResourceDB]
         userDB: ClassVar[UserDB]
 
         notices: List[str]

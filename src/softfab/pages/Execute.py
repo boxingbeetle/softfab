@@ -28,7 +28,7 @@ from softfab.pagelinks import createJobsURL
 from softfab.paramview import ParamCell, ParamOverrideTable
 from softfab.productdeflib import ProductType
 from softfab.projectlib import project
-from softfab.resourcelib import TaskRunner, getTaskRunner, iterTaskRunners
+from softfab.resourcelib import ResourceDB, TaskRunner, getTaskRunner
 from softfab.selectview import TagValueEditTable, textToValues, valuesToText
 from softfab.taskdeflib import TaskDefDB
 from softfab.taskgroup import LocalGroup, TaskGroup
@@ -104,7 +104,7 @@ class RunnerStep(DialogStep):
     title = 'Task Runners'
 
     def process(self, proc: 'Execute_POST.Processor') -> bool:
-        return proc.args.trselect and any(iterTaskRunners())
+        return proc.args.trselect and any(proc.resourceDB.iterTaskRunners())
 
     def presentFormBody(self, **kwargs: object) -> XMLContent:
         yield xhtml.p[ 'Select Task Runner(s) to use:' ]
@@ -379,6 +379,7 @@ EntranceSteps = Enum('EntranceSteps', 'EDIT')
 class ExecuteProcessorMixin:
 
     configDB: ClassVar[ConfigDB]
+    resourceDB: ClassVar[ResourceDB]
     taskDefDB: ClassVar[TaskDefDB]
 
     __config: Optional[Config] = None
@@ -413,11 +414,11 @@ class ExecuteProcessorMixin:
         args = cast(Execute_POST.Arguments, getattr(self, 'args'))
         targets = args.target
         if targets:
-            for runner in iterTaskRunners():
+            for runner in self.resourceDB.iterTaskRunners():
                 if runner.targets & targets:
                     yield runner
         else:
-            yield from iterTaskRunners()
+            yield from self.resourceDB.iterTaskRunners()
 
     def getConfig(self) -> Config:
         if self.__config is None:

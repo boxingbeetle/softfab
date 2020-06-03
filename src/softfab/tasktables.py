@@ -13,7 +13,7 @@ from softfab.pagelinks import (
 )
 from softfab.projectlib import project
 from softfab.request import Request
-from softfab.resourcelib import iterTaskRunners
+from softfab.resourcelib import ResourceDB
 from softfab.taskview import getTaskStatus, taskSummary
 from softfab.userlib import UserDB
 from softfab.userview import OwnerColumn
@@ -104,6 +104,7 @@ class TaskRunnerColumn(DataColumn[Task]):
 class JobProcessorMixin:
 
     jobDB: ClassVar[JobDB]
+    resourceDB: ClassVar[ResourceDB]
 
     def initJob(self, req: Request[JobIdArgs]) -> None:
         jobId = req.args.jobId
@@ -112,7 +113,7 @@ class JobProcessorMixin:
             job = self.jobDB[jobId]
         except KeyError:
             raise InvalidRequest(f'No job exists with ID "{jobId}"')
-        job.updateSummaries(tuple(iterTaskRunners()))
+        job.updateSummaries(tuple(self.resourceDB.iterTaskRunners()))
 
         self.job = job
 

@@ -8,7 +8,7 @@ from softfab.formlib import dropDownList, emptyOption, hiddenInput, textInput
 from softfab.pagelinks import createConfigDetailsLink
 from softfab.productdeflib import ProductType
 from softfab.projectlib import project
-from softfab.resourcelib import TaskRunner, iterTaskRunners
+from softfab.resourcelib import ResourceDB, TaskRunner
 from softfab.restypeview import createTargetLink
 from softfab.schedulelib import ScheduleDB
 from softfab.selectview import SelectArgs
@@ -60,6 +60,7 @@ class InputTable(Table):
         taskSet = cast(TaskSetWithInputs, kwargs['taskSet'])
         grouped = taskSet.getInputsGrouped()
         localInputs = taskSet.hasLocalInputs()
+        resourceDB: ResourceDB = getattr(kwargs['proc'], 'resourceDB')
         taskRunners = None
         for group, groupInputs in grouped:
             first: Optional[str] = None
@@ -84,7 +85,7 @@ class InputTable(Table):
                         if taskRunners is None:
                             taskRunners = sorted(
                                 runner.getId()
-                                for runner in iterTaskRunners()
+                                for runner in resourceDB.iterTaskRunners()
                                 if self.filterTaskRunner(
                                     # TODO: Passing "inp" should not be needed,
                                     #       but this requires non-trivial

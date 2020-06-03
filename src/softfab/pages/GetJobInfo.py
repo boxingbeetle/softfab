@@ -10,7 +10,7 @@ from softfab.productdeflib import ProductType
 from softfab.productlib import Product
 from softfab.projectlib import project
 from softfab.request import Request
-from softfab.resourcelib import iterTaskRunners
+from softfab.resourcelib import ResourceDB
 from softfab.response import Response
 from softfab.timeview import formatTimeAttr
 from softfab.userlib import User, checkPrivilege
@@ -26,6 +26,7 @@ class GetJobInfo_GET(ControlPage['GetJobInfo_GET.Arguments',
     class Processor(PageProcessor[JobIdArgs]):
 
         jobDB: ClassVar[JobDB]
+        resourceDB: ClassVar[ResourceDB]
 
         async def process(self, req: Request[JobIdArgs], user: User) -> None:
             jobId = req.args.jobId
@@ -84,7 +85,7 @@ class GetJobInfo_GET(ControlPage['GetJobInfo_GET.Arguments',
                 ]
 
         job = proc.job
-        job.updateSummaries(list(iterTaskRunners()))
+        job.updateSummaries(list(proc.resourceDB.iterTaskRunners()))
         comment = job.comment
         tasks = job.getTaskSequence()
         response.writeXML(
