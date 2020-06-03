@@ -443,9 +443,10 @@ class Scheduled(XMLTag, SelectableRecordABC):
             self._notify()
 
     def getLastStartTime(self) -> Optional[int]:
-        '''Returns the create time of the most recently created jobs,
-        or None if the schedule never created any jobs.
-        '''
+        """Return the create time of the most recently created job,
+        or None if the schedule was never triggered or the last trigger
+        did not create any jobs.
+        """
         # Typically all jobs will have the same create time.
         return max(
             (jobDB[jobId].getCreateTime() for jobId in self.__lastJobIds),
