@@ -328,10 +328,6 @@ class ExecutionObserver(RecordObserver[TaskRun]):
         self.__taskRunner = taskRunner
         self.__callback: Callable[[Optional[TaskRun]], None] = callback
         self._run: Optional[TaskRun] = None
-        taskRunDB.addObserver(self)
-
-    def retired(self) -> None:
-        taskRunDB.removeObserver(self)
 
     def reset(self) -> None:
         self._run = None
@@ -451,7 +447,7 @@ class TaskRunner(ResourceBase):
         self._properties.setdefault('status', ConnectionStatus.NEW)
         self.__data: Optional[TaskRunnerData] = None
         self.__hasBeenInSync = False
-        self.__executionObserver = ExecutionObserver(
+        self._executionObserver = ExecutionObserver(
             self, self.__shouldBeExecuting
             )
         self.__lastSyncTime = getTime()
@@ -499,9 +495,6 @@ class TaskRunner(ResourceBase):
         self.__cancelLostCallback()
         self.__failRun('removed')
 
-        self.__executionObserver.retired()
-        self.__executionObserver = cast(ExecutionObserver, None)
-
     @property
     def typeName(self) -> str:
         return taskRunnerResourceTypeName
@@ -533,12 +526,12 @@ class TaskRunner(ResourceBase):
         if run is None:
             logging.warning('Execution run %s does not exist', runId)
         else:
-            self.__executionObserver.setRun(run)
+            self._executionObserver.setRun(run)
 
     def __shouldBeExecuting(self, run: Optional[TaskRun]) -> None:
         '''Callback from ExecutionObserver.
         '''
-        assert run is self.__executionObserver.getRun()
+        assert run is self._executionObserver.getRun()
         # Write reference to current execution run to DB.
         self._notify()
 
@@ -567,7 +560,7 @@ class TaskRunner(ResourceBase):
 
     def __failRun(self, reason: str) -> None:
         """Marks any task this Task Runner was running as failed."""
-        run = self.__executionObserver.getRun()
+        run = self._executionObserver.getRun()
         if run is not None:
             logging.warning(
                 'Marking run %s as failed, '
@@ -622,7 +615,7 @@ class TaskRunner(ResourceBase):
             return ConnectionStatus.UNKNOWN
 
     def getRun(self) -> Optional[TaskRun]:
-        return self.__executionObserver.getRun()
+        return self._executionObserver.getRun()
 
     def setExitFlag(self, flag: bool) -> None:
         self._properties['exit'] = flag
@@ -637,7 +630,7 @@ class TaskRunner(ResourceBase):
     def isReserved(self) -> bool:
         '''Returns True iff something has been assigned to this Task Runner.
         '''
-        return self.__executionObserver.getRun() is not None
+        return self._executionObserver.getRun() is not None
 
     def deactivate(self, reason: str) -> None:
         '''Suspends this Task Runner because it is misbehaving.
@@ -667,7 +660,7 @@ class TaskRunner(ResourceBase):
         self.__cancelLostCallback()
         self.__startLostCallback()
         return self.__enforceSync(
-            self.__executionObserver, data.getExecutionRunId
+            self._executionObserver, data.getExecutionRunId
             )
 
     def __enforceSync(self,
@@ -707,15 +700,15 @@ class TaskRunner(ResourceBase):
         yield super()._getContent()
         if self.__data is not None:
             yield self.__data.toXML()
-        yield self.__executionObserver.toXML()
+        yield self._executionObserver.toXML()
 
     # Used by recomputeRunning:
 
     def _resetRuns(self) -> None:
-        self.__executionObserver.reset()
+        self._executionObserver.reset()
 
     def _initExecutionRun(self, run: TaskRun) -> None:
-        self.__executionObserver.setRun(run)
+        self._executionObserver.setRun(run)
 
 class ResourceFactory:
 
@@ -732,9 +725,10 @@ class ResourceDB(Database[ResourceBase]):
     description = 'resource'
     uniqueKeys = ( 'id', )
 
-    def __init__(self, baseDir: Path, tokenDB: TokenDB):
+    def __init__(self, baseDir: Path, tokenDB: TokenDB, taskRunDB: TaskRunDB):
         super().__init__(baseDir, ResourceFactory())
         self.__tokenDB = tokenDB
+        self.__taskRunDB = taskRunDB
         self.__resourcesByType: DefaultDict[str, Set[str]] = \
                 defaultdict(set)
 
@@ -763,10 +757,19 @@ class ResourceDB(Database[ResourceBase]):
         """Return the IDs of all resources of the given type."""
         return self.__resourcesByType[typeName]
 
+    def add(self, value: ResourceBase) -> None:
+        super().add(value)
+        # pylint: disable=protected-access
+        if isinstance(value, TaskRunner):
+            self.__taskRunDB.addObserver(value._executionObserver)
+
     def remove(self, value: ResourceBase) -> None:
         super().remove(value)
-        if 'tokenId' in value._properties: # pylint: disable=protected-access
+        # pylint: disable=protected-access
+        if 'tokenId' in value._properties:
             self.__tokenDB.remove(value.token)
+        if isinstance(value, TaskRunner):
+            self.__taskRunDB.removeObserver(value._executionObserver)
 
     def iterTaskRunners(self) -> Iterator[TaskRunner]:
         """Iterates through all Task Runner records.
@@ -803,7 +806,7 @@ class ResourceDB(Database[ResourceBase]):
         else:
             raise KeyError('Token does not represent a Task Runner')
 
-resourceDB = ResourceDB(dbDir / 'resources', tokenDB)
+resourceDB = ResourceDB(dbDir / 'resources', tokenDB, taskRunDB)
 
 def recomputeRunning(resourceDB: ResourceDB, taskRunDB: TaskRunDB) -> None:
     '''Scan the task run database for running tasks.
