@@ -4,8 +4,7 @@ from functools import partial
 from mimetypes import guess_type
 from types import GeneratorType, ModuleType
 from typing import (
-    Any, Callable, Dict, Generator, Iterator, Mapping, Optional, Type, Union,
-    cast, get_type_hints
+    Callable, Dict, Generator, Iterator, Mapping, Optional, Type, Union, cast
 )
 import logging
 
@@ -27,7 +26,7 @@ from softfab.compat import importlib_resources
 from softfab.config import dbDir
 from softfab.configlib import ConfigDB
 from softfab.databaselib import Database
-from softfab.databases import iterDatabases
+from softfab.databases import injectDependencies, iterDatabases
 from softfab.docserve import DocPage, DocResource
 from softfab.joblib import DateRangeMonitor, JobDB
 from softfab.pageargs import PageArgs
@@ -123,28 +122,6 @@ class PageLoader:
         self.root = root
         self.dependencies = dependencies
 
-    def injectDependencies(self, obj: Any) -> None:
-        """Inject the dependencies that the given object declared."""
-
-        dependencies = self.dependencies
-        isClass = isinstance(obj, type)
-        for annName, annType in get_type_hints(obj).items():
-            if not hasattr(obj, annName):
-                if annName.startswith('_'):
-                    continue
-                if str(annType).startswith('typing.ClassVar') != isClass:
-                    continue
-                try:
-                    dep = dependencies[annName]
-                except KeyError:
-                    startupLogger.warning(
-                        '%s declares unknown value %s',
-                        (obj if isClass else obj.__class__).__qualname__,
-                        annName
-                        )
-                else:
-                    setattr(obj, annName, dep)
-
     def __addPage(self, module: ModuleType, pageName: str) -> None:
         pageNamePrefix = pageName + '_'
         pageClasses = tuple(
@@ -162,6 +139,7 @@ class PageLoader:
         pagesByMethod: Dict[str, FabResource] = {}
         name = None
         root = self.root
+        dependencies = self.dependencies
         for pageClass in pageClasses:
             try:
                 page = pageClass()
@@ -175,7 +153,7 @@ class PageLoader:
             if root.anonOperator:
                 if not isinstance(page.authenticator, TokenAuthPage):
                     page.authenticator = DisabledAuthPage.instance
-            self.injectDependencies(page.authenticator.__class__)
+            injectDependencies(page.authenticator.__class__, dependencies)
 
             if not issubclass(page.Arguments, PageArgs):
                 startupLogger.error(
@@ -191,7 +169,7 @@ class PageLoader:
                     PageProcessor.__module__, PageProcessor.__name__
                     )
 
-            self.injectDependencies(processorClass)
+            injectDependencies(processorClass, dependencies)
 
             className = pageClass.__name__
             index = className.index('_')
@@ -213,8 +191,8 @@ class PageLoader:
         root.putChild(b'docs', DocResource.registerDocs('softfab.docs'))
         createArtifactRoots(self.root, dbDir / 'artifacts',
                             self.root.anonOperator)
-        root.putChild(b'webhook',
-                      createWebhooks(startupLogger, self.injectDependencies))
+        injector = partial(injectDependencies, dependencies=self.dependencies)
+        root.putChild(b'webhook', createWebhooks(startupLogger, injector))
 
         # Add files from the 'softfab.static' package.
         for resource in importlib_resources.contents(static):

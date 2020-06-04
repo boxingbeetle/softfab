@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from importlib import reload
-from typing import Iterator
+from typing import Any, Iterator, Mapping, get_type_hints
 
 from softfab import (
     configlib, databaselib, frameworklib, joblib, productdeflib, productlib,
@@ -49,6 +49,24 @@ def reloadDatabases() -> None:
 
     for db in iterDatabases():
         db.preload()
+
+def injectDependencies(obj: Any, dependencies: Mapping[str, object]) -> None:
+    """Inject the dependencies that the given object declared."""
+
+    isClass = isinstance(obj, type)
+    for annName, annType in get_type_hints(obj).items():
+        if not hasattr(obj, annName):
+            if annName.startswith('_'):
+                continue
+            if str(annType).startswith('typing.ClassVar') != isClass:
+                continue
+            try:
+                dep = dependencies[annName]
+            except KeyError:
+                qualName = (obj if isClass else obj.__class__).__qualname__
+                raise NameError(f"{qualName} declares unknown value {annName}")
+            else:
+                setattr(obj, annName, dep)
 
 def convertAll() -> None:
     """Convert all databases to the current format."""
