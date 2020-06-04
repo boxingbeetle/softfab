@@ -1,7 +1,8 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import cast
+from typing import Coroutine, cast
 
+from twisted.internet.interfaces import IReactorTime
 from twisted.web.http import Request as TwistedRequest
 from twisted.web.iweb import IRequest
 from twisted.web.resource import IResource, Resource
@@ -91,3 +92,13 @@ class AccessDeniedResource(ClientErrorResource):
 
 class NotFoundResource(ClientErrorResource):
     code = 404
+
+def runCoroutine(reactor: IReactorTime, routine: Coroutine) -> None:
+    def step(result: object) -> None:
+        try:
+            result = routine.send(result)
+        except StopIteration:
+            pass
+        else:
+            reactor.callLater(0, step, result)
+    reactor.callLater(0, step,  None)

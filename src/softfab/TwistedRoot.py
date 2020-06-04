@@ -2,15 +2,12 @@
 
 from functools import partial
 from mimetypes import guess_type
-from types import GeneratorType, ModuleType
-from typing import (
-    Callable, Dict, Generator, Iterator, Mapping, Optional, Type, Union, cast
-)
+from types import ModuleType
+from typing import Dict, Mapping, Optional, Type, cast
 import logging
 
 from twisted.internet import reactor
-from twisted.internet.defer import Deferred
-from twisted.python.failure import Failure
+from twisted.internet.defer import succeed
 from twisted.web.http import Request as TwistedRequest
 from twisted.web.resource import Resource
 
@@ -18,7 +15,7 @@ from softfab import static
 from softfab.Page import FabResource, PageProcessor, Responder
 from softfab.SplashPage import SplashPage, startupMessages
 from softfab.StyleResources import styleRoot
-from softfab.TwistedUtil import PageRedirect
+from softfab.TwistedUtil import PageRedirect, runCoroutine
 from softfab.UIPage import UIResponder
 from softfab.artifacts import createArtifactRoots
 from softfab.authentication import DisabledAuthPage, NoAuthPage, TokenAuthPage
@@ -38,72 +35,13 @@ from softfab.webhooks import createWebhooks
 
 startupLogger = logging.getLogger('ControlCenter.startup')
 
-class ChunkCaller:
-    def __init__(self,
-            gen: Iterator[Union[Generator, Callable[[], None], None]],
-            deferred: Deferred
-            ):
-        super().__init__()
-        self.__gen = gen
-        self.__deferred = deferred
-        self.scheduleNext()
-
-    def run(self) -> None:
-        try:
-            ret = next(self.__gen)
-        except StopIteration:
-            self.__deferred.callback(None)
-            return
-        except Exception:
-            self.__deferred.errback(Failure())
-            return
-        else:
-            if isinstance(ret, GeneratorType):
-                d = Deferred()
-                ChunkCaller(ret, d)
-                d.addCallback(self.scheduleNext)
-            else:
-                if callable(ret):
-                    try:
-                        ret()
-                    except Exception:
-                        self.__deferred.errback(
-                            Failure()
-                            )
-                        return
-                elif ret is not None:
-                    self.__deferred.errback(Failure(
-                        TypeError(f'Cannot handle chunk '
-                                  f'of type {type(ret).__name__}')
-                        ))
-                    return
-                self.scheduleNext()
-
-    def scheduleNext(self, _: object = None) -> None:
-        reactor.callLater(0, self.run)
-
-def callInChunks(gen: Generator) -> Deferred:
-    '''Calls a generator until it ends and gives control back to the reactor
-    inbetween.
-    Can be used to split a long-running operation in chunks without blocking
-    the reactor from handling other events.
-    A generator can yield:
-    - None, this will cause the same generator to be called again
-    - another generator, which will be called in chunks, recursively
-    - a callable, which will be called as one chunk
-    '''
-    assert isinstance(gen, GeneratorType)
-    d = Deferred()
-    ChunkCaller(gen, d)
-    return d
-
 class DatabaseLoader:
     recordChunks = 100
 
     def __init__(self) -> None:
         self.databases: Dict[str, Database] = {}
 
-    def process(self) -> Iterator[None]:
+    async def process(self) -> None:
         for db in iterDatabases():
             startupMessages.addMessage(f'Loading {db.description} database')
             name = db.__class__.__name__.lstrip('_')
@@ -112,7 +50,7 @@ class DatabaseLoader:
             db._prepareLoad()
             for idx, dummy_ in enumerate(db._iterLoad(startupLogger)):
                 if idx % self.recordChunks == 0:
-                    yield None
+                    await succeed(None)
             db._postLoad()
 
 class PageLoader:
@@ -292,36 +230,28 @@ class SoftFabRoot(Resource):
         self.putChild(styleRoot.relativeURL.encode(), styleRoot)
 
         self.defaultResource = PageResource.anyMethod(SplashPage())
-        d = callInChunks(self.startup())
-        d.addCallback(self.startupComplete)
-        d.addErrback(self.startupFailed)
+        reactor.callWhenRunning(runCoroutine, reactor, self._startup())
 
-    def startup(self) -> Generator:
-        databaseLoader = DatabaseLoader()
-        yield databaseLoader.process()
-        databases = databaseLoader.databases
-        configDB = cast(ConfigDB, databases['configDB'])
-        jobDB = cast(JobDB, databases['jobDB'])
-        dependencies: Dict[str, object] = dict(
-            databases,
-            dateRange=DateRangeMonitor(jobDB)
-            )
-        yield PageLoader(self, dependencies).process
-        # Start schedule processing.
-        yield ScheduleManager(configDB, jobDB).trigger
-
-    def startupComplete(self,
-            result: None # pylint: disable=unused-argument
-            ) -> None:
-        # Serve a 404 page for non-existing URLs.
-        self.defaultResource = PageResource.anyMethod(ResourceNotFound())
-
-    def startupFailed(self, failure: Failure) -> None:
-        startupLogger.error(
-            'Error during startup: %s', failure.getTraceback()
-            )
-
-        # Try to run the part of the Control Center that did start up
-        # properly. This avoids the case where the failure of a rarely used
-        # piece of functionality would block the entire SoftFab.
-        self.startupComplete(None)
+    async def _startup(self) -> None:
+        try:
+            databaseLoader = DatabaseLoader()
+            await databaseLoader.process()
+            databases = databaseLoader.databases
+            configDB = cast(ConfigDB, databases['configDB'])
+            jobDB = cast(JobDB, databases['jobDB'])
+            dependencies: Dict[str, object] = dict(
+                databases,
+                dateRange=DateRangeMonitor(jobDB)
+                )
+            PageLoader(self, dependencies).process()
+            await succeed(None)
+            # Start schedule processing.
+            ScheduleManager(configDB, jobDB).trigger()
+        except Exception:
+            startupLogger.exception('Error during startup:')
+            # Try to run the part of the Control Center that did start up
+            # properly. This avoids the case where the failure of a rarely used
+            # piece of functionality would block the entire SoftFab.
+        finally:
+            # Serve a 404 page for non-existing URLs.
+            self.defaultResource = PageResource.anyMethod(ResourceNotFound())
