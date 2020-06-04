@@ -230,7 +230,7 @@ class SoftFabRoot(Resource):
         try:
             databases = {}
             for db in iterDatabases():
-                name = db.__class__.__name__.lstrip('_')
+                name = db.__class__.__name__
                 databases[name[0].lower() + name[1:]] = db
             await preload(databases.values())
             configDB = cast(ConfigDB, databases['configDB'])
