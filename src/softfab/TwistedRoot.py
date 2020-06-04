@@ -3,7 +3,7 @@
 from functools import partial
 from mimetypes import guess_type
 from types import ModuleType
-from typing import Dict, Mapping, Optional, Type, cast
+from typing import Dict, Iterable, Mapping, Optional, Type, cast
 import logging
 
 from twisted.internet import reactor
@@ -35,23 +35,17 @@ from softfab.webhooks import createWebhooks
 
 startupLogger = logging.getLogger('ControlCenter.startup')
 
-class DatabaseLoader:
-    recordChunks = 100
-
-    def __init__(self) -> None:
-        self.databases: Dict[str, Database] = {}
-
-    async def process(self) -> None:
-        for db in iterDatabases():
-            startupMessages.addMessage(f'Loading {db.description} database')
-            name = db.__class__.__name__.lstrip('_')
-            self.databases[name[0].lower() + name[1:]] = db
-            # pylint: disable=protected-access
-            db._prepareLoad()
-            for idx, dummy_ in enumerate(db._iterLoad(startupLogger)):
-                if idx % self.recordChunks == 0:
-                    await succeed(None)
-            db._postLoad()
+async def preload(databases: Iterable[Database],
+                  recordChunks: int = 100
+                  ) -> None:
+    for db in databases:
+        startupMessages.addMessage(f'Loading {db.description} database')
+        # pylint: disable=protected-access
+        db._prepareLoad()
+        for idx, dummy_ in enumerate(db._iterLoad(startupLogger)):
+            if idx % recordChunks == 0:
+                await succeed(None)
+        db._postLoad()
 
 class PageLoader:
 
@@ -234,9 +228,11 @@ class SoftFabRoot(Resource):
 
     async def _startup(self) -> None:
         try:
-            databaseLoader = DatabaseLoader()
-            await databaseLoader.process()
-            databases = databaseLoader.databases
+            databases = {}
+            for db in iterDatabases():
+                name = db.__class__.__name__.lstrip('_')
+                databases[name[0].lower() + name[1:]] = db
+            await preload(databases.values())
             configDB = cast(ConfigDB, databases['configDB'])
             jobDB = cast(JobDB, databases['jobDB'])
             dependencies: Dict[str, object] = dict(
