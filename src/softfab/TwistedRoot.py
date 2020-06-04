@@ -1,12 +1,12 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from asyncio import sleep
 from functools import partial
 from mimetypes import guess_type
 from types import ModuleType
 from typing import Dict, Iterable, Mapping, Optional, Type, cast
 import logging
 
-from twisted.internet.defer import succeed
 from twisted.web.http import Request as TwistedRequest
 from twisted.web.resource import Resource
 
@@ -43,7 +43,7 @@ async def preload(databases: Iterable[Database],
         db._prepareLoad()
         for idx, dummy_ in enumerate(db._iterLoad(startupLogger)):
             if idx % recordChunks == 0:
-                await succeed(None)
+                await sleep(0)
         db._postLoad()
 
 class PageLoader:
@@ -238,7 +238,7 @@ class SoftFabRoot(Resource):
                 dateRange=DateRangeMonitor(jobDB)
                 )
             PageLoader(self, dependencies).process()
-            await succeed(None)
+            await sleep(0)
             # Start schedule processing.
             ScheduleManager(configDB, jobDB).trigger()
         except Exception:
