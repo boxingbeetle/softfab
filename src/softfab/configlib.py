@@ -14,7 +14,7 @@ from softfab.frameworklib import Framework, frameworkDB
 from softfab.joblib import Job
 from softfab.productdeflib import ProductDef, ProductType, productDefDB
 from softfab.projectlib import project
-from softfab.restypelib import resTypeDB
+from softfab.restypelib import ResTypeDB
 from softfab.selectlib import ObservingTagCache, SelectableRecordABC
 from softfab.taskdeflib import taskDefDB
 from softfab.taskgroup import (
@@ -459,11 +459,11 @@ class Config(XMLTag, TaskRunnerSet, TaskSetWithInputs[Task],
     def getParameter(self, name: str) -> Optional[str]:
         return self.__params.get(name)
 
-    def isConsistent(self) -> bool:
+    def isConsistent(self, resTypeDB: ResTypeDB) -> bool:
         """Returns True iff this configuration can be instantiated.
-        It is possible for a configuration to consistent when it is created
-        but become inconsistent due to definitions changing, for example
-        due to conflicting resource requirements.
+        It is possible for a configuration to be consistent when it is
+        created but become inconsistent due to definitions changing,
+        for example due to conflicting resource requirements.
         """
         refToType: Dict[str, str] = {}
         for task in self._tasks.values():

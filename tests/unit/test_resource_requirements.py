@@ -276,9 +276,9 @@ class TestResourceRequirements(unittest.TestCase):
         """Test configuration using different types for same reference."""
 
         def checkConsistent(config):
-            self.assertTrue(config.isConsistent())
+            self.assertTrue(config.isConsistent(restypelib.resTypeDB))
         def checkInconsistent(config):
-            self.assertFalse(config.isConsistent())
+            self.assertFalse(config.isConsistent(restypelib.resTypeDB))
 
         gen = DataGenerator()
         resTypeA = gen.createResourceType(pertask=True)
