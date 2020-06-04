@@ -249,6 +249,8 @@ def server(
         echo("Reactor does not support UNIX sockets; "
              "control socket not available", err=True)
 
+    from softfab.TwistedUtil import runCoroutine
+    reactor.callWhenRunning(runCoroutine, reactor, root.startup())
     reactor.run()
 
     pidfilePath.unlink()

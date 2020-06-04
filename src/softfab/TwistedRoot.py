@@ -6,7 +6,6 @@ from types import ModuleType
 from typing import Dict, Iterable, Mapping, Optional, Type, cast
 import logging
 
-from twisted.internet import reactor
 from twisted.internet.defer import succeed
 from twisted.web.http import Request as TwistedRequest
 from twisted.web.resource import Resource
@@ -15,7 +14,7 @@ from softfab import static
 from softfab.Page import FabResource, PageProcessor, Responder
 from softfab.SplashPage import SplashPage, startupMessages
 from softfab.StyleResources import styleRoot
-from softfab.TwistedUtil import PageRedirect, runCoroutine
+from softfab.TwistedUtil import PageRedirect
 from softfab.UIPage import UIResponder
 from softfab.artifacts import createArtifactRoots
 from softfab.authentication import DisabledAuthPage, NoAuthPage, TokenAuthPage
@@ -224,9 +223,8 @@ class SoftFabRoot(Resource):
         self.putChild(styleRoot.relativeURL.encode(), styleRoot)
 
         self.defaultResource = PageResource.anyMethod(SplashPage())
-        reactor.callWhenRunning(runCoroutine, reactor, self._startup())
 
-    async def _startup(self) -> None:
+    async def startup(self) -> None:
         try:
             databases = {}
             for db in iterDatabases():
