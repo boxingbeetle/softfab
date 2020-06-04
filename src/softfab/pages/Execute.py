@@ -275,12 +275,9 @@ class StartStep(DialogStep):
     def process(self, proc: 'Execute_POST.Processor') -> bool:
         checkPrivilege(proc.user, 'j/c', 'create jobs')
         if len(proc.args.tasks) == 0:
-            # Normally this will be stopped by TaskStep.verify(), but it is
-            # not safe to rely on that because the request might be mangled
-            # by the browser (this has happened, see bug 297).
-            # In the new design, all previous steps are traversed for each
-            # processing, but we rely on info from the request to know which
-            # step to start from, so this extra check is still useful.
+            # Normally this will be stopped by TaskStep.verify(), but we rely
+            # on info from the request to know which step to start from, so
+            # this extra check is still useful.
             raise InvalidRequest('No tasks selected')
         config = proc.getConfig()
         jobIds = []

@@ -59,7 +59,7 @@ class _ObserverProxy(RecordObserver[DBRecord]):
         if keys is None:
             # Note: For a config which contains no products, the key set is
             #       empty, which means addObserver was not called, so the
-            #       configId is not known to us (bug 225).
+            #       configId is not known to us.
             return
         # The key set will be changed by delObserver, so copy it into a list.
         for key in list(keys):
@@ -186,10 +186,9 @@ class Task(PriorityMixin, ResourceRequirementsMixin, XMLTag, TaskRunnerSet):
 @total_ordering
 class Input(XMLTag):
     '''
-    TODO: Refactor this code, see bug 261 for details.
-          The root of the problem is that this class should offer the same
-          interface as the productlib.Product class, but there is no mechanism
-          that guarantees that.
+    TODO: Refactor this code: this class should offer the same interface
+          as the productlib.Product class, but there is no mechanism that
+          guarantees that.
     TODO: isLocal() and getType() return "safe" values when the product
           definition no longer exists; this works well in practice, but it
           would be cleaner if these methods could not be called at all if
