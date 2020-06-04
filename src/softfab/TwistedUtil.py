@@ -93,12 +93,13 @@ class AccessDeniedResource(ClientErrorResource):
 class NotFoundResource(ClientErrorResource):
     code = 404
 
+def _step(reactor: IReactorTime, routine: Coroutine, result: object) -> None:
+    try:
+        result = routine.send(result)
+    except StopIteration:
+        pass
+    else:
+        reactor.callLater(0, _step, reactor, routine, result)
+
 def runCoroutine(reactor: IReactorTime, routine: Coroutine) -> None:
-    def step(result: object) -> None:
-        try:
-            result = routine.send(result)
-        except StopIteration:
-            pass
-        else:
-            reactor.callLater(0, step, result)
-    reactor.callLater(0, step,  None)
+    reactor.callLater(0, _step,  reactor, routine, None)
