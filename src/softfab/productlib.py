@@ -6,9 +6,7 @@ from typing import Dict, Iterator, Mapping, Optional, Tuple, cast
 
 from softfab.config import dbDir
 from softfab.databaselib import Database, DatabaseElem, createInternalId
-from softfab.productdeflib import (
-    ProductDef, ProductDefDB, ProductType, productDefDB
-)
+from softfab.productdeflib import ProductDef, ProductDefDB, ProductType
 from softfab.xmlbind import XMLTag
 from softfab.xmlgen import XMLContent, xml
 
@@ -134,8 +132,7 @@ class Product(XMLTag, DatabaseElem):
 
 class ProductFactory:
 
-    def __init__(self, productDefDB: ProductDefDB):
-        self.productDefDB = productDefDB
+    productDefDB: ProductDefDB
 
     def createProduct(self, attributes: Mapping[str, str]) -> Product:
         productDef = self.productDefDB.getVersion(attributes['pdKey'])
@@ -147,12 +144,11 @@ class ProductDB(Database[Product]):
     uniqueKeys = ( 'id', )
     alwaysInMemory = False
 
-    def __init__(self, baseDir: Path, productDefDB: ProductDefDB):
-        super().__init__(baseDir, ProductFactory(productDefDB))
-        self.__productDefDB = productDefDB
+    def __init__(self, baseDir: Path):
+        super().__init__(baseDir, ProductFactory())
 
     def create(self, name: str) -> Product:
-        productDefDB = self.__productDefDB
+        productDefDB = cast(ProductFactory, self.factory).productDefDB
         pdKey = productDefDB.latestVersion(name)
         if pdKey is None:
             raise KeyError(name)
@@ -166,4 +162,4 @@ class ProductDB(Database[Product]):
         self.add(product)
         return product
 
-productDB = ProductDB(dbDir / 'products', productDefDB)
+productDB = ProductDB(dbDir / 'products')
