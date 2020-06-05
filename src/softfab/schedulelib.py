@@ -103,12 +103,13 @@ class ScheduleDB(Database['Scheduled']):
 
 scheduleDB = ScheduleDB(dbDir / 'scheduled')
 
-class JobDBObserver(RecordObserver[Job]):
+class _JobDBObserver(RecordObserver[Job]):
     '''Send notifications if a job related to a schedule is new or changed.
     '''
 
-    def __init__(self) -> None:
+    def __init__(self, scheduleDB: ScheduleDB):
         super().__init__()
+        self.__scheduleDB = scheduleDB
         self.__observers: List[Callable[[Job, 'Scheduled'], None]] = []
 
     def addObserver(self, observer: Callable[[Job, 'Scheduled'], None]) -> None:
@@ -123,14 +124,18 @@ class JobDBObserver(RecordObserver[Job]):
     def updated(self, record: Job) -> None:
         schedId = record.getScheduledBy()
         if schedId is not None:
-            schedule = scheduleDB.get(schedId) # schedule might be deleted
+            # Note that schedule might be deleted.
+            schedule = self.__scheduleDB.get(schedId)
             if schedule is not None:
                 for observer in self.__observers:
                     observer(record, schedule)
 
 class ScheduleManager(RecordObserver['Scheduled']):
 
-    def __init__(self, configDB: ConfigDB, jobDB: JobDB):
+    def __init__(self,
+                 configDB: ConfigDB,
+                 jobDB: JobDB,
+                 scheduleDB: ScheduleDB):
         super().__init__()
         self.configDB = configDB
         self.jobDB = jobDB
@@ -143,7 +148,7 @@ class ScheduleManager(RecordObserver['Scheduled']):
             self.added(schedule)
 
         scheduleDB.addObserver(self)
-        jobDBObserver = JobDBObserver()
+        jobDBObserver = _JobDBObserver(scheduleDB)
         jobDBObserver.addObserver(self.__jobUpdated)
         jobDB.addObserver(jobDBObserver)
 

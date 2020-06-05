@@ -27,7 +27,7 @@ from softfab.docserve import DocPage, DocResource
 from softfab.joblib import DateRangeMonitor, JobDB
 from softfab.pageargs import PageArgs
 from softfab.render import NotFoundPage, renderAuthenticated
-from softfab.schedulelib import ScheduleManager
+from softfab.schedulelib import ScheduleDB, ScheduleManager
 from softfab.userlib import User
 from softfab.utils import iterModules
 from softfab.webhooks import createWebhooks
@@ -240,7 +240,8 @@ class SoftFabRoot(Resource):
 
             # Start schedule processing.
             configDB = cast(ConfigDB, databases['configDB'])
-            ScheduleManager(configDB, jobDB).trigger()
+            scheduleDB = cast(ScheduleDB, databases['scheduleDB'])
+            ScheduleManager(configDB, jobDB, scheduleDB).trigger()
         except Exception:
             startupLogger.exception('Error during startup:')
             # Try to run the part of the Control Center that did start up

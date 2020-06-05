@@ -99,8 +99,10 @@ class ScheduleFixtureMixin:
         # all the modules.
         schedulelib.reactor = DummyReactor()
         # Create singleton instance.
-        self.scheduleManager = schedulelib.ScheduleManager(configlib.configDB,
-                                                           joblib.jobDB)
+        self.scheduleManager = schedulelib.ScheduleManager(
+                                    configlib.configDB,
+                                    joblib.jobDB,
+                                    schedulelib.scheduleDB)
 
         self.__taskRunnerAvailableCallbacks = []
         self.__timedCallbacks = []
