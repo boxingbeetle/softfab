@@ -54,7 +54,8 @@ def injectDependencies(obj: Any, dependencies: Mapping[str, object]) -> None:
     """Inject the dependencies that the given object declared."""
 
     isClass = isinstance(obj, type)
-    for annName, annType in get_type_hints(obj).items():
+    cls = obj if isClass else obj.__class__
+    for annName, annType in get_type_hints(cls).items():
         if not hasattr(obj, annName):
             if annName.startswith('_'):
                 continue
@@ -63,7 +64,7 @@ def injectDependencies(obj: Any, dependencies: Mapping[str, object]) -> None:
             try:
                 dep = dependencies[annName]
             except KeyError:
-                qualName = (obj if isClass else obj.__class__).__qualname__
+                qualName = cls.__qualname__
                 raise NameError(f"{qualName} declares unknown value {annName}")
             else:
                 setattr(obj, annName, dep)
