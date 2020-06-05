@@ -230,16 +230,23 @@ class SoftFabRoot(Resource):
             for db in iterDatabases():
                 name = db.__class__.__name__
                 databases[name[0].lower() + name[1:]] = db
+
+            for db in databases.values():
+                injectDependencies(db.factory, databases)
+
             await preload(databases.values())
-            configDB = cast(ConfigDB, databases['configDB'])
+
             jobDB = cast(JobDB, databases['jobDB'])
             dependencies: Dict[str, object] = dict(
                 databases,
                 dateRange=DateRangeMonitor(jobDB)
                 )
+
             PageLoader(self, dependencies).process()
             await sleep(0)
+
             # Start schedule processing.
+            configDB = cast(ConfigDB, databases['configDB'])
             ScheduleManager(configDB, jobDB).trigger()
         except Exception:
             startupLogger.exception('Error during startup:')
