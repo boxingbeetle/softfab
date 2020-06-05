@@ -3,7 +3,7 @@
 from softfab.ControlPage import ControlPage
 from softfab.Page import PageProcessor
 from softfab.config import rootURL
-from softfab.databases import iterDatabases
+from softfab.databases import getDatabases
 from softfab.projectlib import getBootTime, project
 from softfab.request import Request
 from softfab.response import Response
@@ -19,7 +19,7 @@ class GetFactoryInfo_GET(ControlPage[ControlPage.Arguments,
     def checkAccess(self, user: User) -> None:
         # Check that user has 'list' privileges for all databases.
         # For the singleton project DB, check the 'access' privilege instead.
-        for db in iterDatabases():
+        for db in getDatabases().values():
             priv = f'{db.privilegeObject}/l'
             checkPrivilege(user, 'p/a' if priv == 'p/l' else priv)
 
@@ -41,6 +41,6 @@ class GetFactoryInfo_GET(ControlPage[ControlPage.Arguments,
                 timezone = project.timezone,
                 )[
                 ( xml.table(name = db.name, count = len(db))
-                for db in iterDatabases() ),
+                  for db in getDatabases().values() ),
                 ]
             )

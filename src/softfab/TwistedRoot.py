@@ -22,7 +22,7 @@ from softfab.compat import importlib_resources
 from softfab.config import dbDir
 from softfab.configlib import ConfigDB
 from softfab.databaselib import Database
-from softfab.databases import injectDependencies, iterDatabases
+from softfab.databases import getDatabases, injectDependencies
 from softfab.docserve import DocPage, DocResource
 from softfab.joblib import DateRangeMonitor, JobDB
 from softfab.pageargs import PageArgs
@@ -226,14 +226,7 @@ class SoftFabRoot(Resource):
 
     async def startup(self) -> None:
         try:
-            databases = {}
-            for db in iterDatabases():
-                name = db.__class__.__name__
-                databases[name[0].lower() + name[1:]] = db
-
-            for db in databases.values():
-                injectDependencies(db.factory, databases)
-
+            databases = getDatabases()
             await preload(databases.values())
 
             jobDB = cast(JobDB, databases['jobDB'])

@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from importlib import reload
-from typing import Any, Iterator, Mapping, get_type_hints
+from typing import Any, Iterator, Mapping, Optional, get_type_hints
 
 from softfab import (
     configlib, databaselib, frameworklib, joblib, productdeflib, productlib,
@@ -14,7 +14,7 @@ from softfab import (
 #       D1 is positioned in the list before D2.
 # TODO: Automatically order in this way, or at least detect if the order is
 #       invalid.
-def iterDatabases() -> Iterator[databaselib.Database]:
+def _iterDatabases() -> Iterator[databaselib.Database]:
     yield projectlib.projectDB
     yield restypelib.resTypeDB
     yield productdeflib.productDefDB
@@ -28,6 +28,20 @@ def iterDatabases() -> Iterator[databaselib.Database]:
     yield schedulelib.scheduleDB
     yield userlib.userDB
     yield tokens.tokenDB
+
+_databases: Optional[Mapping[str, databaselib.Database]] = None
+
+def getDatabases() -> Mapping[str, databaselib.Database]:
+    global _databases
+    if _databases is None:
+        databases = {}
+        for db in _iterDatabases():
+            name = db.__class__.__name__
+            databases[name[0].lower() + name[1:]] = db
+        for db in databases.values():
+            injectDependencies(db.factory, databases)
+        _databases = databases
+    return _databases
 
 def reloadDatabases() -> None:
     # !!! NOTE: The order of reloading is very important:
@@ -47,7 +61,12 @@ def reloadDatabases() -> None:
     reload(configlib)
     reload(schedulelib)
 
-    for db in iterDatabases():
+    # Force mapping creation and factory injection to be redone.
+    global _databases
+    _databases = None
+    getDatabases()
+
+    for db in _iterDatabases():
         db.preload()
 
 def injectDependencies(obj: Any, dependencies: Mapping[str, object]) -> None:
@@ -72,7 +91,7 @@ def injectDependencies(obj: Any, dependencies: Mapping[str, object]) -> None:
 def convertAll() -> None:
     """Convert all databases to the current format."""
 
-    for db in iterDatabases():
+    for db in _iterDatabases():
         print('Migrating', db.description, 'database...')
         db.convert()
 
