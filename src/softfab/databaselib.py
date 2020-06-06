@@ -14,6 +14,7 @@ import re
 import time
 
 from softfab.config import dbAtomicWrites, logChanges
+from softfab.conversionflags import migrationInProgress
 from softfab.utils import (
     Comparable, ComparableT, abstract, atomicWrite, cachedProperty
 )
@@ -483,17 +484,27 @@ class Database(Generic[DBRecord], RecordSubjectMixin[DBRecord], ABC):
             )
         yield None # sorting might take a while for big DBs
 
+        # Log a small number of exceptions per DB.
+        # If there are more exceptions, it is likely the same problem
+        # repeated again and again; no point in flooding the log file.
         failedRecordCount = 0
         for key in keys:
             try:
                 value = cast(DBRecord,
                              parse(self.factory, self._fileNameForKey(key)))
                 self._register(key, value)
+            except ObsoleteRecordError:
+                if migrationInProgress:
+                    logging.warning('Removing obsolete record: %s', key)
+                    os.remove(self._fileNameForKey(key))
+                else:
+                    if failedRecordCount < 3:
+                        logger.warning(
+                            'Ignoring obsolete record "%s" from %s database',
+                            key, self.description
+                            )
+                    failedRecordCount += 1
             except Exception:
-                # Log a small number of exceptions per DB.
-                # If there are more exceptions, it is likely the
-                # same problem repeated again and again; no point
-                # in flooding the log file.
                 if failedRecordCount < 3:
                     logger.exception(
                         'Failed to load record "%s" from %s database',
