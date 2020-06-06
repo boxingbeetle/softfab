@@ -20,10 +20,10 @@ def _iterDatabases() -> Iterator[databaselib.Database]:
     yield productdeflib.productDefDB
     yield frameworklib.frameworkDB
     yield taskdeflib.taskDefDB
-    yield resourcelib.resourceDB
     yield productlib.productDB
     yield joblib.jobDB # joblib must go before taskrunlib despite dependencies
     yield taskrunlib.taskRunDB
+    yield resourcelib.resourceDB
     yield configlib.configDB
     yield schedulelib.scheduleDB
     yield userlib.userDB
