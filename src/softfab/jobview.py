@@ -12,7 +12,7 @@ from softfab.databaselib import RecordObserver
 from softfab.datawidgets import (
     DataColumn, DataTable, DurationColumn, TimeColumn
 )
-from softfab.joblib import Job, Task, resultlessJobs
+from softfab.joblib import Job, Task
 from softfab.notification import NotificationPresenter, sendNotification
 from softfab.pagelinks import createConfigDetailsLink, createJobURL
 from softfab.projectlib import project
@@ -253,7 +253,7 @@ class _JobOverviewPresenter(NotificationPresenter):
             for prop in ( 'name', 'state', 'result', 'summary' ):
                 yield prefix + prop, str(taskRun[prop] or 'unknown')
 
-class _JobNotificationObserver(RecordObserver):
+class JobNotificationObserver(RecordObserver):
 
     def added(self, record: Job) -> None:
         pass
@@ -273,5 +273,3 @@ class _JobNotificationObserver(RecordObserver):
                         record.getFinalResult() is ResultCode.ERROR
                     ):
                 sendNotification(locator, _JobOverviewPresenter(record))
-
-resultlessJobs.addObserver(_JobNotificationObserver())

@@ -24,7 +24,10 @@ from softfab.configlib import ConfigDB
 from softfab.databaselib import Database
 from softfab.databases import getDatabases, injectDependencies
 from softfab.docserve import DocPage, DocResource
-from softfab.joblib import DateRangeMonitor, JobDB
+from softfab.joblib import (
+    DateRangeMonitor, JobDB, ResultlessJobs, UnfinishedJobs
+)
+from softfab.jobview import JobNotificationObserver
 from softfab.pageargs import PageArgs
 from softfab.render import NotFoundPage, renderAuthenticated
 from softfab.schedulelib import ScheduleDB, ScheduleManager
@@ -232,8 +235,12 @@ class SoftFabRoot(Resource):
             jobDB = cast(JobDB, databases['jobDB'])
             dependencies: Dict[str, object] = dict(
                 databases,
-                dateRange=DateRangeMonitor(jobDB)
+                dateRange=DateRangeMonitor(jobDB),
+                unfinishedJobs=UnfinishedJobs(jobDB)
                 )
+
+            resultlessJobs = ResultlessJobs(jobDB)
+            resultlessJobs.addObserver(JobNotificationObserver())
 
             PageLoader(self, dependencies).process()
             await sleep(0)

@@ -5,7 +5,7 @@ from typing import ClassVar, Optional, cast
 from softfab.ControlPage import ControlPage
 from softfab.Page import InvalidRequest, PageProcessor
 from softfab.authentication import TokenAuthPage
-from softfab.joblib import unfinishedJobs
+from softfab.joblib import UnfinishedJobs
 from softfab.request import Request
 from softfab.resourcelib import (
     RequestFactory, ResourceDB, TaskRunner, TaskRunnerData
@@ -18,7 +18,9 @@ from softfab.xmlbind import parse
 from softfab.xmlgen import XMLContent, xml
 
 
-def assignExecutionRun(taskRunner: TaskRunner) -> Optional[TaskRun]:
+def assignExecutionRun(taskRunner: TaskRunner,
+                       unfinishedJobs: UnfinishedJobs
+                       ) -> Optional[TaskRun]:
     # Find oldest unassigned task.
     capabilities = taskRunner.capabilities
     # TODO: It would be more efficient to keep non-fixed tasks instead of
@@ -47,6 +49,7 @@ class Synchronize_POST(ControlPage[ControlPage.Arguments,
     class Processor(PageProcessor[ControlPage.Arguments]):
 
         resourceDB: ClassVar[ResourceDB]
+        unfinishedJobs: ClassVar[UnfinishedJobs]
 
         async def process(self,
                           req: Request[ControlPage.Arguments],
@@ -76,7 +79,8 @@ class Synchronize_POST(ControlPage[ControlPage.Arguments,
                     self.exit = True
                     taskRunner.setExitFlag(False)
                 elif not taskRunner.isSuspended():
-                    self.newRun = assignExecutionRun(taskRunner)
+                    self.newRun = assignExecutionRun(taskRunner,
+                                                     self.unfinishedJobs)
 
         def createResponse(self) -> XMLContent:
             taskRunner = self.taskRunner

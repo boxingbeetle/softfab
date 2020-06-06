@@ -1173,18 +1173,14 @@ class DateRangeMonitor(RecordObserver[Job]):
         # Create time cannot change, so we don't care.
         pass
 
-class _UnfinishedJobs(SortedQueue[Job]):
+class UnfinishedJobs(SortedQueue[Job]):
     compareField = 'timestamp'
 
     def _filter(self, record: Job) -> bool:
         return not record.isExecutionFinished()
 
-unfinishedJobs = _UnfinishedJobs(jobDB)
-
-class _ResultlessJobs(SortedQueue[Job]):
+class ResultlessJobs(SortedQueue[Job]):
     compareField = 'timestamp'
 
     def _filter(self, record: Job) -> bool:
         return not record.hasFinalResult()
-
-resultlessJobs = _ResultlessJobs(jobDB)
