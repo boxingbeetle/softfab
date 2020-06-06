@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from importlib import reload
-from typing import Any, Iterator, Mapping, Optional, get_type_hints
+from typing import Any, Iterator, Mapping, Optional, cast, get_type_hints
 
 from softfab import (
     configlib, databaselib, frameworklib, joblib, productdeflib, productlib,
@@ -91,12 +91,19 @@ def injectDependencies(obj: Any, dependencies: Mapping[str, object]) -> None:
 def convertAll() -> None:
     """Convert all databases to the current format."""
 
-    for db in _iterDatabases():
+    databases = getDatabases()
+    for db in databases.values():
+        print('Loading', db.description, 'database...')
+        if not isinstance(db, projectlib.ProjectDB):
+            db.preload()
+    for db in databases.values():
         print('Migrating', db.description, 'database...')
         db.convert()
 
     print('Recomputing running tasks...')
-    resourcelib.recomputeRunning(resourcelib.resourceDB, taskrunlib.taskRunDB)
+    resourceDB = cast(resourcelib.ResourceDB, databases['resourceDB'])
+    taskRunDB = cast(taskrunlib.TaskRunDB, databases['taskRunDB'])
+    resourcelib.recomputeRunning(resourceDB, taskRunDB)
 
     print('Updating database version tag...')
     projectlib.project.updateVersion()
