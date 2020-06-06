@@ -142,7 +142,6 @@ class ProductDB(Database[Product]):
     privilegeObject = 'j' # every product is a part of a job
     description = 'product'
     uniqueKeys = ( 'id', )
-    alwaysInMemory = False
 
     def __init__(self, baseDir: Path):
         super().__init__(baseDir, ProductFactory())
