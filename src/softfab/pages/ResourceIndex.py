@@ -63,7 +63,10 @@ class ReservedByColumn(DataColumn[ResourceBase]):
                     return createJobLink(reservedId)
                 elif reservedType == 'T': # task
                     proc = cast(ResourceIndex_GET.Processor, kwargs['proc'])
-                    run = proc.taskRunDB[reservedId]
+                    try:
+                        run = proc.taskRunDB[reservedId]
+                    except KeyError:
+                        return 'unknown task'
                     return createTaskInfoLink(
                         run.getJob().getId(), run.getName()
                         )
