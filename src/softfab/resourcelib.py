@@ -735,10 +735,16 @@ class ResourceDB(Database[ResourceBase]):
     def _register(self, key: str, value: ResourceBase) -> None:
         self.__resourcesByType[value.typeName].add(key)
         super()._register(key, value)
+        if isinstance(value, TaskRunner):
+            # pylint: disable=protected-access
+            self.__taskRunDB.addObserver(value._executionObserver)
 
     def _unregister(self, key: str, value: ResourceBase) -> None:
         self.__resourcesByType[value.typeName].remove(key)
         super()._unregister(key, value)
+        if isinstance(value, TaskRunner):
+            # pylint: disable=protected-access
+            self.__taskRunDB.removeObserver(value._executionObserver)
 
     def _update(self, value: ResourceBase) -> None:
         resourcesByType = self.__resourcesByType
@@ -757,19 +763,11 @@ class ResourceDB(Database[ResourceBase]):
         """Return the IDs of all resources of the given type."""
         return self.__resourcesByType[typeName]
 
-    def add(self, value: ResourceBase) -> None:
-        super().add(value)
-        # pylint: disable=protected-access
-        if isinstance(value, TaskRunner):
-            self.__taskRunDB.addObserver(value._executionObserver)
-
     def remove(self, value: ResourceBase) -> None:
         super().remove(value)
         # pylint: disable=protected-access
         if 'tokenId' in value._properties:
             self.__tokenDB.remove(value.token)
-        if isinstance(value, TaskRunner):
-            self.__taskRunDB.removeObserver(value._executionObserver)
 
     def iterTaskRunners(self) -> Iterator[TaskRunner]:
         """Iterates through all Task Runner records.
