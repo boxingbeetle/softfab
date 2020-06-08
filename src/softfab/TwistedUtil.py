@@ -93,13 +93,17 @@ class AccessDeniedResource(ClientErrorResource):
 class NotFoundResource(ClientErrorResource):
     code = 404
 
-def _step(reactor: IReactorTime, routine: Coroutine, result: object) -> None:
+def runCoroutine(reactor: IReactorTime,
+                 routine: Coroutine[None, None, None]
+                 ) -> None:
+    """Run the given coroutine, while returning control to the reactor
+    after every processing step.
+    Use `await asyncio.sleep(0)` in your coroutine to separate processing
+    steps.
+    """
     try:
-        result = routine.send(result)
+        routine.send(None)
     except StopIteration:
         pass
     else:
-        reactor.callLater(0, _step, reactor, routine, result)
-
-def runCoroutine(reactor: IReactorTime, routine: Coroutine) -> None:
-    reactor.callLater(0, _step,  reactor, routine, None)
+        reactor.callLater(0, runCoroutine, reactor, routine)
