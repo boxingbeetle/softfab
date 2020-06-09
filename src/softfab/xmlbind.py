@@ -100,8 +100,17 @@ class _XMLHandler(ContentHandler):
     def __getContext(self) -> str:
         return '.'.join(self.__nameStack[1:])
 
-    def __getMethod(self, baseName: str, tagName: str = '') -> Callable:
+    def __getTagMethod(self,
+                       baseName: str,
+                       tagName: str
+                       ) -> Callable[[Mapping[str, str]], object]:
         return getattr(self.__peek(), baseName + tagName.capitalize(), None)
+
+    def __getTextMethod(self, tagName: str) -> Optional[Callable[[str], None]]:
+        return getattr(self.__peek(), f'_text{tagName.capitalize()}', None)
+
+    def __getEndMethod(self) -> Optional[Callable[[], None]]:
+        return getattr(self.__peek(), '_endParse', None)
 
     def getParsed(self) -> object:
         return self.__parsed
@@ -111,7 +120,7 @@ class _XMLHandler(ContentHandler):
         self.__content = ''
 
         if self.__parsed is None: # root element?
-            factoryMethod = self.__getMethod('create', name)
+            factoryMethod = self.__getTagMethod('create', name)
             if factoryMethod:
                 newObj = factoryMethod(dict(attrs))
                 self.__parsed = newObj
@@ -119,12 +128,12 @@ class _XMLHandler(ContentHandler):
             else:
                 raise ParseError(f'no factory for tag "{name}"')
         else:
-            method = self.__getMethod('_add', name) \
-                or self.__getMethod('_set', name)
+            method = self.__getTagMethod('_add', name) \
+                  or self.__getTagMethod('_set', name)
             if method:
                 newObj = method(dict(attrs))
                 self.__push(name, newObj, False)
-            elif self.__getMethod('_text', name):
+            elif self.__getTextMethod(name):
                 self.__push(name, None, True)
             else:
                 objClass = self.__peek().__class__
@@ -138,11 +147,13 @@ class _XMLHandler(ContentHandler):
         if self.__text:
             content = self.__content.strip()
             self.__pop()
-            self.__getMethod('_text', name)(content)
+            textMethod = self.__getTextMethod(name)
+            assert textMethod is not None
+            textMethod(content)
         else:
-            method = self.__getMethod('_endParse')
-            if method:
-                method()
+            endMethod = self.__getEndMethod()
+            if endMethod:
+                endMethod()
             self.__pop()
         self.__content = ''
 
