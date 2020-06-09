@@ -129,7 +129,7 @@ class Feed_GET(ControlPage[ControlPage.Arguments, 'Feed_GET.Processor']):
             self.jobs = jobs
             self.tables = [ SingleJobTable(job) for job in jobs ]
 
-    def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
+    def iterDataTables(self, proc: Processor) -> Iterator[DataTable[Any]]:
         yield from proc.tables
 
     async def writeReply(self, response: Response, proc: Processor) -> None:

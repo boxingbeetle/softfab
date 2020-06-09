@@ -3,7 +3,8 @@
 from collections import OrderedDict
 from os.path import splitext
 from typing import (
-    ClassVar, Collection, Dict, Iterable, Iterator, Optional, Sequence, cast
+    Any, ClassVar, Collection, Dict, Iterable, Iterator, Optional, Sequence,
+    cast
 )
 import re
 
@@ -111,7 +112,7 @@ class Task_GET(FabPage['Task_GET.Processor', 'Task_GET.Arguments']):
             yield InputTable.instance
             yield OutputTable.instance
 
-    def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
+    def iterDataTables(self, proc: Processor) -> Iterator[DataTable[Any]]:
         if proc.active == 'Overview':
             yield SelfTaskRunsTable.instance
 

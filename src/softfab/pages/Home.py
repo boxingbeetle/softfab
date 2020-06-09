@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import ClassVar, Collection, Iterator, List, Optional, cast
+from typing import Any, ClassVar, Collection, Iterator, List, Optional, cast
 
 from softfab.FabPage import FabPage, LinkBarButton
 from softfab.Page import PageProcessor
@@ -84,7 +84,7 @@ class Home_GET(FabPage['Home_GET.Processor', FabPage.Arguments]):
     def iterWidgets(self, proc: Processor) -> Iterator[Widget]:
         yield RecentJobsTable.instance
 
-    def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
+    def iterDataTables(self, proc: Processor) -> Iterator[DataTable[Any]]:
         yield RecentJobsTable.instance
 
     def presentHeadParts(self, **kwargs: object) -> XMLContent:

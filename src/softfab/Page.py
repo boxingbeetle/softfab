@@ -2,7 +2,8 @@
 
 from collections import defaultdict
 from typing import (
-    TYPE_CHECKING, DefaultDict, Dict, Generic, Iterator, Optional, Set, TypeVar
+    TYPE_CHECKING, Any, DefaultDict, Dict, Generic, Iterator, Optional, Set,
+    TypeVar
 )
 import logging
 
@@ -249,7 +250,7 @@ class FabResource(Generic[ArgsT, ProcT]):
 
     def iterDataTables(self,
                        proc: ProcT # pylint: disable=unused-argument
-                       ) -> Iterator[DataTable]:
+                       ) -> Iterator[DataTable[Any]]:
         '''Yields all DataTables on this resource.
         The default implementation yields no tables.
         '''

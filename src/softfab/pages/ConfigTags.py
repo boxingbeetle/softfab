@@ -2,8 +2,8 @@
 
 from enum import Enum
 from typing import (
-    ClassVar, Collection, Dict, FrozenSet, Iterator, List, Mapping, Optional,
-    cast
+    Any, ClassVar, Collection, Dict, FrozenSet, Iterator, List, Mapping,
+    Optional, cast
 )
 
 from softfab.FabPage import FabPage, IconModifier
@@ -62,7 +62,7 @@ class ConfigTagsBase(FabPage['ConfigTagsBase.Processor', ArgsT]):
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'c/a')
 
-    def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
+    def iterDataTables(self, proc: Processor) -> Iterator[DataTable[Any]]:
         yield TagConfigTable.instance
 
     def presentContent(self, **kwargs: object) -> XMLContent:

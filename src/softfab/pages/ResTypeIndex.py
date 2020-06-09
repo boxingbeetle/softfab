@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from functools import partial
-from typing import ClassVar, Iterator, cast
+from typing import Any, ClassVar, Iterator, cast
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
@@ -74,7 +74,7 @@ class ResTypeIndex_GET(FabPage['ResTypeIndex_GET.Processor',
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'rt/l')
 
-    def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
+    def iterDataTables(self, proc: Processor) -> Iterator[DataTable[Any]]:
         yield ResTypeTable.instance
 
     def presentContent(self, **kwargs: object) -> XMLContent:

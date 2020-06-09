@@ -3,7 +3,7 @@
 from collections import defaultdict
 from enum import Enum
 from typing import (
-    AbstractSet, ClassVar, Collection, DefaultDict, Dict, Iterator, List,
+    AbstractSet, Any, ClassVar, Collection, DefaultDict, Dict, Iterator, List,
     Mapping, Optional, Set, cast
 )
 
@@ -169,7 +169,7 @@ class BatchExecute_GET(FabPage['BatchExecute_GET.Processor',
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'j/c')
 
-    def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
+    def iterDataTables(self, proc: Processor) -> Iterator[DataTable[Any]]:
         yield BatchConfigTable.instance
 
     def presentContent(self, **kwargs: object) -> XMLContent:

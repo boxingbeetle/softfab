@@ -2,7 +2,7 @@
 
 from collections import defaultdict
 from enum import Enum
-from typing import ClassVar, DefaultDict, Iterator, List, Sequence, cast
+from typing import Any, ClassVar, DefaultDict, Iterator, List, Sequence, cast
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor, PresentableError, Redirect
@@ -175,7 +175,7 @@ class ResourceIndex_GET(FabPage['ResourceIndex_GET.Processor',
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'r/l')
 
-    def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
+    def iterDataTables(self, proc: Processor) -> Iterator[DataTable[Any]]:
         yield ResourcesTable.instance
 
     def iterWidgets(self, proc: Processor) -> Iterator[Widget]:

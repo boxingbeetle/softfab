@@ -2,8 +2,8 @@
 
 from collections import defaultdict
 from typing import (
-    Collection, DefaultDict, Dict, Iterable, Iterator, List, Mapping, Sequence,
-    Tuple, cast
+    Any, Collection, DefaultDict, Dict, Iterable, Iterator, List, Mapping,
+    Sequence, Tuple, cast
 )
 
 from softfab.CSVPage import presentCSVLink
@@ -252,7 +252,7 @@ class ExtractedData_GET(FabPage['ExtractedData_GET.Processor',
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 't/a')
 
-    def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
+    def iterDataTables(self, proc: Processor) -> Iterator[DataTable[Any]]:
         yield ExtractedDataTable.instance
 
     def presentContent(self, **kwargs: object) -> XMLContent:

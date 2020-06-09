@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from enum import Enum
-from typing import ClassVar, Iterator, Mapping, cast
+from typing import Any, ClassVar, Iterator, Mapping, cast
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor, Redirect
@@ -126,7 +126,7 @@ class ScheduleIndex_GET(FabPage['ScheduleIndex_GET.Processor',
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 's/l')
 
-    def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
+    def iterDataTables(self, proc: Processor) -> Iterator[DataTable[Any]]:
         yield ScheduleTable.instance
 
     def iterWidgets(self, proc: Processor) -> Iterator[Widget]:

@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import ClassVar, Iterable, Iterator, cast
+from typing import Any, ClassVar, Iterable, Iterator, cast
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
@@ -59,7 +59,7 @@ class ShowJobs_GET(FabPage['ShowJobs_GET.Processor', 'ShowJobs_GET.Arguments']):
     def iterWidgets(self, proc: Processor) -> Iterator[Widget]:
         yield ShowJobsTable.instance
 
-    def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
+    def iterDataTables(self, proc: Processor) -> Iterator[DataTable[Any]]:
         yield ShowJobsTable.instance
 
     def presentContent(self, **kwargs: object) -> XMLContent:

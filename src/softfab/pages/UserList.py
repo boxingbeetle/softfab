@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import ClassVar, Iterator, cast
+from typing import Any, ClassVar, Iterator, cast
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor, PresentableError, Redirect
@@ -162,7 +162,7 @@ class UserList_GET(FabPage['UserList_GET.Processor', 'UserList_GET.Arguments']):
             self.canChangeRoles = user.hasPrivilege('u/m')
             self.canChangeAnonGuest = user.hasPrivilege('p/m')
 
-    def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
+    def iterDataTables(self, proc: Processor) -> Iterator[DataTable[Any]]:
         yield UserTable.instance
 
     def pageTitle(self, proc: Processor) -> str:

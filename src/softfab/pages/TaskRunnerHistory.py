@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import ClassVar, Iterable, Iterator, List, cast
+from typing import Any, ClassVar, Iterable, Iterator, List, cast
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
@@ -78,7 +78,7 @@ class TaskRunnerHistory_GET(FabPage['TaskRunnerHistory_GET.Processor',
         checkPrivilege(user, 'r/l')
         checkPrivilege(user, 't/l')
 
-    def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
+    def iterDataTables(self, proc: Processor) -> Iterator[DataTable[Any]]:
         yield HistoryTable.instance
 
     def presentContent(self, **kwargs: object) -> XMLContent:

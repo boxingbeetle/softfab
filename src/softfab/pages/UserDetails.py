@@ -76,7 +76,7 @@ class UserDetails_GET(FabPage['UserDetails_GET.Processor',
         if proc.error is None:
             yield OwnedJobsTable.instance
 
-    def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
+    def iterDataTables(self, proc: Processor) -> Iterator[DataTable[Any]]:
         if proc.error is None:
             yield OwnedJobsTable.instance
 

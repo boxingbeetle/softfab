@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from enum import Enum
-from typing import ClassVar, Collection, Iterator, cast
+from typing import Any, ClassVar, Collection, Iterator, cast
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor, PresentableError, Redirect
@@ -99,7 +99,7 @@ class FastExecute_GET(FabPage['FastExecute_GET.Processor',
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'c/l')
 
-    def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
+    def iterDataTables(self, proc: Processor) -> Iterator[DataTable[Any]]:
         yield FastConfigTable.instance
 
     def presentContent(self, **kwargs: object) -> XMLContent:

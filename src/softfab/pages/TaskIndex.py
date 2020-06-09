@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import ClassVar, Iterator
+from typing import Any, ClassVar, Iterator
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
@@ -49,7 +49,7 @@ class TaskIndex_GET(FabPage['TaskIndex_GET.Processor',
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'td/l')
 
-    def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
+    def iterDataTables(self, proc: Processor) -> Iterator[DataTable[Any]]:
         yield TasksTable.instance
 
     def presentContent(self, **kwargs: object) -> XMLContent:

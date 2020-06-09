@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import ClassVar, Collection, Iterator, MutableSet, cast
+from typing import Any, ClassVar, Collection, Iterator, MutableSet, cast
 
 import attr
 
@@ -179,7 +179,7 @@ class Capabilities_GET(FabPage['Capabilities_GET.Processor',
             # pylint: disable=attribute-defined-outside-init
             self.capMap = capMap.values()
 
-    def iterDataTables(self, proc: Processor) -> Iterator[DataTable]:
+    def iterDataTables(self, proc: Processor) -> Iterator[DataTable[Any]]:
         yield ResourcesTable.instance
         yield CapabilitiesTable.instance
 
