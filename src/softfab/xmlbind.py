@@ -3,8 +3,8 @@
 from abc import ABC
 from enum import Enum
 from typing import (
-    IO, Callable, ClassVar, Dict, Generic, Iterable, Iterator, List, Mapping,
-    Optional, Sequence, Type, TypeVar, Union, cast
+    IO, Any, Callable, ClassVar, Dict, Generic, Iterable, Iterator, List,
+    Mapping, Optional, Sequence, Type, TypeVar, Union, cast
 )
 from xml.etree.ElementTree import Element
 from xml.sax import make_parser
@@ -178,7 +178,7 @@ class XMLTag(ABC):
     enumProperties: ClassVar[Mapping[str, Type[Enum]]] = {}
 
     @classmethod
-    def _findDeclarations(cls, name: str) -> Iterator:
+    def _findDeclarations(cls, name: str) -> Iterator[Any]:
         '''Yields declarations with the given `name` in this class
         and its superclasses.
         '''
@@ -248,7 +248,9 @@ class XMLTag(ABC):
     def toXML(self) -> XML:
         return xmlnode(self.tagName)(**self._properties)[self._getContent()]
 
-def parse(factory: object, filenameOrStream: Union[str, IO]) -> object:
+def parse(factory: object,
+          filenameOrStream: Union[str, IO[str], IO[bytes]]
+          ) -> object:
     handler = _XMLHandler(factory)
     parser = make_parser()
     parser.setContentHandler(handler)
