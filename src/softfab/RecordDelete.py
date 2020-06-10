@@ -90,7 +90,7 @@ def fetchRecordForDeletion(proc: RecordDeleteProcessor[DeleteArgsT, DBRecord],
 
     return record
 
-class RecordDelete_GET(FabPage['RecordDelete_GET.Processor',
+class RecordDelete_GET(FabPage['RecordDelete_GET.Processor[DBRecord]',
                                'RecordDelete_GET.Arguments']):
     """Reusable implementation for handling a GET of a "delete record" dialog.
     """
@@ -109,7 +109,7 @@ class RecordDelete_GET(FabPage['RecordDelete_GET.Processor',
         def db(self) -> Database[DBRecord]:
             raise NotImplementedError
 
-    def pageTitle(self, proc: Processor) -> str:
+    def pageTitle(self, proc: Processor[DBRecord]) -> str:
         return 'Delete ' + ' '.join(
             word.capitalize() for word in proc.recordName.split()
             )
@@ -125,7 +125,7 @@ class RecordDelete_GET(FabPage['RecordDelete_GET.Processor',
         return args.refererURL or self.getParentURL(args)
 
     def presentContent(self, **kwargs: object) -> XMLContent:
-        proc = cast(RecordDelete_GET.Processor, kwargs['proc'])
+        proc = cast(RecordDelete_GET.Processor[DBRecord], kwargs['proc'])
         yield xhtml.p[
             'Delete ', proc.recordName, ' ', xhtml.b[ proc.args.id ], '?'
             ]
@@ -134,7 +134,7 @@ class RecordDelete_GET(FabPage['RecordDelete_GET.Processor',
             ].present(**kwargs)
 
     def presentError(self, message: XML, **kwargs: object) -> XMLContent:
-        proc = cast(RecordDelete_GET.Processor, kwargs['proc'])
+        proc = cast(RecordDelete_GET.Processor[DBRecord], kwargs['proc'])
         yield message
         yield self.backToReferer(proc.args)
 
