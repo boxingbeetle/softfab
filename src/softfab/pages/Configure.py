@@ -7,7 +7,8 @@ from softfab.userlib import User
 from softfab.xmlgen import XMLContent, xhtml
 
 
-class Configure_GET(FabPage[FabPage.Processor, FabPage.Arguments]):
+class Configure_GET(FabPage[FabPage.Processor[FabPage.Arguments],
+                            FabPage.Arguments]):
     icon = 'IconConfig'
     description = 'Configure'
     children = [
