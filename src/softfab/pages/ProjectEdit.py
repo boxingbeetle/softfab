@@ -217,9 +217,8 @@ class TimeZoneSelector(DropDownList):
     name = 'timezone'
 
     def getActive(self, **kwargs: object) -> Optional[str]:
-        proc = cast(ProjectEditBase.Processor, kwargs['proc'])
-        args = cast(ProjectEditArgs, proc.args)
-        return encodeTimezone(args.timezone)
+        proc = cast(ProjectEditBase.Processor[ProjectEditArgs], kwargs['proc'])
+        return encodeTimezone(proc.args.timezone)
 
     def iterOptions(self, **kwargs: object) -> Iterator[Option]:
 
