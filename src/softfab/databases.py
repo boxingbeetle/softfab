@@ -14,7 +14,7 @@ from softfab import (
 #       D1 is positioned in the list before D2.
 # TODO: Automatically order in this way, or at least detect if the order is
 #       invalid.
-def _iterDatabases() -> Iterator[databaselib.Database]:
+def _iterDatabases() -> Iterator[databaselib.Database[Any]]:
     yield projectlib.projectDB
     yield restypelib.resTypeDB
     yield productdeflib.productDefDB
@@ -29,9 +29,9 @@ def _iterDatabases() -> Iterator[databaselib.Database]:
     yield userlib.userDB
     yield tokens.tokenDB
 
-_databases: Optional[Mapping[str, databaselib.Database]] = None
+_databases: Optional[Mapping[str, databaselib.Database[Any]]] = None
 
-def getDatabases() -> Mapping[str, databaselib.Database]:
+def getDatabases() -> Mapping[str, databaselib.Database[Any]]:
     global _databases
     if _databases is None:
         databases = {}

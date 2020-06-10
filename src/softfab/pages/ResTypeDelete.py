@@ -1,12 +1,12 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Callable, ClassVar
+from typing import Callable, ClassVar, TypeVar
 
 from softfab.RecordDelete import (
     RecordDelete_GET, RecordDelete_POSTMixin, RecordInUseError
 )
 from softfab.databaselib import Database
-from softfab.frameworklib import FrameworkDB
+from softfab.frameworklib import FrameworkDB, TaskDefBase
 from softfab.pageargs import RefererArg
 from softfab.pagelinks import createFrameworkDetailsLink, createTaskDetailsLink
 from softfab.resourcelib import ResourceDB
@@ -14,8 +14,9 @@ from softfab.restypelib import ResType, ResTypeDB
 from softfab.taskdeflib import TaskDefDB
 from softfab.xmlgen import XMLContent
 
+TaskDefT = TypeVar('TaskDefT', bound='TaskDefBase')
 
-def checkRequirements(db: Database,
+def checkRequirements(db: Database[TaskDefT],
                       typeName: str,
                       linkFunc: Callable[[str], XMLContent]
                       ) -> None:

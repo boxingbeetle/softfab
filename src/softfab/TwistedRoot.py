@@ -4,7 +4,7 @@ from asyncio import sleep
 from functools import partial
 from mimetypes import guess_type
 from types import ModuleType
-from typing import Dict, Iterable, Mapping, Optional, Type, cast
+from typing import Any, Dict, Iterable, Mapping, Optional, Type, cast
 import logging
 
 from twisted.web.http import Request as TwistedRequest
@@ -37,7 +37,7 @@ from softfab.webhooks import createWebhooks
 
 startupLogger = logging.getLogger('ControlCenter.startup')
 
-async def preload(databases: Iterable[Database],
+async def preload(databases: Iterable[Database[Any]],
                   recordChunks: int = 100
                   ) -> None:
     for db in databases:

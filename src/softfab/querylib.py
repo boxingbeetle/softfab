@@ -2,7 +2,7 @@
 
 from operator import itemgetter
 from typing import (
-    AbstractSet, Callable, Collection, Generic, Iterable, Iterator, List,
+    AbstractSet, Any, Callable, Collection, Generic, Iterable, Iterator, List,
     Optional, Type, TypeVar, Union, cast, overload
 )
 
@@ -53,7 +53,7 @@ class ValueFilter(RecordFilter[Record], Generic[Record, ComparableT]):
     def __init__(self: 'ValueFilter',
                  key: str,
                  value: ComparableT,
-                 db: Optional[Database] = None
+                 db: Optional[Database[Any]] = None
                  ):
         super().__init__()
         self.__retriever: Retriever[Record, ComparableT] \
@@ -84,7 +84,7 @@ class WildcardFilter(RecordFilter[Record]):
     def __init__(self: 'WildcardFilter',
                  key: str,
                  pattern: str,
-                 db: Optional[Database] = None
+                 db: Optional[Database[Any]] = None
                  ):
         super().__init__()
         # Note: The caller should only pass keys that have string values,
@@ -142,7 +142,7 @@ class SetFilter(RecordFilter[Record], Generic[Record, ComparableT]):
                key: str,
                selected: AbstractSet[ComparableT],
                choices: AbstractSet[ComparableT],
-               db: Optional[Database] = None
+               db: Optional[Database[Any]] = None
                ) -> RecordFilter:
         '''Creates a set filter.
         Use this method instead of the constructor to to have a sanity check

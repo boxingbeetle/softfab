@@ -179,8 +179,8 @@ class TableData(Generic[Record]):
         columns = tuple(table.iterColumns(proc=proc, data=None))
 
         dbName = table.dbName
-        db: Optional[Database] = None if dbName is None \
-                                      else getattr(proc, dbName)
+        db: Optional[Database[Any]] = \
+                None if dbName is None else getattr(proc, dbName)
         records = table.getRecordsToQuery(proc)
         if isinstance(records, SizedABC):
             unfilteredNrRecords: Optional[int] = len(records)
