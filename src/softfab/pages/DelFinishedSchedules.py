@@ -27,12 +27,14 @@ class DelFinishedSchedulesBase(FabPage[ProcT, ArgsT]):
     def presentContent(self, **kwargs: object) -> XMLContent:
         raise NotImplementedError
 
-class DelFinishedSchedules_GET(
-        DelFinishedSchedulesBase[FabPage.Processor,
-                                 'DelFinishedSchedules_GET.Arguments']
-        ):
+class DelFinishedSchedules_GET(DelFinishedSchedulesBase[
+                                    'DelFinishedSchedules_GET.Processor',
+                                    'DelFinishedSchedules_GET.Arguments']):
 
     class Arguments(PageArgs):
+        pass
+
+    class Processor(PageProcessor[Arguments]):
         pass
 
     def presentContent(self, **kwargs: object) -> XMLContent:
