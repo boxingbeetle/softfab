@@ -374,7 +374,7 @@ class _Select(AttrContainer, XMLPresentable):
         elif isinstance(element, (str, int, Enum)):
             yield option(value = element)[ element ]
         elif iterable(element):
-            for child in cast(Iterable, element):
+            for child in cast(Iterable[XMLContent], element):
                 yield from self._adaptContentElement(child)
         elif isinstance(element, type) and issubclass(element, Enum):
             for value in element.__members__.values():

@@ -39,7 +39,7 @@ class ResourceSpec(XMLTag):
                             f'{self.__capabilities!r})'
 
     def _addCapability(self, attributes: Mapping[str, str]) -> None:
-        cast(MutableSet, self.__capabilities).add(attributes['name'])
+        cast(MutableSet[str], self.__capabilities).add(attributes['name'])
 
     def _endParse(self) -> None:
         self.__capabilities = frozenset(self.__capabilities)
