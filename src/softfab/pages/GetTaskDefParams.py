@@ -16,7 +16,7 @@ class GetTaskDefParams_GET(ControlPage['GetTaskDefParams_GET.Arguments',
     class Arguments(PageArgs):
         param = SetArg()
 
-    class Processor(ControlPage.Processor):
+    class Processor(ControlPage.Processor[Arguments]):
         taskDefDB: ClassVar[TaskDefDB]
 
     def checkAccess(self, user: User) -> None:
