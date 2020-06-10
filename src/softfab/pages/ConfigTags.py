@@ -32,8 +32,10 @@ class TagConfigTable(SimpleConfigTable):
     tabOffsetField = None
     sortField = None
 
-    def getRecordsToQuery(self, proc: PageProcessor) -> Collection[Config]:
-        return cast(ConfigTagsBase.Processor, proc).configs
+    def getRecordsToQuery(self,
+                          proc: PageProcessor[SelectArgs]
+                          ) -> Collection[Config]:
+        return cast(ConfigTagsBase.Processor[SelectArgs], proc).configs
 
 parentPage = 'LoadExecute'
 
@@ -42,7 +44,7 @@ class ParentArgs(SelectArgs):
 
 Actions = Enum('Actions', 'APPLY CANCEL')
 
-class ConfigTagsBase(FabPage['ConfigTagsBase.Processor', ArgsT]):
+class ConfigTagsBase(FabPage['ConfigTagsBase.Processor[ArgsT]', ArgsT]):
     icon = 'IconExec'
     iconModifier = IconModifier.EDIT
     description = 'Configuration Tags'
@@ -62,11 +64,13 @@ class ConfigTagsBase(FabPage['ConfigTagsBase.Processor', ArgsT]):
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'c/a')
 
-    def iterDataTables(self, proc: Processor) -> Iterator[DataTable[Any]]:
+    def iterDataTables(self,
+                       proc: Processor[ArgsT]
+                       ) -> Iterator[DataTable[Any]]:
         yield TagConfigTable.instance
 
     def presentContent(self, **kwargs: object) -> XMLContent:
-        proc = cast(ConfigTagsBase.Processor, kwargs['proc'])
+        proc = cast(ConfigTagsBase.Processor[ArgsT], kwargs['proc'])
         for notice in proc.notices:
             yield xhtml.p(class_ = 'notice')[ notice ]
         configs = proc.configs
@@ -113,7 +117,7 @@ class ConfigTags_POST(ConfigTagsBase['ConfigTags_POST.Arguments']):
         tagvalues = DictArg(StrArg())
         commontags = DictArg(SetArg())
 
-    class Processor(ConfigTagsBase.Processor):
+    class Processor(ConfigTagsBase.Processor[Arguments]):
 
         userDB: ClassVar[UserDB]
 
@@ -184,7 +188,7 @@ class ConfigTags_POST(ConfigTagsBase['ConfigTags_POST.Arguments']):
                                     })
 
     def presentContent(self, **kwargs: object) -> XMLContent:
-        proc = cast(ConfigTagsBase.Processor, kwargs['proc'])
+        proc = cast(ConfigTags_POST.Processor, kwargs['proc'])
         if proc.notices:
             yield super().presentContent(**kwargs)
         else:
