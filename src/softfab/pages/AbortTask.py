@@ -15,12 +15,16 @@ from softfab.xmlgen import XMLContent, xhtml
 
 Actions = Enum('Actions', 'ABORT CANCEL')
 
-class AbortTask_GET(FabPage[FabPage.Processor, FabPage.Arguments]):
+class AbortTask_GET(FabPage['AbortTask_GET.Processor',
+                            'AbortTask_GET.Arguments']):
     icon = 'IconExec'
     iconModifier = IconModifier.DELETE
     description = 'Abort Task'
 
     class Arguments(TaskIdArgs):
+        pass
+
+    class Processor(PageProcessor[Arguments]):
         pass
 
     def checkAccess(self, user: User) -> None:
