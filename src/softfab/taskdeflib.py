@@ -7,7 +7,6 @@ from softfab import frameworklib
 from softfab.config import dbDir
 from softfab.databaselib import VersionedDatabase
 from softfab.paramlib import GetParent, Parameterized, paramTop
-from softfab.selectlib import ObservingTagCache
 from softfab.xmlgen import XMLContent, xml
 
 
@@ -27,7 +26,6 @@ class TaskDefDB(VersionedDatabase['TaskDef']):
 taskDefDB = TaskDefDB(dbDir / 'taskdefs')
 
 class TaskDef(frameworklib.TaskDefBase):
-    cache = ObservingTagCache(taskDefDB, lambda: ())
 
     @staticmethod
     def create(name: str,
@@ -108,4 +106,3 @@ class TaskDef(frameworklib.TaskDefBase):
         yield super()._getContent()
         yield xml.title[ self.__title ]
         yield xml.description[ self.__description ]
-        yield self._tagsAsXML()

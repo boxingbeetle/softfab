@@ -2,18 +2,16 @@
 
 from pathlib import Path
 from typing import (
-    AbstractSet, ClassVar, Dict, Iterable, List, Mapping, Optional, Set, cast
+    AbstractSet, Dict, Iterable, List, Mapping, Optional, Set, cast
 )
 
 from softfab.config import dbDir
-from softfab.databaselib import VersionedDatabase
+from softfab.databaselib import DatabaseElem, VersionedDatabase
 from softfab.paramlib import GetParent, ParamMixin, Parameterized, paramTop
 from softfab.resreq import (
     ResourceClaim, ResourceSpec, taskRunnerResourceRefName
 )
 from softfab.restypelib import taskRunnerResourceTypeName
-from softfab.selectlib import ObservingTagCache, SelectableRecordABC, TagCache
-from softfab.utils import abstract
 from softfab.xmlbind import XMLTag
 from softfab.xmlgen import XMLContent, xml
 
@@ -33,9 +31,8 @@ class FrameworkDB(VersionedDatabase['Framework']):
 
 frameworkDB = FrameworkDB(dbDir / 'frameworks')
 
-class TaskDefBase(XMLTag, ParamMixin, SelectableRecordABC):
+class TaskDefBase(XMLTag, ParamMixin, DatabaseElem):
     tagName = 'taskdef'
-    cache: ClassVar[TagCache] = abstract
 
     def __init__(self, properties: Mapping[str, Optional[str]]):
         super().__init__(properties)
@@ -87,7 +84,6 @@ class TaskDefBase(XMLTag, ParamMixin, SelectableRecordABC):
         yield self.__resources
 
 class Framework(TaskDefBase):
-    cache = ObservingTagCache(frameworkDB, lambda: ())
 
     @staticmethod
     def create(name: str,
