@@ -193,26 +193,28 @@ class ScheduleEdit_POST(ScheduleEditBase):
             except ValueError:
                 startTime = 0
             repeat = args.repeat
-            parameters: Dict[str, XMLAttributeValue] = {
-                'id': recordId,
-                'suspended': str(args.suspended),
-                'startTime': startTime,
-                'repeat': repeat.name,
-                'owner': self.user.name,
-                }
+            extra: Dict[str, XMLAttributeValue] = {}
             if args.selectBy is SelectBy.NAME:
-                parameters['configId'] = args.configId
+                extra['configId'] = args.configId
             elif args.selectBy is SelectBy.TAG:
                 key, value = args.tag.split(',')
-                parameters['tagKey'] = key
-                parameters['tagValue'] = value
+                extra['tagKey'] = key
+                extra['tagValue'] = value
             else:
                 assert False, args.selectBy
             if repeat is ScheduleRepeat.WEEKLY:
-                parameters['days'] = listToStringDays(args.days)
+                extra['days'] = listToStringDays(args.days)
             elif repeat is ScheduleRepeat.CONTINUOUSLY:
-                parameters['minDelay'] = args.minDelay
-            element = Scheduled(parameters, args.comment, True)
+                extra['minDelay'] = args.minDelay
+            element = self.scheduleDB.create(
+                recordId,
+                args.suspended,
+                startTime,
+                repeat,
+                self.user.name,
+                args.comment,
+                extra
+                )
             if repeat is ScheduleRepeat.TRIGGERED:
                 triggers = cast(Mapping[str, str], args.trigger)
                 tags = []

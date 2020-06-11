@@ -65,6 +65,7 @@ from softfab.databaselib import Database, RecordObserver
 from softfab.joblib import Job, JobDB, jobDB
 from softfab.selectlib import ObservingTagCache, SelectableRecordABC
 from softfab.timelib import endOfTime, getTime
+from softfab.userlib import User
 from softfab.utils import Heap
 from softfab.xmlbind import XMLTag
 from softfab.xmlgen import XMLAttributeValue, XMLContent, xml
@@ -100,6 +101,24 @@ class ScheduleDB(Database['Scheduled']):
 
     def __init__(self, baseDir: Path):
         super().__init__(baseDir, ScheduledFactory())
+
+    def create(self,
+               name: str,
+               suspended: bool,
+               startTime: int,
+               repeat: ScheduleRepeat,
+               owner: Optional[str],
+               comment: str,
+               extra: Mapping[str, XMLAttributeValue]
+               ) -> 'Scheduled':
+        return Scheduled(
+            dict(extra,
+                 id=name,
+                 suspended=suspended,
+                 startTime=startTime,
+                 repeat=repeat,
+                 owner=owner),
+            comment, True)
 
 scheduleDB = ScheduleDB(dbDir / 'scheduled')
 

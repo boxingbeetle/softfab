@@ -167,16 +167,15 @@ class ScheduleFixtureMixin:
         ):
         if configFactory is None:
             configFactory = self.defaultConfigFactory
-        properties =  {
-            'id': scheduleId, 'suspended': str(suspended),
-            'startTime': startTime, 'sequence': sequence,
-            'owner': owner,
+        extra = {
             'minDelay': self.continuousDelay // 60
             }
         if days is not None:
-            properties['days'] = days
-        properties.update(configFactory())
-        element = schedulelib.Scheduled(properties, comment, True)
+            extra['days'] = days
+        extra.update(configFactory())
+        element = schedulelib.scheduleDB.create(
+            scheduleId, suspended, startTime, sequence, owner, comment, extra
+            )
         schedulelib.scheduleDB.add(element)
         return element
 
@@ -285,38 +284,38 @@ class Test0100Basic(ScheduleFixtureMixin, unittest.TestCase):
     def test0100NonExistingOnce(self):
         '''Test one-shot schedule with a non-existing config.
         '''
-        self.prepare(-120, 'once', missingConfig = True)
+        self.prepare(-120, schedulelib.ScheduleRepeat.ONCE, missingConfig = True)
         self.expectScheduleDone()
         self.wait(60)
 
     def test0105NonExistingRepeat(self):
         '''Test daily schedule with a non-existing config.
         '''
-        self.prepare(-120, 'daily', missingConfig = True)
+        self.prepare(-120, schedulelib.ScheduleRepeat.DAILY, missingConfig = True)
         self.wait(60)
 
     def test0110NonExistingSuspended(self):
         '''Test one-shot schedule with a non-existing config, which is suspended.
         '''
-        self.prepare(-120, 'once', missingConfig = True, suspended = True)
+        self.prepare(-120, schedulelib.ScheduleRepeat.ONCE, missingConfig = True, suspended = True)
         self.wait(60)
 
     def test0200OnceSuspended(self):
         '''Test one-shot schedule which is suspended.
         '''
-        self.prepare(-120, 'once', suspended = True)
+        self.prepare(-120, schedulelib.ScheduleRepeat.ONCE, suspended = True)
         self.wait(60)
 
     def test0210OnceFuture(self):
         '''Test one-shot schedule with a start time in the future.
         '''
-        self.prepare(120, 'once')
+        self.prepare(120, schedulelib.ScheduleRepeat.ONCE)
         self.wait(60)
 
     def test0220OncePast(self):
         '''Test one-shot schedule with a start time in the past.
         '''
-        self.prepare(-120, 'once')
+        self.prepare(-120, schedulelib.ScheduleRepeat.ONCE)
         self.expectScheduleDone()
         self.expectRunning()
         self.wait(60)
@@ -326,7 +325,7 @@ class Test0100Basic(ScheduleFixtureMixin, unittest.TestCase):
         '''Test that a one-shot schedule is started at the specified time.
         '''
         startOffset = 120
-        self.prepare(startOffset, 'once')
+        self.prepare(startOffset, schedulelib.ScheduleRepeat.ONCE)
         self.wait(startOffset)
         self.expectRunning()
         self.expectScheduleDone()
@@ -339,7 +338,7 @@ class Test0100Basic(ScheduleFixtureMixin, unittest.TestCase):
         '''Test that a continuous schedule is started repeatedly.
         '''
         startOffset = 120
-        self.prepare(startOffset, sequence = 'continuously')
+        self.prepare(startOffset, sequence=schedulelib.ScheduleRepeat.CONTINUOUSLY)
         self.wait(startOffset)
         for loop_ in range(4):
             self.expectRunning()
@@ -348,7 +347,7 @@ class Test0100Basic(ScheduleFixtureMixin, unittest.TestCase):
 
     def runContinuousStartDelay(self, startOffset):
         self.duration = 120
-        self.prepare(startOffset, sequence = 'continuously')
+        self.prepare(startOffset, sequence=schedulelib.ScheduleRepeat.CONTINUOUSLY)
         self.wait(startOffset)
         for loop_ in range(4):
             self.expectRunning()
@@ -372,7 +371,7 @@ class Test0100Basic(ScheduleFixtureMixin, unittest.TestCase):
         '''Test suspending a continous schedule.
         '''
         startOffset = 120
-        self.prepare(startOffset, sequence = 'continuously')
+        self.prepare(startOffset, sequence=schedulelib.ScheduleRepeat.CONTINUOUSLY)
         self.wait(startOffset)
         for loop_ in range(4):
             self.expectRunning()
@@ -424,7 +423,7 @@ class Test0400StartTime(ScheduleFixtureMixin, unittest.TestCase):
         '''
         # Schedule starts Monday 2007-01-01 at 13:01.
         startTime = int(time.mktime(( 2007, 1, 1, 13, 1, 0, 0, 0, 0 )))
-        self.prepare(startTime - self.preparedTime, sequence = 'daily')
+        self.prepare(startTime - self.preparedTime, sequence=schedulelib.ScheduleRepeat.DAILY)
         self.assertEqual(getScheduleStatus(configlib.configDB, self.scheduled), 'ok')
 
         # Run simulation for 1 week.
@@ -469,7 +468,7 @@ class Test0400StartTime(ScheduleFixtureMixin, unittest.TestCase):
             schedId = 'WeeklyStart_%d' % day
             self.createSchedule(
                 schedId, False, startTime,
-                'weekly', days = '0' * day + '1' + '0' * (6 - day),
+                schedulelib.ScheduleRepeat.WEEKLY, days = '0' * day + '1' + '0' * (6 - day),
                 configFactory = sharedConfigFactory(configId)
                 )
             scheduled = schedulelib.scheduleDB.get(schedId)
@@ -507,7 +506,7 @@ class Test0400StartTime(ScheduleFixtureMixin, unittest.TestCase):
             scheduledTimes.append(startTime)
             schedId = 'WeeklyStartMultiDay_%d' % i
             self.createSchedule(
-                schedId, False, startTime, 'weekly', days = dayString,
+                schedId, False, startTime, schedulelib.ScheduleRepeat.WEEKLY, days = dayString,
                 configFactory = sharedConfigFactory(configId)
                 )
             scheduled = schedulelib.scheduleDB.get(schedId)
@@ -554,7 +553,7 @@ class Test0400StartTime(ScheduleFixtureMixin, unittest.TestCase):
                 ( schedId, startTime, timeOnDay(correctedDay) )
                 )
             self.createSchedule(
-                schedId, False, startTime, 'weekly', days = '0010000',
+                schedId, False, startTime, schedulelib.ScheduleRepeat.WEEKLY, days = '0010000',
                 configFactory = sharedConfigFactory(configId)
                 )
             scheduled = schedulelib.scheduleDB.get(schedId)
@@ -625,7 +624,7 @@ class Test0600Tagged(ScheduleFixtureMixin, unittest.TestCase):
         def configFactory():
             return { 'tagKey': 'nosuchkey', 'tagValue': 'dummy' }
         startOffset = 120
-        self.prepare(startOffset, 'once', configFactory = configFactory)
+        self.prepare(startOffset, schedulelib.ScheduleRepeat.ONCE, configFactory = configFactory)
         assert len(self.scheduled.getMatchingConfigIds(configlib.configDB)) == 0
         self.wait(startOffset)
         self.expectScheduleDone()
@@ -650,7 +649,7 @@ class Test0600Tagged(ScheduleFixtureMixin, unittest.TestCase):
     def runTaggedStart(self, numConfigs, configFactory = None):
         if configFactory is None:
             configFactory = TaggedConfigFactory(self.dataGenerator, numConfigs)
-        self.prepareTaggedStart('once', numConfigs, configFactory)
+        self.prepareTaggedStart(schedulelib.ScheduleRepeat.ONCE, numConfigs, configFactory)
         self.expectRunning(numJobs = numConfigs)
         self.expectScheduleDone()
         self.wait(60)
@@ -694,7 +693,7 @@ class Test0600Tagged(ScheduleFixtureMixin, unittest.TestCase):
         '''Test repeating of continuous schedule which matches multiple configs.
         '''
         numConfigs = 2
-        self.prepareTaggedStart('continuously', numConfigs)
+        self.prepareTaggedStart(schedulelib.ScheduleRepeat.CONTINUOUSLY, numConfigs)
         for loop_ in range(4):
             self.expectRunning(numJobs = numConfigs)
             self.wait(self.duration)
@@ -707,7 +706,7 @@ class Test0600Tagged(ScheduleFixtureMixin, unittest.TestCase):
         '''
         self.duration = 120
         numConfigs = 2
-        self.prepareTaggedStart('continuously', numConfigs)
+        self.prepareTaggedStart(schedulelib.ScheduleRepeat.CONTINUOUSLY, numConfigs)
         for loop_ in range(4):
             self.expectRunning(numJobs = numConfigs)
             self.wait(self.duration)
