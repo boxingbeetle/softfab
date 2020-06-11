@@ -14,7 +14,7 @@ from softfab.restypelib import ResType, ResTypeDB
 from softfab.taskdeflib import TaskDefDB
 from softfab.xmlgen import XMLContent
 
-TaskDefT = TypeVar('TaskDefT', bound='TaskDefBase')
+TaskDefT = TypeVar('TaskDefT', bound=TaskDefBase)
 
 def checkRequirements(db: Database[TaskDefT],
                       typeName: str,
