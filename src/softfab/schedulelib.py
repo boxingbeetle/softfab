@@ -65,7 +65,6 @@ from softfab.databaselib import Database, RecordObserver
 from softfab.joblib import Job, JobDB, jobDB
 from softfab.selectlib import ObservingTagCache, SelectableRecordABC
 from softfab.timelib import endOfTime, getTime
-from softfab.userlib import User
 from softfab.utils import Heap
 from softfab.xmlbind import XMLTag
 from softfab.xmlgen import XMLAttributeValue, XMLContent, xml
