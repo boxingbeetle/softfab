@@ -157,7 +157,7 @@ class WebhookResource(Resource):
         tagValues = {f'{repoId}/{branch}' for branch in branches}
         scheduleIds = []
         for scheduleId, schedule in self.scheduleDB.items():
-            if tagValues & schedule.getTagValues('sf.trigger'):
+            if tagValues & schedule.tags.getTagValues('sf.trigger'):
                 schedule.setTrigger()
                 scheduleIds.append(scheduleId)
 

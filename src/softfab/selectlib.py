@@ -3,14 +3,14 @@
 from abc import ABC
 from collections import defaultdict
 from typing import (
-    AbstractSet, Callable, ClassVar, Dict, ItemsView, Iterable, Mapping,
-    Optional, Sequence, Tuple, TypeVar
+    AbstractSet, Callable, ClassVar, Dict, ItemsView, Iterable, Iterator,
+    Mapping, Optional, Sequence, Tuple, TypeVar
 )
 
 from softfab.compat import Protocol
 from softfab.databaselib import Database, DatabaseElem, RecordObserver
 from softfab.utils import abstract
-from softfab.xmlgen import XMLContent, xml
+from softfab.xmlgen import XMLNode, xml
 
 
 class Selectable(Protocol):
@@ -19,23 +19,20 @@ class Selectable(Protocol):
     def _tagItems(self) -> ItemsView[str, Mapping[str, str]]:
         raise NotImplementedError
 
-class SelectableABC(Selectable, ABC):
-    cache: ClassVar['TagCache'] = abstract
+class Tags(Selectable):
 
-    def __init__(self) -> None:
+    def __init__(self, cache: 'TagCache') -> None:
         super().__init__()
+        self.__cache = cache
         self.__tags: Dict[str, Dict[str, str]] = {}
 
-    def _addTag(self, attributes: Mapping[str, str]) -> None:
-        key = attributes['key']
-        value = attributes['value']
-        cvalue, dvalue = self.cache.toCanonical(key, value, True)
+    def _load(self, key: str, value: str) -> None:
+        cvalue, dvalue = self.__cache.toCanonical(key, value, True)
         self.__tags.setdefault(key, {})[cvalue] = dvalue
         #if value != dvalue: "Warning!"
 
-    def _tagsAsXML(self) -> XMLContent:
-        '''Serializes tags to XML to store them in the database.
-        '''
+    def toXML(self) -> Iterator[XMLNode]:
+        """Serializes tags to XML."""
         for key, values in self.__tags.items():
             for value in values.values():
                 yield xml.tag(key = key, value = value)
@@ -69,7 +66,7 @@ class SelectableABC(Selectable, ABC):
         '''Sets the value set for the given key.
         '''
         canonicalValues = dict(
-            self.cache.toCanonical(key, value)
+            self.__cache.toCanonical(key, value)
             for value in values
             )
         if canonicalValues:
@@ -101,7 +98,7 @@ class SelectableABC(Selectable, ABC):
 class TagCache:
 
     def __init__(self,
-                 items: Iterable[Selectable],
+                 items: Iterable['SelectableRecordABC'],
                  getKeys: Callable[[], Sequence[str]]
                  ):
         super().__init__()
@@ -126,10 +123,10 @@ class TagCache:
     def _refreshCache(self) -> None:
         self.__tags.clear()
         for item in self.__items:
-            self._updateCache(item)
+            self._updateCache(item.tags)
 
-    def _updateCache(self, item: Selectable) -> None:
-        for key, values in item._tagItems(): # pylint: disable=protected-access
+    def _updateCache(self, tags: Tags) -> None:
+        for key, values in tags._tagItems(): # pylint: disable=protected-access
             if values:
                 self.__tags[key].update(values)
 
@@ -169,10 +166,20 @@ class TagCache:
             dvalue = self.__tags.get(key, {}).get(cvalue, value)
         return (cvalue, dvalue)
 
-class SelectableRecordABC(DatabaseElem, SelectableABC):
+class SelectableRecordABC(DatabaseElem, ABC):
     """Abstract base class for database records that support tagging."""
 
     cache: ClassVar[TagCache] = abstract
+    tags: Tags
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.tags = Tags(self.cache)
+
+    def _addTag(self, attributes: Mapping[str, str]) -> None:
+        key = attributes['key']
+        value = attributes['value']
+        self.tags._load(key, value) # pylint: disable=protected-access
 
     # Mark this class as abstract:
     def getId(self) -> str:
@@ -190,7 +197,7 @@ class ObservingTagCache(TagCache, RecordObserver[SelectableRecord]):
         db.addObserver(self)
 
     def added(self, record: SelectableRecord) -> None:
-        self._updateCache(record)
+        self._updateCache(record.tags)
 
     def removed(self, record: SelectableRecord) -> None:
         self._refreshCache()

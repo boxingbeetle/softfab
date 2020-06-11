@@ -210,13 +210,13 @@ class SelectProcMixin(Generic[BasketArgsT, SelectableRecord]):
                                 tagKey: str = cast(str, tagKey),
                                 cvalue: str = cvalue
                                 ) -> bool:
-                    return record.hasTagValue(tagKey, cvalue)
+                    return record.tags.hasTagValue(tagKey, cvalue)
                 recordFilter = CustomFilter(valueFilter)
             else:
                 def keyFilter(record: SelectableRecord,
                               tagKey: str = cast(str, tagKey)
                               ) -> bool:
-                    return not record.hasTagKey(tagKey)
+                    return not record.tags.hasTagKey(tagKey)
                 recordFilter = CustomFilter(keyFilter)
             return runQuery(( recordFilter, ), self.db)
         else:

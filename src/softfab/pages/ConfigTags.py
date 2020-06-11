@@ -80,7 +80,8 @@ class ConfigTagsBase(FabPage['ConfigTagsBase.Processor[ArgsT]', ArgsT]):
 
             yield xhtml.h3[ 'Common Selection Tags:' ]
             tagKeys = project.getTagKeys()
-            commonTags = getCommonTags(tagKeys, configs)
+            commonTags = getCommonTags(tagKeys,
+                                       (config.tags for config in configs))
             yield makeForm(
                 args=ParentArgs.subset(proc.args).override(
                     sel={config.getId() for config in configs}
@@ -171,7 +172,7 @@ class ConfigTags_POST(ConfigTagsBase['ConfigTags_POST.Arguments']):
 
             for config in configs:
                 # TODO: Wrap update() call in context manager.
-                config.updateTags(changes)
+                config.tags.updateTags(changes)
                 configDB.update(config)
 
             # Case changes must be done on all instances of a tag;
@@ -180,15 +181,12 @@ class ConfigTags_POST(ConfigTagsBase['ConfigTags_POST.Arguments']):
             #       in the DB instead of in every record tagged with it.
             for index, tagKey in tagkeys.items():
                 for uvalue in textToValues(tagvalues[index]):
-                    cvalue, dvalue = Config.cache.toCanonical(
-                        tagKey, uvalue
-                        )
+                    cvalue, dvalue = Config.cache.toCanonical(tagKey, uvalue)
                     if uvalue != dvalue:
                         for config in configDB:
-                            if config.hasTagValue(tagKey, cvalue):
-                                config.updateTags({
-                                    tagKey: { cvalue: uvalue },
-                                    })
+                            tags = config.tags
+                            if tags.hasTagValue(tagKey, cvalue):
+                                tags.updateTags({tagKey: { cvalue: uvalue }})
                                 configDB.update(config)
 
     def presentContent(self, **kwargs: object) -> XMLContent:

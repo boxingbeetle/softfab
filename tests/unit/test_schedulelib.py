@@ -604,7 +604,7 @@ class TaggedConfigFactory:
 
     def setTags(self):
         for config in self.configs:
-            config.setTag(self.tagKey, (self.tagValue, ))
+            config.tags.setTag(self.tagKey, (self.tagValue, ))
             # Force tag cache update.
             config._notify()
 

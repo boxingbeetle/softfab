@@ -89,7 +89,7 @@ class DetailsTable(PropertiesTable):
         elif repeat is ScheduleRepeat.TRIGGERED:
             yield 'Triggered', 'yes' if scheduled['trigger'] else 'no'
             yield 'Triggers', xhtml.br.join(
-                sorted(scheduled.getTagValues('sf.trigger'))
+                sorted(scheduled.tags.getTagValues('sf.trigger'))
                 )
         if proc.userDB.showOwners:
             yield 'Owner', scheduled.owner or '-'

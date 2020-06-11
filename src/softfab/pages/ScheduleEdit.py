@@ -142,7 +142,7 @@ class ScheduleEdit_GET(ScheduleEditBase):
                 elif repeat is ScheduleRepeat.TRIGGERED:
                     branchesByRepo: DefaultDict[str, List[str]] = \
                                     defaultdict(list)
-                    for trigger in element.getTagValues('sf.trigger'):
+                    for trigger in element.tags.getTagValues('sf.trigger'):
                         repoId, branch = trigger.split('/', 1)
                         branchesByRepo[repoId].append(branch)
                     overrides['trigger'] = {
@@ -219,7 +219,7 @@ class ScheduleEdit_POST(ScheduleEditBase):
                 for repoId, branchesText in triggers.items():
                     for branch in branchesText.split('\n'):
                         tags.append(f'{repoId}/{branch.strip()}')
-                element.setTag('sf.trigger', tags)
+                element.tags.setTag('sf.trigger', tags)
             if oldElement is not None \
             and element.getId() == oldElement.getId():
                 # Remember last started jobs.

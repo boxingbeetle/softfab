@@ -45,7 +45,7 @@ class TagsTable(Table):
         proc = cast('ConfigDetails_GET.Processor', kwargs['proc'])
         config = proc.config
         for key in project.getTagKeys():
-            values = config.getTagValues(key)
+            values = config.tags.getTagValues(key)
             if values:
                 yield key, xhtml[', '].join(
                     pageLink(

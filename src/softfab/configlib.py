@@ -99,7 +99,7 @@ class ConfigDB(Database['Config']):
     def iterConfigsByTag(self, key: str, value: str) -> Iterator['Config']:
         cvalue, dvalue_ = Config.cache.toCanonical(key, value)
         for config in self:
-            if config.hasTagValue(key, cvalue):
+            if config.tags.hasTagValue(key, cvalue):
                 yield config
 
 configDB = ConfigDB(dbDir / 'configs')
@@ -556,7 +556,7 @@ class Config(XMLTag, TaskRunnerSet, TaskSetWithInputs[Task],
         for name, value in self.__params.items():
             yield xml.param(name = name, value = value)
         yield self.runnersAsXML()
-        yield self._tagsAsXML()
+        yield self.tags.toXML()
 
     def getDescription(self) -> str:
         if self.__description is None:

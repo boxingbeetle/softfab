@@ -79,17 +79,18 @@ class GetTagged_GET(ControlPage['GetTagged_GET.Arguments',
             # Filter records.
             matches = []
             for record in db.values():
+                tags = record.tags
                 for key in keys:
-                    if record.hasTagKey(key):
+                    if tags.hasTagKey(key):
                         recordId = record.getId()
                         if values:
                             for value in values:
                                 cvalue, dvalue = \
                                     record.cache.toCanonical(key, value)
-                                if record.hasTagValue(key, cvalue):
+                                if tags.hasTagValue(key, cvalue):
                                     matches.append(( recordId, key, dvalue ))
                         else:
-                            for value in record.getTagValues(key):
+                            for value in tags.getTagValues(key):
                                 matches.append(( recordId, key, value ))
 
             # pylint: disable=attribute-defined-outside-init

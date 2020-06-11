@@ -478,8 +478,9 @@ class ExecuteProcessorMixin:
                         # pylint: disable=protected-access
                         task._setRunners(runners)
 
+            tags = config.tags
             for index, key in tagkeys.items():
-                config.setTag(key, textToValues(tagvalues.get(index, '')))
+                tags.setTag(key, textToValues(tagvalues.get(index, '')))
 
             self.__config = config
         return self.__config
@@ -596,10 +597,11 @@ class Execute_POST(ExecuteBase):
 
             tagkeys = {}
             tagvalues = {}
-            for index, key in enumerate(config.getTagKeys()):
+            tags = config.tags
+            for index, key in enumerate(tags.getTagKeys()):
                 indexStr = str(index)
                 tagkeys[indexStr] = key
-                tagvalues[indexStr] = valuesToText(config.getTagValues(key))
+                tagvalues[indexStr] = valuesToText(tags.getTagValues(key))
 
             return cls(
                 config = config.getId(),

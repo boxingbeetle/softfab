@@ -611,4 +611,4 @@ class Scheduled(XMLTag, SelectableRecordABC):
         yield xml.comment[ self.__comment ]
         for jobId in self.__lastJobIds:
             yield xml.job(jobId = jobId)
-        yield self._tagsAsXML()
+        yield self.tags.toXML()
