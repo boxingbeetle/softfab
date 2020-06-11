@@ -131,8 +131,9 @@ class ConfigTags_POST(ConfigTagsBase['ConfigTags_POST.Arguments']):
                 assert action is Actions.CANCEL, action
                 raise Redirect(args.refererURL or parentPage)
 
+            configDB = self.configDB
             self.notices = []
-            self.findConfigs(self.configDB)
+            self.findConfigs(configDB)
             if self.notices:
                 return
             configs = self.configs
@@ -169,7 +170,9 @@ class ConfigTags_POST(ConfigTagsBase['ConfigTags_POST.Arguments']):
                 changes[tagKey] = chValues
 
             for config in configs:
+                # TODO: Wrap update() call in context manager.
                 config.updateTags(changes)
+                configDB.update(config)
 
             # Case changes must be done on all instances of a tag;
             # even configurations that were not selected must be updated.
@@ -181,11 +184,12 @@ class ConfigTags_POST(ConfigTagsBase['ConfigTags_POST.Arguments']):
                         tagKey, uvalue
                         )
                     if uvalue != dvalue:
-                        for config in self.configDB:
+                        for config in configDB:
                             if config.hasTagValue(tagKey, cvalue):
                                 config.updateTags({
                                     tagKey: { cvalue: uvalue },
                                     })
+                                configDB.update(config)
 
     def presentContent(self, **kwargs: object) -> XMLContent:
         proc = cast(ConfigTags_POST.Processor, kwargs['proc'])
