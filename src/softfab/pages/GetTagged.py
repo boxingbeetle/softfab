@@ -11,7 +11,6 @@ from softfab.request import Request
 from softfab.response import Response
 from softfab.schedulelib import ScheduleDB
 from softfab.selectlib import SelectableRecordABC, TagCache
-from softfab.taskdeflib import TaskDefDB
 from softfab.userlib import User, checkPrivilege
 from softfab.xmlgen import xml
 
@@ -32,7 +31,6 @@ class GetTagged_GET(ControlPage['GetTagged_GET.Arguments',
 
         configDB: ClassVar[ConfigDB]
         scheduleDB: ClassVar[ScheduleDB]
-        taskDefDB: ClassVar[TaskDefDB]
 
         @classmethod
         def subjectToDB(cls, subject: str) -> Database[SelectableRecordABC]:
@@ -40,8 +38,6 @@ class GetTagged_GET(ControlPage['GetTagged_GET.Arguments',
                 return cast(Database[SelectableRecordABC], cls.configDB)
             elif subject == 'schedule':
                 return cast(Database[SelectableRecordABC], cls.scheduleDB)
-            elif subject == 'taskdef':
-                return cast(Database[SelectableRecordABC], cls.taskDefDB)
             else:
                 raise KeyError(subject)
 
