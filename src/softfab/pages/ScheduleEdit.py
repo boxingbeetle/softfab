@@ -246,7 +246,7 @@ class TagList(DropDownList):
 
     def iterOptions(self, **kwargs: object) -> Iterator[Option]:
         for key in project.getTagKeys():
-            yield key, Config.cache.getValues(key)
+            yield key, sorted(Config.cache.getValues(key))
 
 def _createGroupItem(visible: bool) -> Container:
     return groupItem(class_=None if visible else 'hidden')

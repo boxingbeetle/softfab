@@ -173,13 +173,9 @@ class SelectProcMixin(Generic[BasketArgsT, SelectableRecord]):
                     # Drop non-existing value.
                     tagValue = None
             if tagValue is None:
-                tagValues = tagCache.getValues(tagKey)
-                if tagValues:
-                    # Pick default value.
-                    tagValue = tagValues[0]
-                else:
-                    # Nothing is tagged with this key; show untagged.
-                    tagValue = ''
+                # Pick default value.
+                # If nothing is tagged with this key, show untagged.
+                tagValue = min(tagCache.getValues(tagKey), default='')
         else:
             # A value only has meaning if we have a key.
             tagValue = None
@@ -325,7 +321,7 @@ def selectDialog(formAction: str,
             xhtml.tbody[
                 xhtml.tr[ xhtml.th[ 'Tag Values:' ] ],
                 ( xhtml.tr[ createTagCell(value) ]
-                  for value in list(tagCache.getValues(tagKey)) + [''] )
+                  for value in sorted(tagCache.getValues(tagKey)) + [''] )
                 ]
             ]
     else:
@@ -440,7 +436,7 @@ class TagValueEditTable(Table, ABC):
         for index, key in enumerate(tagKeys):
             indexStr = str(index)
             inputName = 'tagvalues.' + indexStr
-            values = self.tagCache.getValues(key)
+            values = sorted(self.tagCache.getValues(key))
             yield (
                 preserveSpaces(key),
                 ( hiddenInput(name='tagkeys.' + indexStr, value=key),

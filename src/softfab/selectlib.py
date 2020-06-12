@@ -133,12 +133,10 @@ class TagCache:
     def getKeys(self) -> Sequence[str]:
         return self.__getKeys()
 
-    def getValues(self, key: str) -> Sequence[str]:
+    def getValues(self, key: str) -> Iterable[str]:
         '''Returns the display values for the given tag key.
         '''
-        # TODO: Cache the sorted value list?
-        #       Or don't sort here at all?
-        return sorted(self.__tags.get(key, {}).values())
+        return self.__tags.get(key, {}).values()
 
     def hasValue(self, key: str, value: str) -> bool:
         '''Returns True iff the given value exists for the given key.
