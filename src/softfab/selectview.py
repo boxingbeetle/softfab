@@ -166,11 +166,8 @@ class SelectProcMixin(Generic[BasketArgsT, SelectableRecord]):
         if tagKey:
             tagValue = args.tagvalue
             if tagValue:
-                if tagCache.hasValue(tagKey, tagValue):
-                    # Known tag, use display value.
-                    _, tagValue = tagCache.toCanonical(tagKey, tagValue)
-                else:
-                    # Drop non-existing value.
+                if not tagCache.hasValue(tagKey, tagValue):
+                    # Unknown tag; drop non-existing value.
                     tagValue = None
             if tagValue is None:
                 # Pick default value.
@@ -197,16 +194,14 @@ class SelectProcMixin(Generic[BasketArgsT, SelectableRecord]):
         if tagKey:
             assert tagValue is not None
             if tagValue:
-                cvalue, dvalue_ = self.tagCache.toCanonical(tagKey, tagValue)
-                assert cvalue is not None
-                # The cast is necessary because mypy seems to ignore
+                # The casts are necessary because mypy seems to ignore
                 # the narrowed type in the parameter default value.
                 #   https://github.com/python/mypy/issues/2608
                 def valueFilter(record: SelectableRecord,
                                 tagKey: str = cast(str, tagKey),
-                                cvalue: str = cvalue
+                                tagValue: str = cast(str, tagValue)
                                 ) -> bool:
-                    return record.tags.hasTagValue(tagKey, cvalue)
+                    return record.tags.hasTagValue(tagKey, tagValue)
                 recordFilter = CustomFilter(valueFilter)
             else:
                 def keyFilter(record: SelectableRecord,

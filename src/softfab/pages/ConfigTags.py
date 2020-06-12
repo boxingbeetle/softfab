@@ -2,8 +2,8 @@
 
 from enum import Enum
 from typing import (
-    Any, ClassVar, Collection, Dict, FrozenSet, Iterator, List, Mapping,
-    Optional, cast
+    AbstractSet, Any, ClassVar, Collection, Dict, FrozenSet, Iterator, List,
+    Mapping, cast
 )
 
 from softfab.FabPage import FabPage, IconModifier
@@ -91,10 +91,9 @@ class ConfigTagsBase(FabPage['ConfigTagsBase.Processor[ArgsT]', ArgsT]):
                 xhtml.p[ actionButtons(Actions) ],
                 ( hiddenInput(name=f'commontags.{index:d}', value=tagName)
                   for index, tagKey in enumerate(tagKeys)
-                  for tagName in commonTags[tagKey].keys() )
+                  for tagName in commonTags[tagKey] )
                 ].present(
-                    getValues=lambda key:
-                        valuesToText(commonTags[key].values()),
+                    getValues=lambda key: valuesToText(commonTags[key]),
                     **kwargs
                     )
         else:
@@ -151,43 +150,19 @@ class ConfigTags_POST(ConfigTagsBase['ConfigTags_POST.Arguments']):
 
             # Determine changes between the submitted tags and the stored
             # tags.
-            changes: Dict[str, Dict[str, Optional[str]]] = {}
+            additions: Dict[str, AbstractSet[str]] = {}
+            removals: Dict[str, AbstractSet[str]] = {}
             for index, tagKey in tagkeys.items():
-                assert isinstance(tagKey, str), tagKey
                 storedValues = commontags.get(index, frozenset())
-                values = dict(
-                    Config.cache.toCanonical(tagKey, value)
-                    for value in textToValues(tagvalues[index])
-                    )
-                chValues: Dict[str, Optional[str]] = {}
-                # Look for deleted tags.
-                for cvalue in storedValues:
-                    if cvalue not in values:
-                        chValues[cvalue] = None
-                # Look for added tags.
-                for cvalue, dvalue in values.items():
-                    if cvalue not in storedValues:
-                        chValues[cvalue] = dvalue
-                changes[tagKey] = chValues
+                values = textToValues(tagvalues[index])
+                additions[tagKey] = values - storedValues
+                removals[tagKey] = storedValues - values
 
             for config in configs:
                 # TODO: Wrap update() call in context manager.
-                config.tags.updateTags(changes)
+                for tagKey in tagkeys.values():
+                    config.tags.updateTags(tagKey, additions[tagKey], removals[tagKey])
                 configDB.update(config)
-
-            # Case changes must be done on all instances of a tag;
-            # even configurations that were not selected must be updated.
-            # TODO: This is motivation to store the tag value only once
-            #       in the DB instead of in every record tagged with it.
-            for index, tagKey in tagkeys.items():
-                for uvalue in textToValues(tagvalues[index]):
-                    cvalue, dvalue = Config.cache.toCanonical(tagKey, uvalue)
-                    if uvalue != dvalue:
-                        for config in configDB:
-                            tags = config.tags
-                            if tags.hasTagValue(tagKey, cvalue):
-                                tags.updateTags({tagKey: { cvalue: uvalue }})
-                                configDB.update(config)
 
     def presentContent(self, **kwargs: object) -> XMLContent:
         proc = cast(ConfigTags_POST.Processor, kwargs['proc'])

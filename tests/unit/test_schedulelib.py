@@ -676,19 +676,6 @@ class Test0600Tagged(ScheduleFixtureMixin, unittest.TestCase):
         '''
         self.runTaggedStart(2)
 
-    def test0700TagCaseInsensitive(self):
-        '''Test whether tag values are case insensitive.
-        '''
-        class ConfigFactory(TaggedConfigFactory):
-            def __call__(self):
-                properties = TaggedConfigFactory.__call__(self)
-                tagValue = properties['tagValue']
-                newTagValue = tagValue.capitalize()
-                assert newTagValue != tagValue
-                properties['tagValue'] = newTagValue
-                return properties
-        self.runTaggedStart(2, ConfigFactory(self.dataGenerator, 2))
-
     def test0710ContinuousMulti(self):
         '''Test repeating of continuous schedule which matches multiple configs.
         '''

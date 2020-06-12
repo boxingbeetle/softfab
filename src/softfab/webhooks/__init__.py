@@ -150,10 +150,6 @@ class WebhookResource(Resource):
             return b'Missing key in JSON: %s\n' % str(ex).encode()
 
         # Trigger schedules.
-        # TODO: Our tags are case-insensitive while Git branches are
-        #       case-sensitive. We work around this by comparing the
-        #       display values, but it does mean that a user cannot
-        #       filters on two branches that only differ in case.
         tagValues = {f'{repoId}/{branch}' for branch in branches}
         scheduleIds = []
         for scheduleId, schedule in self.scheduleDB.items():

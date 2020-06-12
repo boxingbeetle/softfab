@@ -97,9 +97,8 @@ class ConfigDB(Database['Config']):
         super().__init__(baseDir, ConfigFactory())
 
     def iterConfigsByTag(self, key: str, value: str) -> Iterator['Config']:
-        cvalue, dvalue_ = Config.cache.toCanonical(key, value)
         for config in self:
-            if config.tags.hasTagValue(key, cvalue):
+            if config.tags.hasTagValue(key, value):
                 yield config
 
 configDB = ConfigDB(dbDir / 'configs')

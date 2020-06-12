@@ -85,10 +85,8 @@ class GetTagged_GET(ControlPage['GetTagged_GET.Arguments',
                         recordId = record.getId()
                         if values:
                             for value in values:
-                                cvalue, dvalue = \
-                                    record.cache.toCanonical(key, value)
-                                if tags.hasTagValue(key, cvalue):
-                                    matches.append(( recordId, key, dvalue ))
+                                if tags.hasTagValue(key, value):
+                                    matches.append(( recordId, key, value ))
                         else:
                             for value in tags.getTagValues(key):
                                 matches.append(( recordId, key, value ))

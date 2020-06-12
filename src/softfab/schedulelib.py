@@ -60,7 +60,7 @@ import time
 from twisted.internet import reactor
 
 from softfab.config import dbDir
-from softfab.configlib import Config, ConfigDB
+from softfab.configlib import ConfigDB
 from softfab.databaselib import Database, RecordObserver
 from softfab.joblib import Job, JobDB, jobDB
 from softfab.selectlib import ObservingTagCache, SelectableRecordABC
@@ -296,10 +296,7 @@ class Scheduled(XMLTag, SelectableRecordABC):
         elif key == 'configId':
             return self.configId
         elif key == 'tagValue':
-            # Return the current display value.
-            cvalue_, dvalue = Config.cache.toCanonical(self.tagKey,
-                                                       self.tagValue)
-            return dvalue
+            return self.tagValue
         elif key == 'days':
             return self._properties.get('days', '')
         elif key == 'comment':
