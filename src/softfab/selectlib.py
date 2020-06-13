@@ -27,7 +27,7 @@ class Tags(Selectable):
         self.__tags: Dict[str, Set[str]] = {}
 
     def _load(self, key: str, value: str) -> None:
-        self.__cache._load(key, value)
+        self.__cache._load(key, value) # pylint: disable=protected-access
         try:
             tagsForKey = self.__tags[key]
         except KeyError:
