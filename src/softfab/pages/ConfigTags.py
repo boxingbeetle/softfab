@@ -161,7 +161,8 @@ class ConfigTags_POST(ConfigTagsBase['ConfigTags_POST.Arguments']):
             for config in configs:
                 # TODO: Wrap update() call in context manager.
                 for tagKey in tagkeys.values():
-                    config.tags.updateTags(tagKey, additions[tagKey], removals[tagKey])
+                    config.tags.updateTags(tagKey, additions[tagKey],
+                                                   removals[tagKey])
                 configDB.update(config)
 
     def presentContent(self, **kwargs: object) -> XMLContent:
