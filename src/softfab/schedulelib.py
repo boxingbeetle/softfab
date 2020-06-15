@@ -63,7 +63,7 @@ from softfab.config import dbDir
 from softfab.configlib import ConfigDB
 from softfab.databaselib import Database, RecordObserver
 from softfab.joblib import Job, JobDB, jobDB
-from softfab.selectlib import ObservingTagCache, SelectableRecordABC
+from softfab.selectlib import ObservingTagCache, SelectableRecordABC, TagCache
 from softfab.timelib import endOfTime, getTime
 from softfab.utils import Heap
 from softfab.xmlbind import XMLTag
@@ -100,6 +100,9 @@ class ScheduleDB(Database['Scheduled']):
 
     def __init__(self, baseDir: Path):
         super().__init__(baseDir, ScheduledFactory())
+        self.tagCache: TagCache = ObservingTagCache(
+            self, lambda: ('sf.trigger',)
+            )
 
     def create(self,
                name: str,
@@ -240,7 +243,6 @@ class Scheduled(XMLTag, SelectableRecordABC):
     boolProperties = ('suspended',)
     intProperties = ('startTime', 'minDelay')
     enumProperties = {'repeat': ScheduleRepeat}
-    cache = ObservingTagCache(scheduleDB, lambda: ('sf.trigger',) )
 
     def __init__(self,
                  properties: Mapping[str, XMLAttributeValue],

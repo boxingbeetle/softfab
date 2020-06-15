@@ -13,7 +13,7 @@ from softfab.EditPage import (
     InitialEditProcessor
 )
 from softfab.Page import PresentableError
-from softfab.configlib import Config, ConfigDB
+from softfab.configlib import ConfigDB
 from softfab.formlib import (
     CheckBoxesTable, DropDownList, Option, RadioTable, checkBox, dropDownList,
     textArea, textInput
@@ -245,8 +245,10 @@ class TagList(DropDownList):
         return args.tag if args.selectBy is SelectBy.TAG else None
 
     def iterOptions(self, **kwargs: object) -> Iterator[Option]:
+        configDB: ConfigDB = getattr(kwargs['proc'], 'configDB')
+        tagCache = configDB.tagCache
         for key in project.getTagKeys():
-            yield key, sorted(Config.cache.getValues(key))
+            yield key, sorted(tagCache.getValues(key))
 
 def _createGroupItem(visible: bool) -> Container:
     return groupItem(class_=None if visible else 'hidden')

@@ -65,7 +65,7 @@ class TagConfigTable(BaseTagConfigTable):
 
     def _simpleMode(self, proc: 'LoadExecute_GET.Processor') -> bool:
         # If there is a basket, use simple mode, otherwise full mode.
-        return len(Config.cache.getKeys()) != 0 and len(proc.selected) > 0
+        return len(proc.tagCache.getKeys()) != 0 and len(proc.selected) > 0
 
     def getRecordsToQuery(self,
                           proc: PageProcessor['LoadExecute_GET.Arguments']
@@ -103,7 +103,6 @@ class LoadExecute_GET(FabPage['LoadExecute_GET.Processor',
 
         configDB: ClassVar[ConfigDB]
         userDB: ClassVar[UserDB]
-        tagCache = Config.cache
 
         @property
         @abstractmethod
@@ -129,9 +128,10 @@ class LoadExecute_GET(FabPage['LoadExecute_GET.Processor',
         checkPrivilege(user, 'c/l')
 
     def presentContent(self, **kwargs: object) -> XMLContent:
+        proc = cast(LoadExecute_GET.Processor, kwargs['proc'])
         yield xhtml.h2[ 'Execute from Configuration' ],
         yield selectDialog(
-            self.name, Config.cache,
+            self.name, proc.tagCache,
             TagConfigTable.instance, BasketConfigTable.instance,
             'Configurations to Tag or Execute',
             **kwargs

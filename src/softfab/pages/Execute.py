@@ -29,6 +29,7 @@ from softfab.paramview import ParamCell, ParamOverrideTable
 from softfab.productdeflib import ProductType
 from softfab.projectlib import project
 from softfab.resourcelib import ResourceDB, TaskRunner
+from softfab.selectlib import TagCache
 from softfab.selectview import TagValueEditTable, textToValues, valuesToText
 from softfab.taskdeflib import TaskDefDB
 from softfab.taskgroup import LocalGroup, TaskGroup
@@ -317,7 +318,10 @@ class TagsStep(DialogStep):
         return ConfirmStep
 
 class ConfigTagValueEditTable(TagValueEditTable):
-    tagCache = Config.cache
+
+    def getTagCache(self, **kwargs: object) -> TagCache:
+        proc = cast(Execute_POST.Processor, kwargs['proc'])
+        return proc.configDB.tagCache
 
 class ConfirmStep(DialogStep):
     name = 'confirm'

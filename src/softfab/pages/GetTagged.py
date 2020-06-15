@@ -57,18 +57,10 @@ class GetTagged_GET(ControlPage['GetTagged_GET.Arguments',
                 f'list {db.description}s'
                 )
 
-            # Get tag cache from any record.
-            # TODO: Refactor so tag cache can be fetched directly from "db".
-            tagCache: Optional[TagCache]
-            for recordId in db.keys():
-                tagCache = db[recordId].cache
-                break
-            else:
-                tagCache = None
-
             # Determine keys and values.
             keys = req.args.key
             values = req.args.value
+            tagCache = db.tagCache
             if tagCache is not None:
                 # Restrict keys to those that actually exist.
                 if keys:

@@ -248,6 +248,9 @@ class Database(Generic[DBRecord], RecordSubjectMixin[DBRecord], ABC):
         self.factory = factory
         """Parser for the root XML tag."""
 
+        self.tagCache: Optional[TagCache] = None
+        """Tracks the tagging of records in this database."""
+
         self._cache: Dict[str, DBRecord] = {}
         self.__uniqueValuesFor: Dict[str, Set[object]] = {
             key: set() for key in self.cachedUniqueValues
@@ -527,12 +530,10 @@ class Database(Generic[DBRecord], RecordSubjectMixin[DBRecord], ABC):
                 )
 
         # Sync tag cache.
-        record = next(iter(self), None)
-        if record is not None:
-            tagCache: Optional[TagCache] = getattr(record, 'cache', None)
-            if tagCache is not None:
-                yield None
-                tagCache._refreshCache() # pylint: disable=protected-access
+        tagCache = self.tagCache
+        if tagCache is not None:
+            yield None
+            tagCache._refreshCache() # pylint: disable=protected-access
 
     def convert(self, visitor: Optional[Callable[[DBRecord], None]] = None) \
             -> None:

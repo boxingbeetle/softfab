@@ -3,8 +3,8 @@
 from abc import ABC, abstractmethod
 from itertools import chain
 from typing import (
-    Callable, ClassVar, Collection, Generic, Iterable, Iterator, List,
-    MutableSet, Optional, Sequence, Tuple, TypeVar, cast
+    Callable, Collection, Generic, Iterable, Iterator, List, MutableSet,
+    Optional, Sequence, Tuple, TypeVar, cast
 )
 
 from softfab.Page import Redirect
@@ -16,7 +16,6 @@ from softfab.formlib import (
 from softfab.pageargs import ArgsCorrected, PageArgs, SetArg, StrArg
 from softfab.querylib import CustomFilter, runQuery
 from softfab.selectlib import SelectableRecord, SelectableRecordABC, TagCache
-from softfab.utils import abstract
 from softfab.webgui import (
     Column, Table, addRemoveStyleScript, cell, hgroup, pageLink, pageURL,
     preserveSpaces, script
@@ -121,12 +120,17 @@ class BasketArgs(TagArgs, SelectArgs):
 BasketArgsT = TypeVar('BasketArgsT', bound=BasketArgs)
 
 class SelectProcMixin(Generic[BasketArgsT, SelectableRecord]):
-    tagCache: ClassVar[TagCache] = abstract
 
     @property
     @abstractmethod
     def db(self) -> Database[SelectableRecord]:
         raise NotImplementedError
+
+    @property
+    def tagCache(self) -> TagCache:
+        tagCache = self.db.tagCache
+        assert tagCache is not None
+        return tagCache
 
     args: BasketArgsT
 
@@ -390,7 +394,6 @@ def selectDialog(formAction: str,
 
 class TagValueEditTable(Table, ABC):
     valTitle = 'Tag Values'
-    tagCache: ClassVar[TagCache] = abstract
 
     addTagValueScript = script[
         r'''
@@ -420,6 +423,9 @@ class TagValueEditTable(Table, ABC):
         }
         '''].present()
 
+    def getTagCache(self, **kwargs: object) -> TagCache:
+        raise NotImplementedError
+
     def iterColumns(self, **kwargs: object) -> Iterator[Column]:
         yield Column('Tag Key')
         yield Column(self.valTitle)
@@ -427,11 +433,12 @@ class TagValueEditTable(Table, ABC):
 
     def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
         getValues = cast(Callable[[str], Sequence[str]], kwargs['getValues'])
-        tagKeys = self.tagCache.getKeys()
+        tagCache = self.getTagCache(**kwargs)
+        tagKeys = tagCache.getKeys()
         for index, key in enumerate(tagKeys):
             indexStr = str(index)
             inputName = 'tagvalues.' + indexStr
-            values = sorted(self.tagCache.getValues(key))
+            values = sorted(tagCache.getValues(key))
             yield (
                 preserveSpaces(key),
                 ( hiddenInput(name='tagkeys.' + indexStr, value=key),

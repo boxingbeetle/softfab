@@ -17,7 +17,7 @@ from softfab.pageargs import (
 )
 from softfab.projectlib import project
 from softfab.request import Request
-from softfab.selectlib import getCommonTags
+from softfab.selectlib import TagCache, getCommonTags
 from softfab.selectview import (
     SelectArgs, TagValueEditTable, textToValues, valuesToText
 )
@@ -179,4 +179,7 @@ class ConfigTags_POST(ConfigTagsBase['ConfigTags_POST.Arguments']):
 
 class ConfigTagValueEditTable(TagValueEditTable):
     valTitle = 'Common Tag Values'
-    tagCache = Config.cache
+
+    def getTagCache(self, **kwargs: object) -> TagCache:
+        proc = cast(ConfigTagsBase.Processor[ParentArgs], kwargs['proc'])
+        return proc.configDB.tagCache

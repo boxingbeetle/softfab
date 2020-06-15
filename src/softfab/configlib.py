@@ -15,7 +15,7 @@ from softfab.joblib import Job
 from softfab.productdeflib import ProductDef, ProductType, productDefDB
 from softfab.projectlib import project
 from softfab.restypelib import ResTypeDB
-from softfab.selectlib import ObservingTagCache, SelectableRecordABC
+from softfab.selectlib import ObservingTagCache, SelectableRecordABC, TagCache
 from softfab.taskdeflib import taskDefDB
 from softfab.taskgroup import (
     LocalGroup, PriorityMixin, TaskGroup, TaskSet, TaskT
@@ -95,6 +95,13 @@ class ConfigDB(Database['Config']):
 
     def __init__(self, baseDir: Path):
         super().__init__(baseDir, ConfigFactory())
+        self.tagCache: TagCache = ObservingTagCache(
+            self,
+            # pylint: disable=unnecessary-lambda
+            # The lambda construct is essential, since "project" redirects its
+            # members to a new object when it is database entry gets updated.
+            lambda: project.getTagKeys()
+            )
 
     def iterConfigsByTag(self, key: str, value: str) -> Iterator['Config']:
         for config in self:
@@ -333,13 +340,6 @@ class Config(XMLTag, TaskRunnerSet, TaskSetWithInputs[Task],
              SelectableRecordABC):
     tagName = 'config'
     boolProperties = ('trselect',)
-    cache = ObservingTagCache(
-        configDB,
-        # pylint: disable=unnecessary-lambda
-        # The lambda construct is essential, since "project" redirects its
-        # members to a new object when it is database entry gets updated.
-        lambda: project.getTagKeys()
-        )
 
     @staticmethod
     def create(name: str,

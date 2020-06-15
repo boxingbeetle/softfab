@@ -3,13 +3,12 @@
 from abc import ABC
 from collections import defaultdict
 from typing import (
-    AbstractSet, Callable, ClassVar, DefaultDict, Dict, ItemsView, Iterable,
-    Iterator, Mapping, Optional, Sequence, Set, TypeVar
+    AbstractSet, Callable, DefaultDict, Dict, ItemsView, Iterable, Iterator,
+    Mapping, Optional, Sequence, Set, TypeVar
 )
 
 from softfab.compat import Protocol
 from softfab.databaselib import Database, DatabaseElem, RecordObserver
-from softfab.utils import abstract
 from softfab.xmlgen import XMLNode, xml
 
 
@@ -129,7 +128,6 @@ class TagCache:
 class SelectableRecordABC(DatabaseElem, ABC):
     """Abstract base class for database records that support tagging."""
 
-    cache: ClassVar[TagCache] = abstract
     tags: Tags
 
     def __init__(self) -> None:
