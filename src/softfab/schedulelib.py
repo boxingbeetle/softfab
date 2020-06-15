@@ -311,10 +311,7 @@ class Scheduled(XMLTag, SelectableRecordABC):
             return self._properties[key]
 
     def _addLastJob(self, jobId: str) -> None:
-        if jobDB.get(jobId) is not None:
-            # We sometimes clean up old jobs by manually removing records from
-            # the database, so in those cases the job may no longer exist.
-            self.__lastJobIds.append(jobId)
+        self.__lastJobIds.append(jobId)
 
     def _addJob(self, attributes: Mapping[str, str]) -> None:
         self._addLastJob(attributes['jobId'])
@@ -442,7 +439,8 @@ class Scheduled(XMLTag, SelectableRecordABC):
         if not self.__running:
             return False
         for jobId in self.__lastJobIds:
-            if not jobDB[jobId].isExecutionFinished():
+            job = jobDB.get(jobId)
+            if job is not None and not job.isExecutionFinished():
                 return True
         self.__running = False
         return False
@@ -471,7 +469,10 @@ class Scheduled(XMLTag, SelectableRecordABC):
         """
         # Typically all jobs will have the same create time.
         return max(
-            (jobDB[jobId].getCreateTime() for jobId in self.__lastJobIds),
+            (jobDB[jobId].getCreateTime()
+             for jobId in self.__lastJobIds
+             if jobId in jobDB
+             ),
             default=None
             )
 
