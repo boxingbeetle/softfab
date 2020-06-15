@@ -23,6 +23,7 @@ from softfab.xmlbind import parse
 from softfab.xmlgen import XML
 
 if TYPE_CHECKING:
+    # pylint: disable=cyclic-import
     from softfab.selectlib import TagCache
 else:
     TagCache = object
