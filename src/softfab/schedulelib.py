@@ -305,8 +305,6 @@ class Scheduled(XMLTag, SelectableRecordABC):
             return self.__comment
         elif key == 'owner':
             return self.owner
-        elif key == 'lastStartTime':
-            return self.getLastStartTime()
         else:
             return self._properties[key]
 

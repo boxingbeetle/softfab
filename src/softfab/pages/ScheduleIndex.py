@@ -33,8 +33,12 @@ class NameColumn(DataColumn[Scheduled]):
 
 class LastRunColumn(DataColumn[Scheduled]):
     label = 'Last Run'
-    keyName = 'lastStartTime'
     cellStyle = 'nobreak'
+
+    def getSortKey(self, proc: PageProcessor) -> Retriever[Scheduled, int]:
+        def getLastStartTime(record: Scheduled) -> int:
+            return record.getLastStartTime() or 0
+        return getLastStartTime
 
     def presentCell(self, record: Scheduled, **kwargs: object) -> XMLContent:
         return createLastJobLink(record)
