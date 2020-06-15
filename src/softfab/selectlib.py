@@ -21,13 +21,11 @@ class Selectable(Protocol):
 
 class Tags(Selectable):
 
-    def __init__(self, cache: 'TagCache') -> None:
+    def __init__(self) -> None:
         super().__init__()
-        self.__cache = cache
         self.__tags: Dict[str, Set[str]] = {}
 
     def _load(self, key: str, value: str) -> None:
-        self.__cache._load(key, value) # pylint: disable=protected-access
         try:
             tagsForKey = self.__tags[key]
         except KeyError:
@@ -136,7 +134,7 @@ class SelectableRecordABC(DatabaseElem, ABC):
 
     def __init__(self) -> None:
         super().__init__()
-        self.tags = Tags(self.cache)
+        self.tags = Tags()
 
     def _addTag(self, attributes: Mapping[str, str]) -> None:
         key = attributes['key']

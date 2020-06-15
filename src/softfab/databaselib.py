@@ -4,8 +4,9 @@ from abc import ABC
 from operator import itemgetter
 from pathlib import Path
 from typing import (
-    Callable, ClassVar, Dict, FrozenSet, Generic, Iterable, Iterator, KeysView,
-    List, Mapping, Optional, Sequence, Set, Tuple, TypeVar, cast
+    TYPE_CHECKING, Callable, ClassVar, Dict, FrozenSet, Generic, Iterable,
+    Iterator, KeysView, List, Mapping, Optional, Sequence, Set, Tuple, TypeVar,
+    cast
 )
 import logging
 import os
@@ -20,6 +21,12 @@ from softfab.utils import (
 )
 from softfab.xmlbind import parse
 from softfab.xmlgen import XML
+
+if TYPE_CHECKING:
+    from softfab.selectlib import TagCache
+else:
+    TagCache = object
+
 
 _changeLogger = logging.getLogger('ControlCenter.datachange')
 _changeLogger.setLevel(logging.INFO if logChanges else logging.ERROR)
@@ -518,6 +525,14 @@ class Database(Generic[DBRecord], RecordSubjectMixin[DBRecord], ABC):
                 'Failed to load %d of %d records from %s database',
                 failedRecordCount, len(keys), self.description
                 )
+
+        # Sync tag cache.
+        record = next(iter(self), None)
+        if record is not None:
+            tagCache: Optional[TagCache] = getattr(record, 'cache', None)
+            if tagCache is not None:
+                yield None
+                tagCache._refreshCache() # pylint: disable=protected-access
 
     def convert(self, visitor: Optional[Callable[[DBRecord], None]] = None) \
             -> None:
