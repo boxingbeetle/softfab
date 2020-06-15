@@ -36,9 +36,9 @@ class LastRunColumn(DataColumn[Scheduled]):
     cellStyle = 'nobreak'
 
     def getSortKey(self, proc: PageProcessor) -> Retriever[Scheduled, int]:
-        def getLastStartTime(record: Scheduled) -> int:
-            return record.getLastStartTime() or 0
-        return getLastStartTime
+        def getLastRunTime(record: Scheduled) -> int:
+            return record.lastRunTime or 0
+        return getLastRunTime
 
     def presentCell(self, record: Scheduled, **kwargs: object) -> XMLContent:
         return createLastJobLink(record)

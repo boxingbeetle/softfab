@@ -319,7 +319,7 @@ class Test0100Basic(ScheduleFixtureMixin, unittest.TestCase):
         self.expectScheduleDone()
         self.expectRunning()
         self.wait(60)
-        self.assertEqual(self.scheduled.getLastStartTime(), self.preparedTime)
+        self.assertEqual(self.scheduled.lastRunTime, self.preparedTime)
 
     def test0230OnceStart(self):
         '''Test that a one-shot schedule is started at the specified time.
@@ -331,7 +331,7 @@ class Test0100Basic(ScheduleFixtureMixin, unittest.TestCase):
         self.expectScheduleDone()
         self.wait(60)
         self.assertEqual(
-            self.scheduled.getLastStartTime(), self.preparedTime + startOffset
+            self.scheduled.lastRunTime, self.preparedTime + startOffset
             )
 
     def test0300ContinuousStart(self):
@@ -629,7 +629,7 @@ class Test0600Tagged(ScheduleFixtureMixin, unittest.TestCase):
         self.wait(startOffset)
         self.expectScheduleDone()
         self.wait(60)
-        self.assertIsNone(self.scheduled.getLastStartTime())
+        assert self.scheduled.lastRunTime == self.preparedTime + startOffset
 
     def prepareTaggedStart(self, sequence, numConfigs, configFactory = None):
         if configFactory is None:
@@ -653,9 +653,7 @@ class Test0600Tagged(ScheduleFixtureMixin, unittest.TestCase):
         self.expectRunning(numJobs = numConfigs)
         self.expectScheduleDone()
         self.wait(60)
-        self.assertEqual(
-            self.scheduled.getLastStartTime(), self.startTime
-            )
+        self.assertEqual(self.scheduled.lastRunTime, self.startTime)
         # Verify last started jobs.
         createdConfigs = set(
             config.getId() for config in configFactory.configs

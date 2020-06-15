@@ -460,19 +460,12 @@ class Scheduled(XMLTag, SelectableRecordABC):
             self._properties['trigger'] = True
             self._notify()
 
-    def getLastStartTime(self) -> Optional[int]:
-        """Return the create time of the most recently created job,
-        or None if the schedule was never triggered or the last trigger
-        did not create any jobs.
+    @property
+    def lastRunTime(self) -> Optional[int]:
+        """The last time this schedule started jobs,
+        or None if the schedule never ran.
         """
-        # Typically all jobs will have the same create time.
-        return max(
-            (jobDB[jobId].getCreateTime()
-             for jobId in self.__lastJobIds
-             if jobId in jobDB
-             ),
-            default=None
-            )
+        return cast(Optional[int], self._properties.get('lastRunTime'))
 
     def __adjustStartTime(self,
                           skipToNext: bool,
@@ -589,9 +582,9 @@ class Scheduled(XMLTag, SelectableRecordABC):
                 self.getId()
                 )
         else:
-            if jobIds:
-                self.__lastJobIds = jobIds
-                self.__running = True
+            self._properties['lastRunTime'] = currentTime
+            self.__lastJobIds = jobIds
+            self.__running = bool(jobIds)
 
         self._notify()
 

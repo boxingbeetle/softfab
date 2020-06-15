@@ -41,7 +41,7 @@ def stringToListDays(binDays: str) -> List[str]:
 
 def createLastJobLink(schedule: Scheduled) -> XML:
     return maybeLink(createJobsURL(schedule.getLastJobs()))[
-        formatTime(schedule.getLastStartTime())
+        formatTime(schedule.lastRunTime)
         ]
 
 def describeNextRun(schedule: Scheduled) -> XMLContent:
