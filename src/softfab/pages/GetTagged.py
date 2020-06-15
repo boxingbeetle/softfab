@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import ClassVar, Optional, cast
+from typing import ClassVar, cast
 
 from softfab.ControlPage import ControlPage
 from softfab.Page import InvalidRequest, PageProcessor
@@ -10,7 +10,7 @@ from softfab.pageargs import PageArgs, SetArg, StrArg
 from softfab.request import Request
 from softfab.response import Response
 from softfab.schedulelib import ScheduleDB
-from softfab.selectlib import SelectableRecordABC, TagCache
+from softfab.selectlib import SelectableRecordABC
 from softfab.userlib import User, checkPrivilege
 from softfab.xmlgen import xml
 
