@@ -206,10 +206,17 @@ class ScheduleManager(RecordObserver['Scheduled']):
             if nextSchedule is None or nextSchedule.startTime > untilSecs:
                 break
             heap.pop()
-            nextSchedule.trigger(
-                untilSecs,
-                nextSchedule.createJobs(self.configDB, self.jobDB)
-                )
+            try:
+                jobIds = list(
+                    nextSchedule.createJobs(self.configDB, self.jobDB)
+                    )
+            except Exception:
+                # Make sure the schedule is updated in the DB even
+                # if job creation failed.
+                logging.exception('Error creating jobs from schedule "%s"',
+                                  nextSchedule.getId())
+                jobIds = []
+            nextSchedule.trigger(untilSecs, jobIds)
 
     def added(self, record: 'Scheduled') -> None:
         self.__addToQueue(record)
@@ -266,7 +273,7 @@ class Scheduled(XMLTag, SelectableRecordABC):
             del properties['sequence']
 
         super().__init__(properties)
-        self.__lastJobIds: List[str] = []
+        self.__lastJobIds: Sequence[str] = []
         # Cached value: True means "might be running", False means "certainly
         # not running", since jobs can go from not fixed to fixed but not
         # vice versa.
@@ -310,7 +317,7 @@ class Scheduled(XMLTag, SelectableRecordABC):
             return self._properties[key]
 
     def _addLastJob(self, jobId: str) -> None:
-        self.__lastJobIds.append(jobId)
+        cast(List[str], self.__lastJobIds).append(jobId)
 
     def _addJob(self, attributes: Mapping[str, str]) -> None:
         self._addLastJob(attributes['jobId'])
@@ -557,13 +564,21 @@ class Scheduled(XMLTag, SelectableRecordABC):
                 # are schedules that point to non-existing configs.
                 return ()
 
-    def trigger(self, currentTime: int, jobIds: Iterable[str]) -> None:
+    def trigger(self, currentTime: int, jobIds: Sequence[str]) -> None:
+        """Record the jobs started now and advance the schedule's
+        start time for the next run.
+        """
+
+        # Update "last run" info.
+        self._properties['lastRunTime'] = currentTime
+        self.__lastJobIds = jobIds
+        self.__running = bool(jobIds)
+
+        # Advance time for next run.
         # To avoid an infinite loop in ScheduleManager, each invocation of
         # trigger() should either increase the schedule's start time or
         # cause isBlocked() to return False (which will lead to the schedule
         # being removed from the heap).
-
-        # Advance time for next run.
         self.__adjustStartTime(True, currentTime)
         if not self.isSuspended():
             repeat = self.repeat
@@ -571,21 +586,6 @@ class Scheduled(XMLTag, SelectableRecordABC):
                 self._properties['done'] = True
             elif repeat is ScheduleRepeat.TRIGGERED:
                 self._properties['trigger'] = False
-
-        try:
-            jobIds = list(jobIds)
-        except Exception:
-            # Make sure the schedule is updated in the DB even if job creation
-            # failed.
-            logging.exception(
-                'Error creating jobs from schedule "%s"',
-                self.getId()
-                )
-        else:
-            # Update "last run" info.
-            self._properties['lastRunTime'] = currentTime
-            self.__lastJobIds = jobIds
-            self.__running = bool(jobIds)
 
         self._notify()
 
