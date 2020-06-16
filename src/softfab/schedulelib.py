@@ -51,8 +51,7 @@ A: For repeating schedules, advance to next time.
 from enum import Enum
 from pathlib import Path
 from typing import (
-    Callable, Iterable, Iterator, List, Mapping, Optional, Sequence, Tuple,
-    cast
+    Callable, Iterator, List, Mapping, Optional, Sequence, Tuple, cast
 )
 import logging
 import time
