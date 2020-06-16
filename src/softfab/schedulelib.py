@@ -200,11 +200,12 @@ class ScheduleManager(RecordObserver['Scheduled']):
         '''
         # Checks if smallest item in heap is lower than current time.
         # If yes, clone and change 'startTime' in the database.
+        heap = self.__heap
         while True:
-            nextSchedule = self.__heap.peek()
+            nextSchedule = heap.peek()
             if nextSchedule is None or nextSchedule.startTime > untilSecs:
                 break
-            next(self.__heap)
+            heap.pop()
             nextSchedule.trigger(
                 untilSecs,
                 nextSchedule.createJobs(self.configDB, self.jobDB)

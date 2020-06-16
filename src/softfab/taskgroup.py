@@ -282,8 +282,7 @@ class TaskGroup(PriorityMixin, Generic[TaskT]):
                 for name, task in list(tasksLeft.items()):
                     if task.getInputs() <= availableProducts:
                         readyTasks.add(tasksLeft.pop(name))
-                # Note: The heap iterator is destructive.
-                for task in readyTasks:
+                for task in readyTasks.iterPop():
                     if not flattened:
                         mainSequence.append(task)
                     if isinstance(task, TaskGroup):

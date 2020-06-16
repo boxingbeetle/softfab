@@ -18,12 +18,14 @@ class TestHeap(unittest.TestCase):
         self.__delFactor = 0.4
 
     def __checkEmpty(self, heap):
-        self.assertRaises(StopIteration, lambda: next(heap))
+        self.assertIsNone(heap.peek())
+        self.assertIsNone(heap.pop())
+        self.assertRaises(StopIteration, lambda: next(heap.iterPop()))
 
     def __getItems(self, heap):
         #return [item for item in heap]
         list = []
-        for item in heap:
+        for item in heap.iterPop():
             heap._check()
             list.append(item)
         return list
@@ -93,10 +95,9 @@ class TestHeap(unittest.TestCase):
                 checkArray.append(item)
             checkArray.sort(key=self.keyFunc)
             for a in range(toGet):
-                try:
-                    item = next(heap)
-                    heap._check()
-                except StopIteration:
+                item = heap.pop()
+                heap._check()
+                if item is None:
                     if len(checkArray) != 0:
                         self.fail('Heap is empty while check array'
                         ' contains ' + str(len(checkArray)) + ' items')
@@ -104,9 +105,9 @@ class TestHeap(unittest.TestCase):
                     try:
                         self.assertEqual(checkArray.pop(0), item)
                     except IndexError:
-                        self.fail('Heap has returned \'' + str(item) +
-                        '\' while check array is empty')
-        for item in heap:
+                        self.fail(f"Heap has returned '{item}' "
+                                  f"while check array is empty")
+        for item in heap.iterPop():
             heap._check()
             try:
                 self.assertEqual(checkArray.pop(0), item)

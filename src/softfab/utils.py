@@ -67,12 +67,6 @@ class Heap(Generic[T]):
             (lambda x: x) if key is None else key
             )
 
-    def __iter__(self) -> 'Heap[T]':
-        """Note: This heap's iterator is destructive:
-        each iteration removes the smallest element from the heap.
-        """
-        return self
-
     def __moveUp(self, item: T, this: int) -> None:
         array = self.__array
         key = self.__keyFunc
@@ -149,15 +143,24 @@ class Heap(Generic[T]):
         else:
             return item
 
-    def __next__(self) -> T:
-        """Removes the smallest item from the heap and returns it.
+    def pop(self) -> Optional[T]:
+        """Remove the smallest item from the heap and return it.
+        If the heap is empty, None is returned.
         """
         item = self.peek()
-        if item is None:
-            raise StopIteration
-        else:
+        if item is not None:
             self.__array[0] = None
-            return item
+        return item
+
+    def iterPop(self) -> Iterator[T]:
+        """In each iteration cycle, remove the smallest item from
+        the heap and return it.
+        """
+        while True:
+            item = self.pop()
+            if item is None:
+                break
+            yield item
 
     def _check(self) -> None:
         """Check proper element ordering (used for unit testing only).
