@@ -195,6 +195,8 @@ class ScheduleFixtureMixin:
 
     def checkStatus(self):
         schedule = self.scheduled
+        if schedule is None:
+            return
         self.assertEqual(
             schedule.isRunning(),
             self.__nrCreatedJobs > self.__nrFinishedJobs
@@ -391,6 +393,7 @@ class Test0100Basic(ScheduleFixtureMixin, unittest.TestCase):
         self.expectRunning()
         self.wait(60)
         schedulelib.scheduleDB.remove(self.scheduled)
+        self.scheduled = None
         self.assertEqual(len(schedulelib.scheduleDB), 0)
         self.wait(self.duration - 60)
         self.expectJobDone()

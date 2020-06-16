@@ -51,7 +51,8 @@ A: For repeating schedules, advance to next time.
 from enum import Enum
 from pathlib import Path
 from typing import (
-    Callable, Iterator, List, Mapping, Optional, Sequence, Tuple, cast
+    Callable, Dict, Iterator, List, Mapping, MutableSet, Optional, Sequence,
+    Tuple, cast
 )
 import logging
 import time
@@ -61,7 +62,7 @@ from twisted.internet import reactor
 from softfab.config import dbDir
 from softfab.configlib import ConfigDB
 from softfab.databaselib import Database, RecordObserver
-from softfab.joblib import Job, JobDB, jobDB
+from softfab.joblib import Job, JobDB
 from softfab.selectlib import ObservingTagCache, SelectableRecordABC, TagCache
 from softfab.timelib import endOfTime, getTime
 from softfab.utils import Heap
@@ -160,6 +161,11 @@ class ScheduleManager(RecordObserver['Scheduled']):
         self.configDB = configDB
         self.jobDB = jobDB
 
+        self.__runningJobs: Dict[str, MutableSet[str]] = {}
+        """Maps schedule ID to the set of job IDs it spawned on its last run
+        that haven't finished yet.
+        """
+
         # Initialize heap.
         self.__heap: Heap[Scheduled] = Heap(key=lambda schedule:
             (schedule.startTime, schedule.getId())
@@ -173,25 +179,41 @@ class ScheduleManager(RecordObserver['Scheduled']):
         jobDB.addObserver(jobDBObserver)
 
     def __jobUpdated(self, job: Job, schedule: 'Scheduled') -> None:
-        if job.isExecutionFinished() and job.getId() in schedule.getLastJobs() \
-                and not schedule.isRunning():
-            # The schedule itself has not changed, but the return value of
-            # isBlocked() might have.
-            self.updated(schedule)
+        if job.isExecutionFinished():
+            scheduleId = schedule.getId()
+            unfinishedJobIds = self.__runningJobs.get(scheduleId)
+            if unfinishedJobIds is not None:
+                unfinishedJobIds.discard(job.getId())
+                if not unfinishedJobIds:
+                    schedule._jobsFinished() # pylint: disable=protected-access
+                    self.updated(schedule)
 
-    def __addToQueue(self, record: 'Scheduled') -> None:
-        if not record.isBlocked():
-            self.__heap.add(record)
+    def __addToQueue(self, schedule: 'Scheduled') -> None:
+        # Have the jobs from the last run finished?
+        jobDB = self.jobDB
+        unfinishedJobIds = set()
+        for jobId in schedule.getLastJobs():
+            job = jobDB.get(jobId)
+            if job is not None and not job.isExecutionFinished():
+                unfinishedJobIds.add(jobId)
+        if unfinishedJobIds:
+            self.__runningJobs[schedule.getId()] = unfinishedJobIds
+        else:
+            schedule._jobsFinished() # pylint: disable=protected-access
+
+        if not schedule.isBlocked():
+            self.__heap.add(schedule)
             # If the new schedule should start right away, trigger it.
             # Doing this call via the reactor makes sure that no schedules
             # are instantiated on upgrade.
             reactor.callLater(0, self.__triggerSchedules, getTime())
 
-    def __removeFromQueue(self, record: 'Scheduled') -> None:
+    def __removeFromQueue(self, schedule: 'Scheduled') -> None:
         try:
-            self.__heap.remove(record)
+            self.__heap.remove(schedule)
         except ValueError:
             pass
+        self.__runningJobs.pop(schedule.getId(), None)
 
     def __triggerSchedules(self, untilSecs: int) -> None:
         '''Create jobs for all schedules which have a start time that is
@@ -273,10 +295,11 @@ class Scheduled(XMLTag, SelectableRecordABC):
 
         super().__init__(properties)
         self.__lastJobIds: Sequence[str] = []
-        # Cached value: True means "might be running", False means "certainly
-        # not running", since jobs can go from not fixed to fixed but not
-        # vice versa.
+
+        # Note: ScheduleManager will update this via _jobsFinished()
+        #       if jobs are no longer running.
         self.__running = True
+        """True iff the jobs from the last run haven't all finished yet."""
 
         repeat = self._properties['repeat']
         if repeat is ScheduleRepeat.ONCE:
@@ -323,6 +346,12 @@ class Scheduled(XMLTag, SelectableRecordABC):
 
     def _textComment(self, text: str) -> None:
         self.__comment = text
+
+    def _jobsFinished(self) -> None:
+        """Called by ScheduleManager when all jobs from the last run
+        have finished.
+        """
+        self.__running = False
 
     def getId(self) -> str:
         return cast(str, self._properties['id'])
@@ -441,14 +470,7 @@ class Scheduled(XMLTag, SelectableRecordABC):
         '''Returns True iff one or more of the jobs last instantiated by this
         schedule are not finished yet.
         '''
-        if not self.__running:
-            return False
-        for jobId in self.__lastJobIds:
-            job = jobDB.get(jobId)
-            if job is not None and not job.isExecutionFinished():
-                return True
-        self.__running = False
-        return False
+        return self.__running
 
     def setSuspend(self, suspended: bool) -> None:
         '''Suspends or resumes a schedule.
