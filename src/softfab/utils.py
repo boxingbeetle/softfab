@@ -124,12 +124,13 @@ class Heap(Generic[T]):
         else:
             self.__count -= 1
             if this != self.__count:
-                item = cast(T, array[self.__count])
+                lastItem = array[self.__count]
+                assert lastItem is not None
                 key = self.__keyFunc
-                if key(item) > key(array[this]):
-                    self.__moveDown(item, this)
+                if key(lastItem) > key(item):
+                    self.__moveDown(lastItem, this)
                 else:
-                    self.__moveUp(item, this)
+                    self.__moveUp(lastItem, this)
 
     def peek(self) -> Optional[T]:
         """Returns the smallest item in the heap.
@@ -139,8 +140,9 @@ class Heap(Generic[T]):
         if item is None:
             if self.__count > 1:
                 self.__count -= 1
-                item = cast(T, array[self.__count])
-                self.__moveDown(item, 0)
+                lastItem = array[self.__count]
+                assert lastItem is not None
+                self.__moveDown(lastItem, 0)
                 return array[0]
             else:
                 return None
