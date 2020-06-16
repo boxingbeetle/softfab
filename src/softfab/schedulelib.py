@@ -571,7 +571,6 @@ class Scheduled(XMLTag, SelectableRecordABC):
             elif repeat is ScheduleRepeat.TRIGGERED:
                 self._properties['trigger'] = False
 
-        # Update "last run" if any jobs were created.
         try:
             jobIds = list(jobIds)
         except Exception:
@@ -582,6 +581,7 @@ class Scheduled(XMLTag, SelectableRecordABC):
                 self.getId()
                 )
         else:
+            # Update "last run" info.
             self._properties['lastRunTime'] = currentTime
             self.__lastJobIds = jobIds
             self.__running = bool(jobIds)
