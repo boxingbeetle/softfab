@@ -1,10 +1,10 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Iterator, List, Sequence
+from typing import ClassVar, Iterator, List, Sequence
 
 from softfab.CSVPage import CSVPage
 from softfab.ReportMixin import ReportProcessor
-from softfab.joblib import iterDoneTasks
+from softfab.joblib import TaskToJobs
 from softfab.pagelinks import ReportTaskCSVArgs
 from softfab.querylib import KeySorter, RecordProcessor, runQuery
 from softfab.request import Request
@@ -22,6 +22,8 @@ class ReportTasksCSV_GET(CSVPage['ReportTasksCSV_GET.Processor']):
 
     class Processor(ReportProcessor[Arguments]):
 
+        taskToJobs: ClassVar[TaskToJobs]
+
         async def process(self,
                           req: Request['ReportTasksCSV_GET.Arguments'],
                           user: User
@@ -32,7 +34,8 @@ class ReportTasksCSV_GET(CSVPage['ReportTasksCSV_GET.Processor']):
             #       matches) filter, no need for a special case here.
             query: List[RecordProcessor] = list(self.iterFilters())
             query.append(KeySorter.forCustom(['recent']))
-            tasks = runQuery(query, iterDoneTasks(self.args.task))
+            taskName = self.args.task
+            tasks = runQuery(query, self.taskToJobs.iterDoneTasks(taskName))
 
             # pylint: disable=attribute-defined-outside-init
             self.tasks = tasks

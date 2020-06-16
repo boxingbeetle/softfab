@@ -25,7 +25,7 @@ from softfab.databaselib import Database
 from softfab.databases import getDatabases, injectDependencies
 from softfab.docserve import DocPage, DocResource
 from softfab.joblib import (
-    DateRangeMonitor, JobDB, ResultlessJobs, UnfinishedJobs
+    DateRangeMonitor, JobDB, ResultlessJobs, TaskToJobs, UnfinishedJobs
 )
 from softfab.jobview import JobNotificationObserver
 from softfab.pageargs import PageArgs
@@ -236,7 +236,8 @@ class SoftFabRoot(Resource):
             dependencies: Dict[str, object] = dict(
                 databases,
                 dateRange=DateRangeMonitor(jobDB),
-                unfinishedJobs=UnfinishedJobs(jobDB)
+                unfinishedJobs=UnfinishedJobs(jobDB),
+                taskToJobs=TaskToJobs(jobDB)
                 )
 
             resultlessJobs = ResultlessJobs(jobDB)

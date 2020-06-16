@@ -7,9 +7,7 @@ from softfab.Page import PageProcessor
 from softfab.ReportMixin import ReportFilterForm, ReportProcessor
 from softfab.datawidgets import DataTable
 from softfab.formlib import selectionList
-from softfab.joblib import (
-    Task, iterAllTasks, iterDoneTasks, iterFinishedTasks, iterUnfinishedTasks
-)
+from softfab.joblib import Task, TaskToJobs
 from softfab.pageargs import IntArg, SortArg
 from softfab.pagelinks import ExecutionState, ReportTaskArgs
 from softfab.querylib import RecordFilter
@@ -31,14 +29,16 @@ class FilteredTaskRunsTable(TaskRunsTable):
             or bool(proc.jobDB.uniqueValues('target'))
 
     def getRecordsToQuery(self, proc: PageProcessor) -> Iterator[Task]:
-        args = cast(ReportTasks_GET.Processor, proc).args
+        assert isinstance(proc, ReportTasks_GET.Processor)
+        taskToJobs = proc.taskToJobs
+        args = proc.args
         # Note: iterAllTasks() etc can efficiently handle an empty (nothing
         #       matches) filter, no need for a special case here.
         return {
-            ExecutionState.ALL: iterAllTasks,
-            ExecutionState.COMPLETED: iterDoneTasks,
-            ExecutionState.FINISHED: iterFinishedTasks,
-            ExecutionState.UNFINISHED: iterUnfinishedTasks,
+            ExecutionState.ALL: taskToJobs.iterAllTasks,
+            ExecutionState.COMPLETED: taskToJobs.iterDoneTasks,
+            ExecutionState.FINISHED: taskToJobs.iterFinishedTasks,
+            ExecutionState.UNFINISHED: taskToJobs.iterUnfinishedTasks,
             }[args.execState](args.task)
 
     def iterFilters(self, proc: PageProcessor) -> Iterator[RecordFilter]:
@@ -68,6 +68,7 @@ class ReportTasks_GET(FabPage['ReportTasks_GET.Processor',
 
     class Processor(ReportProcessor[Arguments]):
         taskDefDB: ClassVar[TaskDefDB]
+        taskToJobs: ClassVar[TaskToJobs]
 
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'j/a', 'view the task list')

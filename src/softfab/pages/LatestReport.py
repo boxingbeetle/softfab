@@ -1,11 +1,11 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import cast
+from typing import ClassVar, cast
 
 from softfab.Page import FabResource, PageProcessor, Redirect
 from softfab.UIPage import UIPage
 from softfab.authentication import LoginAuthPage
-from softfab.joblib import getAllTasksWithId
+from softfab.joblib import TaskToJobs
 from softfab.pagelinks import TaskDefIdArgs, createRunURL
 from softfab.request import Request
 from softfab.resultcode import ResultCode
@@ -24,6 +24,8 @@ class LatestReport_GET(
 
     class Processor(PageProcessor[TaskDefIdArgs]):
 
+        taskToJobs: ClassVar[TaskToJobs]
+
         async def process(self,
                           req: Request[TaskDefIdArgs],
                           user: User
@@ -31,7 +33,7 @@ class LatestReport_GET(
             taskId = req.args.id
             taskTimes = (
                 ( task.startTime, task )
-                for task in getAllTasksWithId(taskId)
+                for task in self.taskToJobs.iterTasksWithId(taskId)
                 if task.result in ( ResultCode.OK, ResultCode.WARNING )
                 )
             try:

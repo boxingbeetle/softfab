@@ -1046,47 +1046,49 @@ class JobDB(Database[Job]):
 jobDB = JobDB(dbDir / 'jobs')
 taskrunlib.jobDB = jobDB
 
-class _TaskToJobs(RecordObserver[Job]):
+class TaskToJobs(RecordObserver[Job]):
     '''For each task ID, keep track of the IDs of all jobs containing that task.
     '''
-    def __init__(self) -> None:
+    def __init__(self, jobDB: JobDB):
         super().__init__()
-        self.__taskToJobs: Optional[DefaultDict[str, List[str]]] = None
+        self.__taskToJobs: DefaultDict[str, List[Job]] = defaultdict(list)
 
-    def __call__(self, taskId: str) -> Iterator[Task]:
-        '''Iterates through all task objects with the given task ID.
-        '''
-        # Delayed initialization
-        if self.__taskToJobs is None:
-            self.__taskToJobs = defaultdict(list)
-            # TODO: Initialising like this forces loading of the entire job DB.
-            for job in jobDB:
-                self.added(job)
-            jobDB.addObserver(self)
-        # TODO: Is the following comment still valid?
-        # We maintain a dictionary of job IDs so we don't have to load all jobs.
-        # However, anyone calling this function will most likely need to request
-        # info about the tasks, so we return objects instead of IDs. Since we
-        # use objects only at the last stage, only a selected few jobs are
-        # loaded.
-        return (
-            # Cast because we only store IDs of jobs that do have the task.
-            cast(Task, jobDB[jobId].getTask(taskId))
-            for jobId in self.get(taskId)
-            )
+        for job in jobDB:
+            self.added(job)
+        jobDB.addObserver(self)
 
-    def get(self, taskId: str) -> List[str]:
-        # TODO: It would be nice to be able to raise KeyError if the definition
-        #       of the task ID never existed (as opposed to no existing run).
-        assert self.__taskToJobs is not None
-        return self.__taskToJobs.get(taskId, [])
+    def __getitem__(self, taskName: str) -> Iterable[Job]:
+        return self.__taskToJobs.get(taskName, [])
+
+    def iterTasksWithId(self, taskName: str) -> Iterator[Task]:
+        for job in self[taskName]:
+            task = job.getTask(taskName)
+            assert task is not None
+            yield task
+
+    def iterAllTasks(self, taskFilter: Iterable[str]) -> Iterator[Task]:
+        for taskId in taskFilter:
+            yield from self.iterTasksWithId(taskId)
+
+    def iterDoneTasks(self, taskFilter: Iterable[str]) -> Iterator[Task]:
+        for task in self.iterAllTasks(taskFilter):
+            if task.isDone():
+                yield task
+
+    def iterFinishedTasks(self, taskFilter: Iterable[str]) -> Iterator[Task]:
+        for task in self.iterAllTasks(taskFilter):
+            if task.hasResult():
+                yield task
+
+    def iterUnfinishedTasks(self, taskFilter: Iterable[str]) -> Iterator[Task]:
+        for task in self.iterAllTasks(taskFilter):
+            if not task.hasResult():
+                yield task
 
     def added(self, record: Job) -> None:
         taskToJobs = self.__taskToJobs
-        assert taskToJobs is not None
-        jobId = record.getId()
         for taskName in record.iterTaskNames():
-            taskToJobs[taskName].append(jobId)
+            taskToJobs[taskName].append(record)
 
     def removed(self, record: Job) -> None:
         assert False, 'jobs should not be removed'
@@ -1094,36 +1096,6 @@ class _TaskToJobs(RecordObserver[Job]):
     def updated(self, record: Job) -> None:
         # We don't care, since the set of tasks will not be different.
         pass
-
-getAllTasksWithId = _TaskToJobs()
-
-def iterAllTasks(taskFilter: Iterable[str]) -> Iterator[Task]:
-    return (
-        task
-        for taskId in taskFilter
-        for task in getAllTasksWithId(taskId)
-        )
-
-def iterDoneTasks(taskFilter: Iterable[str]) -> Iterator[Task]:
-    return (
-        task
-        for task in iterAllTasks(taskFilter)
-        if task.isDone()
-        )
-
-def iterFinishedTasks(taskFilter: Iterable[str]) -> Iterator[Task]:
-    return (
-        task
-        for task in iterAllTasks(taskFilter)
-        if task.hasResult()
-        )
-
-def iterUnfinishedTasks(taskFilter: Iterable[str]) -> Iterator[Task]:
-    return (
-        task
-        for task in iterAllTasks(taskFilter)
-        if not task.hasResult()
-        )
 
 class DateRangeMonitor(RecordObserver[Job]):
     @property

@@ -2,8 +2,8 @@
 
 from collections import defaultdict
 from typing import (
-    Any, Collection, DefaultDict, Dict, Iterable, Iterator, List, Mapping,
-    Sequence, Tuple, cast
+    Any, ClassVar, Collection, DefaultDict, Dict, Iterable, Iterator, List,
+    Mapping, Sequence, Tuple, cast
 )
 
 from softfab.CSVPage import presentCSVLink
@@ -12,7 +12,7 @@ from softfab.Page import PageProcessor
 from softfab.ReportMixin import ReportProcessor
 from softfab.datawidgets import DataColumn, DataTable
 from softfab.formlib import CheckBoxesTable, RadioTable, makeForm, submitButton
-from softfab.joblib import Task, iterDoneTasks
+from softfab.joblib import Task, TaskToJobs
 from softfab.jobview import CreateTimeColumn
 from softfab.pageargs import EnumArg, IntArg, SetArg, SortArg
 from softfab.pagelinks import (
@@ -219,6 +219,8 @@ class ExtractedData_GET(FabPage['ExtractedData_GET.Processor',
 
     class Processor(ReportProcessor[Arguments]):
 
+        taskToJobs: ClassVar[TaskToJobs]
+
         async def process(self,
                           req: Request['ExtractedData_GET.Arguments'],
                           user: User
@@ -240,7 +242,7 @@ class ExtractedData_GET(FabPage['ExtractedData_GET.Processor',
             # Query DB.
             query: List[RecordProcessor[Task]] = list(self.iterFilters())
             query.append(KeySorter[Task].forCustom([ 'starttime' ]))
-            tasks = runQuery(query, iterDoneTasks(taskNames))
+            tasks = runQuery(query, self.taskToJobs.iterDoneTasks(taskNames))
             dataByRunId = gatherData(taskNames, tasks, activeKeys)
 
             # pylint: disable=attribute-defined-outside-init
