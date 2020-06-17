@@ -7,6 +7,7 @@ only used as an internal API by the command line interface.
 
 from enum import Enum, auto
 from os.path import splitext
+from typing import Any, Mapping
 from urllib.parse import unquote_plus
 import json
 
@@ -17,7 +18,7 @@ import attr
 from softfab.TwistedUtil import ClientErrorResource, NotFoundResource
 from softfab.json import dataToJSON, jsonToData
 from softfab.roles import UIRoleNames, uiRoleToSet
-from softfab.userlib import UserInfo, addUserAccount, removeUserAccount, userDB
+from softfab.userlib import UserDB, UserInfo, addUserAccount, removeUserAccount
 
 
 class DataFormat(Enum):
@@ -46,8 +47,9 @@ class UserData:
 class UserResource(Resource):
     """HTTP resource for an existing user account."""
 
-    def __init__(self, user: UserData, fmt: DataFormat):
+    def __init__(self, userDB: UserDB, user: UserData, fmt: DataFormat):
         super().__init__()
+        self._userDB = userDB
         self._user = user
         self._format = fmt
 
@@ -68,14 +70,15 @@ class UserResource(Resource):
 
     def render_DELETE(self, request: Request) -> bytes:
         name = self._user.name
-        removeUserAccount(userDB, name)
+        removeUserAccount(self._userDB, name)
         return textReply(request, 200, f"User removed: {name}\n")
 
 class NoUserResource(Resource):
     """HTTP resource for a non-existing user account."""
 
-    def __init__(self, name: str):
+    def __init__(self, userDB: UserDB, name: str):
         super().__init__()
+        self._userDB = userDB
         self._name = name
 
     def getChildWithDefault(self, path: bytes, request: Request) -> Resource:
@@ -102,7 +105,7 @@ class NoUserResource(Resource):
                              f"name in path ({self._name})\n")
 
         try:
-            addUserAccount(userDB, name, uiRoleToSet(data.role))
+            addUserAccount(self._userDB, name, uiRoleToSet(data.role))
         except ValueError as ex:
             return textReply(request, 400, f"Error creating user: {ex}\n")
         else:
@@ -112,6 +115,9 @@ class NoUserResource(Resource):
         return textReply(request, 404, f"User not found: {self._name}\n")
 
 class UsersResource(Resource):
+
+    def __init__(self, userDB: UserDB):
+        self._userDB = userDB
 
     def getChildWithDefault(self, path: bytes, request: Request) -> Resource:
         if not path:
@@ -131,16 +137,16 @@ class UsersResource(Resource):
             return NotFoundResource('Currently only ".json" is supported')
 
         try:
-            user = userDB[name]
+            user = self._userDB[name]
         except KeyError:
-            return NoUserResource(name)
+            return NoUserResource(self._userDB, name)
         else:
-            return UserResource(UserData.fromUserInfo(user), fmt)
+            return UserResource(self._userDB, UserData.fromUserInfo(user), fmt)
 
     def render_GET(self, request: Request) -> bytes:
         request.setHeader(b'Content-Type', b'text/plain; charset=UTF-8')
         return b'User index not implemented yet\n'
 
-def populateAPI(root: Resource) -> None:
+def populateAPI(root: Resource, dependencies: Mapping[str, Any]) -> None:
     """Add API resources under the given root."""
-    root.putChild(b'users', UsersResource())
+    root.putChild(b'users', UsersResource(dependencies['userDB']))

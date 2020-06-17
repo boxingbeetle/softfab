@@ -250,7 +250,7 @@ class SoftFabRoot(Resource):
             resultlessJobs = ResultlessJobs(jobDB)
             resultlessJobs.addObserver(JobNotificationObserver())
 
-            populateAPI(self.apiRoot)
+            populateAPI(self.apiRoot, dependencies)
 
             PageLoader(self, dependencies).process()
             await sleep(0)
