@@ -28,6 +28,7 @@ from softfab.joblib import (
     DateRangeMonitor, JobDB, ResultlessJobs, TaskToJobs, UnfinishedJobs
 )
 from softfab.jobview import JobNotificationObserver
+from softfab.newapi import populateAPI
 from softfab.pageargs import PageArgs
 from softfab.render import NotFoundPage, renderAuthenticated
 from softfab.schedulelib import ScheduleDB, ScheduleManager
@@ -225,6 +226,12 @@ class SoftFabRoot(Resource):
         self.putChild(b'', PageRedirect('Home'))
         self.putChild(styleRoot.relativeURL.encode(), styleRoot)
 
+        # Note: For now, the new-style API is only accessible via
+        #       the control socket. When the API is more mature and
+        #       supports authentication + authorization, it will
+        #       replace the current API.
+        self.apiRoot = Resource()
+
         self.defaultResource = PageResource.anyMethod(SplashPage())
 
     async def startup(self) -> None:
@@ -242,6 +249,8 @@ class SoftFabRoot(Resource):
 
             resultlessJobs = ResultlessJobs(jobDB)
             resultlessJobs.addObserver(JobNotificationObserver())
+
+            populateAPI(self.apiRoot)
 
             PageLoader(self, dependencies).process()
             await sleep(0)

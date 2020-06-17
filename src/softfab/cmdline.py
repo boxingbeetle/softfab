@@ -234,7 +234,6 @@ def server(
 
     from twisted.internet.interfaces import IReactorUNIX
     if IReactorUNIX.providedBy(reactor):
-        from softfab.newapi import createAPIRoot
         socketPath = globalOptions.path / 'ctrl.sock'
         if socketPath.is_socket():
             # Remove stale socket.
@@ -242,7 +241,7 @@ def server(
             socketPath.unlink()
         reactor.listenUNIX(
             str(socketPath),
-            ControlSocket(createAPIRoot()),
+            ControlSocket(root.apiRoot),
             mode=0o600
             )
     else:

@@ -141,7 +141,6 @@ class UsersResource(Resource):
         request.setHeader(b'Content-Type', b'text/plain; charset=UTF-8')
         return b'User index not implemented yet\n'
 
-def createAPIRoot() -> Resource:
-    root = Resource()
+def populateAPI(root: Resource) -> None:
+    """Add API resources under the given root."""
     root.putChild(b'users', UsersResource())
-    return root
