@@ -33,7 +33,7 @@ from softfab.TwistedUtil import (
     UnauthorizedResource
 )
 from softfab.UIPage import fixedHeadItems
-from softfab.joblib import Job, jobDB
+from softfab.joblib import Job, JobDB
 from softfab.projectlib import project
 from softfab.reportview import ReportPresenter, createPresenter
 from softfab.request import Request
@@ -283,12 +283,14 @@ class ArtifactAuthWrapper:
     def __init__(self,
                  path: SandboxedPath,
                  anonOperator: bool,
-                 tokenDB: TokenDB
+                 tokenDB: TokenDB,
+                 jobDB: JobDB
                  ):
         super().__init__()
         self.path = path
         self.anonOperator = anonOperator
         self.tokenDB = tokenDB
+        self.jobDB = jobDB
 
     def _authorizedResource(self, request: TwistedRequest) -> IResource:
         req: Request = Request(request)
@@ -339,7 +341,7 @@ class ArtifactAuthWrapper:
             return UnauthorizedResource('artifacts',
                                         'Please provide an access token')
 
-        return ArtifactRoot(self.path, user)
+        return ArtifactRoot(self.jobDB, self.path, user)
 
     def render(self, request: TwistedRequest) -> bytes:
         return self._authorizedResource(request).render(request)
@@ -354,8 +356,9 @@ class ArtifactAuthWrapper:
 class ArtifactRoot(FactoryResource):
     """Top-level job artifact resource."""
 
-    def __init__(self, path: SandboxedPath, user: User):
+    def __init__(self, jobDB: JobDB, path: SandboxedPath, user: User):
         super().__init__()
+        self.jobDB = jobDB
         self.path = path
         self.user = user
 
@@ -373,7 +376,8 @@ class ArtifactRoot(FactoryResource):
                         segment: str,
                         request: TwistedRequest
                         ) -> Resource:
-        return JobDayResource(self.path.child(segment), self.user, segment)
+        return JobDayResource(self.jobDB, self.path.child(segment), self.user,
+                              segment)
 
     def renderIndex(self, request: TwistedRequest) -> bytes:
         return b'Top-level index not implemented yet'
@@ -387,8 +391,9 @@ class JobDayResource(FactoryResource):
     are reached.
     """
 
-    def __init__(self, path: SandboxedPath, user: User, day: str):
+    def __init__(self, jobDB: JobDB, path: SandboxedPath, user: User, day: str):
         super().__init__()
+        self.jobDB = jobDB
         self.path = path
         self.user = user
         self.day = day
@@ -402,7 +407,7 @@ class JobDayResource(FactoryResource):
                         ) -> Resource:
         jobId = f'{self.day}-{segment}'
         try:
-            job = jobDB[jobId]
+            job = self.jobDB[jobId]
         except KeyError:
             return NotFoundResource(f'Job "{jobId}" does not exist')
         else:
@@ -1082,5 +1087,6 @@ def populateArtifacts(parent: Resource,
     parent.putChild(b'sandbox', sandbox)
     auth = ArtifactAuthWrapper(sandbox.rootPath.child('jobs'),
                                anonOperator,
-                               dependencies['tokenDB'])
+                               dependencies['tokenDB'],
+                               dependencies['jobDB'])
     parent.putChild(b'jobs', auth)
