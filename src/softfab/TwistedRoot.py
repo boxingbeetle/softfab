@@ -125,7 +125,7 @@ class PageLoader:
         root = self.root
         root.putChild(b'docs', DocResource.registerDocs('softfab.docs'))
         populateArtifacts(self.root, dbDir / 'artifacts',
-                          self.root.anonOperator)
+                          self.root.anonOperator, self.dependencies)
         injector = partial(injectDependencies, dependencies=self.dependencies)
         root.putChild(b'webhook', createWebhooks(startupLogger, injector))
 

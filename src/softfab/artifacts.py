@@ -7,7 +7,9 @@ from os import fsync, replace
 from pathlib import Path
 # https://github.com/PyCQA/pylint/issues/3499
 from struct import Struct  # pylint: disable=no-name-in-module
-from typing import IO, Dict, Iterable, Iterator, Optional, Tuple, Union
+from typing import (
+    IO, Any, Dict, Iterable, Iterator, Mapping, Optional, Tuple, Union
+)
 from urllib.parse import unquote_plus
 from zipfile import ZIP_DEFLATED, BadZipFile, ZipFile, ZipInfo
 import logging
@@ -37,7 +39,7 @@ from softfab.reportview import ReportPresenter, createPresenter
 from softfab.request import Request
 from softfab.resourcelib import resourceDB
 from softfab.taskrunlib import TaskRun
-from softfab.tokens import TokenRole, TokenUser, authenticateToken, tokenDB
+from softfab.tokens import TokenDB, TokenRole, TokenUser, authenticateToken
 from softfab.useragent import AcceptedEncodings
 from softfab.userlib import (
     AccessDenied, AnonGuestUser, SuperUser, UnauthorizedLogin, User,
@@ -278,10 +280,15 @@ class ArtifactAuthWrapper:
     """
     isLeaf = False
 
-    def __init__(self, path: SandboxedPath, anonOperator: bool):
+    def __init__(self,
+                 path: SandboxedPath,
+                 anonOperator: bool,
+                 tokenDB: TokenDB
+                 ):
         super().__init__()
         self.path = path
         self.anonOperator = anonOperator
+        self.tokenDB = tokenDB
 
     def _authorizedResource(self, request: TwistedRequest) -> IResource:
         req: Request = Request(request)
@@ -312,7 +319,7 @@ class ArtifactAuthWrapper:
 
             if tokenId:
                 try:
-                    token = authenticateToken(tokenDB, tokenId, password)
+                    token = authenticateToken(self.tokenDB, tokenId, password)
                 except KeyError:
                     return AccessDeniedResource(
                         f'Token "{tokenId}" does not exist'
@@ -1064,7 +1071,8 @@ class ZipTree:
 
 def populateArtifacts(parent: Resource,
                       baseDir: Path,
-                      anonOperator: bool
+                      anonOperator: bool,
+                      dependencies: Mapping[str, Any]
                       ) -> None:
     """Add resources for storing and retrieving artifacts under the given
     parent resource.
@@ -1072,5 +1080,7 @@ def populateArtifacts(parent: Resource,
     path = FilePath(str(baseDir))
     sandbox = ArtifactSandbox(path)
     parent.putChild(b'sandbox', sandbox)
-    auth = ArtifactAuthWrapper(sandbox.rootPath.child('jobs'), anonOperator)
+    auth = ArtifactAuthWrapper(sandbox.rootPath.child('jobs'),
+                               anonOperator,
+                               dependencies['tokenDB'])
     parent.putChild(b'jobs', auth)
