@@ -29,11 +29,12 @@ from softfab.xmlgen import XML, XMLContent, xml
 
 if TYPE_CHECKING:
     # pylint: disable=cyclic-import
-    from softfab.joblib import Job, Task, jobDB
+    from softfab.joblib import Job, JobDB, Task, jobDB
     from softfab.productlib import Product
     from softfab.resourcelib import Resource, ResourceDB, TaskRunner
 else:
     Job = object
+    JobDB = object
     Task = object
     # Note: To avoid cyclic imports, joblib sets this.
     #       The weird construct is to avoid PyLint complaining about methods we
@@ -690,7 +691,7 @@ class RunInfo(XMLTag):
         else:
             return NotImplemented
 
-    def getTaskRun(self) -> TaskRun:
+    def getTaskRun(self, jobDB: JobDB) -> TaskRun:
         '''Returns the task run object corresponding to the ID strings.
         If that task run does not exist, KeyError is raised.
         '''

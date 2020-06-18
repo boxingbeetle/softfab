@@ -5,7 +5,7 @@ from typing import ClassVar, Optional, cast
 from softfab.ControlPage import ControlPage
 from softfab.Page import InvalidRequest, PageProcessor
 from softfab.authentication import TokenAuthPage
-from softfab.joblib import UnfinishedJobs
+from softfab.joblib import JobDB, UnfinishedJobs
 from softfab.request import Request
 from softfab.resourcelib import (
     RequestFactory, ResourceDB, TaskRunner, TaskRunnerData
@@ -49,6 +49,7 @@ class Synchronize_POST(ControlPage[ControlPage.Arguments,
     class Processor(PageProcessor[ControlPage.Arguments]):
 
         resourceDB: ClassVar[ResourceDB]
+        jobDB: ClassVar[JobDB]
         unfinishedJobs: ClassVar[UnfinishedJobs]
 
         async def process(self,
@@ -68,7 +69,7 @@ class Synchronize_POST(ControlPage[ControlPage.Arguments,
             except KeyError as ex:
                 raise InvalidRequest(*ex.args) from ex
             self.taskRunner = taskRunner
-            self.abort = taskRunner.sync(request)
+            self.abort = taskRunner.sync(self.jobDB, request)
 
             # Try to assign a new run if the Task Runner is available.
             # Or exit if the Task Runner exit flag is set.

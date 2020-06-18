@@ -24,6 +24,13 @@ from softfab.utils import abstract, cachedProperty, parseVersion
 from softfab.xmlbind import XMLTag
 from softfab.xmlgen import XMLContent, xml
 
+if TYPE_CHECKING:
+    # pylint: disable=cyclic-import
+    from softfab.joblib import JobDB
+else:
+    JobDB = object
+
+
 ResourceT = TypeVar('ResourceT', bound='ResourceBase')
 
 class ResourceBase(XMLTag, ParamMixin, DatabaseElem):
@@ -295,7 +302,7 @@ class TaskRunnerData(XMLTag):
         '''
         return self.__run is not None
 
-    def getExecutionRunId(self) -> Optional[str]:
+    def getExecutionRunId(self, jobDB: JobDB) -> Optional[str]:
         '''Returns ID corresponding to the execution run the Task Runner
         reported it is currently running, or None if it is not running an
         execution run.
@@ -305,7 +312,7 @@ class TaskRunnerData(XMLTag):
         if runInfo is None:
             return None
         else:
-            return runInfo.getTaskRun().getId()
+            return runInfo.getTaskRun(jobDB).getId()
 
     def _getContent(self) -> XMLContent:
         yield self.__run
@@ -643,7 +650,7 @@ class TaskRunner(ResourceBase):
             )
         self.setSuspend(True, 'ControlCenter')
 
-    def sync(self, data: TaskRunnerData) -> bool:
+    def sync(self, jobDB: JobDB, data: TaskRunnerData) -> bool:
         '''Synchronise database with data reported by the Task Runner.
         The sync time will be remembered, but not stored in the database.
         Returns True iff the run that the Task Runner reports should be aborted,
@@ -660,7 +667,7 @@ class TaskRunner(ResourceBase):
         self.__cancelLostCallback()
         self.__startLostCallback()
         return self.__enforceSync(
-            self._executionObserver, data.getExecutionRunId
+            self._executionObserver, lambda: data.getExecutionRunId(jobDB)
             )
 
     def __enforceSync(self,
