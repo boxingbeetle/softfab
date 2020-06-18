@@ -5,7 +5,7 @@ from collections import defaultdict
 from mimetypes import guess_type
 from typing import (
     IO, Any, Callable, DefaultDict, Iterable, Iterator, List, Optional,
-    Sequence, Tuple
+    Sequence, Tuple, cast
 )
 
 from pygments.lexer import Lexer
@@ -209,7 +209,9 @@ class JUnitSummary(Table):
                     (ResultCode.WARNING, ResultCode.ERROR, ResultCode.CANCELLED)
                     ):
                 style=None if count == 0 else result
-                row.append(cell(class_=style)[count])
+                # The cast works around a regression in mypy/typeshed:
+                #   https://github.com/python/typeshed/issues/4226
+                row.append(cell(class_=style)[cast(int, count)])
             yield row
 
 class JUnitSuiteTable(Table):
