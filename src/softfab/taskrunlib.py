@@ -679,30 +679,6 @@ def newTaskRun(task: Task) -> TaskRun:
     taskRunDB.add(taskRun)
     return taskRun
 
-class RunInfo(XMLTag):
-    '''Contains the ID strings required to uniquely identify a task run:
-    jobId, taskId and runId.
-    '''
-    tagName = 'run'
-
-    def __eq__(self, other: object) -> bool:
-        if isinstance(other, RunInfo):
-            return self._properties == other._properties
-        else:
-            return NotImplemented
-
-    def getTaskRun(self, jobDB: JobDB) -> TaskRun:
-        '''Returns the task run object corresponding to the ID strings.
-        If that task run does not exist, KeyError is raised.
-        '''
-        jobId = cast(str, self['jobId'])
-        taskId = cast(str, self['taskId'])
-        runId = cast(str, self['runId'])
-        task = jobDB[jobId].getTask(taskId)
-        if task is None:
-            raise KeyError(f'no task named "{taskId}" in job {jobId}')
-        return task.getRun(runId)
-
 def getKeys(taskName: str) -> Set[str]:
     '''Get the set of keys that exist for the given task name.
     The existance of a key means that at least one record contains that key;

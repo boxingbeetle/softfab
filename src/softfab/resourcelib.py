@@ -16,7 +16,7 @@ from softfab.databaselib import Database, DatabaseElem, RecordObserver
 from softfab.paramlib import GetParent, ParamMixin, Parameterized, paramTop
 from softfab.projectlib import project
 from softfab.restypelib import taskRunnerResourceTypeName
-from softfab.taskrunlib import RunInfo, TaskRun, TaskRunDB, taskRunDB
+from softfab.taskrunlib import TaskRun, TaskRunDB, taskRunDB
 from softfab.timelib import getTime
 from softfab.tokens import Token, TokenDB, TokenRole, TokenUser, tokenDB
 from softfab.userlib import TaskRunnerUser
@@ -257,6 +257,30 @@ class Resource(ResourceBase):
                 'Attempt to free resource "%s" that is not reserved',
                 self.getId()
                 )
+
+class RunInfo(XMLTag):
+    '''Contains the ID strings required to uniquely identify a task run:
+    jobId, taskId and runId.
+    '''
+    tagName = 'run'
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, RunInfo):
+            return self._properties == other._properties
+        else:
+            return NotImplemented
+
+    def getTaskRun(self, jobDB: JobDB) -> TaskRun:
+        '''Returns the task run object corresponding to the ID strings.
+        If that task run does not exist, KeyError is raised.
+        '''
+        jobId = cast(str, self['jobId'])
+        taskId = cast(str, self['taskId'])
+        runId = cast(str, self['runId'])
+        task = jobDB[jobId].getTask(taskId)
+        if task is None:
+            raise KeyError(f'no task named "{taskId}" in job {jobId}')
+        return task.getRun(runId)
 
 class TaskRunnerData(XMLTag):
     '''This class represents a request of a Task Runner.
