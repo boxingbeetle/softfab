@@ -30,6 +30,7 @@ from softfab.joblib import (
 from softfab.jobview import JobNotificationObserver
 from softfab.newapi import populateAPI
 from softfab.pageargs import PageArgs
+from softfab.projectlib import ProjectDB, TimezoneUpdater
 from softfab.render import NotFoundPage, renderAuthenticated
 from softfab.schedulelib import ScheduleDB, ScheduleManager
 from softfab.userlib import User
@@ -240,6 +241,7 @@ class SoftFabRoot(Resource):
             await preload(databases.values())
 
             jobDB = cast(JobDB, databases['jobDB'])
+            projectDB = cast(ProjectDB, databases['projectDB'])
             dependencies: Dict[str, object] = dict(
                 databases,
                 dateRange=DateRangeMonitor(jobDB),
@@ -249,6 +251,8 @@ class SoftFabRoot(Resource):
 
             resultlessJobs = ResultlessJobs(jobDB)
             resultlessJobs.addObserver(JobNotificationObserver())
+
+            projectDB.addObserver(TimezoneUpdater())
 
             populateAPI(self.apiRoot, dependencies)
 

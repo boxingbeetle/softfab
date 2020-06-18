@@ -258,12 +258,10 @@ projectDB = ProjectDB(dbDir / 'project')
 # Note: SingletonWrapper is not a Project, but mimics it closely.
 project = cast(Project, SingletonWrapper(projectDB))
 
-class _TimezoneUpdater(SingletonObserver):
+class TimezoneUpdater(SingletonObserver):
 
     def updated(self, record: Project) -> None:
         _selectTimezone()
-
-projectDB.addObserver(_TimezoneUpdater())
 
 _bootTime = getTime()
 def getBootTime() -> int:
