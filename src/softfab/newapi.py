@@ -117,6 +117,7 @@ class NoUserResource(Resource):
 class UsersResource(Resource):
 
     def __init__(self, userDB: UserDB):
+        super().__init__()
         self._userDB = userDB
 
     def getChildWithDefault(self, path: bytes, request: Request) -> Resource:
