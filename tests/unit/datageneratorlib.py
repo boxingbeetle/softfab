@@ -4,7 +4,7 @@ from io import StringIO
 import random
 
 from softfab import (
-    configlib, frameworklib, productdeflib, resourcelib, restypelib,
+    configlib, frameworklib, joblib, productdeflib, resourcelib, restypelib,
     taskdeflib, xmlbind
     )
 from softfab.resreq import ResourceSpec
@@ -138,7 +138,7 @@ class DataGenerator:
         taskRunner = resourcelib.TaskRunner.create(name, '', capabilities)
         resourcelib.resourceDB.add(taskRunner)
         data = self.createTaskRunnerData(name, target, versionStr)
-        taskRunner.sync(data)
+        taskRunner.sync(joblib.jobDB, data)
         self.taskRunners.append(name)
         return name
 

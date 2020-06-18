@@ -6,7 +6,7 @@ from io import StringIO
 
 from initconfig import removeDB
 
-from softfab import resourcelib, xmlbind
+from softfab import joblib, resourcelib, xmlbind
 from softfab.databases import reloadDatabases
 from softfab.resourceview import getResourceStatus
 from softfab.timelib import setTime
@@ -43,7 +43,7 @@ class TestTRDatabase(unittest.TestCase):
     def suspendTest(self, data):
         """Test suspend functionality."""
         record = resourcelib.TaskRunner.create('runner1', '', set())
-        record.sync(data)
+        record.sync(joblib.jobDB, data)
 
         # Check if initially not suspended.
         self.assertTrue(not record.isSuspended())
@@ -64,7 +64,7 @@ class TestTRDatabase(unittest.TestCase):
         """Test syncing of the TR database."""
         record1 = resourcelib.TaskRunner.create('runner1', '', set())
         resourcelib.resourceDB.add(record1)
-        record1.sync(data1)
+        record1.sync(joblib.jobDB, data1)
 
         # Check if cache and database are in sync:
         reload(resourcelib)
@@ -73,7 +73,7 @@ class TestTRDatabase(unittest.TestCase):
         self.assertEqual(record1._properties, record2._properties)
         # Change data in database.
         # Check if cache and database are still in sync:
-        record1.sync(data2)
+        record1.sync(joblib.jobDB, data2)
         reload(resourcelib)
         resourcelib.resourceDB.preload()
         record2 = resourcelib.resourceDB[record1.getId()]
@@ -84,7 +84,7 @@ class TestTRDatabase(unittest.TestCase):
         setTime(1000) # time at moment of record creation
         record = resourcelib.TaskRunner.create('runner1', '', set())
         resourcelib.resourceDB.add(record)
-        record.sync(data)
+        record.sync(joblib.jobDB, data)
         #record.getSyncWaitDelay = lambda: 3
         record.getWarnTimeout = lambda: 8
         record.getLostTimeout = lambda: 35
@@ -158,7 +158,7 @@ class TestTRDatabase(unittest.TestCase):
         self.assertEqual(data, data2)
         # TaskRunner class:
         record1 = resourcelib.TaskRunner.create('runner1', '', set())
-        record1.sync(data)
+        record1.sync(joblib.jobDB, data)
         record2 = xmlbind.parse(
             resourcelib.ResourceFactory(),
             StringIO(record1.toXML().flattenXML())
