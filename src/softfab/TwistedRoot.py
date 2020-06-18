@@ -16,7 +16,7 @@ from softfab.SplashPage import SplashPage, startupMessages
 from softfab.StyleResources import styleRoot
 from softfab.TwistedUtil import PageRedirect
 from softfab.UIPage import UIResponder
-from softfab.artifacts import createArtifactRoots
+from softfab.artifacts import populateArtifacts
 from softfab.authentication import DisabledAuthPage, NoAuthPage, TokenAuthPage
 from softfab.compat import importlib_resources
 from softfab.config import dbDir
@@ -124,8 +124,8 @@ class PageLoader:
         startupMessages.addMessage('Registering pages')
         root = self.root
         root.putChild(b'docs', DocResource.registerDocs('softfab.docs'))
-        createArtifactRoots(self.root, dbDir / 'artifacts',
-                            self.root.anonOperator)
+        populateArtifacts(self.root, dbDir / 'artifacts',
+                          self.root.anonOperator)
         injector = partial(injectDependencies, dependencies=self.dependencies)
         root.putChild(b'webhook', createWebhooks(startupLogger, injector))
 

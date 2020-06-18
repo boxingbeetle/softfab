@@ -147,6 +147,6 @@ class UsersResource(Resource):
         request.setHeader(b'Content-Type', b'text/plain; charset=UTF-8')
         return b'User index not implemented yet\n'
 
-def populateAPI(root: Resource, dependencies: Mapping[str, Any]) -> None:
-    """Add API resources under the given root."""
-    root.putChild(b'users', UsersResource(dependencies['userDB']))
+def populateAPI(parent: Resource, dependencies: Mapping[str, Any]) -> None:
+    """Add API resources under the given parent resource."""
+    parent.putChild(b'users', UsersResource(dependencies['userDB']))

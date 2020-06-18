@@ -1062,10 +1062,13 @@ class ZipTree:
                 raise KeyError(segment)
         return node
 
-def createArtifactRoots(parent: Resource,
-                        baseDir: Path,
-                        anonOperator: bool
-                        ) -> None:
+def populateArtifacts(parent: Resource,
+                      baseDir: Path,
+                      anonOperator: bool
+                      ) -> None:
+    """Add resources for storing and retrieving artifacts under the given
+    parent resource.
+    """
     path = FilePath(str(baseDir))
     sandbox = ArtifactSandbox(path)
     parent.putChild(b'sandbox', sandbox)
