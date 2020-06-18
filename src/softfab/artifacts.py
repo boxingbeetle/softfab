@@ -37,7 +37,7 @@ from softfab.joblib import Job, JobDB
 from softfab.projectlib import project
 from softfab.reportview import ReportPresenter, createPresenter
 from softfab.request import Request
-from softfab.resourcelib import resourceDB
+from softfab.resourcelib import ResourceDB
 from softfab.taskrunlib import TaskRun
 from softfab.tokens import TokenDB, TokenRole, TokenUser, authenticateToken
 from softfab.useragent import AcceptedEncodings
@@ -205,7 +205,7 @@ class SandboxedResource:
             [b'..'] * (len(request.prepath) - 1) + request.prepath[2:]
             ))
 
-def _runForRunnerUser(user: User) -> TaskRun:
+def _runForRunnerUser(resourceDB: ResourceDB, user: User) -> TaskRun:
     """Returns the task run accessible to the given user.
     Raises AccessDenied if the user does not represent a Task Runner
     or the Task Runner is not running any task.
@@ -284,13 +284,15 @@ class ArtifactAuthWrapper:
                  path: SandboxedPath,
                  anonOperator: bool,
                  tokenDB: TokenDB,
-                 jobDB: JobDB
+                 jobDB: JobDB,
+                 resourceDB: ResourceDB
                  ):
         super().__init__()
         self.path = path
         self.anonOperator = anonOperator
         self.tokenDB = tokenDB
         self.jobDB = jobDB
+        self.resourceDB = resourceDB
 
     def _authorizedResource(self, request: TwistedRequest) -> IResource:
         req: Request = Request(request)
@@ -341,7 +343,7 @@ class ArtifactAuthWrapper:
             return UnauthorizedResource('artifacts',
                                         'Please provide an access token')
 
-        return ArtifactRoot(self.jobDB, self.path, user)
+        return ArtifactRoot(self.jobDB, self.resourceDB, self.path, user)
 
     def render(self, request: TwistedRequest) -> bytes:
         return self._authorizedResource(request).render(request)
@@ -356,9 +358,15 @@ class ArtifactAuthWrapper:
 class ArtifactRoot(FactoryResource):
     """Top-level job artifact resource."""
 
-    def __init__(self, jobDB: JobDB, path: SandboxedPath, user: User):
+    def __init__(self,
+                 jobDB: JobDB,
+                 resourceDB: ResourceDB,
+                 path: SandboxedPath,
+                 user: User
+                 ):
         super().__init__()
         self.jobDB = jobDB
+        self.resourceDB = resourceDB
         self.path = path
         self.user = user
 
@@ -376,8 +384,8 @@ class ArtifactRoot(FactoryResource):
                         segment: str,
                         request: TwistedRequest
                         ) -> Resource:
-        return JobDayResource(self.jobDB, self.path.child(segment), self.user,
-                              segment)
+        return JobDayResource(self.jobDB, self.resourceDB,
+                              self.path.child(segment), self.user, segment)
 
     def renderIndex(self, request: TwistedRequest) -> bytes:
         return b'Top-level index not implemented yet'
@@ -391,9 +399,16 @@ class JobDayResource(FactoryResource):
     are reached.
     """
 
-    def __init__(self, jobDB: JobDB, path: SandboxedPath, user: User, day: str):
+    def __init__(self,
+                 jobDB: JobDB,
+                 resourceDB: ResourceDB,
+                 path: SandboxedPath,
+                 user: User,
+                 day: str
+                 ):
         super().__init__()
         self.jobDB = jobDB
+        self.resourceDB = resourceDB
         self.path = path
         self.user = user
         self.day = day
@@ -411,7 +426,8 @@ class JobDayResource(FactoryResource):
         except KeyError:
             return NotFoundResource(f'Job "{jobId}" does not exist')
         else:
-            return JobResource(self.path.child(segment), self.user, job)
+            return JobResource(self.resourceDB, self.path.child(segment),
+                               self.user, job)
 
     def renderIndex(self, request: TwistedRequest) -> bytes:
         return b'Job day index not implemented yet'
@@ -419,8 +435,14 @@ class JobDayResource(FactoryResource):
 class JobResource(FactoryResource):
     """Resource that represents one job."""
 
-    def __init__(self, path: SandboxedPath, user: User, job: Job):
+    def __init__(self,
+                 resourceDB: ResourceDB,
+                 path: SandboxedPath,
+                 user: User,
+                 job: Job
+                 ):
         super().__init__()
+        self.resourceDB = resourceDB
         self.path = path
         self.user = user
         self.job = job
@@ -428,7 +450,7 @@ class JobResource(FactoryResource):
     def checkAccess(self) -> None:
         user = self.user
         if user.hasPrivilege('tr/*'):
-            job = _runForRunnerUser(user).getJob()
+            job = _runForRunnerUser(self.resourceDB, user).getJob()
             if self.job.getId() != job.getId():
                 raise AccessDenied('Task Runner is running a different job')
         else:
@@ -452,7 +474,8 @@ class JobResource(FactoryResource):
                 f'Task "{segment}" does not exist in this job'
                 )
         run = task.getLatestRun()
-        return TaskResource(self.path.child(segment), self.user, run)
+        return TaskResource(self.resourceDB, self.path.child(segment),
+                            self.user, run)
 
     def renderIndex(self, request: TwistedRequest) -> bytes:
         return b'Job index not implemented yet'
@@ -460,8 +483,14 @@ class JobResource(FactoryResource):
 class TaskResource(FactoryResource):
     """Resource that represents one task run."""
 
-    def __init__(self, path: SandboxedPath, user: User, run: TaskRun):
+    def __init__(self,
+                 resourceDB: ResourceDB,
+                 path: SandboxedPath,
+                 user: User,
+                 run: TaskRun
+                 ):
         super().__init__()
+        self.resourceDB = resourceDB
         self.path = path
         self.user = user
         self.run = run
@@ -469,7 +498,7 @@ class TaskResource(FactoryResource):
     def checkAccess(self) -> None:
         user = self.user
         if user.hasPrivilege('tr/*'):
-            run = _runForRunnerUser(user)
+            run = _runForRunnerUser(self.resourceDB, user)
             if self.run.getId() != run.getId():
                 raise AccessDenied('Task Runner is running a different task')
         else:
@@ -1088,5 +1117,6 @@ def populateArtifacts(parent: Resource,
     auth = ArtifactAuthWrapper(sandbox.rootPath.child('jobs'),
                                anonOperator,
                                dependencies['tokenDB'],
-                               dependencies['jobDB'])
+                               dependencies['jobDB'],
+                               dependencies['resourceDB'])
     parent.putChild(b'jobs', auth)
