@@ -81,33 +81,6 @@ def getKnownTimezones() -> Sequence[str]:
 
 defaultMaxJobs = 25
 
-class ProjectFactory:
-    def createProject(self, attributes: Mapping[str, str]) -> 'Project':
-        return Project(attributes)
-
-class ProjectDB(Database['Project']):
-    privilegeObject = 'p'
-    description = 'project configuration'
-
-    def __init__(self, baseDir: Path):
-        super().__init__(baseDir, ProjectFactory())
-
-    def _postLoad(self) -> None:
-        super()._postLoad()
-
-        # Create singleton record if it doesn't exist already.
-        if len(self) == 0:
-            record = Project({'name': 'Nameless'})
-            record.updateVersion()
-            self.add(record)
-        else:
-            record = self['singleton']
-
-        # Call observers, no matter whether we loaded or created the record.
-        self._notifyAdded(record)
-
-projectDB = ProjectDB(dbDir / 'project')
-
 class Project(XMLTag, SingletonElem):
     '''Overall project settings.
     '''
@@ -254,6 +227,33 @@ class Project(XMLTag, SingletonElem):
         else:
             assert False, embed
             return "'none'"
+
+class ProjectFactory:
+    def createProject(self, attributes: Mapping[str, str]) -> Project:
+        return Project(attributes)
+
+class ProjectDB(Database[Project]):
+    privilegeObject = 'p'
+    description = 'project configuration'
+
+    def __init__(self, baseDir: Path):
+        super().__init__(baseDir, ProjectFactory())
+
+    def _postLoad(self) -> None:
+        super()._postLoad()
+
+        # Create singleton record if it doesn't exist already.
+        if len(self) == 0:
+            record = Project({'name': 'Nameless'})
+            record.updateVersion()
+            self.add(record)
+        else:
+            record = self['singleton']
+
+        # Call observers, no matter whether we loaded or created the record.
+        self._notifyAdded(record)
+
+projectDB = ProjectDB(dbDir / 'project')
 
 # Note: SingletonWrapper is not a Project, but mimics it closely.
 project = cast(Project, SingletonWrapper(projectDB))
