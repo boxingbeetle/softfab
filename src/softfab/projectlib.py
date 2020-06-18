@@ -60,8 +60,7 @@ def _guessSystemTimezone() -> str:
     # Give up.
     return ''
 
-def _selectTimezone() -> None:
-    timezone = project.timezone
+def _selectTimezone(timezone: str) -> None:
     if timezone:
         os.environ['TZ'] = timezone
         if hasattr(time, 'tzset'):
@@ -261,7 +260,7 @@ project = cast(Project, SingletonWrapper(projectDB))
 class TimezoneUpdater(SingletonObserver):
 
     def updated(self, record: Project) -> None:
-        _selectTimezone()
+        _selectTimezone(record.timezone)
 
 _bootTime = getTime()
 def getBootTime() -> int:
