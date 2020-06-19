@@ -21,7 +21,7 @@ from softfab.authentication import DisabledAuthPage, NoAuthPage, TokenAuthPage
 from softfab.compat import importlib_resources
 from softfab.config import dbDir
 from softfab.configlib import ConfigDB
-from softfab.databaselib import Database
+from softfab.databaselib import Database, SingletonWrapper
 from softfab.databases import getDatabases, injectDependencies
 from softfab.docserve import DocPage, DocResource
 from softfab.joblib import (
@@ -244,6 +244,7 @@ class SoftFabRoot(Resource):
             projectDB = cast(ProjectDB, databases['projectDB'])
             dependencies: Dict[str, object] = dict(
                 databases,
+                project=SingletonWrapper(projectDB),
                 dateRange=DateRangeMonitor(jobDB),
                 unfinishedJobs=UnfinishedJobs(jobDB),
                 taskToJobs=TaskToJobs(jobDB)

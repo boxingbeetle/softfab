@@ -34,7 +34,7 @@ from softfab.TwistedUtil import (
 )
 from softfab.UIPage import fixedHeadItems
 from softfab.joblib import Job, JobDB
-from softfab.projectlib import project
+from softfab.projectlib import Project
 from softfab.reportview import ReportPresenter, createPresenter
 from softfab.request import Request
 from softfab.resourcelib import ResourceDB
@@ -88,6 +88,7 @@ class ArtifactSandbox:
     keyLength = 6
 
     baseDir: FilePath
+    project: Project
     _activeKeys: Dict[str, SandboxedPath] = \
         attr.ib(repr=False, init=False, factory=dict)
 
@@ -100,7 +101,7 @@ class ArtifactSandbox:
         """
 
         # Skip key generation if artifacts are public.
-        if project.anonguest:
+        if self.project.anonguest:
             return 'anon'
 
         key = genword(length=self.keyLength)
@@ -127,7 +128,7 @@ class ArtifactSandbox:
         origin = request.getHeader(b'Origin')
 
         # Handle anonymous guest access.
-        if name == b'anon' and project.anonguest:
+        if name == b'anon' and self.project.anonguest:
             if origin is not None:
                 request.setHeader(b'Access-Control-Allow-Origin', b'*')
             return SandboxedResource(self.baseDir, ())
@@ -285,7 +286,8 @@ class ArtifactAuthWrapper:
                  anonOperator: bool,
                  tokenDB: TokenDB,
                  jobDB: JobDB,
-                 resourceDB: ResourceDB
+                 resourceDB: ResourceDB,
+                 project: Project
                  ):
         super().__init__()
         self.path = path
@@ -293,6 +295,7 @@ class ArtifactAuthWrapper:
         self.tokenDB = tokenDB
         self.jobDB = jobDB
         self.resourceDB = resourceDB
+        self.project = project
 
     def _authorizedResource(self, request: TwistedRequest) -> IResource:
         req: Request = Request(request)
@@ -310,7 +313,7 @@ class ArtifactAuthWrapper:
                 # Perform anonymous read access, if allowed.
                 if self.anonOperator:
                     user = SuperUser()
-                elif project.anonguest:
+                elif self.project.anonguest:
                     user = AnonGuestUser()
 
         if user is None:
@@ -1112,11 +1115,12 @@ def populateArtifacts(parent: Resource,
     parent resource.
     """
     path = FilePath(str(baseDir))
-    sandbox = ArtifactSandbox(path)
+    sandbox = ArtifactSandbox(path, dependencies['project'])
     parent.putChild(b'sandbox', sandbox)
     auth = ArtifactAuthWrapper(sandbox.rootPath.child('jobs'),
                                anonOperator,
                                dependencies['tokenDB'],
                                dependencies['jobDB'],
-                               dependencies['resourceDB'])
+                               dependencies['resourceDB'],
+                               dependencies['project'])
     parent.putChild(b'jobs', auth)
