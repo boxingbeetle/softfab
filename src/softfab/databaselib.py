@@ -493,7 +493,7 @@ class Database(Generic[DBRecord], RecordSubjectMixin[DBRecord], ABC):
             for fileName in os.listdir(self.baseDir)
             if fileName.endswith('.xml')
             )
-        yield None # sorting might take a while for big DBs
+        yield # sorting might take a while for big DBs
 
         # Log a small number of exceptions per DB.
         # If there are more exceptions, it is likely the same problem
@@ -522,7 +522,7 @@ class Database(Generic[DBRecord], RecordSubjectMixin[DBRecord], ABC):
                         key, self.description
                         )
                 failedRecordCount += 1
-            yield None
+            yield
 
         if failedRecordCount != 0:
             logger.error(
@@ -533,7 +533,7 @@ class Database(Generic[DBRecord], RecordSubjectMixin[DBRecord], ABC):
         # Sync tag cache.
         tagCache = self.tagCache
         if tagCache is not None:
-            yield None
+            yield
             tagCache._refreshCache() # pylint: disable=protected-access
 
     def convert(self, visitor: Optional[Callable[[DBRecord], None]] = None) \
