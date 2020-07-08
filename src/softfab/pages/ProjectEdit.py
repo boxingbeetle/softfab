@@ -18,8 +18,7 @@ from softfab.formlib import (
 )
 from softfab.pageargs import ArgsCorrected, BoolArg, EnumArg, IntArg, StrArg
 from softfab.projectlib import (
-    EmbeddingPolicy, Project, ProjectDB, defaultMaxJobs, getKnownTimezones,
-    project
+    EmbeddingPolicy, Project, ProjectDB, defaultMaxJobs, getKnownTimezones
 )
 from softfab.setcalc import categorizedLists
 from softfab.webgui import PropertiesTable, Widget, docLink
@@ -76,14 +75,14 @@ class ProjectEdit_GET(ProjectEditBase):
                 return {}
             else:
                 return dict(
-                    name = project.name,
-                    targets = ' '.join(sorted(project.getTargets())),
-                    tagkeys = ', '.join(project.getTagKeys()),
-                    timezone = project.timezone,
-                    maxjobs = project['maxjobs'],
-                    taskprio = project['taskprio'],
-                    embed = project['embed'],
-                    embedcustom = project['embedcustom'],
+                    name = element.name,
+                    targets = ' '.join(sorted(element.getTargets())),
+                    tagkeys = ', '.join(element.getTagKeys()),
+                    timezone = element.timezone,
+                    maxjobs = element['maxjobs'],
+                    taskprio = element['taskprio'],
+                    embed = element['embed'],
+                    embedcustom = element['embedcustom'],
                     )
 
 class ProjectEdit_POST(ProjectEditBase):
