@@ -106,6 +106,8 @@ def convertAll() -> None:
     resourcelib.recomputeRunning(resourceDB, taskRunDB)
 
     print('Updating database version tag...')
-    projectlib.project.updateVersion()
+    projectDB = cast(projectlib.ProjectDB, databases['projectDB'])
+    project = projectDB['singleton']
+    project.updateVersion()
 
     print('Done.')
