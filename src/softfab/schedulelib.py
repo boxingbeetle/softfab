@@ -270,7 +270,7 @@ class Scheduled(XMLTag, SelectableRecordABC):
     '''
     tagName = 'scheduled'
     boolProperties = ('suspended',)
-    intProperties = ('startTime', 'minDelay')
+    intProperties = ('startTime', 'minDelay', 'lastRunTime')
     enumProperties = {'repeat': ScheduleRepeat}
 
     def __init__(self,
