@@ -12,7 +12,6 @@ from softfab.pageargs import (
     BoolArg, EnumArg, IntArg, PageArgs, SortArg, StrArg
 )
 from softfab.pagelinks import AnonGuestArgs, UserIdArgs, createUserDetailsLink
-from softfab.projectlib import project
 from softfab.querylib import CustomFilter, RecordFilter
 from softfab.request import Request
 from softfab.roles import UIRoleNames, uiRoleToSet
@@ -188,7 +187,7 @@ class UserList_GET(FabPage['UserList_GET.Processor', 'UserList_GET.Arguments']):
                 formId='anonguest',
                 action='AnonGuest',
                 setFocus=False,
-                args=AnonGuestArgs(anonguest=project.anonguest)
+                args=AnonGuestArgs(anonguest=proc.project.anonguest)
                 )[ AnonGuestTable.instance ].present(**kwargs)
         else:
             yield presentAnonGuestSetting()

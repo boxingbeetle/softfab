@@ -2,8 +2,8 @@
 
 from collections import defaultdict
 from typing import (
-    TYPE_CHECKING, Any, DefaultDict, Dict, Generic, Iterator, Optional, Set,
-    TypeVar
+    TYPE_CHECKING, Any, ClassVar, DefaultDict, Dict, Generic, Iterator,
+    Optional, Set, TypeVar
 )
 import logging
 
@@ -11,6 +11,7 @@ from twisted.internet.defer import Deferred
 
 from softfab.datawidgets import DataTable, TableData
 from softfab.pageargs import ArgsT, PageArgs
+from softfab.projectlib import Project
 from softfab.response import Response
 from softfab.userlib import User
 from softfab.utils import abstract
@@ -89,6 +90,8 @@ class Redirect(BaseException):
 class PageProcessor(Generic[ArgsT]):
     """Abstract base class for processors.
     """
+
+    project: ClassVar[Project]
 
     # Workaround for PyLint bug: https://github.com/PyCQA/pylint/issues/2981
     args: ArgsT

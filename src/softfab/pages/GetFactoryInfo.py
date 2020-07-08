@@ -4,7 +4,7 @@ from softfab.ControlPage import ControlPage
 from softfab.Page import PageProcessor
 from softfab.config import rootURL
 from softfab.databases import getDatabases
-from softfab.projectlib import getBootTime, project
+from softfab.projectlib import getBootTime
 from softfab.request import Request
 from softfab.response import Response
 from softfab.timeview import formatTimeAttr
@@ -34,11 +34,11 @@ class GetFactoryInfo_GET(ControlPage[ControlPage.Arguments,
     async def writeReply(self, response: Response, proc: Processor) -> None:
         response.writeXML(
             xml.factory(
-                name = project.name,
+                name = proc.project.name,
                 url = rootURL,
                 version = VERSION,
                 boottime = formatTimeAttr(getBootTime()),
-                timezone = project.timezone,
+                timezone = proc.project.timezone,
                 )[
                 ( xml.table(name = db.name, count = len(db))
                   for db in getDatabases().values() ),

@@ -6,7 +6,6 @@ from typing import Generic, Iterable, Iterator, Optional, cast
 from softfab.Page import ProcT, Responder, logPageException
 from softfab.StyleResources import styleRoot
 from softfab.pagelinks import createUserDetailsLink, loginURL, logoutURL
-from softfab.projectlib import project
 from softfab.request import Request
 from softfab.response import Response, ResponseHeaders
 from softfab.timelib import getTime
@@ -90,14 +89,14 @@ class UIPage(Generic[ProcT]):
         proc = cast(ProcT, kwargs['proc'])
         for item in fixedHeadItems:
             yield item.present(**kwargs)
-        yield xhtml.title[ f'{project.name} - {self.pageTitle(proc)}' ]
+        yield xhtml.title[ f'{proc.project.name} - {self.pageTitle(proc)}' ]
         customStyleDefs = '\n'.join(self.iterStyleDefs())
         if customStyleDefs:
             yield xhtml.style[customStyleDefs]
 
     def __title(self, proc: ProcT) -> XMLContent:
         return (
-            xhtml.span(class_ = 'project')[ project.name ],
+            xhtml.span(class_ = 'project')[ proc.project.name ],
             xhtml.span(class_ = 'softfab')[ ' SoftFab' ],
             xhtml.span(class_ = 'project')[ ' \u2013 ' ],
             self.pageTitle(proc)

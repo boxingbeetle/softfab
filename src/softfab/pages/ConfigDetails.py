@@ -15,7 +15,6 @@ from softfab.pagelinks import (
 from softfab.productdeflib import ProductDefDB
 from softfab.productlib import Product
 from softfab.productview import formatLocator
-from softfab.projectlib import project
 from softfab.request import Request
 from softfab.restypeview import createTargetLink
 from softfab.schedulelib import ScheduleDB
@@ -44,7 +43,7 @@ class TagsTable(Table):
     def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
         proc = cast('ConfigDetails_GET.Processor', kwargs['proc'])
         config = proc.config
-        for key in project.getTagKeys():
+        for key in proc.project.getTagKeys():
             values = config.tags.getTagValues(key)
             if values:
                 yield key, xhtml[', '].join(
@@ -124,7 +123,7 @@ def presentTargets(**kwargs: object) -> XMLContent:
         yield unorderedList[(
             createTargetLink(target) for target in sorted(targets)
             )].present()
-    elif project.getTargets():
+    elif proc.project.getTargets():
         yield xhtml.p[
             'Configuration will create jobs with ', xhtml.b['no target'],
             ' requirements.'

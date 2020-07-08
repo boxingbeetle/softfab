@@ -19,7 +19,6 @@ from softfab.formlib import (
     textArea, textInput
 )
 from softfab.pageargs import BoolArg, DictArg, EnumArg, IntArg, SetArg, StrArg
-from softfab.projectlib import project
 from softfab.resourcelib import ResourceDB
 from softfab.restypelib import repoResourceTypeName
 from softfab.schedulelib import (
@@ -79,7 +78,8 @@ class ScheduleEditBase(EditPage[ScheduleEditArgs, Scheduled]):
         if args.id != '':
             yield xhtml.h3[ 'Schedule: ', xhtml.b[ args.id ]]
         yield vgroup[
-            (ConfigTagTable if project.getTagKeys() else ConfigTable).instance,
+            (ConfigTagTable if proc.project.getTagKeys()
+                            else ConfigTable).instance,
             TimeTable.instance,
             RepeatTable.instance,
             _createGroupItem(args.repeat is ScheduleRepeat.WEEKLY)[
@@ -245,9 +245,10 @@ class TagList(DropDownList):
         return args.tag if args.selectBy is SelectBy.TAG else None
 
     def iterOptions(self, **kwargs: object) -> Iterator[Option]:
-        configDB: ConfigDB = getattr(kwargs['proc'], 'configDB')
-        tagCache = configDB.tagCache
-        for key in project.getTagKeys():
+        # Note: The GET and POST processor both have the fields we need.
+        proc = cast(ScheduleEdit_GET.Processor, kwargs['proc'])
+        tagCache = proc.configDB.tagCache
+        for key in proc.project.getTagKeys():
             yield key, sorted(tagCache.getValues(key))
 
 def _createGroupItem(visible: bool) -> Container:

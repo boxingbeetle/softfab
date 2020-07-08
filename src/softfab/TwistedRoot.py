@@ -257,6 +257,7 @@ class SoftFabRoot(Resource):
 
             populateAPI(self.apiRoot, dependencies)
 
+            injectDependencies(DocPage.Processor, dependencies)
             PageLoader(self, dependencies).process()
             await sleep(0)
 

@@ -15,7 +15,6 @@ from softfab.formlib import (
 )
 from softfab.pageargs import ArgsCorrected, ArgsT, EnumArg, StrArg
 from softfab.pagelinks import URLArgs
-from softfab.projectlib import project
 from softfab.request import Request
 from softfab.userlib import User, UserDB, authenticateUser
 from softfab.userview import (
@@ -44,16 +43,16 @@ class LoginBase(UIPage[ProcT], FabResource[ArgsT, ProcT]):
     def pageTitle(self, proc: ProcT) -> str:
         return 'Log In'
 
-    def iterActions(self) -> Iterator[Actions]:
+    def iterActions(self, proc: ProcT) -> Iterator[Actions]:
         yield Actions.LOG_IN
-        if project.anonguest:
+        if proc.project.anonguest:
             yield Actions.CANCEL
 
     def presentContent(self, **kwargs: object) -> XMLContent:
         proc = cast(ProcT, kwargs['proc'])
         yield makeForm(args = proc.args)[
             LoginTable.instance,
-            xhtml.p[ actionButtons(*self.iterActions()) ]
+            xhtml.p[ actionButtons(*self.iterActions(proc)) ]
             ].present(**kwargs)
 
         userAgent = proc.req.userAgent

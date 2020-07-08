@@ -12,7 +12,6 @@ from softfab.formlib import (
 from softfab.joblib import JobDB
 from softfab.pageargs import ArgsCorrected
 from softfab.pagelinks import ExecutionState, ReportArgs
-from softfab.projectlib import project
 from softfab.querylib import CustomFilter, RecordFilter, SetFilter
 from softfab.request import Request
 from softfab.timeview import formatTime
@@ -74,7 +73,7 @@ class ReportProcessor(PageProcessor[ReportArgsT]):
         # Set of targets for which jobs have run.
         targets = cast(AbstractSet[Optional[str]], jobDB.uniqueValues('target'))
         # Add targets that are available now.
-        targets |= project.getTargets()
+        targets |= self.project.getTargets()
         uiTargets = noneToEmpty(targets)
 
         # Set of users that have initiated jobs.

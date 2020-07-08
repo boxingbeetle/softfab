@@ -15,7 +15,6 @@ from softfab.formlib import actionButtons, hiddenInput, makeForm
 from softfab.pageargs import (
     ArgsT, DictArg, EnumArg, RefererArg, SetArg, StrArg
 )
-from softfab.projectlib import project
 from softfab.request import Request
 from softfab.selectlib import TagCache, getCommonTags
 from softfab.selectview import (
@@ -79,7 +78,7 @@ class ConfigTagsBase(FabPage['ConfigTagsBase.Processor[ArgsT]', ArgsT]):
             yield TagConfigTable.instance.present(**kwargs)
 
             yield xhtml.h3[ 'Common Selection Tags:' ]
-            tagKeys = project.getTagKeys()
+            tagKeys = proc.project.getTagKeys()
             commonTags = getCommonTags(tagKeys,
                                        (config.tags for config in configs))
             yield makeForm(

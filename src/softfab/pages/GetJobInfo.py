@@ -8,7 +8,6 @@ from softfab.joblib import JobDB, Task
 from softfab.pagelinks import JobIdArgs
 from softfab.productdeflib import ProductType
 from softfab.productlib import Product
-from softfab.projectlib import project
 from softfab.request import Request
 from softfab.resourcelib import ResourceDB
 from softfab.response import Response
@@ -40,7 +39,7 @@ class GetJobInfo_GET(ControlPage['GetJobInfo_GET.Arguments',
         checkPrivilege(user, 'j/a')
 
     async def writeReply(self, response: Response, proc: Processor) -> None:
-        taskprio = project['taskprio']
+        taskprio = proc.project['taskprio']
 
         def taskToXML(task: Task) -> XML:
             run = task.getLatestRun()

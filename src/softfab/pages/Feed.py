@@ -21,7 +21,6 @@ from softfab.datawidgets import DataColumn, DataTable
 from softfab.joblib import Job, JobDB
 from softfab.jobview import CommentPanel, JobsSubTable, presentJobCaption
 from softfab.pagelinks import createJobURL, createUserDetailsURL
-from softfab.projectlib import project
 from softfab.querylib import CustomFilter, KeySorter, RecordProcessor, runQuery
 from softfab.request import Request
 from softfab.response import Response
@@ -144,7 +143,7 @@ class Feed_GET(ControlPage[ControlPage.Arguments, 'Feed_GET.Processor']):
             ])
 
     def presentFeed(self, proc: Processor, ccURL: str) -> XMLContent:
-        projectName = project.name
+        projectName = proc.project.name
         yield atom.title[ f'{projectName} SoftFab - Recent Jobs' ]
         yield atom.subtitle[
             f'The most recent jobs running in the {projectName} SoftFab'
@@ -184,7 +183,7 @@ class Feed_GET(ControlPage[ControlPage.Arguments, 'Feed_GET.Processor']):
         jobId = job.getId()
         jobResult = job.result
         owner = job.owner
-        projectName = project.name
+        projectName = proc.project.name
         jobComment = CommentPanel(job.comment)
         yield atom.title[ f'{job.getDescription()}: ', jobResult ]
         yield atom.link(href = ccURL + createJobURL(jobId))

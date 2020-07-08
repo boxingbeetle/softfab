@@ -6,7 +6,6 @@ from softfab.FabPage import FabPage, IconModifier
 from softfab.Page import PageProcessor, ProcT, Redirect
 from softfab.pageargs import ArgsT
 from softfab.pagelinks import AnonGuestArgs
-from softfab.projectlib import project
 from softfab.request import Request
 from softfab.userlib import User, checkPrivilege
 from softfab.userview import presentAnonGuestSetting
@@ -50,7 +49,7 @@ class AnonGuest_POST(AnonGuestBase['AnonGuest_POST.Processor',
                           req: Request['AnonGuest_POST.Arguments'],
                           user: User
                           ) -> None:
-            project.setAnonGuestAccess(req.args.anonguest)
+            self.project.setAnonGuestAccess(req.args.anonguest)
             raise Redirect('AnonGuest')
 
     def presentContent(self, **kwargs: object) -> XMLContent:

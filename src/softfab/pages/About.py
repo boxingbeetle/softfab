@@ -6,7 +6,7 @@ from typing import Iterator, List, cast
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
 from softfab.packaging import dependencies, getDistribution
-from softfab.projectlib import getBootTime, project
+from softfab.projectlib import getBootTime
 from softfab.timeview import formatTime
 from softfab.userlib import User
 from softfab.utils import parseVersion
@@ -58,10 +58,11 @@ class StatusTable(Table):
     columns = None, None
 
     def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
+        proc = cast(FabPage.Processor, kwargs['proc'])
         yield 'Up since', (
             formatTime(getBootTime())
             )
-        dbVersion = project.dbVersion
+        dbVersion = proc.project.dbVersion
         yield 'Database version', (
             dbVersion
             if parseVersion(dbVersion)[:2] == parseVersion(softFabVersion)[:2]

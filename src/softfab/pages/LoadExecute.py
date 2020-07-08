@@ -12,7 +12,6 @@ from softfab.configview import ConfigTable, SimpleConfigTable
 from softfab.datawidgets import DataColumn, DataTable
 from softfab.formlib import checkBox
 from softfab.pageargs import IntArg, SortArg
-from softfab.projectlib import project
 from softfab.request import Request
 from softfab.selectview import BasketArgs, SelectProcMixin, selectDialog
 from softfab.userlib import User, UserDB, checkPrivilege
@@ -110,7 +109,7 @@ class LoadExecute_GET(FabPage['LoadExecute_GET.Processor',
             return self.configDB
 
         def iterActions(self) -> Iterator[Tuple[str, str, str]]:
-            if project.getTagKeys():
+            if self.project.getTagKeys():
                 yield 'tags', 'Edit Tags...', 'ConfigTags'
             yield 'execute', 'Execute...', 'BatchExecute'
 

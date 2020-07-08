@@ -27,7 +27,6 @@ from softfab.pageargs import (
 from softfab.pagelinks import createJobsURL
 from softfab.paramview import ParamCell, ParamOverrideTable
 from softfab.productdeflib import ProductType
-from softfab.projectlib import project
 from softfab.resourcelib import ResourceDB, TaskRunner
 from softfab.selectlib import TagCache
 from softfab.selectview import TagValueEditTable, textToValues, valuesToText
@@ -45,7 +44,7 @@ class TargetStep(DialogStep):
     title = 'Targets'
 
     def process(self, proc: 'Execute_POST.Processor') -> bool:
-        projectTargets = project.getTargets()
+        projectTargets = proc.project.getTargets()
         if projectTargets:
             return True
         else:
@@ -246,7 +245,7 @@ class ActionStep(DialogStep):
                 raise VerificationError(
                     'Please specify "Local at" for all local inputs.'
                     )
-            multiMax = cast(int, project['maxjobs'])
+            multiMax = cast(int, proc.project['maxjobs'])
             if proc.args.multi < 0:
                 raise VerificationError(
                     'A negative multiple jobs count is not possible.'
@@ -301,7 +300,7 @@ class TagsStep(DialogStep):
     title = 'Tags'
 
     def process(self, proc: 'Execute_POST.Processor') -> bool:
-        return bool(project.getTagKeys())
+        return bool(proc.project.getTagKeys())
 
     def presentFormBody(self, **kwargs: object) -> XMLContent:
         proc = cast(Execute_POST.Processor, kwargs['proc'])
@@ -651,7 +650,8 @@ class TargetTable(CheckBoxesTable):
 
     def iterOptions(self, **kwargs: object
                     ) -> Iterator[Tuple[str, Sequence[XMLContent]]]:
-        for target in sorted(project.getTargets()):
+        proc = cast(Execute_POST.Processor, kwargs['proc'])
+        for target in sorted(proc.project.getTargets()):
             yield target, ( target, )
 
 class NotifyTable(RadioTable):
@@ -670,9 +670,10 @@ class TaskTable(CheckBoxesTable):
     name = 'tasks'
 
     def iterColumns(self, **kwargs: object) -> Iterator[Column]:
+        proc = cast(Execute_POST.Processor, kwargs['proc'])
         yield Column('Task ID')
         yield Column('Title')
-        if project['taskprio']:
+        if proc.project['taskprio']:
             yield Column('Priority')
 
     def iterOptions(self, **kwargs: object
@@ -698,7 +699,7 @@ class TaskTable(CheckBoxesTable):
             for taskId in taskIds:
                 task = taskDefDB[taskId]
                 cells: List[XMLContent] = [ taskId, task.getTitle() ]
-                if project['taskprio']:
+                if proc.project['taskprio']:
                     cells.append(
                         textInput(
                             name = 'prio.' + taskId,

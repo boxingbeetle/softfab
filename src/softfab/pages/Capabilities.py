@@ -11,7 +11,6 @@ from softfab.pageargs import ArgsCorrected, IntArg
 from softfab.pagelinks import (
     CapFilterArgs, createTaskDetailsLink, createTaskRunnerDetailsLink
 )
-from softfab.projectlib import project
 from softfab.querylib import CustomFilter, RecordFilter
 from softfab.request import Request
 from softfab.resourcelib import ResourceBase, ResourceDB
@@ -156,7 +155,7 @@ class Capabilities_GET(FabPage['Capabilities_GET.Processor',
             capMap: ResultKeeper[str, CapInfo] = ResultKeeper(CapInfo)
 
             # Always include targets, even if there are no TRs for them.
-            for target in project.getTargets():
+            for target in self.project.getTargets():
                 capMap[target] # pylint: disable=pointless-statement
 
             # Determine capabilities required for each task.

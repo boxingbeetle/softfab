@@ -12,7 +12,6 @@ from softfab.Page import PageProcessor, PresentableError, Redirect
 from softfab.formlib import actionButtons, checkBox, makeForm, textInput
 from softfab.notification import sendTestMail, sendmail
 from softfab.pageargs import BoolArg, EnumArg, PageArgs, StrArg
-from softfab.projectlib import project
 from softfab.request import Request
 from softfab.userlib import User, checkPrivilege
 from softfab.xmlgen import XML, XMLContent, xhtml
@@ -82,6 +81,8 @@ class Notifications_GET(FabPage[FabPage.Processor, FabPage.Arguments]):
         pass
 
     def presentContent(self, **kwargs: object) -> XMLContent:
+        proc = cast(FabPage.Processor, kwargs['proc'])
+        project = proc.project
         return presentForm(
             MailConfigArgs(
                 mailNotification=project['mailnotification'],
@@ -155,7 +156,7 @@ class Notifications_POST(FabPage['Notifications_POST.Processor',
                         'Mail sender ', xhtml.code[mailSender],
                         ' does not look like an e-mail address.'
                         ])
-                project.setMailConfig(
+                self.project.setMailConfig(
                     args.mailNotification, smtpRelay, mailSender
                     )
             else:
