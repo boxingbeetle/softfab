@@ -7,7 +7,7 @@ from softfab.datawidgets import DataColumn, DataTable, LinkColumn
 from softfab.formlib import dropDownList, emptyOption, hiddenInput, textInput
 from softfab.pagelinks import createConfigDetailsLink
 from softfab.productdeflib import ProductType
-from softfab.projectlib import project
+from softfab.projectlib import Project
 from softfab.resourcelib import ResourceDB, TaskRunner
 from softfab.restypeview import createTargetLink
 from softfab.schedulelib import ScheduleDB
@@ -165,6 +165,7 @@ class SimpleConfigTable(DataTable[Config]):
         )
 
     def iterColumns(self, **kwargs: object) -> Iterator[DataColumn[Config]]:
+        project: Project = getattr(kwargs['proc'], 'project')
         userDB: UserDB = getattr(kwargs['proc'], 'userDB')
         yield from self.fixedColumns
         if self.showTargets and project.showTargets:

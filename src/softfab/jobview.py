@@ -15,7 +15,7 @@ from softfab.datawidgets import (
 from softfab.joblib import Job, Task
 from softfab.notification import NotificationPresenter, sendNotification
 from softfab.pagelinks import createConfigDetailsLink, createJobURL
-from softfab.projectlib import project
+from softfab.projectlib import Project
 from softfab.resultcode import ResultCode
 from softfab.schedulelib import ScheduleDB
 from softfab.schedulerefs import createScheduleDetailsURL
@@ -177,9 +177,8 @@ class JobsTable(DataTable[Job]):
     leadTimeColumn = DurationColumn[Job](label='Lead Time', keyName='leadtime')
     statusColumn: ClassVar[DataColumn[Job]] = _StatusColumn.instance
 
-    def showTargetColumn( # pylint: disable=unused-argument
-                         self, **kwargs: object
-                         ) -> bool:
+    def showTargetColumn(self, **kwargs: object) -> bool:
+        project: Project = getattr(kwargs['proc'], 'project')
         return project.showTargets
 
     def iterRowStyles( # pylint: disable=unused-argument

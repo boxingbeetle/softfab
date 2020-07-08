@@ -31,7 +31,7 @@ class AnonGuest_GET(AnonGuestBase[FabPage.Processor, FabPage.Arguments]):
 
     def presentContent(self, **kwargs: object) -> XMLContent:
         proc = cast(FabPage.Processor, kwargs['proc'])
-        yield presentAnonGuestSetting()
+        yield presentAnonGuestSetting(proc.project)
         yield self.backToParent(proc.args)
 
 class AnonGuest_POST(AnonGuestBase['AnonGuest_POST.Processor',

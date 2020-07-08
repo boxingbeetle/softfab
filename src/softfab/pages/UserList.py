@@ -190,7 +190,7 @@ class UserList_GET(FabPage['UserList_GET.Processor', 'UserList_GET.Arguments']):
                 args=AnonGuestArgs(anonguest=proc.project.anonguest)
                 )[ AnonGuestTable.instance ].present(**kwargs)
         else:
-            yield presentAnonGuestSetting()
+            yield presentAnonGuestSetting(proc.project)
 
 class UserList_POST(FabPage['UserList_POST.Processor',
                             'UserList_POST.Arguments']):

@@ -6,7 +6,7 @@ from typing import cast
 from softfab.datawidgets import DataColumn
 from softfab.pageargs import EnumArg, PageArgs, PasswordArg
 from softfab.pagelinks import UserIdArgs, createUserDetailsLink
-from softfab.projectlib import project
+from softfab.projectlib import Project
 from softfab.querylib import Record
 from softfab.xmlgen import XMLContent, xhtml
 
@@ -55,7 +55,7 @@ class LoginPassArgs(PageArgs):
     #       than storing the password in the first place.
     loginpass = PasswordArg()
 
-def presentAnonGuestSetting() -> XMLContent:
+def presentAnonGuestSetting(project: Project) -> XMLContent:
     return xhtml.p[
         'Anonymous guest access is ',
         xhtml.b['enabled' if project.anonguest else 'disabled'], '.'

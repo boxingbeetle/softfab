@@ -11,7 +11,7 @@ from softfab.jobview import TargetColumn
 from softfab.pagelinks import (
     JobIdArgs, TaskIdArgs, createTaskInfoLink, createTaskRunnerDetailsLink
 )
-from softfab.projectlib import project
+from softfab.projectlib import Project
 from softfab.request import Request
 from softfab.resourcelib import ResourceDB
 from softfab.taskview import getTaskStatus, taskSummary
@@ -75,13 +75,12 @@ class TaskRunsTable(DataTable[Task]):
                       ) -> Iterator[str]:
         yield getTaskStatus(record)
 
-    def showTargetColumn( # pylint: disable=unused-argument
-                         self, **kwargs: object
-                         ) -> bool:
+    def showTargetColumn(self, **kwargs: object) -> bool:
         '''Returns True iff the target column should be included.
         Default implementation returns True iff there are multiple targets
         defined for this project.
         '''
+        project: Project = getattr(kwargs['proc'], 'project')
         return project.showTargets
 
     def iterColumns(self, **kwargs: object) -> Iterator[DataColumn[Task]]:
@@ -148,7 +147,7 @@ class JobTaskRunsTable(TaskRunsTable):
         proc = cast(PageProcessor, kwargs['proc'])
         tasks = self.getRecordsToQuery(proc)
         yield self.taskColumn
-        if project['taskprio']:
+        if proc.project['taskprio']:
             yield self.priorityColumn
         yield self.startTimeColumn
         yield self.durationColumn
