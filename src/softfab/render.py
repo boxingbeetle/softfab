@@ -165,14 +165,14 @@ async def renderAsync(page: FabResource, request: TwistedRequest) -> None:
         try:
             user: User = await authenticator.authenticate(req)
         except LoginFailed as ex:
-            if request.postpath:
-                # Widget requests should just fail immediately instead of
-                # asking for authentication.
-                responder = _unauthorizedResponder(ex)
-            else:
+            if req.getSubPath() is None:
                 responder = authenticator.askForAuthentication(
                     req, ex.args[0] if ex.args else None
                     )
+            else:
+                # Widget requests should just fail immediately instead of
+                # asking for authentication.
+                responder = _unauthorizedResponder(ex)
         except Unauthorized as ex:
             responder = _unauthorizedResponder(ex)
         else:
