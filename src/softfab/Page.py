@@ -39,6 +39,8 @@ class Authenticator:
     '''Abstract base class of authenticators.
     '''
 
+    project: ClassVar[Project]
+
     def authenticate(self, req: Request) -> Deferred:
         '''Authentication step: selects an authentication method depending on
         the page and the request.

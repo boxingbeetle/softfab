@@ -21,7 +21,6 @@ from softfab.Page import (
 )
 from softfab.UIPage import UIPage, UIResponder
 from softfab.pageargs import ArgsCorrected, ArgsInvalid, ArgsT, Query, dynamic
-from softfab.projectlib import project
 from softfab.request import Request
 from softfab.response import NotModified, Response, ResponseHeaders
 from softfab.userlib import AccessDenied, UnknownUser, User
@@ -160,8 +159,12 @@ def _unauthorizedResponder(ex: Exception) -> Responder:
 
 async def renderAsync(page: FabResource, request: TwistedRequest) -> None:
     req: Request = Request(request)
+    authenticator = page.authenticator
+    response = Response(request,
+                        authenticator.project.frameAncestors,
+                        req.userAgent)
+
     try:
-        authenticator = page.authenticator
         try:
             user: User = await authenticator.authenticate(req)
         except LoginFailed as ex:
@@ -188,8 +191,6 @@ async def renderAsync(page: FabResource, request: TwistedRequest) -> None:
             PageProcessor(page, req, FabResource.Arguments(), UnknownUser())
             )
 
-    frameAncestors = project.frameAncestors
-    response = Response(request, frameAncestors, req.userAgent)
     await _present(responder, response)
 
 def _checkActive(

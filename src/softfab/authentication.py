@@ -9,7 +9,6 @@ from softfab.Page import (
     Authenticator, HTTPAuthenticator, InternalError, Redirector, Responder
 )
 from softfab.pagelinks import loginURL
-from softfab.projectlib import Project
 from softfab.request import Request
 from softfab.tokens import TokenDB, TokenRole, TokenUser, authenticateToken
 from softfab.userlib import (
@@ -24,7 +23,6 @@ class LoginAuthPage(Authenticator):
     '''
 
     instance: ClassVar[SharedInstance] = SharedInstance()
-    project: ClassVar[Project]
 
     def authenticate(self, req: Request) -> Deferred:
         user = req.loggedInUser()
@@ -48,7 +46,6 @@ class HTTPAuthPage(Authenticator):
     '''
 
     instance: ClassVar[SharedInstance] = SharedInstance()
-    project: ClassVar[Project]
     userDB: ClassVar[UserDB]
 
     def authenticate(self, req: Request) -> Deferred:
@@ -81,7 +78,6 @@ class TokenAuthPage(Authenticator):
     '''Authenticator that performs HTTP authentication using an access token.
     '''
 
-    project: ClassVar[Project]
     tokenDB: ClassVar[TokenDB]
 
     def __init__(self, role: TokenRole):
