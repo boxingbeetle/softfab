@@ -288,9 +288,9 @@ def migrate(globalOptions: GlobalOptions) -> None:
 
     # Check whether we can convert from the database version in use before
     # the migration.
-    import softfab.projectlib
-    softfab.projectlib.projectDB.preload()
-    versionStr = softfab.projectlib.project.dbVersion
+    from softfab.projectlib import projectDB
+    projectDB.preload()
+    versionStr = projectDB['singleton'].dbVersion
     from softfab.utils import parseVersion
     try:
         dbVersion = parseVersion(versionStr)
