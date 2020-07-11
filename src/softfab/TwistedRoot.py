@@ -30,7 +30,7 @@ from softfab.joblib import (
 from softfab.jobview import JobNotificationObserver
 from softfab.newapi import populateAPI
 from softfab.pageargs import PageArgs
-from softfab.projectlib import ProjectDB, TimezoneUpdater
+from softfab.projectlib import Project, ProjectDB, TimezoneUpdater
 from softfab.render import NotFoundPage, renderAuthenticated
 from softfab.schedulelib import ScheduleDB, ScheduleManager
 from softfab.userlib import User
@@ -250,8 +250,9 @@ class SoftFabRoot(Resource):
                 taskToJobs=TaskToJobs(jobDB)
                 )
 
+            project = cast(Project, dependencies['project'])
             resultlessJobs = ResultlessJobs(jobDB)
-            resultlessJobs.addObserver(JobNotificationObserver())
+            resultlessJobs.addObserver(JobNotificationObserver(project))
 
             projectDB.addObserver(TimezoneUpdater())
 

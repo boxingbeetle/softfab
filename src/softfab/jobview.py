@@ -254,6 +254,9 @@ class _JobOverviewPresenter(NotificationPresenter):
 
 class JobNotificationObserver(RecordObserver):
 
+    def __init__(self, project: Project):
+        self.project = project
+
     def added(self, record: Job) -> None:
         pass
 
@@ -271,4 +274,5 @@ class JobNotificationObserver(RecordObserver):
                     mode == 'onerror' and
                         record.getFinalResult() is ResultCode.ERROR
                     ):
-                sendNotification(locator, _JobOverviewPresenter(record))
+                presenter = _JobOverviewPresenter(record)
+                sendNotification(locator, presenter, self.project)

@@ -17,7 +17,7 @@ import re
 from twisted.internet.defer import Deferred
 from twisted.python.failure import Failure
 
-from softfab.projectlib import project
+from softfab.projectlib import Project
 from softfab.utils import IllegalStateError
 
 # The twisted.mail package wasn't ported to Python 3 until Twisted 17.x.
@@ -50,7 +50,10 @@ class NotificationPresenter:
         """
         raise NotImplementedError
 
-def sendNotification(locator: str, presenter: NotificationPresenter) -> None:
+def sendNotification(locator: str,
+                     presenter: NotificationPresenter,
+                     project: Project
+                     ) -> None:
     '''Sends a notification about some event that happened in the SoftFab.
     The locator specifies how the message should be sent: the protocol and
     the recipient. The presenter is used to create the message body.
