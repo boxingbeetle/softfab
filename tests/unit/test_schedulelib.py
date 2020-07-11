@@ -5,8 +5,7 @@ from initconfig import removeDB
 from datageneratorlib import DataGenerator
 
 from softfab import (
-    databases, configlib, joblib, projectlib, resourcelib, schedulelib,
-    scheduleview
+    databases, configlib, joblib, resourcelib, schedulelib, scheduleview
     )
 from softfab.resultcode import ResultCode
 from softfab.scheduleview import getScheduleStatus
@@ -599,7 +598,7 @@ class TaggedConfigFactory:
             dataGenerator.createConfiguration(name = 'config%d' % count)
             for count in range(numConfigs)
             ]
-        projectlib.project.setTagKeys(( self.tagKey, ))
+        # Note that we don't need a TagCache for these tests.
 
     def __call__(self):
         return { 'tagKey': self.tagKey, 'tagValue': self.tagValue }
@@ -607,8 +606,6 @@ class TaggedConfigFactory:
     def setTags(self):
         for config in self.configs:
             config.tags.setTag(self.tagKey, (self.tagValue, ))
-            # Force tag cache update.
-            config._notify()
 
 class Test0600Tagged(ScheduleFixtureMixin, unittest.TestCase):
     '''Test cases which validate scheduling by configuration tag.

@@ -13,9 +13,7 @@ import os.path
 import time
 
 from softfab.config import dbDir
-from softfab.databaselib import (
-    Database, SingletonElem, SingletonObserver, SingletonWrapper
-)
+from softfab.databaselib import Database, SingletonElem, SingletonObserver
 from softfab.timelib import getTime
 from softfab.userlib import AnonGuestUser, UnknownUser, User
 from softfab.utils import cachedProperty
@@ -253,9 +251,6 @@ class ProjectDB(Database[Project]):
         self._notifyAdded(record)
 
 projectDB = ProjectDB(dbDir / 'project')
-
-# Note: SingletonWrapper is not a Project, but mimics it closely.
-project = cast(Project, SingletonWrapper(projectDB))
 
 class TimezoneUpdater(SingletonObserver):
 
