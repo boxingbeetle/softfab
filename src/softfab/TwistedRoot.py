@@ -4,7 +4,7 @@ from asyncio import sleep
 from functools import partial
 from mimetypes import guess_type
 from types import ModuleType
-from typing import Any, Dict, Iterable, Mapping, Optional, Type, cast
+from typing import Any, Dict, Iterable, Mapping, Optional, Sequence, Type, cast
 import logging
 
 from twisted.web.http import Request as TwistedRequest
@@ -33,6 +33,7 @@ from softfab.pageargs import PageArgs
 from softfab.projectlib import Project, ProjectDB, TimezoneUpdater
 from softfab.render import NotFoundPage, renderAuthenticated
 from softfab.schedulelib import ScheduleDB, ScheduleManager
+from softfab.selectlib import ObservingTagCache
 from softfab.userlib import User
 from softfab.utils import iterModules
 from softfab.webhooks import createWebhooks
@@ -238,19 +239,26 @@ class SoftFabRoot(Resource):
     async def startup(self) -> None:
         try:
             databases = getDatabases()
+
+            projectDB = cast(ProjectDB, databases['projectDB'])
+            project = cast(Project, SingletonWrapper(projectDB))
+
+            configDB = cast(ConfigDB, databases['configDB'])
+            def configTagKeys(project: Project = project) -> Sequence[str]:
+                return project.getTagKeys()
+            configDB.tagCache = ObservingTagCache(configDB, configTagKeys)
+
             await preload(databases.values())
 
             jobDB = cast(JobDB, databases['jobDB'])
-            projectDB = cast(ProjectDB, databases['projectDB'])
             dependencies: Dict[str, object] = dict(
                 databases,
-                project=SingletonWrapper(projectDB),
+                project=project,
                 dateRange=DateRangeMonitor(jobDB),
                 unfinishedJobs=UnfinishedJobs(jobDB),
                 taskToJobs=TaskToJobs(jobDB)
                 )
 
-            project = cast(Project, dependencies['project'])
             resultlessJobs = ResultlessJobs(jobDB)
             resultlessJobs.addObserver(JobNotificationObserver(project))
 
@@ -263,7 +271,6 @@ class SoftFabRoot(Resource):
             await sleep(0)
 
             # Start schedule processing.
-            configDB = cast(ConfigDB, databases['configDB'])
             scheduleDB = cast(ScheduleDB, databases['scheduleDB'])
             ScheduleManager(configDB, jobDB, scheduleDB).trigger()
         except Exception:
