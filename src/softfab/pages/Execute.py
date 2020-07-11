@@ -419,7 +419,7 @@ class ExecuteProcessorMixin:
         targets = args.target
         if targets:
             for runner in self.resourceDB.iterTaskRunners():
-                if runner.targets & targets:
+                if runner.capabilities & targets:
                     yield runner
         else:
             yield from self.resourceDB.iterTaskRunners()
@@ -773,9 +773,10 @@ class ConfigInputTable(InputTable):
                          inp: Input
                          ) -> bool:
         targets = cast(Config, taskSet).targets
-        return (not targets or not targets.isdisjoint(taskRunner.targets)) and (
-            group is None or group.canRunOn(taskRunner.getId())
-            )
+        if targets and targets.isdisjoint(taskRunner.capabilities):
+            return False
+        else:
+            return group is None or group.canRunOn(taskRunner.getId())
 
 class ParamTable(ParamOverrideTable):
 
