@@ -61,6 +61,10 @@ class TargetStep(DialogStep):
             ]
 
     def verify(self, proc: 'Execute_POST.Processor') -> Type[DialogStep]:
+        targets = proc.args.target
+        projectTargets = proc.project.getTargets()
+        if targets - projectTargets:
+            raise ArgsCorrected(proc.args, target=targets & projectTargets)
         return TaskStep
 
 class TaskStep(DialogStep):
