@@ -14,7 +14,6 @@ from softfab.config import dbDir
 from softfab.connection import ConnectionStatus
 from softfab.databaselib import Database, DatabaseElem, RecordObserver
 from softfab.paramlib import GetParent, ParamMixin, Parameterized, paramTop
-from softfab.projectlib import project
 from softfab.restypelib import taskRunnerResourceTypeName
 from softfab.taskrunlib import TaskRun, TaskRunDB, taskRunDB
 from softfab.timelib import getTime
@@ -542,10 +541,6 @@ class TaskRunner(ResourceBase):
         def capabilities(self, value: Iterable[str]) -> None:
             self._capabilities = frozenset(value)
             self._notify()
-
-    @property
-    def targets(self) -> AbstractSet[str]:
-        return self._capabilities & project.getTargets()
 
     def _setData(self, attributes: Mapping[str, str]) -> TaskRunnerData:
         self.__data = TaskRunnerData(attributes)

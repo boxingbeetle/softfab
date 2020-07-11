@@ -93,12 +93,13 @@ class DetailsTable(Table):
         yield 'Version', runner['runnerVersion']
         yield 'Host', runner['host']
         yield 'Token ID', runner.token.getId()
+        targets = proc.project.getTargets()
         yield 'Targets', presentCapabilities(
-            runner.targets,
+            runner.capabilities & targets,
             taskRunnerResourceTypeName
             )
         yield 'Other capabilities', presentCapabilities(
-            runner.capabilities - runner.targets,
+            runner.capabilities - targets,
             taskRunnerResourceTypeName
             )
         lastSync = cast(Optional[int], runner['lastSync'])
