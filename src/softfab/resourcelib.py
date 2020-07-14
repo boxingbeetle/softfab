@@ -51,7 +51,6 @@ class ResourceBase(XMLTag, ParamMixin, DatabaseElem):
         if locator is not None:
             self.addParameter('locator', locator)
         self._capabilities: AbstractSet[str] = set()
-        self.__token: Optional[Token] = None
 
     def _addCapability(self, attributes: Mapping[str, str]) -> None:
         cast(Set[str], self._capabilities).add(attributes['name'])
@@ -110,24 +109,6 @@ class ResourceBase(XMLTag, ParamMixin, DatabaseElem):
     @property
     def capabilities(self) -> AbstractSet[str]:
         return self._capabilities
-
-    @property
-    def token(self) -> Token:
-        token = self.__token
-        if token is None:
-            try:
-                token = tokenDB[cast(str, self._properties['tokenId'])]
-            except KeyError:
-                token = Token.create(TokenRole.RESOURCE, {
-                    'resourceId': self.getId()
-                    })
-                tokenDB.add(token)
-                self._properties['tokenId'] = token.getId()
-                self._notify()
-            assert token.role is TokenRole.RESOURCE, token
-            assert token.getParam('resourceId') == self.getId(), token
-            self.__token = token
-        return token
 
     @property
     def cost(self) -> int:
@@ -475,6 +456,7 @@ class TaskRunner(ResourceBase):
         super().__init__(properties)
         self._properties.setdefault('description', '')
         self._properties.setdefault('status', ConnectionStatus.NEW)
+        self.__token: Optional[Token] = None
         self.__data: Optional[TaskRunnerData] = None
         self.__hasBeenInSync = False
         self._executionObserver = ExecutionObserver(
@@ -541,6 +523,24 @@ class TaskRunner(ResourceBase):
         def capabilities(self, value: Iterable[str]) -> None:
             self._capabilities = frozenset(value)
             self._notify()
+
+    @property
+    def token(self) -> Token:
+        token = self.__token
+        if token is None:
+            try:
+                token = tokenDB[cast(str, self._properties['tokenId'])]
+            except KeyError:
+                token = Token.create(TokenRole.RESOURCE, {
+                    'resourceId': self.getId()
+                    })
+                tokenDB.add(token)
+                self._properties['tokenId'] = token.getId()
+                self._notify()
+            assert token.role is TokenRole.RESOURCE, token
+            assert token.getParam('resourceId') == self.getId(), token
+            self.__token = token
+        return token
 
     def _setData(self, attributes: Mapping[str, str]) -> TaskRunnerData:
         self.__data = TaskRunnerData(attributes)
@@ -793,6 +793,7 @@ class ResourceDB(Database[ResourceBase]):
         super().remove(value)
         # pylint: disable=protected-access
         if 'tokenId' in value._properties:
+            assert isinstance(value, TaskRunner), value
             self.__tokenDB.remove(value.token)
 
     def iterTaskRunners(self) -> Iterator[TaskRunner]:
