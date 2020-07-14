@@ -272,52 +272,8 @@ def migrate(globalOptions: GlobalOptions) -> None:
         echo("Stop the Control Center before migrating the data.", err=True)
         get_current_context().exit(1)
 
-    # Avoid calling fsync on record rewrites.
-    # Syncing on every file would make migrations of large databases take
-    # forever. The upgrade procedure states that a backup should be made
-    # before upgrading, so in case of abnormal termination the user can
-    # restart the upgrade from the backup.
-    import softfab.config
-    softfab.config.dbAtomicWrites = False
-
-    # Set conversion flags.
-    from softfab.migration import (
-        setConversionFlags, setConversionFlagsForVersion
-    )
-    setConversionFlags()
-
-    # Check whether we can convert from the database version in use before
-    # the migration.
-    from softfab.projectlib import projectDB
-    projectDB.preload()
-    versionStr = projectDB['singleton'].dbVersion
-    from softfab.utils import parseVersion
-    try:
-        dbVersion = parseVersion(versionStr)
-    except ValueError as ex:
-        echo(f"Failed to parse database version: {ex}\n"
-             f"Migration aborted.", err=True)
-        get_current_context().exit(1)
-    if dbVersion < (2, 16, 0):
-        echo(f"Cannot migrate database because its format "
-             f"({versionStr}) is too old.\n"
-             f"Please upgrade to an earlier SoftFab version first.\n"
-             f"See release notes for details.", err=True)
-        get_current_context().exit(1)
-
-    setConversionFlagsForVersion(dbVersion)
-
-    import logging
-    from softfab.version import VERSION
-    logging.info("Migrating from version %s to version %s", versionStr, VERSION)
-    try:
-        from softfab.databases import convertAll
-        convertAll()
-    except Exception as ex:
-        logging.exception("Migration aborted with error: %s", ex)
-        raise
-    else:
-        logging.info("Migration complete")
+    from softfab.migration import migrateData
+    migrateData()
 
 @main.group()
 def user() -> None:

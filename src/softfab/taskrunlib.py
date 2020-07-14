@@ -12,7 +12,6 @@ from softfab.config import dbDir
 from softfab.databaselib import (
     Database, DatabaseElem, ObsoleteRecordError, createInternalId
 )
-from softfab.migration import migrationInProgress
 from softfab.reportlib import Report, parseReport
 from softfab.resreq import ResourceClaim
 from softfab.restypelib import taskRunnerResourceTypeName
@@ -26,6 +25,7 @@ from softfab.utils import IllegalStateError, cachedProperty, pluralize
 from softfab.waiting import ReasonForWaiting, topWhyNot
 from softfab.xmlbind import XMLTag
 from softfab.xmlgen import XML, XMLContent, xml
+import softfab.migration
 
 if TYPE_CHECKING:
     # pylint: disable=cyclic-import
@@ -126,7 +126,7 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
         self.__reserved[attributes['ref']] = attributes['id']
 
     def _setTask(self, attributes: Mapping[str, str]) -> None:
-        if migrationInProgress:
+        if softfab.migration.migrationInProgress:
             if attributes['job'] not in jobDB:
                 raise ObsoleteRecordError()
             self.__jobId = attributes['job']

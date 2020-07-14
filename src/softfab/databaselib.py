@@ -15,12 +15,12 @@ import re
 import time
 
 from softfab.config import dbAtomicWrites, logChanges
-from softfab.migration import migrationInProgress
 from softfab.utils import (
     Comparable, ComparableT, abstract, atomicWrite, cachedProperty
 )
 from softfab.xmlbind import parse
 from softfab.xmlgen import XML
+import softfab.migration
 
 if TYPE_CHECKING:
     # pylint: disable=cyclic-import
@@ -505,7 +505,7 @@ class Database(Generic[DBRecord], RecordSubjectMixin[DBRecord], ABC):
                              parse(self.factory, self._fileNameForKey(key)))
                 self._register(key, value)
             except ObsoleteRecordError:
-                if migrationInProgress:
+                if softfab.migration.migrationInProgress:
                     logging.warning('Removing obsolete record: %s', key)
                     os.remove(self._fileNameForKey(key))
                 else:
