@@ -15,7 +15,7 @@ import re
 import time
 
 from softfab.config import dbAtomicWrites, logChanges
-from softfab.conversionflags import migrationInProgress
+from softfab.migration import migrationInProgress
 from softfab.utils import (
     Comparable, ComparableT, abstract, atomicWrite, cachedProperty
 )

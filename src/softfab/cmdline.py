@@ -281,7 +281,7 @@ def migrate(globalOptions: GlobalOptions) -> None:
     softfab.config.dbAtomicWrites = False
 
     # Set conversion flags.
-    from softfab.conversionflags import (
+    from softfab.migration import (
         setConversionFlags, setConversionFlagsForVersion
     )
     setConversionFlags()

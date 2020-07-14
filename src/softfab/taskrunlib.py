@@ -9,10 +9,10 @@ from urllib.parse import quote_plus, urljoin
 import logging
 
 from softfab.config import dbDir
-from softfab.conversionflags import migrationInProgress
 from softfab.databaselib import (
     Database, DatabaseElem, ObsoleteRecordError, createInternalId
 )
+from softfab.migration import migrationInProgress
 from softfab.reportlib import Report, parseReport
 from softfab.resreq import ResourceClaim
 from softfab.restypelib import taskRunnerResourceTypeName
