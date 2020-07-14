@@ -35,6 +35,14 @@ def setConversionFlagsForVersion(
     converting from.
     '''
 
+def getDataVersion() -> str:
+    """Read the format version from the project data."""
+
+    from softfab.projectlib import ProjectDB
+    projectDB = ProjectDB(softfab.config.dbDir / 'project')
+    projectDB.preload()
+    return projectDB['singleton'].dbVersion
+
 def migrateData() -> None:
     # Avoid calling fsync on record rewrites.
     # Syncing on every file would make migrations of large databases take
@@ -48,9 +56,7 @@ def migrateData() -> None:
 
     # Check whether we can convert from the database version in use before
     # the migration.
-    from softfab.projectlib import projectDB
-    projectDB.preload()
-    versionStr = projectDB['singleton'].dbVersion
+    versionStr = getDataVersion()
     try:
         dbVersion = parseVersion(versionStr)
     except ValueError as ex:

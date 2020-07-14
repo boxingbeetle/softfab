@@ -94,8 +94,7 @@ def convertAll() -> None:
     databases = getDatabases()
     for db in databases.values():
         print('Loading', db.description, 'database...')
-        if not isinstance(db, projectlib.ProjectDB):
-            db.preload()
+        db.preload()
     for db in databases.values():
         print('Migrating', db.description, 'database...')
         db.convert()
