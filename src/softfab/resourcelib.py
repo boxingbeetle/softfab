@@ -17,9 +17,11 @@ from softfab.paramlib import GetParent, ParamMixin, Parameterized, paramTop
 from softfab.restypelib import taskRunnerResourceTypeName
 from softfab.taskrunlib import TaskRun, TaskRunDB, taskRunDB
 from softfab.timelib import getTime
-from softfab.tokens import Token, TokenDB, TokenRole, TokenUser, tokenDB
+from softfab.tokens import Token, TokenDB, TokenRole, TokenUser
 from softfab.userlib import TaskRunnerUser
-from softfab.utils import abstract, cachedProperty, parseVersion
+from softfab.utils import (
+    IllegalStateError, abstract, cachedProperty, parseVersion
+)
 from softfab.xmlbind import XMLTag
 from softfab.xmlgen import XMLContent, xml
 
@@ -443,20 +445,24 @@ class TaskRunner(ResourceBase):
         runner = cls({
             'id': runnerId,
             'description': description,
-            })
+            }, None)
         runner._capabilities = frozenset(capabilities)
         return runner
 
-    def __init__(self, properties: Mapping[str, str]):
+    def __init__(self, properties: Mapping[str, str], token: Optional[Token]):
         # COMPAT 2.16: Rename 'paused' to 'suspended'.
         if 'paused' in properties:
             properties = dict(properties, suspended=properties['paused'])
             del properties['paused']
 
+        if token is not None:
+            assert token.role is TokenRole.RESOURCE, token
+            assert token.getParam('resourceId') == self.getId(), token
+        self.__token = token
+
         super().__init__(properties)
         self._properties.setdefault('description', '')
         self._properties.setdefault('status', ConnectionStatus.NEW)
-        self.__token: Optional[Token] = None
         self.__data: Optional[TaskRunnerData] = None
         self.__hasBeenInSync = False
         self._executionObserver = ExecutionObserver(
@@ -466,6 +472,15 @@ class TaskRunner(ResourceBase):
         self.__markLostCall = None
         if self._properties['status'] is ConnectionStatus.CONNECTED:
             self.__startLostCallback()
+
+    def _createToken(self, tokenDB: TokenDB) -> None:
+        assert self.__token is None, self.__token
+        self.__token = token = Token.create(TokenRole.RESOURCE, {
+            'resourceId': self.getId()
+            })
+        tokenDB.add(token)
+        self._properties['tokenId'] = token.getId()
+        self._notify()
 
     def copyState(self, runner: 'TaskRunner') -> None: # pylint: disable=arguments-differ
         # pylint: disable=protected-access
@@ -526,21 +541,17 @@ class TaskRunner(ResourceBase):
 
     @property
     def token(self) -> Token:
+        """The authentication token for this Task Runner.
+
+        @raise IllegalStateError: When this property is requested from
+            a Task Runner that doesn't have a token. Only Task Runners
+            that are in the Task Runner DB have tokens.
+        """
         token = self.__token
         if token is None:
-            try:
-                token = tokenDB[cast(str, self._properties['tokenId'])]
-            except KeyError:
-                token = Token.create(TokenRole.RESOURCE, {
-                    'resourceId': self.getId()
-                    })
-                tokenDB.add(token)
-                self._properties['tokenId'] = token.getId()
-                self._notify()
-            assert token.role is TokenRole.RESOURCE, token
-            assert token.getParam('resourceId') == self.getId(), token
-            self.__token = token
-        return token
+            raise IllegalStateError(f'Task Runner {self.getId()} has no token')
+        else:
+            return token
 
     def _setData(self, attributes: Mapping[str, str]) -> TaskRunnerData:
         self.__data = TaskRunnerData(attributes)
@@ -738,22 +749,33 @@ class TaskRunner(ResourceBase):
 
 class ResourceFactory:
 
-    @staticmethod
-    def createResource(attributes: Mapping[str, str]) -> Resource:
+    tokenDB: TokenDB
+
+    def createResource(self, attributes: Mapping[str, str]) -> Resource:
         return Resource(attributes)
 
-    @staticmethod
-    def createTaskrunner(attributes: Mapping[str, str]) -> TaskRunner:
-        return TaskRunner(attributes)
+    def createTaskrunner(self, attributes: Mapping[str, str]) -> TaskRunner:
+        tokenId = attributes.get('tokenId')
+        token = None
+        if tokenId is not None:
+            try:
+                token = self.tokenDB.get(tokenId)
+            except KeyError:
+                pass
+        runner = TaskRunner(attributes, token)
+        if token is None:
+            logging.error('Recreating token for Task Runner %s', runner.getId())
+            # pylint: disable=protected-access
+            runner._createToken(self.tokenDB)
+        return runner
 
 class ResourceDB(Database[ResourceBase]):
     privilegeObject = 'r'
     description = 'resource'
     uniqueKeys = ( 'id', )
 
-    def __init__(self, baseDir: Path, tokenDB: TokenDB, taskRunDB: TaskRunDB):
+    def __init__(self, baseDir: Path, taskRunDB: TaskRunDB):
         super().__init__(baseDir, ResourceFactory())
-        self.__tokenDB = tokenDB
         self.__taskRunDB = taskRunDB
         self.__resourcesByType: DefaultDict[str, Set[str]] = \
                 defaultdict(set)
@@ -788,13 +810,6 @@ class ResourceDB(Database[ResourceBase]):
     def resourcesOfType(self, typeName: str) -> Collection[str]:
         """Return the IDs of all resources of the given type."""
         return self.__resourcesByType[typeName]
-
-    def remove(self, value: ResourceBase) -> None:
-        super().remove(value)
-        # pylint: disable=protected-access
-        if 'tokenId' in value._properties:
-            assert isinstance(value, TaskRunner), value
-            self.__tokenDB.remove(value.token)
 
     def iterTaskRunners(self) -> Iterator[TaskRunner]:
         """Iterates through all Task Runner records.
@@ -831,7 +846,24 @@ class ResourceDB(Database[ResourceBase]):
         else:
             raise KeyError('Token does not represent a Task Runner')
 
-resourceDB = ResourceDB(dbDir / 'resources', tokenDB, taskRunDB)
+resourceDB = ResourceDB(dbDir / 'resources', taskRunDB)
+
+class TaskRunnerTokenProvider(RecordObserver[ResourceBase]):
+
+    def __init__(self, tokenDB: TokenDB):
+        self.__tokenDB = tokenDB
+
+    def added(self, record: ResourceBase) -> None:
+        if isinstance(record, TaskRunner):
+            # pylint: disable=protected-access
+            record._createToken(self.__tokenDB)
+
+    def removed(self, record: ResourceBase) -> None:
+        if isinstance(record, TaskRunner):
+            self.__tokenDB.remove(record.token)
+
+    def updated(self, record: ResourceBase) -> None:
+        pass
 
 def recomputeRunning(resourceDB: ResourceDB, taskRunDB: TaskRunDB) -> None:
     '''Scan the task run database for running tasks.

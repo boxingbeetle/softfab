@@ -16,6 +16,7 @@ from softfab import (
 #       invalid.
 def _iterDatabases() -> Iterator[databaselib.Database[Any]]:
     yield projectlib.projectDB
+    yield tokens.tokenDB
     yield restypelib.resTypeDB
     yield productdeflib.productDefDB
     yield frameworklib.frameworkDB
@@ -27,7 +28,6 @@ def _iterDatabases() -> Iterator[databaselib.Database[Any]]:
     yield configlib.configDB
     yield schedulelib.scheduleDB
     yield userlib.userDB
-    yield tokens.tokenDB
 
 _databases: Optional[Mapping[str, databaselib.Database[Any]]] = None
 

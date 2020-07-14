@@ -17,6 +17,11 @@ class DataFactory:
     def createData(self, attributes):
         return resourcelib.TaskRunnerData(attributes)
 
+class TaskRunnerFactory:
+    """Factory for TaskRunner resources."""
+    def createTaskrunner(self, attributes):
+        return resourcelib.TaskRunner(attributes, None)
+
 class TestTRDatabase(unittest.TestCase):
     """Test basic Task Runner database functionality."""
 
@@ -67,16 +72,16 @@ class TestTRDatabase(unittest.TestCase):
         record1.sync(joblib.jobDB, data1)
 
         # Check if cache and database are in sync:
-        reload(resourcelib)
-        resourcelib.resourceDB.preload()
+        reloadDatabases()
         record2 = resourcelib.resourceDB[record1.getId()]
+        del record2._properties['tokenId']
         self.assertEqual(record1._properties, record2._properties)
         # Change data in database.
         # Check if cache and database are still in sync:
         record1.sync(joblib.jobDB, data2)
-        reload(resourcelib)
-        resourcelib.resourceDB.preload()
+        reloadDatabases()
         record2 = resourcelib.resourceDB[record1.getId()]
+        del record2._properties['tokenId']
         self.assertEqual(record1._properties, record2._properties)
 
     def statusTest(self, data, busy):
@@ -134,8 +139,7 @@ class TestTRDatabase(unittest.TestCase):
         self.assertEqual(getResourceStatus(record), resultNotSuspended)
 
         # Check if status 'unknown' is returned after a cache flush:
-        reload(resourcelib)
-        resourcelib.resourceDB.preload()
+        reloadDatabases()
         record = resourcelib.resourceDB[record.getId()]
         self.assertEqual(getResourceStatus(record), 'unknown')
         # Check that (un)pausing the TR changes the status:
@@ -160,7 +164,7 @@ class TestTRDatabase(unittest.TestCase):
         record1 = resourcelib.TaskRunner.create('runner1', '', set())
         record1.sync(joblib.jobDB, data)
         record2 = xmlbind.parse(
-            resourcelib.ResourceFactory(),
+            TaskRunnerFactory(),
             StringIO(record1.toXML().flattenXML())
             )
         self.assertEqual(record1._properties, record2._properties)

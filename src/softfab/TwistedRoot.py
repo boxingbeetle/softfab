@@ -32,8 +32,10 @@ from softfab.newapi import populateAPI
 from softfab.pageargs import PageArgs
 from softfab.projectlib import Project, ProjectDB, TimezoneUpdater
 from softfab.render import NotFoundPage, renderAuthenticated
+from softfab.resourcelib import ResourceDB, TaskRunnerTokenProvider
 from softfab.schedulelib import ScheduleDB, ScheduleManager
 from softfab.selectlib import ObservingTagCache
+from softfab.tokens import TokenDB
 from softfab.userlib import User
 from softfab.utils import iterModules
 from softfab.webhooks import createWebhooks
@@ -247,6 +249,11 @@ class SoftFabRoot(Resource):
             def configTagKeys(project: Project = project) -> Sequence[str]:
                 return project.getTagKeys()
             configDB.tagCache = ObservingTagCache(configDB, configTagKeys)
+
+            # Automatically add and remove tokens for Task Runners.
+            resourceDB = cast(ResourceDB, databases['resourceDB'])
+            tokenDB = cast(TokenDB, databases['tokenDB'])
+            resourceDB.addObserver(TaskRunnerTokenProvider(tokenDB))
 
             await preload(databases.values())
 
