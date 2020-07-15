@@ -84,58 +84,6 @@ _pdObserver = _ObserverProxy(productDefDB)
 _fdObserver = _ObserverProxy(frameworkDB)
 _tdObserver = _ObserverProxy(taskDefDB)
 
-class ConfigFactory:
-
-    jobFactory: JobFactory
-
-    def createConfig(self, attributes: Mapping[str, str]) -> 'Config':
-        return Config(attributes, self.jobFactory)
-
-    def newConfig(self,
-                  name: str,
-                  targets: Iterable[str],
-                  owner: Optional[str],
-                  trselect: bool,
-                  comment: str,
-                  jobParams: Mapping[str, str],
-                  tasks: Iterable['Task'],
-                  runners: Iterable[str]
-                  ) -> 'Config':
-        properties = dict(
-            name = name,
-            owner = owner,
-            trselect = trselect,
-            )
-
-        config = Config(properties, self.jobFactory)
-        # pylint: disable=protected-access
-        config._targets = set(targets)
-        config._comment = comment
-        config._params = dict(jobParams)
-        config._setRunners(runners)
-        for task in tasks:
-            config._tasks[task.getName()] = task
-        config._updateInputs()
-        return config
-
-class ConfigDB(Database['Config']):
-    privilegeObject = 'c'
-    description = 'configuration'
-    uniqueKeys = ( 'name', )
-
-    factory: ConfigFactory
-    tagCache: TagCache
-
-    def __init__(self, baseDir: Path):
-        super().__init__(baseDir, ConfigFactory())
-
-    def iterConfigsByTag(self, key: str, value: str) -> Iterator['Config']:
-        for config in self:
-            if config.tags.hasTagValue(key, value):
-                yield config
-
-configDB = ConfigDB(dbDir / 'configs')
-
 class _Param(XMLTag):
     tagName = 'param'
 
@@ -591,3 +539,55 @@ class Config(XMLTag, TaskRunnerSet, TaskSetWithInputs[Task],
         _tdObserver.delAllObservers(self)
         _fdObserver.delAllObservers(self)
         _pdObserver.delAllObservers(self)
+
+class ConfigFactory:
+
+    jobFactory: JobFactory
+
+    def createConfig(self, attributes: Mapping[str, str]) -> Config:
+        return Config(attributes, self.jobFactory)
+
+    def newConfig(self,
+                  name: str,
+                  targets: Iterable[str],
+                  owner: Optional[str],
+                  trselect: bool,
+                  comment: str,
+                  jobParams: Mapping[str, str],
+                  tasks: Iterable[Task],
+                  runners: Iterable[str]
+                  ) -> Config:
+        properties = dict(
+            name = name,
+            owner = owner,
+            trselect = trselect,
+            )
+
+        config = Config(properties, self.jobFactory)
+        # pylint: disable=protected-access
+        config._targets = set(targets)
+        config._comment = comment
+        config._params = dict(jobParams)
+        config._setRunners(runners)
+        for task in tasks:
+            config._tasks[task.getName()] = task
+        config._updateInputs()
+        return config
+
+class ConfigDB(Database[Config]):
+    privilegeObject = 'c'
+    description = 'configuration'
+    uniqueKeys = ( 'name', )
+
+    factory: ConfigFactory
+    tagCache: TagCache
+
+    def __init__(self, baseDir: Path):
+        super().__init__(baseDir, ConfigFactory())
+
+    def iterConfigsByTag(self, key: str, value: str) -> Iterator[Config]:
+        for config in self:
+            if config.tags.hasTagValue(key, value):
+                yield config
+
+configDB = ConfigDB(dbDir / 'configs')
