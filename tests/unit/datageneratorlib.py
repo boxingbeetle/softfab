@@ -201,6 +201,7 @@ class DataGenerator:
                 for taskId in tasksRandomOrder
                 ),
             runners = set(),
+            resourceDB = resourcelib.resourceDB
             )
 
         configlib.configDB.add(config)

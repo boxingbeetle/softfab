@@ -24,8 +24,10 @@ from softfab.xmlbind import XMLTag
 from softfab.xmlgen import XMLAttributeValue, XMLContent, xml
 
 if TYPE_CHECKING:
+    from softfab.resourcelib import ResourceDB
     from softfab.taskdeflib import TaskDef
 else:
+    ResourceDB = object
     TaskDef = object
 
 
@@ -83,9 +85,11 @@ _fdObserver = _ObserverProxy(frameworkDB)
 _tdObserver = _ObserverProxy(taskDefDB)
 
 class ConfigFactory:
-    @staticmethod
-    def createConfig(attributes: Mapping[str, str]) -> 'Config':
-        return Config(attributes)
+
+    resourceDB: ResourceDB
+
+    def createConfig(self, attributes: Mapping[str, str]) -> 'Config':
+        return Config(attributes, self.resourceDB)
 
 class ConfigDB(Database['Config']):
     privilegeObject = 'c'
@@ -343,7 +347,8 @@ class Config(XMLTag, TaskRunnerSet, TaskSetWithInputs[Task],
                comment: str,
                jobParams: Mapping[str, str],
                tasks: Iterable[Task],
-               runners: Iterable[str]
+               runners: Iterable[str],
+               resourceDB: ResourceDB
                ) -> 'Config':
         properties = dict(
             name = name,
@@ -351,7 +356,7 @@ class Config(XMLTag, TaskRunnerSet, TaskSetWithInputs[Task],
             trselect = trselect,
             )
 
-        config = Config(properties)
+        config = Config(properties, resourceDB)
         # pylint: disable=protected-access
         config.__targets = set(targets)
         config.__comment = comment
@@ -362,10 +367,14 @@ class Config(XMLTag, TaskRunnerSet, TaskSetWithInputs[Task],
         config.__updateInputs()
         return config
 
-    def __init__(self, attributes: Mapping[str, XMLAttributeValue]):
+    def __init__(self,
+                 attributes: Mapping[str, XMLAttributeValue],
+                 resourceDB: ResourceDB
+                 ):
         # Note: if the "comment" tag is empty, the XML parser does not call the
         #       <text> handler, so we have to use '' rather than None here.
         super().__init__(attributes)
+        self.__resourceDB = resourceDB
         self.__targets: MutableSet[str] = set()
         self.__comment = ''
         self.__params: Dict[str, str] = {}
@@ -511,6 +520,7 @@ class Config(XMLTag, TaskRunnerSet, TaskSetWithInputs[Task],
                 comment = comment,
                 jobParams = jobParams,
                 runners = self._runners,
+                resourceDB = self.__resourceDB
                 )
 
             for task in self.getTaskSequence():

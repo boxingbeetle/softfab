@@ -447,6 +447,7 @@ class ExecuteProcessorMixin:
                 jobParams = jobParams,
                 tasks = self.iterTasks(),
                 runners = args.runners,
+                resourceDB = self.resourceDB
                 )
 
             for group, inputs in config.getInputsGrouped():

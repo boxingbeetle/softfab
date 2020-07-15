@@ -18,7 +18,7 @@ from softfab.databaselib import (
 from softfab.dispatchlib import pickResources
 from softfab.paramlib import specialParameters
 from softfab.productlib import Product, productDB
-from softfab.resourcelib import resourceDB
+from softfab.resourcelib import ResourceDB
 from softfab.resreq import ResourceClaim, ResourceSpec
 from softfab.restypelib import resTypeDB
 from softfab.sortedqueue import SortedQueue
@@ -397,7 +397,8 @@ class Job(XMLTag, TaskRunnerSet, TaskSet[Task], DatabaseElem):
                owner: Optional[str],
                comment: str,
                jobParams: Mapping[str, str],
-               runners: Iterable[str]
+               runners: Iterable[str],
+               resourceDB: ResourceDB
                ) -> 'Job':
         # TODO: Is validation needed?
         properties: Dict[str, XMLAttributeValue] = dict(
@@ -411,17 +412,21 @@ class Job(XMLTag, TaskRunnerSet, TaskSet[Task], DatabaseElem):
         if owner is not None:
             properties['owner'] = owner
 
-        job = Job(properties)
+        job = Job(properties, resourceDB)
         job.comment = comment
         # pylint: disable=protected-access
         job.__params.update(jobParams)
         job._setRunners(runners)
         return job
 
-    def __init__(self, properties: Mapping[str, XMLAttributeValue]):
+    def __init__(self,
+                 properties: Mapping[str, XMLAttributeValue],
+                 resourceDB: ResourceDB
+                 ):
         # Note: if the "comment" tag is empty, the XML parser does not call the
         #       <text> handler, so we have to use '' rather than None here.
         super().__init__(properties)
+        self.__resourceDB = resourceDB
         self.__comment = ''
         self.__inputSet: Optional[AbstractSet[str]] = None
         self.__products: Dict[str, str] = {}
@@ -896,7 +901,7 @@ class Job(XMLTag, TaskRunnerSet, TaskSet[Task], DatabaseElem):
                          whyNot: Optional[List[ReasonForWaiting]]
                          ) -> Optional[Dict[str, Resource]]:
         if self.__resources:
-            reserved = {}
+            bound = {}
             toReserve = []
             keepPerJob = []
             for spec in claim:
@@ -908,7 +913,7 @@ class Job(XMLTag, TaskRunnerSet, TaskSet[Task], DatabaseElem):
                     specCaps = spec.capabilities
                     assert caps >= specCaps
                     if resId is not None:
-                        reserved[ref] = resId
+                        bound[ref] = resId
                     else:
                         keepPerJob.append(ref)
                         if caps != specCaps:
@@ -917,8 +922,8 @@ class Job(XMLTag, TaskRunnerSet, TaskSet[Task], DatabaseElem):
                 else:
                     toReserve.append(spec)
             reservedPerJob = {}
-            for ref, resId in reserved.items():
-                resource = resourceDB.get(resId)
+            for ref, resId in bound.items():
+                resource = self.__resourceDB.get(resId)
                 if resource is not None:
                     assert isinstance(resource, Resource), resId
                     reservedPerJob[ref] = resource
@@ -928,16 +933,17 @@ class Job(XMLTag, TaskRunnerSet, TaskSet[Task], DatabaseElem):
                         whyNot.append(ResourceMissingReason(resId))
                     return None
             reservedBy = 'J-' + self.getId()
-            resources = _reserveResources(
-                ResourceClaim.create(toReserve), reservedBy, whyNot
-                )
-            if resources is not None:
+            reserved = _reserveResources(
+                    self.__resourceDB, ResourceClaim.create(toReserve),
+                    reservedBy, whyNot)
+            if reserved is not None:
                 for ref in keepPerJob:
-                    self.__resources[ref][2] = resources[ref].getId()
-                resources.update(reservedPerJob)
-            return resources
+                    self.__resources[ref][2] = reserved[ref].getId()
+                reserved.update(reservedPerJob)
+            return reserved
         else:
-            return _reserveResources(claim, reservedBy, whyNot)
+            return _reserveResources(
+                    self.__resourceDB, claim, reservedBy, whyNot)
 
     def releaseResources(self,
                          task: Task,
@@ -959,16 +965,18 @@ class Job(XMLTag, TaskRunnerSet, TaskSet[Task], DatabaseElem):
                     if reserved is not None:
                         assert reserved[ref] == resId
             if toRelease:
-                _releaseResources(toRelease.values())
+                _releaseResources(self.__resourceDB, toRelease.values())
         elif reserved is not None:
-            _releaseResources(reserved.values())
+            _releaseResources(self.__resourceDB, reserved.values())
 
-def _reserveResources(claim: ResourceClaim,
+def _reserveResources(resourceDB: ResourceDB,
+                      claim: ResourceClaim,
                       reservedBy: str,
                       whyNot: Optional[List[ReasonForWaiting]] = None
                       ) -> Optional[Dict[str, Resource]]:
     # TODO: Database is not actually a Mapping.
     #       It's close enough, but I'd rather not cheat the type system.
+    #       Also the element type is actually ResourceBase.
     resources = cast(Mapping[str, Resource], resourceDB)
     assignment = pickResources(claim, resources, whyNot)
     if assignment is not None and whyNot is None:
@@ -978,19 +986,22 @@ def _reserveResources(claim: ResourceClaim,
                 resource.reserve(reservedBy)
     return assignment
 
-def _releaseResources(reserved: Iterable[str]) -> None:
+def _releaseResources(resourceDB: ResourceDB, reserved: Iterable[str]) -> None:
     for resId in reserved:
         resource = resourceDB.get(resId)
         if resource is not None:
+            # Check that resource is a custom resource (not a Task Runner).
             assert isinstance(resource, Resource), resId
             resType = resTypeDB[resource.typeName]
             if resType['perjob'] or resType['pertask']:
                 resource.free()
 
 class JobFactory:
-    @staticmethod
-    def createJob(attributes: Mapping[str, str]) -> Job:
-        return Job(attributes)
+
+    resourceDB: ResourceDB
+
+    def createJob(self, attributes: Mapping[str, str]) -> Job:
+        return Job(attributes, self.resourceDB)
 
 # Work around lack of knowledge of @property in mypy.
 #   https://github.com/python/mypy/issues/7974
