@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from importlib import reload
-from typing import Any, Iterator, Mapping, Optional, cast, get_type_hints
+from typing import Any, Dict, Iterator, Mapping, Optional, cast, get_type_hints
 
 from softfab import (
     configlib, databaselib, frameworklib, joblib, productdeflib, productlib,
@@ -35,11 +35,16 @@ def getDatabases() -> Mapping[str, databaselib.Database[Any]]:
     global _databases
     if _databases is None:
         databases = {}
+        factories = {}
         for db in _iterDatabases():
             name = db.__class__.__name__
             databases[name[0].lower() + name[1:]] = db
-        for db in databases.values():
-            injectDependencies(db.factory, databases)
+            assert name.endswith('DB'), name
+            factories[f'{name[0].lower()}{name[1:-2]}Factory'] = db.factory
+        dependencies: Dict[str, object] = dict(databases)
+        dependencies.update(factories)
+        for factory in factories.values():
+            injectDependencies(factory, dependencies)
         _databases = databases
     return _databases
 
