@@ -538,7 +538,7 @@ class Job(XMLTag, TaskRunnerSet, TaskSet[Task], DatabaseElem):
     def _addParam(self, attributes: Mapping[str, str]) -> None:
         self.__params[attributes['name']] = attributes['value']
 
-    def addTask(self, name: str, prio: int, runners: Iterable[str]) -> Task:
+    def _newTask(self, name: str, prio: int, runners: Iterable[str]) -> Task:
         '''Adds a run of the task by the given name to this job.
         Also adds all input and output products of that task, in state
         "waiting".

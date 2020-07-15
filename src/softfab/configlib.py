@@ -525,9 +525,8 @@ class Config(XMLTag, TaskRunnerSet, TaskSetWithInputs[Task],
 
             for task in self.getTaskSequence():
                 taskParams = taskParameters.get(task.getName(), {})
-                newTask = job.addTask(
-                    task.getName(), task.getPriority(), task.getRunners()
-                    )
+                newTask = job._newTask( # pylint: disable=protected-access
+                        task.getName(), task.getPriority(), task.getRunners())
                 for key, defValue in task.getDef().getParameters().items():
                     value = taskParams.get(key)
                     if value is None:
