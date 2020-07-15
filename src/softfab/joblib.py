@@ -482,7 +482,7 @@ class Job(XMLTag, TaskRunnerSet, TaskSet[Task], DatabaseElem):
         # Examine task resource requirements
         for spec in task.resourceClaim:
             typeObj = resTypeDB.get(spec.typeName)
-            if typeObj is not None and typeObj['perjob']:
+            if typeObj is not None and typeObj.jobExclusive:
                 tasks, caps, _ = self.__resources[spec.reference]
                 # TODO: We don't understand exactly what this code does.
                 #       Major refactoring is needed urgently.
@@ -982,7 +982,7 @@ def _reserveResources(resourceDB: ResourceDB,
     if assignment is not None and whyNot is None:
         for resource in assignment.values():
             resType = resTypeDB[resource.typeName]
-            if resType['perjob'] or resType['pertask']:
+            if resType.jobExclusive or resType.taskExclusive:
                 resource.reserve(reservedBy)
     return assignment
 
@@ -993,7 +993,7 @@ def _releaseResources(resourceDB: ResourceDB, reserved: Iterable[str]) -> None:
             # Check that resource is a custom resource (not a Task Runner).
             assert isinstance(resource, Resource), resId
             resType = resTypeDB[resource.typeName]
-            if resType['perjob'] or resType['pertask']:
+            if resType.jobExclusive or resType.taskExclusive:
                 resource.free()
 
 class JobFactory:

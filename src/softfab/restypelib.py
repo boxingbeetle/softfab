@@ -99,6 +99,16 @@ class ResType(XMLTag, DatabaseElem):
         else:
             return self.__description
 
+    @property
+    def jobExclusive(self) -> bool:
+        """True iff only one job at a time can use this resource."""
+        return cast(bool, self._properties['perjob'])
+
+    @property
+    def taskExclusive(self) -> bool:
+        """True iff only one task at a time can use this resource."""
+        return cast(bool, self._properties['pertask'])
+
     def _getContent(self) -> XMLContent:
         if self.__description:
             yield xml.description[ self.__description ]

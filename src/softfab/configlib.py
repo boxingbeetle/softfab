@@ -472,7 +472,7 @@ class Config(XMLTag, TaskRunnerSet, TaskSetWithInputs[Task],
             for spec in task.resourceClaim:
                 typeName = spec.typeName
                 if not typeName.startswith('sf.'):
-                    if resTypeDB[typeName]['perjob']:
+                    if resTypeDB[typeName].jobExclusive:
                         ref = spec.reference
                         if refToType.setdefault(ref, typeName) != typeName:
                             return False
