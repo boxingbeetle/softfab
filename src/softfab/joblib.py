@@ -391,34 +391,6 @@ class Job(XMLTag, TaskRunnerSet, TaskSet[Task], DatabaseElem):
     tagName = 'job'
     intProperties = ('timestamp', )
 
-    @staticmethod
-    def create(configId: Optional[str],
-               target: Optional[str],
-               owner: Optional[str],
-               comment: str,
-               jobParams: Mapping[str, str],
-               runners: Iterable[str],
-               resourceDB: ResourceDB
-               ) -> 'Job':
-        # TODO: Is validation needed?
-        properties: Dict[str, XMLAttributeValue] = dict(
-            jobId = createUniqueId(),
-            timestamp = getTime(),
-            )
-        if configId is not None:
-            properties['configId'] = configId
-        if target is not None:
-            properties['target'] = target
-        if owner is not None:
-            properties['owner'] = owner
-
-        job = Job(properties, resourceDB)
-        job.comment = comment
-        # pylint: disable=protected-access
-        job.__params.update(jobParams)
-        job._setRunners(runners)
-        return job
-
     def __init__(self,
                  properties: Mapping[str, XMLAttributeValue],
                  resourceDB: ResourceDB
@@ -430,7 +402,7 @@ class Job(XMLTag, TaskRunnerSet, TaskSet[Task], DatabaseElem):
         self.__comment = ''
         self.__inputSet: Optional[AbstractSet[str]] = None
         self.__products: Dict[str, str] = {}
-        self.__params: Dict[str, str] = {}
+        self._params: Dict[str, str] = {}
         self.__mainGroup: Optional[TaskGroup] = None
         self.__description: Optional[str] = None
         self.__result: Optional[ResultCode] = None
@@ -536,7 +508,7 @@ class Job(XMLTag, TaskRunnerSet, TaskSet[Task], DatabaseElem):
             self.__products[name] = productDB.create(name).getId()
 
     def _addParam(self, attributes: Mapping[str, str]) -> None:
-        self.__params[attributes['name']] = attributes['value']
+        self._params[attributes['name']] = attributes['value']
 
     def _newTask(self, name: str, prio: int, runners: Iterable[str]) -> Task:
         '''Adds a run of the task by the given name to this job.
@@ -565,7 +537,7 @@ class Job(XMLTag, TaskRunnerSet, TaskSet[Task], DatabaseElem):
         self.__comment = comment.strip()
 
     def getParams(self) -> Mapping[str, str]:
-        return self.__params
+        return self._params
 
     def getTarget(self) -> Optional[str]:
         '''Gets the target of this job.
@@ -608,7 +580,7 @@ class Job(XMLTag, TaskRunnerSet, TaskSet[Task], DatabaseElem):
     def _getContent(self) -> XMLContent:
         if self.__comment:
             yield xml.comment[ self.__comment ]
-        for key, value in self.__params.items():
+        for key, value in self._params.items():
             yield xml.param(name = key, value = value)
         for task in self.__taskSequence:
             yield self._tasks[task]
@@ -1002,6 +974,35 @@ class JobFactory:
 
     def createJob(self, attributes: Mapping[str, str]) -> Job:
         return Job(attributes, self.resourceDB)
+
+    def newJob(self,
+               configId: Optional[str],
+               target: Optional[str],
+               owner: Optional[str],
+               comment: str,
+               jobParams: Mapping[str, str],
+               runners: Iterable[str]
+               ) -> Job:
+        # TODO: Is validation needed?
+        properties: Dict[str, XMLAttributeValue] = dict(
+            jobId = createUniqueId(),
+            timestamp = getTime(),
+            )
+        if configId is not None:
+            properties['configId'] = configId
+        if target is not None:
+            properties['target'] = target
+        if owner is not None:
+            properties['owner'] = owner
+
+        job = Job(properties, self.resourceDB)
+        job.comment = comment
+        # pylint: disable=protected-access
+        job._params.update(jobParams)
+        job._setRunners(runners)
+        return job
+
+
 
 # Work around lack of knowledge of @property in mypy.
 #   https://github.com/python/mypy/issues/7974

@@ -185,7 +185,8 @@ class DataGenerator:
         tasksRandomOrder = list(tasksToAdd)
         self.rnd.shuffle(tasksRandomOrder)
 
-        config = configlib.Config.create(
+        configFactory = configlib.configDB.factory
+        config = configFactory.newConfig(
             name = name,
             targets = targets,
             owner = self.owner,
@@ -200,8 +201,7 @@ class DataGenerator:
                     )
                 for taskId in tasksRandomOrder
                 ),
-            runners = set(),
-            resourceDB = resourcelib.resourceDB
+            runners = set()
             )
 
         configlib.configDB.add(config)

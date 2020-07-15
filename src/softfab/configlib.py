@@ -11,7 +11,7 @@ from typing import (
 from softfab.config import dbDir
 from softfab.databaselib import DBRecord, Database, RecordObserver
 from softfab.frameworklib import Framework, frameworkDB
-from softfab.joblib import Job
+from softfab.joblib import Job, JobFactory
 from softfab.productdeflib import ProductDef, ProductType, productDefDB
 from softfab.restypelib import ResTypeDB
 from softfab.selectlib import SelectableRecordABC, TagCache
@@ -86,16 +86,44 @@ _tdObserver = _ObserverProxy(taskDefDB)
 
 class ConfigFactory:
 
-    resourceDB: ResourceDB
+    jobFactory: JobFactory
 
     def createConfig(self, attributes: Mapping[str, str]) -> 'Config':
-        return Config(attributes, self.resourceDB)
+        return Config(attributes, self.jobFactory)
+
+    def newConfig(self,
+                  name: str,
+                  targets: Iterable[str],
+                  owner: Optional[str],
+                  trselect: bool,
+                  comment: str,
+                  jobParams: Mapping[str, str],
+                  tasks: Iterable['Task'],
+                  runners: Iterable[str]
+                  ) -> 'Config':
+        properties = dict(
+            name = name,
+            owner = owner,
+            trselect = trselect,
+            )
+
+        config = Config(properties, self.jobFactory)
+        # pylint: disable=protected-access
+        config._targets = set(targets)
+        config._comment = comment
+        config._params = dict(jobParams)
+        config._setRunners(runners)
+        for task in tasks:
+            config._tasks[task.getName()] = task
+        config._updateInputs()
+        return config
 
 class ConfigDB(Database['Config']):
     privilegeObject = 'c'
     description = 'configuration'
     uniqueKeys = ( 'name', )
 
+    factory: ConfigFactory
     tagCache: TagCache
 
     def __init__(self, baseDir: Path):
@@ -339,48 +367,20 @@ class Config(XMLTag, TaskRunnerSet, TaskSetWithInputs[Task],
     tagName = 'config'
     boolProperties = ('trselect',)
 
-    @staticmethod
-    def create(name: str,
-               targets: Iterable[str],
-               owner: Optional[str],
-               trselect: bool,
-               comment: str,
-               jobParams: Mapping[str, str],
-               tasks: Iterable[Task],
-               runners: Iterable[str],
-               resourceDB: ResourceDB
-               ) -> 'Config':
-        properties = dict(
-            name = name,
-            owner = owner,
-            trselect = trselect,
-            )
-
-        config = Config(properties, resourceDB)
-        # pylint: disable=protected-access
-        config.__targets = set(targets)
-        config.__comment = comment
-        config.__params = dict(jobParams)
-        config._setRunners(runners)
-        for task in tasks:
-            config._tasks[task.getName()] = task
-        config.__updateInputs()
-        return config
-
     def __init__(self,
                  attributes: Mapping[str, XMLAttributeValue],
-                 resourceDB: ResourceDB
+                 jobFactory: JobFactory
                  ):
         # Note: if the "comment" tag is empty, the XML parser does not call the
         #       <text> handler, so we have to use '' rather than None here.
         super().__init__(attributes)
-        self.__resourceDB = resourceDB
-        self.__targets: MutableSet[str] = set()
-        self.__comment = ''
-        self.__params: Dict[str, str] = {}
+        self.__jobFactory = jobFactory
+        self._targets: MutableSet[str] = set()
+        self._comment = ''
+        self._params: Dict[str, str] = {}
         self.__description: Optional[str] = None
 
-    def __updateInputs(self) -> None:
+    def _updateInputs(self) -> None:
         '''This should be called after tasks are added, to recompute which
         inputs this configuration has.
         '''
@@ -399,7 +399,7 @@ class Config(XMLTag, TaskRunnerSet, TaskSetWithInputs[Task],
         This can include old targets that were active when this configuration
         was created but are no longer active.
         """
-        return self.__targets
+        return self._targets
 
     @property
     def owner(self) -> Optional[str]:
@@ -413,24 +413,24 @@ class Config(XMLTag, TaskRunnerSet, TaskSetWithInputs[Task],
         """Gets user-specified comment string for this job configuration.
         Comment string may contain newlines.
         """
-        return self.__comment
+        return self._comment
 
     def __getitem__(self, key: str) -> object:
         if key == 'owner':
             return self.owner
         elif key == 'comment':
-            return self.__comment
+            return self._comment
         elif key == 'description':
             return self.getDescription()
         elif key == 'nrtasks':
             return len(self._tasks)
         elif key == 'targets':
-            return sorted(self.__targets)
+            return sorted(self._targets)
         else:
             return XMLTag.__getitem__(self, key)
 
     def _addTarget(self, attributes: Mapping[str, str]) -> None:
-        self.__targets.add(attributes['name'])
+        self._targets.add(attributes['name'])
 
     def _addTask(self, attributes: Mapping[str, str]) -> Task:
         task = Task(attributes)
@@ -442,10 +442,10 @@ class Config(XMLTag, TaskRunnerSet, TaskSetWithInputs[Task],
         self._inputs[inp.getName()] = inp
 
     def _addParam(self, attributes: Mapping[str, str]) -> None:
-        self.__params[attributes['name']] = attributes['value']
+        self._params[attributes['name']] = attributes['value']
 
     def _textComment(self, text: str) -> None:
-        self.__comment = text
+        self._comment = text
 
     def getProduct(self, name: str) -> Union[Input, Output]:
         inp = self._inputs.get(name)
@@ -456,10 +456,10 @@ class Config(XMLTag, TaskRunnerSet, TaskSetWithInputs[Task],
 
     # So far used for testing only
     def getParams(self) -> Dict[str, str]:
-        return dict(self.__params)
+        return dict(self._params)
 
     def getParameter(self, name: str) -> Optional[str]:
-        return self.__params.get(name)
+        return self._params.get(name)
 
     def isConsistent(self, resTypeDB: ResTypeDB) -> bool:
         """Returns True iff this configuration can be instantiated.
@@ -506,21 +506,22 @@ class Config(XMLTag, TaskRunnerSet, TaskSetWithInputs[Task],
         if owner is None:
             owner = self.owner
         if comment is None:
-            comment = self.__comment
-        jobParams = dict(self.__params)
+            comment = self._comment
+        jobParams = dict(self._params)
         jobParams.update(params)
+
+        jobFactory = self.__jobFactory
 
         for target in cast(Sequence[Optional[str]],
                            sorted(self.targets)) or [None]:
-            job = Job.create(
+            job = jobFactory.newJob(
                 # configId is empty string when executing from scratch
                 configId = self.getId() or None,
                 target = target,
                 owner = owner,
                 comment = comment,
                 jobParams = jobParams,
-                runners = self._runners,
-                resourceDB = self.__resourceDB
+                runners = self._runners
                 )
 
             for task in self.getTaskSequence():
@@ -549,13 +550,13 @@ class Config(XMLTag, TaskRunnerSet, TaskSetWithInputs[Task],
             yield job
 
     def _getContent(self) -> XMLContent:
-        for target in self.__targets:
+        for target in self._targets:
             yield xml.target(name=target)
-        if self.__comment:
-            yield xml.comment[ self.__comment ]
+        if self._comment:
+            yield xml.comment[ self._comment ]
         yield from self._tasks.values()
         yield from self._inputs.values()
-        for name, value in self.__params.items():
+        for name, value in self._params.items():
             yield xml.param(name = name, value = value)
         yield self.runnersAsXML()
         yield self.tags.toXML()

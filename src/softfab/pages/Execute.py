@@ -438,7 +438,7 @@ class ExecuteProcessorMixin:
                 if args.onfail:
                     jobParams['notify-mode'] = args.onfail
 
-            config = Config.create(
+            config = self.configDB.factory.newConfig(
                 name = args.config,
                 targets = args.target,
                 owner = self.user.name,
@@ -446,8 +446,7 @@ class ExecuteProcessorMixin:
                 comment = args.comment,
                 jobParams = jobParams,
                 tasks = self.iterTasks(),
-                runners = args.runners,
-                resourceDB = self.resourceDB
+                runners = args.runners
                 )
 
             for group, inputs in config.getInputsGrouped():
