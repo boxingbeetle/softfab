@@ -20,7 +20,7 @@ from softfab.paramlib import specialParameters
 from softfab.productlib import Product, productDB
 from softfab.resourcelib import ResourceDB
 from softfab.resreq import ResourceClaim, ResourceSpec
-from softfab.restypelib import resTypeDB
+from softfab.restypelib import ResTypeDB
 from softfab.sortedqueue import SortedQueue
 from softfab.taskgroup import PriorityMixin, TaskSet
 from softfab.tasklib import (
@@ -393,12 +393,14 @@ class Job(XMLTag, TaskRunnerSet, TaskSet[Task], DatabaseElem):
 
     def __init__(self,
                  properties: Mapping[str, XMLAttributeValue],
-                 resourceDB: ResourceDB
+                 resourceDB: ResourceDB,
+                 resTypeDB: ResTypeDB
                  ):
         # Note: if the "comment" tag is empty, the XML parser does not call the
         #       <text> handler, so we have to use '' rather than None here.
         super().__init__(properties)
         self.__resourceDB = resourceDB
+        self.__resTypeDB = resTypeDB
         self.__comment = ''
         self.__inputSet: Optional[AbstractSet[str]] = None
         self.__products: Dict[str, str] = {}
@@ -453,7 +455,7 @@ class Job(XMLTag, TaskRunnerSet, TaskSet[Task], DatabaseElem):
         self.__taskSequence.append(name)
         # Examine task resource requirements
         for spec in task.resourceClaim:
-            typeObj = resTypeDB.get(spec.typeName)
+            typeObj = self.__resTypeDB.get(spec.typeName)
             if typeObj is not None and typeObj.jobExclusive:
                 tasks, caps, _ = self.__resources[spec.reference]
                 # TODO: We don't understand exactly what this code does.
@@ -971,9 +973,10 @@ def _releaseResources(resourceDB: ResourceDB, reserved: Iterable[str]) -> None:
 class JobFactory:
 
     resourceDB: ResourceDB
+    resTypeDB: ResTypeDB
 
     def createJob(self, attributes: Mapping[str, str]) -> Job:
-        return Job(attributes, self.resourceDB)
+        return Job(attributes, self.resourceDB, self.resTypeDB)
 
     def newJob(self,
                configId: Optional[str],
@@ -995,7 +998,7 @@ class JobFactory:
         if owner is not None:
             properties['owner'] = owner
 
-        job = Job(properties, self.resourceDB)
+        job = Job(properties, self.resourceDB, self.resTypeDB)
         job.comment = comment
         # pylint: disable=protected-access
         job._params.update(jobParams)
