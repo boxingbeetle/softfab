@@ -79,7 +79,8 @@ class DataGenerator:
     def createResource(self, resType, capabilities=(), name=None):
         if name is None:
             name = 'resource%d' % len(resourcelib.resourceDB)
-        resource = resourcelib.Resource.create(
+        resourceFactory = resourcelib.resourceDB.factory
+        resource = resourceFactory.newResource(
             name, resType, 'created by datageneratorlib', capabilities
             )
         resourcelib.resourceDB.add(resource)
@@ -135,7 +136,8 @@ class DataGenerator:
         capabilities = list(capabilities)
         if target is not None:
             capabilities.append(target)
-        taskRunner = resourcelib.TaskRunner.create(name, '', capabilities)
+        resourceFactory = resourcelib.resourceDB.factory
+        taskRunner = resourceFactory.newTaskRunner(name, '', capabilities)
         resourcelib.resourceDB.add(taskRunner)
         data = self.createTaskRunnerData(name, target, versionStr)
         taskRunner.sync(joblib.jobDB, data)

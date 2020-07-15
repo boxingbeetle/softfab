@@ -14,7 +14,7 @@ from softfab.config import dbDir
 from softfab.connection import ConnectionStatus
 from softfab.databaselib import Database, DatabaseElem, RecordObserver
 from softfab.paramlib import GetParent, ParamMixin, Parameterized, paramTop
-from softfab.restypelib import taskRunnerResourceTypeName
+from softfab.restypelib import ResType, ResTypeDB, taskRunnerResourceTypeName
 from softfab.taskrunlib import TaskRun, TaskRunDB, taskRunDB
 from softfab.timelib import getTime
 from softfab.tokens import Token, TokenDB, TokenRole, TokenUser
@@ -41,7 +41,7 @@ class ResourceBase(XMLTag, ParamMixin, DatabaseElem):
     boolProperties = ('suspended',)
     intProperties = ('changedtime',)
 
-    def __init__(self, properties: Mapping[str, str]):
+    def __init__(self, properties: Mapping[str, str], resTypeDB: ResTypeDB):
         # COMPAT 2.x.x: Make locator into a parameter.
         locator: Optional[str]
         if 'locator' in properties:
@@ -52,6 +52,7 @@ class ResourceBase(XMLTag, ParamMixin, DatabaseElem):
         super().__init__(properties)
         if locator is not None:
             self.addParameter('locator', locator)
+        self._resTypeDB = resTypeDB
         self._capabilities: AbstractSet[str] = set()
 
     def _addCapability(self, attributes: Mapping[str, str]) -> None:
@@ -101,6 +102,10 @@ class ResourceBase(XMLTag, ParamMixin, DatabaseElem):
         The type could be defined in `resTypeDB` or be a reserved type.
         """
         raise NotImplementedError
+
+    @property
+    def resType(self) -> ResType:
+        return self._resTypeDB[self.typeName]
 
     @property
     def description(self) -> str:
@@ -186,20 +191,6 @@ class Resource(ResourceBase):
     def _propertiesToCopy(self) -> Iterator[str]:
         yield from super()._propertiesToCopy()
         yield 'reserved'
-
-    @classmethod
-    def create(
-            cls, resourceId: str, resType: str, description: str,
-            capabilities: Iterable[str]
-            ) -> 'Resource':
-        # pylint: disable=protected-access
-        resource = cls({
-            'id': resourceId,
-            'type': resType,
-            'description': description,
-            })
-        resource._capabilities = frozenset(capabilities)
-        return resource
 
     @property
     def typeName(self) -> str:
@@ -432,24 +423,11 @@ class TaskRunner(ResourceBase):
     boolProperties = ('exit',)
     enumProperties = {'status': ConnectionStatus}
 
-    @classmethod
-    def create(cls,
-               runnerId: str,
-               description: str,
-               capabilities: Iterable[str]
-               ) -> 'TaskRunner':
-        '''Creates a new Task Runner record.
-        The new record is returned and not added to the database.
-        '''
-        # pylint: disable=protected-access
-        runner = cls({
-            'id': runnerId,
-            'description': description,
-            }, None)
-        runner._capabilities = frozenset(capabilities)
-        return runner
-
-    def __init__(self, properties: Mapping[str, str], token: Optional[Token]):
+    def __init__(self,
+                 properties: Mapping[str, str],
+                 resTypeDB: ResTypeDB,
+                 token: Optional[Token]
+                 ):
         # COMPAT 2.16: Rename 'paused' to 'suspended'.
         if 'paused' in properties:
             properties = dict(properties, suspended=properties['paused'])
@@ -460,7 +438,7 @@ class TaskRunner(ResourceBase):
             assert token.getParam('resourceId') == self.getId(), token
         self.__token = token
 
-        super().__init__(properties)
+        super().__init__(properties, resTypeDB)
         self._properties.setdefault('description', '')
         self._properties.setdefault('status', ConnectionStatus.NEW)
         self.__data: Optional[TaskRunnerData] = None
@@ -749,10 +727,11 @@ class TaskRunner(ResourceBase):
 
 class ResourceFactory:
 
+    resTypeDB: ResTypeDB
     tokenDB: TokenDB
 
     def createResource(self, attributes: Mapping[str, str]) -> Resource:
-        return Resource(attributes)
+        return Resource(attributes, self.resTypeDB)
 
     def createTaskrunner(self, attributes: Mapping[str, str]) -> TaskRunner:
         tokenId = attributes.get('tokenId')
@@ -762,17 +741,48 @@ class ResourceFactory:
                 token = self.tokenDB.get(tokenId)
             except KeyError:
                 pass
-        runner = TaskRunner(attributes, token)
+        runner = TaskRunner(attributes, self.resTypeDB, token)
         if token is None:
             logging.error('Recreating token for Task Runner %s', runner.getId())
             # pylint: disable=protected-access
             runner._createToken(self.tokenDB)
         return runner
 
+    def newResource(
+            self, resourceId: str, resType: str, description: str,
+            capabilities: Iterable[str]
+            ) -> Resource:
+        # pylint: disable=protected-access
+        resource = Resource({
+            'id': resourceId,
+            'type': resType,
+            'description': description,
+            }, self.resTypeDB)
+        resource._capabilities = frozenset(capabilities)
+        return resource
+
+    def newTaskRunner(self,
+                      runnerId: str,
+                      description: str,
+                      capabilities: Iterable[str]
+                      ) -> TaskRunner:
+        '''Creates a new Task Runner record.
+        The new record is returned and not added to the database.
+        '''
+        # pylint: disable=protected-access
+        runner = TaskRunner({
+            'id': runnerId,
+            'description': description,
+            }, self.resTypeDB, None)
+        runner._capabilities = frozenset(capabilities)
+        return runner
+
 class ResourceDB(Database[ResourceBase]):
     privilegeObject = 'r'
     description = 'resource'
     uniqueKeys = ( 'id', )
+
+    factory: ResourceFactory
 
     def __init__(self, baseDir: Path, taskRunDB: TaskRunDB):
         super().__init__(baseDir, ResourceFactory())

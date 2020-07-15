@@ -6,7 +6,7 @@ from io import StringIO
 
 from initconfig import removeDB
 
-from softfab import joblib, resourcelib, xmlbind
+from softfab import joblib, resourcelib, restypelib, xmlbind
 from softfab.databases import reloadDatabases
 from softfab.resourceview import getResourceStatus
 from softfab.timelib import setTime
@@ -18,9 +18,9 @@ class DataFactory:
         return resourcelib.TaskRunnerData(attributes)
 
 class TaskRunnerFactory:
-    """Factory for TaskRunner resources."""
+    """Factory for TaskRunner resources that does not create a token."""
     def createTaskrunner(self, attributes):
-        return resourcelib.TaskRunner(attributes, None)
+        return resourcelib.TaskRunner(attributes, restypelib.resTypeDB, None)
 
 class TestTRDatabase(unittest.TestCase):
     """Test basic Task Runner database functionality."""
@@ -47,7 +47,8 @@ class TestTRDatabase(unittest.TestCase):
 
     def suspendTest(self, data):
         """Test suspend functionality."""
-        record = resourcelib.TaskRunner.create('runner1', '', set())
+        resourceFactory = resourcelib.resourceDB.factory
+        record = resourceFactory.newTaskRunner('runner1', '', set())
         record.sync(joblib.jobDB, data)
 
         # Check if initially not suspended.
@@ -67,7 +68,8 @@ class TestTRDatabase(unittest.TestCase):
 
     def syncTest(self, data1, data2):
         """Test syncing of the TR database."""
-        record1 = resourcelib.TaskRunner.create('runner1', '', set())
+        resourceFactory = resourcelib.resourceDB.factory
+        record1 = resourceFactory.newTaskRunner('runner1', '', set())
         resourcelib.resourceDB.add(record1)
         record1.sync(joblib.jobDB, data1)
 
@@ -87,7 +89,8 @@ class TestTRDatabase(unittest.TestCase):
     def statusTest(self, data, busy):
         """Test if right status is returned."""
         setTime(1000) # time at moment of record creation
-        record = resourcelib.TaskRunner.create('runner1', '', set())
+        resourceFactory = resourcelib.resourceDB.factory
+        record = resourceFactory.newTaskRunner('runner1', '', set())
         resourcelib.resourceDB.add(record)
         record.sync(joblib.jobDB, data)
         #record.getSyncWaitDelay = lambda: 3
@@ -161,7 +164,8 @@ class TestTRDatabase(unittest.TestCase):
             )
         self.assertEqual(data, data2)
         # TaskRunner class:
-        record1 = resourcelib.TaskRunner.create('runner1', '', set())
+        resourceFactory = resourcelib.resourceDB.factory
+        record1 = resourceFactory.newTaskRunner('runner1', '', set())
         record1.sync(joblib.jobDB, data)
         record2 = xmlbind.parse(
             TaskRunnerFactory(),

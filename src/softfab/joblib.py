@@ -953,7 +953,7 @@ def _reserveResources(resourceDB: ResourceDB,
     assignment = pickResources(claim, resources, whyNot)
     if assignment is not None and whyNot is None:
         for resource in assignment.values():
-            resType = resTypeDB[resource.typeName]
+            resType = resource.resType
             if resType.jobExclusive or resType.taskExclusive:
                 resource.reserve(reservedBy)
     return assignment
@@ -964,7 +964,7 @@ def _releaseResources(resourceDB: ResourceDB, reserved: Iterable[str]) -> None:
         if resource is not None:
             # Check that resource is a custom resource (not a Task Runner).
             assert isinstance(resource, Resource), resId
-            resType = resTypeDB[resource.typeName]
+            resType = resource.resType
             if resType.jobExclusive or resType.taskExclusive:
                 resource.free()
 

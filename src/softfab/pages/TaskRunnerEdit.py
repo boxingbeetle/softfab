@@ -124,7 +124,8 @@ class TaskRunnerEdit_POST(TaskRunnerEditBase):
                           args: TaskRunnerEditArgs,
                           oldElement: Optional[TaskRunner]
                           ) -> TaskRunner:
-            element = TaskRunner.create(
+            resourceFactory = self.resourceDB.factory
+            element = resourceFactory.newTaskRunner(
                 recordId,
                 args.description,
                 args.capabilities.split()

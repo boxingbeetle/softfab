@@ -89,7 +89,8 @@ class RepoEdit_POST(RepoEditBase):
                           args: RepoEditArgs,
                           oldElement: Optional[Resource]
                           ) -> Resource:
-            resource = Resource.create(
+            resourceFactory = self.resourceDB.factory
+            resource = resourceFactory.newResource(
                 recordId,
                 repoResourceTypeName,
                 args.description,

@@ -98,7 +98,8 @@ class ResourceEdit_POST(ResourceEditBase):
                           args: ResourceEditArgs,
                           oldElement: Optional[Resource]
                           ) -> Resource:
-            element = Resource.create(
+            resourceFactory = self.resourceDB.factory
+            element = resourceFactory.newResource(
                 recordId,
                 args.restype,
                 args.description,
