@@ -228,7 +228,7 @@ def _runForRunnerUser(resourceDB: ResourceDB, user: User) -> TaskRun:
 
 class FactoryResource(Resource):
 
-    def getChild(self, path: bytes, request: TwistedRequest) -> Resource:
+    def getChild(self, path: bytes, request: TwistedRequest) -> IResource:
         try:
             self.checkAccess()
         except AccessDenied as ex:
@@ -265,7 +265,7 @@ class FactoryResource(Resource):
     def childForSegment(self,
                         segment: str,
                         request: TwistedRequest
-                        ) -> Resource:
+                        ) -> IResource:
         raise NotImplementedError
 
     def renderIndex(self, request: TwistedRequest) -> bytes:
@@ -385,7 +385,7 @@ class ArtifactRoot(FactoryResource):
     def childForSegment(self,
                         segment: str,
                         request: TwistedRequest
-                        ) -> Resource:
+                        ) -> IResource:
         return JobDayResource(self.jobDB, self.resourceDB,
                               self.path.child(segment), self.user, segment)
 
@@ -421,7 +421,7 @@ class JobDayResource(FactoryResource):
     def childForSegment(self,
                         segment: str,
                         request: TwistedRequest
-                        ) -> Resource:
+                        ) -> IResource:
         jobId = f'{self.day}-{segment}'
         try:
             job = self.jobDB[jobId]
@@ -469,7 +469,7 @@ class JobResource(FactoryResource):
     def childForSegment(self,
                         segment: str,
                         request: TwistedRequest
-                        ) -> Resource:
+                        ) -> IResource:
         task = self.job.getTask(segment)
         if task is None:
             return NotFoundResource(
@@ -512,7 +512,7 @@ class TaskResource(FactoryResource):
     def childForSegment(self,
                         segment: str,
                         request: TwistedRequest
-                        ) -> Resource:
+                        ) -> IResource:
         path = self.path.child(segment)
         dirPath = self.path.filePath
         for ext, plainClass in (('.gz', PlainGzipArtifact),
@@ -538,7 +538,7 @@ class TaskResource(FactoryResource):
                       filePath: FilePath,
                       sandboxedPath: SandboxedPath,
                       request: TwistedRequest
-                      ) -> Resource:
+                      ) -> IResource:
 
         if filePath.splitext()[1] == '.gz':
             # Try to use fancy formatting.
@@ -709,7 +709,7 @@ class PlainArtifact(Resource):
         super().__init__()
         self.path = path
 
-    def getChild(self, path: bytes, request: TwistedRequest) -> Resource:
+    def getChild(self, path: bytes, request: TwistedRequest) -> IResource:
         return NotFoundResource('Cannot access subitems from full archive')
 
     def render_GET(self, request: TwistedRequest) -> object:
@@ -820,7 +820,7 @@ class GzippedArtifact(Resource):
         super().__init__()
         self.path = path
 
-    def getChild(self, path: bytes, request: TwistedRequest) -> Resource:
+    def getChild(self, path: bytes, request: TwistedRequest) -> IResource:
         name = request.prepath[-2].decode()
         return NotFoundResource(f'Artifact "{name}" cannot contain subitems')
 
