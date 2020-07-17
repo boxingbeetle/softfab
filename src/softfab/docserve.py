@@ -457,6 +457,8 @@ class DocResource(Resource):
         '.svg': 'image/svg+xml',
         }
 
+    page: DocPage
+
     @classmethod
     def registerDocs(cls,
                      packageName: str,
