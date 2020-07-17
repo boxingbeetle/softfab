@@ -18,7 +18,6 @@ from markdown.extensions.def_list import DefListExtension
 from markdown.extensions.fenced_code import FencedCodeExtension
 from markdown.extensions.tables import TableExtension
 from markdown.treeprocessors import Treeprocessor
-from twisted.internet.defer import Deferred
 from twisted.web.resource import Resource
 from twisted.web.server import Request as TwistedRequest
 from twisted.web.static import Data
@@ -166,10 +165,11 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
         async def process(self,
                           req: Request['DocPage.Arguments'],
                           user: User
-                          ) -> Optional[Deferred]:
+                          ) -> None:
             page = cast(DocPage, self.page)
             func = getattr(page.module, 'process', None)
-            return None if func is None else func()
+            if func is not None:
+                await func()
 
     def __init__(self,
                  resource: 'DocResource',
