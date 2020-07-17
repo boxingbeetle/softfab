@@ -12,7 +12,7 @@ from urllib.parse import unquote_plus
 import json
 
 from twisted.web.http import Request
-from twisted.web.resource import Resource
+from twisted.web.resource import IResource, Resource
 import attr
 
 from softfab.TwistedUtil import ClientErrorResource, NotFoundResource
@@ -53,7 +53,7 @@ class UserResource(Resource):
         self._user = user
         self._format = fmt
 
-    def getChildWithDefault(self, path: bytes, request: Request) -> Resource:
+    def getChildWithDefault(self, path: bytes, request: Request) -> IResource:
         return NotFoundResource('Records do not support subpaths')
 
     def render_GET(self, request: Request) -> bytes:
@@ -81,7 +81,7 @@ class NoUserResource(Resource):
         self._userDB = userDB
         self._name = name
 
-    def getChildWithDefault(self, path: bytes, request: Request) -> Resource:
+    def getChildWithDefault(self, path: bytes, request: Request) -> IResource:
         return NotFoundResource('Records do not support subpaths')
 
     def render_GET(self, request: Request) -> bytes:
@@ -120,7 +120,7 @@ class UsersResource(Resource):
         super().__init__()
         self._userDB = userDB
 
-    def getChildWithDefault(self, path: bytes, request: Request) -> Resource:
+    def getChildWithDefault(self, path: bytes, request: Request) -> IResource:
         if not path:
             return self
 
