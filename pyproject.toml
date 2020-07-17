@@ -7,6 +7,7 @@ case_sensitive = true
 combine_as_imports = true
 from_first = true
 multi_line_output = 6
+known_third_party = 'twisted'
 
 [tool.poetry]
 name = 'softfab'
