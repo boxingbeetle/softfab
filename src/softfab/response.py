@@ -6,7 +6,6 @@ from hashlib import md5
 from io import BytesIO
 from typing import Optional, Union
 
-from twisted.internet import reactor
 from twisted.internet.defer import Deferred
 from twisted.python.failure import Failure
 from twisted.web.http import CACHED
@@ -14,6 +13,7 @@ from twisted.web.iweb import IRequest
 
 from softfab.TwistedUtil import getRelativeRoot
 from softfab.compat import NoReturn
+from softfab.reactor import reactor
 from softfab.useragent import AcceptedEncodings, UserAgent
 from softfab.utils import IllegalStateError
 from softfab.xmlgen import XMLContent, adaptToXML

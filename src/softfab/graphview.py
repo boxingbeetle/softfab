@@ -14,7 +14,6 @@ import logging
 import re
 
 from graphviz import Digraph
-from twisted.internet import reactor
 from twisted.internet.defer import Deferred
 from twisted.internet.error import ProcessExitedAlready
 from twisted.internet.protocol import ProcessProtocol
@@ -27,6 +26,7 @@ from softfab.pagelinks import (
     createFrameworkDetailsURL, createProductDetailsURL
 )
 from softfab.productdeflib import ProductDef, ProductDefDB, ProductType
+from softfab.reactor import reactor
 from softfab.response import Response, createETag
 from softfab.setcalc import UnionFind
 from softfab.webgui import Widget

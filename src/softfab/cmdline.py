@@ -216,7 +216,7 @@ def server(
         echo(f"Invalid socket specification: {ex}", err=True)
         get_current_context().exit(1)
 
-    from twisted.internet import reactor
+    from softfab.reactor import reactor
     try:
         service.startService()
     except Exception as ex:

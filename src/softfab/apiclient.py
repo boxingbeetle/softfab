@@ -24,7 +24,7 @@ async def _runRequest(endpointFactory: IAgentEndpointFactory,
     """
 
     # pylint: disable=import-outside-toplevel
-    from twisted.internet import reactor
+    from softfab.reactor import reactor
 
     agent = Agent.usingEndpointFactory(reactor, endpointFactory)
 
@@ -98,7 +98,7 @@ T = TypeVar('T')
 
 def runInReactor(call: Awaitable[T]) -> T:
     # pylint: disable=import-outside-toplevel
-    from twisted.internet import reactor
+    from softfab.reactor import reactor
 
     def run() -> None:
         ensureDeferred(call).addCallbacks(done, failed)

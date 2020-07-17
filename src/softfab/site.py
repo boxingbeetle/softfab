@@ -3,13 +3,14 @@
 from os import getpid
 from pathlib import Path
 
-from twisted.internet import reactor
 from twisted.internet.endpoints import clientFromString
 from twisted.internet.interfaces import IStreamClientEndpoint
 from twisted.web.client import URI
 from twisted.web.iweb import IAgentEndpointFactory
 from twisted.web.server import Session, Site
 from zope.interface import implementer
+
+from softfab.reactor import reactor
 
 
 class LongSession(Session):

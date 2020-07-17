@@ -8,12 +8,11 @@ from typing import (
 )
 import logging
 
-from twisted.internet import reactor
-
 from softfab.config import dbDir
 from softfab.connection import ConnectionStatus
 from softfab.databaselib import Database, DatabaseElem, RecordObserver
 from softfab.paramlib import GetParent, ParamMixin, Parameterized, paramTop
+from softfab.reactor import reactor
 from softfab.restypelib import ResType, ResTypeDB, taskRunnerResourceTypeName
 from softfab.taskrunlib import TaskRun, TaskRunDB
 from softfab.timelib import getTime

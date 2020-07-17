@@ -15,7 +15,6 @@ from zipfile import ZIP_DEFLATED, BadZipFile, ZipFile, ZipInfo
 import logging
 
 from passlib.pwd import genword
-from twisted.internet import reactor
 from twisted.internet.interfaces import IDelayedCall, IPullProducer
 from twisted.internet.threads import deferToThread
 from twisted.python.failure import Failure
@@ -35,6 +34,7 @@ from softfab.TwistedUtil import (
 from softfab.UIPage import fixedHeadItems
 from softfab.joblib import Job, JobDB
 from softfab.projectlib import Project
+from softfab.reactor import reactor
 from softfab.reportview import ReportPresenter, createPresenter
 from softfab.request import Request
 from softfab.resourcelib import ResourceDB

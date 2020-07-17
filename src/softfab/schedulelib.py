@@ -57,12 +57,11 @@ from typing import (
 import logging
 import time
 
-from twisted.internet import reactor
-
 from softfab.config import dbDir
 from softfab.configlib import ConfigDB
 from softfab.databaselib import Database, RecordObserver
 from softfab.joblib import Job, JobDB
+from softfab.reactor import reactor
 from softfab.selectlib import ObservingTagCache, SelectableRecordABC, TagCache
 from softfab.timelib import endOfTime, getTime
 from softfab.utils import Heap
