@@ -8,7 +8,7 @@ work since some module initialisations load records from other databases,
 causing them to be parsed before the flags are set up.
 '''
 
-from typing import Tuple
+from typing import Tuple, cast
 import logging
 
 from click import echo, get_current_context
@@ -43,6 +43,33 @@ def getDataVersion() -> str:
     projectDB.preload()
     return projectDB['singleton'].dbVersion
 
+def _convertAll() -> None:
+    """Convert all databases to the current format."""
+
+    # Inline import to break cycle.
+    from softfab.databases import getDatabases
+    from softfab import projectlib, resourcelib, taskrunlib
+
+    databases = getDatabases()
+    for db in databases.values():
+        echo(f'Loading {db.description} database...')
+        db.preload()
+    for db in databases.values():
+        echo(f'Migrating {db.description} database...')
+        db.convert()
+
+    echo('Recomputing running tasks...')
+    resourceDB = cast(resourcelib.ResourceDB, databases['resourceDB'])
+    taskRunDB = cast(taskrunlib.TaskRunDB, databases['taskRunDB'])
+    resourcelib.recomputeRunning(resourceDB, taskRunDB)
+
+    echo('Updating database version tag...')
+    projectDB = cast(projectlib.ProjectDB, databases['projectDB'])
+    project = projectDB['singleton']
+    project.updateVersion()
+
+    echo('Done.')
+
 def migrateData() -> None:
     # Avoid calling fsync on record rewrites.
     # Syncing on every file would make migrations of large databases take
@@ -74,9 +101,7 @@ def migrateData() -> None:
 
     logging.info("Migrating from version %s to version %s", versionStr, VERSION)
     try:
-        # Inline import to break cycle.
-        from softfab.databases import convertAll
-        convertAll()
+        _convertAll()
     except Exception as ex:
         logging.exception("Migration aborted with error: %s", ex)
         raise
