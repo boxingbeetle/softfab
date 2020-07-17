@@ -229,7 +229,8 @@ class DotProcess(ProcessProtocol):
         executable = 'dot'
         args = ('dot', f'-T{self.format.ext}')
         try:
-            reactor.spawnProcess(self, executable, args)
+            reactor.spawnProcess(self, executable, args, env={}, path=None,
+                                 uid=None, gid=None, usePTY=0, childFDs=None)
         except OSError:
             logging.exception('Failed to spawn Graphviz "dot" tool')
             self.state = _ProcessState.NOT_RUNNING

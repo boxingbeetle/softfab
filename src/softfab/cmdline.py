@@ -242,7 +242,7 @@ def server(
         reactor.listenUNIX(
             str(socketPath),
             ControlSocket(root.apiRoot),
-            mode=0o600
+            mode=0o600, backlog=50, wantPID=False
             )
     else:
         echo("Reactor does not support UNIX sockets; "
