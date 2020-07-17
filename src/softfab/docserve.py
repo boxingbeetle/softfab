@@ -497,7 +497,7 @@ class DocResource(Resource):
         # Create resource.
         resource = cls(packageName, parent)
         page = DocPage(resource, initModule, metadata, errors)
-        resource.page = page # pylint: disable=attribute-defined-outside-init
+        resource.page = page
 
         # Add global processing instruction handlers.
         if initModule is not None:

@@ -38,6 +38,7 @@ def setConversionFlagsForVersion(
 def getDataVersion() -> str:
     """Read the format version from the project data."""
 
+    # pylint: disable=import-outside-toplevel
     from softfab.projectlib import ProjectDB
     projectDB = ProjectDB(softfab.config.dbDir / 'project')
     projectDB.preload()
@@ -47,6 +48,7 @@ def _convertAll() -> None:
     """Convert all databases to the current format."""
 
     # Inline import to break cycle.
+    # pylint: disable=import-outside-toplevel
     from softfab.databases import getDatabases
     from softfab import projectlib, resourcelib, taskrunlib
 
