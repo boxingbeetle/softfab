@@ -3,9 +3,9 @@
 from typing import Coroutine, cast
 
 from twisted.internet.interfaces import IReactorTime
-from twisted.web.http import Request as TwistedRequest
 from twisted.web.iweb import IRequest
 from twisted.web.resource import IResource, Resource
+from twisted.web.server import Request as TwistedRequest
 from twisted.web.util import redirectTo
 from zope.interface import implementer
 

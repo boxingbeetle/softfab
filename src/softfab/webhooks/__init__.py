@@ -7,8 +7,8 @@ from typing import Any, Callable, Iterator, Optional
 import json
 import logging
 
-from twisted.web.http import Request as TwistedRequest
 from twisted.web.resource import Resource
+from twisted.web.server import Request as TwistedRequest
 
 from softfab.request import RequestBase
 from softfab.resourcelib import ResourceDB

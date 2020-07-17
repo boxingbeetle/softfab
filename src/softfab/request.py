@@ -5,8 +5,7 @@ from inspect import signature
 from typing import IO, Generic, Mapping, Optional, Tuple, Type, Union, cast
 from urllib.parse import parse_qs, urljoin, urlparse
 
-from twisted.web.http import Request as TwistedRequest
-from twisted.web.server import Session
+from twisted.web.server import Request as TwistedRequest, Session
 from zope.interface import Attribute, Interface, implementer
 
 from softfab.Page import InvalidRequest

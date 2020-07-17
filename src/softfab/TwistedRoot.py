@@ -7,8 +7,8 @@ from types import ModuleType
 from typing import Any, Dict, Iterable, Mapping, Optional, Sequence, Type, cast
 import logging
 
-from twisted.web.http import Request as TwistedRequest
 from twisted.web.resource import Resource
+from twisted.web.server import Request as TwistedRequest
 
 from softfab import static
 from softfab.Page import FabResource, PageProcessor, Responder

@@ -19,8 +19,8 @@ from markdown.extensions.fenced_code import FencedCodeExtension
 from markdown.extensions.tables import TableExtension
 from markdown.treeprocessors import Treeprocessor
 from twisted.internet.defer import Deferred
-from twisted.web.http import Request as TwistedRequest
 from twisted.web.resource import Resource
+from twisted.web.server import Request as TwistedRequest
 from twisted.web.static import Data
 from twisted.web.util import redirectTo
 

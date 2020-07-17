@@ -3,7 +3,7 @@
 from typing import Any, Iterator
 import hmac
 
-from twisted.web.http import Request as TwistedRequest
+from twisted.web.server import Request as TwistedRequest
 
 from softfab.webhooks import WebhookEvents
 

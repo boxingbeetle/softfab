@@ -11,8 +11,7 @@ from twisted.cred.error import LoginFailed, Unauthorized
 from twisted.internet.defer import ensureDeferred
 from twisted.internet.error import ConnectionClosed
 from twisted.python.failure import Failure
-from twisted.web.http import Request as TwistedRequest
-from twisted.web.server import NOT_DONE_YET
+from twisted.web.server import NOT_DONE_YET, Request as TwistedRequest
 
 from softfab.FabPage import FabPage
 from softfab.Page import (
