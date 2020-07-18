@@ -6,7 +6,7 @@ from io import StringIO
 
 from initconfig import removeDB
 
-from softfab import joblib, resourcelib, restypelib, xmlbind
+from softfab import joblib, resourcelib, restypelib, taskrunlib, xmlbind
 from softfab.databases import reloadDatabases
 from softfab.resourceview import getResourceStatus
 from softfab.timelib import setTime
@@ -20,7 +20,8 @@ class DataFactory:
 class TaskRunnerFactory:
     """Factory for TaskRunner resources that does not create a token."""
     def createTaskrunner(self, attributes):
-        return resourcelib.TaskRunner(attributes, restypelib.resTypeDB, None)
+        return resourcelib.TaskRunner(attributes, restypelib.resTypeDB,
+                                      taskrunlib.taskRunDB, None)
 
 class TestTRDatabase(unittest.TestCase):
     """Test basic Task Runner database functionality."""
