@@ -13,7 +13,7 @@ from softfab.pagelinks import ExecutionState, ReportTaskArgs
 from softfab.querylib import RecordFilter
 from softfab.setcalc import intersection, union
 from softfab.taskdeflib import TaskDefDB
-from softfab.taskrunlib import getKeys
+from softfab.taskrunlib import TaskRunDB
 from softfab.tasktables import TaskRunsTable
 from softfab.userlib import User, checkPrivilege
 from softfab.utils import pluralize
@@ -68,6 +68,7 @@ class ReportTasks_GET(FabPage['ReportTasks_GET.Processor',
 
     class Processor(ReportProcessor[Arguments]):
         taskDefDB: ClassVar[TaskDefDB]
+        taskRunDB: ClassVar[TaskRunDB]
         taskToJobs: ClassVar[TaskToJobs]
 
     def checkAccess(self, user: User) -> None:
@@ -95,7 +96,8 @@ class ReportTasks_GET(FabPage['ReportTasks_GET.Processor',
         if len(taskFilter) == 0:
             return
 
-        keySets = [ getKeys(taskName) for taskName in taskFilter ]
+        keySets = [ proc.taskRunDB.getKeys(taskName)
+                    for taskName in taskFilter ]
         commonKeys = intersection(keySets)
         combinedKeys = union(keySets)
 

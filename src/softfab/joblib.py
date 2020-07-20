@@ -184,7 +184,7 @@ class Task(
         return cast(int, self._properties['priority'])
 
     def newRun(self) -> None:
-        self.__taskRun = taskrunlib.newTaskRun(self)
+        self.__taskRun = taskrunlib.taskRunDB.addRun(self)
         self._properties['run'] = self.__taskRun.getId()
 
     def _getContent(self) -> XMLContent:

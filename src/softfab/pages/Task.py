@@ -29,7 +29,7 @@ from softfab.request import Request
 from softfab.resourceview import InlineResourcesTable
 from softfab.taskdeflib import TaskDefDB
 from softfab.taskdefview import formatTimeout
-from softfab.taskrunlib import getData, getKeys
+from softfab.taskrunlib import TaskRunDB
 from softfab.tasktables import JobTaskRunsTable, TaskProcessorMixin
 from softfab.userlib import User, UserDB, checkPrivilege
 from softfab.webgui import PropertiesTable, Table, Widget, cell, pageLink
@@ -62,6 +62,7 @@ class Task_GET(FabPage['Task_GET.Processor', 'Task_GET.Arguments']):
 
         frameworkDB: ClassVar[FrameworkDB]
         taskDefDB: ClassVar[TaskDefDB]
+        taskRunDB: ClassVar[TaskRunDB]
         userDB: ClassVar[UserDB]
 
         async def process(self,
@@ -327,13 +328,14 @@ class ExtractedDataTable(Table):
     columns = 'Key', 'Value'
 
     def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
-        proc = cast(TaskProcessorMixin, kwargs['proc'])
+        proc = cast(Task_GET.Processor, kwargs['proc'])
+        taskRunDB = proc.taskRunDB
         taskRun = proc.task.getLatestRun()
         taskRunId = taskRun.getId()
         taskName = taskRun.getName()
-        for key in sorted(getKeys(taskName)):
+        for key in sorted(taskRunDB.getKeys(taskName)):
             values = []
-            for run, value in getData(taskName, [ taskRunId ], key):
+            for run, value in taskRunDB.getData(taskName, [ taskRunId ], key):
                 assert run == taskRunId
                 values.append(value)
             if len(values) == 0:

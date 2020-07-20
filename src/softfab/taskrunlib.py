@@ -672,38 +672,39 @@ class TaskRunDB(Database[TaskRun]):
     def __init__(self, baseDir: Path):
         super().__init__(baseDir, TaskRunFactory())
 
-taskRunDB = TaskRunDB(dbDir / 'taskruns')
+    def addRun(self, task: Task) -> TaskRun:
+        taskRun = TaskRun({'id': createInternalId()}, task)
+        self.add(taskRun)
+        return taskRun
 
-def newTaskRun(task: Task) -> TaskRun:
-    taskRun = TaskRun({'id': createInternalId()}, task)
-    taskRunDB.add(taskRun)
-    return taskRun
+    def getKeys(self, taskName: str) -> Set[str]:
+        '''Get the set of keys that exist for the given task name.
+        The existance of a key means that at least one record contains that key;
+        it is not guaranteed all records will contain that key.
+        '''
+        return {'sf.duration'} | getCustomKeys(taskName)
 
-def getKeys(taskName: str) -> Set[str]:
-    '''Get the set of keys that exist for the given task name.
-    The existance of a key means that at least one record contains that key;
-    it is not guaranteed all records will contain that key.
-    '''
-    return {'sf.duration'} | getCustomKeys(taskName)
-
-def getData(taskName: str,
-            runIds: Iterable[str],
-            key: str
-            ) -> Iterator[Tuple[str, str]]:
-    '''Yield (run, value) pairs for all of the given runs that have
-    a synthetic or user-defined value for the given key.
-    The returned values are in the same order as in the given runIds.
-    The runIds are not checked against malicious constructs, so the caller
-    should take care that they are secure.
-    '''
-    # Handle synthetic keys.
-    if key.startswith('sf.'):
-        if key == 'sf.duration':
-            # This info is in the job DB, but we cannot access it there because
-            # there is no mapping from task run ID to job.
-            for run in runIds:
-                yield run, str(taskRunDB[run]['duration'])
+    def getData(self,
+                taskName: str,
+                runIds: Iterable[str],
+                key: str
+                ) -> Iterator[Tuple[str, str]]:
+        '''Yield (run, value) pairs for all of the given runs that have
+        a synthetic or user-defined value for the given key.
+        The returned values are in the same order as in the given runIds.
+        The runIds are not checked against malicious constructs, so the caller
+        should take care that they are secure.
+        '''
+        # Handle synthetic keys.
+        if key.startswith('sf.'):
+            if key == 'sf.duration':
+                # This info is in the job DB, but we cannot access it there
+                # because there is no mapping from task run ID to job.
+                for run in runIds:
+                    yield run, str(self[run]['duration'])
+            else:
+                raise KeyError(key)
         else:
-            raise KeyError(key)
-    else:
-        yield from getCustomData(taskName, runIds, key)
+            yield from getCustomData(taskName, runIds, key)
+
+taskRunDB = TaskRunDB(dbDir / 'taskruns')

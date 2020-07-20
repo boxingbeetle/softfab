@@ -9,7 +9,7 @@ from softfab.pagelinks import ReportTaskCSVArgs
 from softfab.querylib import KeySorter, RecordProcessor, runQuery
 from softfab.request import Request
 from softfab.setcalc import union
-from softfab.taskrunlib import getData, getKeys
+from softfab.taskrunlib import TaskRunDB
 from softfab.taskview import getTaskStatus
 from softfab.timeview import formatTime
 from softfab.userlib import User, checkPrivilege
@@ -22,6 +22,7 @@ class ReportTasksCSV_GET(CSVPage['ReportTasksCSV_GET.Processor']):
 
     class Processor(ReportProcessor[Arguments]):
 
+        taskRunDB: ClassVar[TaskRunDB]
         taskToJobs: ClassVar[TaskToJobs]
 
         async def process(self,
@@ -48,16 +49,17 @@ class ReportTasksCSV_GET(CSVPage['ReportTasksCSV_GET.Processor']):
 
     def iterRows(self, proc: Processor) -> Iterator[Sequence[str]]:
         tasks = proc.tasks
+        taskRunDB = proc.taskRunDB
 
         # Determine all keys that exist for the given task names.
         keys = sorted(union(
-            getKeys(taskName) for taskName in proc.args.task
+            taskRunDB.getKeys(taskName) for taskName in proc.args.task
             ))
 
         yield [ 'create date', 'create time', 'result' ] + keys
         for task in tasks:
             taskName = task.getName()
-            taskKeys = getKeys(taskName)
+            taskKeys = taskRunDB.getKeys(taskName)
             # TODO: Which properties are useful to export?
             timestamp = formatTime(task.getJob().getCreateTime())
             # Assuming format "2008-09-16 15:21"
@@ -65,7 +67,7 @@ class ReportTasksCSV_GET(CSVPage['ReportTasksCSV_GET.Processor']):
             for key in keys:
                 if key in taskKeys:
                     # TODO: Querying one run at a time is not really efficient.
-                    data = list(getData(
+                    data = list(taskRunDB.getData(
                         taskName, [ task.getLatestRun().getId() ], key
                         ))
                     if len(data) == 0:

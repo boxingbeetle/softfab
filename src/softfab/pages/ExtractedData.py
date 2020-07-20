@@ -22,7 +22,7 @@ from softfab.pagelinks import (
 from softfab.querylib import KeySorter, RecordProcessor, runQuery
 from softfab.request import Request
 from softfab.setcalc import intersection
-from softfab.taskrunlib import getData, getKeys
+from softfab.taskrunlib import TaskRunDB
 from softfab.tasktables import TaskColumn, TaskRunsTable
 from softfab.timeview import formatTime
 from softfab.userlib import User, checkPrivilege
@@ -31,7 +31,8 @@ from softfab.webgui import pageLink
 from softfab.xmlgen import XMLContent, xhtml
 
 
-def gatherData(taskFilter: Iterable[str],
+def gatherData(taskRunDB: TaskRunDB,
+               taskFilter: Iterable[str],
                tasks: Iterable[Task],
                activeKeys: Iterable[str]
                ) -> Mapping[str, Mapping[str, str]]:
@@ -43,8 +44,8 @@ def gatherData(taskFilter: Iterable[str],
     dataByRunId: DefaultDict[str, Dict[str, str]] = defaultdict(dict)
     for key in activeKeys:
         for taskName in taskFilter:
-            for runId, valueStr in getData(taskName, taskRunIdsByName[taskName],
-                                           key):
+            for runId, valueStr in taskRunDB.getData(
+                                    taskName, taskRunIdsByName[taskName], key):
                 dataByRunId[runId][key] = valueStr
     return dataByRunId
 
@@ -219,6 +220,7 @@ class ExtractedData_GET(FabPage['ExtractedData_GET.Processor',
 
     class Processor(ReportProcessor[Arguments]):
 
+        taskRunDB: ClassVar[TaskRunDB]
         taskToJobs: ClassVar[TaskToJobs]
 
         async def process(self,
@@ -228,11 +230,12 @@ class ExtractedData_GET(FabPage['ExtractedData_GET.Processor',
             await super().process(req, user)
 
             taskNames = req.args.task
+            taskRunDB = self.taskRunDB
 
             # Determine keys that exist for all the given task names.
             # And clean up the list of active keys.
             keys = intersection(
-                getKeys(taskName) for taskName in taskNames
+                taskRunDB.getKeys(taskName) for taskName in taskNames
                 )
             # The empty task set is rejected at argument parsing,
             # so the intersection is always defined.
@@ -243,7 +246,7 @@ class ExtractedData_GET(FabPage['ExtractedData_GET.Processor',
             query: List[RecordProcessor[Task]] = list(self.iterFilters())
             query.append(KeySorter[Task].forCustom([ 'starttime' ]))
             tasks = runQuery(query, self.taskToJobs.iterDoneTasks(taskNames))
-            dataByRunId = gatherData(taskNames, tasks, activeKeys)
+            dataByRunId = gatherData(taskRunDB, taskNames, tasks, activeKeys)
 
             # pylint: disable=attribute-defined-outside-init
             self.keys = keys
