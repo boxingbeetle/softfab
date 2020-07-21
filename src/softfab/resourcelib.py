@@ -464,6 +464,7 @@ class TaskRunner(ResourceBase):
     def copyState(self, runner: 'TaskRunner') -> None: # pylint: disable=arguments-differ
         # pylint: disable=protected-access
         self.__data = runner.__data
+        self.__token = runner.__token
         self._properties['status'] = runner._properties['status']
         self.__hasBeenInSync = runner.__hasBeenInSync
         self.__lastSyncTime = runner.__lastSyncTime
