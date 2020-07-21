@@ -435,7 +435,7 @@ class TaskRunner(ResourceBase):
 
         if token is not None:
             assert token.role is TokenRole.RESOURCE, token
-            assert token.getParam('resourceId') == self.getId(), token
+            assert token.getParam('resourceId') == properties['id'], token
         self.__token = token
 
         super().__init__(properties, resTypeDB)
