@@ -11,14 +11,12 @@ from typing import (
 from softfab.compat import Protocol
 from softfab.config import dbDir
 from softfab.databaselib import DBRecord, Database, RecordObserver
-from softfab.frameworklib import Framework, frameworkDB
+from softfab.frameworklib import Framework, FrameworkDB
 from softfab.joblib import Job, JobFactory
-from softfab.productdeflib import (
-    ProductDef, ProductDefDB, ProductType, productDefDB
-)
+from softfab.productdeflib import ProductDef, ProductDefDB, ProductType
 from softfab.restypelib import ResTypeDB
 from softfab.selectlib import SelectableRecordABC, TagCache
-from softfab.taskdeflib import taskDefDB
+from softfab.taskdeflib import TaskDefDB, taskDefDB
 from softfab.taskgroup import (
     LocalGroup, PriorityMixin, TaskGroup, TaskSet, TaskT
 )
@@ -83,9 +81,33 @@ class _ObserverProxy(RecordObserver[DBRecord]):
             for cfg in list(configs.values()):
                 cfg._invalidate() # pylint: disable=protected-access
 
-_pdObserver = _ObserverProxy(productDefDB)
-_fdObserver = _ObserverProxy(frameworkDB)
-_tdObserver = _ObserverProxy(taskDefDB)
+class _DescriptionCache:
+    """This doesn't cache the description itself: instead, it informs
+    each registered Config when to invalidate its cached description.
+    """
+
+    def __init__(self, configFactory: 'ConfigFactory'):
+        self.__pdObserver = _ObserverProxy(configFactory.productDefDB)
+        self.__fdObserver = _ObserverProxy(configFactory.frameworkDB)
+        self.__tdObserver = _ObserverProxy(configFactory.taskDefDB)
+
+    def register(self, config: 'Config') -> None:
+        frameworks = {}
+        for task in config.getTasks():
+            self.__tdObserver.addObserver(task.getName(), config)
+            framework = task.getDef().getFramework()
+            frameworks[framework.getId()] = framework
+        products: MutableSet[str] = set()
+        for frameworkId, framework in frameworks.items():
+            self.__fdObserver.addObserver(frameworkId, config)
+            products |= framework.getInputs() | framework.getOutputs()
+        for product in products:
+            self.__pdObserver.addObserver(product, config)
+
+    def unregister(self, config: 'Config') -> None:
+        self.__tdObserver.delAllObservers(config)
+        self.__fdObserver.delAllObservers(config)
+        self.__pdObserver.delAllObservers(config)
 
 class ProductDefLookup(Protocol):
     """Function that looks up a product definition."""
@@ -335,11 +357,13 @@ class Config(XMLTag, TaskRunnerSet, TaskSetWithInputs[Task],
     def __init__(self,
                  attributes: Mapping[str, XMLAttributeValue],
                  jobFactory: JobFactory,
+                 descriptionCache: _DescriptionCache,
                  productDefLookup: ProductDefLookup
                  ):
         # Note: if the "comment" tag is empty, the XML parser does not call the
         #       <text> handler, so we have to use '' rather than None here.
         super().__init__(attributes)
+        self.__descriptionCache = descriptionCache
         self._productDefLookup = productDefLookup
         self.__jobFactory = jobFactory
         self._targets: MutableSet[str] = set()
@@ -534,41 +558,34 @@ class Config(XMLTag, TaskRunnerSet, TaskSetWithInputs[Task],
     def getDescription(self) -> str:
         if self.__description is None:
             self.__description = super().getDescription()
-            self.__registerNotify()
+            self.__descriptionCache.register(self)
         return self.__description
 
     def _invalidate(self) -> None:
-        self.__unregisterNotify()
+        self.__descriptionCache.unregister(self)
         self.__description = None
 
     def _unload(self) -> None:
-        self.__unregisterNotify()
-
-    def __registerNotify(self) -> None:
-        frameworks = {}
-        for task in self.getTasks():
-            _tdObserver.addObserver(task.getName(), self)
-            framework = task.getDef().getFramework()
-            frameworks[framework.getId()] = framework
-        products: MutableSet[str] = set()
-        for frameworkId, framework in frameworks.items():
-            _fdObserver.addObserver(frameworkId, self)
-            products |= framework.getInputs() | framework.getOutputs()
-        for product in products:
-            _pdObserver.addObserver(product, self)
-
-    def __unregisterNotify(self) -> None:
-        _tdObserver.delAllObservers(self)
-        _fdObserver.delAllObservers(self)
-        _pdObserver.delAllObservers(self)
+        self.__descriptionCache.unregister(self)
 
 class ConfigFactory:
 
     jobFactory: JobFactory
+    frameworkDB: FrameworkDB
+    taskDefDB: TaskDefDB
     productDefDB: ProductDefDB
 
+    __descriptionCache: Optional[_DescriptionCache] = None
+
+    @property
+    def descriptionCache(self) -> _DescriptionCache:
+        if self.__descriptionCache is None:
+            self.__descriptionCache = _DescriptionCache(self)
+        return self.__descriptionCache
+
     def createConfig(self, attributes: Mapping[str, str]) -> Config:
-        return Config(attributes, self.jobFactory, self.productDefDB.get)
+        return Config(attributes, self.jobFactory, self.descriptionCache,
+                      self.productDefDB.get)
 
     def newConfig(self,
                   name: str,
@@ -586,7 +603,8 @@ class ConfigFactory:
             trselect = trselect,
             )
 
-        config = Config(properties, self.jobFactory, self.productDefDB.get)
+        config = Config(properties, self.jobFactory, self.descriptionCache,
+                        self.productDefDB.get)
         # pylint: disable=protected-access
         config._targets = set(targets)
         config._comment = comment
