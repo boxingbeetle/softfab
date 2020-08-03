@@ -8,11 +8,14 @@ from typing import (
     Mapping, MutableSet, Optional, Sequence, Tuple, Union, cast
 )
 
+from softfab.compat import Protocol
 from softfab.config import dbDir
 from softfab.databaselib import DBRecord, Database, RecordObserver
 from softfab.frameworklib import Framework, frameworkDB
 from softfab.joblib import Job, JobFactory
-from softfab.productdeflib import ProductDef, ProductType, productDefDB
+from softfab.productdeflib import (
+    ProductDef, ProductDefDB, ProductType, productDefDB
+)
 from softfab.restypelib import ResTypeDB
 from softfab.selectlib import SelectableRecordABC, TagCache
 from softfab.taskdeflib import taskDefDB
@@ -83,6 +86,11 @@ class _ObserverProxy(RecordObserver[DBRecord]):
 _pdObserver = _ObserverProxy(productDefDB)
 _fdObserver = _ObserverProxy(frameworkDB)
 _tdObserver = _ObserverProxy(taskDefDB)
+
+class ProductDefLookup(Protocol):
+    """Function that looks up a product definition."""
+
+    def __call__(self, key: str) -> Optional[ProductDef]: ...
 
 class _Param(XMLTag):
     tagName = 'param'
@@ -177,6 +185,13 @@ class Input(XMLTag):
 
     tagName = 'input'
 
+    def __init__(self,
+                 attributes: Mapping[str, XMLAttributeValue],
+                 productDefLookup: ProductDefLookup
+                 ):
+        super().__init__(attributes)
+        self.__productDefLookup = productDefLookup
+
     def __hash__(self) -> int:
         return hash(self.getName())
 
@@ -196,16 +211,12 @@ class Input(XMLTag):
         return cast(str, self._properties['name'])
 
     def isLocal(self) -> bool:
-        try:
-            return productDefDB[self.getName()].isLocal()
-        except KeyError:
-            return False
+        productDef = self.__productDefLookup(self.getName())
+        return False if productDef is None else productDef.isLocal()
 
     def getType(self) -> ProductType:
-        try:
-            return productDefDB[self.getName()].getType()
-        except KeyError:
-            return ProductType.TOKEN
+        productDef = self.__productDefLookup(self.getName())
+        return ProductType.TOKEN if productDef is None else productDef.getType()
 
     def getLocator(self) -> Optional[str]:
         return cast(str, self._properties.get('locator'))
@@ -228,7 +239,7 @@ class Input(XMLTag):
         self._properties['localAt'] = runnerId
 
     def clone(self) -> 'Input':
-        return Input(self._properties)
+        return Input(self._properties, self.__productDefLookup)
 
 class Output:
     '''Dummy class for output products.
@@ -237,9 +248,9 @@ class Output:
     one of the inputs.
     '''
 
-    def __init__(self, name: str):
+    def __init__(self, productDef: ProductDef):
         super().__init__()
-        self.__productDef = productDefDB[name]
+        self.__productDef = productDef
 
     def isLocal(self) -> bool:
         return self.__productDef.isLocal()
@@ -248,6 +259,8 @@ class Output:
         assert runnerId is not None
 
 class TaskSetWithInputs(TaskSet[TaskT]):
+
+    _productDefLookup: ProductDefLookup
 
     def __init__(self) -> None:
         super().__init__()
@@ -264,8 +277,11 @@ class TaskSetWithInputs(TaskSet[TaskT]):
         return self._inputs.values()
 
     def getProductDef(self, name: str) -> ProductDef:
-        # Get the latest version.
-        return productDefDB[name]
+        # Get the latest version. This must always exist, since deletion of
+        # in-use product definitions is blocked.
+        productDef = self._productDefLookup(name)
+        assert productDef is not None, name
+        return productDef
 
     def getProductLocation(self, name: str) -> Optional[str]:
         product = self.getInput(name)
@@ -294,7 +310,8 @@ class TaskSetWithInputs(TaskSet[TaskT]):
                 if inpName in inputSet:
                     inpObj = self._inputs.get(inpName)
                     if inpObj is None:
-                        inpObj = Input({'name': inpName})
+                        inpObj = Input({'name': inpName},
+                                       self._productDefLookup)
                     if group is not None and inpObj.isLocal():
                         group.add(inpObj)
                     else:
@@ -317,11 +334,13 @@ class Config(XMLTag, TaskRunnerSet, TaskSetWithInputs[Task],
 
     def __init__(self,
                  attributes: Mapping[str, XMLAttributeValue],
-                 jobFactory: JobFactory
+                 jobFactory: JobFactory,
+                 productDefLookup: ProductDefLookup
                  ):
         # Note: if the "comment" tag is empty, the XML parser does not call the
         #       <text> handler, so we have to use '' rather than None here.
         super().__init__(attributes)
+        self._productDefLookup = productDefLookup
         self.__jobFactory = jobFactory
         self._targets: MutableSet[str] = set()
         self._comment = ''
@@ -333,7 +352,8 @@ class Config(XMLTag, TaskRunnerSet, TaskSetWithInputs[Task],
         inputs this configuration has.
         '''
         self._inputs = {
-            item: self._inputs.get(item, Input({'name': item}))
+            item: self._inputs.get(item, Input({'name': item},
+                                               self._productDefLookup))
             for item in self.getInputSet()
             }
 
@@ -386,7 +406,7 @@ class Config(XMLTag, TaskRunnerSet, TaskSetWithInputs[Task],
         return task
 
     def _addInput(self, attributes: Mapping[str, str]) -> None:
-        inp = Input(attributes)
+        inp = Input(attributes, self._productDefLookup)
         self._inputs[inp.getName()] = inp
 
     def _addParam(self, attributes: Mapping[str, str]) -> None:
@@ -398,7 +418,9 @@ class Config(XMLTag, TaskRunnerSet, TaskSetWithInputs[Task],
     def getProduct(self, name: str) -> Union[Input, Output]:
         inp = self._inputs.get(name)
         if inp is None:
-            return Output(name)
+            productDef = self._productDefLookup(name)
+            assert productDef is not None, name
+            return Output(productDef)
         else:
             return inp
 
@@ -543,9 +565,10 @@ class Config(XMLTag, TaskRunnerSet, TaskSetWithInputs[Task],
 class ConfigFactory:
 
     jobFactory: JobFactory
+    productDefDB: ProductDefDB
 
     def createConfig(self, attributes: Mapping[str, str]) -> Config:
-        return Config(attributes, self.jobFactory)
+        return Config(attributes, self.jobFactory, self.productDefDB.get)
 
     def newConfig(self,
                   name: str,
@@ -563,7 +586,7 @@ class ConfigFactory:
             trselect = trselect,
             )
 
-        config = Config(properties, self.jobFactory)
+        config = Config(properties, self.jobFactory, self.productDefDB.get)
         # pylint: disable=protected-access
         config._targets = set(targets)
         config._comment = comment

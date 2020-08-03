@@ -9,7 +9,9 @@ from typing import (
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor, Redirect
-from softfab.configlib import Config, ConfigDB, Input, TaskSetWithInputs
+from softfab.configlib import (
+    Config, ConfigDB, Input, ProductDefLookup, TaskSetWithInputs
+)
 from softfab.configview import (
     InputTable, SelectConfigsMixin, SimpleConfigTable, presentMissingConfigs
 )
@@ -19,6 +21,7 @@ from softfab.joblib import Job, JobDB
 from softfab.pageargs import DictArg, EnumArg, RefererArg, StrArg
 from softfab.pagelinks import createJobsURL
 from softfab.paramview import ParamOverrideTable
+from softfab.productdeflib import ProductDefDB
 from softfab.request import Request
 from softfab.resourcelib import ResourceDB, TaskRunner
 from softfab.selectview import SelectArgs
@@ -60,8 +63,9 @@ class FakeTask:
 
 class FakeTaskSet(TaskSetWithInputs[FakeTask]):
 
-    def __init__(self) -> None:
+    def __init__(self, productDefLookup: ProductDefLookup):
         super().__init__()
+        self._productDefLookup = productDefLookup
         self.__targets: DefaultDict[str, Set[str]] = defaultdict(set)
         self.__index = 0
 
@@ -136,6 +140,7 @@ class BatchExecute_GET(FabPage['BatchExecute_GET.Processor',
     class Processor(SelectConfigsMixin[ParentArgs], PageProcessor[ParentArgs]):
 
         configDB: ClassVar[ConfigDB]
+        productDefDB: ClassVar[ProductDefDB]
         resourceDB: ClassVar[ResourceDB]
         userDB: ClassVar[UserDB]
 
@@ -148,7 +153,7 @@ class BatchExecute_GET(FabPage['BatchExecute_GET.Processor',
             If problems prevent the creation of `taskSet`, set it to None.
             '''
             # pylint: disable=attribute-defined-outside-init
-            taskSet = FakeTaskSet()
+            taskSet = FakeTaskSet(self.productDefDB.get)
             try:
                 for config in self.configs:
                     taskSet.addConfig(config)
