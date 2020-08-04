@@ -1,14 +1,12 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from collections import defaultdict
-from itertools import chain
 from pathlib import Path
 from time import localtime
 from typing import (
     TYPE_CHECKING, AbstractSet, Callable, DefaultDict, Dict, Iterable,
     Iterator, List, Mapping, MutableSet, Optional, Sequence, Tuple, Union, cast
 )
-import logging
 
 from softfab import frameworklib, taskdeflib, taskrunlib
 from softfab.config import dbDir
@@ -1037,26 +1035,6 @@ class JobDB(Database[Job]):
 
     def __init__(self, baseDir: Path):
         super().__init__(baseDir, JobFactory())
-
-    def convert(self,
-                visitor: Optional[Callable[[Job], None]] = None
-                ) -> None:
-        # Find orphaned products.
-        orphanedProductIDs = set(productDB.keys())
-        def checkJob(job: Job) -> None:
-            if visitor:
-                visitor(job)
-            for product in chain(job.getInputs(), job.getProduced()):
-                orphanedProductIDs.discard(product.getId())
-
-        super().convert(checkJob)
-
-        if orphanedProductIDs:
-            logging.warning(
-                'Removing %d obsolete product(s)...', len(orphanedProductIDs)
-                )
-            for productID in orphanedProductIDs:
-                productDB.remove(productDB[productID])
 
 jobDB = JobDB(dbDir / 'jobs')
 taskrunlib.jobDB = jobDB

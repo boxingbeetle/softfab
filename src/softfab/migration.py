@@ -8,6 +8,7 @@ work since some module initialisations load records from other databases,
 causing them to be parsed before the flags are set up.
 '''
 
+from itertools import chain
 from typing import Tuple, cast
 import logging
 
@@ -50,7 +51,7 @@ def _convertAll() -> None:
     # Inline import to break cycle.
     # pylint: disable=import-outside-toplevel
     from softfab.databases import getDatabases
-    from softfab import projectlib, resourcelib, taskrunlib
+    from softfab import joblib, productlib, projectlib, resourcelib, taskrunlib
 
     databases = getDatabases()
     for db in databases.values():
@@ -59,6 +60,20 @@ def _convertAll() -> None:
     for db in databases.values():
         echo(f'Migrating {db.description} database...')
         db.convert()
+
+    echo('Checking for obsolete products...')
+    jobDB = cast(joblib.JobDB, databases['jobDB'])
+    productDB = cast(productlib.ProductDB, databases['productDB'])
+    orphanedProductIDs = set(productDB.keys())
+    for job in jobDB:
+        for product in chain(job.getInputs(), job.getProduced()):
+            orphanedProductIDs.discard(product.getId())
+    if orphanedProductIDs:
+        echo(f'Removing {len(orphanedProductIDs)} obsolete product(s)...')
+        for productID in orphanedProductIDs:
+            productDB.remove(productDB[productID])
+    else:
+        echo('No obsolete products found.')
 
     echo('Recomputing running tasks...')
     resourceDB = cast(resourcelib.ResourceDB, databases['resourceDB'])
