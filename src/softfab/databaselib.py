@@ -536,18 +536,14 @@ class Database(Generic[DBRecord], RecordSubjectMixin[DBRecord], ABC):
             yield
             tagCache._refreshCache() # pylint: disable=protected-access
 
-    def convert(self, visitor: Optional[Callable[[DBRecord], None]] = None) \
-            -> None:
+    def convert(self) -> None:
         '''Converts the XML files that store this database's data to a new
         XML format.
+
         This happens by rewriting every element in the database.
         Make sure you backup your database before using this method,
         because if the new XML format is missing information,
         that information is lost in the conversion.
-        The optional visitor is a function that will be called for each
-        converted record with that record as its sole argument. It can be
-        used to mark a record as obsolete by raising ObsoleteRecordError
-        or it can keep track of reachability of other record types.
         '''
         try:
             # TODO: How to handle obsolete records in versioned databases?
@@ -564,8 +560,6 @@ class Database(Generic[DBRecord], RecordSubjectMixin[DBRecord], ABC):
                     os.remove(self._fileNameForKey(key))
                 else:
                     try:
-                        if visitor is not None:
-                            visitor(value)
                         self._write(key, value)
                     except ObsoleteRecordError:
                         logging.warning('Removing obsolete record: %s', key)
