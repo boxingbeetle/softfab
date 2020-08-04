@@ -15,7 +15,7 @@ from softfab.databaselib import (
 )
 from softfab.dispatchlib import pickResources
 from softfab.paramlib import specialParameters
-from softfab.productlib import Product, productDB
+from softfab.productlib import Product, ProductDB
 from softfab.resourcelib import ResourceDB
 from softfab.resreq import ResourceClaim, ResourceSpec
 from softfab.restypelib import ResTypeDB
@@ -391,12 +391,14 @@ class Job(XMLTag, TaskRunnerSet, TaskSet[Task], DatabaseElem):
 
     def __init__(self,
                  properties: Mapping[str, XMLAttributeValue],
+                 productDB: ProductDB,
                  resourceDB: ResourceDB,
                  resTypeDB: ResTypeDB
                  ):
         # Note: if the "comment" tag is empty, the XML parser does not call the
         #       <text> handler, so we have to use '' rather than None here.
         super().__init__(properties)
+        self.__productDB = productDB
         self.__resourceDB = resourceDB
         self.__resTypeDB = resTypeDB
         self.__comment = ''
@@ -505,7 +507,7 @@ class Job(XMLTag, TaskRunnerSet, TaskSet[Task], DatabaseElem):
 
     def __checkProduct(self, name: str) -> None:
         if not name in self.__products:
-            self.__products[name] = productDB.create(name).getId()
+            self.__products[name] = self.__productDB.create(name).getId()
 
     def _addParam(self, attributes: Mapping[str, str]) -> None:
         self._params[attributes['name']] = attributes['value']
@@ -858,7 +860,7 @@ class Job(XMLTag, TaskRunnerSet, TaskSet[Task], DatabaseElem):
         '''Returns the product with the given name.
         Raises KeyError if there is no product with the given name in this job.
         '''
-        return productDB[self.__products[name]]
+        return self.__productDB[self.__products[name]]
 
     def getProductDef(self, name: str) -> ProductDef:
         # Go through the Product object to get the correct version.
@@ -970,11 +972,12 @@ def _releaseResources(resourceDB: ResourceDB, reserved: Iterable[str]) -> None:
 
 class JobFactory:
 
+    productDB: ProductDB
     resourceDB: ResourceDB
     resTypeDB: ResTypeDB
 
     def createJob(self, attributes: Mapping[str, str]) -> Job:
-        return Job(attributes, self.resourceDB, self.resTypeDB)
+        return Job(attributes, self.productDB, self.resourceDB, self.resTypeDB)
 
     def newJob(self,
                configId: Optional[str],
@@ -996,7 +999,7 @@ class JobFactory:
         if owner is not None:
             properties['owner'] = owner
 
-        job = Job(properties, self.resourceDB, self.resTypeDB)
+        job = Job(properties, self.productDB, self.resourceDB, self.resTypeDB)
         job.comment = comment
         # pylint: disable=protected-access
         job._params.update(jobParams)
