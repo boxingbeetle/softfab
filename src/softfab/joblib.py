@@ -35,22 +35,25 @@ from softfab.xmlgen import XMLAttributeValue, XMLContent, xml
 
 if TYPE_CHECKING:
     # pylint: disable=cyclic-import
-    from softfab.frameworklib import Framework
+    from softfab.frameworklib import Framework, FrameworkDB
     from softfab.productdeflib import ProductDef
     from softfab.resourcelib import Resource, TaskRunner
     from softfab.resultcode import ResultCode
-    from softfab.taskdeflib import TaskDef
+    from softfab.taskdeflib import TaskDef, TaskDefDB
     from softfab.taskgroup import TaskGroup
-    from softfab.taskrunlib import TaskRun
+    from softfab.taskrunlib import TaskRun, TaskRunDB
 else:
     Framework = object
+    FrameworkDB = object
     ProductDef = object
     Resource = object
     TaskRunner = object
     ResultCode = object
     TaskDef = object
+    TaskDefDB = object
     TaskGroup = object
     TaskRun = object
+    TaskRunDB = object
 
 
 class Task(
@@ -61,15 +64,16 @@ class Task(
     intProperties = ('priority', )
 
     @staticmethod
-    def create(job: 'Job',
-               name: str,
-               priority: int,
-               runners: Iterable[str]
-               ) -> 'Task':
-        tdKey = taskdeflib.taskDefDB.latestVersion(name)
+    def addTask(job: 'Job',
+                name: str,
+                priority: int,
+                runners: Iterable[str],
+                jobFactory: 'JobFactory'
+                ) -> 'Task':
+        tdKey = jobFactory.taskDefDB.latestVersion(name)
         assert tdKey is not None
-        fdKey = frameworklib.frameworkDB.latestVersion(
-                cast(str, taskdeflib.taskDefDB.getVersion(tdKey)['parent'])
+        fdKey = jobFactory.frameworkDB.latestVersion(
+                cast(str, jobFactory.taskDefDB.getVersion(tdKey)['parent'])
                 )
 
         properties: Mapping[str, XMLAttributeValue] = dict(
@@ -81,6 +85,9 @@ class Task(
         task = Task(properties, job)
         # pylint: disable=protected-access
         task._setRunners(runners)
+        taskRun = jobFactory.taskRunDB.addRun(task)
+        task._properties['run'] = taskRun.getId()
+        task.__taskRun = taskRun
         return task
 
     def __init__(self,
@@ -180,10 +187,6 @@ class Task(
 
     def getPriority(self) -> int:
         return cast(int, self._properties['priority'])
-
-    def newRun(self) -> None:
-        self.__taskRun = taskrunlib.taskRunDB.addRun(self)
-        self._properties['run'] = self.__taskRun.getId()
 
     def _getContent(self) -> XMLContent:
         for name, value in self._parameters.items():
@@ -517,8 +520,11 @@ class Job(XMLTag, TaskRunnerSet, TaskSet[Task], DatabaseElem):
         This method is only intended for Config.createJobs(), which should
         add the tasks in the right order.
         '''
-        task = Task.create(job=self, name=name, priority=prio, runners=runners)
-        self.__addTask(task).newRun()
+
+        task = Task.addTask(job=self, name=name, priority=prio, runners=runners,
+                            jobFactory=self.__jobFactory)
+        self.__addTask(task)
+
         productNames = task.getInputs() | task.getOutputs()
         for productName in productNames:
             self.__checkProduct(productName)
@@ -975,6 +981,9 @@ class JobFactory:
     productDB: ProductDB
     resourceDB: ResourceDB
     resTypeDB: ResTypeDB
+    taskRunDB: TaskRunDB
+    frameworkDB: FrameworkDB
+    taskDefDB: TaskDefDB
 
     def createJob(self, attributes: Mapping[str, str]) -> Job:
         return Job(attributes, self)
