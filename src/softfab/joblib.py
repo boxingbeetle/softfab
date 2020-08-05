@@ -391,16 +391,12 @@ class Job(XMLTag, TaskRunnerSet, TaskSet[Task], DatabaseElem):
 
     def __init__(self,
                  properties: Mapping[str, XMLAttributeValue],
-                 productDB: ProductDB,
-                 resourceDB: ResourceDB,
-                 resTypeDB: ResTypeDB
+                 jobFactory: 'JobFactory'
                  ):
         # Note: if the "comment" tag is empty, the XML parser does not call the
         #       <text> handler, so we have to use '' rather than None here.
         super().__init__(properties)
-        self.__productDB = productDB
-        self.__resourceDB = resourceDB
-        self.__resTypeDB = resTypeDB
+        self.__jobFactory = jobFactory
         self.__comment = ''
         self.__inputSet: Optional[AbstractSet[str]] = None
         self.__products: Dict[str, str] = {}
@@ -454,8 +450,9 @@ class Job(XMLTag, TaskRunnerSet, TaskSet[Task], DatabaseElem):
         self._tasks[name] = task
         self.__taskSequence.append(name)
         # Examine task resource requirements
+        resTypeDB = self.__jobFactory.resTypeDB
         for spec in task.resourceClaim:
-            typeObj = self.__resTypeDB.get(spec.typeName)
+            typeObj = resTypeDB.get(spec.typeName)
             if typeObj is not None and typeObj.jobExclusive:
                 tasks, caps, _ = self.__resources[spec.reference]
                 # TODO: We don't understand exactly what this code does.
@@ -507,7 +504,8 @@ class Job(XMLTag, TaskRunnerSet, TaskSet[Task], DatabaseElem):
 
     def __checkProduct(self, name: str) -> None:
         if not name in self.__products:
-            self.__products[name] = self.__productDB.create(name).getId()
+            productDB = self.__jobFactory.productDB
+            self.__products[name] = productDB.create(name).getId()
 
     def _addParam(self, attributes: Mapping[str, str]) -> None:
         self._params[attributes['name']] = attributes['value']
@@ -860,7 +858,8 @@ class Job(XMLTag, TaskRunnerSet, TaskSet[Task], DatabaseElem):
         '''Returns the product with the given name.
         Raises KeyError if there is no product with the given name in this job.
         '''
-        return self.__productDB[self.__products[name]]
+        productDB = self.__jobFactory.productDB
+        return productDB[self.__products[name]]
 
     def getProductDef(self, name: str) -> ProductDef:
         # Go through the Product object to get the correct version.
@@ -874,6 +873,7 @@ class Job(XMLTag, TaskRunnerSet, TaskSet[Task], DatabaseElem):
                          reservedBy: str,
                          whyNot: Optional[List[ReasonForWaiting]]
                          ) -> Optional[Dict[str, Resource]]:
+        resourceDB = self.__jobFactory.resourceDB
         if self.__resources:
             bound = {}
             toReserve = []
@@ -897,7 +897,7 @@ class Job(XMLTag, TaskRunnerSet, TaskSet[Task], DatabaseElem):
                     toReserve.append(spec)
             reservedPerJob = {}
             for ref, resId in bound.items():
-                resource = self.__resourceDB.get(resId)
+                resource = resourceDB.get(resId)
                 if resource is not None:
                     assert isinstance(resource, Resource), resId
                     reservedPerJob[ref] = resource
@@ -907,22 +907,22 @@ class Job(XMLTag, TaskRunnerSet, TaskSet[Task], DatabaseElem):
                         whyNot.append(ResourceMissingReason(resId))
                     return None
             reservedBy = 'J-' + self.getId()
-            reserved = _reserveResources(
-                    self.__resourceDB, ResourceClaim.create(toReserve),
-                    reservedBy, whyNot)
+            reserved = _reserveResources(resourceDB,
+                                         ResourceClaim.create(toReserve),
+                                         reservedBy, whyNot)
             if reserved is not None:
                 for ref in keepPerJob:
                     self.__resources[ref][2] = reserved[ref].getId()
                 reserved.update(reservedPerJob)
             return reserved
         else:
-            return _reserveResources(
-                    self.__resourceDB, claim, reservedBy, whyNot)
+            return _reserveResources(resourceDB, claim, reservedBy, whyNot)
 
     def releaseResources(self,
                          task: Task,
                          reserved: Optional[Mapping[str, str]]
                          ) -> None:
+        resourceDB = self.__jobFactory.resourceDB
         if self.__resources:
             toRelease: Dict[str, str] = dict(reserved or ())
             for spec in task.resourceClaim:
@@ -939,9 +939,9 @@ class Job(XMLTag, TaskRunnerSet, TaskSet[Task], DatabaseElem):
                     if reserved is not None:
                         assert reserved[ref] == resId
             if toRelease:
-                _releaseResources(self.__resourceDB, toRelease.values())
+                _releaseResources(resourceDB, toRelease.values())
         elif reserved is not None:
-            _releaseResources(self.__resourceDB, reserved.values())
+            _releaseResources(resourceDB, reserved.values())
 
 def _reserveResources(resourceDB: ResourceDB,
                       claim: ResourceClaim,
@@ -977,7 +977,7 @@ class JobFactory:
     resTypeDB: ResTypeDB
 
     def createJob(self, attributes: Mapping[str, str]) -> Job:
-        return Job(attributes, self.productDB, self.resourceDB, self.resTypeDB)
+        return Job(attributes, self)
 
     def newJob(self,
                configId: Optional[str],
@@ -999,7 +999,7 @@ class JobFactory:
         if owner is not None:
             properties['owner'] = owner
 
-        job = Job(properties, self.productDB, self.resourceDB, self.resTypeDB)
+        job = Job(properties, self)
         job.comment = comment
         # pylint: disable=protected-access
         job._params.update(jobParams)
