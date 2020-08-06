@@ -56,15 +56,11 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
     tagName = 'taskRun'
     intProperties = ('runId', )
 
-    def __init__(self,
-                 attributes: Mapping[str, str],
-                 task: Optional[Task] = None
-                 ):
+    _job: Job
+    _task: Task
+
+    def __init__(self, attributes: Mapping[str, str]):
         super().__init__(attributes)
-        # Note: If not passed, task (and job) will be set during XML parsing.
-        if task is not None:
-            self.__task = task
-            self.__job = task.getJob()
         if 'state' not in self._properties:
             # Initial state.
             self._properties['state'] = 'waiting'
@@ -122,14 +118,14 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
         except KeyError as ex:
             raise ObsoleteRecordError(jobId) from ex
         # pylint: disable=attribute-defined-outside-init
-        self.__job = job
+        self._job = job
         task = job.getTask(taskName)
         assert task is not None, (job.getId(), taskName)
-        self.__task = task
+        self._task = task
 
     def createRunXML(self) -> XML:
         return xml.run(
-            jobId = self.__job.getId(),
+            jobId = self._job.getId(),
             taskId = self.getName(),
             runId = self.getRunId()
             )
@@ -199,20 +195,20 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
         return cast(str, self._properties['id'])
 
     def getTask(self) -> Task:
-        return self.__task
+        return self._task
 
     def getName(self) -> str:
-        return self.__task.getName()
+        return self._task.getName()
 
     def _getContent(self) -> XMLContent:
         for report in self.__reports:
             yield xml.report(name = report)
         for ref, resId in self.__reserved.items():
             yield xml.resource(ref = ref, id = resId)
-        yield xml.task(name = self.getName(), job = self.__job.getId())
+        yield xml.task(name = self.getName(), job = self._job.getId())
 
     def getJob(self) -> Job:
-        return self.__job
+        return self._job
 
     def _getState(self) -> str:
         return cast(str, self._properties['state'])
@@ -492,7 +488,7 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
         assert self.isRunning()
 
         # Remember reports.
-        artifactsPaths = self.__job.getId().split('-', 1)
+        artifactsPaths = self._job.getId().split('-', 1)
         artifactsPaths += (quote_plus(taskName), '')
         self.setInternalStorage('/'.join(artifactsPaths))
         self.__reports += reports
@@ -603,7 +599,7 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
                 'ignoring conflicting new result %s (summary "%s") '
                 'for run %s of task %s of job %s with old result %s',
                 result, summary,
-                self.getRunId(), self.getName(), self.__job.getId(), oldResult
+                self.getRunId(), self.getName(), self._job.getId(), oldResult
                 )
         self._notify()
 
@@ -644,7 +640,10 @@ class TaskRunDB(Database[TaskRun]):
         super().__init__(baseDir, TaskRunFactory())
 
     def addRun(self, task: Task) -> TaskRun:
-        taskRun = TaskRun({'id': createInternalId()}, task)
+        taskRun = TaskRun({'id': createInternalId()})
+        # pylint: disable=protected-access
+        taskRun._task = task
+        taskRun._job = task.getJob()
         self.add(taskRun)
         return taskRun
 
