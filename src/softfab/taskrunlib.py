@@ -25,7 +25,6 @@ from softfab.utils import IllegalStateError, cachedProperty, pluralize
 from softfab.waiting import ReasonForWaiting, topWhyNot
 from softfab.xmlbind import XMLTag
 from softfab.xmlgen import XML, XMLContent, xml
-import softfab.migration
 
 if TYPE_CHECKING:
     # pylint: disable=cyclic-import
@@ -62,13 +61,10 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
                  task: Optional[Task] = None
                  ):
         super().__init__(attributes)
-        self.__task = task
-        if task is None:
-            self.__job: Optional[Job] = None
-        else:
+        # Note: If not passed, task (and job) will be set during XML parsing.
+        if task is not None:
+            self.__task = task
             self.__job = task.getJob()
-        # This will be set during XML parsing.
-        self.__jobId = cast(str, None)
         if 'state' not in self._properties:
             # Initial state.
             self._properties['state'] = 'waiting'
@@ -112,13 +108,6 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
             else:
                 return value
 
-    def __getJobId(self) -> str:
-        if self.__job is None:
-            # During upgrade, job ID is stored because job is not.
-            return self.__jobId
-        else:
-            return self.__job.getId()
-
     def _addReport(self, attributes: Mapping[str, str]) -> None:
         self.__reports.append(attributes['name'])
 
@@ -126,22 +115,21 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
         self.__reserved[attributes['ref']] = attributes['id']
 
     def _setTask(self, attributes: Mapping[str, str]) -> None:
-        if softfab.migration.migrationInProgress:
-            if attributes['job'] not in jobDB:
-                raise ObsoleteRecordError()
-            self.__jobId = attributes['job']
-            self.__taskName = attributes['name'] # pylint: disable=attribute-defined-outside-init
-        else:
-            # TODO: The delayed initialization is required when loading a job
-            #       with non-finished tasks.
-            self.__jobId = attributes['job']
-            self.__taskName = attributes['name'] # pylint: disable=attribute-defined-outside-init
-            #self.__job = jobDB[attributes['job']]
-            #self.__task = self.__job.getTask(attributes['name'])
+        jobId = attributes['job']
+        taskName = attributes['name']
+        try:
+            job = jobDB[jobId]
+        except KeyError as ex:
+            raise ObsoleteRecordError(jobId) from ex
+        # pylint: disable=attribute-defined-outside-init
+        self.__job = job
+        task = job.getTask(taskName)
+        assert task is not None, (job.getId(), taskName)
+        self.__task = task
 
     def createRunXML(self) -> XML:
         return xml.run(
-            jobId = self.__getJobId(),
+            jobId = self.__job.getId(),
             taskId = self.getName(),
             runId = self.getRunId()
             )
@@ -211,37 +199,20 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
         return cast(str, self._properties['id'])
 
     def getTask(self) -> Task:
-        task = self.__task
-        if task is None:
-            # During upgrade, task name is stored because task is not.
-            # However, in special cases a particular job is needed, so load it.
-            self.__task = task = self.getJob().getTask(self.__taskName)
-            assert task is not None
-        return task
+        return self.__task
 
     def getName(self) -> str:
-        if self.__task is None:
-            # During upgrade, task name is stored because task is not.
-            return self.__taskName
-        else:
-            return self.__task.getName()
+        return self.__task.getName()
 
     def _getContent(self) -> XMLContent:
         for report in self.__reports:
             yield xml.report(name = report)
         for ref, resId in self.__reserved.items():
             yield xml.resource(ref = ref, id = resId)
-        yield xml.task(name = self.getName(), job = self.__getJobId())
+        yield xml.task(name = self.getName(), job = self.__job.getId())
 
-    # TODO: Should this remain public?
-    #       It is used by ExtractedData at least, but will it stay that way?
     def getJob(self) -> Job:
-        job = self.__job
-        if job is None:
-            # During upgrade, job ID is stored because job is not.
-            # However, in special cases a particular job is needed, so load it.
-            self.__job = job = jobDB[self.__jobId]
-        return job
+        return self.__job
 
     def _getState(self) -> str:
         return cast(str, self._properties['state'])
@@ -521,7 +492,7 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
         assert self.isRunning()
 
         # Remember reports.
-        artifactsPaths = self.__getJobId().split('-', 1)
+        artifactsPaths = self.__job.getId().split('-', 1)
         artifactsPaths += (quote_plus(taskName), '')
         self.setInternalStorage('/'.join(artifactsPaths))
         self.__reports += reports
@@ -632,7 +603,7 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
                 'ignoring conflicting new result %s (summary "%s") '
                 'for run %s of task %s of job %s with old result %s',
                 result, summary,
-                self.getRunId(), self.getName(), self.__getJobId(), oldResult
+                self.getRunId(), self.getName(), self.__job.getId(), oldResult
                 )
         self._notify()
 
