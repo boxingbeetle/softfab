@@ -72,9 +72,9 @@ class Task(
                 ) -> 'Task':
         tdKey = jobFactory.taskDefDB.latestVersion(name)
         assert tdKey is not None
-        fdKey = jobFactory.frameworkDB.latestVersion(
-                cast(str, jobFactory.taskDefDB.getVersion(tdKey)['parent'])
-                )
+        frameworkId = jobFactory.taskDefDB.getVersion(tdKey).frameworkId
+        assert frameworkId is not None
+        fdKey = jobFactory.frameworkDB.latestVersion(frameworkId)
 
         properties: Mapping[str, XMLAttributeValue] = dict(
             name = name,

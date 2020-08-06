@@ -151,13 +151,13 @@ class FrameworkEdit_POST(FrameworkEditBase):
                     continue
                 final = index in cast(DictArgInstance[bool], args.final)
                 if final:
-                    for task in self.taskDefDB:
-                        if task['parent'] == args.id and \
-                                name in task.getParametersSelf():
+                    for taskDef in self.taskDefDB:
+                        if taskDef.frameworkId == args.id and \
+                                name in taskDef.getParametersSelf():
                             raise PresentableError(xhtml.p[
                                 f'Cannot make parameter "{name}" final, '
                                 f'because it is overridden '
-                                f'by task "{task.getId()}".'
+                                f'by task "{taskDef.getId()}".'
                                 ])
 
             if args.wrapper == '':

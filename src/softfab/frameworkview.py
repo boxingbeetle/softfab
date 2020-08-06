@@ -22,5 +22,5 @@ def taskDefsUsingFramework(taskDefDB: TaskDefDB,
     the framework with the given ID.
     '''
     for taskId, taskDef in taskDefDB.items():
-        if taskDef['parent'] == frameworkId:
+        if taskDef.frameworkId == frameworkId:
             yield taskId

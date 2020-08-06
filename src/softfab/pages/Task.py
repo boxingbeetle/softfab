@@ -211,7 +211,8 @@ class DetailsTable(PropertiesTable):
         run = task.getLatestRun()
         taskDef = task.getDef()
         taskDefId = taskDef.getId()
-        frameworkId = cast(str, taskDef['parent'])
+        frameworkId = taskDef.frameworkId
+        assert frameworkId is not None
         tdLatest = proc.taskDefDB.latestVersion(taskDefId)
         fdLatest = proc.frameworkDB.latestVersion(frameworkId)
 
