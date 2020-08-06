@@ -8,7 +8,7 @@ from typing import (
     Iterator, List, Mapping, MutableSet, Optional, Sequence, Tuple, Union, cast
 )
 
-from softfab import frameworklib, taskdeflib, taskrunlib
+from softfab import taskrunlib
 from softfab.config import dbDir
 from softfab.databaselib import (
     Database, DatabaseElem, RecordObserver, Retriever, createUniqueId
@@ -72,9 +72,12 @@ class Task(
                 ) -> 'Task':
         tdKey = jobFactory.taskDefDB.latestVersion(name)
         assert tdKey is not None
-        frameworkId = jobFactory.taskDefDB.getVersion(tdKey).frameworkId
+        taskDef = jobFactory.taskDefDB.getVersion(tdKey)
+        frameworkId = taskDef.frameworkId
         assert frameworkId is not None
         fdKey = jobFactory.frameworkDB.latestVersion(frameworkId)
+        assert fdKey is not None
+        framework = jobFactory.frameworkDB.getVersion(fdKey)
 
         properties: Mapping[str, XMLAttributeValue] = dict(
             name = name,
@@ -82,7 +85,7 @@ class Task(
             tdKey = tdKey,
             fdKey = fdKey,
             )
-        task = Task(properties, job)
+        task = Task(properties, job, taskDef, framework)
         # pylint: disable=protected-access
         task._setRunners(runners)
         taskRun = jobFactory.taskRunDB.addRun(task)
@@ -92,13 +95,15 @@ class Task(
 
     def __init__(self,
                  attributes: Mapping[str, XMLAttributeValue],
-                 job: 'Job'
+                 job: 'Job', taskDef: TaskDef, framework: Framework
                  ):
         super().__init__(attributes)
         self._properties.setdefault('priority', 0)
         self._parameters: Dict[str, str] = {}
         self.__taskRun: Optional[TaskRun] = None
         self.__job = job
+        self.__taskDef = taskDef
+        self.__framework = framework
 
         # COMPAT 2.x.x: Remove invalid time stamps cancelled tasks.
         if self._properties.get('starttime') == 0:
@@ -173,14 +178,10 @@ class Task(
             raise KeyError(runId)
 
     def getDef(self) -> TaskDef:
-        return taskdeflib.taskDefDB.getVersion(
-            cast(str, self._properties['tdKey'])
-            )
+        return self.__taskDef
 
     def getFramework(self) -> Framework:
-        return frameworklib.frameworkDB.getVersion(
-            cast(str, self._properties['fdKey'])
-            )
+        return self.__framework
 
     def getName(self) -> str:
         return cast(str, self._properties['name'])
@@ -494,7 +495,10 @@ class Job(XMLTag, TaskRunnerSet, TaskSet[Task], DatabaseElem):
         self.__comment = text
 
     def _addTask(self, attributes: Mapping[str, str]) -> Task:
-        return self.__addTask(Task(attributes, self))
+        jobFactory = self.__jobFactory
+        taskDef = jobFactory.taskDefDB.getVersion(attributes['tdKey'])
+        framework = jobFactory.frameworkDB.getVersion(attributes['fdKey'])
+        return self.__addTask(Task(attributes, self, taskDef, framework))
 
     def _addProduct(self, attributes: Mapping[str, str]) -> None:
         self.__products[attributes['name']] = attributes['key']
