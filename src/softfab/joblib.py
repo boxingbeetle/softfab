@@ -165,7 +165,7 @@ class Task(
         taskRun = self.__taskRun
         if taskRun is None:
             runId = cast(str, self._properties['run'])
-            taskRun = taskrunlib.taskRunDB[runId]
+            taskRun = self.__job._getRun(runId) # pylint: disable=protected-access
             self.__taskRun = taskRun
         return taskRun
 
@@ -533,6 +533,13 @@ class Job(XMLTag, TaskRunnerSet, TaskSet[Task], DatabaseElem):
         for productName in productNames:
             self.__checkProduct(productName)
         return task
+
+    def _getRun(self, runId: str) -> TaskRun:
+        """Return the task run with the given ID.
+        This method is only intended for the Task class to get access to
+        the taskRunDB instance.
+        """
+        return self.__jobFactory.taskRunDB[runId]
 
     @property
     def comment(self) -> str:
