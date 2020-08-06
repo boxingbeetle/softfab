@@ -16,7 +16,7 @@ from softfab.joblib import Job, JobFactory
 from softfab.productdeflib import ProductDef, ProductDefDB, ProductType
 from softfab.restypelib import ResTypeDB
 from softfab.selectlib import SelectableRecordABC, TagCache
-from softfab.taskdeflib import TaskDefDB, taskDefDB
+from softfab.taskdeflib import TaskDefDB
 from softfab.taskgroup import (
     LocalGroup, PriorityMixin, TaskGroup, TaskSet, TaskT
 )
@@ -124,6 +124,7 @@ class Task(PriorityMixin, ResourceRequirementsMixin, XMLTag, TaskRunnerSet):
     @staticmethod
     def create(name: str,
                priority: int,
+               taskDef: TaskDef,
                parameters: Mapping[str, str]
                ) -> 'Task':
         properties: Dict[str, XMLAttributeValue] = dict(
@@ -131,15 +132,19 @@ class Task(PriorityMixin, ResourceRequirementsMixin, XMLTag, TaskRunnerSet):
             priority = priority,
             )
 
-        task = Task(properties)
+        task = Task(properties, taskDef)
         # pylint: disable=protected-access
         for paramName, value in parameters.items():
             task._addParam(dict(name = paramName, value = value))
         return task
 
-    def __init__(self, attributes: Mapping[str, XMLAttributeValue]):
+    def __init__(self,
+                 attributes: Mapping[str, XMLAttributeValue],
+                 taskDef: TaskDef
+                 ):
         super().__init__(attributes)
         self._properties.setdefault('priority', 0)
+        self.__taskDef = taskDef
         self.__params: Dict[str, _Param] = {}
 
     def _addParam(self, attributes: Mapping[str, str]) -> None:
@@ -150,7 +155,7 @@ class Task(PriorityMixin, ResourceRequirementsMixin, XMLTag, TaskRunnerSet):
         return cast(str, self._properties['name'])
 
     def getDef(self) -> TaskDef:
-        return taskDefDB[self.getName()]
+        return self.__taskDef
 
     def getFramework(self) -> Framework:
         return self.getDef().getFramework()
@@ -425,8 +430,10 @@ class Config(XMLTag, TaskRunnerSet, TaskSetWithInputs[Task],
         self._targets.add(attributes['name'])
 
     def _addTask(self, attributes: Mapping[str, str]) -> Task:
-        task = Task(attributes)
-        self._tasks[task.getName()] = task
+        name = attributes['name']
+        taskDef = self.__jobFactory.taskDefDB[name]
+        task = Task(attributes, taskDef)
+        self._tasks[name] = task
         return task
 
     def _addInput(self, attributes: Mapping[str, str]) -> None:

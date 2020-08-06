@@ -409,6 +409,7 @@ class ExecuteProcessorMixin:
             yield Task.create(
                 name = taskId,
                 priority = prio.get(taskId, 0),
+                taskDef = taskDef,
                 parameters = taskParams,
                 )
 

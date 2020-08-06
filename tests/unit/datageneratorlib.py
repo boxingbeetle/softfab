@@ -199,6 +199,7 @@ class DataGenerator:
                 configlib.Task.create(
                     name = taskId,
                     priority = 0,
+                    taskDef = taskdeflib.taskDefDB[taskId],
                     parameters = {},
                     )
                 for taskId in tasksRandomOrder
