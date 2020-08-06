@@ -50,6 +50,7 @@ def _convertAll() -> None:
 
     # Inline import to break cycle.
     # pylint: disable=import-outside-toplevel
+    # pylint: disable=cyclic-import
     from softfab.databases import getDatabases
     from softfab import joblib, productlib, projectlib, resourcelib, taskrunlib
 
