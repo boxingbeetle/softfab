@@ -12,8 +12,12 @@ from softfab.xmlgen import XMLContent, xml
 
 class TaskDef(frameworklib.TaskDefBase):
 
-    def __init__(self, properties: Mapping[str, Optional[str]]):
+    def __init__(self,
+                 properties: Mapping[str, Optional[str]],
+                 frameworkDB: frameworklib.FrameworkDB
+                 ):
         super().__init__(properties)
+        self.__frameworkDB = frameworkDB
         self._title = ''
         self._description = ''
 
@@ -51,7 +55,7 @@ class TaskDef(frameworklib.TaskDefBase):
         if frameworkId is None:
             return paramTop
         elif getFunc is None:
-            return frameworklib.frameworkDB[frameworkId]
+            return self.__frameworkDB[frameworkId]
         else:
             return getFunc(frameworkId)
 
@@ -77,18 +81,20 @@ class TaskDef(frameworklib.TaskDefBase):
         yield xml.description[ self._description ]
 
 class TaskDefFactory:
-    @staticmethod
-    def createTaskdef(attributes: Mapping[str, str]) -> TaskDef:
-        return TaskDef(attributes)
 
-    @staticmethod
-    def newTaskDef(name: str,
+    frameworkDB: frameworklib.FrameworkDB
+
+    def createTaskdef(self, attributes: Mapping[str, str]) -> TaskDef:
+        return TaskDef(attributes, self.frameworkDB)
+
+    def newTaskDef(self,
+                   name: str,
                    parent: Optional[str] = None,
                    title: str = '',
                    description: str = ''
                    ) -> TaskDef:
         properties = dict(id=name, parent=parent)
-        taskDef = TaskDef(properties)
+        taskDef = TaskDef(properties, self.frameworkDB)
         # pylint: disable=protected-access
         taskDef._title = title
         taskDef._description = description
