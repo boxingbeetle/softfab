@@ -12,40 +12,24 @@ from softfab.xmlgen import XMLContent, xml
 
 class TaskDef(frameworklib.TaskDefBase):
 
-    @staticmethod
-    def create(name: str,
-               parent: Optional[str] = None,
-               title: str = '',
-               description: str = ''
-               ) -> 'TaskDef':
-        properties = dict(
-            id = name,
-            parent = parent,
-            )
-        taskDef = TaskDef(properties)
-        # pylint: disable=protected-access
-        taskDef.__title = title
-        taskDef.__description = description
-        return taskDef
-
     def __init__(self, properties: Mapping[str, Optional[str]]):
         super().__init__(properties)
-        self.__title = ''
-        self.__description = ''
+        self._title = ''
+        self._description = ''
 
     def __getitem__(self, key: str) -> object:
         if key == 'title':
-            return self.__title or self.getId()
+            return self._title or self.getId()
         elif key == 'description':
-            return self.__description or '(no description)'
+            return self._description or '(no description)'
         else:
             return super().__getitem__(key)
 
     def _textTitle(self, text: str) -> None:
-        self.__title = text
+        self._title = text
 
     def _textDescription(self, text: str) -> None:
-        self.__description = text
+        self._description = text
 
     @property
     def frameworkId(self) -> Optional[str]:
@@ -72,10 +56,10 @@ class TaskDef(frameworklib.TaskDefBase):
             return getFunc(frameworkId)
 
     def getTitle(self) -> str:
-        return self.__title
+        return self._title
 
     def getDescription(self) -> str:
-        return self.__description
+        return self._description
 
     @property
     def timeoutMins(self) -> Optional[int]:
@@ -89,18 +73,33 @@ class TaskDef(frameworklib.TaskDefBase):
 
     def _getContent(self) -> XMLContent:
         yield super()._getContent()
-        yield xml.title[ self.__title ]
-        yield xml.description[ self.__description ]
+        yield xml.title[ self._title ]
+        yield xml.description[ self._description ]
 
 class TaskDefFactory:
     @staticmethod
     def createTaskdef(attributes: Mapping[str, str]) -> TaskDef:
         return TaskDef(attributes)
 
+    @staticmethod
+    def newTaskDef(name: str,
+                   parent: Optional[str] = None,
+                   title: str = '',
+                   description: str = ''
+                   ) -> TaskDef:
+        properties = dict(id=name, parent=parent)
+        taskDef = TaskDef(properties)
+        # pylint: disable=protected-access
+        taskDef._title = title
+        taskDef._description = description
+        return taskDef
+
 class TaskDefDB(VersionedDatabase[TaskDef]):
     privilegeObject = 'td'
     description = 'task definition'
     uniqueKeys = ( 'id', )
+
+    factory: TaskDefFactory
 
     def __init__(self, baseDir: Path):
         super().__init__(baseDir, TaskDefFactory())

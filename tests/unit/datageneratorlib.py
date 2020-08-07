@@ -61,7 +61,7 @@ class DataGenerator:
         return name
 
     def createTask(self, name, framework, resources=None):
-        task = taskdeflib.TaskDef.create(name, framework)
+        task = taskdeflib.taskDefDB.factory.newTaskDef(name, framework)
         if resources is None:
             task.addTaskRunnerSpec(capabilities=(framework,))
         _addResources(task, resources)

@@ -120,7 +120,7 @@ class TaskEdit_POST(TaskEditBase):
                           args: TaskEditArgs,
                           oldElement: Optional[TaskDef]
                           ) -> TaskDef:
-            element = TaskDef.create(
+            element = self.taskDefDB.factory.newTaskDef(
                 name = recordId,
                 parent = args.framework or None,
                 title = args.title,
