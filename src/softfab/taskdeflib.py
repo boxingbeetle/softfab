@@ -3,18 +3,18 @@
 from pathlib import Path
 from typing import Mapping, Optional, cast
 
-from softfab import frameworklib
 from softfab.config import dbDir
 from softfab.databaselib import VersionedDatabase
+from softfab.frameworklib import Framework, FrameworkDB, TaskDefBase
 from softfab.paramlib import GetParent, Parameterized, paramTop
 from softfab.xmlgen import XMLContent, xml
 
 
-class TaskDef(frameworklib.TaskDefBase):
+class TaskDef(TaskDefBase):
 
     def __init__(self,
                  properties: Mapping[str, Optional[str]],
-                 frameworkDB: frameworklib.FrameworkDB
+                 frameworkDB: FrameworkDB
                  ):
         super().__init__(properties)
         self.__frameworkDB = frameworkDB
@@ -39,16 +39,14 @@ class TaskDef(frameworklib.TaskDefBase):
     def frameworkId(self) -> Optional[str]:
         return cast(Optional[str], self._properties.get('parent'))
 
-    def getFramework(self,
-            getParent: Optional[GetParent] = None
-            ) -> frameworklib.Framework:
+    def getFramework(self, getParent: Optional[GetParent] = None) -> Framework:
         frameworkId = self.frameworkId
         if frameworkId is None:
             # The framework can be undefined in records that are still being
             # edited; records in the DB must have a framework.
             raise ValueError('getFramework() called on parentless taskdef')
         else:
-            return cast(frameworklib.Framework, self.getParent(getParent))
+            return cast(Framework, self.getParent(getParent))
 
     def getParent(self, getFunc: Optional[GetParent]) -> Parameterized:
         frameworkId = self.frameworkId
@@ -82,7 +80,7 @@ class TaskDef(frameworklib.TaskDefBase):
 
 class TaskDefFactory:
 
-    frameworkDB: frameworklib.FrameworkDB
+    frameworkDB: FrameworkDB
 
     def createTaskdef(self, attributes: Mapping[str, str]) -> TaskDef:
         return TaskDef(attributes, self.frameworkDB)
