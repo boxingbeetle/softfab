@@ -53,7 +53,7 @@ class DB(Database):
 
 @fixture
 def db(tmp_path):
-    db = DB(str(tmp_path))
+    db = DB(tmp_path)
     db.preload()
     return db
 
