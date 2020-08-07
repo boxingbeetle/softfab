@@ -1,15 +1,16 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from softfab.utils import cachedProperty
+"""Test the CachedProperty class."""
 
-import unittest
+from pytest import raises
+
+from softfab.utils import cachedProperty
 
 
 # Classes under test:
 
 class Base:
-    '''Most basic use case.
-    '''
+    """Most basic use case."""
 
     def __init__(self, valueFunc):
         self._valueFunc = valueFunc
@@ -19,8 +20,7 @@ class Base:
         return self._valueFunc()
 
 class Dual:
-    '''Basic use case with two cached properties.
-    '''
+    """Basic use case with two cached properties."""
 
     def __init__(self, valueFunc):
         self._valueFunc = valueFunc
@@ -34,22 +34,17 @@ class Dual:
         return self._valueFunc()
 
 class Inherit(Base):
-    '''Inheritance without any overrides.
-    '''
-
-    pass
+    """Inheritance without any overrides."""
 
 class Override(Base):
-    '''Override the cached property with another cached property.
-    '''
+    """Override the cached property with another cached property."""
 
     @cachedProperty
     def description(self):
         return self._valueFunc()
 
 class OverrideNonCached(Base):
-    '''Override the cached property with a non-cached property.
-    '''
+    """Override the cached property with a non-cached property."""
 
     @property
     def description(self):
@@ -57,16 +52,14 @@ class OverrideNonCached(Base):
 
 
 class SuperSingle(Base):
-    '''Subclass value is computed from superclass value.
-    '''
+    """Subclass value is computed from superclass value."""
 
     @cachedProperty
     def description(self):
         return super(SuperSingle, self).description + ' sub'
 
 class SuperDual(Base):
-    '''Subclass value is computed from superclass value.
-    '''
+    """Subclass value is computed from superclass value."""
 
     @cachedProperty
     def description(self):
@@ -77,12 +70,12 @@ class SuperDual(Base):
         return super(SuperDual, self).description + ' sub2'
 
 
-# Classes that perform the tests:
+# Code that performs the tests:
 
 class CallCounter:
-    '''Helper class that counts how often the value is retrieved.
+    """Helper class that counts how often the value is retrieved.
     This can be used to verify that the value is actually cached.
-    '''
+    """
 
     def __init__(self, testValue):
         self.called = 0
@@ -95,137 +88,117 @@ class CallCounter:
 def createTestValue(repeat):
     return 'very nice %d' % repeat
 
-class TestCachedProperty(unittest.TestCase):
-    '''Test the CachedProperty class.
-    '''
+def check(objFactory, valueFactory=createTestValue, suffix=None):
+    # Create multiple objects, because some things should be computed per
+    # class and some per object.
+    for repeat in range(3):
+        value = valueFactory(repeat)
+        counter = CallCounter(value)
+        expectedValue = value if suffix is None else value + ' ' + suffix
 
-    def __init__(self, methodName = 'runTest'):
-        unittest.TestCase.__init__(self, methodName)
+        obj = objFactory(counter)
+        # First time the get method should be called.
+        assert obj.description == expectedValue
+        assert counter.called == 1
+        # Second time the cached value should be returned.
+        assert obj.description == expectedValue
+        assert counter.called == 1
 
-    def check(self, objFactory, valueFactory=createTestValue, suffix=None):
-        # Create multiple objects, because some things should be computed per
-        # class and some per object.
-        for repeat in range(3):
-            value = valueFactory(repeat)
-            counter = CallCounter(value)
-            expectedValue = value if suffix is None else value + ' ' + suffix
+def checkError(objFactory, badFunc):
+    # Create multiple objects, because some things should be computed per
+    # class and some per object.
+    for repeat in range(3):
+        counter = CallCounter('very nice %d' % repeat)
+        obj = objFactory(counter)
+        # Try the bad behaviour before the get method is called.
+        with raises(AttributeError):
+            badFunc(obj)
+        # First time the get method should be called.
+        assert obj.description == counter.testValue
+        assert counter.called == 1
+        # Try the bad behaviour after the get method is called.
+        with raises(AttributeError):
+            badFunc(obj)
+        # Second time the cached value should be returned.
+        assert obj.description == counter.testValue
+        assert counter.called == 1
+        # Try the bad behaviour after the caching has been confirmed.
+        with raises(AttributeError):
+            badFunc(obj)
 
-            obj = objFactory(counter)
-            # First time the get method should be called.
-            self.assertEqual(obj.description, expectedValue)
-            self.assertEqual(counter.called, 1)
-            # Second time the cached value should be returned.
-            self.assertEqual(obj.description, expectedValue)
-            self.assertEqual(counter.called, 1)
+def testCachedPropertyBase():
+    """Test the most straightforward use case."""
+    check(Base)
 
-    def checkError(self, objFactory, badFunc):
-        # Create multiple objects, because some things should be computed per
-        # class and some per object.
-        for repeat in range(3):
-            counter = CallCounter('very nice %d' % repeat)
-            obj = objFactory(counter)
-            # Try the bad behaviour before the get method is called.
-            self.assertRaises(AttributeError, lambda: badFunc(obj))
-            # First time the get method should be called.
-            self.assertEqual(obj.description, counter.testValue)
-            self.assertEqual(counter.called, 1)
-            # Try the bad behaviour after the get method is called.
-            self.assertRaises(AttributeError, lambda: badFunc(obj))
-            # Second time the cached value should be returned.
-            self.assertEqual(obj.description, counter.testValue)
-            self.assertEqual(counter.called, 1)
-            # Try the bad behaviour after the caching has been confirmed.
-            self.assertRaises(AttributeError, lambda: badFunc(obj))
+def testCachedPropertyDual():
+    """Test two properties in one class."""
+    check(Dual)
 
-    def test0100Base(self):
-        '''Test the most straightforward use case.
-        '''
-        self.check(Base)
+    counter = CallCounter(createTestValue(123))
+    obj = Dual(counter)
+    assert obj.description == counter.testValue
+    assert counter.called == 1
+    assert obj.description2 == counter.testValue
+    assert counter.called == 2
+    assert obj.description == counter.testValue
+    assert counter.called == 2
+    assert obj.description2 == counter.testValue
+    assert counter.called == 2
 
-    def test0110Dual(self):
-        '''Test two properties in one class.
-        '''
-        self.check(Dual)
+def testCachedPropertyInherit():
+    """Test inheritance of a class that contains a cached property."""
+    check(Inherit)
 
-        counter = CallCounter(createTestValue(123))
-        obj = Dual(counter)
-        self.assertEqual(obj.description, counter.testValue)
-        self.assertEqual(counter.called, 1)
-        self.assertEqual(obj.description2, counter.testValue)
-        self.assertEqual(counter.called, 2)
-        self.assertEqual(obj.description, counter.testValue)
-        self.assertEqual(counter.called, 2)
-        self.assertEqual(obj.description2, counter.testValue)
-        self.assertEqual(counter.called, 2)
+def testCachedPropertyOverride():
+    """Test overriding cached property with another cached property."""
+    check(Override)
 
-    def test0200Inherit(self):
-        '''Test inheritance of a class that contains a cached property.
-        '''
-        self.check(Inherit)
+def testCachedPropertyOverrideNonCached():
+    """Test overriding cached property with non-cached property."""
+    counter = CallCounter(createTestValue(123))
+    obj = OverrideNonCached(counter)
+    # The get method should be called every time.
+    assert obj.description == counter.testValue
+    assert counter.called == 1
+    assert obj.description == counter.testValue
+    assert counter.called == 2
+    assert obj.description == counter.testValue
+    assert counter.called == 3
 
-    def test0300Override(self):
-        '''Test overriding cached property with another cached property.
-        '''
-        self.check(Override)
+def testCachedPropertySuper():
+    """Test computing subclass value based on superclass value."""
+    check(SuperSingle, suffix='sub')
 
-    def test0310OverrideNonCached(self):
-        '''Test overriding cached property with non-cached property.
-        '''
-        counter = CallCounter(createTestValue(123))
-        obj = OverrideNonCached(counter)
-        # The get method should be called every time.
-        self.assertEqual(obj.description, counter.testValue)
-        self.assertEqual(counter.called, 1)
-        self.assertEqual(obj.description, counter.testValue)
-        self.assertEqual(counter.called, 2)
-        self.assertEqual(obj.description, counter.testValue)
-        self.assertEqual(counter.called, 3)
+def testCachedPropertySuperDual():
+    """Test computing subclass value based on superclass value."""
+    check(SuperDual, suffix='sub')
 
-    def test0400Super(self):
-        '''Test computing subclass value based on superclass value.
-        '''
-        self.check(SuperSingle, suffix='sub')
+    # Verify that second property actually gets the superclass value
+    # of the first property rather than the cached subclass value.
+    counter = CallCounter(createTestValue(123))
+    obj = SuperDual(counter)
+    assert obj.description == counter.testValue + ' sub'
+    assert obj.description2 == counter.testValue + ' sub2'
 
-    def test0410Dual(self):
-        '''Test computing subclass value based on superclass value.
-        '''
-        self.check(SuperDual, suffix='sub')
+def testCachedPropertySet():
+    """Try to write to a cached property."""
+    def setValue(obj):
+        obj.description = 'new description'
+    checkError(Base, setValue)
 
-        # Verify that second property actually gets the superclass value
-        # of the first property rather than the cached subclass value.
-        counter = CallCounter(createTestValue(123))
-        obj = SuperDual(counter)
-        self.assertEqual(obj.description, counter.testValue + ' sub')
-        self.assertEqual(obj.description2, counter.testValue + ' sub2')
+def testCachedPropertyDel():
+    """Try to delete a cached property."""
+    def delete(obj):
+        del obj.description
+    checkError(Base, delete)
 
-    def test0500Set(self):
-        '''Try to write to a cached property.
-        '''
-        def setValue(obj):
-            obj.description = 'new description'
-        self.checkError(Base, setValue)
+def testCachedPropertyNoneValue():
+    """Test whether a return value of "None" is cached."""
+    check(Base, lambda repeat: None)
+    check(Inherit, lambda repeat: None)
 
-    def test0510Del(self):
-        '''Try to delete a cached property.
-        '''
-        def delete(obj):
-            del obj.description
-        self.checkError(Base, delete)
-
-    def test0600NoneValue(self):
-        '''Test whether a return value of "None" is cached.
-        '''
-        self.check(Base, lambda repeat: None)
-        self.check(Inherit, lambda repeat: None)
-
-    def test0610ClassAttributeAccess(self):
-        '''Test what happens if the property is looked up on a class
-        instead of an object.
-        '''
-        self.assertEqual(
-            Base.description,
-            Base.__dict__['description']
-            )
-
-if __name__ == '__main__':
-    unittest.main()
+def testCachedPropertyClassAttributeAccess():
+    """Test what happens if the property is looked up on a class
+    instead of an object.
+    """
+    assert Base.description == Base.__dict__['description']
