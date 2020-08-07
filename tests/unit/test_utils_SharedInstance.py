@@ -1,9 +1,13 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+"""Test the SharedInstance class."""
+
+from abc import ABC, abstractmethod
+
+from pytest import raises
+
 from softfab.utils import SharedInstance
 
-import unittest
-from abc import ABC, abstractmethod
 
 # Classes under test:
 
@@ -37,52 +41,41 @@ class Concrete(Abstract):
     def set_value(self, value):
         self.value = value
 
-# Classes that perform the tests:
 
-class TestCachedProperty(unittest.TestCase):
-    '''Test the SharedInstance class.
-    '''
+# Test cases:
 
-    def __init__(self, methodName = 'runTest'):
-        unittest.TestCase.__init__(self, methodName)
+def testSharedInstanceBase():
+    """Test the most straightforward use case."""
+    instance = Base.instance
+    assert isinstance(instance, Base)
+    assert instance.value == BASE_VALUE
+    assert instance.get_value() == BASE_VALUE
+    assert instance is Base.instance
 
-    def test0100Base(self):
-        '''Test the most straightforward use case.
-        '''
-        instance = Base.instance
-        self.assertIsInstance(instance, Base)
-        self.assertEqual(instance.value, BASE_VALUE)
-        self.assertEqual(instance.get_value(), BASE_VALUE)
-        self.assertIs(instance, Base.instance)
+def testSharedInstanceSub():
+    """Test whether a subclass instance refers to the subclass."""
+    instance = Sub.instance
+    assert isinstance(instance, Base)
+    assert isinstance(instance, Sub)
+    assert instance.value == SUB_VALUE
+    assert instance.get_value() == SUB_VALUE
+    assert instance is not Base.instance
+    assert instance is Sub.instance
 
-    def test0200Sub(self):
-        '''Test whether a subclass instance refers to the subclass.
-        '''
-        instance = Sub.instance
-        self.assertIsInstance(instance, Base)
-        self.assertIsInstance(instance, Sub)
-        self.assertEqual(instance.value, SUB_VALUE)
-        self.assertEqual(instance.get_value(), SUB_VALUE)
-        self.assertIsNot(instance, Base.instance)
-        self.assertIs(instance, Sub.instance)
+def testSharedInstanceABC():
+    """Test interaction with Abstract Base Classes."""
+    with raises(TypeError):
+        Abstract.instance
 
-    def test0300ABC(self):
-        '''Test interaction with Abstract Base Classes.
-        '''
-        self.assertRaises(TypeError, lambda: Abstract.instance)
+    instance = Concrete.instance
+    assert isinstance(instance, Base)
+    assert isinstance(instance, Abstract)
+    assert isinstance(instance, Concrete)
+    assert instance.value == BASE_VALUE
+    assert instance.get_value() == BASE_VALUE
+    assert instance is not Base.instance
+    assert instance is Concrete.instance
 
-        instance = Concrete.instance
-        self.assertIsInstance(instance, Base)
-        self.assertIsInstance(instance, Abstract)
-        self.assertIsInstance(instance, Concrete)
-        self.assertEqual(instance.value, BASE_VALUE)
-        self.assertEqual(instance.get_value(), BASE_VALUE)
-        self.assertIsNot(instance, Base.instance)
-        self.assertIs(instance, Concrete.instance)
-
-        instance.set_value(789)
-        self.assertEqual(instance.value, 789)
-        self.assertEqual(instance.get_value(), 789)
-
-if __name__ == '__main__':
-    unittest.main()
+    instance.set_value(789)
+    assert instance.value == 789
+    assert instance.get_value() == 789
