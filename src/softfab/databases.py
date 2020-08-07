@@ -8,6 +8,7 @@ from softfab import (
     projectlib, resourcelib, restypelib, schedulelib, taskdeflib, taskrunlib,
     tokens, userlib
 )
+from softfab.config import dbDir
 
 
 # Note: The databases should be ordered such that all if D2 depends on D1,
@@ -16,7 +17,7 @@ from softfab import (
 #       invalid.
 def _iterDatabases() -> Iterator[databaselib.Database[Any]]:
     yield projectlib.projectDB
-    yield tokens.tokenDB
+    yield tokens.TokenDB(dbDir / 'tokens')
     yield restypelib.resTypeDB
     yield productdeflib.productDefDB
     yield frameworklib.frameworkDB
@@ -27,7 +28,7 @@ def _iterDatabases() -> Iterator[databaselib.Database[Any]]:
     yield resourcelib.resourceDB
     yield configlib.configDB
     yield schedulelib.scheduleDB
-    yield userlib.userDB
+    yield userlib.UserDB(dbDir / 'users')
 
 _databases: Optional[Mapping[str, databaselib.Database[Any]]] = None
 
@@ -53,8 +54,6 @@ def reloadDatabases() -> None:
     # dependent modules must be reloaded AFTER their dependencies
     # TODO: Automate this.
     reload(projectlib)
-    reload(tokens)
-    reload(userlib)
     reload(restypelib)
     reload(productdeflib)
     reload(frameworklib)

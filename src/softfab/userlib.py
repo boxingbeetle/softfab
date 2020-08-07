@@ -12,7 +12,6 @@ from passlib.apache import HtpasswdFile
 from twisted.cred.error import UnauthorizedLogin
 
 from softfab.compat import Protocol
-from softfab.config import dbDir
 from softfab.databaselib import Database, DatabaseElem
 from softfab.roles import UIRoleNames, roleNames
 from softfab.utils import atomicWrite, iterable
@@ -345,11 +344,6 @@ class UserDB(Database[UserInfo]):
         Returns True iff there are multiple active users.
         """
         return self.numActiveUsers > 1
-
-userDB = UserDB(dbDir / 'users')
-
-# The global name should go away eventually.
-# pylint: disable=redefined-outer-name
 
 def addUserAccount(userDB: UserDB, userName: str, roles: Iterable[str]) -> None:
     '''Creates a new user account.

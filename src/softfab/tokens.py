@@ -6,7 +6,6 @@ from typing import Dict, Iterator, Mapping, Optional, cast
 
 from passlib.pwd import genword
 
-from softfab.config import dbDir
 from softfab.databaselib import Database, DatabaseElem, createUniqueId
 from softfab.timelib import getTime
 from softfab.userlib import (
@@ -124,8 +123,6 @@ class TokenDB(Database[Token]):
         passwordFile = self.passwordFile
         if passwordFile.delete(tokenId):
             writePasswordFile(passwordFile)
-
-tokenDB = TokenDB(dbDir / 'tokens')
 
 class TokenUser(User):
     """User represented by an access token.

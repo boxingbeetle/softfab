@@ -1,95 +1,86 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-import unittest
+from pathlib import Path
 
+from pytest import fixture, raises
 from twisted.cred.error import UnauthorizedLogin
 
-from initconfig import removeDB
+from softfab.tokens import (
+    Token, TokenDB, TokenRole, authenticateToken, resetTokenPassword
+)
 
-from softfab import databases, tokens
 
+@fixture
+def tokenDB(tmp_path):
+    db = TokenDB(tmp_path)
+    db.preload()
+    return db
 
-class TestTokens(unittest.TestCase):
-    """Test access tokens."""
+def reloadDB(db):
+    db = db.__class__(Path(db.baseDir))
+    db.preload()
+    return db
 
-    def __init__(self, methodName = 'runTest'):
-        unittest.TestCase.__init__(self, methodName)
+def testTokenParams(tokenDB):
+    """Test token parameters."""
 
-    def reloadDatabases(self):
-        databases.reloadDatabases()
+    params = {'PARAM1': '12345', 'PARAM2': 'a b c'}
+    token = Token.create(TokenRole.RESOURCE, params)
+    tokenDB.add(token)
+    tokenId = token.getId()
 
-    def setUp(self):
-        self.reloadDatabases()
+    def checkParams():
+        assert token.getParam('PARAM1') == '12345'
+        assert token.getParam('PARAM2') == 'a b c'
 
-    def tearDown(self):
-        removeDB()
+    checkParams()
 
-    def test0100Params(self):
-        """Test token parameters."""
+    params['PARAM1'] = '67890'
+    del params['PARAM2']
+    checkParams()
 
-        params = {'PARAM1': '12345', 'PARAM2': 'a b c'}
-        token = tokens.Token.create(tokens.TokenRole.RESOURCE, params)
-        tokens.tokenDB.add(token)
-        tokenId = token.getId()
+    tokenDB = reloadDB(tokenDB)
+    token = tokenDB[tokenId]
+    checkParams()
 
-        def checkParams():
-            self.assertEqual(token.getParam('PARAM1'), '12345')
-            self.assertEqual(token.getParam('PARAM2'), 'a b c')
+def testTokenAuth(tokenDB):
+    """Test token authentication."""
 
-        checkParams()
+    token = Token.create(TokenRole.RESOURCE, {})
+    tokenDB.add(token)
+    tokenId = token.getId()
 
-        params['PARAM1'] = '67890'
-        del params['PARAM2']
-        checkParams()
+    # Non-existing token.
+    with raises(KeyError):
+        authenticateToken(tokenDB, 'nosuchtoken', 'letmein')
 
-        self.reloadDatabases()
-        token = tokens.tokenDB[tokenId]
-        checkParams()
+    # Existing token with no password set.
+    with raises(UnauthorizedLogin):
+        authenticateToken(tokenDB, tokenId, 'letmein')
 
-    def test0200Auth(self):
-        """Test token authentication."""
+    password1 = resetTokenPassword(tokenDB, token)
 
-        tokenDB = tokens.tokenDB
+    # Existing token with wrong password.
+    with raises(UnauthorizedLogin):
+        authenticateToken(tokenDB, tokenId, 'letmein')
 
-        token = tokens.Token.create(tokens.TokenRole.RESOURCE, {})
-        tokenDB.add(token)
-        tokenId = token.getId()
+    # Existing token with correct password.
+    token1 = authenticateToken(tokenDB, tokenId, password1)
+    assert token1.getId() == tokenId
 
-        # Non-existing token.
-        with self.assertRaises(KeyError):
-            tokens.authenticateToken(tokenDB, 'nosuchtoken', 'letmein')
+    password2 = resetTokenPassword(tokenDB, token)
+    assert password1 != password2
 
-        # Existing token with no password set.
-        with self.assertRaises(UnauthorizedLogin):
-            tokens.authenticateToken(tokenDB, tokenId, 'letmein')
+    # Existing token with old password.
+    with raises(UnauthorizedLogin):
+        authenticateToken(tokenDB, tokenId, password1)
 
-        password1 = tokens.resetTokenPassword(tokenDB, token)
+    # Existing token with new password.
+    token2 = authenticateToken(tokenDB, tokenId, password2)
+    assert token2.getId() == tokenId
 
-        # Existing token with wrong password.
-        with self.assertRaises(UnauthorizedLogin):
-            tokens.authenticateToken(tokenDB, tokenId, 'letmein')
+    tokenDB = reloadDB(tokenDB)
 
-        # Existing token with correct password.
-        token1 = tokens.authenticateToken(tokenDB, tokenId, password1)
-        self.assertEqual(token1.getId(), tokenId)
-
-        password2 = tokens.resetTokenPassword(tokenDB, token)
-        self.assertNotEqual(password1, password2)
-
-        # Existing token with old password.
-        with self.assertRaises(UnauthorizedLogin):
-            tokens.authenticateToken(tokenDB, tokenId, password1)
-
-        # Existing token with new password.
-        token2 = tokens.authenticateToken(tokenDB, tokenId, password2)
-        self.assertEqual(token2.getId(), tokenId)
-
-        self.reloadDatabases()
-        tokenDB = tokens.tokenDB
-
-        # Existing token with new password.
-        token3 = tokens.authenticateToken(tokenDB, tokenId, password2)
-        self.assertEqual(token3.getId(), tokenId)
-
-if __name__ == '__main__':
-    unittest.main()
+    # Existing token with new password.
+    token3 = authenticateToken(tokenDB, tokenId, password2)
+    assert token3.getId() == tokenId
