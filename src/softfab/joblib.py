@@ -8,7 +8,6 @@ from typing import (
     Iterator, List, Mapping, MutableSet, Optional, Sequence, Tuple, Union, cast
 )
 
-from softfab import taskrunlib
 from softfab.config import dbDir
 from softfab.databaselib import (
     Database, DatabaseElem, RecordObserver, Retriever, createUniqueId
@@ -1060,7 +1059,6 @@ class JobDB(Database[Job]):
         super().__init__(baseDir, JobFactory())
 
 jobDB = JobDB(dbDir / 'jobs')
-taskrunlib.jobDB = jobDB
 
 class TaskToJobs(RecordObserver[Job]):
     '''For each task ID, keep track of the IDs of all jobs containing that task.

@@ -28,17 +28,13 @@ from softfab.xmlgen import XML, XMLContent, xml
 
 if TYPE_CHECKING:
     # pylint: disable=cyclic-import
-    from softfab.joblib import Job, JobDB, Task, jobDB
+    from softfab.joblib import Job, JobDB, Task
     from softfab.productlib import Product
     from softfab.resourcelib import Resource, ResourceDB, TaskRunner
 else:
     Job = object
     JobDB = object
     Task = object
-    # Note: To avoid cyclic imports, joblib sets this.
-    #       The weird construct is to avoid PyLint complaining about methods we
-    #       call on it not existing for NoneType.
-    jobDB = cast(Database, (lambda x: x if x else None)(0))
     Product = object
     Resource = object
     ResourceDB = object
@@ -59,11 +55,12 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
     _job: Job
     _task: Task
 
-    def __init__(self, attributes: Mapping[str, str]):
+    def __init__(self, attributes: Mapping[str, str], jobDB: JobDB):
         super().__init__(attributes)
         if 'state' not in self._properties:
             # Initial state.
             self._properties['state'] = 'waiting'
+        self.__jobDB = jobDB
         self.__reports: List[str] = []
         self.__reserved: Dict[str, str] = {}
         self.__reasonForWaiting: Optional[ReasonForWaiting] = None
@@ -114,7 +111,7 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
         jobId = attributes['job']
         taskName = attributes['name']
         try:
-            job = jobDB[jobId]
+            job = self.__jobDB[jobId]
         except KeyError as ex:
             raise ObsoleteRecordError(jobId) from ex
         self._job = job
@@ -626,20 +623,24 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
                 yield xml.resource(ref=spec.reference, locator=locator)
 
 class TaskRunFactory:
-    @staticmethod
-    def createTaskrun(attributes: Mapping[str, str]) -> TaskRun:
-        return TaskRun(attributes)
+
+    jobDB: JobDB
+
+    def createTaskrun(self, attributes: Mapping[str, str]) -> TaskRun:
+        return TaskRun(attributes, self.jobDB)
 
 class TaskRunDB(Database[TaskRun]):
     privilegeObject = 't'
     description = 'task run'
     uniqueKeys = ( 'id', )
 
+    factory: TaskRunFactory
+
     def __init__(self, baseDir: Path):
         super().__init__(baseDir, TaskRunFactory())
 
     def addRun(self, task: Task) -> TaskRun:
-        taskRun = TaskRun({'id': createInternalId()})
+        taskRun = TaskRun({'id': createInternalId()}, self.factory.jobDB)
         # pylint: disable=protected-access
         taskRun._task = task
         taskRun._job = task.getJob()
