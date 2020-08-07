@@ -67,7 +67,7 @@ class TaskDef(frameworklib.TaskDefBase):
         return cast(Optional[str], self._properties.get('parent'))
 
     def getFramework(self,
-            getParent: GetParent = frameworklib.frameworkDB.__getitem__
+            getParent: Optional[GetParent] = None
             ) -> frameworklib.Framework:
         frameworkId = self.frameworkId
         if frameworkId is None:
@@ -75,7 +75,7 @@ class TaskDef(frameworklib.TaskDefBase):
             # edited; records in the DB must have a framework.
             raise ValueError('getFramework() called on parentless taskdef')
         else:
-            return cast(frameworklib.Framework, getParent(frameworkId))
+            return cast(frameworklib.Framework, self.getParent(getParent))
 
     def getParent(self, getFunc: Optional[GetParent]) -> Parameterized:
         frameworkId = self.frameworkId
