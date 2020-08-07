@@ -117,7 +117,6 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
             job = jobDB[jobId]
         except KeyError as ex:
             raise ObsoleteRecordError(jobId) from ex
-        # pylint: disable=attribute-defined-outside-init
         self._job = job
         task = job.getTask(taskName)
         assert task is not None, (job.getId(), taskName)
