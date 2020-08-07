@@ -10,21 +10,6 @@ from softfab.paramlib import GetParent, Parameterized, paramTop
 from softfab.xmlgen import XMLContent, xml
 
 
-class TaskDefFactory:
-    @staticmethod
-    def createTaskdef(attributes: Mapping[str, str]) -> 'TaskDef':
-        return TaskDef(attributes)
-
-class TaskDefDB(VersionedDatabase['TaskDef']):
-    privilegeObject = 'td'
-    description = 'task definition'
-    uniqueKeys = ( 'id', )
-
-    def __init__(self, baseDir: Path):
-        super().__init__(baseDir, TaskDefFactory())
-
-taskDefDB = TaskDefDB(dbDir / 'taskdefs')
-
 class TaskDef(frameworklib.TaskDefBase):
 
     @staticmethod
@@ -106,3 +91,18 @@ class TaskDef(frameworklib.TaskDefBase):
         yield super()._getContent()
         yield xml.title[ self.__title ]
         yield xml.description[ self.__description ]
+
+class TaskDefFactory:
+    @staticmethod
+    def createTaskdef(attributes: Mapping[str, str]) -> TaskDef:
+        return TaskDef(attributes)
+
+class TaskDefDB(VersionedDatabase[TaskDef]):
+    privilegeObject = 'td'
+    description = 'task definition'
+    uniqueKeys = ( 'id', )
+
+    def __init__(self, baseDir: Path):
+        super().__init__(baseDir, TaskDefFactory())
+
+taskDefDB = TaskDefDB(dbDir / 'taskdefs')
