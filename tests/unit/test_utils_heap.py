@@ -1,170 +1,181 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from softfab import utils
-import random, unittest
+"""Test Heap functionality."""
 
-class TestHeap(unittest.TestCase):
-    "Test Heap functionality."
+from random import randint, shuffle
 
+from pytest import fail, mark, raises
+
+from softfab.utils import Heap
+
+
+class SimParams:
+    arraySize = 471
+    arrayLoop = 27
+    chunkSize = 217
+    chunkLoop = 51
+    fillFactor = 1.3
+    delFactor = 0.4
+
+simParams = SimParams()
+
+
+class BaseTypeParams:
     keyFunc = None
 
-    def __init__(self, methodName = 'runTest'):
-        unittest.TestCase.__init__(self, methodName)
-        self.__arraySize = 471
-        self.__arrayLoop = 27
-        self.__chunkSize = 217
-        self.__chunkLoop = 51
-        self.__fillFactor = 1.3
-        self.__delFactor = 0.4
-
-    def __checkEmpty(self, heap):
-        self.assertIsNone(heap.peek())
-        self.assertIsNone(heap.pop())
-        self.assertRaises(StopIteration, lambda: next(heap.iterPop()))
-
-    def __getItems(self, heap):
-        #return [item for item in heap]
-        list = []
-        for item in heap.iterPop():
-            heap._check()
-            list.append(item)
-        return list
-
-    def _createHeap(self):
-        return utils.Heap(key=self.keyFunc)
-
-    def _wrapItem(self, item):
+    def wrapItem(self, item):
         return item
 
-    def test01Empty(self):
-        """Test with no elements (empty heap)"""
-        heap = self._createHeap()
-        self.__checkEmpty(heap)
+    def createHeap(self):
+        return Heap(key=self.keyFunc)
 
-    def test02OneItem(self):
-        """Test with a single element (add/remove)"""
-        heap = self._createHeap()
-        item = self._wrapItem('item')
-        heap.add(item)
-        list = self.__getItems(heap)
-        self.assertEqual(len(list), 1)
-        self.assertEqual(list[0], item)
-        self.__checkEmpty(heap)
+class Uncomparable:
+    def __init__(self, x):
+        self.x = x
+    def __lt__(self, other):
+        assert False
+    def __le__(self, other):
+        assert False
+    def __gt__(self, other):
+        assert False
+    def __ge__(self, other):
+        assert False
+    def __eq__(self, other):
+        return hasattr(other, 'x') and self.x == other.x
+    __hash__ = None
 
-    def test03Shuffled(self):
-        """Test with a shuffled sequence of distinct integers"""
-        heap = self._createHeap()
-        for _ in range(self.__arrayLoop):
-            initial = [ self._wrapItem(x) for x in range(self.__arraySize) ]
-            shuffled = list(initial)
-            random.shuffle(shuffled)
-            for item in shuffled:
-                heap.add(item)
-                heap._check()
-            self.assertEqual(self.__getItems(heap), initial)
-            self.__checkEmpty(heap)
-
-    def test04Random(self):
-        """Test with a sequence of random integers"""
-        heap = self._createHeap()
-        for _ in range(self.__arrayLoop):
-            initial = [
-                self._wrapItem(random.randint(0, 1 << 30))
-                for _ in range(self.__arraySize)
-                ]
-            random.shuffle(initial)
-            sorted = list(initial)
-            sorted.sort(key=self.keyFunc)
-            for item in initial:
-                heap.add(item)
-                heap._check()
-            self.assertEqual(self.__getItems(heap), sorted)
-            self.__checkEmpty(heap)
-
-    def test05Chunky(self):
-        """Test with a sequence of random integers fed in chuncks"""
-        heap = self._createHeap()
-        checkArray = []
-        for _ in range(self.__chunkLoop):
-            toAdd = random.randint(1, int(self.__chunkSize * self.__fillFactor))
-            toGet = random.randint(1, self.__chunkSize)
-            for a in range(toAdd):
-                item = self._wrapItem(random.randint(0, 1 << 30))
-                heap.add(item)
-                heap._check()
-                checkArray.append(item)
-            checkArray.sort(key=self.keyFunc)
-            for a in range(toGet):
-                item = heap.pop()
-                heap._check()
-                if item is None:
-                    if len(checkArray) != 0:
-                        self.fail('Heap is empty while check array'
-                        ' contains ' + str(len(checkArray)) + ' items')
-                else:
-                    try:
-                        self.assertEqual(checkArray.pop(0), item)
-                    except IndexError:
-                        self.fail(f"Heap has returned '{item}' "
-                                  f"while check array is empty")
-        for item in heap.iterPop():
-            heap._check()
-            try:
-                self.assertEqual(checkArray.pop(0), item)
-            except IndexError:
-                self.fail('Heap has returned \'' + str(item) +
-                '\' while check array is empty')
-        self.assertEqual(len(checkArray), 0)
-
-    def test06Remove(self):
-        """Test with removing elements from the middle"""
-        heap = self._createHeap()
-        for _ in range(self.__arrayLoop):
-            initial = [ self._wrapItem(x) for x in range(self.__arraySize) ]
-            shuffled = list(initial)
-            random.shuffle(shuffled)
-            for item in shuffled:
-                heap.add(item)
-                heap._check()
-            for _ in range(int(self.__arraySize * self.__delFactor)):
-                value = self._wrapItem(random.randint(0, self.__arraySize - 1))
-                try:
-                    index = initial.index(value)
-                except ValueError:
-                    pass
-                else:
-                    del initial[index]
-                    try:
-                        heap.remove(value)
-                    except ValueError:
-                        self.fail('Failed to remove element: ' + str(value))
-                    heap._check()
-            self.assertEqual(self.__getItems(heap), initial)
-            self.__checkEmpty(heap)
-
-class TestHeapExternalComparator(TestHeap):
+class UncomparableTypeParams(BaseTypeParams):
 
     @staticmethod
     def keyFunc(elem):
         return elem.x
 
-    class Uncomparable:
-        def __init__(self, x):
-            self.x = x
-        def __lt__(self, other):
-            assert False
-        def __le__(self, other):
-            assert False
-        def __gt__(self, other):
-            assert False
-        def __ge__(self, other):
-            assert False
-        def __eq__(self, other):
-            return hasattr(other, 'x') and self.x == other.x
-        __hash__ = None
+    def wrapItem(self, item):
+        return Uncomparable(item)
 
-    def _wrapItem(self, item):
-        return self.Uncomparable(item)
+typeParamsOptions = (BaseTypeParams(), UncomparableTypeParams())
 
-if __name__ == '__main__':
-    unittest.main()
+
+def checkEmpty(heap):
+    assert heap.peek() is None
+    assert heap.pop() is None
+    with raises(StopIteration):
+        next(heap.iterPop())
+
+def getItems(heap):
+    lst = []
+    for item in heap.iterPop():
+        heap._check()
+        lst.append(item)
+    return lst
+
+
+@mark.parametrize('typeParams', typeParamsOptions)
+def testHeapEmpty(typeParams):
+    """Test with no elements (empty heap)."""
+    heap = typeParams.createHeap()
+    checkEmpty(heap)
+
+@mark.parametrize('typeParams', typeParamsOptions)
+def testHeapOneItem(typeParams):
+    """Test with a single element (add/remove)."""
+    heap = typeParams.createHeap()
+    item = typeParams.wrapItem('item')
+    heap.add(item)
+    lst = getItems(heap)
+    assert len(lst) == 1
+    assert lst[0] == item
+    checkEmpty(heap)
+
+@mark.parametrize('typeParams', typeParamsOptions)
+def testHeapShuffled(typeParams):
+    """Test with a shuffled sequence of distinct integers."""
+    heap = typeParams.createHeap()
+    for _ in range(simParams.arrayLoop):
+        initial = [typeParams.wrapItem(x) for x in range(simParams.arraySize)]
+        shuffled = list(initial)
+        shuffle(shuffled)
+        for item in shuffled:
+            heap.add(item)
+            heap._check()
+        assert getItems(heap) == initial
+        checkEmpty(heap)
+
+@mark.parametrize('typeParams', typeParamsOptions)
+def testHeapRandom(typeParams):
+    """Test with a sequence of random integers."""
+    heap = typeParams.createHeap()
+    for _ in range(simParams.arrayLoop):
+        initial = [
+            typeParams.wrapItem(randint(0, 1 << 30))
+            for _ in range(simParams.arraySize)
+            ]
+        shuffle(initial)
+        srt = sorted(initial, key=typeParams.keyFunc)
+        for item in initial:
+            heap.add(item)
+            heap._check()
+        assert getItems(heap) == srt
+        checkEmpty(heap)
+
+@mark.parametrize('typeParams', typeParamsOptions)
+def testHeapChunky(typeParams):
+    """Test with a sequence of random integers fed in chuncks."""
+    heap = typeParams.createHeap()
+    checkArray = []
+    for _ in range(simParams.chunkLoop):
+        toAdd = randint(1, int(simParams.chunkSize * simParams.fillFactor))
+        toGet = randint(1, simParams.chunkSize)
+        for a in range(toAdd):
+            item = typeParams.wrapItem(randint(0, 1 << 30))
+            heap.add(item)
+            heap._check()
+            checkArray.append(item)
+        checkArray.sort(key=typeParams.keyFunc)
+        for a in range(toGet):
+            item = heap.pop()
+            heap._check()
+            if item is None:
+                if len(checkArray) != 0:
+                    fail(f"Heap is empty while check array "
+                         f"contains {len(checkArray)} items")
+            else:
+                try:
+                    assert checkArray.pop(0) == item
+                except IndexError:
+                    fail(f"Heap has returned '{item}' "
+                         f"while check array is empty")
+    for item in heap.iterPop():
+        heap._check()
+        try:
+            assert checkArray.pop(0) == item
+        except IndexError:
+            fail(f"Heap has returned '{item}' while check array is empty")
+    assert len(checkArray) == 0
+
+@mark.parametrize('typeParams', typeParamsOptions)
+def testHeapRemove(typeParams):
+    """Test with removing elements from the middle."""
+    heap = typeParams.createHeap()
+    for _ in range(simParams.arrayLoop):
+        initial = [typeParams.wrapItem(x) for x in range(simParams.arraySize)]
+        shuffled = list(initial)
+        shuffle(shuffled)
+        for item in shuffled:
+            heap.add(item)
+            heap._check()
+        for _ in range(int(simParams.arraySize * simParams.delFactor)):
+            value = typeParams.wrapItem(randint(0, simParams.arraySize - 1))
+            try:
+                index = initial.index(value)
+            except ValueError:
+                pass
+            else:
+                del initial[index]
+                try:
+                    heap.remove(value)
+                except ValueError:
+                    fail(f"Failed to remove element: {value}")
+                heap._check()
+        assert getItems(heap) == initial
+        checkEmpty(heap)
