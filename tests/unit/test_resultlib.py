@@ -1,137 +1,98 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-import os, unittest
+"""Test result storage and processing functionality."""
 
-from initconfig import config, removeDB
+from pytest import fixture, raises
 
 from softfab.resultlib import ResultStorage
 
 
-class TestResults(unittest.TestCase):
-    """Test result storage and processing functionality.
-    """
+@fixture
+def resultStorage(tmp_path):
+    return ResultStorage(tmp_path)
 
-    # Test data that can be used by various test cases:
-    taskName = 'testtask'
-    runId = 'faster'
-    key = 'dawn'
-    nrRuns = 50
-    @staticmethod
+# Test data that can be used by various test cases:
+TASK_NAME = 'testtask'
+RUN_ID = 'faster'
+KEY = 'dawn'
+NR_RUNS = 50
+
+def testResultsPutGet(resultStorage):
+    """Test whether data can be stored and retrieved."""
+
     def valueFunc(index):
-        return 'value%02d' % index
+        return f'value{index:02d}'
 
-    def __init__(self, methodName = 'runTest'):
-        unittest.TestCase.__init__(self, methodName)
+    runIds = []
+    for index in range(NR_RUNS):
+        runId = f'run{index:02d}'
+        runIds.append(runId)
+        data = {KEY: valueFunc(index)}
+        resultStorage.putData(TASK_NAME, runId, data)
 
-    def setUp(self):
-        self.resultStorage = ResultStorage(config.dbDir / 'results')
+    results = resultStorage.getCustomData(TASK_NAME, runIds, KEY)
+    foundIds = []
+    for runId, value in results:
+        assert runId.startswith('run')
+        index = int(runId[3:])
+        assert 0 <= index < NR_RUNS
+        assert value == valueFunc(index)
+        foundIds.append(runId)
+    assert sorted(foundIds) == sorted(runIds)
 
-    def tearDown(self):
-        removeDB()
+def testResultsInvalidKey(resultStorage):
+    """Test treatment of invalid keys."""
 
-    def test0010PutGet(self):
-        "Test whether data can be stored and retrieved."
+    # TODO: Maybe we need more thought about what should be valid keys.
+    for key in ('../abc', ''):
+        data = {key: 'dummy'}
+        with raises(KeyError):
+            resultStorage.putData(TASK_NAME, RUN_ID, data)
+        results = resultStorage.getCustomData(TASK_NAME, [RUN_ID], key)
+        assert list(results) == []
 
-        resultStorage = self.resultStorage
+def testResultsReplace(resultStorage):
+    """Check that new data replaces old data."""
 
-        runIds = []
-        for index in range(self.nrRuns):
-            runId = 'run%02d' % index
-            runIds.append(runId)
-            data = { self.key: self.valueFunc(index) }
-            resultStorage.putData(self.taskName, runId, data)
+    oldData = {KEY: 'old'}
+    newData = {KEY: 'new'}
+    resultStorage.putData(TASK_NAME, RUN_ID, oldData)
+    resultStorage.putData(TASK_NAME, RUN_ID, newData)
+    results = resultStorage.getCustomData(TASK_NAME, [RUN_ID], KEY)
+    assert list(results) == [(RUN_ID, 'new')]
 
-        results = resultStorage.getCustomData(self.taskName, runIds, self.key)
-        foundIds = []
-        for runId, value in results:
-            self.assertTrue(runId.startswith('run'))
-            index = int(runId[3:])
-            self.assertTrue(0 <= index < self.nrRuns)
-            self.assertEqual(value, self.valueFunc(index))
-            foundIds.append(runId)
-        self.assertEqual(sorted(foundIds), sorted(runIds))
+def testResultsAdd(resultStorage):
+    """Check that new data with different keys is added to old data."""
 
-    def test0020InvalidKey(self):
-        "Test treatment of invalid keys."
+    oldData = {'oldkey': 'old'}
+    newData = {'newkey': 'new'}
+    resultStorage.putData(TASK_NAME, RUN_ID, oldData)
+    resultStorage.putData(TASK_NAME, RUN_ID, newData)
+    results1 = resultStorage.getCustomData(TASK_NAME, [RUN_ID], 'oldkey')
+    assert list(results1) == [(RUN_ID, 'old')]
+    results2 = resultStorage.getCustomData(TASK_NAME, [RUN_ID], 'newkey')
+    assert list(results2) == [(RUN_ID, 'new')]
 
-        resultStorage = self.resultStorage
+def testResultsListKeys(resultStorage):
+    """Tests listing the keys that exist for a task name."""
 
-        # TODO: Maybe we need more thought about what should be valid keys.
-        for key in ( '../abc', '' ):
-            data = { key: 'dummy' }
-            self.assertRaises(
-                KeyError,
-                lambda: resultStorage.putData(self.taskName, self.runId, data)
-                )
-            results = resultStorage.getCustomData(
-                                    self.taskName, [ self.runId ], key)
-            self.assertEqual(list(results), [])
+    for index in range(2, NR_RUNS):
+        runId = f'run{index:02d}'
+        keys = [
+            f'key{key:02d}'
+            for key in range(2, NR_RUNS)
+            if key % index == 0
+            ]
+        data = dict.fromkeys(keys, 'dummy')
+        resultStorage.putData(TASK_NAME, runId, data)
 
-        # This test case is atypical by not storing anything.
-        # Make sure removeDB doesn't complain that the dir does not exist.
-        os.makedirs(config.dbDir)
+    assert resultStorage.getCustomKeys(TASK_NAME) == {
+        # for every N, N % N == 0 is true
+        # so every key for 2 <= key < nrRuns should be present
+        f'key{key:02d}' for key in range(2, NR_RUNS)
+        }
 
-    def test0030Replace(self):
-        "Check that new data replaces old data."
+def testResultsListKeysNone(resultStorage):
+    """Tests listing the keys if no data is stored for a task name."""
 
-        resultStorage = self.resultStorage
-
-        oldData = { self.key: 'old' }
-        newData = { self.key: 'new' }
-        resultStorage.putData(self.taskName, self.runId, oldData)
-        resultStorage.putData(self.taskName, self.runId, newData)
-        results = resultStorage.getCustomData(
-                                self.taskName, [ self.runId ], self.key)
-        self.assertEqual(list(results), [ ( self.runId, 'new' ) ])
-
-    def test0031Add(self):
-        "Check that new data with different keys is added to old data."
-
-        resultStorage = self.resultStorage
-
-        oldData = { 'oldkey': 'old' }
-        newData = { 'newkey': 'new' }
-        resultStorage.putData(self.taskName, self.runId, oldData)
-        resultStorage.putData(self.taskName, self.runId, newData)
-        results1 = resultStorage.getCustomData(
-                                self.taskName, [ self.runId ], 'oldkey')
-        self.assertEqual(list(results1), [ ( self.runId, 'old' ) ])
-        results2 = resultStorage.getCustomData(
-                                self.taskName, [ self.runId ], 'newkey')
-        self.assertEqual(list(results2), [ ( self.runId, 'new' ) ])
-
-    def test0040ListKeys(self):
-        "Tests listing the keys that exist for a task name."
-
-        resultStorage = self.resultStorage
-
-        for index in range(2, self.nrRuns):
-            runId = 'run%02d' % index
-            keys = [
-                'key%02d' % key
-                for key in range(2, self.nrRuns)
-                if key % index == 0
-                ]
-            data = dict.fromkeys(keys, 'dummy')
-            resultStorage.putData(self.taskName, runId, data)
-
-        self.assertEqual(
-            resultStorage.getCustomKeys(self.taskName),
-            # for every N, N % N == 0 is true
-            # so every key for 2 <= key < nrRuns should be present
-            {'key%02d' % key for key in range(2, self.nrRuns)}
-            )
-
-    def test0041ListKeysNone(self):
-        "Tests listing the keys if no data is stored for a task name."
-
-        resultStorage = self.resultStorage
-
-        self.assertEqual(resultStorage.getCustomKeys(self.taskName), set())
-
-        # This test case is atypical by not storing anything.
-        # Make sure removeDB doesn't complain that the dir does not exist.
-        os.makedirs(config.dbDir)
-
-if __name__ == '__main__':
-    unittest.main()
+    assert resultStorage.getCustomKeys(TASK_NAME) == set()
