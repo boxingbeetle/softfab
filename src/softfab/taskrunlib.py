@@ -16,7 +16,7 @@ from softfab.reportlib import Report, parseReport
 from softfab.resreq import ResourceClaim
 from softfab.restypelib import taskRunnerResourceTypeName
 from softfab.resultcode import ResultCode
-from softfab.resultlib import getCustomData, getCustomKeys, putData
+from softfab.resultlib import ResultStorage
 from softfab.storagelib import StorageURLMixin
 from softfab.tasklib import TaskStateMixin
 from softfab.timelib import getTime
@@ -55,12 +55,17 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
     _job: Job
     _task: Task
 
-    def __init__(self, attributes: Mapping[str, str], jobDB: JobDB):
+    def __init__(self,
+                 attributes: Mapping[str, str],
+                 jobDB: JobDB,
+                 resultStorage: ResultStorage
+                 ):
         super().__init__(attributes)
         if 'state' not in self._properties:
             # Initial state.
             self._properties['state'] = 'waiting'
         self.__jobDB = jobDB
+        self.__resultStorage = resultStorage
         self.__reports: List[str] = []
         self.__reserved: Dict[str, str] = {}
         self.__reasonForWaiting: Optional[ReasonForWaiting] = None
@@ -495,7 +500,7 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
             if reportResult and reportResult > result:
                 result = reportResult
                 summary = report.summary
-            putData(taskName, self.getId(), report.data)
+            self.__resultStorage.putData(taskName, self.getId(), report.data)
 
         # Finalize result.
         if result is None:
@@ -625,9 +630,10 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
 class TaskRunFactory:
 
     jobDB: JobDB
+    resultStorage: ResultStorage
 
     def createTaskrun(self, attributes: Mapping[str, str]) -> TaskRun:
-        return TaskRun(attributes, self.jobDB)
+        return TaskRun(attributes, self.jobDB, self.resultStorage)
 
 class TaskRunDB(Database[TaskRun]):
     privilegeObject = 't'
@@ -640,7 +646,7 @@ class TaskRunDB(Database[TaskRun]):
         super().__init__(baseDir, TaskRunFactory())
 
     def addRun(self, task: Task) -> TaskRun:
-        taskRun = TaskRun({'id': createInternalId()}, self.factory.jobDB)
+        taskRun = self.factory.createTaskrun({'id': createInternalId()})
         # pylint: disable=protected-access
         taskRun._task = task
         taskRun._job = task.getJob()
@@ -652,7 +658,8 @@ class TaskRunDB(Database[TaskRun]):
         The existance of a key means that at least one record contains that key;
         it is not guaranteed all records will contain that key.
         '''
-        return {'sf.duration'} | getCustomKeys(taskName)
+        return {'sf.duration'} \
+             | self.factory.resultStorage.getCustomKeys(taskName)
 
     def getData(self,
                 taskName: str,
@@ -675,6 +682,7 @@ class TaskRunDB(Database[TaskRun]):
             else:
                 raise KeyError(key)
         else:
-            yield from getCustomData(taskName, runIds, key)
+            yield from self.factory.resultStorage.getCustomData(
+                                                        taskName, runIds, key)
 
 taskRunDB = TaskRunDB(dbDir / 'taskruns')

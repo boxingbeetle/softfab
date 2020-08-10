@@ -12,7 +12,7 @@ from softfab.request import Request
 from softfab.resourcelib import ResourceDB
 from softfab.response import Response
 from softfab.resultcode import ResultCode
-from softfab.resultlib import putData
+from softfab.resultlib import ResultStorage
 from softfab.taskrunlib import defaultSummaries
 from softfab.tokens import TokenRole, TokenUser
 from softfab.userlib import User, checkPrivilege
@@ -36,6 +36,7 @@ class TaskDone_POST(ControlPage['TaskDone_POST.Arguments',
 
         jobDB: ClassVar[JobDB]
         resourceDB: ClassVar[ResourceDB]
+        resultStorage: ClassVar[ResultStorage]
 
         async def process(self,
                           req: Request['TaskDone_POST.Arguments'],
@@ -103,7 +104,7 @@ class TaskDone_POST(ControlPage['TaskDone_POST.Arguments',
 
             # Start making changes.
             if extracted:
-                putData(taskName, runId, extracted)
+                self.resultStorage.putData(taskName, runId, extracted)
             job.taskDone(taskName, result, summary, reports, outputs)
 
     def checkAccess(self, user: User) -> None:

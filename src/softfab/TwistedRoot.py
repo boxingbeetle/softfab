@@ -33,6 +33,7 @@ from softfab.pageargs import PageArgs
 from softfab.projectlib import Project, ProjectDB, TimezoneUpdater
 from softfab.render import NotFoundPage, renderAuthenticated
 from softfab.resourcelib import ResourceDB, TaskRunnerTokenProvider
+from softfab.resultlib import ResultStorage
 from softfab.schedulelib import ScheduleDB, ScheduleManager
 from softfab.selectlib import ObservingTagCache
 from softfab.tokens import TokenDB
@@ -258,9 +259,13 @@ class SoftFabRoot(Resource):
             await preload(databases.values())
 
             jobDB = cast(JobDB, databases['jobDB'])
+            # TODO: resultStorage was already injected into factories by
+            #       getDatabases(), but we have to construct it again
+            #       to inject into pages.
             dependencies: Dict[str, object] = dict(
                 databases,
                 project=project,
+                resultStorage=ResultStorage(dbDir / 'results'),
                 dateRange=DateRangeMonitor(jobDB),
                 unfinishedJobs=UnfinishedJobs(jobDB),
                 taskToJobs=TaskToJobs(jobDB)

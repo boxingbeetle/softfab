@@ -9,6 +9,7 @@ from softfab import (
     tokens, userlib
 )
 from softfab.config import dbDir
+from softfab.resultlib import ResultStorage
 
 
 # Note: The databases should be ordered such that all if D2 depends on D1,
@@ -44,6 +45,7 @@ def getDatabases() -> Mapping[str, databaselib.Database[Any]]:
             factories[f'{name[0].lower()}{name[1:-2]}Factory'] = db.factory
         dependencies: Dict[str, object] = dict(databases)
         dependencies.update(factories)
+        dependencies['resultStorage'] = ResultStorage(dbDir / 'results')
         for factory in factories.values():
             injectDependencies(factory, dependencies)
         _databases = databases
