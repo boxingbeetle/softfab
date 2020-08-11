@@ -1,194 +1,119 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-import unittest
-from importlib import reload
 from io import StringIO
 
-from initconfig import removeDB
+from pytest import fixture, mark
+import attr
 
-from softfab import joblib, resourcelib, restypelib, taskrunlib, xmlbind
-from softfab.databases import reloadDatabases
+# Import for the side effect of setting dbDir.
+# We're not going to use that dir, but the modules under test still need it.
+import initconfig
+
+from softfab.joblib import JobDB
+from softfab.resourcelib import (
+    RequestFactory, ResourceDB, TaskRunner, TaskRunnerData
+)
 from softfab.resourceview import getResourceStatus
+from softfab.restypelib import ResTypeDB
 from softfab.timelib import setTime
+from softfab.tokens import TokenDB
+from softfab.taskrunlib import TaskRunDB
+from softfab.xmlbind import parse
 
 
-class DataFactory:
-    """Factory for TaskRunnerData class."""
-    def createData(self, attributes):
-        return resourcelib.TaskRunnerData(attributes)
+class Databases:
 
-class TaskRunnerFactory:
-    """Factory for TaskRunner resources that does not create a token."""
-    def createTaskrunner(self, attributes):
-        return resourcelib.TaskRunner(attributes, restypelib.resTypeDB,
-                                      taskrunlib.taskRunDB, None)
+    def __init__(self, dbDir):
+        self.dbDir = dbDir
+        self.reload()
 
-class TestTRDatabase(unittest.TestCase):
-    """Test basic Task Runner database functionality."""
+    def reload(self):
+        dbDir = self.dbDir
 
-    dataRun = xmlbind.parse(resourcelib.RequestFactory(), StringIO(
-        '<request runnerVersion="2.0.0" host="factorypc">'
-            '<run jobId="2004-05-06_12-34_567890" taskId="TC-6.1" runId="0"/>'
-        '</request>'
-        ))
-    dataNoRun = xmlbind.parse(resourcelib.RequestFactory(), StringIO(
-        '<request runnerVersion="2.0.0" host="factorypc">'
-        '</request>'
-        ))
+        self.jobDB = JobDB(dbDir / 'jobs')
+        self.resTypeDB = ResTypeDB(dbDir / 'restypes')
+        self.taskRunDB = TaskRunDB(dbDir / 'taskruns')
+        self.resourceDB = ResourceDB(dbDir / 'resources')
+        self.tokenDB = TokenDB(dbDir / 'tokens')
 
-    def __init__(self, methodName = 'runTest'):
-        unittest.TestCase.__init__(self, methodName)
+        # TODO: Use the generic injection system.
+        self.resourceDB.factory.resTypeDB = self.resTypeDB
+        self.resourceDB.factory.taskRunDB = self.taskRunDB
+        self.resourceDB.factory.tokenDB = self.tokenDB
 
-    def setUp(self):
-        reloadDatabases()
-        assert len(resourcelib.resourceDB) == 0
+        self.jobDB.preload()
+        self.resTypeDB.preload()
+        self.taskRunDB.preload()
+        self.resourceDB.preload()
 
-    def tearDown(self):
-        removeDB()
+@fixture
+def databases(tmp_path):
+    ret = Databases(tmp_path)
+    assert len(ret.resourceDB) == 0
+    return ret
 
-    def suspendTest(self, data):
-        """Test suspend functionality."""
-        resourceFactory = resourcelib.resourceDB.factory
-        record = resourceFactory.newTaskRunner('runner1', '', set())
-        record.sync(joblib.jobDB, data)
+dataRun = parse(RequestFactory(), StringIO(
+    '<request runnerVersion="2.0.0" host="factorypc">'
+        '<run jobId="2004-05-06_12-34_567890" taskId="TC-6.1" runId="0"/>'
+    '</request>'
+    ))
 
-        # Check if initially not suspended.
-        self.assertTrue(not record.isSuspended())
-        # Check False -> True transition of suspended.
-        record.setSuspend(True, None)
-        self.assertTrue(record.isSuspended())
-        # Check True -> True transition of suspended.
-        record.setSuspend(True, None)
-        self.assertTrue(record.isSuspended())
-        # Check True -> False transition of suspended.
-        record.setSuspend(False, None)
-        self.assertTrue(not record.isSuspended())
-        # Check False -> False transition of suspended.
-        record.setSuspend(False, None)
-        self.assertTrue(not record.isSuspended())
+dataNoRun = parse(RequestFactory(), StringIO(
+    '<request runnerVersion="2.0.0" host="factorypc">'
+    '</request>'
+    ))
 
-    def syncTest(self, data1, data2):
-        """Test syncing of the TR database."""
-        resourceFactory = resourcelib.resourceDB.factory
-        record1 = resourceFactory.newTaskRunner('runner1', '', set())
-        resourcelib.resourceDB.add(record1)
-        record1.sync(joblib.jobDB, data1)
+@mark.parametrize('data1', (dataRun, dataNoRun))
+@mark.parametrize('data2', (dataRun, dataNoRun))
+def testTaskRunnerSync(databases, data1, data2):
+    """Test syncing of the TR database."""
 
-        # Check if cache and database are in sync:
-        reloadDatabases()
-        record2 = resourcelib.resourceDB[record1.getId()]
+    def check():
+        """Check if cache and database are in sync."""
+        databases.reload()
+        record2 = databases.resourceDB[record1.getId()]
         del record2._properties['tokenId']
-        self.assertEqual(record1._properties, record2._properties)
-        # Change data in database.
-        # Check if cache and database are still in sync:
-        record1.sync(joblib.jobDB, data2)
-        reloadDatabases()
-        record2 = resourcelib.resourceDB[record1.getId()]
-        del record2._properties['tokenId']
-        self.assertEqual(record1._properties, record2._properties)
+        assert record1._properties == record2._properties
 
-    def statusTest(self, data, busy):
-        """Test if right status is returned."""
-        setTime(1000) # time at moment of record creation
-        resourceFactory = resourcelib.resourceDB.factory
-        record = resourceFactory.newTaskRunner('runner1', '', set())
-        resourcelib.resourceDB.add(record)
-        record.sync(joblib.jobDB, data)
-        #record.getSyncWaitDelay = lambda: 3
-        record.getWarnTimeout = lambda: 8
-        record.getLostTimeout = lambda: 35
+    resourceFactory = databases.resourceDB.factory
+    record1 = resourceFactory.newTaskRunner('runner1', '', set())
+    databases.resourceDB.add(record1)
+    record1.sync(databases.jobDB, data1)
+    check()
 
-        # Check if status 'lost' is returned if the time since last sync has
-        # become larger than the lost timeout value (= 35):
-        setTime(1036) # - 1000 > 35
-        self.assertEqual(getResourceStatus(record), 'lost')
-        # Check that pausing the TR doesn't change this status:
-        record.setSuspend(True, None)
-        self.assertEqual(getResourceStatus(record), 'lost')
-        record.setSuspend(False, None)
-        self.assertEqual(getResourceStatus(record), 'lost')
-        # Check if status 'warning' is returned if the time since last sync has
-        # become larger than the warning timeout value (= 8)
-        # but smaller than the lost timeout value (= 35):
-        setTime(1035) # - 1000 > 8
-        self.assertEqual(getResourceStatus(record), 'warning')
-        setTime(1009) # - 1000 > 8
-        self.assertEqual(getResourceStatus(record), 'warning')
-        # Check that pausing the TR doesn't change this status:
-        record.setSuspend(True, None)
-        self.assertEqual(getResourceStatus(record), 'warning')
-        record.setSuspend(False, None)
-        self.assertEqual(getResourceStatus(record), 'warning')
+    # Change data in database.
+    record1.sync(databases.jobDB, data2)
+    check()
 
-        # busy or not busy dependend block:
-        if busy:
-            resultNotSuspended = 'busy'
-            resultSuspended = 'busy'
-        else:
-            resultNotSuspended = 'free'
-            resultSuspended = 'suspended'
-        # Check the status if the time since last sync has become
-        # not larger than the warning timeout value (= 8).
-        # If TR is busy, 'busy' should be returned.
-        # If TR is not busy, 'free' should be returned.
-        setTime(1008) # - 1000 == 8
-        self.assertEqual(getResourceStatus(record), resultNotSuspended)
-        # Check that pausing the TR returns 'busy', in case TR is busy,
-        # or returns 'suspended' in case TR is not busy:
-        record.setSuspend(True, None)
-        self.assertEqual(getResourceStatus(record), resultSuspended)
-        # Check that unpausing the TR returns 'busy', in case TR is busy,
-        # or returns 'free' in case TR is not busy:
-        record.setSuspend(False, None)
-        self.assertEqual(getResourceStatus(record), resultNotSuspended)
+@mark.parametrize('data', (dataRun, dataNoRun))
+def testTaskRunnerSuspend(databases, data):
+    """Test suspend functionality."""
 
-        # Check if status 'unknown' is returned after a cache flush:
-        reloadDatabases()
-        record = resourcelib.resourceDB[record.getId()]
-        self.assertEqual(getResourceStatus(record), 'unknown')
-        # Check that (un)pausing the TR changes the status:
-        record.setSuspend(True, None)
-        self.assertEqual(getResourceStatus(record), 'suspended')
-        record.setSuspend(False, None)
-        self.assertEqual(getResourceStatus(record), 'unknown')
+    resourceFactory = databases.resourceDB.factory
+    record = resourceFactory.newTaskRunner('runner1', '', set())
+    record.sync(databases.jobDB, data)
 
-    def toXMLTest(self, data):
-        '''Test toXML functionality.
-        Check if toXML() generates valid XML code by parsing the toXML()
-        output while creating a new object and compare the old and new object,
-        as well as their toXML() outputs.
-        '''
+    # Check if initially not suspended.
+    assert not record.isSuspended()
+    # Check False -> True transition of suspended.
+    record.setSuspend(True, None)
+    assert record.isSuspended()
+    # Check True -> True transition of suspended.
+    record.setSuspend(True, None)
+    assert record.isSuspended()
+    # Check True -> False transition of suspended.
+    record.setSuspend(False, None)
+    assert not record.isSuspended()
+    # Check False -> False transition of suspended.
+    record.setSuspend(False, None)
+    assert not record.isSuspended()
 
-        # TaskRunnerData class:
-        data2 = xmlbind.parse(
-            DataFactory(), StringIO(data.toXML().flattenXML())
-            )
-        self.assertEqual(data, data2)
-        # TaskRunner class:
-        resourceFactory = resourcelib.resourceDB.factory
-        record1 = resourceFactory.newTaskRunner('runner1', '', set())
-        record1.sync(joblib.jobDB, data)
-        record2 = xmlbind.parse(
-            TaskRunnerFactory(),
-            StringIO(record1.toXML().flattenXML())
-            )
-        self.assertEqual(record1._properties, record2._properties)
+def testTaskRunnerStatus(databases):
+    """Test if right status is returned."""
 
-    def test0010sync(self):
-        """Test syncing from a busy TR to an idle TR."""
-        self.syncTest(self.dataRun, self.dataNoRun)
-
-    def test0015sync(self):
-        """Test syncing from an idle TR to a busy TR."""
-        self.syncTest(self.dataNoRun, self.dataRun)
-
-    def test0020suspend(self):
-        """Test suspend functionality while TR is busy."""
-        self.suspendTest(self.dataRun)
-
-    def test0025suspend(self):
-        """Test suspend functionality while TR is not busy."""
-        self.suspendTest(self.dataNoRun)
+    # Idle TR.
+    data = dataNoRun
+    busy = False
 
 # TODO: The old design of resourcelib made the Task Runner the authority that
 #       determines whether a task is running. In the new design, it is the
@@ -198,21 +123,108 @@ class TestTRDatabase(unittest.TestCase):
 #       a second joblib test. Instead, I kept the resourcelib test simple
 #       and disabled this test case. However, it means that parts of the
 #       functionality remain untested, which is not a good situation.
-#    def test0030status(self):
-#        """Test status reproduction of a busy TR."""
-#        self.statusTest(self.dataRun, True)
+#    data = dataRun
+#    busy = True
 
-    def test0035status(self):
-        """Test status reproduction of an idle TR."""
-        self.statusTest(self.dataNoRun, False)
+    setTime(1000) # time at moment of record creation
+    resourceFactory = databases.resourceDB.factory
+    record = resourceFactory.newTaskRunner('runner1', '', set())
+    databases.resourceDB.add(record)
+    record.sync(databases.jobDB, data)
+    #record.getSyncWaitDelay = lambda: 3
+    record.getWarnTimeout = lambda: 8
+    record.getLostTimeout = lambda: 35
 
-    def test0040toXML(self):
-        """Test XML generation of objects of a busy TR."""
-        self.toXMLTest(self.dataRun)
+    # Check if status 'lost' is returned if the time since last sync has
+    # become larger than the lost timeout value (= 35):
+    setTime(1036) # - 1000 > 35
+    assert getResourceStatus(record) == 'lost'
+    # Check that pausing the TR doesn't change this status:
+    record.setSuspend(True, None)
+    assert getResourceStatus(record) == 'lost'
+    record.setSuspend(False, None)
+    assert getResourceStatus(record) == 'lost'
+    # Check if status 'warning' is returned if the time since last sync has
+    # become larger than the warning timeout value (= 8)
+    # but smaller than the lost timeout value (= 35):
+    setTime(1035) # - 1000 > 8
+    assert getResourceStatus(record) == 'warning'
+    setTime(1009) # - 1000 > 8
+    assert getResourceStatus(record) == 'warning'
+    # Check that pausing the TR doesn't change this status:
+    record.setSuspend(True, None)
+    assert getResourceStatus(record) == 'warning'
+    record.setSuspend(False, None)
+    assert getResourceStatus(record) == 'warning'
 
-    def test0045toXML(self):
-        """Test XML generation of objects of an idle TR."""
-        self.toXMLTest(self.dataNoRun)
+    # busy or not busy dependend block:
+    if busy:
+        resultNotSuspended = 'busy'
+        resultSuspended = 'busy'
+    else:
+        resultNotSuspended = 'free'
+        resultSuspended = 'suspended'
+    # Check the status if the time since last sync has become
+    # not larger than the warning timeout value (= 8).
+    # If TR is busy, 'busy' should be returned.
+    # If TR is not busy, 'free' should be returned.
+    setTime(1008) # - 1000 == 8
+    assert getResourceStatus(record) == resultNotSuspended
+    # Check that pausing the TR returns 'busy', in case TR is busy,
+    # or returns 'suspended' in case TR is not busy:
+    record.setSuspend(True, None)
+    assert getResourceStatus(record) == resultSuspended
+    # Check that unpausing the TR returns 'busy', in case TR is busy,
+    # or returns 'free' in case TR is not busy:
+    record.setSuspend(False, None)
+    assert getResourceStatus(record) == resultNotSuspended
 
-if __name__ == '__main__':
-    unittest.main()
+    # Check if status 'unknown' is returned after a cache flush:
+    databases.reload()
+    record = databases.resourceDB[record.getId()]
+    assert getResourceStatus(record) == 'unknown'
+    # Check that (un)pausing the TR changes the status:
+    record.setSuspend(True, None)
+    assert getResourceStatus(record) == 'suspended'
+    record.setSuspend(False, None)
+    assert getResourceStatus(record) == 'unknown'
+
+class DataFactory:
+    """Factory for TaskRunnerData class.
+
+    This is like RequestFactory, but with a different tag name.
+    """
+
+    def createData(self, attributes):
+        return TaskRunnerData(attributes)
+
+@attr.s(auto_attribs=True, frozen=True)
+class TaskRunnerFactory:
+    """Factory for TaskRunner resources that does not create a token."""
+
+    databases: Databases
+
+    def createTaskrunner(self, attributes):
+        resTypeDB = self.databases.resTypeDB
+        taskRunDB = self.databases.taskRunDB
+        return TaskRunner(attributes, resTypeDB, taskRunDB, None)
+
+@mark.parametrize('data', (dataRun, dataNoRun))
+def testTaskRunnerToXML(databases, data):
+    """Test toXML() functionality.
+
+    Check if toXML() generates valid XML code by parsing the toXML()
+    output while creating a new object and compare the old and new object,
+    as well as their toXML() outputs.
+    """
+
+    # TaskRunnerData class:
+    data2 = parse(DataFactory(), StringIO(data.toXML().flattenXML()))
+    assert data == data2
+    # TaskRunner class:
+    resourceFactory = databases.resourceDB.factory
+    record1 = resourceFactory.newTaskRunner('runner1', '', set())
+    record1.sync(databases.jobDB, data)
+    taskRunnerFactory = TaskRunnerFactory(databases)
+    record2 = parse(taskRunnerFactory, StringIO(record1.toXML().flattenXML()))
+    assert record1._properties == record2._properties
