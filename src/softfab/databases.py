@@ -17,15 +17,15 @@ from softfab.resultlib import ResultStorage
 # TODO: Automatically order in this way, or at least detect if the order is
 #       invalid.
 def _iterDatabases() -> Iterator[databaselib.Database[Any]]:
-    yield projectlib.projectDB
+    yield projectlib.ProjectDB(dbDir / 'project')
     yield tokens.TokenDB(dbDir / 'tokens')
     yield restypelib.resTypeDB
     yield productdeflib.productDefDB
     yield frameworklib.frameworkDB
     yield taskdeflib.taskDefDB
-    yield productlib.productDB
+    yield productlib.ProductDB(dbDir / 'products')
     yield joblib.jobDB # joblib must go before taskrunlib despite dependencies
-    yield taskrunlib.taskRunDB
+    yield taskrunlib.TaskRunDB(dbDir / 'taskruns')
     yield resourcelib.resourceDB
     yield configlib.configDB
     yield schedulelib.ScheduleDB(dbDir / 'scheduled')
@@ -55,13 +55,10 @@ def reloadDatabases() -> None:
     # !!! NOTE: The order of reloading is very important:
     # dependent modules must be reloaded AFTER their dependencies
     # TODO: Automate this.
-    reload(projectlib)
     reload(restypelib)
     reload(productdeflib)
     reload(frameworklib)
     reload(taskdeflib)
-    reload(productlib)
-    reload(taskrunlib)
     reload(resourcelib)
     reload(joblib)
     reload(configlib)

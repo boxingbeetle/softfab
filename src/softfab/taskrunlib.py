@@ -8,7 +8,6 @@ from typing import (
 from urllib.parse import quote_plus, urljoin
 import logging
 
-from softfab.config import dbDir
 from softfab.databaselib import (
     Database, DatabaseElem, ObsoleteRecordError, createInternalId
 )
@@ -684,5 +683,3 @@ class TaskRunDB(Database[TaskRun]):
         else:
             yield from self.factory.resultStorage.getCustomData(
                                                         taskName, runIds, key)
-
-taskRunDB = TaskRunDB(dbDir / 'taskruns')

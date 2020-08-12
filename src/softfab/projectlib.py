@@ -12,7 +12,6 @@ import os
 import os.path
 import time
 
-from softfab.config import dbDir
 from softfab.databaselib import Database, SingletonElem, SingletonObserver
 from softfab.timelib import getTime
 from softfab.userlib import AnonGuestUser, UnknownUser, User
@@ -249,8 +248,6 @@ class ProjectDB(Database[Project]):
 
         # Call observers, no matter whether we loaded or created the record.
         self._notifyAdded(record)
-
-projectDB = ProjectDB(dbDir / 'project')
 
 class TimezoneUpdater(SingletonObserver):
 

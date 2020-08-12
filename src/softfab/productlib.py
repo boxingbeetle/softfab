@@ -4,7 +4,6 @@ from functools import total_ordering
 from pathlib import Path
 from typing import Dict, Iterator, Mapping, Optional, Tuple, cast
 
-from softfab.config import dbDir
 from softfab.databaselib import Database, DatabaseElem, createInternalId
 from softfab.productdeflib import ProductDef, ProductDefDB, ProductType
 from softfab.xmlbind import XMLTag
@@ -160,5 +159,3 @@ class ProductDB(Database[Product]):
             )
         self.add(product)
         return product
-
-productDB = ProductDB(dbDir / 'products')
