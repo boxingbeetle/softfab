@@ -142,11 +142,13 @@ class ProductDB(Database[Product]):
     description = 'product'
     uniqueKeys = ( 'id', )
 
+    factory: ProductFactory
+
     def __init__(self, baseDir: Path):
         super().__init__(baseDir, ProductFactory())
 
     def create(self, name: str) -> Product:
-        productDefDB = cast(ProductFactory, self.factory).productDefDB
+        productDefDB = self.factory.productDefDB
         pdKey = productDefDB.latestVersion(name)
         if pdKey is None:
             raise KeyError(name)
