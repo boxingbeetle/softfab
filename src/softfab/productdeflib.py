@@ -59,7 +59,7 @@ class ProductDef(XMLTag, DatabaseElem):
     def isCombined(self) -> bool:
         return cast(bool, self['combined'])
 
-class ProductFactory:
+class ProductDefFactory:
     @staticmethod
     def createProduct(attributes: Mapping[str, str]) -> ProductDef:
         return ProductDef(attributes)
@@ -70,7 +70,7 @@ class ProductDefDB(VersionedDatabase[ProductDef]):
     uniqueKeys = ( 'id', )
 
     def __init__(self, baseDir: Path):
-        super().__init__(baseDir, ProductFactory())
+        super().__init__(baseDir, ProductDefFactory())
 
     def _customCheckId(self, key: str) -> None:
         checkWrapperVarName(key)
