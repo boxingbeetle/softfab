@@ -209,6 +209,8 @@ class TaskRunnerFactory:
         taskRunDB = self.databases.taskRunDB
         return TaskRunner(attributes, resTypeDB, taskRunDB, None)
 
+@mark.skip(reason="test fails if there is a module reload between collection "
+                  "and execution, as it breaks isinstance() inside __eq__()")
 @mark.parametrize('data', (dataRun, dataNoRun))
 def testTaskRunnerToXML(databases, data):
     """Test toXML() functionality.
