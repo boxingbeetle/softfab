@@ -40,9 +40,13 @@ def getDatabases() -> Mapping[str, databaselib.Database[Any]]:
         factories = {}
         for db in _iterDatabases():
             name = db.__class__.__name__
-            databases[name[0].lower() + name[1:]] = db
+            dbName = name[0].lower() + name[1:]
+            assert dbName not in databases
+            databases[dbName] = db
             assert name.endswith('DB'), name
-            factories[f'{name[0].lower()}{name[1:-2]}Factory'] = db.factory
+            factoryName = f'{name[0].lower()}{name[1:-2]}Factory'
+            assert factoryName not in factories
+            factories[factoryName] = db.factory
         dependencies: Dict[str, object] = dict(databases)
         dependencies.update(factories)
         dependencies['resultStorage'] = ResultStorage(dbDir / 'results')
