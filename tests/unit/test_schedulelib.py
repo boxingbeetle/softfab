@@ -92,6 +92,7 @@ class ScheduleFixtureMixin:
 
     def setUp(self):
         self.reloadDatabases()
+        self.scheduleDB = databases.getDatabases()['scheduleDB']
         # Patch reactor used by schedulelib, because we don't use it in this
         # test and it is only costing us performance.
         # The patching has to be done here because reloadDatabases() reloads
@@ -101,7 +102,7 @@ class ScheduleFixtureMixin:
         self.scheduleManager = schedulelib.ScheduleManager(
                                     configlib.configDB,
                                     joblib.jobDB,
-                                    schedulelib.scheduleDB)
+                                    self.scheduleDB)
 
         self.__taskRunnerAvailableCallbacks = []
         self.__timedCallbacks = []
@@ -172,10 +173,10 @@ class ScheduleFixtureMixin:
         if days is not None:
             extra['days'] = days
         extra.update(configFactory())
-        element = schedulelib.scheduleDB.create(
+        element = self.scheduleDB.create(
             scheduleId, suspended, startTime, sequence, owner, comment, extra
             )
-        schedulelib.scheduleDB.add(element)
+        self.scheduleDB.add(element)
         return element
 
     def expectedStatus(self):
@@ -251,7 +252,7 @@ class ScheduleFixtureMixin:
         self.__suspended = suspended
 
         # Create schedule.
-        self.assertEqual(len(schedulelib.scheduleDB), 0)
+        self.assertEqual(len(self.scheduleDB), 0)
         schedId = 'schedule-name'
         if configFactory is None and missingConfig:
             configFactory = sharedConfigFactory('nonExisting')
@@ -259,7 +260,7 @@ class ScheduleFixtureMixin:
             schedId, suspended, self.preparedTime + deltaTime,
             sequence, days = days, configFactory = configFactory
             )
-        self.scheduled = scheduled = schedulelib.scheduleDB.get(schedId)
+        self.scheduled = scheduled = self.scheduleDB.get(schedId)
         self.assertTrue(element is scheduled, (element, scheduled))
 
         # Verify initial status.
@@ -391,9 +392,9 @@ class Test0100Basic(ScheduleFixtureMixin, unittest.TestCase):
         # Delete schedule.
         self.expectRunning()
         self.wait(60)
-        schedulelib.scheduleDB.remove(self.scheduled)
+        self.scheduleDB.remove(self.scheduled)
         self.scheduled = None
-        self.assertEqual(len(schedulelib.scheduleDB), 0)
+        self.assertEqual(len(self.scheduleDB), 0)
         self.wait(self.duration - 60)
         self.expectJobDone()
         # Run for another day, no jobs should be created anymore.
@@ -417,7 +418,7 @@ class Test0400StartTime(ScheduleFixtureMixin, unittest.TestCase):
         pass
         # We could perform the check below, but it slows down the test a lot
         # and it doesn't provide much value in return.
-        #for schedule in schedulelib.scheduleDB:
+        #for schedule in self.scheduleDB:
         #    self.assertEqual(getScheduleStatus(configlib.configDB, schedule), 'ok')
 
     def test0400DailyStart(self):
@@ -473,7 +474,7 @@ class Test0400StartTime(ScheduleFixtureMixin, unittest.TestCase):
                 schedulelib.ScheduleRepeat.WEEKLY, days = '0' * day + '1' + '0' * (6 - day),
                 configFactory = sharedConfigFactory(configId)
                 )
-            scheduled = schedulelib.scheduleDB.get(schedId)
+            scheduled = self.scheduleDB.get(schedId)
             self.assertEqual(getScheduleStatus(configlib.configDB, scheduled), 'ok')
 
         # Run simulation for 2 weeks.
@@ -511,7 +512,7 @@ class Test0400StartTime(ScheduleFixtureMixin, unittest.TestCase):
                 schedId, False, startTime, schedulelib.ScheduleRepeat.WEEKLY, days = dayString,
                 configFactory = sharedConfigFactory(configId)
                 )
-            scheduled = schedulelib.scheduleDB.get(schedId)
+            scheduled = self.scheduleDB.get(schedId)
             self.assertEqual(getScheduleStatus(configlib.configDB, scheduled), 'ok')
 
         # Run simulation for 2 weeks.
@@ -558,7 +559,7 @@ class Test0400StartTime(ScheduleFixtureMixin, unittest.TestCase):
                 schedId, False, startTime, schedulelib.ScheduleRepeat.WEEKLY, days = '0010000',
                 configFactory = sharedConfigFactory(configId)
                 )
-            scheduled = schedulelib.scheduleDB.get(schedId)
+            scheduled = self.scheduleDB.get(schedId)
             self.assertEqual(getScheduleStatus(configlib.configDB, scheduled), 'ok')
 
         # Run simulation for 4 weeks.

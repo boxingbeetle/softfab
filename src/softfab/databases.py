@@ -28,7 +28,7 @@ def _iterDatabases() -> Iterator[databaselib.Database[Any]]:
     yield taskrunlib.taskRunDB
     yield resourcelib.resourceDB
     yield configlib.configDB
-    yield schedulelib.scheduleDB
+    yield schedulelib.ScheduleDB(dbDir / 'scheduled')
     yield userlib.UserDB(dbDir / 'users')
 
 _databases: Optional[Mapping[str, databaselib.Database[Any]]] = None
@@ -65,7 +65,6 @@ def reloadDatabases() -> None:
     reload(resourcelib)
     reload(joblib)
     reload(configlib)
-    reload(schedulelib)
 
     # Force mapping creation and factory injection to be redone.
     global _databases

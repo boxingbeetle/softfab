@@ -57,7 +57,6 @@ from typing import (
 import logging
 import time
 
-from softfab.config import dbDir
 from softfab.configlib import ConfigDB
 from softfab.databaselib import Database, RecordObserver
 from softfab.joblib import Job, JobDB
@@ -120,8 +119,6 @@ class ScheduleDB(Database['Scheduled']):
                  repeat=repeat,
                  owner=owner),
             comment, True)
-
-scheduleDB = ScheduleDB(dbDir / 'scheduled')
 
 class _JobDBObserver(RecordObserver[Job]):
     '''Send notifications if a job related to a schedule is new or changed.
