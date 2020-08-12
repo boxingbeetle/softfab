@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from importlib import reload
-from typing import Any, Dict, Iterator, Mapping, Optional, get_type_hints
+from typing import Any, Dict, Iterator, Mapping, Optional, cast, get_type_hints
 
 from softfab import (
     configlib, databaselib, frameworklib, joblib, productdeflib, productlib,
@@ -72,7 +72,8 @@ def reloadDatabases() -> None:
     _databases = None
     getDatabases()
 
-    for db in _databases.values():
+    for db in cast(Mapping[str, databaselib.Database[Any]],
+                   _databases).values():
         db.preload()
 
 def injectDependencies(obj: Any, dependencies: Mapping[str, object]) -> None:
