@@ -72,7 +72,7 @@ def reloadDatabases() -> None:
     _databases = None
     getDatabases()
 
-    for db in _iterDatabases():
+    for db in _databases.values():
         db.preload()
 
 def injectDependencies(obj: Any, dependencies: Mapping[str, object]) -> None:
