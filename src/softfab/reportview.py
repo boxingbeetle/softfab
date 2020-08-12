@@ -112,6 +112,7 @@ class PygmentedPresenter(ReportPresenter):
 
 resultMap = {
     ResultCode.OK: 'pass',
+    ResultCode.CANCELLED: 'skip',
     ResultCode.WARNING: 'fail',
     ResultCode.ERROR: 'error',
     }
@@ -136,29 +137,36 @@ class JUnitPresenter(ReportPresenter):
             yield xhtml.h2[suite.name]
             yield JUnitSuiteTable.instance.present(suite=suite)
 
-            anyErrors = False
-            yield xhtml.h3['Errors']
-            for case in suite.testcase:
-                if case.result is ResultCode.ERROR:
-                    anyErrors = True
-                    yield self.presentDetails(case, case.error)
-            if not anyErrors:
-                yield xhtml.p['None.']
-
-            anyFailures = False
-            yield xhtml.h3['Failures']
-            for case in suite.testcase:
-                if case.result is ResultCode.WARNING:
-                    anyFailures = True
-                    yield self.presentDetails(case, case.failure)
-            if not anyFailures:
-                yield xhtml.p['None.']
+            yield self.presentDetails(suite, 'Errors', 'error',
+                                      ResultCode.ERROR)
+            yield self.presentDetails(suite, 'Failures', 'failure',
+                                      ResultCode.WARNING)
+            yield self.presentDetails(suite, 'Skipped', 'skipped',
+                                      ResultCode.CANCELLED, preformatted=False)
 
     headerSep = xhtml[' \u25B8 ']
 
     def presentDetails(self,
+                       suite: JUnitSuite,
+                       label: str,
+                       attrib: str,
+                       result: ResultCode,
+                       preformatted: bool = True
+                       ) -> XMLContent:
+        anyWithResult = False
+        yield xhtml.h3[label]
+        for case in suite.testcase:
+            if case.result is result:
+                anyWithResult = True
+                details = getattr(case, attrib)
+                yield self.presentMessage(case, details, preformatted)
+        if not anyWithResult:
+            yield xhtml.p['None.']
+
+    def presentMessage(self,
                        case: JUnitCase,
-                       details: Sequence[JUnitDetail]
+                       details: Sequence[JUnitDetail],
+                       preformatted: bool
                        ) -> XMLContent:
         for number, detail in enumerate(details, start=1):
             header = [case.classname, case.name]
@@ -167,12 +175,19 @@ class JUnitPresenter(ReportPresenter):
             yield xhtml.h4[self.headerSep.join(header)]
 
             message = detail.message
+            text = detail.text
+            if text.endswith(message):
+                # If the message is included in the full text, don't display
+                # it twice. This happens with pytest reporting skips.
+                message = ''
+
             if message:
                 yield xhtml.p[message]
 
-            text = detail.text
             if text:
-                yield xhtml.pre[xhtml.code[text]]
+                yield (xhtml.pre if preformatted else xhtml.p)[
+                    xhtml.code[text]
+                    ]
 
 class JUnitSummary(Table):
     style = 'nostrong'

@@ -49,6 +49,7 @@ class JUnitCase:
     time: float = 0
     error: List[JUnitDetail] = attr.ib(factory=list)
     failure: List[JUnitDetail] = attr.ib(factory=list)
+    skipped: List[JUnitDetail] = attr.ib(factory=list)
 
     @property
     def result(self) -> ResultCode:
@@ -56,6 +57,8 @@ class JUnitCase:
             return ResultCode.ERROR
         elif self.failure:
             return ResultCode.WARNING
+        elif self.skipped:
+            return ResultCode.CANCELLED
         else:
             return ResultCode.OK
 
