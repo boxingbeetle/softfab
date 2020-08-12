@@ -150,7 +150,7 @@ def unittest(c, suite=None, select=None,
     else:
         report_dir = Path(results).parent.resolve()
         junit_xml = report_dir / 'pytest-report.xml'
-    cmd = ['pytest']
+    cmd = ['pytest', '-v']
     if coverage:
         cmd.append(f'--cov={SRC_DIR}')
         cmd.append(f"--cov-config={TOP_DIR / '.coveragerc'}")
