@@ -2,7 +2,7 @@
 
 import random, unittest
 
-from initconfig import removeDB
+from initconfig import dbDir, removeDB
 
 from softfab import databases
 from softfab import configlib, resourcelib, taskgroup
@@ -48,7 +48,7 @@ class TestJobs(unittest.TestCase):
         removeDB()
 
     def reloadDatabases(self):
-        databases.reloadDatabases()
+        databases.reloadDatabases(dbDir)
 
     def runWithReload(self, config, verifyFunc):
         configId = config.getId()

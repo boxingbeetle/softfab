@@ -54,7 +54,7 @@ def _convertAll() -> None:
     from softfab.databases import initDatabases
     from softfab import joblib, productlib, projectlib, resourcelib, taskrunlib
 
-    databases = initDatabases()
+    databases = initDatabases(softfab.config.dbDir)
     for db in databases.values():
         echo(f'Loading {db.description} database...')
         db.preload()

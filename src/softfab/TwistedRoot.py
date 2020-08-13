@@ -241,7 +241,7 @@ class SoftFabRoot(Resource):
 
     async def startup(self) -> None:
         try:
-            databases = initDatabases()
+            databases = initDatabases(dbDir)
 
             projectDB = cast(ProjectDB, databases['projectDB'])
             project = cast(Project, SingletonWrapper(projectDB))

@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from importlib import reload
+from pathlib import Path
 from typing import Any, Dict, Iterator, Mapping, get_type_hints
 
 from softfab import (
@@ -8,7 +9,6 @@ from softfab import (
     projectlib, resourcelib, restypelib, schedulelib, taskdeflib, taskrunlib,
     tokens, userlib
 )
-from softfab.config import dbDir
 from softfab.resultlib import ResultStorage
 
 
@@ -16,7 +16,7 @@ from softfab.resultlib import ResultStorage
 #       D1 is positioned in the list before D2.
 # TODO: Automatically order in this way, or at least detect if the order is
 #       invalid.
-def _iterDatabases() -> Iterator[databaselib.Database[Any]]:
+def _iterDatabases(dbDir: Path) -> Iterator[databaselib.Database[Any]]:
     yield projectlib.ProjectDB(dbDir / 'project')
     yield tokens.TokenDB(dbDir / 'tokens')
     yield restypelib.resTypeDB
@@ -31,10 +31,10 @@ def _iterDatabases() -> Iterator[databaselib.Database[Any]]:
     yield schedulelib.ScheduleDB(dbDir / 'scheduled')
     yield userlib.UserDB(dbDir / 'users')
 
-def initDatabases() -> Mapping[str, databaselib.Database[Any]]:
+def initDatabases(dbDir: Path) -> Mapping[str, databaselib.Database[Any]]:
     databases = {}
     factories = {}
-    for db in _iterDatabases():
+    for db in _iterDatabases(dbDir):
         name = db.__class__.__name__
         dbName = name[0].lower() + name[1:]
         assert dbName not in databases
@@ -50,7 +50,7 @@ def initDatabases() -> Mapping[str, databaselib.Database[Any]]:
         injectDependencies(factory, dependencies)
     return databases
 
-def reloadDatabases() -> Mapping[str, databaselib.Database[Any]]:
+def reloadDatabases(dbDir: Path) -> Mapping[str, databaselib.Database[Any]]:
     # !!! NOTE: The order of reloading is very important:
     # dependent modules must be reloaded AFTER their dependencies
     # TODO: Automate this.
@@ -63,7 +63,7 @@ def reloadDatabases() -> Mapping[str, databaselib.Database[Any]]:
     reload(configlib)
 
     # Force mapping creation and factory injection to be redone.
-    databases = initDatabases()
+    databases = initDatabases(dbDir)
 
     for db in databases.values():
         db.preload()

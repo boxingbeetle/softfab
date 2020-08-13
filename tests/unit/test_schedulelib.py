@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from initconfig import removeDB
+from initconfig import dbDir, removeDB
 
 from datageneratorlib import DataGenerator
 
@@ -91,7 +91,7 @@ class ScheduleFixtureMixin:
         assert False, job.getId()
 
     def setUp(self):
-        dbs = databases.reloadDatabases()
+        dbs = databases.reloadDatabases(dbDir)
         self.scheduleDB = dbs['scheduleDB']
         # Patch reactor used by schedulelib, because we don't use it in this
         # test and it is only costing us performance.
