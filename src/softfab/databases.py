@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from importlib import reload
-from typing import Any, Dict, Iterator, Mapping, Optional, cast, get_type_hints
+from typing import Any, Dict, Iterator, Mapping, get_type_hints
 
 from softfab import (
     configlib, databaselib, frameworklib, joblib, productdeflib, productlib,
@@ -31,31 +31,26 @@ def _iterDatabases() -> Iterator[databaselib.Database[Any]]:
     yield schedulelib.ScheduleDB(dbDir / 'scheduled')
     yield userlib.UserDB(dbDir / 'users')
 
-_databases: Optional[Mapping[str, databaselib.Database[Any]]] = None
+def initDatabases() -> Mapping[str, databaselib.Database[Any]]:
+    databases = {}
+    factories = {}
+    for db in _iterDatabases():
+        name = db.__class__.__name__
+        dbName = name[0].lower() + name[1:]
+        assert dbName not in databases
+        databases[dbName] = db
+        assert name.endswith('DB'), name
+        factoryName = f'{name[0].lower()}{name[1:-2]}Factory'
+        assert factoryName not in factories
+        factories[factoryName] = db.factory
+    dependencies: Dict[str, object] = dict(databases)
+    dependencies.update(factories)
+    dependencies['resultStorage'] = ResultStorage(dbDir / 'results')
+    for factory in factories.values():
+        injectDependencies(factory, dependencies)
+    return databases
 
-def getDatabases() -> Mapping[str, databaselib.Database[Any]]:
-    global _databases
-    if _databases is None:
-        databases = {}
-        factories = {}
-        for db in _iterDatabases():
-            name = db.__class__.__name__
-            dbName = name[0].lower() + name[1:]
-            assert dbName not in databases
-            databases[dbName] = db
-            assert name.endswith('DB'), name
-            factoryName = f'{name[0].lower()}{name[1:-2]}Factory'
-            assert factoryName not in factories
-            factories[factoryName] = db.factory
-        dependencies: Dict[str, object] = dict(databases)
-        dependencies.update(factories)
-        dependencies['resultStorage'] = ResultStorage(dbDir / 'results')
-        for factory in factories.values():
-            injectDependencies(factory, dependencies)
-        _databases = databases
-    return _databases
-
-def reloadDatabases() -> None:
+def reloadDatabases() -> Mapping[str, databaselib.Database[Any]]:
     # !!! NOTE: The order of reloading is very important:
     # dependent modules must be reloaded AFTER their dependencies
     # TODO: Automate this.
@@ -68,13 +63,12 @@ def reloadDatabases() -> None:
     reload(configlib)
 
     # Force mapping creation and factory injection to be redone.
-    global _databases
-    _databases = None
-    getDatabases()
+    databases = initDatabases()
 
-    for db in cast(Mapping[str, databaselib.Database[Any]],
-                   _databases).values():
+    for db in databases.values():
         db.preload()
+
+    return databases
 
 def injectDependencies(obj: Any, dependencies: Mapping[str, object]) -> None:
     """Inject the dependencies that the given object declared."""

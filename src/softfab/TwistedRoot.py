@@ -22,7 +22,7 @@ from softfab.compat import importlib_resources
 from softfab.config import dbDir
 from softfab.configlib import ConfigDB
 from softfab.databaselib import Database, SingletonWrapper
-from softfab.databases import getDatabases, injectDependencies
+from softfab.databases import initDatabases, injectDependencies
 from softfab.docserve import DocPage, DocResource
 from softfab.joblib import (
     DateRangeMonitor, JobDB, ResultlessJobs, TaskToJobs, UnfinishedJobs
@@ -241,7 +241,7 @@ class SoftFabRoot(Resource):
 
     async def startup(self) -> None:
         try:
-            databases = getDatabases()
+            databases = initDatabases()
 
             projectDB = cast(ProjectDB, databases['projectDB'])
             project = cast(Project, SingletonWrapper(projectDB))
@@ -260,7 +260,7 @@ class SoftFabRoot(Resource):
 
             jobDB = cast(JobDB, databases['jobDB'])
             # TODO: resultStorage was already injected into factories by
-            #       getDatabases(), but we have to construct it again
+            #       initDatabases(), but we have to construct it again
             #       to inject into pages.
             dependencies: Dict[str, object] = dict(
                 databases,
