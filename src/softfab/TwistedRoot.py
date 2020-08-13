@@ -264,6 +264,7 @@ class SoftFabRoot(Resource):
             #       to inject into pages.
             dependencies: Dict[str, object] = dict(
                 databases,
+                databases=databases.values(),
                 project=project,
                 resultStorage=ResultStorage(dbDir / 'results'),
                 dateRange=DateRangeMonitor(jobDB),
