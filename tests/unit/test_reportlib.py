@@ -22,9 +22,9 @@ def testParsePytestEmpty():
     assert report.errors == 0
     assert report.failures == 0
     assert report.skipped == 0
-    # TODO: Is None actually useful or should we map to CANCELLED?
-    assert report.result is None
-    assert report.summary == '0 failed'
+    assert report.numTestcases == 0
+    assert report.result is ResultCode.CANCELLED
+    assert report.summary == 'no test cases found'
     data = report.data
     assert data['testcases'] == '0'
     assert data['checks'] == '0'
@@ -39,7 +39,7 @@ def testParsePytestEmpty():
     assert suite.errors == 0
     assert suite.skipped == 0
     assert suite.time == 0.569
-    assert suite.result is None
+    assert suite.result is ResultCode.CANCELLED
 
     assert not suite.testcase
 
@@ -66,6 +66,7 @@ def testParsePytestAllPass():
     assert report.errors == 0
     assert report.failures == 0
     assert report.skipped == 0
+    assert report.numTestcases == 3
     assert report.result is ResultCode.OK
     assert report.summary == '0 failed'
     data = report.data
@@ -120,6 +121,7 @@ test_joblib.py:45: RuntimeError</failure>
     assert report.errors == 0
     assert report.failures == 1
     assert report.skipped == 0
+    assert report.numTestcases == 3
     assert report.result is ResultCode.WARNING
     assert report.summary == '1 failed'
     data = report.data
@@ -172,6 +174,7 @@ def testParsePytestSomeSkipped():
     assert report.errors == 0
     assert report.failures == 0
     assert report.skipped == 1
+    assert report.numTestcases == 3
     # TODO: Giving skip priority over pass is probably not what users expect.
     #       Unexpected skips are worth highlighting and for jobs/tasks all
     #       skips are unexpected. But for test suites, skips are often known

@@ -73,10 +73,10 @@ class JUnitSuite:
     testcase: List[JUnitCase] = attr.ib(factory=list)
 
     @property
-    def result(self) -> Optional[ResultCode]:
+    def result(self) -> ResultCode:
         return max(chain(self.__statsResults(),
                          (case.result for case in self.testcase),
-                         ), default=None)
+                         ), default=ResultCode.CANCELLED)
 
     def __statsResults(self) -> Iterable[ResultCode]:
         """Results based on reported stats."""
@@ -90,11 +90,14 @@ class JUnitReport(Report):
     testsuite: List[JUnitSuite] = attr.ib(factory=list)
 
     @property
-    def result(self) -> Optional[ResultCode]:
-        return max((suite.result for suite in self.testsuite), default=None)
+    def result(self) -> ResultCode:
+        return max((suite.result for suite in self.testsuite),
+                   default=ResultCode.CANCELLED)
 
     @property
     def summary(self) -> str:
+        if self.numTestcases == 0:
+            return 'no test cases found'
         elems = []
         errors = self.errors
         if errors:
@@ -108,12 +111,16 @@ class JUnitReport(Report):
     @property
     def data(self) -> Mapping[str, str]:
         return dict(
-            testcases=str(sum(len(suite.testcase) for suite in self.testsuite)),
+            testcases=str(self.numTestcases),
             checks=str(sum(suite.tests for suite in self.testsuite)),
             failures=str(self.failures),
             errors=str(self.errors),
             skipped=str(self.skipped),
             )
+
+    @property
+    def numTestcases(self) -> int:
+        return sum(len(suite.testcase) for suite in self.testsuite)
 
     @property
     def failures(self) -> int:
