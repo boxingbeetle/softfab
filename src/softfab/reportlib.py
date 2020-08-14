@@ -35,6 +35,14 @@ class Report:
         """The mid-level data extracted from this report."""
         raise NotImplementedError
 
+def _combineResults(results: Iterable[ResultCode]) -> ResultCode:
+    """Combine multiple results into one.
+    Skipped (CANCELLED) entries will be ignored.
+    """
+    CANCELLED = ResultCode.CANCELLED
+    return max((result for result in results if result is not CANCELLED),
+               default=CANCELLED)
+
 @attr.s(auto_attribs=True)
 class JUnitDetail:
     message: str = ''
@@ -74,9 +82,10 @@ class JUnitSuite:
 
     @property
     def result(self) -> ResultCode:
-        return max(chain(self.__statsResults(),
-                         (case.result for case in self.testcase),
-                         ), default=ResultCode.CANCELLED)
+        return _combineResults(chain(
+            self.__statsResults(),
+            (case.result for case in self.testcase)
+            ))
 
     def __statsResults(self) -> Iterable[ResultCode]:
         """Results based on reported stats."""
@@ -91,8 +100,7 @@ class JUnitReport(Report):
 
     @property
     def result(self) -> ResultCode:
-        return max((suite.result for suite in self.testsuite),
-                   default=ResultCode.CANCELLED)
+        return _combineResults(suite.result for suite in self.testsuite)
 
     @property
     def summary(self) -> str:

@@ -175,11 +175,7 @@ def testParsePytestSomeSkipped():
     assert report.failures == 0
     assert report.skipped == 1
     assert report.numTestcases == 3
-    # TODO: Giving skip priority over pass is probably not what users expect.
-    #       Unexpected skips are worth highlighting and for jobs/tasks all
-    #       skips are unexpected. But for test suites, skips are often known
-    #       and should not grab attention.
-    assert report.result is ResultCode.CANCELLED
+    assert report.result is ResultCode.OK
     assert report.summary == '0 failed, 1 skipped'
     data = report.data
     assert data['testcases'] == '3'
@@ -195,7 +191,7 @@ def testParsePytestSomeSkipped():
     assert suite.errors == 0
     assert suite.skipped == 1
     assert suite.time == 1.234
-    assert suite.result is ResultCode.CANCELLED
+    assert suite.result is ResultCode.OK
 
     assert len(suite.testcase) == 3
     for index, case in enumerate(suite.testcase):
