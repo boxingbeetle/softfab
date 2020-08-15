@@ -275,7 +275,9 @@ class SoftFabRoot(Resource):
             resultlessJobs = ResultlessJobs(jobDB)
             resultlessJobs.addObserver(JobNotificationObserver(project))
 
-            projectDB.addObserver(TimezoneUpdater())
+            timezoneUpdater = TimezoneUpdater()
+            timezoneUpdater.updated(project)
+            projectDB.addObserver(timezoneUpdater)
 
             populateAPI(self.apiRoot, dependencies)
 

@@ -243,11 +243,6 @@ class ProjectDB(Database[Project]):
             record = Project({'name': 'Nameless'})
             record.updateVersion()
             self.add(record)
-        else:
-            record = self['singleton']
-
-        # Call observers, no matter whether we loaded or created the record.
-        self._notifyAdded(record)
 
 class TimezoneUpdater(SingletonObserver):
 
