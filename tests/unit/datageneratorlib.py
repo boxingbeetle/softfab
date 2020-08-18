@@ -3,11 +3,13 @@
 from io import StringIO
 import random
 
-from softfab import (
-    configlib, frameworklib, joblib, productdeflib, resourcelib, restypelib,
-    taskdeflib, xmlbind
-    )
+from softfab.configlib import Task as ConfigTask
+from softfab.frameworklib import Framework
+from softfab.productdeflib import ProductDef
+from softfab.resourcelib import RequestFactory
 from softfab.resreq import ResourceSpec
+from softfab.restypelib import ResType
+from softfab.xmlbind import parse
 
 
 def _addResources(record, resources):
@@ -25,7 +27,8 @@ class DataGenerator:
     chanceLocalProduct = 0.5
     numTaskRunners = 1
 
-    def __init__(self, rnd = None, run = 0):
+    def __init__(self, dbs, rnd = None, run = 0):
+        self.dbs = dbs
         if rnd is None:
             self.rnd = random.Random()
         else:
@@ -40,10 +43,9 @@ class DataGenerator:
         self.taskRunners = []
 
     def createProduct(self, name, local = False, combined = False):
-        product = productdeflib.ProductDef.create(
-            name=name, local=local, combined=combined
-            )
-        productdeflib.productDefDB.add(product)
+        productDefDB = self.dbs['productDefDB']
+        product = ProductDef.create(name=name, local=local, combined=combined)
+        productDefDB.add(product)
         self.products.append(name)
         return name
 
@@ -54,36 +56,38 @@ class DataGenerator:
             )
 
     def createFramework(self, name, inputs=(), outputs=(), resources=None):
-        framework = frameworklib.Framework.create(name, inputs, outputs)
+        frameworkDB = self.dbs['frameworkDB']
+        framework = Framework.create(name, inputs, outputs)
         _addResources(framework, resources)
-        frameworklib.frameworkDB.add(framework)
+        frameworkDB.add(framework)
         self.frameworks.append(name)
         return name
 
     def createTask(self, name, framework, resources=None):
-        task = taskdeflib.taskDefDB.factory.newTaskDef(name, framework)
+        taskDefDB = self.dbs['taskDefDB']
+        task = taskDefDB.factory.newTaskDef(name, framework)
         if resources is None:
             task.addTaskRunnerSpec(capabilities=(framework,))
         _addResources(task, resources)
-        taskdeflib.taskDefDB.add(task)
+        taskDefDB.add(task)
         self.tasks.append(name)
         return name
 
     def createResourceType(self, name=None, pertask=False, perjob=False):
         if name is None:
-            name = 'restype%d' % len(restypelib.resTypeDB)
-        resType = restypelib.ResType.create(name, pertask, perjob)
-        restypelib.resTypeDB.add(resType)
+            name = 'restype%d' % len(self.dbs['resTypeDB'])
+        resType = ResType.create(name, pertask, perjob)
+        self.dbs['resTypeDB'].add(resType)
         return name
 
     def createResource(self, resType, capabilities=(), name=None):
+        resourceDB = self.dbs['resourceDB']
         if name is None:
-            name = 'resource%d' % len(resourcelib.resourceDB)
-        resourceFactory = resourcelib.resourceDB.factory
-        resource = resourceFactory.newResource(
+            name = 'resource%d' % len(resourceDB)
+        resource = resourceDB.factory.newResource(
             name, resType, 'created by datageneratorlib', capabilities
             )
-        resourcelib.resourceDB.add(resource)
+        resourceDB.add(resource)
         return name
 
     def createDefinitions(self):
@@ -122,8 +126,8 @@ class DataGenerator:
                 framework )
 
     def createTaskRunnerData(self, name, target, versionStr):
-        return xmlbind.parse(
-            resourcelib.RequestFactory(),
+        return parse(
+            RequestFactory(),
             StringIO(
                 '<request runnerId="' + name + '" '
                 'runnerVersion="' + versionStr + '"/>'
@@ -131,16 +135,18 @@ class DataGenerator:
 
     def createTaskRunner(self, *, name=None, target=None, capabilities=(),
                          versionStr='3.0.0'):
+        jobDB = self.dbs['jobDB']
+        resourceDB = self.dbs['resourceDB']
         if name is None:
-            name = 'taskrunner%d_%d' % (self.run, len(resourcelib.resourceDB))
+            name = 'taskrunner%d_%d' % (self.run, len(resourceDB))
         capabilities = list(capabilities)
         if target is not None:
             capabilities.append(target)
-        resourceFactory = resourcelib.resourceDB.factory
+        resourceFactory = resourceDB.factory
         taskRunner = resourceFactory.newTaskRunner(name, '', capabilities)
-        resourcelib.resourceDB.add(taskRunner)
+        resourceDB.add(taskRunner)
         data = self.createTaskRunnerData(name, target, versionStr)
-        taskRunner.sync(joblib.jobDB, data)
+        taskRunner.sync(jobDB, data)
         self.taskRunners.append(name)
         return name
 
@@ -156,11 +162,12 @@ class DataGenerator:
     def addCapabilities(self, config):
         """Add capabilities to Task Runners until all tasks are possible.
         """
+        resourceDB = self.dbs['resourceDB']
         for task in config.getTaskGroupSequence():
             taskCaps = task.getNeededCaps()
             matches = []
             for trName in self.taskRunners:
-                runnerCaps = resourcelib.resourceDB[trName].capabilities
+                runnerCaps = resourceDB[trName].capabilities
                 missingCaps = [
                     cap for cap in taskCaps
                     if cap not in runnerCaps
@@ -170,7 +177,7 @@ class DataGenerator:
                 matches.append( (len(missingCaps), missingCaps, trName) )
             else:
                 num, missingCaps, trName = min(matches)
-                taskRunner = resourcelib.resourceDB[trName]
+                taskRunner = resourceDB[trName]
                 taskRunner.capabilities |= set(missingCaps)
 
     def createConfiguration(self, name=None, tasks=None, targets=()):
@@ -187,7 +194,10 @@ class DataGenerator:
         tasksRandomOrder = list(tasksToAdd)
         self.rnd.shuffle(tasksRandomOrder)
 
-        configFactory = configlib.configDB.factory
+        configDB = self.dbs['configDB']
+        taskDefDB = self.dbs['taskDefDB']
+
+        configFactory = configDB.factory
         config = configFactory.newConfig(
             name = name,
             targets = targets,
@@ -196,10 +206,10 @@ class DataGenerator:
             comment = self.comment,
             jobParams = {},
             tasks = (
-                configlib.Task.create(
+                ConfigTask.create(
                     name = taskId,
                     priority = 0,
-                    taskDef = taskdeflib.taskDefDB[taskId],
+                    taskDef = taskDefDB[taskId],
                     parameters = {},
                     )
                 for taskId in tasksRandomOrder
@@ -207,12 +217,13 @@ class DataGenerator:
             runners = set()
             )
 
-        configlib.configDB.add(config)
+        configDB.add(config)
         return config
 
     def setInputs(self, config):
         """Provide locators for the inputs.
         """
+        resourceDB = self.dbs['resourceDB']
         mainGroup = config._getMainGroup()
         for group, inputs in config.getInputsGrouped():
             if group is None:
@@ -223,9 +234,7 @@ class DataGenerator:
                 capableRunners = [
                     taskRunnerId
                     for taskRunnerId in self.taskRunners
-                    if taskCaps.issubset(
-                        resourcelib.resourceDB[taskRunnerId].capabilities
-                        )
+                    if taskCaps.issubset(resourceDB[taskRunnerId].capabilities)
                     ]
                 taskRunner = self.rnd.choice(capableRunners)
             for inp in inputs:

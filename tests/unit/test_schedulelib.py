@@ -121,7 +121,7 @@ class ScheduleFixtureMixin:
             numInputs = [ 0 ]
             numOutputs = [ 0 ]
 
-        self.dataGenerator = gen = CustomGenerator()
+        self.dataGenerator = gen = CustomGenerator(dbs)
         gen.createDefinitions()
 
         gen.createTaskRunners()

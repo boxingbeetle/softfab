@@ -48,7 +48,7 @@ class TestJobs(unittest.TestCase):
         removeDB()
 
     def reloadDatabases(self):
-        dbs = reloadDatabases(dbDir)
+        self.dbs = dbs = reloadDatabases(dbDir)
         for name in ('configDB', 'resourceDB'):
             setattr(self, name, dbs[name])
 
@@ -63,7 +63,7 @@ class TestJobs(unittest.TestCase):
 
     def randomRuns(self, runs, rnd, genClass, checkFunc = None):
         for run in range(runs):
-            gen = genClass(rnd, run)
+            gen = genClass(self.dbs, rnd, run)
             gen.createDefinitions()
             gen.createTaskRunners()
             config = gen.createConfiguration()
@@ -185,7 +185,7 @@ class TestJobs(unittest.TestCase):
             self.assertEqual(config.comment, self.comment)
             #self.assertEqual(config.getDescription(), config['description'])
 
-        config = DataGenerator().createConfiguration(
+        config = DataGenerator(self.dbs).createConfiguration(
             targets=('target1', 'target2')
             )
         self.runWithReload(config, checkProperties)
@@ -200,7 +200,7 @@ class TestJobs(unittest.TestCase):
             self.assertEqual(len(config.getTasks()), 0)
             self.assertEqual(len(config.getTaskSequence()), 0)
 
-        config = DataGenerator().createConfiguration()
+        config = DataGenerator(self.dbs).createConfiguration()
         self.runWithReload(config, checkEmpty)
 
     def test0030One(self):
@@ -211,7 +211,7 @@ class TestJobs(unittest.TestCase):
             numInputs = [ 0 ]
             numOutputs = [ 0 ]
 
-        gen = CustomGenerator()
+        gen = CustomGenerator(self.dbs)
         gen.createDefinitions()
         config = gen.createConfiguration()
 
@@ -247,7 +247,7 @@ class TestJobs(unittest.TestCase):
 
         class CustomGenerator(DataGenerator):
             pass
-        gen = CustomGenerator()
+        gen = CustomGenerator(self.dbs)
 
         image = gen.createProduct('image')
         buildFw = gen.createFramework('build', [], [ image ])
@@ -315,7 +315,7 @@ class TestJobs(unittest.TestCase):
         """Test Task Runner restrictions at the job level.
         Two Task Runners, only one is allowed at the job level.
         """
-        gen = DataGenerator()
+        gen = DataGenerator(self.dbs)
         fwName = gen.createFramework('testfw1')
         taskName = gen.createTask('task1', fwName)
         tr1Name = gen.createTaskRunner(capabilities=[fwName])
@@ -341,7 +341,7 @@ class TestJobs(unittest.TestCase):
         """Test Task Runner restrictions at the task level.
         Two Task Runners, only one is allowed at the task level.
         """
-        gen = DataGenerator()
+        gen = DataGenerator(self.dbs)
         fwName = gen.createFramework('testfw1')
         taskName = gen.createTask('task1', fwName)
         tr1Name = gen.createTaskRunner(capabilities=[fwName])
@@ -368,7 +368,7 @@ class TestJobs(unittest.TestCase):
         Two Task Runners, one allowed at the job level
         and overridden at the task level.
         """
-        gen = DataGenerator()
+        gen = DataGenerator(self.dbs)
         fwName = gen.createFramework('testfw1')
         taskName = gen.createTask('task1', fwName)
         tr1Name = gen.createTaskRunner(capabilities=[fwName])
@@ -396,7 +396,7 @@ class TestJobs(unittest.TestCase):
         One Task Runner, explicitly allowed both at the task
         and at the job level, but does not have required capability.
         """
-        gen = DataGenerator()
+        gen = DataGenerator(self.dbs)
         fwName = gen.createFramework('testfw1')
         taskName = gen.createTask('task1', fwName)
         tr1Name = gen.createTaskRunner(capabilities=['dummy'])
@@ -418,7 +418,7 @@ class TestJobs(unittest.TestCase):
         Two Task Runners, one is allowed at the task level,
         local input is bound to the other task runner.
         """
-        gen = DataGenerator()
+        gen = DataGenerator(self.dbs)
         prodName = gen.createProduct('input1', True)
         fwName = gen.createFramework('testfw1', [prodName])
         taskName = gen.createTask('task1', fwName)
@@ -571,7 +571,7 @@ class TestJobs(unittest.TestCase):
 
         class CustomGenerator(DataGenerator):
             pass
-        gen = CustomGenerator()
+        gen = CustomGenerator(self.dbs)
 
         image = gen.createProduct('image', False, True)
         buildFw = gen.createFramework('build', [], [ image ])
@@ -627,7 +627,7 @@ class TestJobs(unittest.TestCase):
 
         class CustomGenerator(DataGenerator):
             pass
-        gen = CustomGenerator()
+        gen = CustomGenerator(self.dbs)
 
         image = gen.createProduct('image')
         buildFw = gen.createFramework('build', [], [ image ])
@@ -705,7 +705,7 @@ class TestJobs(unittest.TestCase):
 
     def test0200TRLostWhileRunning(self):
         """Test what happens when a busy Task Runner is lost."""
-        gen = DataGenerator()
+        gen = DataGenerator(self.dbs)
         fwName = gen.createFramework('testfw1')
         taskName = gen.createTask('task1', fwName)
         trName = gen.createTaskRunner(capabilities=[fwName])
@@ -723,7 +723,7 @@ class TestJobs(unittest.TestCase):
 
     def test0210TRRemovedWhileRunning(self):
         """Test what happens when a busy Task Runner is removed."""
-        gen = DataGenerator()
+        gen = DataGenerator(self.dbs)
         fwName = gen.createFramework('testfw1')
         taskName = gen.createTask('task1', fwName)
         trName = gen.createTaskRunner(capabilities=[fwName])
@@ -746,7 +746,7 @@ class TestJobs(unittest.TestCase):
         For example, removal of the resource may simply be the resource
         management being moved outside of SoftFab.
         """
-        gen = DataGenerator()
+        gen = DataGenerator(self.dbs)
         resType = gen.createResourceType(pertask=True)
         fwName = gen.createFramework(
             name='testfw1',

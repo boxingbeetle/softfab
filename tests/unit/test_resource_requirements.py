@@ -37,7 +37,7 @@ class TestResourceRequirements(unittest.TestCase):
         removeDB()
 
     def reloadDatabases(self):
-        dbs = reloadDatabases(dbDir)
+        self.dbs = dbs = reloadDatabases(dbDir)
         for name in ('configDB', 'resTypeDB', 'resourceDB'):
             setattr(self, name, dbs[name])
 
@@ -86,7 +86,7 @@ class TestResourceRequirements(unittest.TestCase):
             task = job.getTask('task')
             self.checkResourceClaim(specs, task.resourceClaim)
 
-        gen = DataGenerator()
+        gen = DataGenerator(self.dbs)
         resType = gen.createResourceType(pertask=True)
         specs = (
             ('ref', resType, ('cap_a', 'cap_b')),
@@ -107,7 +107,7 @@ class TestResourceRequirements(unittest.TestCase):
             task = job.getTask('task')
             self.checkResourceClaim(specs, task.resourceClaim)
 
-        gen = DataGenerator()
+        gen = DataGenerator(self.dbs)
         resType = gen.createResourceType(pertask=True)
         specs = (
             ('ref', resType, ('cap_a', 'cap_b')),
@@ -128,7 +128,7 @@ class TestResourceRequirements(unittest.TestCase):
             task = job.getTask('task')
             self.checkResourceClaim(specs, task.resourceClaim)
 
-        gen = DataGenerator()
+        gen = DataGenerator(self.dbs)
         resType = gen.createResourceType(pertask=True)
         fwSpecs = (
             ('ref', resType, ('cap_a', )),
@@ -164,7 +164,7 @@ class TestResourceRequirements(unittest.TestCase):
             task = job.getTask('task')
             self.checkResourceClaim(specs, task.resourceClaim)
 
-        gen = DataGenerator()
+        gen = DataGenerator(self.dbs)
         resType1 = gen.createResourceType(pertask=True)
         resType2 = gen.createResourceType(pertask=True)
         fwSpecs = (
@@ -220,7 +220,7 @@ class TestResourceRequirements(unittest.TestCase):
             self.assertTrue(self.resourceDB[resB].isFree())
             self.assertTrue(self.resourceDB[resC].isFree())
 
-        gen = DataGenerator()
+        gen = DataGenerator(self.dbs)
         resType = gen.createResourceType(pertask=True)
         resA = gen.createResource(resType, ('cap_a', ))
         resB = gen.createResource(resType, ('cap_b', 'cap_d'))
@@ -259,7 +259,7 @@ class TestResourceRequirements(unittest.TestCase):
             job.taskDone('task', ResultCode.OK, 'summary text', (), {})
             self.assertTrue(self.resourceDB[res].isFree())
 
-        gen = DataGenerator()
+        gen = DataGenerator(self.dbs)
         resType = gen.createResourceType()
         res = gen.createResource(resType, ())
         tr = gen.createTaskRunner()
@@ -281,7 +281,7 @@ class TestResourceRequirements(unittest.TestCase):
         def checkInconsistent(config):
             self.assertFalse(config.isConsistent(self.resTypeDB))
 
-        gen = DataGenerator()
+        gen = DataGenerator(self.dbs)
         resTypeA = gen.createResourceType(pertask=True)
         resTypeB = gen.createResourceType(pertask=True)
 
@@ -310,7 +310,7 @@ class TestResourceRequirements(unittest.TestCase):
 
     def test2000TestDoubleReserve(self):
         """Test reserving the same resource twice."""
-        gen = DataGenerator()
+        gen = DataGenerator(self.dbs)
         resType = gen.createResourceType()
         res = gen.createResource(resType)
 
@@ -322,7 +322,7 @@ class TestResourceRequirements(unittest.TestCase):
 
     def test2010TestDoubleFree(self):
         """Test freeing the same resource twice."""
-        gen = DataGenerator()
+        gen = DataGenerator(self.dbs)
         resType = gen.createResourceType()
         res = gen.createResource(resType)
 
