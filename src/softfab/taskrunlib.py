@@ -57,7 +57,8 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
     def __init__(self,
                  attributes: Mapping[str, str],
                  jobDB: JobDB,
-                 resultStorage: ResultStorage
+                 resultStorage: ResultStorage,
+                 artifactsPath: Path
                  ):
         super().__init__(attributes)
         if 'state' not in self._properties:
@@ -65,6 +66,7 @@ class TaskRun(XMLTag, DatabaseElem, TaskStateMixin, StorageURLMixin):
             self._properties['state'] = 'waiting'
         self.__jobDB = jobDB
         self.__resultStorage = resultStorage
+        self._artifactsPath = artifactsPath
         self.__reports: List[str] = []
         self.__reserved: Dict[str, str] = {}
         self.__reasonForWaiting: Optional[ReasonForWaiting] = None
@@ -630,9 +632,11 @@ class TaskRunFactory:
 
     jobDB: JobDB
     resultStorage: ResultStorage
+    artifactsPath: Path
 
     def createTaskrun(self, attributes: Mapping[str, str]) -> TaskRun:
-        return TaskRun(attributes, self.jobDB, self.resultStorage)
+        return TaskRun(attributes, self.jobDB, self.resultStorage,
+                       self.artifactsPath)
 
 class TaskRunDB(Database[TaskRun]):
     privilegeObject = 't'

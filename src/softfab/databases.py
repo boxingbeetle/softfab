@@ -50,6 +50,7 @@ def initDatabases(dbDir: Path) -> Mapping[str, Database[Any]]:
     dependencies: Dict[str, object] = dict(databases)
     dependencies.update(factories)
     dependencies['resultStorage'] = ResultStorage(dbDir / 'results')
+    dependencies['artifactsPath'] = dbDir / 'artifacts'
     for factory in factories.values():
         injectDependencies(factory, dependencies)
     return databases

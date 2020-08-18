@@ -260,14 +260,15 @@ class SoftFabRoot(Resource):
             await preload(databases.values())
 
             jobDB = cast(JobDB, databases['jobDB'])
-            # TODO: resultStorage was already injected into factories by
-            #       initDatabases(), but we have to construct it again
-            #       to inject into pages.
+            # TODO: resultStorage and artifactsPath were already injected into
+            #       factories by initDatabases(), but we have to construct them
+            #       again to inject into pages.
             dependencies: Dict[str, object] = dict(
                 databases,
                 databases=databases.values(),
                 project=project,
                 resultStorage=ResultStorage(dbDir / 'results'),
+                artifactsPath=dbDir / 'artifacts',
                 dateRange=DateRangeMonitor(jobDB),
                 unfinishedJobs=UnfinishedJobs(jobDB),
                 taskToJobs=TaskToJobs(jobDB)

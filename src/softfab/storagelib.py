@@ -9,13 +9,11 @@ from typing import IO, Callable, Dict, Optional, Union, cast
 from urllib.parse import unquote_plus, urljoin
 import logging
 
-from softfab.config import dbDir
-
-artifactsPath = Path(dbDir) / 'artifacts'
 
 class StorageURLMixin:
 
     _properties: Dict[str, Union[str, int, Enum]]
+    _artifactsPath: Path
 
     @abstractmethod
     def _notify(self) -> None:
@@ -46,7 +44,7 @@ class StorageURLMixin:
         """
         url = self.getURL()
         if url:
-            path = artifactsPath
+            path = self._artifactsPath
             for segment in url.split('/'):
                 dirName = unquote_plus(segment)
                 if dirName.startswith('.') or '/' in dirName:
