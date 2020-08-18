@@ -31,6 +31,7 @@ from softfab.jobview import JobNotificationObserver
 from softfab.newapi import populateAPI
 from softfab.pageargs import PageArgs
 from softfab.projectlib import Project, ProjectDB, TimezoneUpdater
+from softfab.reactor import reactor
 from softfab.render import NotFoundPage, renderAuthenticated
 from softfab.resourcelib import ResourceDB, TaskRunnerTokenProvider
 from softfab.resultlib import ResultStorage
@@ -287,7 +288,7 @@ class SoftFabRoot(Resource):
 
             # Start schedule processing.
             scheduleDB = cast(ScheduleDB, databases['scheduleDB'])
-            ScheduleManager(configDB, jobDB, scheduleDB).trigger()
+            ScheduleManager(configDB, jobDB, scheduleDB, reactor).trigger()
         except Exception:
             startupLogger.exception('Error during startup:')
             # Try to run the part of the Control Center that did start up

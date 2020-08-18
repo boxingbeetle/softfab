@@ -17,8 +17,11 @@ from heapq import heappush, heappop
 
 
 class DummyReactor:
-    '''Dummy replacement for Twisted's reactor.
-    '''
+    """Dummy replacement for Twisted's reactor.
+
+    We don't need the callbacks to happen because we call
+    ScheduleManager.trigger() manually.
+    """
     def callLater(self, delay, func, *args, **kw):
         pass
 
@@ -93,16 +96,12 @@ class ScheduleFixtureMixin:
     def setUp(self):
         dbs = databases.reloadDatabases(dbDir)
         self.scheduleDB = dbs['scheduleDB']
-        # Patch reactor used by schedulelib, because we don't use it in this
-        # test and it is only costing us performance.
-        # The patching has to be done here because reloadDatabases() reloads
-        # all the modules.
-        schedulelib.reactor = DummyReactor()
         # Create singleton instance.
         self.scheduleManager = schedulelib.ScheduleManager(
                                     configlib.configDB,
                                     joblib.jobDB,
-                                    self.scheduleDB)
+                                    self.scheduleDB,
+                                    DummyReactor())
 
         self.__taskRunnerAvailableCallbacks = []
         self.__timedCallbacks = []

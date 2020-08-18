@@ -57,10 +57,11 @@ from typing import (
 import logging
 import time
 
+from twisted.internet.interfaces import IReactorTime
+
 from softfab.configlib import ConfigDB
 from softfab.databaselib import Database, RecordObserver
 from softfab.joblib import Job, JobDB
-from softfab.reactor import reactor
 from softfab.selectlib import ObservingTagCache, SelectableRecordABC, TagCache
 from softfab.timelib import endOfTime, getTime
 from softfab.utils import Heap
@@ -152,10 +153,13 @@ class ScheduleManager(RecordObserver['Scheduled']):
     def __init__(self,
                  configDB: ConfigDB,
                  jobDB: JobDB,
-                 scheduleDB: ScheduleDB):
+                 scheduleDB: ScheduleDB,
+                 reactor: IReactorTime
+                 ):
         super().__init__()
         self.configDB = configDB
         self.jobDB = jobDB
+        self.__reactor = reactor
 
         self.__runningJobs: Dict[str, MutableSet[str]] = {}
         """Maps schedule ID to the set of job IDs it spawned on its last run
@@ -202,7 +206,7 @@ class ScheduleManager(RecordObserver['Scheduled']):
             # If the new schedule should start right away, trigger it.
             # Doing this call via the reactor makes sure that no schedules
             # are instantiated on upgrade.
-            reactor.callLater(0, self.__triggerSchedules, getTime())
+            self.__reactor.callLater(0, self.__triggerSchedules, getTime())
 
     def __removeFromQueue(self, schedule: 'Scheduled') -> None:
         try:
@@ -255,7 +259,7 @@ class ScheduleManager(RecordObserver['Scheduled']):
             self.__triggerSchedules(minute * 60)
         finally:
             # Register callback at the next minute boundary.
-            reactor.callLater(
+            self.__reactor.callLater(
                 (minute + 1) * 60 - currentSecs,
                 self.trigger,
                 minute + 1
