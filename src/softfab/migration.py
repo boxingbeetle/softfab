@@ -14,6 +14,12 @@ import logging
 
 from click import echo, get_current_context
 
+from softfab.databases import initDatabases
+from softfab.joblib import JobDB
+from softfab.productlib import ProductDB
+from softfab.projectlib import ProjectDB
+from softfab.resourcelib import ResourceDB, recomputeRunning
+from softfab.taskrunlib import TaskRunDB
 from softfab.utils import parseVersion
 from softfab.version import VERSION
 import softfab.config
@@ -35,20 +41,12 @@ def setConversionFlagsForVersion(
 def getDataVersion() -> str:
     """Read the format version from the project data."""
 
-    # pylint: disable=import-outside-toplevel
-    from softfab.projectlib import ProjectDB
     projectDB = ProjectDB(softfab.config.dbDir / 'project')
     projectDB.preload()
     return projectDB['singleton'].dbVersion
 
 def _convertAll() -> None:
     """Convert all databases to the current format."""
-
-    # Inline import to break cycle.
-    # pylint: disable=import-outside-toplevel
-    # pylint: disable=cyclic-import
-    from softfab.databases import initDatabases
-    from softfab import joblib, productlib, projectlib, resourcelib, taskrunlib
 
     databases = initDatabases(softfab.config.dbDir)
     for db in databases.values():
@@ -59,8 +57,8 @@ def _convertAll() -> None:
         db.convert()
 
     echo('Checking for obsolete products...')
-    jobDB = cast(joblib.JobDB, databases['jobDB'])
-    productDB = cast(productlib.ProductDB, databases['productDB'])
+    jobDB = cast(JobDB, databases['jobDB'])
+    productDB = cast(ProductDB, databases['productDB'])
     orphanedProductIDs = set(productDB.keys())
     for job in jobDB:
         for product in chain(job.getInputs(), job.getProduced()):
@@ -73,12 +71,12 @@ def _convertAll() -> None:
         echo('No obsolete products found.')
 
     echo('Recomputing running tasks...')
-    resourceDB = cast(resourcelib.ResourceDB, databases['resourceDB'])
-    taskRunDB = cast(taskrunlib.TaskRunDB, databases['taskRunDB'])
-    resourcelib.recomputeRunning(resourceDB, taskRunDB)
+    resourceDB = cast(ResourceDB, databases['resourceDB'])
+    taskRunDB = cast(TaskRunDB, databases['taskRunDB'])
+    recomputeRunning(resourceDB, taskRunDB)
 
     echo('Updating database version tag...')
-    projectDB = cast(projectlib.ProjectDB, databases['projectDB'])
+    projectDB = cast(ProjectDB, databases['projectDB'])
     project = projectDB['singleton']
     project.updateVersion()
 
