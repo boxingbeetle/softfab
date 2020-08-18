@@ -8,7 +8,6 @@ from typing import (
 )
 import logging
 
-from softfab.config import dbDir
 from softfab.connection import ConnectionStatus
 from softfab.databaselib import Database, DatabaseElem, RecordObserver
 from softfab.paramlib import GetParent, ParamMixin, Parameterized, paramTop
@@ -863,8 +862,6 @@ class ResourceDB(Database[ResourceBase]):
             return self.getTaskRunner(owner.name)
         else:
             raise KeyError('Token does not represent a Task Runner')
-
-resourceDB = ResourceDB(dbDir / 'resources')
 
 class TaskRunnerTokenProvider(RecordObserver[ResourceBase]):
 

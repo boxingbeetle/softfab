@@ -3,7 +3,6 @@
 from pathlib import Path
 from typing import Mapping, Optional, cast
 
-from softfab.config import dbDir
 from softfab.databaselib import VersionedDatabase
 from softfab.frameworklib import Framework, FrameworkDB, TaskDefBase
 from softfab.paramlib import GetParent, Parameterized, paramTop
@@ -107,5 +106,3 @@ class TaskDefDB(VersionedDatabase[TaskDef]):
 
     def __init__(self, baseDir: Path):
         super().__init__(baseDir, TaskDefFactory())
-
-taskDefDB = TaskDefDB(dbDir / 'taskdefs')

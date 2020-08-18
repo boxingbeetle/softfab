@@ -3,7 +3,6 @@
 from pathlib import Path
 from typing import Mapping, cast
 
-from softfab.config import dbDir
 from softfab.databaselib import DatabaseElem, VersionedDatabase
 from softfab.xmlbind import XMLTag
 from softfab.xmlgen import XMLAttributeValue, XMLContent, xml
@@ -42,8 +41,6 @@ class ResTypeDB(VersionedDatabase['ResType']):
             self.add(ResType.create(
                 repoResourceTypeName, pertask=False, perjob=False
                 ))
-
-resTypeDB = ResTypeDB(dbDir / 'restypes')
 
 # TODO: This should be moved to restypeview, but that is only possible
 #       after we replace the __getitem__ mechanism.

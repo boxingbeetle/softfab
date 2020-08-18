@@ -5,7 +5,6 @@ from typing import (
     AbstractSet, Dict, Iterable, List, Mapping, Optional, Set, cast
 )
 
-from softfab.config import dbDir
 from softfab.databaselib import DatabaseElem, VersionedDatabase
 from softfab.paramlib import GetParent, ParamMixin, Parameterized, paramTop
 from softfab.resreq import (
@@ -28,8 +27,6 @@ class FrameworkDB(VersionedDatabase['Framework']):
 
     def __init__(self, baseDir: Path):
         super().__init__(baseDir, FrameworkFactory())
-
-frameworkDB = FrameworkDB(dbDir / 'frameworks')
 
 class TaskDefBase(XMLTag, ParamMixin, DatabaseElem):
     tagName = 'taskdef'

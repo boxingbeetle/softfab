@@ -1,37 +1,41 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from importlib import reload
 from pathlib import Path
 from typing import Any, Dict, Iterator, Mapping, get_type_hints
 
-from softfab import (
-    configlib, databaselib, frameworklib, joblib, productdeflib, productlib,
-    projectlib, resourcelib, restypelib, schedulelib, taskdeflib, taskrunlib,
-    tokens, userlib
-)
+from softfab.configlib import ConfigDB
+from softfab.databaselib import Database
+from softfab.frameworklib import FrameworkDB
+from softfab.joblib import JobDB
+from softfab.productdeflib import ProductDefDB
+from softfab.productlib import ProductDB
+from softfab.projectlib import ProjectDB
+from softfab.resourcelib import ResourceDB
+from softfab.restypelib import ResTypeDB
 from softfab.resultlib import ResultStorage
+from softfab.schedulelib import ScheduleDB
+from softfab.taskdeflib import TaskDefDB
+from softfab.taskrunlib import TaskRunDB
+from softfab.tokens import TokenDB
+from softfab.userlib import UserDB
 
 
-# Note: The databases should be ordered such that all if D2 depends on D1,
-#       D1 is positioned in the list before D2.
-# TODO: Automatically order in this way, or at least detect if the order is
-#       invalid.
-def _iterDatabases(dbDir: Path) -> Iterator[databaselib.Database[Any]]:
-    yield projectlib.ProjectDB(dbDir / 'project')
-    yield tokens.TokenDB(dbDir / 'tokens')
-    yield restypelib.resTypeDB
-    yield productdeflib.productDefDB
-    yield frameworklib.frameworkDB
-    yield taskdeflib.taskDefDB
-    yield productlib.ProductDB(dbDir / 'products')
-    yield joblib.jobDB # joblib must go before taskrunlib despite dependencies
-    yield taskrunlib.TaskRunDB(dbDir / 'taskruns')
-    yield resourcelib.resourceDB
-    yield configlib.configDB
-    yield schedulelib.ScheduleDB(dbDir / 'scheduled')
-    yield userlib.UserDB(dbDir / 'users')
+def _iterDatabases(dbDir: Path) -> Iterator[Database[Any]]:
+    yield ProjectDB(dbDir / 'project')
+    yield TokenDB(dbDir / 'tokens')
+    yield ResTypeDB(dbDir / 'restypes')
+    yield ProductDefDB(dbDir / 'productdefs')
+    yield FrameworkDB(dbDir / 'frameworks')
+    yield TaskDefDB(dbDir / 'taskdefs')
+    yield ProductDB(dbDir / 'products')
+    yield JobDB(dbDir / 'jobs')
+    yield TaskRunDB(dbDir / 'taskruns')
+    yield ResourceDB(dbDir / 'resources')
+    yield ConfigDB(dbDir / 'configs')
+    yield ScheduleDB(dbDir / 'scheduled')
+    yield UserDB(dbDir / 'users')
 
-def initDatabases(dbDir: Path) -> Mapping[str, databaselib.Database[Any]]:
+def initDatabases(dbDir: Path) -> Mapping[str, Database[Any]]:
     databases = {}
     factories = {}
     for db in _iterDatabases(dbDir):
@@ -50,24 +54,11 @@ def initDatabases(dbDir: Path) -> Mapping[str, databaselib.Database[Any]]:
         injectDependencies(factory, dependencies)
     return databases
 
-def reloadDatabases(dbDir: Path) -> Mapping[str, databaselib.Database[Any]]:
-    # !!! NOTE: The order of reloading is very important:
-    # dependent modules must be reloaded AFTER their dependencies
-    # TODO: Automate this.
-    reload(restypelib)
-    reload(productdeflib)
-    reload(frameworklib)
-    reload(taskdeflib)
-    reload(resourcelib)
-    reload(joblib)
-    reload(configlib)
-
-    # Force mapping creation and factory injection to be redone.
+def reloadDatabases(dbDir: Path) -> Mapping[str, Database[Any]]:
+    """Called by unit tests to reload the databases from disk."""
     databases = initDatabases(dbDir)
-
     for db in databases.values():
         db.preload()
-
     return databases
 
 def injectDependencies(obj: Any, dependencies: Mapping[str, object]) -> None:

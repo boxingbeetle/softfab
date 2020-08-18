@@ -9,7 +9,6 @@ from typing import (
 )
 
 from softfab.compat import Protocol
-from softfab.config import dbDir
 from softfab.databaselib import DBRecord, Database, RecordObserver
 from softfab.frameworklib import Framework, FrameworkDB
 from softfab.joblib import Job, JobFactory
@@ -637,5 +636,3 @@ class ConfigDB(Database[Config]):
         for config in self:
             if config.tags.hasTagValue(key, value):
                 yield config
-
-configDB = ConfigDB(dbDir / 'configs')

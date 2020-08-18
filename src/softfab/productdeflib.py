@@ -4,7 +4,6 @@ from enum import Enum
 from pathlib import Path
 from typing import Mapping, cast
 
-from softfab.config import dbDir
 from softfab.databaselib import (
     DatabaseElem, VersionedDatabase, checkWrapperVarName
 )
@@ -74,5 +73,3 @@ class ProductDefDB(VersionedDatabase[ProductDef]):
 
     def _customCheckId(self, key: str) -> None:
         checkWrapperVarName(key)
-
-productDefDB = ProductDefDB(dbDir / 'productdefs')
