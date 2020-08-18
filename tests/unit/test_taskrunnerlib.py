@@ -2,55 +2,16 @@
 
 from io import StringIO
 
-from pytest import fixture, mark
+from pytest import mark
 import attr
 
-# Import for the side effect of setting dbDir.
-# We're not going to use that dir, but the modules under test still need it.
-import initconfig
-
-from softfab.joblib import JobDB
-from softfab.resourcelib import (
-    RequestFactory, ResourceDB, TaskRunner, TaskRunnerData
-)
+from softfab.resourcelib import RequestFactory, TaskRunner, TaskRunnerData
 from softfab.resourceview import getResourceStatus
-from softfab.restypelib import ResTypeDB
 from softfab.timelib import setTime
-from softfab.tokens import TokenDB
-from softfab.taskrunlib import TaskRunDB
 from softfab.xmlbind import parse
 
+from conftest import Databases
 
-class Databases:
-
-    def __init__(self, dbDir):
-        self.dbDir = dbDir
-        self.reload()
-
-    def reload(self):
-        dbDir = self.dbDir
-
-        self.jobDB = JobDB(dbDir / 'jobs')
-        self.resTypeDB = ResTypeDB(dbDir / 'restypes')
-        self.taskRunDB = TaskRunDB(dbDir / 'taskruns')
-        self.resourceDB = ResourceDB(dbDir / 'resources')
-        self.tokenDB = TokenDB(dbDir / 'tokens')
-
-        # TODO: Use the generic injection system.
-        self.resourceDB.factory.resTypeDB = self.resTypeDB
-        self.resourceDB.factory.taskRunDB = self.taskRunDB
-        self.resourceDB.factory.tokenDB = self.tokenDB
-
-        self.jobDB.preload()
-        self.resTypeDB.preload()
-        self.taskRunDB.preload()
-        self.resourceDB.preload()
-
-@fixture
-def databases(tmp_path):
-    ret = Databases(tmp_path)
-    assert len(ret.resourceDB) == 0
-    return ret
 
 dataRun = parse(RequestFactory(), StringIO(
     '<request runnerVersion="2.0.0" host="factorypc">'
