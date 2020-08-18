@@ -5,7 +5,6 @@ but much better defined.
 Its specification is in RFC 4287:  http://tools.ietf.org/html/rfc4287
 '''
 
-from os.path import basename
 from time import gmtime, strftime
 from typing import Any, ClassVar, Collection, Iterator, List
 
@@ -14,7 +13,7 @@ from softfab.Page import PageProcessor
 from softfab.StyleResources import styleRoot
 from softfab.UIPage import factoryStyleSheet
 from softfab.compat import NoReturn
-from softfab.config import dbDir, rootURL
+from softfab.config import rootURL
 from softfab.configlib import ConfigDB
 from softfab.databaselib import RecordObserver
 from softfab.datawidgets import DataColumn, DataTable
@@ -33,8 +32,6 @@ from softfab.version import HOMEPAGE, VERSION
 from softfab.webgui import Table, cell, pageURL, row
 from softfab.xmlgen import XMLContent, atom, xhtml
 
-# TODO: Give each factory a truly unique ID.
-factoryId = basename(dbDir)
 
 class MostRecent(RecordObserver[Job]):
     '''Keeps a list of the N (N=50) most recent completed jobs.
@@ -148,7 +145,7 @@ class Feed_GET(ControlPage[ControlPage.Arguments, 'Feed_GET.Processor']):
         yield atom.subtitle[
             f'The most recent jobs running in the {projectName} SoftFab'
             ]
-        yield atom.id[ f'urn:softfab:{factoryId}:jobs' ]
+        yield atom.id[ f'{rootURL}jobs' ]
         yield atom.updated[ self.presentTime(getTime()) ]
         yield atom.generator(uri=HOMEPAGE, version=VERSION)[ 'SoftFab' ]
         # TODO: Akregator for KDE4 won't show the icon, no matter what I try.
@@ -187,7 +184,8 @@ class Feed_GET(ControlPage[ControlPage.Arguments, 'Feed_GET.Processor']):
         jobComment = CommentPanel(job.comment)
         yield atom.title[ f'{job.getDescription()}: ', jobResult ]
         yield atom.link(href = ccURL + createJobURL(jobId))
-        yield atom.id[ f'softfab:{factoryId}/jobs/{jobId}' ]
+        day, timeSeq = jobId.split('-', 1)
+        yield atom.id[ f'{rootURL}jobs/{day}/{timeSeq}' ]
         yield atom.published[ self.presentTime(job.getCreateTime()) ]
         # TODO: More accurate last-modified time.
         yield atom.updated[ self.presentTime(job.getCreateTime()) ]
