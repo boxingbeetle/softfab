@@ -4,10 +4,9 @@ import unittest
 
 from initconfig import dbDir, removeDB
 
-from softfab import databases
-from softfab import configlib, resourcelib, restypelib
+from softfab.databases import reloadDatabases
 from softfab.resreq import taskRunnerResourceRefName
-from softfab.restypelib import taskRunnerResourceTypeName
+from softfab.restypelib import ResType, taskRunnerResourceTypeName
 from softfab.resultcode import ResultCode
 from softfab.timelib import setTime
 
@@ -38,13 +37,15 @@ class TestResourceRequirements(unittest.TestCase):
         removeDB()
 
     def reloadDatabases(self):
-        databases.reloadDatabases(dbDir)
+        dbs = reloadDatabases(dbDir)
+        for name in ('configDB', 'resTypeDB', 'resourceDB'):
+            setattr(self, name, dbs[name])
 
     def runWithReload(self, config, verifyFunc):
         configId = config.getId()
         verifyFunc(config)
         self.reloadDatabases()
-        config = configlib.configDB[configId]
+        config = self.configDB[configId]
         verifyFunc(config)
 
     def checkResourceClaim(self, correctSpecs, claim):
@@ -64,13 +65,13 @@ class TestResourceRequirements(unittest.TestCase):
         self.assertCountEqual(specsByRef, ())
 
     def reserveResource(self, name):
-        resource = resourcelib.resourceDB[name]
+        resource = self.resourceDB[name]
         self.assertFalse(resource.isReserved())
         resource.reserve('someone')
         self.assertTrue(resource.isReserved())
 
     def freeResource(self, name):
-        resource = resourcelib.resourceDB[name]
+        resource = self.resourceDB[name]
         self.assertTrue(resource.isReserved())
         resource.free()
         self.assertFalse(resource.isReserved())
@@ -188,7 +189,7 @@ class TestResourceRequirements(unittest.TestCase):
 
         def check(config):
             job, = config.createJobs(OWNER)
-            taskRunner = resourcelib.resourceDB[tr]
+            taskRunner = self.resourceDB[tr]
 
             # Try to assign with both cap_a and cap_b unavailable.
             self.reserveResource(resA)
@@ -211,13 +212,13 @@ class TestResourceRequirements(unittest.TestCase):
             self.freeResource(resB)
             task = job.assignTask(taskRunner)
             self.assertIsNotNone(task)
-            self.assertFalse(resourcelib.resourceDB[resA].isFree())
-            self.assertFalse(resourcelib.resourceDB[resB].isFree())
-            self.assertTrue(resourcelib.resourceDB[resC].isFree())
+            self.assertFalse(self.resourceDB[resA].isFree())
+            self.assertFalse(self.resourceDB[resB].isFree())
+            self.assertTrue(self.resourceDB[resC].isFree())
             job.taskDone('task', ResultCode.OK, 'summary text', (), {})
-            self.assertTrue(resourcelib.resourceDB[resA].isFree())
-            self.assertTrue(resourcelib.resourceDB[resB].isFree())
-            self.assertTrue(resourcelib.resourceDB[resC].isFree())
+            self.assertTrue(self.resourceDB[resA].isFree())
+            self.assertTrue(self.resourceDB[resB].isFree())
+            self.assertTrue(self.resourceDB[resC].isFree())
 
         gen = DataGenerator()
         resType = gen.createResourceType(pertask=True)
@@ -243,7 +244,7 @@ class TestResourceRequirements(unittest.TestCase):
 
         def check(config):
             job, = config.createJobs(OWNER)
-            taskRunner = resourcelib.resourceDB[tr]
+            taskRunner = self.resourceDB[tr]
 
             # Try to assign with resource unavailable.
             self.reserveResource(res)
@@ -254,9 +255,9 @@ class TestResourceRequirements(unittest.TestCase):
             self.freeResource(res)
             task = job.assignTask(taskRunner)
             self.assertIsNotNone(task)
-            self.assertTrue(resourcelib.resourceDB[res].isFree())
+            self.assertTrue(self.resourceDB[res].isFree())
             job.taskDone('task', ResultCode.OK, 'summary text', (), {})
-            self.assertTrue(resourcelib.resourceDB[res].isFree())
+            self.assertTrue(self.resourceDB[res].isFree())
 
         gen = DataGenerator()
         resType = gen.createResourceType()
@@ -276,9 +277,9 @@ class TestResourceRequirements(unittest.TestCase):
         """Test configuration using different types for same reference."""
 
         def checkConsistent(config):
-            self.assertTrue(config.isConsistent(restypelib.resTypeDB))
+            self.assertTrue(config.isConsistent(self.resTypeDB))
         def checkInconsistent(config):
-            self.assertFalse(config.isConsistent(restypelib.resTypeDB))
+            self.assertFalse(config.isConsistent(self.resTypeDB))
 
         gen = DataGenerator()
         resTypeA = gen.createResourceType(pertask=True)
@@ -301,14 +302,10 @@ class TestResourceRequirements(unittest.TestCase):
         # Both resource types are per-task, so no conflict.
         self.runWithReload(config, checkConsistent)
         # Update resource type A to be also per-job exclusive.
-        restypelib.resTypeDB.update(
-            restypelib.ResType.create(resTypeA, True, True)
-            )
+        self.resTypeDB.update(ResType.create(resTypeA, True, True))
         self.runWithReload(config, checkConsistent)
         # Update resource type B to be also per-job exclusive.
-        restypelib.resTypeDB.update(
-            restypelib.ResType.create(resTypeB, True, True)
-            )
+        self.resTypeDB.update(ResType.create(resTypeB, True, True))
         self.runWithReload(config, checkInconsistent)
 
     def test2000TestDoubleReserve(self):
@@ -318,7 +315,7 @@ class TestResourceRequirements(unittest.TestCase):
         res = gen.createResource(resType)
 
         self.reserveResource(res)
-        resource = resourcelib.resourceDB[res]
+        resource = self.resourceDB[res]
         with self.assertLogs(level='ERROR'):
             resource.reserve('twice')
         self.assertTrue(resource.isReserved())
@@ -331,7 +328,7 @@ class TestResourceRequirements(unittest.TestCase):
 
         self.reserveResource(res)
         self.freeResource(res)
-        resource = resourcelib.resourceDB[res]
+        resource = self.resourceDB[res]
         with self.assertLogs(level='ERROR'):
             resource.free()
         self.assertFalse(resource.isReserved())

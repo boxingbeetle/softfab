@@ -4,7 +4,6 @@ from initconfig import dbDir, removeDB
 
 from datageneratorlib import DataGenerator
 
-from softfab import configlib, joblib, resourcelib
 from softfab.databases import reloadDatabases
 from softfab.resultcode import ResultCode
 from softfab.schedulelib import ScheduleManager, ScheduleRepeat
@@ -95,10 +94,12 @@ class ScheduleFixtureMixin:
 
     def setUp(self):
         dbs = reloadDatabases(dbDir)
-        self.scheduleDB = dbs['scheduleDB']
+        for name in ('configDB', 'jobDB', 'resourceDB', 'scheduleDB'):
+            setattr(self, name, dbs[name])
+
         # Create singleton instance.
-        self.scheduleManager = ScheduleManager(configlib.configDB,
-                                               joblib.jobDB,
+        self.scheduleManager = ScheduleManager(self.configDB,
+                                               self.jobDB,
                                                self.scheduleDB,
                                                DummyReactor())
 
@@ -113,7 +114,7 @@ class ScheduleFixtureMixin:
         setTimeFunc(self.getTime)
 
         self.jobs = []
-        joblib.jobDB.addObserver(self)
+        self.jobDB.addObserver(self)
 
         class CustomGenerator(DataGenerator):
             numTasks = 1
@@ -124,7 +125,7 @@ class ScheduleFixtureMixin:
         gen.createDefinitions()
 
         gen.createTaskRunners()
-        trRecord = resourcelib.resourceDB.get(gen.taskRunners[0])
+        trRecord = self.resourceDB.get(gen.taskRunners[0])
         # Keep the TaskRunner alive for all runs we want to execute.
         trRecord.getWarnTimeout = lambda: endOfTime - 300
         trRecord.getLostTimeout = lambda: endOfTime - 60
@@ -152,7 +153,7 @@ class ScheduleFixtureMixin:
         createSchedule(). It calls createConfig() to create a single config.
         '''
         config = self.createConfig()
-        self.assertEqual(len(configlib.configDB), 1)
+        self.assertEqual(len(self.configDB), 1)
         return { 'configId': config.getId() }
 
     def createSchedule(
@@ -181,7 +182,7 @@ class ScheduleFixtureMixin:
         elif self.__isDone:
             return 'done'
         elif self.__missingConfig \
-                or not self.scheduled.getMatchingConfigIds(configlib.configDB):
+                or not self.scheduled.getMatchingConfigIds(self.configDB):
             return 'warning'
         elif self.__suspended:
             return 'suspended'
@@ -198,13 +199,13 @@ class ScheduleFixtureMixin:
             )
         self.assertEqual(schedule.isDone(), self.__isDone)
         if self.__missingConfig:
-            assert len(schedule.getMatchingConfigIds(configlib.configDB)) == 0
+            assert len(schedule.getMatchingConfigIds(self.configDB)) == 0
         self.assertEqual(schedule.isSuspended(), self.__suspended)
-        self.assertEqual(getScheduleStatus(configlib.configDB, schedule),
+        self.assertEqual(getScheduleStatus(self.configDB, schedule),
                          self.expectedStatus())
-        self.assertEqual(len(joblib.jobDB), self.__nrCreatedJobs)
+        self.assertEqual(len(self.jobDB), self.__nrCreatedJobs)
         finishedJobs = [
-            job for job in joblib.jobDB if job.isExecutionFinished()
+            job for job in self.jobDB if job.isExecutionFinished()
             ]
         self.assertEqual(len(finishedJobs), self.__nrFinishedJobs)
 
@@ -393,9 +394,9 @@ class Test0100Basic(ScheduleFixtureMixin, unittest.TestCase):
         self.wait(self.duration - 60)
         self.expectJobDone()
         # Run for another day, no jobs should be created anymore.
-        self.assertEqual(len(joblib.jobDB), 5)
+        self.assertEqual(len(self.jobDB), 5)
         self.wait(secondsPerDay)
-        self.assertEqual(len(joblib.jobDB), 5)
+        self.assertEqual(len(self.jobDB), 5)
 
 class Test0400StartTime(ScheduleFixtureMixin, unittest.TestCase):
     '''Test cases which validate the time at which schedules are started.
@@ -414,7 +415,7 @@ class Test0400StartTime(ScheduleFixtureMixin, unittest.TestCase):
         # We could perform the check below, but it slows down the test a lot
         # and it doesn't provide much value in return.
         #for schedule in self.scheduleDB:
-        #    self.assertEqual(getScheduleStatus(configlib.configDB, schedule), 'ok')
+        #    self.assertEqual(getScheduleStatus(self.configDB, schedule), 'ok')
 
     def test0400DailyStart(self):
         '''Test daily schedule.
@@ -422,7 +423,7 @@ class Test0400StartTime(ScheduleFixtureMixin, unittest.TestCase):
         # Schedule starts Monday 2007-01-01 at 13:01.
         startTime = int(time.mktime(( 2007, 1, 1, 13, 1, 0, 0, 0, 0 )))
         self.prepare(startTime - self.preparedTime, sequence=ScheduleRepeat.DAILY)
-        self.assertEqual(getScheduleStatus(configlib.configDB, self.scheduled), 'ok')
+        self.assertEqual(getScheduleStatus(self.configDB, self.scheduled), 'ok')
 
         # Run simulation for 1 week.
         self.wait(secondsPerWeek)
@@ -470,13 +471,13 @@ class Test0400StartTime(ScheduleFixtureMixin, unittest.TestCase):
                 configFactory=sharedConfigFactory(configId)
                 )
             scheduled = self.scheduleDB.get(schedId)
-            self.assertEqual(getScheduleStatus(configlib.configDB, scheduled), 'ok')
+            self.assertEqual(getScheduleStatus(self.configDB, scheduled), 'ok')
 
         # Run simulation for 2 weeks.
         self.wait(2 * secondsPerWeek)
 
         # Validate the results.
-        self.assertEqual(set(joblib.jobDB), set(self.jobs))
+        self.assertEqual(set(self.jobDB), set(self.jobs))
         creationTimes = [ job['timestamp'] for job in self.jobs ]
         self.assertEqual(len(creationTimes), 14)
         self.assertEqual(len(scheduledTimes), 7)
@@ -508,13 +509,13 @@ class Test0400StartTime(ScheduleFixtureMixin, unittest.TestCase):
                 configFactory=sharedConfigFactory(configId)
                 )
             scheduled = self.scheduleDB.get(schedId)
-            self.assertEqual(getScheduleStatus(configlib.configDB, scheduled), 'ok')
+            self.assertEqual(getScheduleStatus(self.configDB, scheduled), 'ok')
 
         # Run simulation for 2 weeks.
         self.wait(2 * secondsPerWeek)
 
         # Validate the results.
-        self.assertEqual(set(joblib.jobDB), set(self.jobs))
+        self.assertEqual(set(self.jobDB), set(self.jobs))
         creationTimes = [ job['timestamp'] for job in self.jobs ]
         self.assertEqual(len(creationTimes), 14)
         self.assertEqual(len(scheduledTimes), 2)
@@ -555,13 +556,13 @@ class Test0400StartTime(ScheduleFixtureMixin, unittest.TestCase):
                 configFactory=sharedConfigFactory(configId)
                 )
             scheduled = self.scheduleDB.get(schedId)
-            self.assertEqual(getScheduleStatus(configlib.configDB, scheduled), 'ok')
+            self.assertEqual(getScheduleStatus(self.configDB, scheduled), 'ok')
 
         # Run simulation for 4 weeks.
         self.wait(4 * secondsPerWeek)
 
         # Validate the results.
-        self.assertEqual(set(joblib.jobDB), set(self.jobs))
+        self.assertEqual(set(self.jobDB), set(self.jobs))
         for schedId, scheduledTime, correctedTime in scheduledTimes:
             jobsFromSchedule = [
                 job for job in self.jobs if job.getScheduledBy() == schedId
@@ -621,7 +622,7 @@ class Test0600Tagged(ScheduleFixtureMixin, unittest.TestCase):
             return { 'tagKey': 'nosuchkey', 'tagValue': 'dummy' }
         startOffset = 120
         self.prepare(startOffset, ScheduleRepeat.ONCE, configFactory=configFactory)
-        assert len(self.scheduled.getMatchingConfigIds(configlib.configDB)) == 0
+        assert len(self.scheduled.getMatchingConfigIds(self.configDB)) == 0
         self.wait(startOffset)
         self.expectScheduleDone()
         self.wait(60)
@@ -635,10 +636,9 @@ class Test0600Tagged(ScheduleFixtureMixin, unittest.TestCase):
         self.prepare(startOffset, sequence, configFactory = configFactory)
         self.startTime = self.preparedTime + startOffset
         # Apply tag.
-        assert len(self.scheduled.getMatchingConfigIds(configlib.configDB)) == 0
+        assert len(self.scheduled.getMatchingConfigIds(self.configDB)) == 0
         configFactory.setTags()
-        assert len(self.scheduled.getMatchingConfigIds(configlib.configDB)) \
-                == numConfigs
+        assert len(self.scheduled.getMatchingConfigIds(self.configDB)) == numConfigs
         # Execution.
         self.wait(startOffset)
 
@@ -655,7 +655,7 @@ class Test0600Tagged(ScheduleFixtureMixin, unittest.TestCase):
             config.getId() for config in configFactory.configs
             )
         jobConfigs = set(
-            joblib.jobDB[jobId].configId
+            self.jobDB[jobId].configId
             for jobId in self.scheduled.getLastJobs()
             )
         self.assertEqual(createdConfigs, jobConfigs)
