@@ -20,7 +20,6 @@ from softfab.utils import (
 )
 from softfab.xmlbind import parse
 from softfab.xmlgen import XML
-import softfab.migration
 
 if TYPE_CHECKING:
     # pylint: disable=cyclic-import
@@ -36,6 +35,9 @@ class ObsoleteRecordError(Exception):
     '''Raised when a record which has no reason for existing anymore is being
     accessed. Used to purge obsolete records during database conversion.
     '''
+
+migrationInProgress = False
+"""Flag set during migration from any version."""
 
 DBRecord = TypeVar('DBRecord', bound='DatabaseElem')
 R2 = TypeVar('R2', bound='DatabaseElem')
@@ -505,7 +507,7 @@ class Database(Generic[DBRecord], RecordSubjectMixin[DBRecord], ABC):
                              parse(self.factory, self._fileNameForKey(key)))
                 self._register(key, value)
             except ObsoleteRecordError:
-                if softfab.migration.migrationInProgress:
+                if migrationInProgress:
                     logging.warning('Removing obsolete record: %s', key)
                     os.remove(self._fileNameForKey(key))
                 else:

@@ -17,17 +17,13 @@ from click import echo, get_current_context
 from softfab.utils import parseVersion
 from softfab.version import VERSION
 import softfab.config
+import softfab.databaselib
 
-# Set during any migration.
-migrationInProgress = False
 
 def setConversionFlags() -> None:
     '''Sets all conversion flags to True.
     '''
-    variables = globals()
-    for name in list(variables.keys()):
-        if isinstance(variables[name], bool):
-            variables[name] = True
+    softfab.databaselib.migrationInProgress = True
 
 def setConversionFlagsForVersion(
         version: Tuple[int, int, int] # pylint: disable=unused-argument
