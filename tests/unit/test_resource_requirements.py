@@ -1,337 +1,321 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-import unittest
+"""Test resource requirements functionality.
 
-from initconfig import dbDir, removeDB
+Every test case checks both the in-memory database (same db object on which
+operations were performed) and the on-disk database (used to load data
+after reloadDatabases() call is performed).
+"""
 
-from softfab.databases import reloadDatabases
 from softfab.resreq import taskRunnerResourceRefName
 from softfab.restypelib import ResType, taskRunnerResourceTypeName
 from softfab.resultcode import ResultCode
-from softfab.timelib import setTime
 
 from datageneratorlib import DataGenerator
 
 
 OWNER = 'Maggy'
 
-class TestResourceRequirements(unittest.TestCase):
-    """Test resource requirements functionality.
+def checkResourceClaim(correctSpecs, claim):
+    specsByRef = {}
+    for spec in claim:
+        ref = spec.reference
+        value = (spec.typeName, spec.capabilities)
+        assert ref not in specsByRef # ref must be unique
+        specsByRef[ref] = value
 
-    Every test case checks both the in-memory database (same db object on which
-    operations were performed) and the on-disk database (used to load data
-    after reloadDatabases() call is performed).
+    for ref, resTypeName, capabilities in sorted(correctSpecs):
+        assert ref in specsByRef
+        checkType, checkCaps = specsByRef.pop(ref)
+        assert checkType == resTypeName
+        assert checkCaps == set(capabilities)
+
+    assert not specsByRef
+
+def reserveResource(resourceDB, name):
+    resource = resourceDB[name]
+    assert not resource.isReserved()
+    resource.reserve('someone')
+    assert resource.isReserved()
+
+def freeResource(resourceDB, name):
+    resource = resourceDB[name]
+    assert resource.isReserved()
+    resource.free()
+    assert not resource.isReserved()
+
+def runWithReload(databases, config, verifyFunc):
+    configId = config.getId()
+    verifyFunc(config)
+    databases.reload()
+    config = databases.configDB[configId]
+    verifyFunc(config)
+
+def testResReqFromTaskDef(databases):
+    """Test whether a simple resource requirement from the task definition
+    is applied to a task."""
+
+    def check(config):
+        job, = config.createJobs(OWNER)
+
+        task = job.getTask('task')
+        checkResourceClaim(specs, task.resourceClaim)
+
+    gen = DataGenerator(databases)
+    resType = gen.createResourceType(pertask=True)
+    specs = (
+        ('ref', resType, ('cap_a', 'cap_b')),
+        (taskRunnerResourceRefName, taskRunnerResourceTypeName, ()),
+        )
+    framework = gen.createFramework('fw', resources=())
+    gen.createTask('task', framework, resources=specs)
+    config = gen.createConfiguration()
+    runWithReload(databases, config, check)
+
+def testResReqFromFrameworkDef(databases):
+    """Test whether a simple resource requirement from the framework
+    definition is applied to a task."""
+
+    def check(config):
+        job, = config.createJobs(OWNER)
+
+        task = job.getTask('task')
+        checkResourceClaim(specs, task.resourceClaim)
+
+    gen = DataGenerator(databases)
+    resType = gen.createResourceType(pertask=True)
+    specs = (
+        ('ref', resType, ('cap_a', 'cap_b')),
+        (taskRunnerResourceRefName, taskRunnerResourceTypeName, ()),
+        )
+    framework = gen.createFramework('fw', resources=specs)
+    gen.createTask('task', framework, resources=())
+    config = gen.createConfiguration()
+    runWithReload(databases, config, check)
+
+def testResReqFromCombinedDefs(databases):
+    """Test whether a simple resource requirements from both the framework
+    and task definitions are applied to a task."""
+
+    def check(config):
+        job, = config.createJobs(OWNER)
+
+        task = job.getTask('task')
+        checkResourceClaim(specs, task.resourceClaim)
+
+    gen = DataGenerator(databases)
+    resType = gen.createResourceType(pertask=True)
+    fwSpecs = (
+        ('ref', resType, ('cap_a', )),
+        ('ref2', resType, ('cap_c', )),
+        (taskRunnerResourceRefName, taskRunnerResourceTypeName, ()),
+        )
+    framework = gen.createFramework('fw', resources=fwSpecs)
+    tdSpecs = (
+        ('ref', resType, ('cap_b', )),
+        ('ref3', resType, ('cap_d', )),
+        )
+    gen.createTask('task', framework, resources=tdSpecs)
+    config = gen.createConfiguration()
+    specs = (
+        ('ref', resType, ('cap_a', 'cap_b')),
+        ('ref2', resType, ('cap_c', )),
+        ('ref3', resType, ('cap_d', )),
+        (taskRunnerResourceRefName, taskRunnerResourceTypeName, ()),
+        )
+    runWithReload(databases, config, check)
+
+def testResReqConflictingDefs(databases):
+    """Test what happens if resource requirements from the framework
+    and task definitions disagree about a resource's type.
+    While we don't allow changing an inherted resource type when editing
+    a task definition, there can be a conflict if the type is changed
+    in the framework definition later.
     """
 
-    def __init__(self, methodName = 'runTest'):
-        unittest.TestCase.__init__(self, methodName)
-        self.jobId = 'job1'
+    def check(config):
+        job, = config.createJobs(OWNER)
 
-        # Stop time, so Task Runner will not get out of sync.
-        setTime(1000)
+        task = job.getTask('task')
+        checkResourceClaim(specs, task.resourceClaim)
 
-    def setUp(self):
-        self.reloadDatabases()
+    gen = DataGenerator(databases)
+    resType1 = gen.createResourceType(pertask=True)
+    resType2 = gen.createResourceType(pertask=True)
+    fwSpecs = (
+        ('ref', resType1, ('cap_a', )),
+        (taskRunnerResourceRefName, taskRunnerResourceTypeName, ()),
+        )
+    framework = gen.createFramework('fw', resources=fwSpecs)
+    tdSpecs = (
+        ('ref', resType2, ('cap_b', )),
+        )
+    gen.createTask('task', framework, resources=tdSpecs)
+    config = gen.createConfiguration()
+    specs = (
+        ('ref', resType2, ('cap_b', )),
+        (taskRunnerResourceRefName, taskRunnerResourceTypeName, ()),
+        )
+    runWithReload(databases, config, check)
 
-    def tearDown(self):
-        removeDB()
+def testResReqAssignCombinedDefs(databases):
+    """Test whether simple resource requirements from both the framework
+    and task definition are used in task assignment."""
 
-    def reloadDatabases(self):
-        self.dbs = dbs = reloadDatabases(dbDir)
-        for name in ('configDB', 'resTypeDB', 'resourceDB'):
-            setattr(self, name, dbs[name])
+    def check(config):
+        resourceDB = databases.resourceDB
 
-    def runWithReload(self, config, verifyFunc):
-        configId = config.getId()
-        verifyFunc(config)
-        self.reloadDatabases()
-        config = self.configDB[configId]
-        verifyFunc(config)
+        job, = config.createJobs(OWNER)
+        taskRunner = resourceDB[tr]
 
-    def checkResourceClaim(self, correctSpecs, claim):
-        specsByRef = {}
-        for spec in claim:
-            ref = spec.reference
-            value = (spec.typeName, spec.capabilities)
-            self.assertNotIn(ref, specsByRef) # ref must be unique
-            specsByRef[ref] = value
+        # Try to assign with both cap_a and cap_b unavailable.
+        reserveResource(resourceDB, resA)
+        reserveResource(resourceDB, resB)
+        task = job.assignTask(taskRunner)
+        assert task is None
 
-        for ref, resTypeName, capabilities in sorted(correctSpecs):
-            self.assertIn(ref, specsByRef)
-            checkType, checkCaps = specsByRef.pop(ref)
-            self.assertEqual(checkType, resTypeName)
-            self.assertCountEqual(checkCaps, capabilities)
+        # Try to assign with only cap_a unavailable.
+        freeResource(resourceDB, resB)
+        task = job.assignTask(taskRunner)
+        assert task is None
 
-        self.assertCountEqual(specsByRef, ())
+        # Try to assign with only cap_b unavailable.
+        freeResource(resourceDB, resA)
+        reserveResource(resourceDB, resB)
+        task = job.assignTask(taskRunner)
+        assert task is None
 
-    def reserveResource(self, name):
-        resource = self.resourceDB[name]
-        self.assertFalse(resource.isReserved())
-        resource.reserve('someone')
-        self.assertTrue(resource.isReserved())
+        # Try to assign with cap_a and cap_b available.
+        freeResource(resourceDB, resB)
+        task = job.assignTask(taskRunner)
+        assert task is not None
+        assert not resourceDB[resA].isFree()
+        assert not resourceDB[resB].isFree()
+        assert resourceDB[resC].isFree()
+        job.taskDone('task', ResultCode.OK, 'summary text', (), {})
+        assert resourceDB[resA].isFree()
+        assert resourceDB[resB].isFree()
+        assert resourceDB[resC].isFree()
 
-    def freeResource(self, name):
-        resource = self.resourceDB[name]
-        self.assertTrue(resource.isReserved())
-        resource.free()
-        self.assertFalse(resource.isReserved())
+    gen = DataGenerator(databases)
+    resType = gen.createResourceType(pertask=True)
+    resA = gen.createResource(resType, ('cap_a', ))
+    resB = gen.createResource(resType, ('cap_b', 'cap_d'))
+    resC = gen.createResource(resType, ('cap_c', ))
+    tr = gen.createTaskRunner()
 
-    def test0100FromTaskDef(self):
-        """Test whether a simple resource requirement from the task definition
-        is applied to a task."""
+    fwSpecs = (
+        ('ref1', resType, ('cap_a', )),
+        (taskRunnerResourceRefName, taskRunnerResourceTypeName, ()),
+        )
+    framework = gen.createFramework('fw', resources=fwSpecs)
+    tdSpecs = (
+        ('ref2', resType, ('cap_b', )),
+        )
+    gen.createTask('task', framework, resources=tdSpecs)
+    config = gen.createConfiguration()
+    runWithReload(databases, config, check)
 
-        def check(config):
-            job, = config.createJobs(OWNER)
+def testResReqAssignNonExclusive(databases):
+    """Test assigning task using a non-exclusive resource."""
 
-            task = job.getTask('task')
-            self.checkResourceClaim(specs, task.resourceClaim)
+    def check(config):
+        job, = config.createJobs(OWNER)
+        taskRunner = databases.resourceDB[tr]
 
-        gen = DataGenerator(self.dbs)
-        resType = gen.createResourceType(pertask=True)
-        specs = (
-            ('ref', resType, ('cap_a', 'cap_b')),
-            (taskRunnerResourceRefName, taskRunnerResourceTypeName, ()),
-            )
-        framework = gen.createFramework('fw', resources=())
-        gen.createTask('task', framework, resources=specs)
-        config = gen.createConfiguration()
-        self.runWithReload(config, check)
+        # Try to assign with resource unavailable.
+        reserveResource(databases.resourceDB, res)
+        task = job.assignTask(taskRunner)
+        assert task is None
 
-    def test0110FromFrameworkDef(self):
-        """Test whether a simple resource requirement from the framework
-        definition is applied to a task."""
+        # Try to assign with resource available.
+        freeResource(databases.resourceDB, res)
+        task = job.assignTask(taskRunner)
+        assert task is not None
+        assert databases.resourceDB[res].isFree()
+        job.taskDone('task', ResultCode.OK, 'summary text', (), {})
+        assert databases.resourceDB[res].isFree()
 
-        def check(config):
-            job, = config.createJobs(OWNER)
+    gen = DataGenerator(databases)
+    resType = gen.createResourceType()
+    res = gen.createResource(resType, ())
+    tr = gen.createTaskRunner()
 
-            task = job.getTask('task')
-            self.checkResourceClaim(specs, task.resourceClaim)
+    fwSpecs = (
+        ('ref', resType, ()),
+        (taskRunnerResourceRefName, taskRunnerResourceTypeName, ()),
+        )
+    framework = gen.createFramework('fw', resources=fwSpecs)
+    gen.createTask('task', framework, resources=())
+    config = gen.createConfiguration()
+    runWithReload(databases, config, check)
 
-        gen = DataGenerator(self.dbs)
-        resType = gen.createResourceType(pertask=True)
-        specs = (
-            ('ref', resType, ('cap_a', 'cap_b')),
-            (taskRunnerResourceRefName, taskRunnerResourceTypeName, ()),
-            )
-        framework = gen.createFramework('fw', resources=specs)
-        gen.createTask('task', framework, resources=())
-        config = gen.createConfiguration()
-        self.runWithReload(config, check)
+def testResReqTypeConflict(databases):
+    """Test configuration using different types for same reference."""
 
-    def test0120FromCombinedDefs(self):
-        """Test whether a simple resource requirements from both the framework
-        and task definitions are applied to a task."""
+    def checkConsistent(config):
+        assert config.isConsistent(databases.resTypeDB)
+    def checkInconsistent(config):
+        assert not config.isConsistent(databases.resTypeDB)
 
-        def check(config):
-            job, = config.createJobs(OWNER)
+    gen = DataGenerator(databases)
+    resTypeA = gen.createResourceType(pertask=True)
+    resTypeB = gen.createResourceType(pertask=True)
 
-            task = job.getTask('task')
-            self.checkResourceClaim(specs, task.resourceClaim)
+    fwSpecs = (
+        (taskRunnerResourceRefName, taskRunnerResourceTypeName, ()),
+        )
+    framework = gen.createFramework('fw', resources=fwSpecs)
+    tdASpecs = (
+        ('ref', resTypeA, ()),
+        )
+    gen.createTask('taskA', framework, resources=tdASpecs)
+    tdBSpecs = (
+        ('ref', resTypeB, ()),
+        )
+    gen.createTask('taskB', framework, resources=tdBSpecs)
+    config = gen.createConfiguration()
 
-        gen = DataGenerator(self.dbs)
-        resType = gen.createResourceType(pertask=True)
-        fwSpecs = (
-            ('ref', resType, ('cap_a', )),
-            ('ref2', resType, ('cap_c', )),
-            (taskRunnerResourceRefName, taskRunnerResourceTypeName, ()),
-            )
-        framework = gen.createFramework('fw', resources=fwSpecs)
-        tdSpecs = (
-            ('ref', resType, ('cap_b', )),
-            ('ref3', resType, ('cap_d', )),
-            )
-        gen.createTask('task', framework, resources=tdSpecs)
-        config = gen.createConfiguration()
-        specs = (
-            ('ref', resType, ('cap_a', 'cap_b')),
-            ('ref2', resType, ('cap_c', )),
-            ('ref3', resType, ('cap_d', )),
-            (taskRunnerResourceRefName, taskRunnerResourceTypeName, ()),
-            )
-        self.runWithReload(config, check)
+    # Both resource types are per-task, so no conflict.
+    runWithReload(databases, config, checkConsistent)
+    # Update resource type A to be also per-job exclusive.
+    databases.resTypeDB.update(ResType.create(resTypeA, True, True))
+    runWithReload(databases, config, checkConsistent)
+    # Update resource type B to be also per-job exclusive.
+    databases.resTypeDB.update(ResType.create(resTypeB, True, True))
+    runWithReload(databases, config, checkInconsistent)
 
-    def test0130ConflictingDefs(self):
-        """Test what happens if resource requirements from the framework
-        and task definitions disagree about a resource's type.
-        While we don't allow changing an inherted resource type when editing
-        a task definition, there can be a conflict if the type is changed
-        in the framework definition later.
-        """
+def testResReqDoubleReserve(databases, caplog):
+    """Test reserving the same resource twice."""
 
-        def check(config):
-            job, = config.createJobs(OWNER)
+    gen = DataGenerator(databases)
+    resType = gen.createResourceType()
+    res = gen.createResource(resType)
 
-            task = job.getTask('task')
-            self.checkResourceClaim(specs, task.resourceClaim)
+    resourceDB = databases.resourceDB
+    reserveResource(resourceDB, res)
 
-        gen = DataGenerator(self.dbs)
-        resType1 = gen.createResourceType(pertask=True)
-        resType2 = gen.createResourceType(pertask=True)
-        fwSpecs = (
-            ('ref', resType1, ('cap_a', )),
-            (taskRunnerResourceRefName, taskRunnerResourceTypeName, ()),
-            )
-        framework = gen.createFramework('fw', resources=fwSpecs)
-        tdSpecs = (
-            ('ref', resType2, ('cap_b', )),
-            )
-        gen.createTask('task', framework, resources=tdSpecs)
-        config = gen.createConfiguration()
-        specs = (
-            ('ref', resType2, ('cap_b', )),
-            (taskRunnerResourceRefName, taskRunnerResourceTypeName, ()),
-            )
-        self.runWithReload(config, check)
+    resource = resourceDB[res]
+    resource.reserve('twice')
+    logged, = caplog.records
+    assert logged.levelname == 'ERROR'
+    assert 'already reserved' in logged.message
+    assert resource.isReserved()
 
-    def test0200AssignCombinedDefs(self):
-        """Test whether simple resource requirements from both the framework
-        and task definition are used in task assignment."""
+def testResReqDoubleFree(databases, caplog):
+    """Test freeing the same resource twice."""
 
-        def check(config):
-            job, = config.createJobs(OWNER)
-            taskRunner = self.resourceDB[tr]
+    gen = DataGenerator(databases)
+    resType = gen.createResourceType()
+    res = gen.createResource(resType)
 
-            # Try to assign with both cap_a and cap_b unavailable.
-            self.reserveResource(resA)
-            self.reserveResource(resB)
-            task = job.assignTask(taskRunner)
-            self.assertIsNone(task)
+    resourceDB = databases.resourceDB
+    reserveResource(resourceDB, res)
+    freeResource(resourceDB, res)
 
-            # Try to assign with only cap_a unavailable.
-            self.freeResource(resB)
-            task = job.assignTask(taskRunner)
-            self.assertIsNone(task)
-
-            # Try to assign with only cap_b unavailable.
-            self.freeResource(resA)
-            self.reserveResource(resB)
-            task = job.assignTask(taskRunner)
-            self.assertIsNone(task)
-
-            # Try to assign with cap_a and cap_b available.
-            self.freeResource(resB)
-            task = job.assignTask(taskRunner)
-            self.assertIsNotNone(task)
-            self.assertFalse(self.resourceDB[resA].isFree())
-            self.assertFalse(self.resourceDB[resB].isFree())
-            self.assertTrue(self.resourceDB[resC].isFree())
-            job.taskDone('task', ResultCode.OK, 'summary text', (), {})
-            self.assertTrue(self.resourceDB[resA].isFree())
-            self.assertTrue(self.resourceDB[resB].isFree())
-            self.assertTrue(self.resourceDB[resC].isFree())
-
-        gen = DataGenerator(self.dbs)
-        resType = gen.createResourceType(pertask=True)
-        resA = gen.createResource(resType, ('cap_a', ))
-        resB = gen.createResource(resType, ('cap_b', 'cap_d'))
-        resC = gen.createResource(resType, ('cap_c', ))
-        tr = gen.createTaskRunner()
-
-        fwSpecs = (
-            ('ref1', resType, ('cap_a', )),
-            (taskRunnerResourceRefName, taskRunnerResourceTypeName, ()),
-            )
-        framework = gen.createFramework('fw', resources=fwSpecs)
-        tdSpecs = (
-            ('ref2', resType, ('cap_b', )),
-            )
-        gen.createTask('task', framework, resources=tdSpecs)
-        config = gen.createConfiguration()
-        self.runWithReload(config, check)
-
-    def test0210AssignNonExclusive(self):
-        """Test assigning task using a non-exclusive resource."""
-
-        def check(config):
-            job, = config.createJobs(OWNER)
-            taskRunner = self.resourceDB[tr]
-
-            # Try to assign with resource unavailable.
-            self.reserveResource(res)
-            task = job.assignTask(taskRunner)
-            self.assertIsNone(task)
-
-            # Try to assign with resource available.
-            self.freeResource(res)
-            task = job.assignTask(taskRunner)
-            self.assertIsNotNone(task)
-            self.assertTrue(self.resourceDB[res].isFree())
-            job.taskDone('task', ResultCode.OK, 'summary text', (), {})
-            self.assertTrue(self.resourceDB[res].isFree())
-
-        gen = DataGenerator(self.dbs)
-        resType = gen.createResourceType()
-        res = gen.createResource(resType, ())
-        tr = gen.createTaskRunner()
-
-        fwSpecs = (
-            ('ref', resType, ()),
-            (taskRunnerResourceRefName, taskRunnerResourceTypeName, ()),
-            )
-        framework = gen.createFramework('fw', resources=fwSpecs)
-        gen.createTask('task', framework, resources=())
-        config = gen.createConfiguration()
-        self.runWithReload(config, check)
-
-    def test1000TestResTypeConflict(self):
-        """Test configuration using different types for same reference."""
-
-        def checkConsistent(config):
-            self.assertTrue(config.isConsistent(self.resTypeDB))
-        def checkInconsistent(config):
-            self.assertFalse(config.isConsistent(self.resTypeDB))
-
-        gen = DataGenerator(self.dbs)
-        resTypeA = gen.createResourceType(pertask=True)
-        resTypeB = gen.createResourceType(pertask=True)
-
-        fwSpecs = (
-            (taskRunnerResourceRefName, taskRunnerResourceTypeName, ()),
-            )
-        framework = gen.createFramework('fw', resources=fwSpecs)
-        tdASpecs = (
-            ('ref', resTypeA, ()),
-            )
-        gen.createTask('taskA', framework, resources=tdASpecs)
-        tdBSpecs = (
-            ('ref', resTypeB, ()),
-            )
-        gen.createTask('taskB', framework, resources=tdBSpecs)
-        config = gen.createConfiguration()
-
-        # Both resource types are per-task, so no conflict.
-        self.runWithReload(config, checkConsistent)
-        # Update resource type A to be also per-job exclusive.
-        self.resTypeDB.update(ResType.create(resTypeA, True, True))
-        self.runWithReload(config, checkConsistent)
-        # Update resource type B to be also per-job exclusive.
-        self.resTypeDB.update(ResType.create(resTypeB, True, True))
-        self.runWithReload(config, checkInconsistent)
-
-    def test2000TestDoubleReserve(self):
-        """Test reserving the same resource twice."""
-        gen = DataGenerator(self.dbs)
-        resType = gen.createResourceType()
-        res = gen.createResource(resType)
-
-        self.reserveResource(res)
-        resource = self.resourceDB[res]
-        with self.assertLogs(level='ERROR'):
-            resource.reserve('twice')
-        self.assertTrue(resource.isReserved())
-
-    def test2010TestDoubleFree(self):
-        """Test freeing the same resource twice."""
-        gen = DataGenerator(self.dbs)
-        resType = gen.createResourceType()
-        res = gen.createResource(resType)
-
-        self.reserveResource(res)
-        self.freeResource(res)
-        resource = self.resourceDB[res]
-        with self.assertLogs(level='ERROR'):
-            resource.free()
-        self.assertFalse(resource.isReserved())
-
-if __name__ == '__main__':
-    unittest.main()
+    resource = resourceDB[res]
+    resource.free()
+    logged, = caplog.records
+    assert logged.levelname == 'ERROR'
+    assert 'not reserved' in logged.message
+    assert not resource.isReserved()

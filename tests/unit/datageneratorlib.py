@@ -9,8 +9,12 @@ from softfab.productdeflib import ProductDef
 from softfab.resourcelib import RequestFactory
 from softfab.resreq import ResourceSpec
 from softfab.restypelib import ResType
+from softfab.timelib import setTime
 from softfab.xmlbind import parse
 
+
+# Stop time, so Task Runner will not get out of sync.
+setTime(1000)
 
 def _addResources(record, resources):
     if resources is not None:
