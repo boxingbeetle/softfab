@@ -34,9 +34,6 @@ class TestJobs(unittest.TestCase):
 
     def __init__(self, methodName = 'runTest'):
         unittest.TestCase.__init__(self, methodName)
-        self.owner = 'owner1'
-        self.comment = 'this is a comment'
-        self.jobId = 'job1'
 
         # Stop time, so Task Runner will not get out of sync.
         setTime(1000)
@@ -110,7 +107,7 @@ class TestJobs(unittest.TestCase):
 
         # TODO: Is it OK that Config.createJob does not put record into job DB?
         #       If so, document.
-        job, = config.createJobs(self.owner)
+        job, = config.createJobs(gen.owner)
         # Note: Disabled to save time.
         # TODO: The toXML functionality should probably be tested
         #       in a separate test case.
@@ -180,12 +177,13 @@ class TestJobs(unittest.TestCase):
             self.assertEqual(config.targets, {'target1', 'target2'})
             self.assertEqual(config.getId(), jobId)
             self.assertEqual(config['name'], jobId)
-            self.assertEqual(config.owner, self.owner)
-            self.assertEqual(config['owner'], self.owner)
-            self.assertEqual(config.comment, self.comment)
+            self.assertEqual(config.owner, gen.owner)
+            self.assertEqual(config['owner'], gen.owner)
+            self.assertEqual(config.comment, gen.comment)
             #self.assertEqual(config.getDescription(), config['description'])
 
-        config = DataGenerator(self.dbs).createConfiguration(
+        gen = DataGenerator(self.dbs)
+        config = gen.createConfiguration(
             targets=('target1', 'target2')
             )
         self.runWithReload(config, checkProperties)
@@ -264,7 +262,7 @@ class TestJobs(unittest.TestCase):
 
             # TODO: Is it OK that Config.createJob does not put record into
             #       job DB? If so, document.
-            job, = config.createJobs(self.owner)
+            job, = config.createJobs(gen.owner)
             # Note: Disabled to save time.
             # TODO: The toXML functionality should probably be tested
             #       in a separate test case.
@@ -325,7 +323,7 @@ class TestJobs(unittest.TestCase):
         config._notify()
         def simulate(config):
             self.sanityCheck(gen, config)
-            job, = config.createJobs(self.owner)
+            job, = config.createJobs(gen.owner)
             task = job.assignTask(self.resourceDB[tr1Name])
             self.assertIsNone(task)
             self.assertFalse(job.isExecutionFinished())
@@ -351,7 +349,7 @@ class TestJobs(unittest.TestCase):
         config._notify()
         def simulate(config):
             self.sanityCheck(gen, config)
-            job, = config.createJobs(self.owner)
+            job, = config.createJobs(gen.owner)
             task = job.assignTask(self.resourceDB[tr1Name])
             self.assertIsNone(task)
             self.assertFalse(job.isExecutionFinished())
@@ -379,7 +377,7 @@ class TestJobs(unittest.TestCase):
         config._notify()
         def simulate(config):
             self.sanityCheck(gen, config)
-            job, = config.createJobs(self.owner)
+            job, = config.createJobs(gen.owner)
             task = job.assignTask(self.resourceDB[tr1Name])
             self.assertIsNone(task)
             self.assertFalse(job.isExecutionFinished())
@@ -406,7 +404,7 @@ class TestJobs(unittest.TestCase):
         config._notify()
         def simulate(config):
             self.sanityCheck(gen, config)
-            job, = config.createJobs(self.owner)
+            job, = config.createJobs(gen.owner)
             task = job.assignTask(self.resourceDB[tr1Name])
             self.assertIsNone(task)
             self.assertFalse(job.isExecutionFinished())
@@ -436,7 +434,7 @@ class TestJobs(unittest.TestCase):
         gen.inputsCreated = [prodName]
         def simulate(config):
             self.sanityCheck(gen, config)
-            job, = config.createJobs(self.owner)
+            job, = config.createJobs(gen.owner)
             task = job.assignTask(self.resourceDB[tr1Name])
             self.assertIsNone(task)
             self.assertFalse(job.isExecutionFinished())
@@ -586,7 +584,7 @@ class TestJobs(unittest.TestCase):
         def simulate(config):
             self.sanityCheck(gen, config)
 
-            job, = config.createJobs(self.owner)
+            job, = config.createJobs(gen.owner)
             # TODO: The toXML functionality should probably be tested
             #       in a separate test case.
 
@@ -643,7 +641,7 @@ class TestJobs(unittest.TestCase):
         def simulate(config):
             self.sanityCheck(gen, config)
 
-            job, = config.createJobs(self.owner)
+            job, = config.createJobs(gen.owner)
             # TODO: The toXML functionality should probably be tested
             #       in a separate test case.
 
@@ -712,7 +710,7 @@ class TestJobs(unittest.TestCase):
         config = gen.createConfiguration()
 
         self.sanityCheck(gen, config)
-        job, = config.createJobs(self.owner)
+        job, = config.createJobs(gen.owner)
         runner = self.resourceDB[trName]
         task = job.assignTask(runner)
         self.assertIsNotNone(task)
@@ -730,7 +728,7 @@ class TestJobs(unittest.TestCase):
         config = gen.createConfiguration()
 
         self.sanityCheck(gen, config)
-        job, = config.createJobs(self.owner)
+        job, = config.createJobs(gen.owner)
         runner = self.resourceDB[trName]
         task = job.assignTask(runner)
         self.assertIsNotNone(task)
@@ -758,7 +756,7 @@ class TestJobs(unittest.TestCase):
         resName = gen.createResource(resType)
 
         self.sanityCheck(gen, config)
-        job, = config.createJobs(self.owner)
+        job, = config.createJobs(gen.owner)
         runner = self.resourceDB[trName]
         resource = self.resourceDB[resName]
         task = job.assignTask(runner)
