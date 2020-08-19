@@ -370,10 +370,12 @@ class _CachedProperty(Generic[C, T]):
     '''Descriptor that implements the `cachedProperty` decorator.
     '''
 
+    __name: str
+    """Name under which the cached value is stored in __dict__."""
+
     def __init__(self, method: Callable[[C], T]):
         super().__init__()
         self.__method = method
-        self.__name: Optional[str] = None
 
     def __get__(self, instance: C, owner: object) -> T:
         if instance is None:
@@ -383,9 +385,6 @@ class _CachedProperty(Generic[C, T]):
             return self
 
         name = self.__name
-        if name is None:
-            self.__name = name = self.__getName(instance)
-
         try:
             # Return cached value.
             return instance.__dict__[name]
@@ -401,16 +400,10 @@ class _CachedProperty(Generic[C, T]):
     def __delete__(self, instance: C) -> None:
         raise AttributeError('Cached properties cannot be deleted')
 
-    def __getName(self, instance: C) -> str:
-        '''Gets the unique name for storing this property's value.
-        '''
-        for container in instance.__class__.__mro__:
-            for name, member in container.__dict__.items():
-                if member is self:
-                    # The use of "$" makes this invalid as a Python
-                    # identifier, reducing the chance of name collisions.
-                    return f'${container.__name__}${name}'
-        raise AttributeError('Property does not belong to this object')
+    def __set_name__(self, owner: Type[C], name: str) -> None:
+        # The use of "$" makes this invalid as a Python identifier,
+        # reducing the chance of name collisions.
+        self.__name = f'${owner.__name__}${name}'
 
 def cachedProperty(method: Callable[[C], T]) -> _CachedProperty[C, T]:
     '''Decorator that creates a read-only property with the same name
