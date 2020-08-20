@@ -121,4 +121,8 @@ def runInReactor(call: Awaitable[T]) -> T:
     reactor.run()
     if failure is not None:
         failure.raiseException()
-    return output
+    try:
+        return output
+    except UnboundLocalError:
+        # The reactor returned without succeeding or failing.
+        raise OSError('Aborted')
