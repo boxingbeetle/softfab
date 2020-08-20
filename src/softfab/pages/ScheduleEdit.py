@@ -334,7 +334,7 @@ class DelayPanel(Panel):
     widgetId = 'delayPanel'
     label = 'Minimal Delay'
     content = xhtml['\u00A0'].join((
-        textInput(name='minDelay', size='4'), 'minutes'
+        textInput(name='minDelay', size='4'), 'minutes between job starts'
         ))
 
 class TriggerPanel(Panel):
