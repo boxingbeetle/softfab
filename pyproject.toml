@@ -56,7 +56,7 @@ click = "^7.0"
 packaging = ">=20.0"
 
 [tool.poetry.dev-dependencies]
-pytest = '^4.0'
+pytest = '^6.0'
 pylint = '^2.0'
 isort = {version = "^4.3", extras = ["pyproject"]}
 invoke = '^1.2'
