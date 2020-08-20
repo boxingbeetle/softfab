@@ -30,5 +30,3 @@ initLogging(Path.cwd())
 dbDir = Path('testdb')
 assert not dbDir.exists(), f'dir already exists: {dbDir}'
 config.dbDir = dbDir
-
-config.dbAtomicWrites = False

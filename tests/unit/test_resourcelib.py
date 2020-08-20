@@ -4,10 +4,6 @@
 test_resource_requirements suite.
 """
 
-# Import for the side effect of setting dbDir.
-# We're not going to use that dir, but resourcelib still needs it.
-import initconfig
-
 from softfab.resourcelib import ResourceDB
 
 

@@ -1,6 +1,11 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-"""Fixture definitions for pytest."""
+"""Fixtures and other global definitions for pytest."""
+
+# Patch the configuration before modules that use it are imported.
+from softfab import config
+config.dbAtomicWrites = False
+
 
 from pytest import fixture
 
