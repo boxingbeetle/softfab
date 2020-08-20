@@ -28,7 +28,7 @@ from softfab.joblib import (
     DateRangeMonitor, JobDB, ResultlessJobs, TaskToJobs, UnfinishedJobs
 )
 from softfab.jobview import JobNotificationObserver
-from softfab.newapi import populateAPI
+from softfab.newapi import APIRoot
 from softfab.pageargs import PageArgs
 from softfab.projectlib import Project, ProjectDB, TimezoneUpdater
 from softfab.reactor import reactor
@@ -236,7 +236,7 @@ class SoftFabRoot(Resource):
         #       the control socket. When the API is more mature and
         #       supports authentication + authorization, it will
         #       replace the current API.
-        self.apiRoot = Resource()
+        self.apiRoot = APIRoot()
 
         self.defaultResource = PageResource.anyMethod(SplashPage())
 
@@ -281,7 +281,7 @@ class SoftFabRoot(Resource):
             timezoneUpdater.updated(project)
             projectDB.addObserver(timezoneUpdater)
 
-            populateAPI(self.apiRoot, dependencies)
+            self.apiRoot.populate(dependencies)
 
             injectDependencies(DocPage.Processor, dependencies)
             PageLoader(self, dependencies).process()

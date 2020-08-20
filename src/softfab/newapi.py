@@ -148,6 +148,24 @@ class UsersResource(Resource):
         request.setHeader(b'Content-Type', b'text/plain; charset=UTF-8')
         return b'User index not implemented yet\n'
 
-def populateAPI(parent: Resource, dependencies: Mapping[str, Any]) -> None:
-    """Add API resources under the given parent resource."""
-    parent.putChild(b'users', UsersResource(dependencies['userDB']))
+class APIRoot(Resource):
+    """Root node for the new API."""
+
+    ready = False
+
+    def getChild(self, path: bytes, request: Request) -> IResource:
+        if self.ready:
+            return super().getChild(path, request) # 404
+        else:
+            return self # 503
+
+    def render(self, request: Request) -> bytes:
+        request.setHeader(b'Retry-After', b'3')
+        return textReply(request, 503,
+                         "API not ready yet; please try again later")
+
+    def populate(self, dependencies: Mapping[str, Any]) -> None:
+        """Add API resources under this resource."""
+
+        self.putChild(b'users', UsersResource(dependencies['userDB']))
+        self.ready = True
