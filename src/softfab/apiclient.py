@@ -7,6 +7,7 @@ from io import BytesIO
 from typing import Awaitable, Optional, Tuple, TypeVar
 
 from twisted.internet.defer import ensureDeferred
+from twisted.internet.interfaces import IReactorCore
 from twisted.python.failure import Failure
 from twisted.web.client import Agent, FileBodyProducer, Response, readBody
 from twisted.web.http_headers import Headers
@@ -96,9 +97,7 @@ async def run_DELETE(endpointFactory: IAgentEndpointFactory, url: str) -> None:
 
 T = TypeVar('T')
 
-def runInReactor(call: Awaitable[T]) -> T:
-    # pylint: disable=import-outside-toplevel
-    from softfab.reactor import reactor
+def runInReactor(reactor: IReactorCore, call: Awaitable[T]) -> T:
 
     def run() -> None:
         ensureDeferred(call).addCallbacks(done, failed)

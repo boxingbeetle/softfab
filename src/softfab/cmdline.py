@@ -111,9 +111,10 @@ def callAPI(request: Awaitable[T]) -> T:
     """
 
     from softfab.apiclient import runInReactor
+    from softfab.reactor import reactor
 
     try:
-        return runInReactor(request)
+        return runInReactor(reactor, request)
     except Exception as ex:
         message = str(ex)
         message = message[message.find('\n') + 1:]
