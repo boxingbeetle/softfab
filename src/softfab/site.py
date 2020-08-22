@@ -4,13 +4,11 @@ from os import getpid
 from pathlib import Path
 
 from twisted.internet.endpoints import clientFromString
-from twisted.internet.interfaces import IStreamClientEndpoint
+from twisted.internet.interfaces import IReactorUNIX, IStreamClientEndpoint
 from twisted.web.client import URI
 from twisted.web.iweb import IAgentEndpointFactory
 from twisted.web.server import Session, Site
 from zope.interface import implementer
-
-from softfab.reactor import reactor
 
 
 class LongSession(Session):
@@ -35,7 +33,8 @@ class ControlSocket(Site):
 @implementer(IAgentEndpointFactory)
 class ControlSocketFactory:
 
-    def __init__(self, path: Path):
+    def __init__(self, reactor: IReactorUNIX, path: Path):
+        self.reactor = reactor
         self.path = path
 
     def endpointForURI(self,
@@ -47,7 +46,8 @@ class ControlSocketFactory:
 
         socketPath = (self.path / 'ctrl.sock').resolve()
         if socketPath.is_socket():
-            return clientFromString(reactor, f'unix:{socketPath}:timeout=10')
+            return clientFromString(self.reactor,
+                                    f'unix:{socketPath}:timeout=10')
         else:
             raise OSError(f"Control socket not found: {socketPath}")
 

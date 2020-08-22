@@ -60,9 +60,10 @@ class GlobalOptions:
 
     @property
     def endpointFactory(self) -> 'IAgentEndpointFactory':
+        from softfab.reactor import reactor
         from softfab.site import ControlSocketFactory
 
-        return ControlSocketFactory(self.path)
+        return ControlSocketFactory(reactor, self.path)
 
     def apply(self) -> None:
         """Initialize Control Center configuration according to
