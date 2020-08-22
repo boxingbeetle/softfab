@@ -9,12 +9,12 @@ from typing import Awaitable, Optional, Tuple, TypeVar
 from twisted.internet.defer import ensureDeferred
 from twisted.internet.interfaces import IReactorCore
 from twisted.python.failure import Failure
-from twisted.web.client import Agent, FileBodyProducer, Response, readBody
+from twisted.web.client import FileBodyProducer, Response, readBody
 from twisted.web.http_headers import Headers
-from twisted.web.iweb import IAgentEndpointFactory
+from twisted.web.iweb import IAgent
 
 
-async def _runRequest(endpointFactory: IAgentEndpointFactory,
+async def _runRequest(agent: IAgent,
                       url: str,
                       method: bytes,
                       payload: Optional[bytes] = None
@@ -23,11 +23,6 @@ async def _runRequest(endpointFactory: IAgentEndpointFactory,
     All buffering is done in-memory, so this function should only be used
     for requests with a small payload and a small reply body.
     """
-
-    # pylint: disable=import-outside-toplevel
-    from softfab.reactor import reactor
-
-    agent = Agent.usingEndpointFactory(reactor, endpointFactory)
 
     headers = Headers()
     if payload is None:
@@ -54,10 +49,10 @@ async def _runRequest(endpointFactory: IAgentEndpointFactory,
 
     return response, body
 
-async def run_GET(endpointFactory: IAgentEndpointFactory, url: str) -> bytes:
+async def run_GET(agent: IAgent, url: str) -> bytes:
     """Make an HTTP GET request."""
 
-    response, body = await _runRequest(endpointFactory, url, b'GET')
+    response, body = await _runRequest(agent, url, b'GET')
 
     code = response.code
     if code == 200:
@@ -68,13 +63,10 @@ async def run_GET(endpointFactory: IAgentEndpointFactory, url: str) -> bytes:
         raise OSError(f"Unexpected result from HTTP GET: {code} {phrase}\n"
                       f"{message}")
 
-async def run_PUT(endpointFactory: IAgentEndpointFactory,
-                  url: str,
-                  payload: bytes
-                  ) -> None:
+async def run_PUT(agent: IAgent, url: str, payload: bytes) -> None:
     """Make an HTTP PUT request."""
 
-    response, body = await _runRequest(endpointFactory, url, b'PUT', payload)
+    response, body = await _runRequest(agent, url, b'PUT', payload)
 
     code = response.code
     if code not in (200, 201, 204):
@@ -83,10 +75,10 @@ async def run_PUT(endpointFactory: IAgentEndpointFactory,
         raise OSError(f"Unexpected result from HTTP PUT: {code} {phrase}\n"
                       f"{message}")
 
-async def run_DELETE(endpointFactory: IAgentEndpointFactory, url: str) -> None:
+async def run_DELETE(agent: IAgent, url: str) -> None:
     """Make an HTTP DELETE request."""
 
-    response, body = await _runRequest(endpointFactory, url, b'DELETE')
+    response, body = await _runRequest(agent, url, b'DELETE')
 
     code = response.code
     if code not in (200, 202, 204):

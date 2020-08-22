@@ -19,7 +19,7 @@ from click import (
 from softfab.roles import UIRoleNames
 
 if TYPE_CHECKING:
-    from twisted.web.iweb import IAgentEndpointFactory
+    from twisted.web.iweb import IAgent
 
 
 # We import inside functions to avoid wasting time importing modules that the
@@ -59,11 +59,13 @@ class GlobalOptions:
         self.path = path
 
     @property
-    def endpointFactory(self) -> 'IAgentEndpointFactory':
+    def agent(self) -> 'IAgent':
+        from twisted.web.client import Agent
         from softfab.reactor import reactor
         from softfab.site import ControlSocketFactory
 
-        return ControlSocketFactory(reactor, self.path)
+        endpointFactory = ControlSocketFactory(reactor, self.path)
+        return Agent.usingEndpointFactory(reactor, endpointFactory)
 
     def apply(self) -> None:
         """Initialize Control Center configuration according to
@@ -294,7 +296,7 @@ def show(globalOptions: GlobalOptions, name: str, fmt: OutputFormat) -> None:
     from softfab.apiclient import run_GET
 
     result = callAPI(run_GET(
-            globalOptions.endpointFactory,
+            globalOptions.agent,
             globalOptions.urlForPath(f'users/{name}.json')
             ))
     if fmt is OutputFormat.TEXT:
@@ -321,7 +323,7 @@ def add(globalOptions: GlobalOptions, name: str, role: str) -> None:
     from softfab.apiclient import run_PUT
 
     callAPI(run_PUT(
-            globalOptions.endpointFactory,
+            globalOptions.agent,
             globalOptions.urlForPath(f'users/{name}.json'),
             json.dumps(dict(name=name, role=role)).encode()
             ))
@@ -348,7 +350,7 @@ def remove(globalOptions: GlobalOptions, name: str, force: bool) -> None:
         get_current_context().exit(2)
 
     callAPI(run_DELETE(
-            globalOptions.endpointFactory,
+            globalOptions.agent,
             globalOptions.urlForPath(f'users/{name}')
             ))
     echo(f"softfab: user account '{name}' removed", err=True)
