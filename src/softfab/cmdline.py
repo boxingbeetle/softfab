@@ -205,8 +205,9 @@ def server(
 
     # This must happen after logging has been initialized.
     from softfab.TwistedRoot import SoftFabRoot
+    from softfab.reactor import reactor
     from softfab.site import ControlCenter, ControlSocket, writePIDFile
-    root = SoftFabRoot(anonOperator=anonoper)
+    root = SoftFabRoot(reactor, anonOperator=anonoper)
 
     import softfab.config
     site = ControlCenter(root)
@@ -220,7 +221,6 @@ def server(
         echo(f"Invalid socket specification: {ex}", err=True)
         get_current_context().exit(1)
 
-    from softfab.reactor import reactor
     try:
         service.startService()
     except Exception as ex:

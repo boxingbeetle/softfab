@@ -7,6 +7,7 @@ from types import ModuleType
 from typing import Any, Dict, Iterable, Mapping, Optional, Sequence, Type, cast
 import logging
 
+from twisted.internet.interfaces import IReactorTime
 from twisted.web.resource import Resource
 from twisted.web.server import Request as TwistedRequest
 
@@ -31,7 +32,6 @@ from softfab.jobview import JobNotificationObserver
 from softfab.newapi import APIRoot
 from softfab.pageargs import PageArgs
 from softfab.projectlib import Project, ProjectDB, TimezoneUpdater
-from softfab.reactor import reactor
 from softfab.render import NotFoundPage, renderAuthenticated
 from softfab.resourcelib import ResourceDB, TaskRunnerTokenProvider
 from softfab.resultlib import ResultStorage
@@ -207,16 +207,17 @@ class StaticResource(Resource):
 
 class SoftFabRoot(Resource):
 
-    def __init__(self, anonOperator: bool):
+    def __init__(self, reactor: Optional[IReactorTime], anonOperator: bool):
         """Creates a Control Center root resource.
 
-        Parameters:
-
-        anonOperator: bool
-            Automatically give every client operator privileges to
-            pages registered under this root, without forcing a login.
+        @param reactor: Reactor to schedule background tasks on.
+            If L{None} is passed, no background tasks will run.
+        @param anonOperator: Automatically give every client operator
+            privileges to pages registered under this root, without
+            forcing a login.
 
         """
+        self.reactor = reactor
         self.anonOperator = anonOperator
 
         if anonOperator:
@@ -289,7 +290,9 @@ class SoftFabRoot(Resource):
 
             # Start schedule processing.
             scheduleDB = cast(ScheduleDB, databases['scheduleDB'])
-            ScheduleManager(configDB, jobDB, scheduleDB, reactor).trigger()
+            reactor = self.reactor
+            if reactor is not None:
+                ScheduleManager(configDB, jobDB, scheduleDB, reactor).trigger()
         except Exception:
             startupLogger.exception('Error during startup:')
             # Try to run the part of the Control Center that did start up
