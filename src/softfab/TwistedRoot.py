@@ -3,6 +3,7 @@
 from asyncio import sleep
 from functools import partial
 from mimetypes import guess_type
+from pathlib import Path
 from types import ModuleType
 from typing import Any, Dict, Iterable, Mapping, Optional, Sequence, Type, cast
 import logging
@@ -20,7 +21,6 @@ from softfab.UIPage import UIResponder
 from softfab.artifacts import populateArtifacts
 from softfab.authentication import DisabledAuthPage, NoAuthPage, TokenAuthPage
 from softfab.compat import importlib_resources
-from softfab.config import dbDir
 from softfab.configlib import ConfigDB
 from softfab.databaselib import Database, SingletonWrapper
 from softfab.databases import initDatabases, injectDependencies
@@ -130,7 +130,7 @@ class PageLoader:
         startupMessages.addMessage('Registering pages')
         root = self.root
         root.putChild(b'docs', DocResource.registerDocs('softfab.docs'))
-        populateArtifacts(self.root, dbDir / 'artifacts',
+        populateArtifacts(self.root, self.root.dbDir / 'artifacts',
                           self.root.anonOperator, self.dependencies)
         injector = partial(injectDependencies, dependencies=self.dependencies)
         root.putChild(b'webhook', createWebhooks(startupLogger, injector))
@@ -207,9 +207,14 @@ class StaticResource(Resource):
 
 class SoftFabRoot(Resource):
 
-    def __init__(self, reactor: Optional[IReactorTime], anonOperator: bool):
+    def __init__(self,
+                 dbDir: Path,
+                 reactor: Optional[IReactorTime],
+                 anonOperator: bool
+                 ):
         """Creates a Control Center root resource.
 
+        @param dbDir: Directory that contains the databases.
         @param reactor: Reactor to schedule background tasks on.
             If L{None} is passed, no background tasks will run.
         @param anonOperator: Automatically give every client operator
@@ -217,6 +222,7 @@ class SoftFabRoot(Resource):
             forcing a login.
 
         """
+        self.dbDir = dbDir
         self.reactor = reactor
         self.anonOperator = anonOperator
 
@@ -243,7 +249,7 @@ class SoftFabRoot(Resource):
 
     async def startup(self) -> None:
         try:
-            databases = initDatabases(dbDir)
+            databases = initDatabases(self.dbDir)
 
             projectDB = cast(ProjectDB, databases['projectDB'])
             project = cast(Project, SingletonWrapper(projectDB))
@@ -268,8 +274,8 @@ class SoftFabRoot(Resource):
                 databases,
                 databases=databases.values(),
                 project=project,
-                resultStorage=ResultStorage(dbDir / 'results'),
-                artifactsPath=dbDir / 'artifacts',
+                resultStorage=ResultStorage(self.dbDir / 'results'),
+                artifactsPath=self.dbDir / 'artifacts',
                 dateRange=DateRangeMonitor(jobDB),
                 unfinishedJobs=UnfinishedJobs(jobDB),
                 taskToJobs=TaskToJobs(jobDB)

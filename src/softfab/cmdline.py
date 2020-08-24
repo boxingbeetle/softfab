@@ -209,7 +209,7 @@ def server(
     from softfab.TwistedRoot import SoftFabRoot
     from softfab.site import ControlCenter, ControlSocket, writePIDFile
     reactor = globalOptions.reactor
-    root = SoftFabRoot(reactor, anonOperator=anonoper)
+    root = SoftFabRoot(globalOptions.path, reactor, anonOperator=anonoper)
 
     import softfab.config
     site = ControlCenter(root)
