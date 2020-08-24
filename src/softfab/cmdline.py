@@ -19,6 +19,7 @@ from click import (
 from softfab.roles import UIRoleNames
 
 if TYPE_CHECKING:
+    from twisted.internet.interfaces import IReactorCore
     from twisted.web.iweb import IAgent
 
 
@@ -57,13 +58,15 @@ class GlobalOptions:
     def __init__(self, debug: bool, path: Path):
         self.debug = debug
         self.path = path
+        from softfab.reactor import reactor
+        self.reactor = reactor
 
     @property
     def agent(self) -> 'IAgent':
         from twisted.web.client import Agent
-        from softfab.reactor import reactor
         from softfab.site import ControlSocketFactory
 
+        reactor = self.reactor
         endpointFactory = ControlSocketFactory(reactor, self.path)
         return Agent.usingEndpointFactory(reactor, endpointFactory)
 
@@ -108,13 +111,12 @@ def formatDetails(message: str) -> str:
 
 T = TypeVar('T')
 
-def callAPI(request: Awaitable[T]) -> T:
+def callAPI(reactor: 'IReactorCore', request: Awaitable[T]) -> T:
     """Make an API call and report errors to the user.
     Return the call's result.
     """
 
     from softfab.apiclient import runInReactor
-    from softfab.reactor import reactor
 
     try:
         return runInReactor(reactor, request)
@@ -205,8 +207,8 @@ def server(
 
     # This must happen after logging has been initialized.
     from softfab.TwistedRoot import SoftFabRoot
-    from softfab.reactor import reactor
     from softfab.site import ControlCenter, ControlSocket, writePIDFile
+    reactor = globalOptions.reactor
     root = SoftFabRoot(reactor, anonOperator=anonoper)
 
     import softfab.config
@@ -295,7 +297,7 @@ def show(globalOptions: GlobalOptions, name: str, fmt: OutputFormat) -> None:
 
     from softfab.apiclient import run_GET
 
-    result = callAPI(run_GET(
+    result = callAPI(globalOptions.reactor, run_GET(
             globalOptions.agent,
             globalOptions.urlForPath(f'users/{name}.json')
             ))
@@ -322,7 +324,7 @@ def add(globalOptions: GlobalOptions, name: str, role: str) -> None:
     import json
     from softfab.apiclient import run_PUT
 
-    callAPI(run_PUT(
+    callAPI(globalOptions.reactor, run_PUT(
             globalOptions.agent,
             globalOptions.urlForPath(f'users/{name}.json'),
             json.dumps(dict(name=name, role=role)).encode()
@@ -349,7 +351,7 @@ def remove(globalOptions: GlobalOptions, name: str, force: bool) -> None:
              f"{formatDetails(userRemoveDoc)}", err=True)
         get_current_context().exit(2)
 
-    callAPI(run_DELETE(
+    callAPI(globalOptions.reactor, run_DELETE(
             globalOptions.agent,
             globalOptions.urlForPath(f'users/{name}')
             ))
