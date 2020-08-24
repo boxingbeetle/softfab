@@ -3,16 +3,40 @@
 """Functions for accessing the SoftFab API."""
 
 from cgi import parse_header
-from io import BytesIO
 from typing import Awaitable, Optional, Tuple, TypeVar
 
-from twisted.internet.defer import ensureDeferred
-from twisted.internet.interfaces import IReactorCore
+from twisted.internet.defer import Deferred, ensureDeferred, succeed
+from twisted.internet.interfaces import IConsumer, IReactorCore
 from twisted.python.failure import Failure
-from twisted.web.client import FileBodyProducer, Response, readBody
+from twisted.web.client import Response, readBody
 from twisted.web.http_headers import Headers
-from twisted.web.iweb import IAgent
+from twisted.web.iweb import IAgent, IBodyProducer
+from zope.interface import implementer
 
+
+@implementer(IBodyProducer)
+class SmallBodyProducer:
+    """Produces a request body from a L{bytes} sequence.
+
+    This can be used for efficiently sending small requests.
+    """
+
+    def __init__(self, data: bytes):
+        self._data = data
+        self.length = len(data)
+
+    def startProducing(self, consumer: IConsumer) -> Deferred:
+        consumer.write(self._data)
+        return succeed(None)
+
+    def stopProducing(self) -> None:
+        pass
+
+    def pauseProducing(self) -> None:
+        pass
+
+    def resumeProducing(self) -> None:
+        pass
 
 async def _runRequest(agent: IAgent,
                       url: str,
@@ -28,7 +52,7 @@ async def _runRequest(agent: IAgent,
     if payload is None:
         bodyProducer = None
     else:
-        bodyProducer = FileBodyProducer(BytesIO(payload))
+        bodyProducer = SmallBodyProducer(payload)
         headers.addRawHeader('Content-Type', 'application/json; charset=UTF-8')
     response = await agent.request(method, url.encode(), headers, bodyProducer)
 
