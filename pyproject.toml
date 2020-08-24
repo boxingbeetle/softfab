@@ -9,6 +9,10 @@ from_first = true
 multi_line_output = 6
 known_third_party = 'twisted'
 
+[tool.pytest.ini_options]
+# https://twistedmatrix.com/trac/ticket/8227
+filterwarnings = 'ignore:Using readBody with a transport that does not have an abortConnection method:DeprecationWarning'
+
 [tool.poetry]
 name = 'softfab'
 version = "3.0.0-pre1"
