@@ -312,9 +312,9 @@ def show(globalOptions: GlobalOptions, name: str, fmt: OutputFormat) -> None:
 @user.command()
 @argument('name')
 @option('-r', '--role',
-        type=Choice([role.name.lower()
-                     for role in UIRoleNames
-                     if role is not UIRoleNames.INACTIVE]),
+        type=Choice([uiRole.name.lower()
+                     for uiRole in UIRoleNames
+                     if uiRole is not UIRoleNames.INACTIVE]),
         default='user', show_default=True,
         help="New user's role, which determines access permissions.")
 @pass_obj
