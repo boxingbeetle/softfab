@@ -95,8 +95,6 @@ disable=bad-continuation,
         # Too many false positives.
         trailing-comma-tuple,
         # Undecided whether trailing commas are bad or useful.
-        wrong-import-order,
-        # We're not sticking to this PEP8 rule yet, maybe later.
         fixme,
         # A lot of TODOs mark poor design, which should be fixed at some
         # point, but are not urgent enough to be included in every run.
