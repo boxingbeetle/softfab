@@ -108,6 +108,9 @@ disable=bad-continuation,
         # but not useful to have enabled all the time.
         no-member,
         # False positives when inheriting from typing.Generic.
+        raise-missing-from,
+        # Most cases flagged by this have trivial 'try' bodies, so not a lot
+        # is gained by chaining exceptions.
 
 [REPORTS]
 
