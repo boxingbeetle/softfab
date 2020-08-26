@@ -137,22 +137,66 @@ def check_user_role(run_cmd, name, role):
     data = json.loads(result.output)
     assert data == {'name': name, 'role': role}
 
-def add_user(run_cmd, name, role=None):
-    """Add a user."""
+def add_user(run_cmd, name, role=None, duplicate=False):
+    """Add a user account."""
     command = ['user', 'add', name]
     if role is None:
         role = 'user'
     else:
         command += ['--role', role]
     result = run_cmd(*command)
-    assert result.exit_code == 0
-    assert result.output == f"softfab: {role.title()} account '{name}' created\n"
+    if duplicate:
+        assert result.exit_code == 1
+        assert result.output == f"softfab: User already exists: {name}\n"
+    else:
+        assert result.exit_code == 0
+        assert result.output == f"softfab: {role.title()} account '{name}' created\n"
+
+def remove_user(run_cmd, name, force=True, exists=True):
+    """Remove a user account."""
+    command = ['user', 'remove', name]
+    if force:
+        command += ['--force']
+    result = run_cmd(*command)
+    if force:
+        if exists:
+            assert result.exit_code == 0
+            assert result.output == f"softfab: account '{name}' removed\n"
+        else:
+            assert result.exit_code == 1
+            assert result.output == f"softfab: User not found: {name}\n"
+    else:
+        assert result.exit_code == 2
+        assert result.output.startswith("softfab: account was NOT removed\n")
 
 
 # Test cases:
 
 @mark.parametrize('role', list(roleNames) + [None])
 def test_create_user(run_cmd, role):
+    # Add a user.
     check_no_user(run_cmd, 'alice')
     add_user(run_cmd, 'alice', role)
     check_user_role(run_cmd, 'alice', role or 'user')
+
+    # Attempt to add the same user again.
+    add_user(run_cmd, 'alice', role, duplicate=True)
+
+def test_remove_user(run_cmd):
+    # Attempt to remove user that never existed.
+    remove_user(run_cmd, 'alice', force=False)
+    remove_user(run_cmd, 'alice', exists=False)
+    check_no_user(run_cmd, 'alice')
+
+    # Add user and remove them.
+    add_user(run_cmd, 'bob', 'user')
+    check_user_role(run_cmd, 'bob', 'user')
+    remove_user(run_cmd, 'bob', force=False)
+    check_user_role(run_cmd, 'bob', 'user')
+    remove_user(run_cmd, 'bob')
+    check_no_user(run_cmd, 'bob')
+
+    # Attempt to remove a user that was already removed.
+    remove_user(run_cmd, 'bob', force=False)
+    remove_user(run_cmd, 'bob', exists=False)
+    check_no_user(run_cmd, 'bob')

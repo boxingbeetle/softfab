@@ -10,8 +10,12 @@ multi_line_output = 6
 known_third_party = 'twisted'
 
 [tool.pytest.ini_options]
-# https://twistedmatrix.com/trac/ticket/8227
-filterwarnings = 'ignore:Using readBody with a transport that does not have an abortConnection method:DeprecationWarning'
+filterwarnings = [
+    # Ignore Twisted issue: https://twistedmatrix.com/trac/ticket/8227
+    "ignore:Using readBody with a transport that does not have an abortConnection method:DeprecationWarning",
+    # If a command ends without making an API call, execute() is not awaited.
+    "ignore:coroutine 'execute' was never awaited:RuntimeWarning",
+    ]
 
 [tool.poetry]
 name = 'softfab'
