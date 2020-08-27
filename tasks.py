@@ -142,7 +142,7 @@ def types(c, src=None, clean=False, report=False, results=None):
 
 @task
 def unittest(c, suite=None, select=None,
-             junit_xml=None, results=None, coverage=False):
+             junit_xml=None, results=None, coverage=False, random=False):
     """Run unit tests."""
     test_dir = TOP_DIR / 'tests' / 'unit'
     if results is None:
@@ -151,6 +151,8 @@ def unittest(c, suite=None, select=None,
         report_dir = Path(results).parent.resolve()
         junit_xml = report_dir / 'pytest-report.xml'
     cmd = ['pytest', '-v']
+    if not random:
+        cmd.append('-p no:randomly')
     if coverage:
         cmd.append(f'--cov={SRC_DIR}')
         cmd.append(f"--cov-config={TOP_DIR / '.coveragerc'}")
