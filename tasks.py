@@ -156,6 +156,7 @@ def unittest(c, suite=None, select=None,
     if coverage:
         cmd.append(f'--cov={SRC_DIR}')
         cmd.append(f"--cov-config={TOP_DIR / '.coveragerc'}")
+        cmd.append('--cov-context=unit')
         cmd.append('--cov-report=')
     if junit_xml is not None:
         cmd.append(f'--junit-xml={junit_xml}')
@@ -186,7 +187,7 @@ def isort(c, src=None):
         c.run('isort %s' % source_arg(src), pty=True)
 
 @task
-def run(c, dbdir='run', auth=False, coverage=False):
+def run(c, dbdir='run', auth=False, coverage=''):
     """Run a Control Center instance."""
     cmd = ['softfab', '--debug', 'server']
     if not auth:
@@ -196,6 +197,7 @@ def run(c, dbdir='run', auth=False, coverage=False):
         cmd = [
             'coverage', 'run',
             f"--rcfile={TOP_DIR / '.coveragerc'}",
+            f'--context={coverage}',
             f'--source={SRC_DIR}',
             str(runner)
             ] + cmd

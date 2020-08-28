@@ -18,3 +18,6 @@ exclude_lines =
 
     # Hard to test:
     except ImportError:$
+
+[html]
+show_contexts = True
