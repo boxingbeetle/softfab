@@ -4,12 +4,12 @@ from codecs import getencoder
 from contextlib import contextmanager
 from importlib import import_module
 from inspect import getmodulename
-from itertools import islice
 from logging import Logger
 from types import ModuleType
 from typing import (
     IO, Any, Callable, Dict, Generic, Iterable, Iterator, List, Match,
-    Optional, Pattern, Sized, Tuple, Type, TypeVar, Union, cast, overload
+    Optional, Pattern, Sequence, Sized, Tuple, Type, TypeVar, Union, cast,
+    overload
 )
 from urllib.parse import quote_plus
 import os
@@ -290,15 +290,10 @@ def iterable(obj: object) -> bool:
     '''
     return hasattr(obj, '__iter__') and not isinstance(obj, (str, bytes))
 
-def chop(sequence: Iterable[T], size: int) -> Iterator[Iterable[T]]:
-    '''Iterate through a given sequence in chunks of the given size.
-    '''
-    it = iter(sequence)
-    while True:
-        chunk = list(islice(it, size))
-        if not chunk:
-            break
-        yield chunk
+def chop(sequence: Sequence[T], size: int) -> Iterator[Sequence[T]]:
+    """Iterate through a given sequence in chunks of the given size."""
+    for idx in range(0, len(sequence), size):
+        yield sequence[idx:idx + size]
 
 def pluralize(word: str, amount: Union[int, Sized]) -> str:
     '''Returns the given word in singular or plural form, depending on the
