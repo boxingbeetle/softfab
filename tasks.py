@@ -156,7 +156,7 @@ def unittest(c, suite=None, select=None,
     if coverage:
         cmd.append(f'--cov={SRC_DIR}')
         cmd.append(f"--cov-config={TOP_DIR / '.coveragerc'}")
-        cmd.append('--cov-context=unit')
+        cmd.append('--cov-context=test')
         cmd.append('--cov-report=')
     if junit_xml is not None:
         cmd.append(f'--junit-xml={junit_xml}')
