@@ -10,7 +10,7 @@ We do not test abnormal program termination, but that could be implemented
 later by spawning a process to perform the file modifications.
 """
 
-from pytest import raises
+from pytest import mark, raises
 
 from softfab.utils import atomicWrite
 
@@ -86,3 +86,18 @@ def testAtomicEarlyClose(tmp_path):
     with raises(ValueError):
         writeFile(atomicWrite, path, newContent, earlyClose)
     checkFile(path, oldContent)
+
+@mark.parametrize('mode', ['q', 'r', 'a', 'w+b'])
+def testAtomicBadMode(tmp_path, mode):
+    """Checks handling of invalid open modes."""
+    path = str(tmp_path / 'testfile.txt')
+    with raises(ValueError):
+        with atomicWrite(path, mode):
+            pass
+
+def testAtomicBadDir(tmp_path):
+    """Checks open a file in a non-existing directory."""
+    path = str(tmp_path / 'nosuchdir' / 'testfile.txt')
+    with raises(FileNotFoundError):
+        with atomicWrite(path, 'w'):
+            pass
