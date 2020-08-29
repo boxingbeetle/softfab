@@ -5,7 +5,7 @@ Data transfer objects are defined using the `attrs` library.
 """
 
 from enum import Enum
-from typing import Dict, Type, TypeVar
+from typing import Callable, Dict, Iterator, Tuple, Type, TypeVar
 
 import attr
 
@@ -19,7 +19,7 @@ def dataToJSON(data: object) -> Dict[str, object]:
     jsonNode: Dict[str, object] = {}
     for field in attr.fields(data.__class__):
         name = field.name
-        value = getattr(data, name)
+        value: object = getattr(data, name)
         if isinstance(value, (str, int, float)):
             jsonNode[name] = value
         elif isinstance(value, Enum):
@@ -55,6 +55,7 @@ def jsonToData(jsonNode: object, cls: Type[T]) -> T:
     to the given data transfer class.
     """
 
+    iterItems: Callable[[], Iterator[Tuple[str, object]]]
     try:
         iterItems = getattr(jsonNode, 'items')
     except AttributeError:
