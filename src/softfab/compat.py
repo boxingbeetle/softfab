@@ -14,6 +14,15 @@ if TYPE_CHECKING:
 else:
     NoReturn = None
 
+# Literal was introduced in Python 3.8.
+if TYPE_CHECKING:
+    from typing_extensions import Literal
+else:
+    class _LiteralType:
+        def __getitem__(self, index):
+            return object
+    Literal = _LiteralType()
+
 # On Python 3.8+, use importlib.metadata from the standard library.
 # On older versions, a compatibility package can be installed from PyPI.
 try:
