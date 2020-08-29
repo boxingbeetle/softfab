@@ -4,6 +4,7 @@ from codecs import getencoder
 from contextlib import contextmanager
 from importlib import import_module
 from inspect import getmodulename
+from io import FileIO, TextIOWrapper
 from logging import Logger
 from pathlib import Path
 from types import ModuleType
@@ -17,7 +18,7 @@ import os
 import os.path
 import re
 
-from softfab.compat import Protocol, importlib_resources
+from softfab.compat import Literal, Protocol, importlib_resources
 
 C = TypeVar('C')
 T = TypeVar('T')
@@ -181,7 +182,17 @@ class Heap(Generic[T]):
 def escapeURL(text: str) -> str:
     return quote_plus(utf8encode(text)[0])
 
-@contextmanager
+@overload
+def atomicWrite(
+        path: Path, mode: Literal['w'], fsync: bool = True, **kwargs: Any
+        ) -> TextIOWrapper: ...
+
+@overload
+def atomicWrite(
+        path: Path, mode: Literal['wb'], fsync: bool = True, **kwargs: Any
+        ) -> FileIO: ...
+
+@contextmanager # type: ignore[misc]
 def atomicWrite(
         path: Path, mode: str, fsync: bool = True, **kwargs: Any
         ) -> Iterator[IO[Any]]:
