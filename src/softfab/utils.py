@@ -188,32 +188,35 @@ def atomicWrite(
     '''A context manager to write a file in such a way that in an event of
     abnormal program termination either an old version of the file remains,
     or a new one, but not something inbetween.
+
     It writes the new data into a temporary file, named like the actual file
-    with a ".tmp" suffix appended. When the file is closed, the temporary
+    with a C{.tmp} suffix appended. When the file is closed, the temporary
     file atomically replaces the actual file.
 
-    'path' must be a string containing the file path to open.
-    'mode' is the mode in which the file will be opened; only modes "w" and
-    "wb" are supported.
-    'fsync' can be set to False to not force changes to be committed to
-    long-term storage; this is faster but destroys the atomicity guarantee.
-    Other keyword arguments are passed to the builtin open() function.
+    Usage::
 
-    Usage:
-    with atomicWrite(path, mode) as out:
-        out.write(...)
+        with atomicWrite(path, mode) as out:
+            out.write(...)
 
-    If there is an uncaught exception in the body of the "with" statement,
+    If there is an uncaught exception in the body of the C{with} statement,
     the old version of the file will remain.
 
-    The body of the "with" statement must not close the file. If it does,
+    The body of the C{with} statement must not close the file. If it does,
     atomicity cannot be guaranteed; this will be treated as an error and
-    cause the old version of the file to remain.
+    will cause the old version of the file to remain.
 
     Note that we do not guarantee durability: if the system goes down after
     the context is closed, it is possible the old version of the file will
     remain on storage. The caller must perform a sync on the containing
     directory if durability is required.
+
+    @param path: The file path to open.
+    @param mode: The mode in which the file will be opened;
+        only modes C{w} and C{wb} are supported.
+    @param fsync: Can be set to C{False} to not force changes to be committed
+        to long-term storage; this is faster but destroys the atomicity
+        guarantee. Used to speed up unit testing.
+    @param kwargs: Arguments passed to the builtin L{open()} function.
     '''
 
     # Note: We could support more modes, but so far we didn't have a need to.
