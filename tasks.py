@@ -152,7 +152,7 @@ def unittest(c, suite=None, select=None,
         junit_xml = report_dir / 'pytest-report.xml'
     cmd = ['pytest', '-v']
     if not random:
-        cmd.append('-p no:randomly')
+        cmd.append('--randomly-dont-reorganize')
     if coverage:
         cmd.append(f'--cov={SRC_DIR}')
         cmd.append(f"--cov-config={TOP_DIR / '.coveragerc'}")
