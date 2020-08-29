@@ -303,7 +303,7 @@ class Database(Generic[DBRecord], RecordSubjectMixin[DBRecord], ABC):
         self.update(value)
 
     def _write(self, key: str, value: DBRecord) -> None:
-        path = self._fileNameForKey(key)
+        path = Path(self._fileNameForKey(key))
         with atomicWrite(path, 'wb', fsync=dbAtomicWrites) as out:
             out.write(
                 value.toXML().flattenXML().encode('ascii', 'xmlcharrefreplace')

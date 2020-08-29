@@ -157,7 +157,7 @@ def initPasswordFile(path: Path) -> HtpasswdFile:
 def writePasswordFile(passwordFile: HtpasswdFile) -> None:
     # Note: Despite the name, to_string() returns bytes.
     data = passwordFile.to_string()
-    with atomicWrite(passwordFile.path, 'wb') as out:
+    with atomicWrite(Path(passwordFile.path), 'wb') as out:
         out.write(data)
 
 def _checkPassword(password: str) -> None:

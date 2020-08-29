@@ -48,7 +48,7 @@ def testNonAtomic(tmp_path):
     """Sanity check to demonstrate that the tests will catch problems when
     using non-atomic file operations.
     """
-    path = str(tmp_path / 'testfile.txt')
+    path = tmp_path / 'testfile.txt'
     oldContent = 'test0100NonAtomic init\n'
     newContent = 'test0100NonAtomic overwrite\n'
     writeFile(open, path, oldContent)
@@ -60,7 +60,7 @@ def testNonAtomic(tmp_path):
 
 def testAtomicNoError(tmp_path):
     """Checks that atomic write will update the file if no errors occur."""
-    path = str(tmp_path / 'testfile.txt')
+    path = tmp_path / 'testfile.txt'
     oldContent = 'test0200AtomicNoError init\n'
     newContent = 'test0200AtomicNoError overwrite\n'
     writeFile(open, path, oldContent)
@@ -69,7 +69,7 @@ def testAtomicNoError(tmp_path):
 
 def testAtomicError(tmp_path):
     """Checks that atomic write will not update the file if an error occurs."""
-    path = str(tmp_path / 'testfile.txt')
+    path = tmp_path / 'testfile.txt'
     oldContent = 'test0210AtomicError init\n'
     newContent = 'test0210AtomicError overwrite\n'
     writeFile(open, path, oldContent)
@@ -79,7 +79,7 @@ def testAtomicError(tmp_path):
 
 def testAtomicEarlyClose(tmp_path):
     """Checks that the user closing the file is handled as an error."""
-    path = str(tmp_path / 'testfile.txt')
+    path = tmp_path / 'testfile.txt'
     oldContent = 'test0300UserClose init\n'
     newContent = 'test0300UserClose overwrite\n'
     writeFile(open, path, oldContent)
@@ -90,14 +90,14 @@ def testAtomicEarlyClose(tmp_path):
 @mark.parametrize('mode', ['q', 'r', 'a', 'w+b'])
 def testAtomicBadMode(tmp_path, mode):
     """Checks handling of invalid open modes."""
-    path = str(tmp_path / 'testfile.txt')
+    path = tmp_path / 'testfile.txt'
     with raises(ValueError):
         with atomicWrite(path, mode):
             pass
 
 def testAtomicBadDir(tmp_path):
     """Checks open a file in a non-existing directory."""
-    path = str(tmp_path / 'nosuchdir' / 'testfile.txt')
+    path = tmp_path / 'nosuchdir' / 'testfile.txt'
     with raises(FileNotFoundError):
         with atomicWrite(path, 'w'):
             pass

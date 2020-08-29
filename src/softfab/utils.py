@@ -5,6 +5,7 @@ from contextlib import contextmanager
 from importlib import import_module
 from inspect import getmodulename
 from logging import Logger
+from pathlib import Path
 from types import ModuleType
 from typing import (
     IO, Any, Callable, Dict, Generic, Iterable, Iterator, List, Match,
@@ -182,7 +183,7 @@ def escapeURL(text: str) -> str:
 
 @contextmanager
 def atomicWrite(
-        path: str, mode: str, fsync: bool = True, **kwargs: Any
+        path: Path, mode: str, fsync: bool = True, **kwargs: Any
         ) -> Iterator[IO[Any]]:
     '''A context manager to write a file in such a way that in an event of
     abnormal program termination either an old version of the file remains,
@@ -219,7 +220,7 @@ def atomicWrite(
     if mode not in ('w', 'wb'):
         raise ValueError(f'invalid mode: {mode!r}')
 
-    tempPath = path + '.tmp'
+    tempPath = path.with_name(f'{path.name}.tmp')
     try:
         with open(tempPath, mode, **kwargs) as out:
             yield out
@@ -235,13 +236,13 @@ def atomicWrite(
         # We do actually want to catch all exceptions here.
         try:
             # Clean up temporary file.
-            os.remove(tempPath)
+            tempPath.unlink()
         finally:
             # Propagate the original exception, even if the remove fails.
             raise
     else:
         # Move the temporary file over the actual file.
-        os.replace(tempPath, path)
+        tempPath.replace(path)
 
 class _AbstractField:
     '''Descriptor that declares an abstract field.
