@@ -3,9 +3,9 @@
 from enum import Enum, auto
 
 import attr
-from pytest import raises
+from pytest import mark, raises
 
-from softfab.json import dataToJSON, jsonToData
+from softfab.json import dataToJSON, jsonToData, mapJSON
 
 
 class Color(Enum):
@@ -32,27 +32,37 @@ def testJSONToHeroData():
     """Test whether a we can create a simple object from JSON."""
     assert jsonToData(knightJSON, HeroData) == knight
 
-def testBadJSON():
+@mark.parametrize('func', [jsonToData, mapJSON])
+def testBadJSON(func):
     """Test the various ways in which JSON binding can fail."""
 
     with raises(ValueError, match="Expected object, got array"):
-        jsonToData([], HeroData)
-
-    with raises(ValueError, match="Missing values for fields:"):
-        jsonToData({}, HeroData)
+        func([], HeroData)
 
     with raises(ValueError, match="Field 'quest' does not exist"):
-        jsonToData({'quest': 'Holy Grail'}, HeroData)
+        func({'quest': 'Holy Grail'}, HeroData)
 
     with raises(ValueError, match="Expected integer value for field 'age'"):
-        jsonToData(dict(knightJSON, age='unknown'), HeroData)
+        func(dict(knightJSON, age='unknown'), HeroData)
 
     with raises(ValueError, match="Expected string value for field 'fav_color'"):
-        jsonToData(dict(knightJSON, fav_color=None), HeroData)
+        func(dict(knightJSON, fav_color=None), HeroData)
 
     with raises(ValueError, match="Invalid value 'yellow' for field 'fav_color'; "
                                   "expected one of: red, green, blue"):
-        jsonToData(dict(knightJSON, fav_color='yellow'), HeroData)
+        func(dict(knightJSON, fav_color='yellow'), HeroData)
+
+@mark.parametrize('obj', [{}, {'age': 35}])
+def testMissingJSONFields(obj):
+    """Test handling of missing fields."""
+
+    with raises(ValueError, match="Missing values for fields:"):
+        jsonToData(obj, HeroData)
+
+    with raises(ValueError, match="Missing values for fields:"):
+        mapJSON(obj, HeroData, partial=False)
+
+    assert mapJSON(obj, HeroData, partial=True) == obj
 
 def testBadDataClass():
     """Test handling of errors in the passed data class."""

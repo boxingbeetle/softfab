@@ -47,12 +47,17 @@ def _describeType(typ: type) -> str:
     else:
         return typ.__name__
 
-T = TypeVar('T')
+def mapJSON(jsonNode: object,
+            cls: Type,
+            partial: bool = True
+            ) -> Dict[str, object]:
+    """Map a JSON object to a data transfer class.
 
-def jsonToData(jsonNode: object, cls: Type[T]) -> T:
-    """Create a data transfer object from a JSON dictionary.
-    Raise ValueError if the structure of the JSON data does not map
-    to the given data transfer class.
+    @param partial: If L{False}, raise L{ValueError} when not all class
+        fields occur in the JSON object.
+    @return: A dictionary mapping field name to value.
+    @raise ValueError: If the structure of the JSON data does not map
+        to the given data transfer class.
     """
 
     iterItems: Callable[[], Iterator[Tuple[str, object]]]
@@ -94,7 +99,18 @@ def jsonToData(jsonNode: object, cls: Type[T]) -> T:
                                  f"value for field '{name}'")
             kwargs[name] = value
 
-    if fields:
+    if fields and not partial:
         raise ValueError(f"Missing values for fields: {', '.join(fields)}")
 
+    return kwargs
+
+T = TypeVar('T')
+
+def jsonToData(jsonNode: object, cls: Type[T]) -> T:
+    """Create a data transfer object from a JSON dictionary.
+    Raise ValueError if the structure of the JSON data does not map
+    to the given data transfer class.
+    """
+
+    kwargs = mapJSON(jsonNode, cls, partial=False)
     return cls(**kwargs) # type: ignore[call-arg]
