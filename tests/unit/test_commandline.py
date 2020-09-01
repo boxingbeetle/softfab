@@ -161,13 +161,13 @@ def remove_user(run_cmd, name, force=True, exists=True):
     if force:
         if exists:
             assert result.exit_code == 0
-            assert result.output == f"softfab: account '{name}' removed\n"
+            assert result.output == f"softfab: Account '{name}' removed\n"
         else:
             assert result.exit_code == 1
             assert result.output == f"softfab: User not found: {name}\n"
     else:
         assert result.exit_code == 2
-        assert result.output.startswith("softfab: account was NOT removed\n")
+        assert result.output.startswith("softfab: Account was NOT removed\n")
 
 
 # Test cases:

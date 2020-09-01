@@ -347,7 +347,7 @@ def remove(globalOptions: GlobalOptions, name: str, force: bool) -> None:
     from softfab.apiclient import run_DELETE
 
     if not force:
-        echo(f"softfab: account was NOT removed\n\n"
+        echo(f"softfab: Account was NOT removed\n\n"
              f"{formatDetails(userRemoveDoc)}", err=True)
         get_current_context().exit(2)
 
@@ -355,4 +355,4 @@ def remove(globalOptions: GlobalOptions, name: str, force: bool) -> None:
             globalOptions.agent,
             globalOptions.urlForPath(f'users/{name}')
             ))
-    echo(f"softfab: account '{name}' removed", err=True)
+    echo(f"softfab: Account '{name}' removed", err=True)
