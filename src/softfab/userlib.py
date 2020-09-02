@@ -106,7 +106,7 @@ privileges: Mapping[str, Sequence[str]] = {
     'u/c': ('operator', ),
 #    'u/a': ('user', 'operator'),
     'u/m': ('operator', ),
-    'u/mo': ('user', 'operator', ),
+    'u/mo': ('guest', 'user', 'operator'),
     'u/d': ('operator', ),
 
 # There is always exactly 1 record in project DB,
