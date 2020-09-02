@@ -99,6 +99,18 @@ async def run_PUT(agent: IAgent, url: str, payload: bytes) -> None:
         raise OSError(f"Unexpected result from HTTP PUT: {code} {phrase}\n"
                       f"{message}")
 
+async def run_PATCH(agent: IAgent, url: str, payload: bytes) -> None:
+    """Make an HTTP PATCH request."""
+
+    response, body = await _runRequest(agent, url, b'PATCH', payload)
+
+    code = response.code
+    if code not in (200, 204):
+        phrase = response.phrase.decode(errors='replace')
+        message = body.decode(errors='replace').rstrip()
+        raise OSError(f"Unexpected result from HTTP PATCH: {code} {phrase}\n"
+                      f"{message}")
+
 async def run_DELETE(agent: IAgent, url: str) -> None:
     """Make an HTTP DELETE request."""
 
