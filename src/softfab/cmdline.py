@@ -356,3 +356,20 @@ def remove(globalOptions: GlobalOptions, name: str, force: bool) -> None:
             globalOptions.urlForPath(f'users/{name}')
             ))
     echo(f"softfab: Account '{name}' removed", err=True)
+
+@user.command()
+@argument('name')
+@argument('role', type=Choice([uiRole.name.lower() for uiRole in UIRoleNames]))
+@pass_obj
+def role(globalOptions: GlobalOptions, name: str, role: str) -> None:
+    """Change the role (permissions) of a user account."""
+
+    import json
+    from softfab.apiclient import run_PATCH
+
+    callAPI(globalOptions.reactor, run_PATCH(
+            globalOptions.agent,
+            globalOptions.urlForPath(f'users/{name}.json'),
+            json.dumps(dict(role=role)).encode()
+            ))
+    echo(f"softfab: Role of account '{name}' set to '{role}'", err=True)

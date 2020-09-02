@@ -169,6 +169,17 @@ def remove_user(run_cmd, name, force=True, exists=True):
         assert result.exit_code == 2
         assert result.output.startswith("softfab: Account was NOT removed\n")
 
+def set_role(run_cmd, name, role, exists=True):
+    """Change the role of a user account."""
+    command = ['user', 'role', name, role]
+    result = run_cmd(*command)
+    if exists:
+        assert result.exit_code == 0
+        assert result.output == f"softfab: Role of account '{name}' set to '{role}'\n"
+    else:
+        assert result.exit_code == 1
+        assert result.output == f"softfab: User not found: {name}\n"
+
 
 # Test cases:
 
@@ -200,3 +211,13 @@ def test_remove_user(run_cmd):
     remove_user(run_cmd, 'bob', force=False)
     remove_user(run_cmd, 'bob', exists=False)
     check_no_user(run_cmd, 'bob')
+
+def test_user_role(run_cmd):
+    # Change role of existing user.
+    add_user(run_cmd, 'alice', 'guest')
+    check_user_role(run_cmd, 'alice', 'guest')
+    set_role(run_cmd, 'alice', 'inactive')
+    check_user_role(run_cmd, 'alice', 'inactive')
+
+    # Attempt to change role of non-existing user.
+    set_role(run_cmd, 'bob', 'operator', exists=False)

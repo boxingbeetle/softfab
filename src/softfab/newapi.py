@@ -7,7 +7,7 @@ only used as an internal API by the command line interface.
 
 from enum import Enum, auto
 from os.path import splitext
-from typing import Any, Mapping
+from typing import Any, Mapping, Optional, cast
 from urllib.parse import unquote_plus
 import json
 
@@ -16,7 +16,7 @@ from twisted.web.resource import IResource, Resource
 import attr
 
 from softfab.TwistedUtil import ClientErrorResource, NotFoundResource
-from softfab.json import dataToJSON, jsonToData
+from softfab.json import dataToJSON, jsonToData, mapJSON
 from softfab.roles import UIRoleNames, uiRoleToSet
 from softfab.userlib import UserDB, UserInfo, addUserAccount, removeUserAccount
 
@@ -25,6 +25,14 @@ class DataFormat(Enum):
     """The data format to use for presenting a resource."""
     AUTO = auto()
     JSON = auto()
+
+def emptyReply(request: Request) -> bytes:
+    """Replies to an HTTP request with a no-body response.
+    An empty bytes sequence is returned.
+    """
+    request.setResponseCode(204)
+    request.setHeader(b'Content-Length', b'0')
+    return b''
 
 def textReply(request: Request, status: int, message: str) -> bytes:
     """Replies to an HTTP request with a plain text message.
@@ -68,6 +76,31 @@ class UserResource(Resource):
         return textReply(request, 409,
                          f"User already exists: {self._user.name}\n")
 
+    def render_PATCH(self, request: Request) -> bytes:
+        try:
+            jsonNode = json.load(request.content)
+        except json.JSONDecodeError as ex:
+            return textReply(request, 400, f"Invalid JSON: {ex}\n")
+
+        try:
+            kwargs = mapJSON(jsonNode, UserData)
+        except ValueError as ex:
+            return textReply(request, 400, f"Data mismatch: {ex}\n")
+
+        # Get fields that can be updated.
+        role = cast(Optional[UIRoleNames], kwargs.pop('role', None))
+        if kwargs:
+            return textReply(request, 400,
+                             f"Patching not supported for fields: "
+                             f"{', '.join(kwargs.keys())}\n")
+
+        # Apply updates.
+        user = self._userDB[self._user.name]
+        if role is not None:
+            user.roles = uiRoleToSet(role)
+
+        return emptyReply(request)
+
     def render_DELETE(self, request: Request) -> bytes:
         name = self._user.name
         removeUserAccount(self._userDB, name)
@@ -110,6 +143,9 @@ class NoUserResource(Resource):
             return textReply(request, 400, f"Error creating user: {ex}\n")
         else:
             return textReply(request, 201, f"User created: {name}\n")
+
+    def render_PATCH(self, request: Request) -> bytes:
+        return textReply(request, 404, f"User not found: {self._name}\n")
 
     def render_DELETE(self, request: Request) -> bytes:
         return textReply(request, 404, f"User not found: {self._name}\n")
