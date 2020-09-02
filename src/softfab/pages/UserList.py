@@ -59,16 +59,22 @@ class PasswordColumn(DataColumn[UserInfo]):
         proc = cast(UserList_GET.Processor, kwargs['proc'])
         requestUser = proc.user
         userName = record.getId()
-        if requestUser.hasPrivilege('u/m') or (
-                requestUser.hasPrivilege('u/mo') and
-                requestUser.name == userName
-                ):
-            # User is allowed to modify passwords.
-            return pageLink('ChangePassword', UserIdArgs(user = userName))[
-                'Change'
-                ]
+        if requestUser.name == userName:
+            if requestUser.hasPrivilege('u/mo'):
+                # User has permission to change own password.
+                return pageLink('ChangePassword', UserIdArgs(user=userName))[
+                    'Change'
+                    ]
+            else:
+                return None
         else:
-            return None
+            if requestUser.hasPrivilege('u/m'):
+                # User has permission to reset other users' passwords.
+                return pageLink('ResetPassword', UserIdArgs(user=userName))[
+                    'Reset'
+                    ]
+            else:
+                return None
 
 class FilterTable(SingleCheckBoxTable):
     name = 'inactive'
@@ -139,7 +145,8 @@ for (var i = 0; i < document.forms.length; i++) {
 class UserList_GET(FabPage['UserList_GET.Processor', 'UserList_GET.Arguments']):
     icon = 'IconUser'
     description = 'Users'
-    children = 'UserDetails', 'AddUser', 'ChangePassword', 'AnonGuest'
+    children = ('UserDetails', 'AddUser', 'ChangePassword', 'ResetPassword',
+                'AnonGuest')
 
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'u/l')
