@@ -28,6 +28,9 @@ if TYPE_CHECKING:
 # loading modules, but that is an issue we want to eliminate at some point.
 # pylint: disable=import-outside-toplevel
 
+# There is overlap between command names and argument names, such as "role".
+# pylint: disable=redefined-outer-name
+
 class DirectoryParamType(ParamType):
     """Parameter type for specifying directories."""
 
