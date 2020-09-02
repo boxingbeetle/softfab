@@ -62,14 +62,16 @@ async def _runRequest(agent: IAgent,
     #       a lot of work for a situation that should never occur.
     body = await readBody(response)
 
-    contentTypeHeaders = response.headers.getRawHeaders('Content-Type')
-    if not contentTypeHeaders:
-        raise OSError("Response lacks Content-Type header")
-    contentType, contentTypeParams = parse_header(contentTypeHeaders[0])
-    if contentType not in ('application/json', 'text/plain'):
-        raise OSError(f"Response has unsupported content type: {contentType}")
-    if contentTypeParams.get('charset', 'utf-8').lower() != 'utf-8':
-        raise OSError("Response not encoded in UTF-8")
+    if response.code != 204:
+        contentTypeHeaders = response.headers.getRawHeaders('Content-Type')
+        if not contentTypeHeaders:
+            raise OSError("Response lacks Content-Type header")
+        contentType, contentTypeParams = parse_header(contentTypeHeaders[0])
+        if contentType not in ('application/json', 'text/plain'):
+            raise OSError(f"Response has unsupported content type: "
+                          f"{contentType}")
+        if contentTypeParams.get('charset', 'utf-8').lower() != 'utf-8':
+            raise OSError("Response not encoded in UTF-8")
 
     return response, body
 
