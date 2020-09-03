@@ -86,6 +86,8 @@ class ChangePassword_GET(FabPage['ChangePassword_GET.Processor',
                           req: Request['ChangePassword_GET.Arguments'],
                           user: User
                           ) -> None:
+            # pylint: disable=attribute-defined-outside-init
+
             userDB = self.userDB
 
             # Validate input.
@@ -102,7 +104,7 @@ class ChangePassword_GET(FabPage['ChangePassword_GET.Processor',
 
             # Check if userName exists in the userDB.
             if userName not in userDB:
-                self.retry = False # pylint: disable=attribute-defined-outside-init
+                self.retry = False
                 raise PresentableError(xhtml[
                     f'User "{userName}" does not exist (anymore)'
                     ])
@@ -110,7 +112,7 @@ class ChangePassword_GET(FabPage['ChangePassword_GET.Processor',
             # Check if msg has been set and act upon accordingly
             msg = req.args.msg
             if msg is not None:
-                self.retry = msg is not PasswordMessage.SUCCESS # pylint: disable=attribute-defined-outside-init
+                self.retry = msg is not PasswordMessage.SUCCESS
                 raise PresentableError(xhtml[passwordStr[msg]])
 
     def checkAccess(self, user: User) -> None:
@@ -155,6 +157,8 @@ class ChangePassword_POST(FabPage['ChangePassword_POST.Processor',
                           req: Request['ChangePassword_POST.Arguments'],
                           user: User
                           ) -> None:
+            # pylint: disable=attribute-defined-outside-init
+
             if req.args.action is Actions.CANCEL:
                 page = cast(ChangePassword_POST, self.page)
                 raise Redirect(page.getCancelURL(req.args))
@@ -174,7 +178,7 @@ class ChangePassword_POST(FabPage['ChangePassword_POST.Processor',
                         )
 
                 if userName not in userDB:
-                    self.retry = False # pylint: disable=attribute-defined-outside-init
+                    self.retry = False
                     raise PresentableError(xhtml[
                         f'User "{userName}" does not exist (anymore)'
                         ])
@@ -185,7 +189,7 @@ class ChangePassword_POST(FabPage['ChangePassword_POST.Processor',
                 else:
                     quality = PasswordMessage.MISMATCH
                 if quality is not PasswordMessage.SUCCESS:
-                    self.retry = True # pylint: disable=attribute-defined-outside-init
+                    self.retry = True
                     raise PresentableError(xhtml[passwordStr[quality]])
 
                 if reqUserName is not None:
@@ -194,7 +198,7 @@ class ChangePassword_POST(FabPage['ChangePassword_POST.Processor',
                             userDB, reqUserName, req.args.loginpass
                             )
                     except LoginFailed as ex:
-                        self.retry = True # pylint: disable=attribute-defined-outside-init
+                        self.retry = True
                         raise PresentableError(xhtml[
                             'Verification of %s password failed%s.' % (
                                 'old' if userName == reqUserName
@@ -207,7 +211,7 @@ class ChangePassword_POST(FabPage['ChangePassword_POST.Processor',
                 try:
                     setPassword(userDB, userName, password)
                 except ValueError as ex:
-                    self.retry = True # pylint: disable=attribute-defined-outside-init
+                    self.retry = True
                     raise PresentableError(xhtml[str(ex)])
                 else:
                     # Successfully changed password
