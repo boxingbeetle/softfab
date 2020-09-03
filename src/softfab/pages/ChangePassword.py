@@ -200,11 +200,11 @@ class ChangePassword_POST(FabPage['ChangePassword_POST.Processor',
                     except LoginFailed as ex:
                         self.retry = True
                         raise PresentableError(xhtml[
-                            'Verification of %s password failed%s.' % (
-                                'old' if userName == reqUserName
-                                    else 'operator',
-                                ': ' + str(ex) if str(ex) else ''
-                                )
+                            "Verification of %s password failed" % (
+                                'old' if userName == reqUserName else 'operator'
+                                ),
+                            f": {ex.args[0]}" if ex.args else None,
+                            "."
                             ])
 
                 # Apply changes.
@@ -212,7 +212,7 @@ class ChangePassword_POST(FabPage['ChangePassword_POST.Processor',
                     setPassword(userDB, userName, password)
                 except ValueError as ex:
                     self.retry = True
-                    raise PresentableError(xhtml[str(ex)])
+                    raise PresentableError(xhtml[ex.args[0]])
                 else:
                     # Successfully changed password
                     raise Redirect(pageURL(
