@@ -154,10 +154,7 @@ class Login_POST(LoginBase['Login_POST.Processor', 'Login_POST.Arguments']):
                     # Suggest the user to pick a stronger password.
                     raise Redirect(pageURL(
                         'ChangePassword',
-                        PasswordMsgArgs(
-                            user = username,
-                            msg = PasswordMessage.POOR
-                            )
+                        PasswordMsgArgs(msg=PasswordMessage.POOR)
                         ))
                 else:
                     raise Redirect(req.args.url or 'Home')

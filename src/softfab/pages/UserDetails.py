@@ -8,7 +8,7 @@ from softfab.datawidgets import DataTable
 from softfab.joblib import Job, JobDB
 from softfab.jobview import JobsSubTable
 from softfab.pageargs import PageArgs, StrArg
-from softfab.pagelinks import ReportArgs, UserIdArgs
+from softfab.pagelinks import ReportArgs
 from softfab.querylib import KeySorter, ValueFilter, runQuery
 from softfab.request import Request
 from softfab.schedulelib import ScheduleDB
@@ -92,10 +92,7 @@ class UserDetails_GET(FabPage['UserDetails_GET.Processor',
         if infoUserName == requestUserName:
             if requestUser.hasPrivilege('u/mo'):
                 yield xhtml.p[
-                    pageLink(
-                        'ChangePassword',
-                        UserIdArgs(user = requestUserName)
-                        )[ 'Change your password' ]
+                    pageLink('ChangePassword')[ 'Change your password' ]
                     ]
 
         yield xhtml.h3[ 'Recent jobs:' ]

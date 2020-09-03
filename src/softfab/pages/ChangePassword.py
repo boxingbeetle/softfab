@@ -32,7 +32,7 @@ def presentForm(**kwargs: object) -> XMLContent:
 def presentFormBody(**kwargs: object) -> XMLContent:
     proc = cast(PageProcessor[PasswordMsgArgs], kwargs['proc'])
     yield xhtml.p[
-        'Please enter a new password for user ', xhtml.b[ proc.args.user ], ':'
+        'Please enter a new password for user ', xhtml.b[ proc.user.name ], ':'
         ]
     yield NewPasswordTable.instance
     if proc.user.name is None:
@@ -40,9 +40,7 @@ def presentFormBody(**kwargs: object) -> XMLContent:
     else:
         yield xhtml.p[
             'To verify your identity, '
-            'please also enter your %s password:' % (
-                'old' if proc.args.user == proc.user.name else 'own'
-                )
+            'please also enter your old password:'
             ]
         yield ReqPasswordTable.instance
     yield xhtml.p[ actionButtons(Actions) ]
@@ -58,13 +56,7 @@ class ReqPasswordTable(FormTable):
     labelStyle = 'formlabel'
 
     def iterFields(self, **kwargs: object) -> Iterator[Tuple[str, XMLContent]]:
-        proc = cast(PageProcessor[PasswordMsgArgs], kwargs['proc'])
-        userName = proc.args.user
-        reqUserName = proc.user.name
-        reqPasswordLabel = '%s password' % (
-            'Old' if userName == reqUserName else 'Operator'
-            )
-        yield reqPasswordLabel, passwordInput(name = 'loginpass')
+        yield 'Old password', passwordInput(name='loginpass')
 
 Actions = Enum('Actions', 'CHANGE CANCEL')
 
@@ -80,33 +72,18 @@ class ChangePassword_GET(FabPage['ChangePassword_GET.Processor',
 
     class Processor(PageProcessor['ChangePassword_GET.Arguments']):
 
-        userDB: ClassVar[UserDB]
-
         async def process(self,
                           req: Request['ChangePassword_GET.Arguments'],
                           user: User
                           ) -> None:
             # pylint: disable=attribute-defined-outside-init
 
-            userDB = self.userDB
-
-            # Validate input.
-            userName = req.args.user
-            reqUserName = user.name # get current logged-in user
-            if userName == reqUserName:
-                checkPrivilege(user, 'u/mo',
-                    'change your password (ask an operator)'
-                    )
-            else:
-                checkPrivilege(user, 'u/m',
-                    "change other user's password (ask an operator)"
-                    )
-
-            # Check if userName exists in the userDB.
-            if userName not in userDB:
+            # This page will not be linked for anonymous users, but they can
+            # of course still navigate here manually.
+            if user.name is None:
                 self.retry = False
                 raise PresentableError(xhtml[
-                    f'User "{userName}" does not exist (anymore)'
+                    "Anonymous user has no password."
                     ])
 
             # Check if msg has been set and act upon accordingly
@@ -116,8 +93,7 @@ class ChangePassword_GET(FabPage['ChangePassword_GET.Processor',
                 raise PresentableError(xhtml[passwordStr[msg]])
 
     def checkAccess(self, user: User) -> None:
-        # Processor checks privileges.
-        pass
+        checkPrivilege(user, 'u/mo', 'change your password')
 
     def iterStyleDefs(self) -> Iterator[str]:
         yield 'td.formlabel { width: 16em; }'
@@ -165,24 +141,14 @@ class ChangePassword_POST(FabPage['ChangePassword_POST.Processor',
             elif req.args.action is Actions.CHANGE:
                 userDB = self.userDB
 
-                # Validate input.
-                userName = req.args.user
-                reqUserName = user.name # get current logged-in user
-                if userName == reqUserName:
-                    checkPrivilege(user, 'u/mo',
-                        'change your password (ask an operator)'
-                        )
-                else:
-                    checkPrivilege(user, 'u/m',
-                        "change other user's password (ask an operator)"
-                        )
-
-                if userName not in userDB:
+                userName = user.name # get current logged-in user
+                if userName is None:
                     self.retry = False
                     raise PresentableError(xhtml[
-                        f'User "{userName}" does not exist (anymore)'
+                        "Anonymous user has no password."
                         ])
 
+                # Perform sanity checks on new password.
                 password = req.args.password
                 if password == req.args.password2:
                     quality = passwordQuality(userName, password)
@@ -192,20 +158,16 @@ class ChangePassword_POST(FabPage['ChangePassword_POST.Processor',
                     self.retry = True
                     raise PresentableError(xhtml[passwordStr[quality]])
 
-                if reqUserName is not None:
-                    try:
-                        user_ = await authenticateUser(
-                            userDB, reqUserName, req.args.loginpass
-                            )
-                    except LoginFailed as ex:
-                        self.retry = True
-                        raise PresentableError(xhtml[
-                            "Verification of %s password failed" % (
-                                'old' if userName == reqUserName else 'operator'
-                                ),
-                            f": {ex.args[0]}" if ex.args else None,
-                            "."
-                            ])
+                try:
+                    user_ = await authenticateUser(userDB, userName,
+                                                   req.args.loginpass)
+                except LoginFailed as ex:
+                    self.retry = True
+                    raise PresentableError(xhtml[
+                        "Verification of old password failed",
+                        f": {ex.args[0]}" if ex.args else None,
+                        "."
+                        ])
 
                 # Apply changes.
                 try:
@@ -225,8 +187,7 @@ class ChangePassword_POST(FabPage['ChangePassword_POST.Processor',
                 assert False, req.args.action
 
     def checkAccess(self, user: User) -> None:
-        # Processor checks privileges.
-        pass
+        checkPrivilege(user, 'u/mo', 'change your password')
 
     def getCancelURL(self, args: Arguments) -> str:
         return args.refererURL or self.getParentURL(args)

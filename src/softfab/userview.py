@@ -5,7 +5,7 @@ from typing import cast
 
 from softfab.datawidgets import DataColumn
 from softfab.pageargs import EnumArg, PageArgs, PasswordArg
-from softfab.pagelinks import UserIdArgs, createUserDetailsLink
+from softfab.pagelinks import createUserDetailsLink
 from softfab.projectlib import Project
 from softfab.querylib import Record
 from softfab.xmlgen import XMLContent, xhtml
@@ -39,7 +39,7 @@ passwordStr = {
     PasswordMessage.MISMATCH : 'New password mismatch.',
     }
 
-class PasswordMsgArgs(UserIdArgs):
+class PasswordMsgArgs(PageArgs):
     '''Identifies a particular user (mandatory) and password message (optional).
     '''
     msg = EnumArg(PasswordMessage, None)

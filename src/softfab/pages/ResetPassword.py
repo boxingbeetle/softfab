@@ -11,6 +11,7 @@ from softfab.formlib import (
     FormTable, actionButtons, hiddenInput, makeForm, passwordInput
 )
 from softfab.pageargs import EnumArg, PasswordArg, RefererArg
+from softfab.pagelinks import UserIdArgs
 from softfab.request import Request
 from softfab.userlib import (
     User, UserDB, authenticateUser, checkPrivilege, setPassword
@@ -24,13 +25,13 @@ from softfab.xmlgen import XML, XMLContent, xhtml
 
 
 def presentForm(**kwargs: object) -> XMLContent:
-    proc = cast(PageProcessor[PasswordMsgArgs], kwargs['proc'])
+    proc = cast(PageProcessor[UserIdArgs], kwargs['proc'])
     return makeForm(args = proc.args)[
         presentFormBody(**kwargs)
         ].present(**kwargs)
 
 def presentFormBody(**kwargs: object) -> XMLContent:
-    proc = cast(PageProcessor[PasswordMsgArgs], kwargs['proc'])
+    proc = cast(PageProcessor[UserIdArgs], kwargs['proc'])
     yield xhtml.p[
         'Please enter a new password for user ', xhtml.b[ proc.args.user ], ':'
         ]
@@ -40,9 +41,7 @@ def presentFormBody(**kwargs: object) -> XMLContent:
     else:
         yield xhtml.p[
             'To verify your identity, '
-            'please also enter your %s password:' % (
-                'old' if proc.args.user == proc.user.name else 'own'
-                )
+            'please also enter your own password:'
             ]
         yield ReqPasswordTable.instance
     yield xhtml.p[ actionButtons(Actions) ]
@@ -58,13 +57,7 @@ class ReqPasswordTable(FormTable):
     labelStyle = 'formlabel'
 
     def iterFields(self, **kwargs: object) -> Iterator[Tuple[str, XMLContent]]:
-        proc = cast(PageProcessor[PasswordMsgArgs], kwargs['proc'])
-        userName = proc.args.user
-        reqUserName = proc.user.name
-        reqPasswordLabel = '%s password' % (
-            'Old' if userName == reqUserName else 'Operator'
-            )
-        yield reqPasswordLabel, passwordInput(name = 'loginpass')
+        yield 'Operator password', passwordInput(name='loginpass')
 
 Actions = Enum('Actions', 'CHANGE CANCEL')
 
@@ -74,7 +67,7 @@ class ResetPassword_GET(FabPage['ResetPassword_GET.Processor',
     iconModifier = IconModifier.EDIT
     description = 'Reset Password'
 
-    class Arguments(PasswordMsgArgs):
+    class Arguments(UserIdArgs, PasswordMsgArgs):
         indexQuery = RefererArg('UserList')
         detailsQuery = RefererArg('UserDetails')
 
@@ -88,36 +81,22 @@ class ResetPassword_GET(FabPage['ResetPassword_GET.Processor',
                           ) -> None:
             # pylint: disable=attribute-defined-outside-init
 
-            userDB = self.userDB
-
-            # Validate input.
+            # Check if user name exists in the DB.
             userName = req.args.user
-            reqUserName = user.name # get current logged-in user
-            if userName == reqUserName:
-                checkPrivilege(user, 'u/mo',
-                    'change your password (ask an operator)'
-                    )
-            else:
-                checkPrivilege(user, 'u/m',
-                    "change other user's password (ask an operator)"
-                    )
-
-            # Check if userName exists in the userDB.
-            if userName not in userDB:
+            if userName not in self.userDB:
                 self.retry = False
                 raise PresentableError(xhtml[
                     f'User "{userName}" does not exist (anymore)'
                     ])
 
-            # Check if msg has been set and act upon accordingly
+            # Check if msg has been set and act upon accordingly.
             msg = req.args.msg
             if msg is not None:
                 self.retry = msg is not PasswordMessage.SUCCESS
                 raise PresentableError(xhtml[passwordStr[msg]])
 
     def checkAccess(self, user: User) -> None:
-        # Processor checks privileges.
-        pass
+        checkPrivilege(user, 'u/m', "reset passwords")
 
     def iterStyleDefs(self) -> Iterator[str]:
         yield 'td.formlabel { width: 16em; }'
@@ -167,16 +146,6 @@ class ResetPassword_POST(FabPage['ResetPassword_POST.Processor',
 
                 # Validate input.
                 userName = req.args.user
-                reqUserName = user.name # get current logged-in user
-                if userName == reqUserName:
-                    checkPrivilege(user, 'u/mo',
-                        'change your password (ask an operator)'
-                        )
-                else:
-                    checkPrivilege(user, 'u/m',
-                        "change other user's password (ask an operator)"
-                        )
-
                 if userName not in userDB:
                     self.retry = False
                     raise PresentableError(xhtml[
@@ -192,6 +161,7 @@ class ResetPassword_POST(FabPage['ResetPassword_POST.Processor',
                     self.retry = True
                     raise PresentableError(xhtml[passwordStr[quality]])
 
+                reqUserName = user.name # get current logged-in user
                 if reqUserName is not None:
                     try:
                         user_ = await authenticateUser(
@@ -200,9 +170,7 @@ class ResetPassword_POST(FabPage['ResetPassword_POST.Processor',
                     except LoginFailed as ex:
                         self.retry = True
                         raise PresentableError(xhtml[
-                            "Verification of %s password failed" % (
-                                'old' if userName == reqUserName else 'operator'
-                                ),
+                            "Verification of operator password failed",
                             f": {ex.args[0]}" if ex.args else None,
                             "."
                             ])
@@ -225,8 +193,7 @@ class ResetPassword_POST(FabPage['ResetPassword_POST.Processor',
                 assert False, req.args.action
 
     def checkAccess(self, user: User) -> None:
-        # Processor checks privileges.
-        pass
+        checkPrivilege(user, 'u/m', "reset passwords")
 
     def getCancelURL(self, args: Arguments) -> str:
         return args.refererURL or self.getParentURL(args)

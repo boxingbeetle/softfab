@@ -62,9 +62,7 @@ class PasswordColumn(DataColumn[UserInfo]):
         if requestUser.name == userName:
             if requestUser.hasPrivilege('u/mo'):
                 # User has permission to change own password.
-                return pageLink('ChangePassword', UserIdArgs(user=userName))[
-                    'Change'
-                    ]
+                return pageLink('ChangePassword')[ 'Change' ]
             else:
                 return None
         else:
