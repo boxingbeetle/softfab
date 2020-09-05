@@ -2,27 +2,6 @@
 
 from typing import TYPE_CHECKING
 
-# Make sure we only require 'typing_extensions' module during type checking.
-if TYPE_CHECKING:
-    from typing_extensions import Protocol
-else:
-    Protocol = object
-
-# NoReturn was introduced in Python 3.6.5.
-if TYPE_CHECKING:
-    from typing_extensions import NoReturn
-else:
-    NoReturn = None
-
-# Literal was introduced in Python 3.8.
-if TYPE_CHECKING:
-    from typing_extensions import Literal
-else:
-    class _LiteralType:
-        def __getitem__(self, index):
-            return object
-    Literal = _LiteralType()
-
 # On Python 3.8+, use importlib.metadata from the standard library.
 # On older versions, a compatibility package can be installed from PyPI.
 try:
@@ -41,5 +20,5 @@ except ImportError:
 
 
 __all__ = [
-    'NoReturn', 'Protocol', 'importlib_metadata', 'importlib_resources'
+    'importlib_metadata', 'importlib_resources'
     ]

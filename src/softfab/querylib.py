@@ -6,7 +6,8 @@ from typing import (
     Optional, Type, TypeVar, Union, cast, overload
 )
 
-from softfab.compat import Protocol
+from typing_extensions import Protocol
+
 from softfab.databaselib import DBRecord, Database, Retriever
 from softfab.utils import (
     Comparable, ComparableT, Missing, missing, wildcardMatcher

@@ -8,11 +8,12 @@ Its specification is in RFC 4287:  http://tools.ietf.org/html/rfc4287
 from time import gmtime, strftime
 from typing import Any, ClassVar, Collection, Iterator, List
 
+from typing_extensions import NoReturn
+
 from softfab.ControlPage import ControlPage
 from softfab.Page import PageProcessor
 from softfab.StyleResources import styleRoot
 from softfab.UIPage import factoryStyleSheet
-from softfab.compat import NoReturn
 from softfab.config import rootURL
 from softfab.configlib import ConfigDB
 from softfab.databaselib import RecordObserver

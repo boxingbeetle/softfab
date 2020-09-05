@@ -18,7 +18,9 @@ import os
 import os.path
 import re
 
-from softfab.compat import Literal, Protocol, importlib_resources
+from typing_extensions import Literal, Protocol
+
+from softfab.compat import importlib_resources
 
 C = TypeVar('C')
 T = TypeVar('T')

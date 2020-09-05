@@ -9,7 +9,8 @@ from typing import (
 )
 from urllib.parse import parse_qs
 
-from softfab.compat import NoReturn
+from typing_extensions import NoReturn
+
 from softfab.timelib import stringToTime
 from softfab.timeview import formatDate, formatTime
 from softfab.utils import cachedProperty, escapeURL, iterable

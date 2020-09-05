@@ -51,7 +51,8 @@ from xml.etree import ElementTree
 from xml.sax.saxutils import escape
 import re
 
-from softfab.compat import NoReturn, Protocol
+from typing_extensions import NoReturn, Protocol
+
 from softfab.utils import cachedProperty
 
 

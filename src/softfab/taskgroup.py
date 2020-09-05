@@ -9,7 +9,8 @@ from typing import (
     Union, cast
 )
 
-from softfab.compat import Protocol
+from typing_extensions import Protocol
+
 from softfab.setcalc import UnionFind, categorizedLists, union
 from softfab.utils import Heap, ResultKeeper
 from softfab.waiting import (

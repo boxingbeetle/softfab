@@ -7,7 +7,8 @@ from typing import (
     Mapping, Optional, Sequence, Set, Tuple, Type, Union, cast
 )
 
-from softfab.compat import NoReturn
+from typing_extensions import NoReturn
+
 from softfab.pageargs import PageArgs, dynamic, mandatory
 from softfab.utils import abstract, iterable
 from softfab.webgui import (

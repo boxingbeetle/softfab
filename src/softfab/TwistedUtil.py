@@ -7,9 +7,9 @@ from twisted.web.iweb import IRequest
 from twisted.web.resource import IResource, Resource
 from twisted.web.server import Request as TwistedRequest
 from twisted.web.util import redirectTo
+from typing_extensions import NoReturn
 from zope.interface import implementer
 
-from softfab.compat import NoReturn
 from softfab.userlib import AccessDenied
 
 

@@ -6,9 +6,10 @@ from typing import (
     Sequence, Tuple, Type, cast
 )
 
+from typing_extensions import NoReturn
+
 from softfab.FabPage import IconModifier
 from softfab.Page import InternalError, InvalidRequest, PageProcessor, Redirect
-from softfab.compat import NoReturn
 from softfab.configlib import Config, ConfigDB, Input, Task, TaskSetWithInputs
 from softfab.configview import InputTable
 from softfab.dialog import (

@@ -7,7 +7,8 @@ from typing import (
     Mapping, Optional, Sequence, Set, TypeVar
 )
 
-from softfab.compat import Protocol
+from typing_extensions import Protocol
+
 from softfab.databaselib import Database, DatabaseElem, RecordObserver
 from softfab.xmlgen import XMLNode, xml
 

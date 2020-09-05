@@ -10,8 +10,8 @@ import logging
 
 from passlib.apache import HtpasswdFile
 from twisted.cred.error import UnauthorizedLogin
+from typing_extensions import Protocol
 
-from softfab.compat import Protocol
 from softfab.databaselib import Database, DatabaseElem
 from softfab.roles import UIRoleNames, roleNames
 from softfab.utils import atomicWrite, iterable

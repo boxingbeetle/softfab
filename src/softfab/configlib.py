@@ -8,7 +8,8 @@ from typing import (
     Mapping, MutableSet, Optional, Sequence, Tuple, Union, cast
 )
 
-from softfab.compat import Protocol
+from typing_extensions import Protocol
+
 from softfab.databaselib import DBRecord, Database, RecordObserver
 from softfab.frameworklib import Framework, FrameworkDB
 from softfab.joblib import Job, JobFactory

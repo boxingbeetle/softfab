@@ -16,7 +16,8 @@ from xml.etree import ElementTree
 from zlib import adler32  # pylint: disable=no-name-in-module
 import logging
 
-from softfab.compat import NoReturn
+from typing_extensions import NoReturn
+
 from softfab.pageargs import PageArgs, Query
 from softfab.pnglib import getPNGDimensions
 from softfab.utils import SharedInstance, abstract, iterable
