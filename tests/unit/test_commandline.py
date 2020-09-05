@@ -6,6 +6,7 @@ import json
 
 from click import Group
 from click.testing import CliRunner
+from passlib.apache import HtpasswdFile
 from pytest import fixture, mark
 from twisted.internet.endpoints import UNIXClientEndpoint
 from twisted.internet.testing import MemoryReactorClock
@@ -103,61 +104,80 @@ def find_command(words):
             return command, words[idx:]
     raise LookupError(f"no such command: {' '.join(words[:idx])}")
 
-@fixture
-def run_cmd(tmp_path):
+class SoftFabCLI:
     runner = CliRunner()
 
-    def invoke(*words):
+    def __init__(self, db_path):
+        self.db_path = db_path
+
+    def run(self, *words):
         command, args = find_command(words)
 
         # Reactors cannot be restarted, so use a fresh one for every command.
         globalOptions = MemoryOptions()
         reactor = globalOptions.reactor
         reactor.callWhenRunning(runCoroutine, reactor,
-                                execute(reactor, tmp_path))
+                                execute(reactor, self.db_path))
 
-        return runner.invoke(command, args,
-                             catch_exceptions=False,
-                             obj=globalOptions)
-    return invoke
+        return self.runner.invoke(command, args,
+                                  catch_exceptions=False,
+                                  obj=globalOptions)
+
+    def add_password(self, name):
+        """Add a (poor) password to the password file for the given user."""
+        passwordFile = HtpasswdFile(str(self.db_path / 'passwords'))
+        passwordFile.set_password(name, f'{name[::-1]}')
+        passwordFile.save()
+
+    def has_password(self, name):
+        """Does an entry for the given user exist in the password file?"""
+        passwordFile = HtpasswdFile(str(self.db_path / 'passwords'))
+        return passwordFile.get_hash(name) is not None
+
+@fixture
+def cli(tmp_path):
+    return SoftFabCLI(tmp_path)
 
 
 # Functions that run commands and check results:
 
-def check_no_user(run_cmd, name):
+def check_no_user(cli, name):
     """Check that no user with the given name exists."""
-    result = run_cmd('user', 'show', name)
+    result = cli.run('user', 'show', name)
     assert result.exit_code == 1
     assert result.output == f"softfab: User not found: {name}\n"
+    assert not cli.has_password(name)
 
-def check_user_role(run_cmd, name, role):
+def check_user_role(cli, name, role, password=True):
     """Check that a user with the given name exists and has the given role."""
-    result = run_cmd('user', 'show', name, '--json')
+    result = cli.run('user', 'show', name, '--json')
     assert result.exit_code == 0
     data = json.loads(result.output)
     assert data == {'name': name, 'role': role}
+    assert cli.has_password(name) == password
 
-def add_user(run_cmd, name, role=None, duplicate=False):
+def add_user(cli, name, role=None, duplicate=False):
     """Add a user account."""
     command = ['user', 'add', name]
     if role is None:
         role = 'user'
     else:
         command += ['--role', role]
-    result = run_cmd(*command)
+    result = cli.run(*command)
     if duplicate:
         assert result.exit_code == 1
         assert result.output == f"softfab: User already exists: {name}\n"
     else:
         assert result.exit_code == 0
         assert result.output == f"softfab: {role.title()} account '{name}' created\n"
+        cli.add_password(name)
 
-def remove_user(run_cmd, name, force=True, exists=True):
+def remove_user(cli, name, force=True, exists=True):
     """Remove a user account."""
     command = ['user', 'remove', name]
     if force:
         command += ['--force']
-    result = run_cmd(*command)
+    result = cli.run(*command)
     if force:
         if exists:
             assert result.exit_code == 0
@@ -169,10 +189,10 @@ def remove_user(run_cmd, name, force=True, exists=True):
         assert result.exit_code == 2
         assert result.output.startswith("softfab: Account was NOT removed\n")
 
-def set_role(run_cmd, name, role, exists=True):
+def set_role(cli, name, role, exists=True):
     """Change the role of a user account."""
     command = ['user', 'role', name, role]
-    result = run_cmd(*command)
+    result = cli.run(*command)
     if exists:
         assert result.exit_code == 0
         assert result.output == f"softfab: Role of account '{name}' set to '{role}'\n"
@@ -184,40 +204,40 @@ def set_role(run_cmd, name, role, exists=True):
 # Test cases:
 
 @mark.parametrize('role', list(roleNames) + [None])
-def test_create_user(run_cmd, role):
+def test_create_user(cli, role):
     # Add a user.
-    check_no_user(run_cmd, 'alice')
-    add_user(run_cmd, 'alice', role)
-    check_user_role(run_cmd, 'alice', role or 'user')
+    check_no_user(cli, 'alice')
+    add_user(cli, 'alice', role)
+    check_user_role(cli, 'alice', role or 'user')
 
     # Attempt to add the same user again.
-    add_user(run_cmd, 'alice', role, duplicate=True)
+    add_user(cli, 'alice', role, duplicate=True)
 
-def test_remove_user(run_cmd):
+def test_remove_user(cli):
     # Attempt to remove user that never existed.
-    remove_user(run_cmd, 'alice', force=False)
-    remove_user(run_cmd, 'alice', exists=False)
-    check_no_user(run_cmd, 'alice')
+    remove_user(cli, 'alice', force=False)
+    remove_user(cli, 'alice', exists=False)
+    check_no_user(cli, 'alice')
 
     # Add user and remove them.
-    add_user(run_cmd, 'bob', 'user')
-    check_user_role(run_cmd, 'bob', 'user')
-    remove_user(run_cmd, 'bob', force=False)
-    check_user_role(run_cmd, 'bob', 'user')
-    remove_user(run_cmd, 'bob')
-    check_no_user(run_cmd, 'bob')
+    add_user(cli, 'bob', 'user')
+    check_user_role(cli, 'bob', 'user')
+    remove_user(cli, 'bob', force=False)
+    check_user_role(cli, 'bob', 'user')
+    remove_user(cli, 'bob')
+    check_no_user(cli, 'bob')
 
     # Attempt to remove a user that was already removed.
-    remove_user(run_cmd, 'bob', force=False)
-    remove_user(run_cmd, 'bob', exists=False)
-    check_no_user(run_cmd, 'bob')
+    remove_user(cli, 'bob', force=False)
+    remove_user(cli, 'bob', exists=False)
+    check_no_user(cli, 'bob')
 
-def test_user_role(run_cmd):
+def test_user_role(cli):
     # Change role of existing user.
-    add_user(run_cmd, 'alice', 'guest')
-    check_user_role(run_cmd, 'alice', 'guest')
-    set_role(run_cmd, 'alice', 'inactive')
-    check_user_role(run_cmd, 'alice', 'inactive')
+    add_user(cli, 'alice', 'guest')
+    check_user_role(cli, 'alice', 'guest')
+    set_role(cli, 'alice', 'inactive')
+    check_user_role(cli, 'alice', 'inactive')
 
     # Attempt to change role of non-existing user.
-    set_role(run_cmd, 'bob', 'operator', exists=False)
+    set_role(cli, 'bob', 'operator', exists=False)
