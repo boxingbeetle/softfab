@@ -20,8 +20,12 @@ class HeroData:
     knighted: bool
     fav_color: Color
 
-knight = HeroData(name='Launcelot', age=35, knighted=True,
-                  fav_color=Color.BLUE)
+@attr.s(auto_attribs=True)
+class HeroDataDefault(HeroData):
+    armor: str = 'plate'
+    shield: bool = True
+
+knight = HeroData(name='Launcelot', age=35, knighted=True, fav_color=Color.BLUE)
 knightJSON = dict(name='Launcelot', age=35, knighted=True, fav_color='blue')
 
 def testHeroDataToJSON():
@@ -63,6 +67,13 @@ def testMissingJSONFields(obj):
         mapJSON(obj, HeroData, partial=False)
 
     assert mapJSON(obj, HeroData, partial=True) == obj
+
+def testJSONDefault():
+    """Test binding to a data transfer class with defaults for some fields."""
+
+    defaultKnight = jsonToData(dict(knightJSON, armor='ring'), HeroDataDefault)
+    assert defaultKnight.armor == 'ring' # overridden
+    assert defaultKnight.shield is True # default
 
 def testBadDataClass():
     """Test handling of errors in the passed data class."""

@@ -99,8 +99,11 @@ def mapJSON(jsonNode: object,
                                  f"value for field '{name}'")
             kwargs[name] = value
 
-    if fields and not partial:
-        raise ValueError(f"Missing values for fields: {', '.join(fields)}")
+    if not partial:
+        missing = [name for name, attrib in fields.items()
+                   if attrib.default is attr.NOTHING]
+        if missing:
+            raise ValueError(f"Missing values for fields: {', '.join(missing)}")
 
     return kwargs
 
