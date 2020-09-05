@@ -366,7 +366,7 @@ def addUserAccount(userDB: UserDB, userName: str, roles: Iterable[str]) -> None:
     userDB.add(userInfo)
 
 def removeUserAccount(userDB: UserDB, name: str) -> None:
-    """Removes a user account."""
+    """Remove a user account."""
 
     user = userDB[name]
     # Revoke all roles prior to removal, to make sure active sessions
@@ -374,7 +374,11 @@ def removeUserAccount(userDB: UserDB, name: str) -> None:
     user.roles = ()
     userDB.remove(user)
 
-    # Remove the user's password.
+    removePassword(userDB, name)
+
+def removePassword(userDB: UserDB, name: str) -> None:
+    """Remove an account's password."""
+
     passwordFile = userDB.passwordFile
     passwordFile.load_if_changed()
     passwordFile.delete(name)

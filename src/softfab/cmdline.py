@@ -337,7 +337,7 @@ def add(globalOptions: GlobalOptions, name: str, role: str) -> None:
 
 userRemoveDoc = """
 To preserve a meaningful history, we recommend to not remove user accounts
-that are no longer in use, but instead set their role to 'inactive'.
+that are no longer in use, but block them instead.
 If you are certain you want to remove the account completely,
 use the --force flag.
 """.strip().replace('\n', ' ')
@@ -362,17 +362,31 @@ def remove(globalOptions: GlobalOptions, name: str, force: bool) -> None:
 
 @user.command()
 @argument('name')
+@pass_obj
+def block(globalOptions: GlobalOptions, name: str) -> None:
+    """Block a user account.
+    This sets the account's role to 'inactive' and removes the password.
+    """
+
+    updateUser(globalOptions, name, role='inactive', password='remove')
+    echo(f"softfab: Account '{name}' blocked", err=True)
+
+@user.command()
+@argument('name')
 @argument('role', type=Choice([uiRole.name.lower() for uiRole in UIRoleNames]))
 @pass_obj
 def role(globalOptions: GlobalOptions, name: str, role: str) -> None:
     """Change the role (permissions) of a user account."""
 
+    updateUser(globalOptions, name, role=role)
+    echo(f"softfab: Role of account '{name}' set to '{role}'", err=True)
+
+def updateUser(globalOptions: GlobalOptions, name: str, **updates: str) -> None:
     import json
     from softfab.apiclient import run_PATCH
 
     callAPI(globalOptions.reactor, run_PATCH(
             globalOptions.agent,
             globalOptions.urlForPath(f'users/{name}.json'),
-            json.dumps(dict(role=role)).encode()
+            json.dumps(updates).encode()
             ))
-    echo(f"softfab: Role of account '{name}' set to '{role}'", err=True)

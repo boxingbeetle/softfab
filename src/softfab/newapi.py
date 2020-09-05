@@ -18,13 +18,24 @@ import attr
 from softfab.TwistedUtil import ClientErrorResource, NotFoundResource
 from softfab.json import dataToJSON, jsonToData, mapJSON
 from softfab.roles import UIRoleNames, uiRoleToSet
-from softfab.userlib import UserDB, UserInfo, addUserAccount, removeUserAccount
+from softfab.userlib import (
+    UserDB, UserInfo, addUserAccount, removePassword, removeUserAccount
+)
 
 
 class DataFormat(Enum):
     """The data format to use for presenting a resource."""
     AUTO = auto()
     JSON = auto()
+
+class PasswordActions(Enum):
+    """Action verbs for manipulating the password of a user account."""
+
+    NOP = auto()
+    """Do not change anything about the password."""
+
+    REMOVE = auto()
+    """Forget the current password."""
 
 def emptyReply(request: Request) -> bytes:
     """Replies to an HTTP request with a no-body response.
@@ -51,6 +62,10 @@ class UserData:
     @classmethod
     def fromUserInfo(cls, user: UserInfo) -> 'UserData':
         return cls(user.name, user.uiRole)
+
+@attr.s(auto_attribs=True)
+class UserDataUpdate(UserData):
+    password: PasswordActions = PasswordActions.NOP
 
 class UserResource(Resource):
     """HTTP resource for an existing user account."""
@@ -83,21 +98,26 @@ class UserResource(Resource):
             return textReply(request, 400, f"Invalid JSON: {ex}\n")
 
         try:
-            kwargs = mapJSON(jsonNode, UserData)
+            kwargs = mapJSON(jsonNode, UserDataUpdate)
         except ValueError as ex:
             return textReply(request, 400, f"Data mismatch: {ex}\n")
 
         # Get fields that can be updated.
         role = cast(Optional[UIRoleNames], kwargs.pop('role', None))
+        password = cast(Optional[UIRoleNames], kwargs.pop('password', None))
         if kwargs:
             return textReply(request, 400,
                              f"Patching not supported for fields: "
                              f"{', '.join(kwargs.keys())}\n")
 
         # Apply updates.
-        user = self._userDB[self._user.name]
+        userDB = self._userDB
+        userName = self._user.name
+        user = userDB[userName]
         if role is not None:
             user.roles = uiRoleToSet(role)
+        if password is PasswordActions.REMOVE:
+            removePassword(userDB, userName)
 
         return emptyReply(request)
 

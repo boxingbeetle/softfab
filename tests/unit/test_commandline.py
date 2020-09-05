@@ -189,6 +189,16 @@ def remove_user(cli, name, force=True, exists=True):
         assert result.exit_code == 2
         assert result.output.startswith("softfab: Account was NOT removed\n")
 
+def block_user(cli, name, exists=True):
+    """Block a user account."""
+    result = cli.run('user', 'block', name)
+    if exists:
+        assert result.exit_code == 0
+        assert result.output == f"softfab: Account '{name}' blocked\n"
+    else:
+        assert result.exit_code == 1
+        assert result.output == f"softfab: User not found: {name}\n"
+
 def set_role(cli, name, role, exists=True):
     """Change the role of a user account."""
     command = ['user', 'role', name, role]
@@ -231,6 +241,21 @@ def test_remove_user(cli):
     remove_user(cli, 'bob', force=False)
     remove_user(cli, 'bob', exists=False)
     check_no_user(cli, 'bob')
+
+def test_block_user(cli):
+    # Add user and block them.
+    add_user(cli, 'dave', 'operator')
+    check_user_role(cli, 'dave', 'operator')
+    block_user(cli, 'dave')
+    check_user_role(cli, 'dave', 'inactive', password=False)
+
+    # Block the same user again; should succeed with no effect.
+    block_user(cli, 'dave')
+    check_user_role(cli, 'dave', 'inactive', password=False)
+
+    # Attempt to block user that never existed.
+    block_user(cli, 'alice', exists=False)
+    check_no_user(cli, 'alice')
 
 def test_user_role(cli):
     # Change role of existing user.
