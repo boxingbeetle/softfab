@@ -104,7 +104,8 @@ class UserResource(Resource):
 
         # Get fields that can be updated.
         role = cast(Optional[UIRoleNames], kwargs.pop('role', None))
-        password = cast(Optional[UIRoleNames], kwargs.pop('password', None))
+        password = cast(PasswordActions,
+                        kwargs.pop('password', PasswordActions.NOP))
         if kwargs:
             return textReply(request, 400,
                              f"Patching not supported for fields: "
