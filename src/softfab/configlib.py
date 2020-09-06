@@ -116,7 +116,7 @@ class ProductDefLookup(Protocol):
 class _Param(XMLTag):
     tagName = 'param'
 
-class Task(PriorityMixin, ResourceRequirementsMixin, XMLTag, TaskRunnerSet):
+class Task(XMLTag, TaskRunnerSet, PriorityMixin, ResourceRequirementsMixin):
     tagName = 'task'
     intProperties = ('priority', )
 
