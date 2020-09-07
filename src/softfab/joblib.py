@@ -54,10 +54,8 @@ else:
     TaskRunDB = object
 
 
-class Task(
-        PriorityMixin, ResourceRequirementsMixin, TaskStateMixin,
-        XMLTag, TaskRunnerSet
-        ):
+class Task(XMLTag, TaskRunnerSet, PriorityMixin, ResourceRequirementsMixin,
+           TaskStateMixin):
     tagName = 'task'
     intProperties = ('priority', )
 
