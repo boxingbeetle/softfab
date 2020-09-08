@@ -7,7 +7,7 @@ only used as an internal API by the command line interface.
 
 from enum import Enum, auto
 from os.path import splitext
-from typing import Any, Mapping, Optional, cast
+from typing import Any, Mapping, Optional
 from urllib.parse import unquote_plus
 import json
 
@@ -16,7 +16,7 @@ from twisted.web.resource import IResource, Resource
 import attr
 
 from softfab.TwistedUtil import ClientErrorResource, NotFoundResource
-from softfab.json import dataToJSON, jsonToData, mapJSON
+from softfab.json import dataToJSON, jsonToData
 from softfab.roles import UIRoleNames, uiRoleToSet
 from softfab.userlib import (
     UserDB, UserInfo, addUserAccount, removePassword, removeUserAccount
@@ -30,9 +30,6 @@ class DataFormat(Enum):
 
 class PasswordActions(Enum):
     """Action verbs for manipulating the password of a user account."""
-
-    NOP = auto()
-    """Do not change anything about the password."""
 
     REMOVE = auto()
     """Forget the current password."""
@@ -66,8 +63,9 @@ class UserDataName(UserData):
         return cls(name=user.name, role=user.uiRole)
 
 @attr.s(auto_attribs=True)
-class UserDataUpdate(UserData):
-    password: PasswordActions = PasswordActions.NOP
+class UserDataUpdate:
+    role: Optional[UIRoleNames] = None
+    password: Optional[PasswordActions] = None
 
 class UserResource(Resource):
     """HTTP resource for an existing user account."""
@@ -100,25 +98,19 @@ class UserResource(Resource):
             return textReply(request, 400, f"Invalid JSON: {ex}\n")
 
         try:
-            kwargs = mapJSON(jsonNode, UserDataUpdate)
+            data = jsonToData(jsonNode, UserDataUpdate)
         except ValueError as ex:
             return textReply(request, 400, f"Data mismatch: {ex}\n")
 
-        # Get fields that can be updated.
-        role = cast(Optional[UIRoleNames], kwargs.pop('role', None))
-        password = cast(PasswordActions,
-                        kwargs.pop('password', PasswordActions.NOP))
-        if kwargs:
-            return textReply(request, 400,
-                             f"Patching not supported for fields: "
-                             f"{', '.join(kwargs.keys())}\n")
-
-        # Apply updates.
         userDB = self._userDB
         userName = self._user.name
         user = userDB[userName]
+
+        role = data.role
         if role is not None:
             user.roles = uiRoleToSet(role)
+
+        password = data.password
         if password is PasswordActions.REMOVE:
             removePassword(userDB, userName)
 
