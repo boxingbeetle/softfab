@@ -1,11 +1,14 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Any, ClassVar, Collection, Iterator, Sequence, cast
+from typing import (
+    Any, ClassVar, Collection, Iterator, List, Mapping, Sequence, Tuple, cast
+)
 
 from softfab.FabPage import FabPage
 from softfab.Page import PageProcessor
 from softfab.configlib import ConfigDB
 from softfab.datawidgets import DataTable
+from softfab.formlib import checkBox
 from softfab.joblib import Job
 from softfab.jobview import CommentPanel, JobsSubTable, presentJobCaption
 from softfab.pagelinks import (
@@ -19,7 +22,7 @@ from softfab.resourceview import getResourceStatus
 from softfab.schedulelib import ScheduleDB
 from softfab.tasktables import JobProcessorMixin, JobTaskRunsTable
 from softfab.userlib import User, UserDB, checkPrivilege
-from softfab.webgui import Table, Widget, cell, pageLink
+from softfab.webgui import Table, Widget, cell, pageLink, row
 from softfab.xmlgen import XMLContent, xhtml
 
 
@@ -128,39 +131,59 @@ class ShowReport_GET(FabPage['ShowReport_GET.Processor',
                     ]
 
 class ParamTable(Table):
+    bodyId = 'params'
     columns = 'Task', 'Parameter', 'Value'
     hideWhenEmpty = True
 
     def presentCaptionParts(self, **kwargs: object) -> XMLContent:
+        taskParams = cast(Mapping[str, Sequence[Tuple[bool, str, str]]],
+                          kwargs['taskParams'])
+        anyFinal = any(
+            final
+            for params in taskParams.values()
+            for final, key, value in params
+            )
         yield 'Job uses the following parameters:'
+        if anyFinal:
+            yield xhtml.br
+            yield checkBox(onclick=f"document.getElementById('{self.bodyId}')"
+                                   f".classList.toggle('showfinal')")[
+                'Show final parameters'
+                ].present(**kwargs)
 
     def iterRows(self, **kwargs: object) -> Iterator[XMLContent]:
         proc = cast(JobProcessor, kwargs['proc'])
         jobId = proc.args.jobId
-        for task in proc.job.getTaskSequence():
-            params = task.getVisibleParameters()
+        taskParams = cast(Mapping[str, Sequence[Tuple[bool, str, str]]],
+                          kwargs['taskParams'])
+        for name, params in taskParams.items():
             first = True
-            for key, value in sorted(params.items()):
+            for final, key, value in params:
+                cells: List[XMLContent] = []
                 if first:
-                    yield cell(rowspan = len(params))[
-                        createTaskInfoLink(jobId, task.getName())
-                        ], key, value
+                    cells.append(cell(rowspan=len(params))[
+                        createTaskInfoLink(jobId, name)
+                        ])
                     first = False
-                else:
-                    yield key, value
+                cells += [key, value]
+                yield row(class_='final' if final else None)[cells]
 
     def present(self, **kwargs: object) -> XMLContent:
-        presentation = super().present(**kwargs)
-        if presentation is None:
-            message = 'This job contains no non-final parameters. '
-        else:
+        proc = cast(JobProcessor, kwargs['proc'])
+        # We use 'final' as the primary sort key to make sure that the first
+        # row (containing the task name) only collapses if all parameters for
+        # that task are final.
+        taskParams = {
+            task.getName(): sorted(
+                (task.isFinal(key), key, value)
+                for key, value in task.getParameters().items()
+                if not key.startswith('sf.')
+                )
+            for task in proc.job.getTaskSequence()
+            }
+        presentation = super().present(taskParams=taskParams, **kwargs)
+        if presentation is not None:
             yield presentation
-            message = 'Final parameters are not shown in the table above. '
-        yield xhtml.p[
-            message,
-            'If you follow one of the task name links, you are taken to '
-            'the task info page which lists all parameters.'
-            ]
 
 class InputTable(ProductTable):
     label = 'Input'

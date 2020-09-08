@@ -112,7 +112,8 @@ img {
 
 caption {
     text-align: left;
-    line-height: 2;
+    line-height: 150%;
+    margin: 4pt 0;
     white-space: nowrap;
 }
 
@@ -271,6 +272,10 @@ span.sortorder {
     font-size: 70%;
     font-weight: normal;
     padding-left: 1em;
+}
+
+tbody:not(.showfinal) > tr.final {
+    visibility: collapse;
 }
 
 a.nav:link, a.nav:visited,
