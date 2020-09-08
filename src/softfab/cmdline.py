@@ -330,7 +330,7 @@ def add(globalOptions: GlobalOptions, name: str, role: str) -> None:
     callAPI(globalOptions.reactor, run_PUT(
             globalOptions.agent,
             globalOptions.urlForPath(f'users/{name}.json'),
-            json.dumps(dict(name=name, role=role)).encode()
+            json.dumps(dict(role=role)).encode()
             ))
     echo(f"softfab: {role.title()} account '{name}' created", err=True)
     # TODO: Produce a password reset link.

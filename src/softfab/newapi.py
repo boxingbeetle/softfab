@@ -55,13 +55,15 @@ def textReply(request: Request, status: int, message: str) -> bytes:
 
 @attr.s(auto_attribs=True)
 class UserData:
-    # TODO: Name is redundant on PUT; accept a default of None?
-    name: str
     role: UIRoleNames
 
+@attr.s(auto_attribs=True)
+class UserDataName(UserData):
+    name: str
+
     @classmethod
-    def fromUserInfo(cls, user: UserInfo) -> 'UserData':
-        return cls(user.name, user.uiRole)
+    def fromUserInfo(cls, user: UserInfo) -> 'UserDataName':
+        return cls(name=user.name, role=user.uiRole)
 
 @attr.s(auto_attribs=True)
 class UserDataUpdate(UserData):
@@ -70,7 +72,7 @@ class UserDataUpdate(UserData):
 class UserResource(Resource):
     """HTTP resource for an existing user account."""
 
-    def __init__(self, userDB: UserDB, user: UserData, fmt: DataFormat):
+    def __init__(self, userDB: UserDB, user: UserDataName, fmt: DataFormat):
         super().__init__()
         self._userDB = userDB
         self._user = user
@@ -152,12 +154,7 @@ class NoUserResource(Resource):
         except ValueError as ex:
             return textReply(request, 400, f"Not a valid record: {ex}\n")
 
-        name = data.name
-        if name != self._name:
-            return textReply(request, 400,
-                             f"User name in body ({name}) does not match "
-                             f"name in path ({self._name})\n")
-
+        name = self._name
         try:
             addUserAccount(self._userDB, name, uiRoleToSet(data.role))
         except ValueError as ex:
@@ -199,7 +196,8 @@ class UsersResource(Resource):
         except KeyError:
             return NoUserResource(self._userDB, name)
         else:
-            return UserResource(self._userDB, UserData.fromUserInfo(user), fmt)
+            return UserResource(self._userDB, UserDataName.fromUserInfo(user),
+                                fmt)
 
     def render_GET(self, request: Request) -> bytes:
         request.setHeader(b'Content-Type', b'text/plain; charset=UTF-8')
