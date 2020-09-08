@@ -573,11 +573,14 @@ def _presentOptions(options: Iterable[Option],
 class _CheckBox(AttrContainer, XMLPresentable):
 
     def present(self, **kwargs: Any) -> XMLContent:
-        form: _FormPresenter = kwargs['form']
+        form: Optional[_FormPresenter] = kwargs.get('form')
         attributes = self._attributes
 
         name = cast(Optional[str], attributes.get('name'))
-        focus = form.addControl(name, True)
+        if form is None:
+            focus = False
+        else:
+            focus = form.addControl(name, True)
 
         if 'checked' not in attributes and name is not None:
             value = _argValue(kwargs['formArgs'], name)
