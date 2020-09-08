@@ -104,7 +104,6 @@ class LoadExecute_GET(FabPage['LoadExecute_GET.Processor',
         userDB: ClassVar[UserDB]
 
         @property
-        @abstractmethod
         def db(self) -> ConfigDB:
             return self.configDB
 
