@@ -15,6 +15,7 @@ from xml.sax.handler import (
 
 import attr
 
+from softfab.compat import get_args, get_origin
 from softfab.utils import abstract
 from softfab.xmlgen import XML, XMLAttributeValue, XMLContent, xml as xmlnode
 
@@ -38,9 +39,9 @@ def bindElement(element: Element, cls: Type[T]) -> T:
         if attrib.init:
             name = attrib.name
             typ = attrib.type
-            if getattr(typ, '_name', '') == 'List':
+            if get_origin(typ) is list:
                 # Recursively bind list items.
-                typeArg, = getattr(typ, '__args__')
+                typeArg, = get_args(typ)
                 data[name] = [
                     bindElement(child, typeArg)
                     for child in element

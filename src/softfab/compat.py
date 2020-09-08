@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import TYPE_CHECKING, Optional, Tuple, Type
+from typing import TYPE_CHECKING, List, Optional, Tuple, Type
 
 # On Python 3.8+, use importlib.metadata from the standard library.
 # On older versions, a compatibility package can be installed from PyPI.
@@ -30,11 +30,13 @@ else:
     except ImportError:
         _originFallback = True
 if _originFallback:
-    # These minimal implementations are sufficient for SoftFab, but not
+    # These minimal implementations are sufficient for SoftFab, but are not
     # general replacements.
-    def get_origin(typ: Type) -> Optional[Type]:
-        return getattr(typ, '__origin__', None)
-    def get_args(typ: Type) -> Tuple[Type, ...]:
+    _collectionsMap = {List: list}
+    def get_origin(typ: Optional[Type]) -> Optional[Type]:
+        origin = getattr(typ, '__origin__', None)
+        return _collectionsMap.get(origin, origin)
+    def get_args(typ: Optional[Type]) -> Tuple[Type, ...]:
         return getattr(typ, '__args__', ())
 
 
