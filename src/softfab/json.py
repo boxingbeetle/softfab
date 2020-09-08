@@ -5,9 +5,11 @@ Data transfer objects are defined using the `attrs` library.
 """
 
 from enum import Enum
-from typing import Callable, Dict, Iterator, Tuple, Type, TypeVar
+from typing import Callable, Dict, Iterator, Tuple, Type, TypeVar, Union
 
 import attr
+
+from softfab.compat import get_args, get_origin
 
 
 def dataToJSON(data: object) -> Dict[str, object]:
@@ -81,10 +83,26 @@ def mapJSON(jsonNode: object,
             # transfer class instead of invalid JSON data.
             raise TypeError(f"No type specified for attribute '{name}'")
 
-        if issubclass(attribType, Enum):
+        optional = False
+        if get_origin(attribType) is Union:
+            valueType = None
+            for typ in get_args(attribType):
+                if typ is type(None):
+                    optional = True
+                elif valueType is None:
+                    valueType = typ
+                else:
+                    raise TypeError(f"Ambiguous type for attribute '{name}'")
+            # The typing module will remove duplicate types and reduce
+            # one-type unions to just that type.
+            assert valueType is not None
+            attribType = valueType
+
+        if value is None and optional:
+            kwargs[name] = None
+        elif issubclass(attribType, Enum):
             if not isinstance(value, str):
-                raise ValueError(f"Expected string value "
-                                 f"for field '{name}'")
+                raise ValueError(f"Expected string value for field '{name}'")
             memberName = value.upper()
             try:
                 kwargs[name] = attribType.__members__[memberName]

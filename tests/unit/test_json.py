@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from enum import Enum, auto
+from typing import Optional
 
 import attr
 from pytest import mark, raises
@@ -25,7 +26,13 @@ class HeroDataDefault(HeroData):
     armor: str = 'plate'
     shield: bool = True
 
-knight = HeroData(name='Launcelot', age=35, knighted=True, fav_color=Color.BLUE)
+@attr.s(auto_attribs=True)
+class HeroDataOptional(HeroData):
+    age: Optional[int]
+    fav_color: Optional[Color] = None
+
+knightArgs = dict(name='Launcelot', age=35, knighted=True, fav_color=Color.BLUE)
+knight = HeroData(**knightArgs)
 knightJSON = dict(name='Launcelot', age=35, knighted=True, fav_color='blue')
 
 def testHeroDataToJSON():
@@ -74,6 +81,33 @@ def testJSONDefault():
     defaultKnight = jsonToData(dict(knightJSON, armor='ring'), HeroDataDefault)
     assert defaultKnight.armor == 'ring' # overridden
     assert defaultKnight.shield is True # default
+
+def testJSONOptional():
+    """Test binding to a data transfer class with optional fields."""
+
+    # All fields.
+    data = HeroDataOptional(**knightArgs)
+    json = dict(knightJSON)
+    assert jsonToData(json, HeroDataOptional) == data
+
+    # Provide null value for optional field with default.
+    data.fav_color = None
+    json['fav_color'] = None
+    assert jsonToData(json, HeroDataOptional) == data
+
+    # Drop optional field with default.
+    del json['fav_color']
+    assert jsonToData(json, HeroDataOptional) == data
+
+    # Provide null value for optional field without default.
+    data.age = None
+    json['age'] = None
+    assert jsonToData(json, HeroDataOptional) == data
+
+    # Drop optional field without default.
+    del json['age']
+    with raises(ValueError, match="Missing values for fields:"):
+        jsonToData(json, HeroDataOptional)
 
 def testBadDataClass():
     """Test handling of errors in the passed data class."""
