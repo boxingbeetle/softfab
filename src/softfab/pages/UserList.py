@@ -16,27 +16,27 @@ from softfab.querylib import CustomFilter, RecordFilter
 from softfab.request import Request
 from softfab.roles import UIRoleNames, uiRoleToSet
 from softfab.userlib import (
-    User, UserDB, UserInfo, checkPrivilege, rolesGrantPrivilege
+    User, UserAccount, UserDB, checkPrivilege, rolesGrantPrivilege
 )
 from softfab.userview import presentAnonGuestSetting
 from softfab.webgui import pageLink, pageURL, script
 from softfab.xmlgen import XML, XMLContent, xhtml
 
 
-class NameColumn(DataColumn[UserInfo]):
+class NameColumn(DataColumn[UserAccount]):
     label = 'Name'
     keyName = 'id'
 
-    def presentCell(self, record: UserInfo, **kwargs: object) -> XMLContent:
+    def presentCell(self, record: UserAccount, **kwargs: object) -> XMLContent:
         return createUserDetailsLink(record.getId())
 
 roleDropDownList = dropDownList(name='role')[ UIRoleNames ]
 
-class RoleColumn(DataColumn[UserInfo]):
+class RoleColumn(DataColumn[UserAccount]):
     label = 'Role'
     keyName = 'uirole'
 
-    def presentCell(self, record: UserInfo, **kwargs: object) -> XMLContent:
+    def presentCell(self, record: UserAccount, **kwargs: object) -> XMLContent:
         proc = cast(UserList_GET.Processor, kwargs['proc'])
         role = record.uiRole
         if proc.canChangeRoles:
@@ -52,10 +52,10 @@ class RoleColumn(DataColumn[UserInfo]):
         else:
             return role
 
-class PasswordColumn(DataColumn[UserInfo]):
+class PasswordColumn(DataColumn[UserAccount]):
     label = 'Password'
 
-    def presentCell(self, record: UserInfo, **kwargs: object) -> XMLContent:
+    def presentCell(self, record: UserAccount, **kwargs: object) -> XMLContent:
         proc = cast(UserList_GET.Processor, kwargs['proc'])
         requestUser = proc.user
         userName = record.getId()
@@ -94,7 +94,7 @@ class AnonGuestTable(SingleCheckBoxTable):
             ),
         yield submitButton[ 'Apply' ].present(**kwargs),
 
-class UserTable(DataTable[UserInfo]):
+class UserTable(DataTable[UserAccount]):
     dbName = 'userDB'
     objectName = 'users'
 
@@ -102,9 +102,11 @@ class UserTable(DataTable[UserInfo]):
                     proc: PageProcessor['UserList_GET.Arguments']
                     ) -> Iterator[RecordFilter]:
         if not proc.args.inactive:
-            yield CustomFilter(UserInfo.isActive)
+            yield CustomFilter(UserAccount.isActive)
 
-    def iterColumns(self, **kwargs: object) -> Iterator[DataColumn[UserInfo]]:
+    def iterColumns(self,
+                    **kwargs: object
+                    ) -> Iterator[DataColumn[UserAccount]]:
         proc = cast(PageProcessor, kwargs['proc'])
         yield NameColumn.instance
         yield RoleColumn.instance

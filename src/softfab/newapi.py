@@ -19,7 +19,7 @@ from softfab.TwistedUtil import ClientErrorResource, NotFoundResource
 from softfab.json import dataToJSON, jsonToData
 from softfab.roles import UIRoleNames, uiRoleToSet
 from softfab.userlib import (
-    UserDB, UserInfo, addUserAccount, removePassword, removeUserAccount
+    UserAccount, UserDB, addUserAccount, removePassword, removeUserAccount
 )
 
 
@@ -59,7 +59,7 @@ class UserDataName(UserData):
     name: str
 
     @classmethod
-    def fromUserInfo(cls, user: UserInfo) -> 'UserDataName':
+    def fromUserAccount(cls, user: UserAccount) -> 'UserDataName':
         return cls(name=user.name, role=user.uiRole)
 
 @attr.s(auto_attribs=True)
@@ -188,8 +188,8 @@ class UsersResource(Resource):
         except KeyError:
             return NoUserResource(self._userDB, name)
         else:
-            return UserResource(self._userDB, UserDataName.fromUserInfo(user),
-                                fmt)
+            return UserResource(self._userDB,
+                                UserDataName.fromUserAccount(user), fmt)
 
     def render_GET(self, request: Request) -> bytes:
         request.setHeader(b'Content-Type', b'text/plain; charset=UTF-8')

@@ -23,6 +23,6 @@ class UIRoleNames(Enum):
 assert {elem.name.lower() for elem in list(UIRoleNames)[1:]} == roleNames
 
 def uiRoleToSet(role: UIRoleNames) -> AbstractSet[str]:
-    '''The opposite transformation of `UserInfo.uiRole`.
+    '''The opposite transformation of `UserAccount.uiRole`.
     '''
     return set() if role is UIRoleNames.INACTIVE else { role.name.lower() }

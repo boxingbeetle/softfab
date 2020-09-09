@@ -240,7 +240,7 @@ class UnknownUser(User):
     def hasPrivilege(self, priv: str) -> bool:
         return False
 
-class UserInfo(XMLTag, DatabaseElem, User):
+class UserAccount(XMLTag, DatabaseElem, User):
     tagName = 'user'
 
     def __init__(self, properties: Mapping[str, str]):
@@ -316,18 +316,18 @@ class UserInfo(XMLTag, DatabaseElem, User):
         for role in self.__roles:
             yield xml.role(name = role)
 
-class UserInfoFactory:
+class UserAccountFactory:
     @staticmethod
-    def createUser(attributes: Mapping[str, str]) -> UserInfo:
-        return UserInfo(attributes)
+    def createUser(attributes: Mapping[str, str]) -> UserAccount:
+        return UserAccount(attributes)
 
-class UserDB(Database[UserInfo]):
+class UserDB(Database[UserAccount]):
     privilegeObject = 'u'
     description = 'user'
     uniqueKeys = ( 'id', )
 
     def __init__(self, baseDir: Path):
-        super().__init__(baseDir, UserInfoFactory())
+        super().__init__(baseDir, UserAccountFactory())
         self.passwordFile = initPasswordFile(baseDir.parent / 'passwords')
 
     @property
@@ -361,7 +361,7 @@ def addUserAccount(userDB: UserDB, userName: str, roles: Iterable[str]) -> None:
         raise ValueError(f'User "{userName}" already exists')
 
     # Create user record.
-    userInfo = UserInfo({'id': userName})
+    userInfo = UserAccount({'id': userName})
     userInfo.roles = roles
     userDB.add(userInfo)
 
@@ -408,7 +408,7 @@ def setPassword(userDB: UserDB, userName: str, password: str) -> None:
 async def authenticateUser(userDB: UserDB,
                            userName: str,
                            password: str
-                           ) -> UserInfo:
+                           ) -> UserAccount:
     """Authenticates a user with the given password.
 
     Callback arguments: user object for the authenticated user.
