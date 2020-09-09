@@ -213,7 +213,7 @@ def set_role(cli, name, role, exists=True):
 
 # Test cases:
 
-@mark.parametrize('role', list(roleNames) + [None])
+@mark.parametrize('role', sorted(roleNames) + [None])
 def test_create_user(cli, role):
     # Add a user.
     check_no_user(cli, 'alice')
