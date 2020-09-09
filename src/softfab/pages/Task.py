@@ -31,7 +31,8 @@ from softfab.taskdeflib import TaskDefDB
 from softfab.taskdefview import formatTimeout
 from softfab.taskrunlib import TaskRunDB
 from softfab.tasktables import JobTaskRunsTable, TaskProcessorMixin
-from softfab.userlib import User, UserDB, checkPrivilege
+from softfab.userlib import UserDB
+from softfab.users import User, checkPrivilege
 from softfab.webgui import PropertiesTable, Table, Widget, cell, pageLink
 from softfab.xmlgen import XMLContent, xhtml
 

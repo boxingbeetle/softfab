@@ -15,7 +15,7 @@ from softfab.graphview import (
 )
 from softfab.productdeflib import ProductDefDB
 from softfab.request import Request
-from softfab.userlib import User, checkPrivilege
+from softfab.users import User, checkPrivilege
 from softfab.utils import pluralize
 from softfab.webgui import docLink
 from softfab.xmlgen import XMLContent, xhtml

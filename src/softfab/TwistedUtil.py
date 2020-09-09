@@ -10,7 +10,7 @@ from twisted.web.util import redirectTo
 from typing_extensions import NoReturn
 from zope.interface import implementer
 
-from softfab.userlib import AccessDenied
+from softfab.users import AccessDenied
 
 
 def getRelativeRoot(request: IRequest) -> str:

@@ -9,7 +9,7 @@ from softfab.formlib import actionButtons, makeForm
 from softfab.pageargs import ArgsT, EnumArg, PageArgs
 from softfab.request import Request
 from softfab.schedulelib import ScheduleDB
-from softfab.userlib import User, checkPrivilege
+from softfab.users import User, checkPrivilege
 from softfab.xmlgen import XMLContent, xhtml
 
 Actions = Enum('Actions', 'DELETE CANCEL')

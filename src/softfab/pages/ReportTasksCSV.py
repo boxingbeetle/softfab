@@ -12,7 +12,7 @@ from softfab.setcalc import union
 from softfab.taskrunlib import TaskRunDB
 from softfab.taskview import getTaskStatus
 from softfab.timeview import formatTime
-from softfab.userlib import User, checkPrivilege
+from softfab.users import User, checkPrivilege
 
 
 class ReportTasksCSV_GET(CSVPage['ReportTasksCSV_GET.Processor']):

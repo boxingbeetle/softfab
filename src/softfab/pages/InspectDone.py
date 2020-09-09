@@ -11,7 +11,7 @@ from softfab.response import Response
 from softfab.resultcode import ResultCode
 from softfab.resultlib import ResultStorage
 from softfab.tasktables import TaskProcessorMixin
-from softfab.userlib import User, checkPrivilege, checkPrivilegeForOwned
+from softfab.users import User, checkPrivilege, checkPrivilegeForOwned
 from softfab.xmlgen import xml
 
 

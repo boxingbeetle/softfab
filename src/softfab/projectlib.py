@@ -14,7 +14,7 @@ import time
 
 from softfab.databaselib import Database, SingletonElem, SingletonObserver
 from softfab.timelib import getTime
-from softfab.userlib import AnonGuestUser, UnknownUser, User
+from softfab.users import AnonGuestUser, UnknownUser, User
 from softfab.utils import cachedProperty
 from softfab.version import VERSION
 from softfab.xmlbind import XMLTag

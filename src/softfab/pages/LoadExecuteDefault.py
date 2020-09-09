@@ -9,7 +9,7 @@ from softfab.joblib import JobDB
 from softfab.pageargs import DictArg, PageArgs, StrArg
 from softfab.request import Request
 from softfab.response import Response
-from softfab.userlib import User, checkPrivilege
+from softfab.users import User, checkPrivilege
 from softfab.xmlgen import xml
 
 

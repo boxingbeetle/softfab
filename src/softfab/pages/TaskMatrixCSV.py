@@ -10,7 +10,7 @@ from softfab.querylib import KeySorter
 from softfab.resultcode import ResultCode
 from softfab.taskdeflib import TaskDefDB
 from softfab.timelib import secondsPerDay
-from softfab.userlib import User, checkPrivilege
+from softfab.users import User, checkPrivilege
 
 
 class TaskMatrixCSV_GET(CSVPage['TaskMatrixCSV_GET.Processor']):

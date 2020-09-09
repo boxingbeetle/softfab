@@ -11,7 +11,7 @@ from softfab.frameworklib import FrameworkDB, TaskDefBase
 from softfab.frameworkview import FrameworkColumn
 from softfab.pageargs import IntArg, PageArgs, SortArg
 from softfab.pagelinks import createProductDetailsLink
-from softfab.userlib import User, checkPrivilege
+from softfab.users import User, checkPrivilege
 from softfab.webgui import docLink
 from softfab.xmlgen import XMLContent, xhtml
 

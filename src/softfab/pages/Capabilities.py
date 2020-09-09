@@ -20,7 +20,7 @@ from softfab.resourceview import (
 from softfab.restypelib import ResTypeDB, presentResTypeName
 from softfab.restypeview import ResTypeTableMixin
 from softfab.taskdeflib import TaskDefDB
-from softfab.userlib import User, checkPrivilege
+from softfab.users import User, checkPrivilege
 from softfab.utils import ResultKeeper
 from softfab.webgui import Table, pageLink, row, vgroup
 from softfab.xmlgen import XMLContent, XMLNode, xhtml

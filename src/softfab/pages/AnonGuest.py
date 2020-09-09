@@ -7,7 +7,7 @@ from softfab.Page import PageProcessor, ProcT, Redirect
 from softfab.pageargs import ArgsT
 from softfab.pagelinks import AnonGuestArgs
 from softfab.request import Request
-from softfab.userlib import User, checkPrivilege
+from softfab.users import User, checkPrivilege
 from softfab.userview import presentAnonGuestSetting
 from softfab.xmlgen import XML, XMLContent
 

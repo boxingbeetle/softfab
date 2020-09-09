@@ -6,7 +6,7 @@ from softfab.ControlPage import ControlPage
 from softfab.pageargs import PageArgs, SetArg
 from softfab.response import Response
 from softfab.taskdeflib import TaskDefDB
-from softfab.userlib import User, checkPrivilege
+from softfab.users import User, checkPrivilege
 from softfab.xmlgen import XMLContent, xml
 
 

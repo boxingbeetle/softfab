@@ -11,9 +11,8 @@ from softfab.Page import (
 from softfab.pagelinks import loginURL
 from softfab.request import Request
 from softfab.tokens import TokenDB, TokenRole, TokenUser, authenticateToken
-from softfab.userlib import (
-    AnonGuestUser, SuperUser, UnknownUser, UserDB, authenticateUser
-)
+from softfab.userlib import UserDB, authenticateUser
+from softfab.users import AnonGuestUser, SuperUser, UnknownUser
 from softfab.utils import SharedInstance
 
 

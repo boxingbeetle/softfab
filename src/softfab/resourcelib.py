@@ -16,7 +16,7 @@ from softfab.restypelib import ResType, ResTypeDB, taskRunnerResourceTypeName
 from softfab.taskrunlib import TaskRun, TaskRunDB
 from softfab.timelib import getTime
 from softfab.tokens import Token, TokenDB, TokenRole, TokenUser
-from softfab.userlib import TaskRunnerUser
+from softfab.users import TaskRunnerUser
 from softfab.utils import (
     IllegalStateError, abstract, cachedProperty, parseVersion
 )

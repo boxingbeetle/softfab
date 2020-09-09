@@ -11,7 +11,7 @@ from softfab.request import Request
 from softfab.response import Response
 from softfab.schedulelib import ScheduleDB
 from softfab.selectlib import SelectableRecordABC
-from softfab.userlib import User, checkPrivilege
+from softfab.users import User, checkPrivilege
 from softfab.xmlgen import xml
 
 

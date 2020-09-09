@@ -25,7 +25,7 @@ from softfab.setcalc import intersection
 from softfab.taskrunlib import TaskRunDB
 from softfab.tasktables import TaskColumn, TaskRunsTable
 from softfab.timeview import formatTime
-from softfab.userlib import User, checkPrivilege
+from softfab.users import User, checkPrivilege
 from softfab.utils import pluralize
 from softfab.webgui import pageLink
 from softfab.xmlgen import XMLContent, xhtml

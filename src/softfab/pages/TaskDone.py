@@ -15,7 +15,7 @@ from softfab.resultcode import ResultCode
 from softfab.resultlib import ResultStorage
 from softfab.taskrunlib import defaultSummaries
 from softfab.tokens import TokenRole, TokenUser
-from softfab.userlib import User, checkPrivilege
+from softfab.users import User, checkPrivilege
 from softfab.xmlgen import xml
 
 

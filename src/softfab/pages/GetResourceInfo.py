@@ -11,7 +11,7 @@ from softfab.resourcelib import ResourceBase, ResourceDB, TaskRunner
 from softfab.response import Response
 from softfab.restypelib import ResTypeDB
 from softfab.timeview import formatTimeAttr
-from softfab.userlib import User, checkPrivilege
+from softfab.users import User, checkPrivilege
 from softfab.xmlgen import XML, xml
 
 

@@ -14,7 +14,8 @@ from softfab.scheduleview import (
     createLastJobLink, describeNextRun, getScheduleStatus, stringToListDays
 )
 from softfab.selectview import TagArgs
-from softfab.userlib import User, UserDB, checkPrivilege
+from softfab.userlib import UserDB
+from softfab.users import User, checkPrivilege
 from softfab.utils import pluralize
 from softfab.webgui import PropertiesTable, Table, Widget, cell, pageLink, row
 from softfab.xmlgen import XML, XMLContent, xhtml

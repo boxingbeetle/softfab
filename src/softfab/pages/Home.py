@@ -11,7 +11,8 @@ from softfab.joblib import Job, JobDB
 from softfab.jobview import JobsSubTable
 from softfab.querylib import KeySorter, RecordProcessor, runQuery
 from softfab.schedulelib import ScheduleDB
-from softfab.userlib import User, UserDB, checkPrivilege
+from softfab.userlib import UserDB
+from softfab.users import User, checkPrivilege
 from softfab.webgui import Widget, docLink, pageLink, pageURL
 from softfab.xmlgen import XMLContent, xhtml
 

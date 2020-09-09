@@ -13,7 +13,7 @@ from softfab.formlib import actionButtons, checkBox, makeForm, textInput
 from softfab.notification import sendTestMail, sendmail
 from softfab.pageargs import BoolArg, EnumArg, PageArgs, StrArg
 from softfab.request import Request
-from softfab.userlib import User, checkPrivilege
+from softfab.users import User, checkPrivilege
 from softfab.xmlgen import XML, XMLContent, xhtml
 
 

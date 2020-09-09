@@ -7,7 +7,7 @@ from softfab.restypelib import (
     presentResTypeName, reservedResourceTypeDescriptions
 )
 from softfab.restypeview import reservedTypes
-from softfab.userlib import User, checkPrivilege
+from softfab.users import User, checkPrivilege
 from softfab.webgui import pageLink
 from softfab.xmlgen import XMLContent, xhtml
 

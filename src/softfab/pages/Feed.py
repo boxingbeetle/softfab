@@ -28,7 +28,8 @@ from softfab.schedulelib import ScheduleDB
 from softfab.taskview import taskSummary
 from softfab.timelib import getTime
 from softfab.timeview import formatDuration, formatTime
-from softfab.userlib import User, UserDB, checkPrivilege
+from softfab.userlib import UserDB
+from softfab.users import User, checkPrivilege
 from softfab.version import HOMEPAGE, VERSION
 from softfab.webgui import Table, cell, pageURL, row
 from softfab.xmlgen import XMLContent, atom, xhtml

@@ -15,8 +15,9 @@ from softfab.pageargs import ArgsT, EnumArg, PageArgs, RefererArg, StrArg
 from softfab.request import Request
 from softfab.roles import UIRoleNames, uiRoleToSet
 from softfab.userlib import (
-    User, UserDB, addUserAccount, authenticateUser, checkPrivilege, setPassword
+    UserDB, addUserAccount, authenticateUser, setPassword
 )
+from softfab.users import User, checkPrivilege
 from softfab.userview import (
     LoginPassArgs, PasswordMessage, passwordQuality, passwordStr
 )

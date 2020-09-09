@@ -22,7 +22,7 @@ from softfab.resourceview import (
 from softfab.restypelib import ResTypeDB, presentResTypeName
 from softfab.restypeview import iterResourceTypes, reservedTypes
 from softfab.taskrunlib import TaskRunDB
-from softfab.userlib import User, checkPrivilege
+from softfab.users import User, checkPrivilege
 from softfab.webgui import Widget, docLink, header, pageLink, pageURL, row
 from softfab.xmlgen import XML, XMLContent, xhtml
 

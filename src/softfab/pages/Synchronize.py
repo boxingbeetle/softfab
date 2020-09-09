@@ -13,7 +13,7 @@ from softfab.resourcelib import (
 from softfab.response import Response
 from softfab.taskrunlib import TaskRun
 from softfab.tokens import TokenRole, TokenUser
-from softfab.userlib import User, checkPrivilege
+from softfab.users import User, checkPrivilege
 from softfab.xmlbind import parse
 from softfab.xmlgen import XMLContent, xml
 

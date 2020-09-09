@@ -13,7 +13,7 @@ from softfab.pageargs import IntArg, SortArg, StrArg
 from softfab.pagelinks import ReportArgs
 from softfab.querylib import RecordFilter, WildcardFilter
 from softfab.schedulelib import ScheduleDB
-from softfab.userlib import User, checkPrivilege
+from softfab.users import User, checkPrivilege
 from softfab.xmlgen import XMLContent, xhtml
 
 

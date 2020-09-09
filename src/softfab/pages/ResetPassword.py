@@ -13,9 +13,8 @@ from softfab.formlib import (
 from softfab.pageargs import EnumArg, PasswordArg, RefererArg
 from softfab.pagelinks import UserIdArgs
 from softfab.request import Request
-from softfab.userlib import (
-    User, UserDB, authenticateUser, checkPrivilege, setPassword
-)
+from softfab.userlib import UserDB, authenticateUser, setPassword
+from softfab.users import User, checkPrivilege
 from softfab.userview import (
     LoginPassArgs, PasswordMessage, PasswordMsgArgs, passwordQuality,
     passwordStr

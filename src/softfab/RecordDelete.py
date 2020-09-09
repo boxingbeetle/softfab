@@ -10,7 +10,7 @@ from softfab.databaselib import DBRecord, Database
 from softfab.formlib import actionButtons, makeForm
 from softfab.pageargs import EnumArg, PageArgs, StrArg
 from softfab.request import Request
-from softfab.userlib import User, checkPrivilegeForOwned
+from softfab.users import User, checkPrivilegeForOwned
 from softfab.utils import abstract, pluralize
 from softfab.webgui import unorderedList
 from softfab.xmlgen import XML, XMLContent, xhtml

@@ -20,9 +20,8 @@ from softfab.selectlib import TagCache, getCommonTags
 from softfab.selectview import (
     SelectArgs, TagValueEditTable, textToValues, valuesToText
 )
-from softfab.userlib import (
-    User, UserDB, checkPrivilege, checkPrivilegeForOwned
-)
+from softfab.userlib import UserDB
+from softfab.users import User, checkPrivilege, checkPrivilegeForOwned
 from softfab.xmlgen import XMLContent, xhtml
 
 

@@ -18,7 +18,7 @@ from softfab.jobview import createStatusBar
 from softfab.pagelinks import ReportTaskArgs
 from softfab.request import Request
 from softfab.timelib import iterDays, normalizeWeek, secondsPerDay, weeksInYear
-from softfab.userlib import User, checkPrivilege
+from softfab.users import User, checkPrivilege
 from softfab.webgui import Column, Table, cell, pageLink, pageURL
 from softfab.xmlgen import XMLContent, XMLNode, xhtml
 

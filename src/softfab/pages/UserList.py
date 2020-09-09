@@ -15,9 +15,8 @@ from softfab.pagelinks import AnonGuestArgs, UserIdArgs, createUserDetailsLink
 from softfab.querylib import CustomFilter, RecordFilter
 from softfab.request import Request
 from softfab.roles import UIRoleNames, uiRoleToSet
-from softfab.userlib import (
-    User, UserAccount, UserDB, checkPrivilege, rolesGrantPrivilege
-)
+from softfab.userlib import UserAccount, UserDB
+from softfab.users import User, checkPrivilege, rolesGrantPrivilege
 from softfab.userview import presentAnonGuestSetting
 from softfab.webgui import pageLink, pageURL, script
 from softfab.xmlgen import XML, XMLContent, xhtml

@@ -40,7 +40,7 @@ from softfab.resourcelib import ResourceDB
 from softfab.taskrunlib import TaskRun
 from softfab.tokens import TokenDB, TokenRole, TokenUser, authenticateToken
 from softfab.useragent import AcceptedEncodings
-from softfab.userlib import (
+from softfab.users import (
     AccessDenied, AnonGuestUser, SuperUser, UnauthorizedLogin, User,
     checkPrivilege
 )

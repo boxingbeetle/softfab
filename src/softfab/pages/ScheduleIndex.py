@@ -16,9 +16,8 @@ from softfab.schedulerefs import createScheduleDetailsLink
 from softfab.scheduleview import (
     createLastJobLink, describeNextRun, getScheduleStatus
 )
-from softfab.userlib import (
-    User, UserDB, checkPrivilege, checkPrivilegeForOwned
-)
+from softfab.userlib import UserDB
+from softfab.users import User, checkPrivilege, checkPrivilegeForOwned
 from softfab.userview import OwnerColumn
 from softfab.webgui import Widget, pageLink, pageURL
 from softfab.xmlgen import XMLContent, xhtml

@@ -10,7 +10,7 @@ from softfab.projectlib import getBootTime
 from softfab.request import Request
 from softfab.response import Response
 from softfab.timeview import formatTimeAttr
-from softfab.userlib import User, checkPrivilege
+from softfab.users import User, checkPrivilege
 from softfab.version import VERSION
 from softfab.xmlgen import xml
 

@@ -33,7 +33,7 @@ from softfab.selectlib import TagCache
 from softfab.selectview import TagValueEditTable, textToValues, valuesToText
 from softfab.taskdeflib import TaskDefDB
 from softfab.taskgroup import LocalGroup, TaskGroup
-from softfab.userlib import (
+from softfab.users import (
     AccessDenied, User, checkPrivilege, checkPrivilegeForOwned
 )
 from softfab.webgui import Column, Table, cell

@@ -8,7 +8,7 @@ from softfab.pageargs import PageArgs, StrArg
 from softfab.request import Request
 from softfab.response import Response
 from softfab.schedulelib import ScheduleDB
-from softfab.userlib import User, checkPrivilege, checkPrivilegeForOwned
+from softfab.users import User, checkPrivilege, checkPrivilegeForOwned
 from softfab.xmlgen import xml
 
 

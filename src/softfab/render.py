@@ -22,7 +22,7 @@ from softfab.UIPage import UIPage, UIResponder
 from softfab.pageargs import ArgsCorrected, ArgsInvalid, ArgsT, Query, dynamic
 from softfab.request import Request
 from softfab.response import NotModified, Response, ResponseHeaders
-from softfab.userlib import AccessDenied, UnknownUser, User
+from softfab.users import AccessDenied, UnknownUser, User
 from softfab.utils import abstract
 from softfab.webgui import docLink
 from softfab.xmlgen import XMLContent, xhtml

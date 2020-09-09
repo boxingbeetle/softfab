@@ -10,7 +10,7 @@ from softfab.pagelinks import ReportArgs
 from softfab.querylib import RecordFilter, SetFilter, runQuery
 from softfab.request import Request
 from softfab.response import Response
-from softfab.userlib import User, checkPrivilege
+from softfab.users import User, checkPrivilege
 from softfab.utils import chop
 from softfab.xmlgen import xml
 

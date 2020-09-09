@@ -12,7 +12,7 @@ from softfab.resourcelib import ResourceDB, TaskRunner
 from softfab.resourceview import getResourceStatus, presentCapabilities
 from softfab.restypelib import taskRunnerResourceTypeName
 from softfab.timeview import formatDuration, formatTime
-from softfab.userlib import User, checkPrivilege
+from softfab.users import User, checkPrivilege
 from softfab.webgui import Column, Table, Widget, pageLink, row
 from softfab.xmlgen import XMLContent, xhtml
 

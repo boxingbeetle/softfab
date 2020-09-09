@@ -16,7 +16,7 @@ from softfab.productdeflib import ProductDefDB
 from softfab.request import Request
 from softfab.resourceview import InlineResourcesTable
 from softfab.taskdeflib import TaskDefDB
-from softfab.userlib import User, checkPrivilege
+from softfab.users import User, checkPrivilege
 from softfab.utils import pluralize
 from softfab.webgui import PropertiesTable, pageLink
 from softfab.xmlgen import XML, XMLContent, xhtml

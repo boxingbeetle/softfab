@@ -8,7 +8,7 @@ from softfab.pagelinks import TaskRunnerIdArgs
 from softfab.request import Request
 from softfab.resourcelib import ResourceDB
 from softfab.response import Response
-from softfab.userlib import User, checkPrivilege
+from softfab.users import User, checkPrivilege
 from softfab.xmlgen import xml
 
 

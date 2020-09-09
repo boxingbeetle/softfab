@@ -11,7 +11,8 @@ from softfab.pagelinks import TaskRunnerIdArgs
 from softfab.querylib import runQuery
 from softfab.request import Request
 from softfab.tasktables import TaskRunsTable
-from softfab.userlib import User, UserDB, checkPrivilege
+from softfab.userlib import UserDB
+from softfab.users import User, checkPrivilege
 from softfab.webgui import pageLink
 from softfab.xmlgen import XMLContent, xhtml
 

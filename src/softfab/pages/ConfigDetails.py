@@ -20,7 +20,7 @@ from softfab.restypeview import createTargetLink
 from softfab.schedulelib import ScheduleDB
 from softfab.schedulerefs import createScheduleDetailsLink
 from softfab.selectview import TagArgs
-from softfab.userlib import User, checkPrivilege
+from softfab.users import User, checkPrivilege
 from softfab.utils import pluralize
 from softfab.webgui import (
     Column, PresenterFunction, Table, cell, decoration, pageLink, unorderedList

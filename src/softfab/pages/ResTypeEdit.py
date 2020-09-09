@@ -9,7 +9,7 @@ from softfab.EditPage import (
 from softfab.formlib import CheckBoxesTable, textInput
 from softfab.pageargs import SetArg, StrArg
 from softfab.restypelib import ResType, ResTypeDB
-from softfab.userlib import AccessDenied
+from softfab.users import AccessDenied
 from softfab.webgui import Column, PropertiesTable, cell
 from softfab.xmlgen import XMLContent
 

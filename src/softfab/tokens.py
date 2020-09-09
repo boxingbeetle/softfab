@@ -8,7 +8,7 @@ from passlib.pwd import genword
 
 from softfab.databaselib import Database, DatabaseElem, createUniqueId
 from softfab.timelib import getTime
-from softfab.userlib import (
+from softfab.users import (
     TaskRunnerUser, UnknownUser, User, authenticate, initPasswordFile,
     writePasswordFile
 )

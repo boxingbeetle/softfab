@@ -26,7 +26,8 @@ from softfab.request import Request
 from softfab.resourcelib import ResourceDB, TaskRunner
 from softfab.selectview import SelectArgs
 from softfab.taskgroup import LocalGroup, ProductProto
-from softfab.userlib import User, UserDB, checkPrivilege
+from softfab.userlib import UserDB
+from softfab.users import User, checkPrivilege
 from softfab.webgui import decoration
 from softfab.xmlgen import XMLContent, xhtml
 

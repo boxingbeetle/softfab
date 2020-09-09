@@ -10,7 +10,7 @@ from softfab.graphview import ExecutionGraphBuilder, GraphPageMixin, GraphPanel
 from softfab.pagelinks import ProductDefIdArgs, createFrameworkDetailsLink
 from softfab.productdeflib import ProductDefDB
 from softfab.request import Request
-from softfab.userlib import User, checkPrivilege
+from softfab.users import User, checkPrivilege
 from softfab.utils import pluralize
 from softfab.webgui import PropertiesTable, pageLink
 from softfab.xmlgen import XML, XMLContent, xhtml

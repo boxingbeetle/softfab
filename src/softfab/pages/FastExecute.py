@@ -14,7 +14,8 @@ from softfab.pageargs import EnumArg, PageArgs, RefererArg, SetArg, StrArg
 from softfab.pagelinks import createJobsURL
 from softfab.request import Request
 from softfab.selectview import TagArgs
-from softfab.userlib import User, UserDB, checkPrivilege
+from softfab.userlib import UserDB
+from softfab.users import User, checkPrivilege
 from softfab.utils import pluralize
 from softfab.xmlgen import XML, XMLContent, xhtml
 

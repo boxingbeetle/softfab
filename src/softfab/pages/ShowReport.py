@@ -21,7 +21,8 @@ from softfab.resourcelib import ResourceDB
 from softfab.resourceview import getResourceStatus
 from softfab.schedulelib import ScheduleDB
 from softfab.tasktables import JobProcessorMixin, JobTaskRunsTable
-from softfab.userlib import User, UserDB, checkPrivilege
+from softfab.userlib import UserDB
+from softfab.users import User, checkPrivilege
 from softfab.webgui import Table, Widget, cell, pageLink, row
 from softfab.xmlgen import XMLContent, xhtml
 

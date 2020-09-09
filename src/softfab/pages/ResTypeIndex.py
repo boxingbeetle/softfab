@@ -12,7 +12,7 @@ from softfab.datawidgets import (
 from softfab.pageargs import IntArg, PageArgs, SortArg
 from softfab.resourcelib import ResourceDB
 from softfab.restypelib import ResType, ResTypeDB
-from softfab.userlib import User, checkPrivilege
+from softfab.users import User, checkPrivilege
 from softfab.xmlgen import XMLContent
 
 

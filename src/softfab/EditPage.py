@@ -15,7 +15,7 @@ from softfab.databaselib import DBRecord, Database
 from softfab.formlib import actionButtons, backButton, makeForm, textInput
 from softfab.pageargs import EnumArg, PageArgs, StrArg
 from softfab.request import Request
-from softfab.userlib import Owned, User, checkPrivilege, checkPrivilegeForOwned
+from softfab.users import Owned, User, checkPrivilege, checkPrivilegeForOwned
 from softfab.utils import abstract
 from softfab.webgui import preserveSpaces, rowManagerScript
 from softfab.xmlgen import XML, XMLContent, xhtml

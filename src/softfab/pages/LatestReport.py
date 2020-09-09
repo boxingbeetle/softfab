@@ -9,7 +9,7 @@ from softfab.joblib import TaskToJobs
 from softfab.pagelinks import TaskDefIdArgs, createRunURL
 from softfab.request import Request
 from softfab.resultcode import ResultCode
-from softfab.userlib import User, checkPrivilege
+from softfab.users import User, checkPrivilege
 from softfab.xmlgen import XMLContent, xhtml
 
 

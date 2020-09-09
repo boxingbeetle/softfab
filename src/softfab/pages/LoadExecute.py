@@ -13,7 +13,8 @@ from softfab.formlib import checkBox
 from softfab.pageargs import IntArg, SortArg
 from softfab.request import Request
 from softfab.selectview import BasketArgs, SelectProcMixin, selectDialog
-from softfab.userlib import User, UserDB, checkPrivilege
+from softfab.userlib import UserDB
+from softfab.users import User, checkPrivilege
 from softfab.webgui import docLink
 from softfab.xmlgen import XMLContent, xhtml
 

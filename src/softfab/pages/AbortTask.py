@@ -10,7 +10,7 @@ from softfab.joblib import JobDB
 from softfab.pageargs import EnumArg
 from softfab.pagelinks import TaskIdArgs
 from softfab.request import Request
-from softfab.userlib import User, checkPrivilegeForOwned
+from softfab.users import User, checkPrivilegeForOwned
 from softfab.xmlgen import XMLContent, xhtml
 
 Actions = Enum('Actions', 'ABORT CANCEL')
