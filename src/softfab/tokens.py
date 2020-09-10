@@ -31,19 +31,28 @@ class Token(XMLTag, DatabaseElem):
     """
 
     tagName = 'token'
-    intProperties = ('createtime',)
+    intProperties = ('createtime', 'expiretime')
     enumProperties = {'role': TokenRole}
 
     @classmethod
-    def create(cls, role: TokenRole, params: Mapping[str, str]) -> 'Token':
+    def create(cls,
+               role: TokenRole,
+               params: Mapping[str, str],
+               expireSecs: Optional[int] = None
+               ) -> 'Token':
         """Creates a new token.
 
         Before the new token can be used, a password must be set.
+
+        @param expireSecs: Seconds before the token expires,
+            or L{None} for tokens that never expire.
         """
 
+        now = getTime()
         token = cls(dict(
             id=createUniqueId(),
-            createtime=getTime(),
+            createtime=now,
+            expiretime=None if expireSecs is None else now + expireSecs,
             role=role,
             ))
         token.__params = dict(params) # pylint: disable=protected-access
@@ -64,6 +73,17 @@ class Token(XMLTag, DatabaseElem):
         was created.
         """
         return cast(int, self['createtime'])
+
+    @property
+    def expireTime(self) -> Optional[int]:
+        """Time (in seconds since the epoch) at which this token expires."""
+        return cast(Optional[int], self.get('expiretime'))
+
+    @property
+    def expired(self) -> bool:
+        """Has this token expired?"""
+        expireTime = self.expireTime
+        return expireTime is not None and getTime() >= expireTime
 
     @property
     def role(self) -> TokenRole:

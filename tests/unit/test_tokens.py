@@ -5,6 +5,7 @@ from pathlib import Path
 from pytest import fixture, raises
 from twisted.cred.error import UnauthorizedLogin
 
+from softfab.timelib import setTime
 from softfab.tokens import (
     Token, TokenDB, TokenRole, authenticateToken, resetTokenPassword
 )
@@ -84,3 +85,29 @@ def testTokenAuth(tokenDB):
     # Existing token with new password.
     token3 = authenticateToken(tokenDB, tokenId, password2)
     assert token3.getId() == tokenId
+
+def testTokenExpiry(tokenDB):
+    """Test token expiry."""
+
+    setTime(12000000)
+    token = Token.create(TokenRole.RESOURCE, {}, expireSecs=345678)
+    assert not token.expired
+    tokenDB.add(token)
+    tokenId = token.getId()
+
+    def check():
+        assert token.createTime == 12000000
+        assert token.expireTime == 12345678
+        setTime(12340000)
+        assert not token.expired
+        setTime(20000000)
+        assert token.expired
+        setTime(12345677)
+        assert not token.expired
+        setTime(12345678)
+        assert token.expired
+
+    check()
+    tokenDB = reloadDB(tokenDB)
+    token = tokenDB[tokenId]
+    check()
