@@ -39,14 +39,12 @@ class TimeSource:
         to provide the current time. The unit tests can use this to run tests
         with a fully programmable clock rather than using the wall clock.
         '''
-        assert callable(func)
         self.__timeSource = func
 
     def setTime(self, timestamp: int) -> None:
         '''Convenience function which sets the time to the given time stamp.
         The time will be frozen: that same time stamp is returned every time.
         '''
-        assert isinstance(timestamp, int)
         self.__timeSource = lambda: timestamp
 
 timeSource = TimeSource()
