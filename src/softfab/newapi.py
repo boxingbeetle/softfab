@@ -18,8 +18,10 @@ import attr
 from softfab.TwistedUtil import ClientErrorResource, NotFoundResource
 from softfab.json import dataToJSON, jsonToData
 from softfab.roles import UIRoleNames, uiRoleToSet
+from softfab.tokens import TokenDB
 from softfab.userlib import (
-    UserAccount, UserDB, addUserAccount, removePassword, removeUserAccount
+    UserAccount, UserDB, addUserAccount, removePassword, removeUserAccount,
+    resetPassword
 )
 
 
@@ -33,6 +35,9 @@ class PasswordActions(Enum):
 
     REMOVE = auto()
     """Forget the current password."""
+
+    RESET = auto()
+    """Forget the current password and create a token to set a new password."""
 
 def emptyReply(request: Request) -> bytes:
     """Replies to an HTTP request with a no-body response.
@@ -70,9 +75,15 @@ class UserDataUpdate:
 class UserResource(Resource):
     """HTTP resource for an existing user account."""
 
-    def __init__(self, userDB: UserDB, user: UserDataName, fmt: DataFormat):
+    def __init__(self,
+                 userDB: UserDB,
+                 tokenDB: TokenDB,
+                 user: UserDataName,
+                 fmt: DataFormat
+                 ):
         super().__init__()
         self._userDB = userDB
+        self._tokenDB = tokenDB
         self._user = user
         self._format = fmt
 
@@ -111,14 +122,17 @@ class UserResource(Resource):
             user.roles = uiRoleToSet(role)
 
         password = data.password
-        if password is PasswordActions.REMOVE:
-            removePassword(userDB, userName)
+        if password is not None:
+            if password is PasswordActions.REMOVE:
+                removePassword(userDB, userName, self._tokenDB)
+            elif password is PasswordActions.RESET:
+                token = resetPassword(userDB, userName, self._tokenDB)
 
         return emptyReply(request)
 
     def render_DELETE(self, request: Request) -> bytes:
         name = self._user.name
-        removeUserAccount(self._userDB, name)
+        removeUserAccount(self._userDB, name, self._tokenDB)
         return textReply(request, 200, f"User removed: {name}\n")
 
 class NoUserResource(Resource):
@@ -162,9 +176,10 @@ class NoUserResource(Resource):
 
 class UsersResource(Resource):
 
-    def __init__(self, userDB: UserDB):
+    def __init__(self, userDB: UserDB, tokenDB: TokenDB):
         super().__init__()
         self._userDB = userDB
+        self._tokenDB = tokenDB
 
     def getChildWithDefault(self, path: bytes, request: Request) -> IResource:
         if not path:
@@ -188,7 +203,7 @@ class UsersResource(Resource):
         except KeyError:
             return NoUserResource(self._userDB, name)
         else:
-            return UserResource(self._userDB,
+            return UserResource(self._userDB, self._tokenDB,
                                 UserDataName.fromUserAccount(user), fmt)
 
     def render_GET(self, request: Request) -> bytes:
@@ -214,5 +229,6 @@ class APIRoot(Resource):
     def populate(self, dependencies: Mapping[str, Any]) -> None:
         """Add API resources under this resource."""
 
-        self.putChild(b'users', UsersResource(dependencies['userDB']))
+        self.putChild(b'users', UsersResource(dependencies['userDB'],
+                                              dependencies['tokenDB']))
         self.ready = True

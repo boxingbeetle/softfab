@@ -2,14 +2,17 @@
 
 from pathlib import Path
 from typing import (
-    Any, FrozenSet, Iterable, Iterator, Mapping, Set, Union, cast
+    Any, FrozenSet, Iterable, Iterator, Mapping, Optional, Set, Union, cast
 )
 import logging
 
+from passlib.apache import HtpasswdFile
 from twisted.cred.error import UnauthorizedLogin
 
 from softfab.databaselib import Database, DatabaseElem
 from softfab.roles import UIRoleNames, roleNames
+from softfab.timelib import secondsPerDay
+from softfab.tokens import Token, TokenDB, TokenRole
 from softfab.users import (
     User, authenticate, checkPassword, initPasswordFile, rolesGrantPrivilege,
     writePasswordFile
@@ -70,6 +73,21 @@ class UserAccount(XMLTag, DatabaseElem, User):
                 )
         else:
             return UIRoleNames.INACTIVE
+
+    @property
+    def passwordResetToken(self) -> Optional[str]:
+        """The ID of the token that allows a password reset for this user,
+        or None if no such token exists.
+        """
+        return cast(Optional[str], self.get('resettoken'))
+
+    @passwordResetToken.setter
+    def passwordResetToken(self, tokenId: Optional[str]) -> None:
+        if tokenId is None:
+            self._properties.pop('resettoken', None)
+        else:
+            self._properties['resettoken'] = tokenId
+        self._notify()
 
     def getId(self) -> str:
         return self['id']
@@ -143,24 +161,73 @@ def addUserAccount(userDB: UserDB, userName: str, roles: Iterable[str]) -> None:
     userInfo.roles = roles
     userDB.add(userInfo)
 
-def removeUserAccount(userDB: UserDB, name: str) -> None:
-    """Remove a user account."""
+def _removePasswordEntry(passwordFile: HtpasswdFile, name: str) -> None:
+    """Remove an entry from a password file."""
 
-    user = userDB[name]
-    # Revoke all roles prior to removal, to make sure active sessions
-    # of this user will not have any permissions.
-    user.roles = ()
-    userDB.remove(user)
-
-    removePassword(userDB, name)
-
-def removePassword(userDB: UserDB, name: str) -> None:
-    """Remove an account's password."""
-
-    passwordFile = userDB.passwordFile
     passwordFile.load_if_changed()
     passwordFile.delete(name)
     writePasswordFile(passwordFile)
+
+def _dropPasswordResetToken(user: UserAccount, tokenDB: TokenDB) -> None:
+    """If the give user account has an active password reset token,
+    remove that token and the account's link to it.
+    """
+
+    tokenId = user.passwordResetToken
+    if tokenId is None:
+        return
+
+    try:
+        token = tokenDB[tokenId]
+    except KeyError:
+        logging.warning(
+            'Old password reset token %s for user "%s" did not exist',
+            tokenId, user.getId()
+            )
+    else:
+        tokenDB.remove(token)
+
+    user.passwordResetToken = None
+
+def removeUserAccount(userDB: UserDB, name: str, tokenDB: TokenDB) -> None:
+    """Remove a user account."""
+
+    user = userDB[name]
+    # Revoke all roles, to make sure active sessions of this user will not
+    # have any permissions.
+    user.roles = ()
+    _dropPasswordResetToken(user, tokenDB)
+    _removePasswordEntry(userDB.passwordFile, name)
+    userDB.remove(user)
+
+def removePassword(userDB: UserDB,
+                    name: str,
+                    tokenDB: TokenDB
+                    ) -> None:
+    """Remove an account's current password."""
+
+    user = userDB[name]
+    _dropPasswordResetToken(user, tokenDB)
+    _removePasswordEntry(userDB.passwordFile, name)
+
+passwordResetDays = 7
+"""The number of days a password reset token is valid."""
+
+def resetPassword(userDB: UserDB,
+                  name: str,
+                  tokenDB: TokenDB
+                  ) -> Token:
+    """Remove an account's current password and create a token that
+    allows setting a new password.
+    """
+
+    removePassword(userDB, name, tokenDB)
+
+    token = Token.create(TokenRole.PASSWORD_RESET, {'name': name},
+                         expireSecs=passwordResetDays * secondsPerDay)
+    tokenDB.add(token)
+    userDB[name].passwordResetToken = token.getId()
+    return token
 
 def setPassword(userDB: UserDB, userName: str, password: str) -> None:
     '''Sets the password for an existing user account.

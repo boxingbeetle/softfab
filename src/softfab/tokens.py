@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from enum import Enum
+from enum import Enum, auto
 from pathlib import Path
 from typing import Dict, Iterator, Mapping, Optional, cast
 
@@ -19,7 +19,8 @@ from softfab.xmlgen import XML, XMLAttributeValue, xml
 class TokenRole(Enum):
     """The purpose for which a token can be used.
     """
-    RESOURCE = 1
+    RESOURCE = auto()
+    PASSWORD_RESET = auto()
 
 class Token(XMLTag, DatabaseElem):
     """Access token that authorizes API calls to perform operations
