@@ -184,8 +184,8 @@ class ResetPassword_POST(FabPage['ResetPassword_POST.Processor',
                     # Successfully changed password
                     raise Redirect(pageURL(
                         'ResetPassword',
-                        PasswordMsgArgs(
-                            user = userName, msg = PasswordMessage.SUCCESS
+                        ResetPassword_GET.Arguments(
+                            user=userName, msg=PasswordMessage.SUCCESS
                             )
                         ))
             else:

@@ -178,8 +178,8 @@ class ChangePassword_POST(FabPage['ChangePassword_POST.Processor',
                     # Successfully changed password
                     raise Redirect(pageURL(
                         'ChangePassword',
-                        PasswordMsgArgs(
-                            user = userName, msg = PasswordMessage.SUCCESS
+                        ChangePassword_GET.Arguments(
+                            user=userName, msg=PasswordMessage.SUCCESS
                             )
                         ))
             else:
