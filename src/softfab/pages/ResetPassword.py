@@ -10,16 +10,13 @@ from softfab.Page import PageProcessor, PresentableError, Redirect
 from softfab.formlib import (
     FormTable, actionButtons, hiddenInput, makeForm, passwordInput
 )
-from softfab.pageargs import EnumArg, PasswordArg, RefererArg
+from softfab.pageargs import EnumArg, RefererArg
 from softfab.pagelinks import UserIdArgs
 from softfab.request import Request
-from softfab.userlib import UserDB, authenticateUser, setPassword
+from softfab.tokens import TokenDB, resetTokenPassword
+from softfab.userlib import UserDB, authenticateUser, resetPassword
 from softfab.users import User, checkPrivilege
-from softfab.userview import (
-    LoginPassArgs, PasswordMessage, PasswordMsgArgs, passwordQuality,
-    passwordStr
-)
-from softfab.webgui import pageURL
+from softfab.userview import LoginPassArgs, presentSetPasswordURL
 from softfab.xmlgen import XML, XMLContent, xhtml
 
 
@@ -32,25 +29,21 @@ def presentForm(**kwargs: object) -> XMLContent:
 def presentFormBody(**kwargs: object) -> XMLContent:
     proc = cast(PageProcessor[UserIdArgs], kwargs['proc'])
     yield xhtml.p[
-        'Please enter a new password for user ', xhtml.b[ proc.args.user ], ':'
+        'Reset password for user ', xhtml.b[ proc.args.user ], '?'
         ]
-    yield NewPasswordTable.instance
     if proc.user.name is None:
         yield hiddenInput(name='loginpass', value='')
     else:
         yield xhtml.p[
             'To verify your identity, '
-            'please also enter your own password:'
+            'please enter your own password:'
             ]
         yield ReqPasswordTable.instance
     yield xhtml.p[ actionButtons(Actions) ]
-
-class NewPasswordTable(FormTable):
-    labelStyle = 'formlabel'
-
-    def iterFields(self, **kwargs: object) -> Iterator[Tuple[str, XMLContent]]:
-        yield 'New password', passwordInput(name = 'password')
-        yield 'New password (again)', passwordInput(name = 'password2')
+    yield xhtml.p[
+        'Resetting a password produces a URL through which the user '
+        'can set a new password.'
+        ]
 
 class ReqPasswordTable(FormTable):
     labelStyle = 'formlabel'
@@ -58,7 +51,7 @@ class ReqPasswordTable(FormTable):
     def iterFields(self, **kwargs: object) -> Iterator[Tuple[str, XMLContent]]:
         yield 'Operator password', passwordInput(name='loginpass')
 
-Actions = Enum('Actions', 'CHANGE CANCEL')
+Actions = Enum('Actions', 'RESET CANCEL')
 
 class ResetPassword_GET(FabPage['ResetPassword_GET.Processor',
                                 'ResetPassword_GET.Arguments']):
@@ -66,9 +59,8 @@ class ResetPassword_GET(FabPage['ResetPassword_GET.Processor',
     iconModifier = IconModifier.EDIT
     description = 'Reset Password'
 
-    class Arguments(UserIdArgs, PasswordMsgArgs):
+    class Arguments(UserIdArgs):
         indexQuery = RefererArg('UserList')
-        detailsQuery = RefererArg('UserDetails')
 
     class Processor(PageProcessor['ResetPassword_GET.Arguments']):
 
@@ -88,11 +80,7 @@ class ResetPassword_GET(FabPage['ResetPassword_GET.Processor',
                     f'User "{userName}" does not exist (anymore)'
                     ])
 
-            # Check if msg has been set and act upon accordingly.
-            msg = req.args.msg
-            if msg is not None:
-                self.retry = msg is not PasswordMessage.SUCCESS
-                raise PresentableError(xhtml[passwordStr[msg]])
+            self.retry = True
 
     def checkAccess(self, user: User) -> None:
         checkPrivilege(user, 'u/m', "reset passwords")
@@ -114,22 +102,16 @@ class ResetPassword_GET(FabPage['ResetPassword_GET.Processor',
 
 class ResetPassword_POST(FabPage['ResetPassword_POST.Processor',
                                  'ResetPassword_POST.Arguments']):
-    # Icon is determined by the GET variant of the page.
-    # TODO: This asymmetry isn't good.
-    #       Either give treat both the GET and POST handlers as full pages
-    #       with their own icon etc (see FabPage.__pageInfo), or move the
-    #       icon etc. to a per-module container.
     icon = None
     description = 'Reset Password'
 
     class Arguments(ResetPassword_GET.Arguments, LoginPassArgs):
         action = EnumArg(Actions)
-        password = PasswordArg()
-        password2 = PasswordArg()
 
     class Processor(PageProcessor['ResetPassword_POST.Arguments']):
 
         userDB: ClassVar[UserDB]
+        tokenDB: ClassVar[TokenDB]
 
         async def process(self,
                           req: Request['ResetPassword_POST.Arguments'],
@@ -140,7 +122,7 @@ class ResetPassword_POST(FabPage['ResetPassword_POST.Processor',
             if req.args.action is Actions.CANCEL:
                 page = cast(ResetPassword_POST, self.page)
                 raise Redirect(page.getCancelURL(req.args))
-            elif req.args.action is Actions.CHANGE:
+            elif req.args.action is Actions.RESET:
                 userDB = self.userDB
 
                 # Validate input.
@@ -150,15 +132,6 @@ class ResetPassword_POST(FabPage['ResetPassword_POST.Processor',
                     raise PresentableError(xhtml[
                         f'User "{userName}" does not exist (anymore)'
                         ])
-
-                password = req.args.password
-                if password == req.args.password2:
-                    quality = passwordQuality(userName, password)
-                else:
-                    quality = PasswordMessage.MISMATCH
-                if quality is not PasswordMessage.SUCCESS:
-                    self.retry = True
-                    raise PresentableError(xhtml[passwordStr[quality]])
 
                 reqUserName = user.name # get current logged-in user
                 if reqUserName is not None:
@@ -175,19 +148,10 @@ class ResetPassword_POST(FabPage['ResetPassword_POST.Processor',
                             ])
 
                 # Apply changes.
-                try:
-                    setPassword(userDB, userName, password)
-                except ValueError as ex:
-                    self.retry = True
-                    raise PresentableError(xhtml[ex.args[0]])
-                else:
-                    # Successfully changed password
-                    raise Redirect(pageURL(
-                        'ResetPassword',
-                        ResetPassword_GET.Arguments(
-                            user=userName, msg=PasswordMessage.SUCCESS
-                            )
-                        ))
+                tokenDB = self.tokenDB
+                token = resetPassword(userDB, userName, tokenDB)
+                self.tokenId = token.getId()
+                self.tokenPassword = resetTokenPassword(tokenDB, token)
             else:
                 assert False, req.args.action
 
@@ -206,4 +170,7 @@ class ResetPassword_POST(FabPage['ResetPassword_POST.Processor',
             yield self.backToReferer(proc.args)
 
     def presentContent(self, **kwargs: object) -> XMLContent:
-        assert False
+        proc = cast(ResetPassword_POST.Processor, kwargs['proc'])
+        yield presentSetPasswordURL(proc.args.user, proc.tokenId,
+                                    proc.tokenPassword)
+        yield self.backToReferer(proc.args)

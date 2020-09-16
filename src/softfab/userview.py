@@ -3,11 +3,14 @@
 from enum import Enum
 from typing import cast
 
+from softfab.config import rootURL
 from softfab.datawidgets import DataColumn
 from softfab.pageargs import EnumArg, PageArgs, PasswordArg
-from softfab.pagelinks import createUserDetailsLink
+from softfab.pagelinks import PasswordSetArgs, createUserDetailsLink
 from softfab.projectlib import Project
 from softfab.querylib import Record
+from softfab.userlib import passwordResetDays
+from softfab.webgui import pageURL
 from softfab.xmlgen import XMLContent, xhtml
 
 PasswordMessage = Enum('PasswordMessage', 'SUCCESS POOR SHORT EMPTY MISMATCH')
@@ -54,6 +57,22 @@ class LoginPassArgs(PageArgs):
     #       Using a stored password does not compromise security any more
     #       than storing the password in the first place.
     loginpass = PasswordArg()
+
+def presentSetPasswordURL(
+        userName: str,
+        tokenId: str,
+        tokenPassword: str
+        ) -> XMLContent:
+    url = rootURL + pageURL('SetPassword',
+        PasswordSetArgs(token=tokenId, secret=tokenPassword))
+    yield xhtml.p[
+        "Please send the following URL to ", xhtml.b[ userName ], ":"
+        ]
+    yield xhtml.p[ xhtml.code[ url ] ]
+    yield xhtml.p[
+        f"The URL can be used to set a new password once "
+        f"and is valid for {passwordResetDays} days."
+        ]
 
 def presentAnonGuestSetting(project: Project) -> XMLContent:
     return xhtml.p[

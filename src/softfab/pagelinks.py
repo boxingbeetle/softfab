@@ -257,6 +257,11 @@ def createUserDetailsURL(userId: str) -> str:
 def createUserDetailsLink(userId: str) -> XMLPresentable:
     return ccLink(href=createUserDetailsURL(userId))[ userId ]
 
+class PasswordSetArgs(PageArgs):
+    """Arguments that allow setting a password."""
+    token = StrArg()
+    secret = StrArg()
+
 class URLArgs(PageArgs):
     """Remembers a URL on this Control Center that we can return to.
     """
