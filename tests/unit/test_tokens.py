@@ -9,6 +9,7 @@ from softfab.timelib import setTime
 from softfab.tokens import (
     Token, TokenDB, TokenRole, authenticateToken, resetTokenPassword
 )
+from softfab.users import Credentials
 
 
 @fixture
@@ -53,20 +54,20 @@ def testTokenAuth(tokenDB):
 
     # Non-existing token.
     with raises(KeyError):
-        authenticateToken(tokenDB, 'nosuchtoken', 'letmein')
+        authenticateToken(tokenDB, Credentials('nosuchtoken', 'letmein'))
 
     # Existing token with no password set.
     with raises(UnauthorizedLogin):
-        authenticateToken(tokenDB, tokenId, 'letmein')
+        authenticateToken(tokenDB, Credentials(tokenId, 'letmein'))
 
     password1 = resetTokenPassword(tokenDB, token)
 
     # Existing token with wrong password.
     with raises(UnauthorizedLogin):
-        authenticateToken(tokenDB, tokenId, 'letmein')
+        authenticateToken(tokenDB, Credentials(tokenId, 'letmein'))
 
     # Existing token with correct password.
-    token1 = authenticateToken(tokenDB, tokenId, password1)
+    token1 = authenticateToken(tokenDB, Credentials(tokenId, password1))
     assert token1.getId() == tokenId
 
     password2 = resetTokenPassword(tokenDB, token)
@@ -74,16 +75,16 @@ def testTokenAuth(tokenDB):
 
     # Existing token with old password.
     with raises(UnauthorizedLogin):
-        authenticateToken(tokenDB, tokenId, password1)
+        authenticateToken(tokenDB, Credentials(tokenId, password1))
 
     # Existing token with new password.
-    token2 = authenticateToken(tokenDB, tokenId, password2)
+    token2 = authenticateToken(tokenDB, Credentials(tokenId, password2))
     assert token2.getId() == tokenId
 
     tokenDB = reloadDB(tokenDB)
 
     # Existing token with new password.
-    token3 = authenticateToken(tokenDB, tokenId, password2)
+    token3 = authenticateToken(tokenDB, Credentials(tokenId, password2))
     assert token3.getId() == tokenId
 
 def testTokenExpiry(tokenDB):
