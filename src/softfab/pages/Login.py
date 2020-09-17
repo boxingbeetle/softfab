@@ -17,6 +17,7 @@ from softfab.pageargs import ArgsCorrected, ArgsT, EnumArg
 from softfab.pagelinks import URLArgs
 from softfab.request import Request
 from softfab.userlib import User, UserDB, authenticateUser
+from softfab.users import Credentials
 from softfab.userview import (
     LoginNameArgs, LoginPassArgs, PasswordMessage, PasswordMsgArgs,
     passwordQuality
@@ -129,11 +130,9 @@ class Login_POST(LoginBase['Login_POST.Processor', 'Login_POST.Arguments']):
             if req.args.action is not Actions.LOG_IN:
                 raise Redirect(req.args.url or 'Home')
 
-            username = req.args.loginname
-            password = req.args.loginpass
-
+            credentials = Credentials(req.args.loginname, req.args.loginpass)
             try:
-                user = await authenticateUser(self.userDB, username, password)
+                user = await authenticateUser(self.userDB, credentials)
             except LoginFailed:
                 raise PresentableError(
                     xhtml.p(class_='notice')['Login failed']
@@ -151,8 +150,8 @@ class Login_POST(LoginBase['Login_POST.Processor', 'Login_POST.Arguments']):
                 #   http://en.wikipedia.org/wiki/Session_fixation
                 req.startSession(user)
 
-                if passwordQuality(username, password) is not \
-                        PasswordMessage.SUCCESS and user.hasPrivilege('u/mo'):
+                if passwordQuality(credentials) is not PasswordMessage.SUCCESS \
+                        and user.hasPrivilege('u/mo'):
                     # Suggest the user to pick a stronger password.
                     raise Redirect(pageURL(
                         'ChangePassword',

@@ -10,6 +10,7 @@ from softfab.pagelinks import PasswordSetArgs, createUserDetailsLink
 from softfab.projectlib import Project
 from softfab.querylib import Record
 from softfab.userlib import passwordResetDays
+from softfab.users import Credentials
 from softfab.webgui import pageURL
 from softfab.xmlgen import XMLContent, xhtml
 
@@ -19,9 +20,13 @@ PasswordMessage = Enum('PasswordMessage', 'SUCCESS POOR SHORT EMPTY MISMATCH')
 
 minimumPasswordLength = 8
 
-def passwordQuality(userName: str, password: str) -> PasswordMessage:
+def passwordQuality(credentials: Credentials) -> PasswordMessage:
     '''Performs sanity checks on a username/password combination.
     '''
+
+    userName = credentials.name
+    password = credentials.password
+
     if not password:
         return PasswordMessage.EMPTY
 
@@ -61,13 +66,9 @@ class LoginPassArgs(PageArgs):
     #       than storing the password in the first place.
     loginpass = PasswordArg()
 
-def presentSetPasswordURL(
-        userName: str,
-        tokenId: str,
-        tokenPassword: str
-        ) -> XMLContent:
+def presentSetPasswordURL(userName: str, token: Credentials) -> XMLContent:
     url = rootURL + pageURL('SetPassword',
-        PasswordSetArgs(token=tokenId, secret=tokenPassword))
+        PasswordSetArgs(token=token.name, secret=token.password))
     yield xhtml.p[
         "Please send the following URL to ", xhtml.b[ userName ], ":"
         ]

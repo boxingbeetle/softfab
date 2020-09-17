@@ -7,6 +7,7 @@ from typing import Iterable, Mapping, Optional, Sequence, Tuple, Union, cast
 from passlib.apache import HtpasswdFile
 from twisted.cred.error import UnauthorizedLogin
 from typing_extensions import Protocol
+import attr
 
 from softfab.utils import atomicWrite, iterable
 
@@ -232,7 +233,16 @@ class UnknownUser(User):
     def hasPrivilege(self, priv: str) -> bool:
         return False
 
-def authenticate(passwordFile: HtpasswdFile, name: str, password: str) -> None:
+@attr.s(auto_attribs=True, repr=False)
+class Credentials:
+    name: str
+    password: str
+
+    def __repr__(self) -> str:
+        # Deliberately omit password.
+        return f'Credentials({self.name})'
+
+def authenticate(passwordFile: HtpasswdFile, credentials: Credentials) -> None:
     """Checks a name and password combination against a password file.
 
     Returns if authentication succeeds.
@@ -242,6 +252,9 @@ def authenticate(passwordFile: HtpasswdFile, name: str, password: str) -> None:
     The hashed version of the password will be updated with a new
     hash function if the current one is depricated.
     """
+
+    name = credentials.name
+    password = credentials.password
 
     try:
         checkPassword(password)

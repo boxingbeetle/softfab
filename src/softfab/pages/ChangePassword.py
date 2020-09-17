@@ -13,7 +13,7 @@ from softfab.formlib import (
 from softfab.pageargs import EnumArg, PasswordArg, RefererArg
 from softfab.request import Request
 from softfab.userlib import UserDB, authenticateUser, setPassword
-from softfab.users import User, checkPrivilege
+from softfab.users import Credentials, User, checkPrivilege
 from softfab.userview import (
     LoginPassArgs, PasswordMessage, PasswordMsgArgs, passwordQuality,
     passwordStr
@@ -149,17 +149,18 @@ class ChangePassword_POST(FabPage['ChangePassword_POST.Processor',
 
                 # Perform sanity checks on new password.
                 password = req.args.password
+                newCredentials = Credentials(userName, password)
                 if password == req.args.password2:
-                    quality = passwordQuality(userName, password)
+                    quality = passwordQuality(newCredentials)
                 else:
                     quality = PasswordMessage.MISMATCH
                 if quality is not PasswordMessage.SUCCESS:
                     self.retry = True
                     raise PresentableError(xhtml[passwordStr[quality]])
 
+                oldCredentials = Credentials(userName, req.args.loginpass)
                 try:
-                    user_ = await authenticateUser(userDB, userName,
-                                                   req.args.loginpass)
+                    user_ = await authenticateUser(userDB, oldCredentials)
                 except LoginFailed as ex:
                     self.retry = True
                     raise PresentableError(xhtml[
@@ -170,7 +171,7 @@ class ChangePassword_POST(FabPage['ChangePassword_POST.Processor',
 
                 # Apply changes.
                 try:
-                    setPassword(userDB, userName, password)
+                    setPassword(userDB, newCredentials)
                 except ValueError as ex:
                     self.retry = True
                     raise PresentableError(xhtml[ex.args[0]])

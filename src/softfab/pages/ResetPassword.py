@@ -15,7 +15,7 @@ from softfab.pagelinks import UserIdArgs
 from softfab.request import Request
 from softfab.tokens import TokenDB
 from softfab.userlib import UserDB, authenticateUser, resetPassword
-from softfab.users import User, checkPrivilege
+from softfab.users import Credentials, User, checkPrivilege
 from softfab.userview import LoginPassArgs, presentSetPasswordURL
 from softfab.xmlgen import XML, XMLContent, xhtml
 
@@ -135,10 +135,9 @@ class ResetPassword_POST(FabPage['ResetPassword_POST.Processor',
 
                 reqUserName = user.name # get current logged-in user
                 if reqUserName is not None:
+                    operatorCred = Credentials(reqUserName, req.args.loginpass)
                     try:
-                        user_ = await authenticateUser(
-                            userDB, reqUserName, req.args.loginpass
-                            )
+                        user_ = await authenticateUser(userDB, operatorCred)
                     except LoginFailed as ex:
                         self.retry = True
                         raise PresentableError(xhtml[
@@ -148,9 +147,7 @@ class ResetPassword_POST(FabPage['ResetPassword_POST.Processor',
                             ])
 
                 # Apply changes.
-                self.tokenId, self.tokenPassword = resetPassword(
-                    userDB, userName, self.tokenDB
-                    )
+                self.token = resetPassword(userDB, userName, self.tokenDB)
             else:
                 assert False, req.args.action
 
@@ -170,6 +167,5 @@ class ResetPassword_POST(FabPage['ResetPassword_POST.Processor',
 
     def presentContent(self, **kwargs: object) -> XMLContent:
         proc = cast(ResetPassword_POST.Processor, kwargs['proc'])
-        yield presentSetPasswordURL(proc.args.user, proc.tokenId,
-                                    proc.tokenPassword)
+        yield presentSetPasswordURL(proc.args.user, proc.token)
         yield self.backToReferer(proc.args)

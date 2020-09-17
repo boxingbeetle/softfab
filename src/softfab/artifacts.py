@@ -319,13 +319,14 @@ class ArtifactAuthWrapper:
             # Authenticate via token.
             # TODO: There is a lot of overlap with TokenAuthPage.
             try:
-                tokenId, password = req.getCredentials()
+                credentials = req.getCredentials()
             except UnicodeDecodeError:
                 return AccessDeniedResource('Credentials are not valid UTF-8')
 
+            tokenId = credentials.name
             if tokenId:
                 try:
-                    token = authenticateToken(self.tokenDB, tokenId, password)
+                    token = authenticateToken(self.tokenDB, credentials)
                 except KeyError:
                     return AccessDeniedResource(
                         f'Token "{tokenId}" does not exist'

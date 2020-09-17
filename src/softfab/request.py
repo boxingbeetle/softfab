@@ -13,6 +13,7 @@ from softfab.TwistedUtil import getRelativeRoot
 from softfab.pageargs import ArgsT_co, Query
 from softfab.useragent import UserAgent
 from softfab.userlib import User
+from softfab.users import Credentials
 from softfab.utils import cachedProperty
 import softfab.config
 
@@ -186,10 +187,10 @@ class Request(RequestBase, Generic[ArgsT_co]):
 
     # For HTTP basic auth:
 
-    def getCredentials(self) -> Tuple[str, str]:
+    def getCredentials(self) -> Credentials:
         """Returns the name and password provided as part of this request.
-        If no name and/or password was provided, the string will be empty.
-        Raises UnicodeDecodeError if the strings are not valid UTF-8.
+        If no name and/or password was provided, that string will be empty.
+        @raise UnicodeDecodeError: If the strings are not valid UTF-8.
         """
         request = self._request
         # Twisted < 20.3.0 will return an empty 'str' instead of 'bytes'
@@ -201,7 +202,7 @@ class Request(RequestBase, Generic[ArgsT_co]):
         password: Union[bytes, str] = request.getPassword()
         if isinstance(password, bytes):
             password = password.decode()
-        return userName, password
+        return Credentials(userName, password)
 
     # Session management:
 

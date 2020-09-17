@@ -9,8 +9,8 @@ from passlib.pwd import genword
 from softfab.databaselib import Database, DatabaseElem, createUniqueId
 from softfab.timelib import getTime
 from softfab.users import (
-    TaskRunnerUser, UnknownUser, User, authenticate, initPasswordFile,
-    writePasswordFile
+    Credentials, TaskRunnerUser, UnknownUser, User, authenticate,
+    initPasswordFile, writePasswordFile
 )
 from softfab.xmlbind import XMLTag
 from softfab.xmlgen import XML, XMLAttributeValue, xml
@@ -164,20 +164,20 @@ class TokenUser(User):
     def hasPrivilege(self, priv: str) -> bool:
         return self.__token.owner.hasPrivilege(priv)
 
-def authenticateToken(tokenDB: TokenDB, tokenId: str, password: str) -> Token:
+def authenticateToken(tokenDB: TokenDB, credentials: Credentials) -> Token:
     """Looks up a token with the give ID and password.
 
-    Returns the token if the password was correct.
-    Raises `KeyError` if the token does not exist.
-    Raises `UnauthorizedLogin` if the password is incorrect.
+    @return: The token, if the password was correct.
+    @raise KeyError: If the token does not exist.
+    @raise UnauthorizedLogin: If the password is incorrect.
     """
 
     # Unlike for users, we will report when a token does not exist.
     # Since tokens use strong passwords, we can afford to be more
     # user friendly here.
-    token = tokenDB[tokenId]
+    token = tokenDB[credentials.name]
 
-    authenticate(tokenDB.passwordFile, tokenId, password)
+    authenticate(tokenDB.passwordFile, credentials)
 
     return token
 

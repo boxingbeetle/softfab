@@ -14,7 +14,7 @@ from softfab.pagelinks import PasswordSetArgs
 from softfab.request import Request
 from softfab.tokens import Token, TokenDB, TokenRole, authenticateToken
 from softfab.userlib import UserDB, setPassword
-from softfab.users import User
+from softfab.users import Credentials, User
 from softfab.userview import (
     LoginNameArgs, PasswordMessage, passwordQuality, passwordStr
 )
@@ -51,9 +51,9 @@ def verifyToken(tokenDB: TokenDB, args: PasswordSetArgs) -> Token:
         the given arguments.
     """
     tokenId = args.token
-    tokenPassword = args.secret
+    credentials = Credentials(tokenId, args.secret)
     try:
-        token = authenticateToken(tokenDB, tokenId, tokenPassword)
+        token = authenticateToken(tokenDB, credentials)
     except KeyError as ex:
         raise PresentableError(xhtml[
             f'Token {tokenId} does not exist. '
@@ -150,15 +150,16 @@ class SetPassword_POST(SetPasswordBase['SetPassword_POST.Processor',
                 self.userName = userName = token.getParam('name')
 
             password = req.args.password
+            credentials = Credentials(userName, password)
             if password == req.args.password2:
-                quality = passwordQuality(userName, password)
+                quality = passwordQuality(credentials)
             else:
                 quality = PasswordMessage.MISMATCH
             if quality is not PasswordMessage.SUCCESS:
                 raise PresentableError(xhtml[passwordStr[quality]])
 
             try:
-                setPassword(self.userDB, userName, password)
+                setPassword(self.userDB, credentials)
             except ValueError as ex:
                 raise PresentableError(xhtml[ex.args[0]])
             else:

@@ -18,7 +18,7 @@ from softfab.tokens import TokenDB
 from softfab.userlib import (
     UserDB, addUserAccount, authenticateUser, resetPassword
 )
-from softfab.users import User, checkPrivilege
+from softfab.users import Credentials, User, checkPrivilege
 from softfab.userview import LoginPassArgs, presentSetPasswordURL
 from softfab.xmlgen import XML, XMLContent, xhtml
 
@@ -108,13 +108,12 @@ class AddUser_POST(AddUserBase['AddUser_POST.Processor',
                 if not userName:
                     raise PresentableError(xhtml['User name cannot be empty.'])
 
-                # Authentication of currently logged-in operator
+                # Authenticate currently logged-in operator.
                 reqUserName = user.name
                 if reqUserName is not None:
+                    operatorCred = Credentials(reqUserName, req.args.loginpass)
                     try:
-                        user_ = await authenticateUser(
-                            userDB, reqUserName, req.args.loginpass
-                            )
+                        user_ = await authenticateUser(userDB, operatorCred)
                     except LoginFailed as ex:
                         raise PresentableError(xhtml[
                             'Operator authentication failed%s.' % (
@@ -131,9 +130,7 @@ class AddUser_POST(AddUserBase['AddUser_POST.Processor',
 
                 # Create a password reset token for the new account.
                 # pylint: disable=attribute-defined-outside-init
-                self.tokenId, self.tokenPassword = resetPassword(
-                    userDB, userName, self.tokenDB
-                    )
+                self.token = resetPassword(userDB, userName, self.tokenDB)
             else:
                 assert False, req.args.action
 
@@ -142,8 +139,7 @@ class AddUser_POST(AddUserBase['AddUser_POST.Processor',
         yield xhtml.p[ xhtml.b[
             f'User "{proc.args.user}" has been added successfully.'
             ] ]
-        yield presentSetPasswordURL(proc.args.user, proc.tokenId,
-                                    proc.tokenPassword)
+        yield presentSetPasswordURL(proc.args.user, proc.token)
         yield xhtml.hr
         yield xhtml.p[
             'You can use the form below to add another user, or ',

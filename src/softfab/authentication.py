@@ -54,14 +54,12 @@ class HTTPAuthPage(Authenticator):
         # anyway.
         #   http://en.wikipedia.org/wiki/Cross-site_request_forgery
         try:
-            userName, password = req.getCredentials()
+            credentials = req.getCredentials()
         except UnicodeDecodeError as ex:
             return fail(LoginFailed(ex))
 
-        if userName:
-            return ensureDeferred(
-                authenticateUser(self.userDB, userName, password)
-                )
+        if credentials.name:
+            return ensureDeferred(authenticateUser(self.userDB, credentials))
         elif self.project.anonguest:
             return succeed(AnonGuestUser())
         else:
@@ -85,13 +83,14 @@ class TokenAuthPage(Authenticator):
 
     def authenticate(self, req: Request) -> Deferred:
         try:
-            tokenId, password = req.getCredentials()
+            credentials = req.getCredentials()
         except UnicodeDecodeError as ex:
             return fail(LoginFailed(ex))
 
+        tokenId = credentials.name
         if tokenId:
             try:
-                token = authenticateToken(self.tokenDB, tokenId, password)
+                token = authenticateToken(self.tokenDB, credentials)
             except KeyError:
                 return fail(LoginFailed(
                     f'Token {tokenId} does not exist'

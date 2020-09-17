@@ -2,8 +2,7 @@
 
 from pathlib import Path
 from typing import (
-    Any, FrozenSet, Iterable, Iterator, Mapping, Optional, Set, Tuple, Union,
-    cast
+    Any, FrozenSet, Iterable, Iterator, Mapping, Optional, Set, Union, cast
 )
 import logging
 
@@ -15,8 +14,8 @@ from softfab.roles import UIRoleNames, roleNames
 from softfab.timelib import secondsPerDay
 from softfab.tokens import Token, TokenDB, TokenRole, resetTokenPassword
 from softfab.users import (
-    User, authenticate, checkPassword, initPasswordFile, rolesGrantPrivilege,
-    writePasswordFile
+    Credentials, User, authenticate, checkPassword, initPasswordFile,
+    rolesGrantPrivilege, writePasswordFile
 )
 from softfab.xmlbind import XMLTag
 from softfab.xmlgen import XML, xml
@@ -214,13 +213,10 @@ def removePassword(userDB: UserDB,
 passwordResetDays = 7
 """The number of days a password reset token is valid."""
 
-def resetPassword(userDB: UserDB,
-                  name: str,
-                  tokenDB: TokenDB
-                  ) -> Tuple[str, str]:
+def resetPassword(userDB: UserDB, name: str, tokenDB: TokenDB) -> Credentials:
     """Remove an account's current password and create a token that
     allows setting a new password.
-    @return: A token credentials pair, containing token ID and token password.
+    @return: The credentials of the password reset token.
     """
 
     removePassword(userDB, name, tokenDB)
@@ -232,15 +228,17 @@ def resetPassword(userDB: UserDB,
     userDB[name].passwordResetToken = tokenId
 
     tokenPassword = resetTokenPassword(tokenDB, token)
-    return tokenId, tokenPassword
+    return Credentials(tokenId, tokenPassword)
 
-def setPassword(userDB: UserDB, userName: str, password: str) -> None:
+def setPassword(userDB: UserDB, credentials: Credentials) -> None:
     '''Sets the password for an existing user account.
-    @param userName: The name of the user account.
-    @param password: New password for the user.
+    @param credentials: The user name and new password.
     @raise ValueError: If the user does not exist in the database,
       or the password is syntactically invalid.
     '''
+
+    userName = credentials.name
+    password = credentials.password
 
     # Sanity check on user name.
     if userName not in userDB:
@@ -256,8 +254,7 @@ def setPassword(userDB: UserDB, userName: str, password: str) -> None:
     writePasswordFile(passwordFile)
 
 async def authenticateUser(userDB: UserDB,
-                           userName: str,
-                           password: str
+                           credentials: Credentials
                            ) -> UserAccount:
     """Authenticates a user with the given password.
 
@@ -269,10 +266,11 @@ async def authenticateUser(userDB: UserDB,
 
     # Twisted returns empty string if there is no "authorization" header,
     # it would be a waste of time to look that up in the password file.
+    userName = credentials.name
     if not userName:
         raise UnauthorizedLogin('No user name specified')
 
-    authenticate(userDB.passwordFile, userName, password)
+    authenticate(userDB.passwordFile, credentials)
 
     try:
         return userDB[userName]
