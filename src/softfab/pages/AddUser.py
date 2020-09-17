@@ -14,13 +14,12 @@ from softfab.formlib import (
 from softfab.pageargs import ArgsT, EnumArg, PageArgs, RefererArg, StrArg
 from softfab.request import Request
 from softfab.roles import UIRoleNames, uiRoleToSet
+from softfab.tokens import TokenDB, resetTokenPassword
 from softfab.userlib import (
-    UserDB, addUserAccount, authenticateUser, setPassword
+    UserDB, addUserAccount, authenticateUser, resetPassword
 )
 from softfab.users import User, checkPrivilege
-from softfab.userview import (
-    LoginPassArgs, PasswordMessage, passwordQuality, passwordStr
-)
+from softfab.userview import LoginPassArgs, presentSetPasswordURL
 from softfab.xmlgen import XML, XMLContent, xhtml
 
 Actions = Enum('Actions', 'ADD CANCEL')
@@ -88,12 +87,11 @@ class AddUser_POST(AddUserBase['AddUser_POST.Processor',
     class Arguments(AddUser_GET.Arguments, LoginPassArgs, RoleArgs):
         action = EnumArg(Actions)
         user = StrArg()
-        password = StrArg()
-        password2 = StrArg()
 
     class Processor(PageProcessor['AddUser_POST.Arguments']):
 
         userDB: ClassVar[UserDB]
+        tokenDB: ClassVar[TokenDB]
 
         async def process(self,
                           req: Request['AddUser_POST.Arguments'],
@@ -109,14 +107,6 @@ class AddUser_POST(AddUserBase['AddUser_POST.Processor',
                 userName = req.args.user
                 if not userName:
                     raise PresentableError(xhtml['User name cannot be empty.'])
-
-                password = req.args.password
-                if password == req.args.password2:
-                    quality = passwordQuality(userName, password)
-                else:
-                    quality = PasswordMessage.MISMATCH
-                if quality is not PasswordMessage.SUCCESS:
-                    raise PresentableError(xhtml[passwordStr[quality]])
 
                 # Authentication of currently logged-in operator
                 reqUserName = user.name
@@ -136,9 +126,15 @@ class AddUser_POST(AddUserBase['AddUser_POST.Processor',
                 try:
                     roles = uiRoleToSet(req.args.role)
                     addUserAccount(userDB, userName, roles)
-                    setPassword(userDB, userName, password)
                 except ValueError as ex:
                     raise PresentableError(xhtml[f'{ex}.'])
+
+                # Create a password reset token for the new account.
+                tokenDB = self.tokenDB
+                token = resetPassword(userDB, userName, tokenDB)
+                # pylint: disable=attribute-defined-outside-init
+                self.tokenId = token.getId()
+                self.tokenPassword = resetTokenPassword(tokenDB, token)
             else:
                 assert False, req.args.action
 
@@ -147,6 +143,9 @@ class AddUser_POST(AddUserBase['AddUser_POST.Processor',
         yield xhtml.p[ xhtml.b[
             f'User "{proc.args.user}" has been added successfully.'
             ] ]
+        yield presentSetPasswordURL(proc.args.user, proc.tokenId,
+                                    proc.tokenPassword)
+        yield xhtml.hr
         yield xhtml.p[
             'You can use the form below to add another user, or ',
             xhtml.a(href = self.getCancelURL(proc.args))[
@@ -166,8 +165,6 @@ class UserTable(FormTable):
     def iterFields(self, **kwargs: object) -> Iterator[Tuple[str, XMLContent]]:
         yield 'User name', textInput(name = 'user')
         yield 'Role', dropDownList(name = 'role')[ UIRoleNames ]
-        yield 'New password', passwordInput(name = 'password')
-        yield 'New password (again)', passwordInput(name = 'password2')
 
 class ReqPasswordTable(FormTable):
     labelStyle = 'formlabel'
