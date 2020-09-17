@@ -67,7 +67,8 @@ def createDB(tmp_path, request):
             description = 'test'
             privilegeObject = 'x' # dummy
             if keyChecker is not None:
-                def _customCheckId(self, key):
+                @classmethod
+                def _customCheckId(cls, key):
                     keyChecker(key)
         db = DB(dbDir, recordFactory)
         db.preload()
