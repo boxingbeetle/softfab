@@ -13,7 +13,7 @@ from softfab.formlib import (
 from softfab.pageargs import EnumArg, RefererArg
 from softfab.pagelinks import UserIdArgs
 from softfab.request import Request
-from softfab.tokens import TokenDB, resetTokenPassword
+from softfab.tokens import TokenDB
 from softfab.userlib import UserDB, authenticateUser, resetPassword
 from softfab.users import User, checkPrivilege
 from softfab.userview import LoginPassArgs, presentSetPasswordURL
@@ -148,10 +148,9 @@ class ResetPassword_POST(FabPage['ResetPassword_POST.Processor',
                             ])
 
                 # Apply changes.
-                tokenDB = self.tokenDB
-                token = resetPassword(userDB, userName, tokenDB)
-                self.tokenId = token.getId()
-                self.tokenPassword = resetTokenPassword(tokenDB, token)
+                self.tokenId, self.tokenPassword = resetPassword(
+                    userDB, userName, self.tokenDB
+                    )
             else:
                 assert False, req.args.action
 

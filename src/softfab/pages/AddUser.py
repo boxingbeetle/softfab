@@ -14,7 +14,7 @@ from softfab.formlib import (
 from softfab.pageargs import ArgsT, EnumArg, PageArgs, RefererArg, StrArg
 from softfab.request import Request
 from softfab.roles import UIRoleNames, uiRoleToSet
-from softfab.tokens import TokenDB, resetTokenPassword
+from softfab.tokens import TokenDB
 from softfab.userlib import (
     UserDB, addUserAccount, authenticateUser, resetPassword
 )
@@ -130,11 +130,10 @@ class AddUser_POST(AddUserBase['AddUser_POST.Processor',
                     raise PresentableError(xhtml[f'{ex}.'])
 
                 # Create a password reset token for the new account.
-                tokenDB = self.tokenDB
-                token = resetPassword(userDB, userName, tokenDB)
                 # pylint: disable=attribute-defined-outside-init
-                self.tokenId = token.getId()
-                self.tokenPassword = resetTokenPassword(tokenDB, token)
+                self.tokenId, self.tokenPassword = resetPassword(
+                    userDB, userName, self.tokenDB
+                    )
             else:
                 assert False, req.args.action
 

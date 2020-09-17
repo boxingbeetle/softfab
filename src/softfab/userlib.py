@@ -2,7 +2,8 @@
 
 from pathlib import Path
 from typing import (
-    Any, FrozenSet, Iterable, Iterator, Mapping, Optional, Set, Union, cast
+    Any, FrozenSet, Iterable, Iterator, Mapping, Optional, Set, Tuple, Union,
+    cast
 )
 import logging
 
@@ -12,7 +13,7 @@ from twisted.cred.error import UnauthorizedLogin
 from softfab.databaselib import Database, DatabaseElem
 from softfab.roles import UIRoleNames, roleNames
 from softfab.timelib import secondsPerDay
-from softfab.tokens import Token, TokenDB, TokenRole
+from softfab.tokens import Token, TokenDB, TokenRole, resetTokenPassword
 from softfab.users import (
     User, authenticate, checkPassword, initPasswordFile, rolesGrantPrivilege,
     writePasswordFile
@@ -216,9 +217,10 @@ passwordResetDays = 7
 def resetPassword(userDB: UserDB,
                   name: str,
                   tokenDB: TokenDB
-                  ) -> Token:
+                  ) -> Tuple[str, str]:
     """Remove an account's current password and create a token that
     allows setting a new password.
+    @return: A token credentials pair, containing token ID and token password.
     """
 
     removePassword(userDB, name, tokenDB)
@@ -226,8 +228,11 @@ def resetPassword(userDB: UserDB,
     token = Token.create(TokenRole.PASSWORD_RESET, {'name': name},
                          expireSecs=passwordResetDays * secondsPerDay)
     tokenDB.add(token)
-    userDB[name].passwordResetToken = token.getId()
-    return token
+    tokenId = token.getId()
+    userDB[name].passwordResetToken = tokenId
+
+    tokenPassword = resetTokenPassword(tokenDB, token)
+    return tokenId, tokenPassword
 
 def setPassword(userDB: UserDB, userName: str, password: str) -> None:
     '''Sets the password for an existing user account.
