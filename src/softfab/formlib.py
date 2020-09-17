@@ -323,8 +323,18 @@ class _TextInput(AttrContainer, XMLPresentable):
         form: _FormPresenter = kwargs['form']
         attributes = self._attributes
 
+        if 'autofocus' in attributes:
+            attributes = dict(attributes)
+            wantFocus = attributes.pop('autofocus')
+            if not isinstance(wantFocus, bool):
+                raise TypeError(type(wantFocus))
+        else:
+            wantFocus = True
+        if attributes.get('disabled', False):
+            wantFocus = False
+
         name = cast(Optional[str], attributes.get('name'))
-        focus = form.addControl(name, not attributes.get('disabled', False))
+        focus = form.addControl(name, wantFocus)
 
         if name is not None:
             form.addClearCode(f'inputs.{name}.value = "";')
