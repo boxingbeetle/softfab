@@ -152,7 +152,7 @@ class AddUser_POST(AddUserBase['AddUser_POST.Processor',
                 'go back to the users overview page'
                 ], '.'
             ]
-        yield self.presentForm(LoginPassArgs.subset(proc.args), **kwargs)
+        yield self.presentForm(RoleArgs(role=UIRoleNames.USER), **kwargs)
 
     def presentError(self, message: XML, **kwargs: object) -> XMLContent:
         proc = cast(AddUser_POST.Processor, kwargs['proc'])
