@@ -332,16 +332,18 @@ class Database(Generic[DBRecord], RecordSubjectMixin[DBRecord], ABC):
         else:
             return frozenset(record[column] for record in self)
 
-    def checkId(self, key: str) -> None:
-        '''Check whether the given string is a valid database key.
-        Raises KeyError if the key is invalid, with as its first argument a
-        message string describing what is invalid about it.
-        '''
+    @classmethod
+    def checkId(cls, key: str) -> None:
+        """Check whether the given string is a valid database key.
+        @raise KeyError: If the key is invalid; the exception's single argument
+            is a message string describing what is wrong with the key.
+        """
+
         # Run custom key checker, if any.
-        self._customCheckId(key)
+        cls._customCheckId(key)
 
         # Check generic restrictions.
-        name = self.description + ' name'
+        name = cls.description + ' name'
         if len(key) == 0:
             raise KeyError(f'Empty {name} is not allowed')
         elif len(key) > 120:
@@ -366,15 +368,16 @@ class Database(Generic[DBRecord], RecordSubjectMixin[DBRecord], ABC):
             # Just like double spaces, a space and the end is confusing and
             # unlikely to be what the user wants.
             raise KeyError(f'{name.capitalize()} ends with a space')
-        elif self.__reKey.match(key) is None:
+        elif cls.__reKey.match(key) is None:
             raise KeyError(f'Invalid character in {name} "{key}"')
 
-    def _customCheckId(self, key: str) -> None:
-        '''This method can be overridden to provide additional restrictions
-        on database keys: raise KeyError if the key is invalid, with as its
-        first argument a message string describing what is invalid about it.
+    @classmethod
+    def _customCheckId(cls, key: str) -> None:
+        """Override this method to put additional restrictions on database keys.
         The default implementation does nothing.
-        '''
+        @raise KeyError: If the key is invalid; the exception's single argument
+            is a message string describing what is wrong with the key.
+        """
 
     def adjustId(self, key: str, unique: bool = False) -> str:
         """Makes the given string a valid key by replaces certain characters.

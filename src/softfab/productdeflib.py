@@ -71,5 +71,6 @@ class ProductDefDB(VersionedDatabase[ProductDef]):
     def __init__(self, baseDir: Path):
         super().__init__(baseDir, ProductDefFactory())
 
-    def _customCheckId(self, key: str) -> None:
+    @classmethod
+    def _customCheckId(cls, key: str) -> None:
         checkWrapperVarName(key)
