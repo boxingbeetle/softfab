@@ -66,13 +66,15 @@ class LoginPassArgs(PageArgs):
     #       than storing the password in the first place.
     loginpass = PasswordArg()
 
-def presentSetPasswordURL(userName: str, token: Credentials) -> XMLContent:
-    url = rootURL + pageURL('SetPassword',
+def setPasswordURL(token: Credentials) -> str:
+    return rootURL + pageURL('SetPassword',
         PasswordSetArgs(token=token.name, secret=token.password))
+
+def presentSetPasswordURL(userName: str, token: Credentials) -> XMLContent:
     yield xhtml.p[
         "Please send the following URL to ", xhtml.b[ userName ], ":"
         ]
-    yield xhtml.p[ xhtml.code[ url ] ]
+    yield xhtml.p[ xhtml.code[ setPasswordURL(token) ] ]
     yield xhtml.p[
         f"The URL can be used to set a new password once "
         f"and is valid for {passwordResetDays} days."

@@ -383,12 +383,32 @@ def role(globalOptions: GlobalOptions, name: str, role: str) -> None:
     updateUser(globalOptions, name, role=role)
     echo(f"softfab: Role of account '{name}' set to '{role}'", err=True)
 
-def updateUser(globalOptions: GlobalOptions, name: str, **updates: str) -> None:
+@user.command()
+@argument('name')
+@pass_obj
+def reset(globalOptions: GlobalOptions, name: str) -> None:
+    """Reset the password of a user account.
+
+    Outputs a URL at which the user can set a new password.
+    """
+
+    result = updateUser(globalOptions, name, password='reset')
+    echo(f"softfab: Password of account '{name}' was reset", err=True)
+
+    import json
+    data = json.loads(result)
+    echo(f"A new password for '{name}' can be set by visiting:")
+    echo(data['reset']['url'])
+
+def updateUser(globalOptions: GlobalOptions,
+               name: str,
+               **updates: str
+               ) -> bytes:
     import json
     from softfab.apiclient import run_PATCH
 
-    callAPI(globalOptions.reactor, run_PATCH(
-            globalOptions.agent,
-            globalOptions.urlForPath(f'users/{name}.json'),
-            json.dumps(updates).encode()
-            ))
+    return callAPI(globalOptions.reactor, run_PATCH(
+        globalOptions.agent,
+        globalOptions.urlForPath(f'users/{name}.json'),
+        json.dumps(updates).encode()
+        ))

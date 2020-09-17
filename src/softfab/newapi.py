@@ -23,6 +23,7 @@ from softfab.userlib import (
     UserAccount, UserDB, addUserAccount, removePassword, removeUserAccount,
     resetPassword
 )
+from softfab.userview import setPasswordURL
 
 
 class DataFormat(Enum):
@@ -54,6 +55,13 @@ def textReply(request: Request, status: int, message: str) -> bytes:
     request.setResponseCode(status)
     request.setHeader(b'Content-Type', b'text/plain; charset=UTF-8')
     return message.encode()
+
+def jsonReply(request: Request, data: object) -> bytes:
+    """Replies to an HTTP request with data in JSON format.
+    The reply body is returned.
+    """
+    request.setHeader(b'Content-Type', b'application/json; charset=UTF-8')
+    return json.dumps(data).encode()
 
 @attr.s(auto_attribs=True)
 class UserData:
@@ -91,8 +99,7 @@ class UserResource(Resource):
         return NotFoundResource('Records do not support subpaths')
 
     def render_GET(self, request: Request) -> bytes:
-        request.setHeader(b'Content-Type', b'application/json; charset=UTF-8')
-        return json.dumps(dataToJSON(self._user)).encode()
+        return jsonReply(request, dataToJSON(self._user))
 
     def render_PUT(self, request: Request) -> bytes:
         # TODO: We could modify an existing user instead.
@@ -116,6 +123,7 @@ class UserResource(Resource):
         userDB = self._userDB
         userName = self._user.name
         user = userDB[userName]
+        reply = {}
 
         role = data.role
         if role is not None:
@@ -127,8 +135,16 @@ class UserResource(Resource):
                 removePassword(userDB, userName, self._tokenDB)
             elif password is PasswordActions.RESET:
                 token = resetPassword(userDB, userName, self._tokenDB)
+                reply['reset'] = dict(
+                    token=token.name,
+                    secret=token.password,
+                    url=setPasswordURL(token)
+                    )
 
-        return emptyReply(request)
+        if reply:
+            return jsonReply(request, reply)
+        else:
+            return emptyReply(request)
 
     def render_DELETE(self, request: Request) -> bytes:
         name = self._user.name

@@ -2,6 +2,7 @@
 
 """Tests for the command line interface."""
 
+from urllib.parse import parse_qs, urlparse
 import json
 
 from click import Group
@@ -210,6 +211,23 @@ def set_role(cli, name, role, exists=True):
         assert result.exit_code == 1
         assert result.output == f"softfab: User not found: {name}\n"
 
+def check_reset_password(cli, name, exists=True):
+    """Reset a user's password."""
+    command = ['user', 'reset', name]
+    result = cli.run(*command)
+    if exists:
+        assert result.exit_code == 0
+        lines = result.output.strip().split('\n')
+        assert lines[0] == f"softfab: Password of account '{name}' was reset"
+        url = urlparse(lines[-1])
+        assert url.path.endswith('/SetPassword'), url
+        query = parse_qs(url.query)
+        assert query.keys() == {'token', 'secret'}, url
+        assert not cli.has_password(name)
+    else:
+        assert result.exit_code == 1
+        assert result.output == f"softfab: User not found: {name}\n"
+
 
 # Test cases:
 
@@ -266,3 +284,14 @@ def test_user_role(cli):
 
     # Attempt to change role of non-existing user.
     set_role(cli, 'bob', 'operator', exists=False)
+
+def test_reset_password(cli):
+    # Add user and reset their password.
+    add_user(cli, 'alice')
+    check_reset_password(cli, 'alice')
+
+    # Reset the password again; should succeed with no effect.
+    check_reset_password(cli, 'alice')
+
+    # Attempt to reset password of non-existing user.
+    check_reset_password(cli, 'bob', exists=False)
