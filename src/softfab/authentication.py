@@ -100,6 +100,10 @@ class TokenAuthPage(Authenticator):
                 return fail(Unauthorized(
                     f'Token "{tokenId}" is of the wrong type for this operation'
                     ))
+            if token.expired:
+                return fail(Unauthorized(
+                    f'Token "{tokenId}" has expired'
+                    ))
             return succeed(TokenUser(token))
         elif self.project.anonguest:
             return succeed(AnonGuestUser())
