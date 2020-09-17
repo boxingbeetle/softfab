@@ -267,6 +267,7 @@ def server(
 @pass_obj
 def migrate(globalOptions: GlobalOptions) -> None:
     """Migrate a Control Center database.
+
     This updates the data to the latest schema.
     Should be run after upgrading SoftFab, if the release notes say so.
     Will also repair inconsistent data and remove unreachable records.
@@ -365,6 +366,7 @@ def remove(globalOptions: GlobalOptions, name: str, force: bool) -> None:
 @pass_obj
 def block(globalOptions: GlobalOptions, name: str) -> None:
     """Block a user account.
+
     This sets the account's role to 'inactive' and removes the password.
     """
 
