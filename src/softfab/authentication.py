@@ -94,15 +94,15 @@ class TokenAuthPage(Authenticator):
                 token = authenticateToken(self.tokenDB, tokenId, password)
             except KeyError:
                 return fail(LoginFailed(
-                    f'Token "{tokenId}" does not exist'
+                    f'Token {tokenId} does not exist'
                     ))
             if token.role is not self.__role:
                 return fail(Unauthorized(
-                    f'Token "{tokenId}" is of the wrong type for this operation'
+                    f'Token {tokenId} is of the wrong type for this operation'
                     ))
             if token.expired:
                 return fail(Unauthorized(
-                    f'Token "{tokenId}" has expired'
+                    f'Token {tokenId} has expired'
                     ))
             return succeed(TokenUser(token))
         elif self.project.anonguest:
