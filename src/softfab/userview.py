@@ -5,7 +5,7 @@ from typing import cast
 
 from softfab.config import rootURL
 from softfab.datawidgets import DataColumn
-from softfab.pageargs import EnumArg, PageArgs, PasswordArg
+from softfab.pageargs import EnumArg, PageArgs, PasswordArg, StrArg
 from softfab.pagelinks import PasswordSetArgs, createUserDetailsLink
 from softfab.projectlib import Project
 from softfab.querylib import Record
@@ -46,6 +46,9 @@ class PasswordMsgArgs(PageArgs):
     '''Identifies a particular user (mandatory) and password message (optional).
     '''
     msg = EnumArg(PasswordMessage, None)
+
+class LoginNameArgs(PageArgs):
+    loginname = StrArg('')
 
 class LoginPassArgs(PageArgs):
     # Note: Sharing the argument name between the Login page and other pages

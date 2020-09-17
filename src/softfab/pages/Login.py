@@ -13,12 +13,13 @@ from softfab.authentication import NoAuthPage
 from softfab.formlib import (
     FormTable, actionButtons, makeForm, passwordInput, textInput
 )
-from softfab.pageargs import ArgsCorrected, ArgsT, EnumArg, StrArg
+from softfab.pageargs import ArgsCorrected, ArgsT, EnumArg
 from softfab.pagelinks import URLArgs
 from softfab.request import Request
 from softfab.userlib import User, UserDB, authenticateUser
 from softfab.userview import (
-    LoginPassArgs, PasswordMessage, PasswordMsgArgs, passwordQuality
+    LoginNameArgs, LoginPassArgs, PasswordMessage, PasswordMsgArgs,
+    passwordQuality
 )
 from softfab.webgui import pageURL
 from softfab.xmlgen import XML, XMLContent, xhtml
@@ -27,8 +28,10 @@ from softfab.xmlgen import XML, XMLContent, xhtml
 class LoginTable(FormTable):
 
     def iterFields(self, **kwargs: object) -> Iterator[Tuple[str, XMLContent]]:
-        yield 'User name', textInput(name = 'loginname')
-        yield 'Password', passwordInput(name = 'loginpass')
+        proc = cast(PageProcessor[LoginNameArgs], kwargs['proc'])
+        yield 'User name', textInput(name='loginname',
+                                     autofocus=not proc.args.loginname)
+        yield 'Password', passwordInput(name='loginpass')
 
 class Actions(Enum):
     LOG_IN = auto()
@@ -83,7 +86,7 @@ class Login_GET(LoginBase['Login_GET.Processor', 'Login_GET.Arguments']):
     '''Page that presents login form.
     '''
 
-    class Arguments(URLArgs):
+    class Arguments(LoginNameArgs, URLArgs):
         pass
 
     class Processor(PageProcessor['Login_GET.Arguments']):
@@ -113,7 +116,6 @@ class Login_POST(LoginBase['Login_POST.Processor', 'Login_POST.Arguments']):
     '''
 
     class Arguments(Login_GET.Arguments, LoginPassArgs):
-        loginname = StrArg()
         action = EnumArg(Actions)
 
     class Processor(PageProcessor['Login_POST.Arguments']):
