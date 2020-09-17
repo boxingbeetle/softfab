@@ -285,6 +285,18 @@ def migrate(globalOptions: GlobalOptions) -> None:
     from softfab.migration import migrateData
     migrateData()
 
+def userPath(name: str) -> str:
+    """The API path for accessing the given user.
+    If the name is not valid as a user name, exit with an error.
+    """
+    from softfab.userlib import UserDB
+    try:
+        UserDB.checkId(name)
+    except KeyError as ex:
+        echo(f"softfab: {ex.args[0]}", err=True)
+        get_current_context().exit(1)
+    return f'users/{name}'
+
 @main.group()
 def user() -> None:
     """Query and modify user accounts."""
@@ -303,7 +315,7 @@ def show(globalOptions: GlobalOptions, name: str, fmt: OutputFormat) -> None:
 
     result = callAPI(globalOptions.reactor, run_GET(
             globalOptions.agent,
-            globalOptions.urlForPath(f'users/{name}.json')
+            globalOptions.urlForPath(userPath(name))
             ))
     if fmt is OutputFormat.TEXT:
         import json
@@ -330,7 +342,7 @@ def add(globalOptions: GlobalOptions, name: str, role: str) -> None:
 
     callAPI(globalOptions.reactor, run_PUT(
             globalOptions.agent,
-            globalOptions.urlForPath(f'users/{name}.json'),
+            globalOptions.urlForPath(userPath(name)),
             json.dumps(dict(role=role)).encode()
             ))
     echo(f"softfab: {role.title()} account '{name}' created", err=True)
@@ -357,7 +369,7 @@ def remove(globalOptions: GlobalOptions, name: str, force: bool) -> None:
 
     callAPI(globalOptions.reactor, run_DELETE(
             globalOptions.agent,
-            globalOptions.urlForPath(f'users/{name}')
+            globalOptions.urlForPath(userPath(name))
             ))
     echo(f"softfab: Account '{name}' removed", err=True)
 
@@ -409,6 +421,6 @@ def updateUser(globalOptions: GlobalOptions,
 
     return callAPI(globalOptions.reactor, run_PATCH(
         globalOptions.agent,
-        globalOptions.urlForPath(f'users/{name}.json'),
+        globalOptions.urlForPath(userPath(name)),
         json.dumps(updates).encode()
         ))
