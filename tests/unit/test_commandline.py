@@ -117,12 +117,17 @@ class SoftFabCLI:
         # Reactors cannot be restarted, so use a fresh one for every command.
         globalOptions = MemoryOptions()
         reactor = globalOptions.reactor
-        reactor.callWhenRunning(runCoroutine, reactor,
-                                execute(reactor, self.db_path))
+        executer = execute(reactor, self.db_path)
+        reactor.callWhenRunning(runCoroutine, reactor, executer)
 
-        return self.runner.invoke(command, args,
-                                  catch_exceptions=False,
-                                  obj=globalOptions)
+        try:
+            return self.runner.invoke(command, args,
+                                      catch_exceptions=False,
+                                      obj=globalOptions)
+        finally:
+            # If a command ends without making an API call, execute() is not
+            # awaited. We close it to avoid a RuntimeWarning.
+            executer.close()
 
     def add_password(self, name):
         """Add a (poor) password to the password file for the given user."""
