@@ -140,6 +140,10 @@ class SoftFabCLI:
         passwordFile = HtpasswdFile(str(self.db_path / 'passwords'))
         return passwordFile.get_hash(name) is not None
 
+    def has_token(self, token_id):
+        """Does a token with the given ID exist?"""
+        return (self.db_path / 'tokens' / f'{token_id}.xml').is_file()
+
 @fixture
 def cli(tmp_path):
     return SoftFabCLI(tmp_path)
@@ -228,10 +232,14 @@ def check_reset_password(cli, name, exists=True):
         assert url.path.endswith('/SetPassword'), url
         query = parse_qs(url.query)
         assert query.keys() == {'token', 'secret'}, url
+        tokenId, = query['token']
+        assert cli.has_token(tokenId), tokenId
         assert not cli.has_password(name)
+        return tokenId
     else:
         assert result.exit_code == 1
         assert result.output == f"softfab: User not found: {name}\n"
+        return None
 
 
 # Test cases:
@@ -293,10 +301,16 @@ def test_user_role(cli):
 def test_reset_password(cli):
     # Add user and reset their password.
     add_user(cli, 'alice')
-    check_reset_password(cli, 'alice')
+    token1 = check_reset_password(cli, 'alice')
 
-    # Reset the password again; should succeed with no effect.
-    check_reset_password(cli, 'alice')
+    # Reset the password again; should produce a new token.
+    token2 = check_reset_password(cli, 'alice')
+    assert token1 != token2
+    assert not cli.has_token(token1)
+
+    # Block user; should remove token.
+    block_user(cli, 'alice')
+    assert not cli.has_token(token2)
 
     # Attempt to reset password of non-existing user.
     check_reset_password(cli, 'bob', exists=False)
