@@ -318,5 +318,5 @@ def test_reset_password(cli):
 def test_bad_user_name(cli):
     # Attempt to add user with an invalid name.
     result = cli.run('user', 'add', 'robert/../tables')
-    assert result.exit_code == 1
+    assert result.exit_code == 2
     assert result.output == f'softfab: Invalid character in user name "robert/../tables"\n'

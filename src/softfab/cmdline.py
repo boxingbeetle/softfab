@@ -294,7 +294,7 @@ def userPath(name: str) -> str:
         UserDB.checkId(name)
     except KeyError as ex:
         echo(f"softfab: {ex.args[0]}", err=True)
-        get_current_context().exit(1)
+        get_current_context().exit(2)
     return f'users/{name}'
 
 @main.group()
