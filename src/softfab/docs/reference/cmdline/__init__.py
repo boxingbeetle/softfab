@@ -17,6 +17,7 @@ icon = 'IconDocs'
 
 @piHandler
 def helptext(arg: str) -> XMLContent:
+    assert not arg.strip(), arg
     ctx = Context(cmdline.main)
     yield xhtml.h3['Global Options']
     # We only have global options, not global arguments.
@@ -48,12 +49,12 @@ def presentCommand(ctx: Context, command: Command) -> Iterator[XMLContent]:
     title += [presentParameter(arg) for arg in arguments]
     yield xhtml.h3[xhtml.code[xhtml[' '].join(title)],
                    xhtml.a(id='-'.join(words))]
-    yield from presentHelpBlocks(ctx, command)
+    yield from presentHelpBlocks(command)
     yield presentOptions(ctx, options)
     if isinstance(command, MultiCommand):
         yield from presentSubcommands(Context(command, ctx), command)
 
-def presentHelpBlocks(ctx: Context, command: Command) -> Iterator[XMLContent]:
+def presentHelpBlocks(command: Command) -> Iterator[XMLContent]:
     text = command.help
     if text is not None:
         for block in text.split('\n\n'):
@@ -128,3 +129,4 @@ def optionSortKey(option: Option) -> object:
         if opt.startswith('--'):
             return opt[2:]
     assert False, option.opts
+    return None
