@@ -20,7 +20,6 @@ h1 {
 }
 h2, h3, h4, h5, h6 {
     margin: 1em 12px 0.5em 12px;
-    color: #800000;
 }
 p, pre, ol, ul, dl, div.dev-plug {
     max-width: 42em;
@@ -42,7 +41,6 @@ p.todo {
 h2 {
     font-weight: 600;
     font-size: 150%;
-    color: black;
     margin-bottom: 0.75em;
     padding-bottom: 2px;
     border-bottom: 1px solid #800000;
@@ -52,6 +50,10 @@ h2 {
 h3, dl.toc > dt {
     font-weight: 500;
     font-size: 140%;
+}
+h3 {
+    margin-top: 1.5em;
+    margin-bottom: 0.75em;
 }
 a[id] {
     position: relative;
