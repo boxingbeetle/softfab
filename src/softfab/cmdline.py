@@ -72,13 +72,13 @@ class GlobalOptions:
         # Sanity checks on data dir, to provide more useful error messages.
         path = self.path
         if not (path / 'softfab.ini').exists():
-            # Currently directory is the default path.
+            # Current directory is the default path.
             current = str(path) == '.'
             echo(f"No 'softfab.ini' in {'current' if current else 'given'} "
                  f"directory: {path.resolve()}", err=True)
             if current:
-                echo(f"Use 'softfab --dir DIR COMMAND ...' to specify "
-                     f"the data  directory.", err=True)
+                echo("Use 'softfab --dir DIR COMMAND ...' to specify "
+                     "the data directory.", err=True)
             get_current_context().exit(2)
         if not (path / 'ctrl.sock').exists():
             echo("No control socket in data directory; "
