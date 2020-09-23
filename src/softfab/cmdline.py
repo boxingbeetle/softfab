@@ -69,8 +69,24 @@ class GlobalOptions:
         from twisted.web.client import Agent
         from softfab.site import ControlSocketFactory
 
+        # Sanity checks on data dir, to provide more useful error messages.
+        path = self.path
+        if not (path / 'softfab.ini').exists():
+            # Currently directory is the default path.
+            current = str(path) == '.'
+            echo(f"No 'softfab.ini' in {'current' if current else 'given'} "
+                 f"directory: {path.resolve()}", err=True)
+            if current:
+                echo(f"Use 'softfab --dir DIR COMMAND ...' to specify "
+                     f"the data  directory.", err=True)
+            get_current_context().exit(2)
+        if not (path / 'ctrl.sock').exists():
+            echo("No control socket in data directory; "
+                 "is the Control Center running?", err=True)
+            get_current_context().exit(2)
+
         reactor = self.reactor
-        endpointFactory = ControlSocketFactory(reactor, self.path)
+        endpointFactory = ControlSocketFactory(reactor, path)
         return Agent.usingEndpointFactory(reactor, endpointFactory)
 
     def apply(self) -> None:
