@@ -286,6 +286,7 @@ def migrate(globalOptions: GlobalOptions) -> None:
 
     This updates the data to the latest schema.
     Should be run after upgrading SoftFab, if the release notes say so.
+
     Will also repair inconsistent data and remove unreachable records.
     """
 
