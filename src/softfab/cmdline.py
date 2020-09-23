@@ -48,13 +48,9 @@ class DirectoryParamType(ParamType):
 
         path = Path(value)
         if path.exists() and not path.is_dir():
-            raise BadParameter(f"Path is not a directory: {path}")
-        elif (path / 'softfab.ini').exists():
-            return path
+            raise BadParameter(f'Path is not a directory: {path}')
         else:
-            raise BadParameter(
-                f"No 'softfab.ini' in {'current' if value == '.' else 'given'} "
-                f"directory: {path.resolve()}")
+            return path
 
 class OutputFormat(Enum):
     TEXT = auto()
