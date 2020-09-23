@@ -89,13 +89,15 @@ async def run_GET(agent: IAgent, url: str) -> bytes:
         raise OSError(f"Unexpected result from HTTP GET: {code} {phrase}\n"
                       f"{message}")
 
-async def run_PUT(agent: IAgent, url: str, payload: bytes) -> None:
+async def run_PUT(agent: IAgent, url: str, payload: bytes) -> bytes:
     """Make an HTTP PUT request."""
 
     response, body = await _runRequest(agent, url, b'PUT', payload)
 
     code = response.code
-    if code not in (200, 201, 204):
+    if code in (200, 201, 204):
+        return body
+    else:
         phrase = response.phrase.decode(errors='replace')
         message = body.decode(errors='replace').rstrip()
         raise OSError(f"Unexpected result from HTTP PUT: {code} {phrase}\n"
