@@ -63,17 +63,33 @@ def jsonReply(request: Request, data: object) -> bytes:
     request.setHeader(b'Content-Type', b'application/json; charset=UTF-8')
     return json.dumps(data).encode()
 
+def _resetPasswordJSON(userDB: UserDB,
+                       userName: str,
+                       tokenDB: TokenDB
+                       ) -> Mapping[str, str]:
+    """Reset the password of a user account.
+    @return: A JSON object containing the reset token and URL.
+    """
+    tokenCredentials = resetPassword(userDB, userName, tokenDB)
+    return dict(
+        token=tokenCredentials.name,
+        secret=tokenCredentials.password,
+        url=setPasswordURL(tokenCredentials)
+        )
+
 @attr.s(auto_attribs=True)
 class UserData:
+    name: str
     role: UIRoleNames
 
-@attr.s(auto_attribs=True)
-class UserDataName(UserData):
-    name: str
-
     @classmethod
-    def fromUserAccount(cls, user: UserAccount) -> 'UserDataName':
+    def fromUserAccount(cls, user: UserAccount) -> 'UserData':
         return cls(name=user.name, role=user.uiRole)
+
+@attr.s(auto_attribs=True)
+class UserDataCreate:
+    role: UIRoleNames
+    password: PasswordActions = PasswordActions.REMOVE
 
 @attr.s(auto_attribs=True)
 class UserDataUpdate:
@@ -86,7 +102,7 @@ class UserResource(Resource):
     def __init__(self,
                  userDB: UserDB,
                  tokenDB: TokenDB,
-                 user: UserDataName,
+                 user: UserData,
                  fmt: DataFormat
                  ):
         super().__init__()
@@ -131,15 +147,11 @@ class UserResource(Resource):
 
         password = data.password
         if password is not None:
+            tokenDB = self._tokenDB
             if password is PasswordActions.REMOVE:
-                removePassword(userDB, userName, self._tokenDB)
+                removePassword(userDB, userName, tokenDB)
             elif password is PasswordActions.RESET:
-                token = resetPassword(userDB, userName, self._tokenDB)
-                reply['reset'] = dict(
-                    token=token.name,
-                    secret=token.password,
-                    url=setPasswordURL(token)
-                    )
+                reply['reset'] = _resetPasswordJSON(userDB, userName, tokenDB)
 
         if reply:
             return jsonReply(request, reply)
@@ -154,9 +166,10 @@ class UserResource(Resource):
 class NoUserResource(Resource):
     """HTTP resource for a non-existing user account."""
 
-    def __init__(self, userDB: UserDB, name: str):
+    def __init__(self, userDB: UserDB, tokenDB: TokenDB, name: str):
         super().__init__()
         self._userDB = userDB
+        self._tokenDB = tokenDB
         self._name = name
 
     def getChildWithDefault(self, path: bytes, request: Request) -> IResource:
@@ -172,15 +185,23 @@ class NoUserResource(Resource):
             return textReply(request, 400, f"Invalid JSON: {ex}\n")
 
         try:
-            data = jsonToData(jsonNode, UserData)
+            data = jsonToData(jsonNode, UserDataCreate)
         except ValueError as ex:
             return textReply(request, 400, f"Not a valid record: {ex}\n")
 
+        userDB = self._userDB
         name = self._name
         try:
-            addUserAccount(self._userDB, name, uiRoleToSet(data.role))
+            addUserAccount(userDB, name, uiRoleToSet(data.role))
         except ValueError as ex:
             return textReply(request, 400, f"Error creating user: {ex}\n")
+
+        reply = {}
+        if data.password is PasswordActions.RESET:
+            reply['reset'] = _resetPasswordJSON(userDB, name, self._tokenDB)
+
+        if reply:
+            return jsonReply(request, reply)
         else:
             return textReply(request, 201, f"User created: {name}\n")
 
@@ -217,10 +238,10 @@ class UsersResource(Resource):
         try:
             user = self._userDB[name]
         except KeyError:
-            return NoUserResource(self._userDB, name)
+            return NoUserResource(self._userDB, self._tokenDB, name)
         else:
             return UserResource(self._userDB, self._tokenDB,
-                                UserDataName.fromUserAccount(user), fmt)
+                                UserData.fromUserAccount(user), fmt)
 
     def render_GET(self, request: Request) -> bytes:
         request.setHeader(b'Content-Type', b'text/plain; charset=UTF-8')

@@ -340,13 +340,13 @@ def add(globalOptions: GlobalOptions, name: str, role: str) -> None:
     import json
     from softfab.apiclient import run_PUT
 
-    callAPI(globalOptions.reactor, run_PUT(
-            globalOptions.agent,
-            globalOptions.urlForPath(userPath(name)),
-            json.dumps(dict(role=role)).encode()
-            ))
+    result = callAPI(globalOptions.reactor, run_PUT(
+        globalOptions.agent,
+        globalOptions.urlForPath(userPath(name)),
+        json.dumps(dict(role=role, password='reset')).encode()
+        ))
     echo(f"softfab: {role.title()} account '{name}' created", err=True)
-    # TODO: Produce a password reset link.
+    presentResetURL(name, result)
 
 userRemoveDoc = """
 To preserve a meaningful history, we recommend to not remove user accounts
@@ -406,11 +406,7 @@ def reset(globalOptions: GlobalOptions, name: str) -> None:
 
     result = updateUser(globalOptions, name, password='reset')
     echo(f"softfab: Password of account '{name}' was reset", err=True)
-
-    import json
-    data = json.loads(result)
-    echo(f"A new password for '{name}' can be set by visiting:")
-    echo(data['reset']['url'])
+    presentResetURL(name, result)
 
 def updateUser(globalOptions: GlobalOptions,
                name: str,
@@ -424,3 +420,9 @@ def updateUser(globalOptions: GlobalOptions,
         globalOptions.urlForPath(userPath(name)),
         json.dumps(updates).encode()
         ))
+
+def presentResetURL(name: str, result: bytes) -> None:
+    import json
+    data = json.loads(result)
+    echo(f"A new password for '{name}' can be set by visiting:")
+    echo(data['reset']['url'])

@@ -105,6 +105,15 @@ def find_command(words):
             return command, words[idx:]
     raise LookupError(f"no such command: {' '.join(words[:idx])}")
 
+def parse_reset_url(urlstr):
+    """Extract the token ID from a password reset URL."""
+    url = urlparse(urlstr)
+    assert url.path.endswith('/SetPassword'), url
+    query = parse_qs(url.query)
+    assert query.keys() == {'token', 'secret'}, url
+    tokenId, = query['token']
+    return tokenId
+
 class SoftFabCLI:
     runner = CliRunner()
 
@@ -144,6 +153,10 @@ class SoftFabCLI:
         """Does a token with the given ID exist?"""
         return (self.db_path / 'tokens' / f'{token_id}.xml').is_file()
 
+    def remove_token(self, token_id):
+        """Remove the token with the given ID."""
+        (self.db_path / 'tokens' / f'{token_id}.xml').unlink()
+
 @fixture
 def cli(tmp_path):
     return SoftFabCLI(tmp_path)
@@ -179,7 +192,13 @@ def add_user(cli, name, role=None, duplicate=False):
         assert result.output == f"softfab: User already exists: {name}\n"
     else:
         assert result.exit_code == 0
-        assert result.output == f"softfab: {role.title()} account '{name}' created\n"
+        lines = result.output.strip().split('\n')
+        assert lines[0] == f"softfab: {role.title()} account '{name}' created"
+        tokenId = parse_reset_url(lines[-1])
+        assert cli.has_token(tokenId), tokenId
+        assert not cli.has_password(name)
+        # Simulate the user setting a password.
+        cli.remove_token(tokenId)
         cli.add_password(name)
 
 def remove_user(cli, name, force=True, exists=True):
@@ -228,11 +247,7 @@ def check_reset_password(cli, name, exists=True):
         assert result.exit_code == 0
         lines = result.output.strip().split('\n')
         assert lines[0] == f"softfab: Password of account '{name}' was reset"
-        url = urlparse(lines[-1])
-        assert url.path.endswith('/SetPassword'), url
-        query = parse_qs(url.query)
-        assert query.keys() == {'token', 'secret'}, url
-        tokenId, = query['token']
+        tokenId = parse_reset_url(lines[-1])
         assert cli.has_token(tokenId), tokenId
         assert not cli.has_password(name)
         return tokenId
