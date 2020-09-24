@@ -75,6 +75,7 @@ def getKnownTimezones() -> Sequence[str]:
     else:
         return ()
 
+defaultFactoryName = 'Nameless'
 defaultMaxJobs = 25
 
 class Project(XMLTag, SingletonElem):
@@ -240,7 +241,7 @@ class ProjectDB(Database[Project]):
 
         # Create singleton record if it doesn't exist already.
         if len(self) == 0:
-            record = Project({'name': 'Nameless'})
+            record = Project({'name': defaultFactoryName})
             record.updateVersion()
             self.add(record)
 

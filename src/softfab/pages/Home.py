@@ -9,6 +9,7 @@ from softfab.databaselib import RecordObserver
 from softfab.datawidgets import DataTable
 from softfab.joblib import Job, JobDB
 from softfab.jobview import JobsSubTable
+from softfab.projectlib import defaultFactoryName
 from softfab.querylib import KeySorter, RecordProcessor, runQuery
 from softfab.schedulelib import ScheduleDB
 from softfab.userlib import UserDB
@@ -106,6 +107,12 @@ class Home_GET(FabPage['Home_GET.Processor', FabPage.Arguments]):
 
         proc = cast(Home_GET.Processor, kwargs['proc'])
         if len(proc.jobDB) < 20:
+            if proc.project.name == defaultFactoryName \
+                    and proc.user.hasPrivilege('p/m'):
+                yield xhtml.p[
+                    "You can set a name for your factory on the ",
+                    pageLink('ProjectEdit')['Project Configuration'], " page."
+                    ]
             yield xhtml.p[
                 'For help to get started, please read the ',
                 docLink('/start/')[ 'Getting Started' ],
