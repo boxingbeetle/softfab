@@ -84,6 +84,8 @@ class Login_GET(LoginBase['Login_GET.Processor', 'Login_GET.Arguments']):
 
     class Processor(PageProcessor['Login_GET.Arguments']):
 
+        userDB: ClassVar[UserDB]
+
         async def process(self,
                           req: Request['Login_GET.Arguments'],
                           user: User
@@ -94,6 +96,46 @@ class Login_GET(LoginBase['Login_GET.Processor', 'Login_GET.Arguments']):
                 url = req.relativeURL(url)
                 if url is None:
                     raise ArgsCorrected(req.args, url=None)
+
+            # If there are no user accounts, provide setup instructions
+            # instead of a login prompt.
+            # pylint: disable=attribute-defined-outside-init
+            self.setup = not self.userDB
+
+    def pageTitle(self, proc: 'Login_GET.Processor') -> str:
+        return 'Setup' if proc.setup else super().pageTitle(proc)
+
+    def presentContent(self, **kwargs: object) -> XMLContent:
+        proc = cast(Login_GET.Processor, kwargs['proc'])
+        if proc.setup:
+            return self.__presentSetup()
+        else:
+            return super().presentContent(**kwargs)
+
+    def __presentSetup(self) -> XMLContent:
+        yield xhtml.h3[
+            "This factory has no user accounts."
+            ]
+        yield xhtml.p[
+            "To add an operator account (user with administrative privileges), "
+            "run the following command on the server that hosts "
+            "the SoftFab Control Center:"
+            ]
+        yield xhtml.p[xhtml.code[
+            "$ softfab --dir ", xhtml.em['datadir'], " user add "
+            "--role operator ", xhtml.em['name']
+            ]]
+        yield xhtml.p[
+            "where ", xhtml.code[xhtml.em['datadir']], " is the directory "
+            "that contains ", xhtml.code['softfab.ini'],
+            " and ", xhtml.code[xhtml.em['name']], " is the login name you "
+            "pick for the operator account."
+            ]
+        yield xhtml.p[
+            "The command above will print a URL that you can open in your "
+            "web browser to set a password for the new operator account. "
+            "You can then log in to that account and complete the setup."
+            ]
 
 _downloadURLs = {
     'Edge':
