@@ -34,18 +34,18 @@ from softfab.render import renderAuthenticated
 from softfab.request import Request
 from softfab.response import Response
 from softfab.userlib import User
-from softfab.xmlgen import XML, XMLContent, parseHTML, xhtml
+from softfab.xmlgen import XML, PIHandler, XMLContent, parseHTML, xhtml
 
-PI_Handler = Callable[[str], XMLContent]
+SinglePIHandler = Callable[[str], XMLContent]
 
-def piHandlerDict(module: ModuleType) -> Dict[str, PI_Handler]:
+def piHandlerDict(module: ModuleType) -> Dict[str, SinglePIHandler]:
     handlers = getattr(module, '__piHandlers', None)
     if handlers is None:
         handlers = {}
         setattr(module, '__piHandlers', handlers)
     return handlers
 
-def piHandler(handler: PI_Handler) -> PI_Handler:
+def piHandler(handler: SinglePIHandler) -> SinglePIHandler:
     """Decorator that marks a function as a processing instruction handler.
     Marked functions will be called for processing instructions where the
     target matches the function name.
@@ -54,6 +54,15 @@ def piHandler(handler: PI_Handler) -> PI_Handler:
     module = sys.modules[handler.__module__]
     piHandlerDict(module)[handler.__name__] = handler
     return handler
+
+class ModulePIHandler(PIHandler):
+
+    def __init__(self, module: ModuleType) -> None:
+        super().__init__()
+        self.handlers = piHandlerDict(module)
+
+    def __call__(self, name: str, arg: str) -> XMLContent:
+        return self.handlers[name](arg)
 
 class ExtractedInfo:
     """Fragments extracted from a documentation page."""
@@ -311,7 +320,7 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
         try:
             renderedXML = parseHTML(
                 renderedStr,
-                piHandlers=piHandlerDict(module)
+                piHandler=ModulePIHandler(module)
                 )
         except Exception:
             logging.exception(

@@ -641,15 +641,24 @@ class _XHTMLNodeFactory(_XMLNodeFactory):
             nodeClass = _XHTMLNode
         return nodeClass(self._namespace, key, {}, _emptySequence)
 
-PI_Handler = Callable[[str], XMLContent]
+class PIHandler(Protocol):
+    """Protocol for handling HTML/XML processing instructions."""
+
+    def __call__(self, name: str, arg: str) -> XMLContent:
+        """Handle a processing instruction (PI).
+
+        @param name: The PI's target (first word).
+        @param arg: The PI's data (remainder).
+        @return: The XML content to be inserted at the point in the document
+            where the PI was.
+        """
+        raise NotImplementedError
 
 class _XHTMLParser(HTMLParser):
 
-    def __init__(self,
-            piHandlers: Optional[Mapping[str, PI_Handler]] = None
-            ) -> None:
+    def __init__(self, piHandler: Optional[PIHandler] = None) -> None:
         super().__init__()
-        self.piHandlers = piHandlers
+        self.piHandler = piHandler
         self.stack: List[Tuple[XMLNode, List[XMLContent]]] = [
             (cast(XMLNode, None), [])
             ]
@@ -677,8 +686,8 @@ class _XHTMLParser(HTMLParser):
         self.stack[-1][-1].append(data)
 
     def handle_pi(self, data: str) -> None:
-        handlers = self.piHandlers
-        if handlers is None:
+        handler = self.piHandler
+        if handler is None:
             # User isn't interested in PI.
             return
 
@@ -700,27 +709,17 @@ class _XHTMLParser(HTMLParser):
         if target == 'xml':
             return
 
-        # Call the registered handler for the target.
-        handler = handlers[target]
-        result = handler(arg.strip())
+        # Call the registered handler.
+        result = handler(target, arg.strip())
         self.stack[-1][-1].append(result)
 
-def parseHTML(
-        html: str, *,
-        piHandlers: Optional[Mapping[str, PI_Handler]] = None
-        ) -> XML:
+def parseHTML(html: str, *, piHandler: Optional[PIHandler] = None) -> XML:
     """Parses an HTML document or fragment.
 
-    If nothing is passed for `piHandlers`, processing instructions (PI)
-    will be silently ignored.
-    If a mapping is passed, the PI's target will be used as a key to look
-    up a PI handler function which will be called with the PI's data.
-    The XML content returned by the handler is inserted at the point in
-    the document where the PI was.
-    KeyError will be raised if there is a PI handler mapping but the PI's
-    target isn't in the mapping.
+    @param piHandler: Handler for processing instructions (PI).
+        If L{None}, PI will be silently ignored.
     """
-    parser = _XHTMLParser(piHandlers)
+    parser = _XHTMLParser(piHandler)
     parser.feed(html)
     (_, content), = parser.stack
     return xhtml[content]
