@@ -133,22 +133,25 @@ def testIgnorePI():
         '</p>'
         )
 
-def testUnknownPI():
-    """Check parsing of unknown processing instruction."""
+def testRaisePI():
+    """Check propagation of handler exceptions."""
+    def handler(name, arg):
+        raise KeyError(f'unknown PI: {name}')
     with raises(KeyError):
         parseHTML(
             '<p>A processing <?jump> instruction.</p>',
-            piHandlers={}
+            piHandler=handler
             )
 
 def testNoArgPI():
     """Check parsing of processing instruction with no arguments."""
-    def jumpHandler(arg):
-        assert arg == '', arg
+    def handler(name, arg):
+        assert name == 'jump'
+        assert arg == ''
         return xhtml.br
     parsed = parseHTML(
         '<p>A processing <?jump> instruction.</p>',
-        piHandlers=dict(jump=jumpHandler)
+        piHandler=handler
         )
     assert parsed.flattenXML() == (
         '<p xmlns="http://www.w3.org/1999/xhtml">'
@@ -158,9 +161,12 @@ def testNoArgPI():
 
 def testArgPI():
     """Check parsing of processing instruction with an argument."""
+    def handler(name, arg):
+        assert name == 'jump'
+        return xhtml.span[arg]
     parsed = parseHTML(
         '<p>A processing <?jump a little higher> instruction.</p>',
-        piHandlers=dict(jump=lambda arg: xhtml.span[arg])
+        piHandler=handler
         )
     assert parsed.flattenXML() == (
         '<p xmlns="http://www.w3.org/1999/xhtml">'
@@ -170,10 +176,12 @@ def testArgPI():
 
 def testIgnoreXMLDecl():
     """Check parsing of XML declaration."""
+    def handler(name, arg):
+        assert False
     parsed = parseHTML(
         '<?xml version="1.0" encoding="UTF-8" ?>'
         '<html><body><p>XHTML document.</p></body></html>',
-        piHandlers={}
+        piHandler=handler
         )
     assert parsed.flattenXML() == (
         '<html xmlns="http://www.w3.org/1999/xhtml">'
@@ -183,11 +191,12 @@ def testIgnoreXMLDecl():
 
 def testIgnoreXMLSyntax():
     """Check parsing of a PI using XML syntax (question mark at end)."""
-    def jumpHandler(arg):
+    def handler(name, arg):
+        assert name == 'jump'
         return arg.upper()
     parsed = parseHTML(
         '<p>A processing <?jump lazy fox?> instruction.</p>',
-        piHandlers=dict(jump=jumpHandler)
+        piHandler=handler
         )
     assert parsed.flattenXML() == (
         '<p xmlns="http://www.w3.org/1999/xhtml">'
