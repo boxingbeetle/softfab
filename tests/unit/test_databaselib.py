@@ -81,6 +81,7 @@ def createDB(tmp_path, request):
 def checkEmpty(db):
     "Check that given database has no records."
     assert len(db) == 0
+    assert not db
     with raises(KeyError):
         db[RECORD_ID]
     assert db.get(RECORD_ID) == None
@@ -94,6 +95,7 @@ def checkEmpty(db):
 def checkOne(db, record):
     "Check that given database has one record."
     assert len(db) == 1
+    assert db
     assert db[record.getId()] == record
     assert db.get(record.getId()) == record
     assert db[record.getId()].properties == record.properties
