@@ -78,7 +78,7 @@ ECHO %SF_TASK_ID% is finished.
 
 ### Why is the next task still carried out, if the previous task failed with result=error?<a id="next_task_executed"></a>
 
-As with [the previous question](next_task_not_executed), the key thing to note is that for inter-task dependencies, it only matters whether a product was produced or not. So the fact that the first task failed is irrelevant.
+As with [the previous question](#next_task_not_executed), the key thing to note is that for inter-task dependencies, it only matters whether a product was produced or not. So the fact that the first task failed is irrelevant.
 
 If a wrapper writes the output location to `results.properties` without checking whether the output was actually produced, dependent tasks will attempt to run and then fail to find the product they need. To avoid this, make sure your wrapper only writes for example `output.BINARY.locator` to the results if the binary was actually produced.
 
