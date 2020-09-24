@@ -61,27 +61,19 @@ class LoginBase(UIPage[ProcT], FabResource[ArgsT, ProcT]):
 
         userAgent = proc.req.userAgent
         if userAgent.family == 'MSIE':
-            version = userAgent.version
-            if version and version[0] < 11:
-                yield xhtml.p[
-                    f'Internet Explorer {version[0]:d} is ',
-                    xhtml.b['not supported'], ' by SoftFab. ',
-                    'Please upgrade to ',
-                    xhtml.a(href = _downloadURLs['MSIE'], target = '_blank')[
-                        'Internet Explorer 11'
-                        ], ' or to an alternative browser such as ',
-                    xhtml.a(href = _downloadURLs['Mozilla'], target = '_blank')[
-                        'Mozilla Firefox'
-                        ], ' or ',
-                    xhtml.a(href = _downloadURLs['Chrome'], target = '_blank')[
-                        'Google Chrome'
-                        ], '.'
-                    ]
-                yield xhtml.p[
-                    'You are free to log in anyway, but it is likely you will '
-                    'see rendering errors and you might encounter problems '
-                    'with JavaScript.'
-                    ]
+            yield xhtml.p[
+                'Internet Explorer is ', xhtml.b['not supported'],
+                ' by SoftFab. Please upgrade to ',
+                xhtml.a(href=_downloadURLs['Edge'], target='_blank')[
+                    'Microsoft Edge'
+                    ], ' or to an alternative browser such as ',
+                xhtml.a(href=_downloadURLs['Mozilla'], target='_blank')[
+                    'Mozilla Firefox'
+                    ], ' or ',
+                xhtml.a(href=_downloadURLs['Chrome'], target='_blank')[
+                    'Google Chrome'
+                    ], '.'
+                ]
 
 class Login_GET(LoginBase['Login_GET.Processor', 'Login_GET.Arguments']):
     '''Page that presents login form.
@@ -104,8 +96,8 @@ class Login_GET(LoginBase['Login_GET.Processor', 'Login_GET.Arguments']):
                     raise ArgsCorrected(req.args, url=None)
 
 _downloadURLs = {
-    'MSIE':
-        'https://support.microsoft.com/en-us/products/internet-explorer',
+    'Edge':
+        'https://www.microsoft.com/edge',
     'Mozilla':
         'https://www.mozilla.com/firefox/',
     'Chrome':
