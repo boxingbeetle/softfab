@@ -1,11 +1,13 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from enum import Flag, auto
+from functools import partial
 from importlib import import_module
 from pathlib import Path
 from types import ModuleType
 from typing import (
-    Callable, Dict, Iterator, List, Optional, Sequence, Tuple, cast
+    Awaitable, Callable, Dict, Iterable, Iterator, List, Optional, Sequence,
+    Tuple, cast
 )
 from xml.etree.ElementTree import Element
 import logging
@@ -18,6 +20,7 @@ from markdown.extensions.def_list import DefListExtension
 from markdown.extensions.fenced_code import FencedCodeExtension
 from markdown.extensions.tables import TableExtension
 from markdown.treeprocessors import Treeprocessor
+from twisted.internet.defer import DeferredList, ensureDeferred
 from twisted.web.resource import Resource
 from twisted.web.server import Request as TwistedRequest
 from twisted.web.static import Data
@@ -29,11 +32,13 @@ from softfab.StyleResources import pygmentsSheet, styleRoot
 from softfab.UIPage import UIResponder
 from softfab.authentication import LoginAuthPage
 from softfab.compat import importlib_resources
+from softfab.graphview import ExecutionGraphBuilder
 from softfab.pageargs import PageArgs
 from softfab.render import renderAuthenticated
 from softfab.request import Request
 from softfab.response import Response
 from softfab.userlib import User
+from softfab.webgui import PresenterFunction
 from softfab.xmlgen import XML, PIHandler, XMLContent, parseHTML, xhtml
 
 SinglePIHandler = Callable[[str], XMLContent]
@@ -55,14 +60,45 @@ def piHandler(handler: SinglePIHandler) -> SinglePIHandler:
     piHandlerDict(module)[handler.__name__] = handler
     return handler
 
+async def _renderGraph(
+        builder: ExecutionGraphBuilder,
+        cache: Dict[str, XML]
+        ) -> None:
+    consumer = await builder.build(export=False).toSVG()
+    cache[builder.name] = xhtml[consumer.takeSVG()]
+
+async def _renderGraphs(
+        builders: Iterable[ExecutionGraphBuilder],
+        cache: Dict[str, XML]
+        ) -> None:
+    deferreds = [
+        ensureDeferred(_renderGraph(builder, cache))
+        for builder in builders
+        if builder.name not in cache
+        ]
+    if deferreds:
+        await DeferredList(deferreds)
+
 class ModulePIHandler(PIHandler):
 
     def __init__(self, module: ModuleType) -> None:
         super().__init__()
+        self.module = module
         self.handlers = piHandlerDict(module)
+        self.graphCache: Dict[str, XML] = {}
 
     def __call__(self, name: str, arg: str) -> XMLContent:
-        return self.handlers[name](arg)
+        if name == 'graph':
+            return PresenterFunction(partial(self.__presentGraph, name=arg))
+        else:
+            return self.handlers[name](arg)
+
+    def __presentGraph(self, name: str, **kwargs: object) -> XMLContent:
+        try:
+            svg = self.graphCache[name]
+        except KeyError:
+            svg = xhtml.span(class_='notice')['Graph rendering failed']
+        return xhtml.div(class_='graph')[xhtml.div[svg]]
 
 class ExtractedInfo:
     """Fragments extracted from a documentation page."""
@@ -176,9 +212,21 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
                           user: User
                           ) -> None:
             page = cast(DocPage, self.page)
-            func = getattr(page.module, 'process', None)
+            module = page.module
+
+            # Run module-specific processing.
+            func: Optional[Callable[[], Awaitable[None]]] = \
+                    getattr(module, 'process', None)
             if func is not None:
                 await func()
+
+            # Render execution graphs.
+            graphBuilders: Optional[Iterable[ExecutionGraphBuilder]] = \
+                    getattr(module, 'graphBuilders', None)
+            if graphBuilders is not None:
+                handler = page.piHandler
+                assert handler is not None
+                await _renderGraphs(graphBuilders, handler.graphCache)
 
     def __init__(self,
                  resource: 'DocResource',
@@ -198,6 +246,8 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
             if moduleFile is not None:
                 contentPath = Path(moduleFile).parent / 'contents.md'
         self.contentPath = contentPath
+
+        self.piHandler = None if module is None else ModulePIHandler(module)
 
         self.contentMTime: Optional[int] = None
         self.__extractedInfo: Optional[ExtractedInfo] = None
@@ -318,10 +368,7 @@ class DocPage(BasePage['DocPage.Processor', 'DocPage.Arguments']):
         # is re-inserted after the tree has been serialized.
         # So unfortunately we have to parse the serialized output.
         try:
-            renderedXML = parseHTML(
-                renderedStr,
-                piHandler=ModulePIHandler(module)
-                )
+            renderedXML = parseHTML(renderedStr, piHandler=self.piHandler)
         except Exception:
             logging.exception(
                 'Error post-processing content for %s',
