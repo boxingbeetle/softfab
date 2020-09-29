@@ -166,7 +166,7 @@ class UIPage(Generic[ProcT]):
         return xhtml.div(class_ = 'titlebar')[
             xhtml.div(class_ = 'title')[ self.__title(proc) ],
             xhtml.div(class_ = 'info')[
-                xhtml.a(href=ccURL + loginURL(proc.req))[ 'log in' ]
+                xhtml.a(href=ccURL + self.loginURL(**kwargs))[ 'log in' ]
                 if userName is None else (
                     createUserDetailsLink(userName).present(**kwargs),
                     ' \u2013 ',
@@ -181,6 +181,10 @@ class UIPage(Generic[ProcT]):
                     ]
                 ]
             ]
+
+    def loginURL(self, **kwargs: object) -> str:
+        proc = cast(ProcT, kwargs['proc'])
+        return loginURL(proc.req)
 
     def presentContent(self, **kwargs: object) -> XMLContent:
         raise NotImplementedError
