@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import ClassVar, Iterator, Tuple, cast
+from typing import Any, ClassVar, Iterator, Optional, Tuple, cast
 
 from twisted.cred.error import UnauthorizedLogin
 
@@ -18,7 +18,7 @@ from softfab.users import Credentials, User
 from softfab.userview import (
     LoginNameArgs, PasswordMessage, passwordQuality, passwordStr
 )
-from softfab.webgui import pageLink
+from softfab.webgui import pageLink, pageURL
 from softfab.xmlgen import XML, XMLContent, xhtml
 
 
@@ -77,6 +77,10 @@ def verifyToken(tokenDB: TokenDB, args: PasswordSetArgs) -> Token:
 class SetPasswordBase(UIPage[ProcT], FabResource[ArgsT, ProcT]):
     authenticator = NoAuthPage.instance
 
+    def loginURL(self, **kwargs: Any) -> str:
+        userName = cast(Optional[str], kwargs['proc'].userName)
+        return pageURL('Login', LoginNameArgs(loginname=userName))
+
     def checkAccess(self, user: User) -> None:
         pass
 
@@ -104,12 +108,15 @@ class SetPassword_GET(SetPasswordBase['SetPassword_GET.Processor',
                           req: Request['SetPassword_GET.Arguments'],
                           user: User
                           ) -> None:
-
-            token = verifyToken(self.tokenDB, req.args)
-            userName = token.getParam('name')
-
             # pylint: disable=attribute-defined-outside-init
-            self.userName = userName
+
+            try:
+                token = verifyToken(self.tokenDB, req.args)
+            except PresentableError:
+                self.userName = None
+                raise
+            else:
+                self.userName = token.getParam('name')
 
     def presentContent(self, **kwargs: object) -> XMLContent:
         # Remove the token credentials from the history and location bar.
@@ -177,9 +184,6 @@ class SetPassword_POST(SetPasswordBase['SetPassword_POST.Processor',
             'Password set successfully.'
             ]
         yield xhtml.p[
-            'You can now ',
-            pageLink('Login', LoginNameArgs(loginname=proc.userName))[
-                'log in'
-                ],
+            'You can now ', xhtml.a(href=self.loginURL(**kwargs))['log in'],
             ' with your new password.'
             ]
