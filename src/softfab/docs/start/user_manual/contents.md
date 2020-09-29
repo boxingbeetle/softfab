@@ -17,6 +17,7 @@ All titles are starting with your project name followed by 'SoftFab'. The second
  At the right hand side you see time and date information, who is logged in, a way to log out and the SoftFab logo.
 
 Clicking:
+
 * the logo takes you to the 'About' page. Here you will find a link to the documentation pages.
 * your user name shows you the user details page where you can change your password or see an overview of jobs and tasks that you created.
 
@@ -272,6 +273,7 @@ Filtering on (Job) configuration means: show only tasks that occur in this/these
 In this section all resources instances, ordered by their type, and their status are presented.
 
 Two types of resources do exist:
+
 * User defined resource types.
 * The predefined [Task Runner](#runner) resource type.
 
