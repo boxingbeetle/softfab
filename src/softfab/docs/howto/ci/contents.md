@@ -25,9 +25,7 @@ Triggering a Schedule
 
 You can trigger a schedule using the [TriggerSchedule](../../reference/api/#TriggerSchedule) API call. This means you request the following URL:
 
-```
-https://example.com/sf/TriggerSchedule?scheduleId=NameOfTriggeredSchedule
-```
+<pre><?ccURL?>TriggerSchedule?scheduleId=NameOfTriggeredSchedule</pre>
 
 This API call should be made when relevant commits are pushed to your repositories. Most version control systems have hooks that allow scripts to run on various events, including when commits are pushed.
 

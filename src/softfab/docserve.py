@@ -32,6 +32,7 @@ from softfab.StyleResources import pygmentsSheet, styleRoot
 from softfab.UIPage import UIResponder
 from softfab.authentication import LoginAuthPage
 from softfab.compat import importlib_resources
+from softfab.config import rootURL
 from softfab.graphview import ExecutionGraphBuilder
 from softfab.pageargs import PageArgs
 from softfab.render import renderAuthenticated
@@ -88,7 +89,9 @@ class ModulePIHandler(PIHandler):
         self.graphCache: Dict[str, XML] = {}
 
     def __call__(self, name: str, arg: str) -> XMLContent:
-        if name == 'graph':
+        if name == 'ccURL':
+            return rootURL
+        elif name == 'graph':
             return PresenterFunction(partial(self.__presentGraph, name=arg))
         else:
             return self.handlers[name](arg)

@@ -53,14 +53,14 @@ On success 'Abort' returns an XML structure tagged by `<abortedtasks>` with 0 or
 
 Examples:
 
-`http://factory.company.com/Abort?jobId=080910-1234-ABCD&taskName=build`
-:   Abort the "build" task in the specified job.
-
-`http://factory.company.com/Abort?jobId=080910-1234-ABCD&jobId=080910-2345-BCDE`
-:   Abort all running and waiting tasks in two specified jobs.
-
-`http://factory.company.com/Abort?jobId=080910-2345-BCDE&onlyWaiting=true`
-:   Abort all waiting tasks in the specified job.
+<dl>
+<dt><code><?ccURL?>Abort?jobId=080910-1234-ABCD&amp;taskName=build</code></dt>
+<dd>Abort the "build" task in the specified job.</dd>
+<dt><code><?ccURL?>Abort?jobId=080910-1234-ABCD&amp;jobId=080910-2345-BCDE</code></dt>
+<dd>Abort all running and waiting tasks in two specified jobs.</dd>
+<dt><code><?ccURL?>Abort?jobId=080910-2345-BCDE&amp;onlyWaiting=true</code></dt>
+<dd>Abort all waiting tasks in the specified job.</dd>
+</dl>
 
 ### GetFactoryInfo<a id="GetFactoryInfo"></a>
 
@@ -72,8 +72,10 @@ none
 
 Example:
 
-`http://factory.company.com/GetFactoryInfo`
-:   Return all kind of monitoring information in XML format of "factory".
+<dl>
+<dt><code><?ccURL?>GetFactoryInfo</code></dt>
+<dd>Return monitoring information about your factory in XML format.</dd>
+</dl>
 
 ### GetJobHistory<a id="GetJobHistory"></a>
 
@@ -101,8 +103,10 @@ execState: (optional)
 
 Example:
 
-`http://factory.company.com/GetJobHistory?ctabove=2008-01-01&ctbelow=2009-01-01&configId=Regression+tests&execState=completed`
-:   Return the IDs of all jobs created in 2008 from the configuration "Regression tests" that ran to completion.
+<dl>
+<dt><code><?ccURL?>GetJobHistory?ctabove=2018-01-01&amp;ctbelow=2019-01-01&amp;configId=Regression+tests&amp;execState=completed</code></dt>
+<dd>Return the IDs of all jobs created in 2018 from the configuration "Regression tests" that ran to completion.</dd>
+</dl>
 
 ### GetJobInfo<a id="GetJobInfo"></a>
 
@@ -115,8 +119,10 @@ jobId: (mandatory)
 
 Example:
 
-`http://factory.company.com/GetJobInfo?jobId=080104-1435-AF98`
-:   Return all information in XML format about job "080104-1435-AF98".
+<dl>
+<dt><code><?ccURL?>GetJobInfo?jobId=080104-1435-AF98</code></dt>
+<dd>Return all information in XML format about job `080104-1435-AF98`.</dd>
+</dl>
 
 ### GetResourceInfo<a id="GetResourceInfo"></a>
 
@@ -132,20 +138,16 @@ name: (optional, multiple)
 
 Examples:
 
-`http://factory.company.com/GetResourceInfo`
-:   Return information of all resources.
-
-`http://factory.company.com/GetResourceInfo?type=sf.tr`
-:   Return information of all resources of type "sf.tr".
-
-`http://factory.company.com/GetResourceInfo?name=myresource`
-:   Return information of all different kind of resources identified by the name "myresource".
-
-`http://factory.company.com/GetResourceInfo?type=sf.tr&name=myresource`
-:   Return just the information of resource "sf.tr" with name "myresource".
-
-`http://factory.company.com/GetResourceInfo?type=sf.tr&type=mytype`
-:   Return the information of all resources "sf.tr" and custom resource typed "mytype".
+<dl>
+<dt><code><?ccURL?>GetResourceInfo</code></dt>
+<dd>Return information of all resources.</dd>
+<dt><code><?ccURL?>GetResourceInfo?type=sf.tr</code></dt>
+<dd>Return information of all Task Runners (pre-defined resource type <code>sf.tr</code>).</dd>
+<dt><code><?ccURL?>GetResourceInfo?name=myresource</code></dt>
+<dd>Return information of the resource named "myresource".</dd>
+<dt><code><?ccURL?>GetResourceInfo?type=sf.tr&amp;type=mytype</code></dt>
+<dd>Return the information of all Task Runners and resources of the custom type "mytype".</dd>
+</dl>
 
 ### GetTagged<a id="GetTagged"></a>
 
@@ -164,11 +166,12 @@ value: (any number of times)
 
 Examples:
 
-`http://factory.company.com/GetTagged?subject=config`
-:   List all tagged configurations and their keys and values. Configurations without any tags are omitted.
-
-`http://factory.company.com/GetTagged?subject=schedule&key=sf.trigger`
-:   List all triggered schedules that have a trigger filter.
+<dl>
+<dt><code><?ccURL?>GetTagged?subject=config</code></dt>
+<dd>List all tagged configurations and their keys and values. Configurations without any tags are omitted.</dd>
+<dt><code><?ccURL?>GetTagged?subject=schedule&amp;key=sf.trigger</code></dt>
+<dd>List all triggered schedules that have a trigger filter.</dd>
+</dl>
 
 ### GetTaskDefParams<a id="GetTaskDefParams"></a>
 
@@ -181,11 +184,12 @@ param: (any number of times)
 
 Examples:
 
-`http://factory.company.com/GetTaskDefParams`
-:   Get all parameters and their values for all task definitions.
-
-`http://factory.company.com/GetTaskDefParams?param=sf.wrapper&param=SOURCE_ROOT`
-:   Get the wrapper names and the values of parameter "SOURCE_ROOT" for all task definitions.
+<dl>
+<dt><code><?ccURL?>GetTaskDefParams</code></dt>
+<dd>Get all parameters and their values for all task definitions.</dd>
+<dt><code><?ccURL?>GetTaskDefParams?param=sf.wrapper&amp;param=SOURCE_ROOT</code></dt>
+<dd>Get the wrapper names and the values of parameter "SOURCE_ROOT" for all task definitions.</dd>
+</dl>
 
 ### InspectDone<a id="InspectDone"></a>
 
@@ -214,8 +218,10 @@ Examples:
 
 <p class="todo">This API call is now POST-only; example needs updating.</p>
 
-`http://factory.company.com/InspectDone?jobId=080706-1234-ABCD&taskName=inspect&result=warning&summary=Some+problems&data.pass=8&data.fail=2`
-:   Mark the task "inspect" in job "080706-1234-ABCD" as done. The inspection found problems, hence the result being "warning" and the summary "Some problems". Two mid-level data pairs are stored: "pass=8" and "fail=2".
+<dl>
+<dt><code><?ccURL?>InspectDone?jobId=080706-1234-ABCD&amp;taskName=inspect&amp;result=warning&amp;summary=Some+problems&amp;data.pass=8&amp;data.fail=2</code></dt>
+<dd>Mark the task "inspect" in job <code>080706-1234-ABCD</code> as done. The inspection found problems, hence the result being <code>warning</code> and the summary "Some problems". Two mid-level data pairs are stored: <code>pass=8</code> and <code>fail=2</code>.</dd>
+</dl>
 
 ### LoadExecuteDefault<a id="LoadExecuteDefault"></a>
 
@@ -284,11 +290,12 @@ Examples:
 
 <p class="todo">This API call is now POST-only; example needs updating.</p>
 
-`http://factory.company.com/ResouceControl?name=toollicense&action=suspend`
-:   Suspends the resource "toollicense".
-
-`http://factory.company.com/ResouceControl?name=runner1&name=runner2&action=resume`
-:   Resumes Task Runners "runner1" and "runner2".
+<dl>
+<dt><code><?ccURL?>ResouceControl?name=toollicense&amp;action=suspend</code></dt>
+<dd>Suspends the resource "toollicense".</dd>
+<dt><code><?ccURL?>ResouceControl?name=runner1&amp;name=runner2&amp;action=resume</code></dt>
+<dd>Resumes Task Runners "runner1" and "runner2".</dd>
+</dl>
 
 ### TaskAlert<a id="TaskAlert"></a>
 
@@ -339,11 +346,15 @@ This chapter describes how to make calls to the SoftFab API. It applies to all [
 
 ### Request
 
-To call a function on the SoftFab API, you fetch a URL from the Control Center. The base of the URL is the same as the URL of the SoftFab web interface you use, typically `http://yourcompany.com/softfab/project/`, where `project` is your project name. The function name is appended to the base URL. For example, if you want to call the `LoadExecuteDefault` function, the complete URL would be `http://yourcompany.com/softfab/project/LoadExecuteDefault`.
+To call a function on the SoftFab API, you fetch a URL from the Control Center. The base of the URL is the same as the URL of the SoftFab web interface you use. The function name is appended to the base URL. For example, if you want to call the `LoadExecuteDefault` function, the complete URL would be:
 
-Arguments are usually passed as a query string that is appended to the URL. For example, to pass the parameter "config" with value "regression\_test" and the parameter "comment" with value "Started from API", the last part of the URL would be `LoadExecuteDefault?config=regression_test&comment=Started+from+API`.
+<pre><?ccURL?>LoadExecuteDefault</pre>
 
-Note that characters other than alphanumerics have to be encoded if they occur in URLs, as described in [RFC 1630](http://www.faqs.org/rfcs/rfc1630.html). If you are doing the call from a programming language, there is a good chance the standard language already contains a method to perform URL encoding. For example, in Java there is `java.net.URLEncoder` and in Python there is `urllib.urlencode`.
+Arguments are usually passed as a query string that is appended to the URL. For example, to pass the parameter "config" with value "regression\_test" and the parameter "comment" with value "Started from API", the URL would be:
+
+<pre><?ccURL?>LoadExecuteDefault?config=regression_test&amp;comment=Started+from+API</pre>
+
+Note that characters other than alphanumerics have to be encoded if they occur in URLs, as described in [RFC 1630](http://www.faqs.org/rfcs/rfc1630.html). If you are doing the call from a programming language, there is a good chance the standard language already contains a method to perform URL encoding. For example, in Java there is [`java.net.URLEncoder`](https://docs.oracle.com/en/java/javase/14/docs/api/java.base/java/net/URLEncoder.html) and in Python there is [`urllib.parse.urlencode`](https://docs.python.org/3/library/urllib.parse.html#urllib.parse.urlencode).
 
 In some cases a particular API call may need a more complex input data structure than it can easily be represented by URL query arguments. In those cases the API should be called using HTTP POST request with the data structure represented in XML format and sent as the request body of `text/xml` content type or or as the value of one of the parts of `multipart/form-data` content type. The documentation of the specific API function tells you if you should do an HTTP POST and what the XML message format is.
 
@@ -370,21 +381,17 @@ The privileges required to perform a call depend on the actions done by that cal
 
 By default the user `api` does not have any access rights at all. If you want to allow unauthenticated API calls in your factory, change the role of the user `api`. This can be done on the Control Center, under Configure / Users.
 
-### Doing an HTTP Request<a id="wrapper"></a>
+### Making an HTTP Request<a id="wrapper"></a>
 
 #### wget
 
 When writing a wrapper as a batch file, shell script or Makefile, we recommend the command line tool [wget](http://www.gnu.org/software/wget/). This tool is easy to script and it displays the full HTTP status line, so you can see the error message if something goes wrong. A typical 'wget' command line looks like this:
 
-```
-wget -O result.xml "https://example.com/sf/GetInfo?arg=test"
-```
+<pre>wget -O result.xml "<?ccURL?>GetInfo?arg=test"</pre>
 
 Or if authentication is required for this API call:
 
-```
-wget -O result.xml --http-user=name --http-password=pass "https://example.com/sf/GetInfo?arg=test"
-```
+<pre>wget -O result.xml --http-user=name --http-password=pass "<?ccURL?>GetInfo?arg=test"</pre>
 
 #### part of script language - HTTP library
 
