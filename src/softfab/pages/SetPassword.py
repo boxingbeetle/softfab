@@ -18,7 +18,7 @@ from softfab.users import Credentials, User
 from softfab.userview import (
     LoginNameArgs, PasswordMessage, passwordQuality, passwordStr
 )
-from softfab.webgui import pageLink, pageURL
+from softfab.webgui import pageURL
 from softfab.xmlgen import XML, XMLContent, xhtml
 
 
@@ -179,7 +179,6 @@ class SetPassword_POST(SetPasswordBase['SetPassword_POST.Processor',
             yield presentForm(**kwargs)
 
     def presentContent(self, **kwargs: object) -> XMLContent:
-        proc = cast(SetPassword_POST.Processor, kwargs['proc'])
         yield xhtml.p[
             'Password set successfully.'
             ]
