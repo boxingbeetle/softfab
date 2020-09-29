@@ -2,10 +2,9 @@
 
 A tour of the Control Center user interface.
 
-<p class="todo">
-TODO: The explanation of the Task Runner resource status table should be replaced and relocated by one covering other resources too.<br/>
-TODO: Perhaps it would be better to re-use the content of this document as per-page help text. While it is intended for new users, it is written in a reference style, not in a step-by-step style that better fits the needs of new users.
-</p>
+<p class="todo">Render tables with the actual rendering code, to make sure their look is always up-to-date.</p>
+<p class="todo">The explanation of the Task Runner resource status table should be replaced and relocated by one covering other resources types as well.</p>
+<p class="todo">Perhaps it would be better to re-use the content of this document as per-page help text. While it is intended for new users, it is written in a reference style, not in a step-by-step style that better fits the needs of new users.</p>
 
 ## SoftFab Web GUI
 
