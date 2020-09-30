@@ -20,8 +20,57 @@ First, create a configuration that implements the build and test. Typically the 
 
 Now create a triggered schedule that starts the configuration you prepared. A triggered schedule sits waiting for a SoftFab API call to trigger it. When triggered, it kicks off the associated configuration(s). When the created jobs are finished, it waits for the next trigger. If a trigger is received while the previous jobs are still running, the configuration(s) will be instantiated again as soon as the jobs finish. This avoids flooding the queue when many triggers occur.
 
-Triggering a Schedule
+Triggering a Schedule<a id="webhook"></a>
 --------------------
+
+When new commits are pushed to your repository, some mechanism needs to notify the Control Center of that event. SoftFab currently offers the following mechanisms:
+
+- [GitHub webhook](#webhook_github)
+- [Gogs webhook](#webhook_gogs)
+- [implementing a new webhook](#webhook_new)
+- [notification by API call](#apitrigger)
+
+### GitHub webhook<a id="webhook_github"></a>
+
+On your GitHub project page, select Settings, then Webhooks and click the "Add webhook" button.
+
+As the payload URL, enter:
+
+<pre><?ccURL?>webhook/github</pre>
+
+Set "Content type" to `application/json`.
+
+For the secret, generate a random string of sufficient length and paste that same string both in the form at GitHub and in the repository configuration here in your Control Center.
+
+The rest of the settings you can leave on their default values.
+
+Submit the form and then click on the webhook's payload URL to check whether GitHub's ping is listed as a success under "Recent Deliveries".
+
+### Gogs webhook<a id="webhook_gogs"></a>
+
+On the Gogs web interface, select Settings, then Webhooks and add a new webhook of the type "Gogs".
+
+As the payload URL, enter:
+
+<pre><?ccURL?>webhook/gogs</pre>
+
+Set "Content type" to `application/json`.
+
+For the secret, generate a random string of sufficient length and paste that same string both in the form at Gogs and in the repository configuration here in your Control Center.
+
+The rest of the settings you can leave on their default values.
+
+Submit the form and then click on the webhook's payload URL and scroll down to "Recent Deliveries". Press the "Test Delivery" button to check whether Gogs's ping is received correctly by your Control Center.
+
+### Implementing a new webhook<a id="webhook_new"></a>
+
+If you're a Python developer who is not too shy to modify the tools you're using, you can add your own webhook implementation in `src/softfab/webhooks/`. New submodules added there are automatically picked up when the Control Center starts. If your webhook is implemented in `foo.py`, it will be called when `POST` requests are made to the following URL:
+
+<pre><?ccURL?>webhook/foo</pre>
+
+Note that we give no backwards compatibility guarantees for SoftFab's intertal interfaces at this point in time, so if you want to make sure your webhook will work with future SoftFab releases, the best strategy is to send us a [pull request](https://github.com/boxingbeetle/softfab/pulls) to integrate it into SoftFab itself.
+
+### Notification by API call<a id="apitrigger"></a>
 
 You can trigger a schedule using the [TriggerSchedule](../../reference/api/#TriggerSchedule) API call. This means you request the following URL:
 

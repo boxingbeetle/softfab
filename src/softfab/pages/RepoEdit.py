@@ -12,7 +12,7 @@ from softfab.pageargs import PasswordArg, StrArg
 from softfab.resourcelib import Resource, ResourceDB
 from softfab.resourceview import CommentPanel
 from softfab.restypelib import repoResourceTypeName
-from softfab.webgui import Panel, vgroup
+from softfab.webgui import Panel, docLink, vgroup
 from softfab.xmlgen import XMLContent, xhtml
 
 
@@ -137,6 +137,10 @@ class SecretPanel(Panel):
             "repository. "
             "If no secret is entered here, webhooks will be inactive for this "
             "repository."
+            ],
+        xhtml.p[
+            docLink('/howto/ci/#webhook')["Detailed setup instructions for "
+            "webhooks"], " can be found in the documentation."
             ]
         ]
 
