@@ -115,6 +115,14 @@ class LocatorPanel(Panel):
         xhtml.p[
             "The locator, typically a URL, tells the version control system "
             "where it can find the repository."
+            ],
+        xhtml.p[
+            "Make sure you enter the URL that the version control system uses "
+            "when run from the command line, which might differ from the URL "
+            "of the web interface you might be using to manage it. "
+            "For example, when using Git, add the URL used with the ",
+            xhtml.code['git clone'], " command here, "
+            "or check using ", xhtml.code['git config remote.origin.url'], "."
             ]
         ]
 
