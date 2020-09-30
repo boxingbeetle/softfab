@@ -110,33 +110,40 @@ class RepoEdit_POST(RepoEditBase):
 
 class LocatorPanel(Panel):
     label = 'Locator'
-    content = xhtml.br.join((
+    content = xhtml[
         textInput(name='locator', size=80, style='width:100%'),
-        'The locator, typically a URL, tells the version control system '
-        'where it can find the repository.'
-        ))
+        xhtml.p[
+            "The locator, typically a URL, tells the version control system "
+            "where it can find the repository."
+            ]
+        ]
 
 class SecretPanel(Panel):
     label = 'Secret'
-    content = xhtml.br.join((
+    content = xhtml[
         textInput(name='secret', size=80, style='width:100%',
                   class_='obfuscate', autocomplete='off'),
-        'Webhooks can be used to report changes in this repository. '
-        'The same secret must be entered here and on the site hosting the '
-        'repository. '
-        'If no secret is entered here, webhooks will be inactive for this '
-        'repository.'
-        ))
+        xhtml.p[
+            "Webhooks can be used to report changes in this repository. "
+            "The same secret must be entered here and on the site hosting the "
+            "repository. "
+            "If no secret is entered here, webhooks will be inactive for this "
+            "repository."
+            ]
+        ]
 
 class CapabilitiesPanel(Panel):
     label = 'Capabilities'
-    content = xhtml.br.join((
+    content = xhtml[
         textInput(name='capabilities', size=80, style='width:100%'),
-        'Multiple capabilities should be separated by spaces.',
-        ('It is recommended to use a capability to specify the content '
-         'of the repository, for example ', xhtml.code['killerapp'], ', ',
-         xhtml.code['libfoo'], ' or ', xhtml.code['website'], '. ',
-         'Task definitions can then use that capability to request '
-         'the repository they need.'
-         )
-        ))
+        xhtml.p[
+            "Multiple capabilities should be separated by spaces."
+            ],
+        xhtml.p[
+            "It is recommended to use a capability to specify the content "
+            "of the repository, for example ", xhtml.code['killerapp'], ", ",
+            xhtml.code['libfoo'], " or ", xhtml.code['website'], ". ",
+            "Task definitions can then use that capability to request "
+            "the repository they need."
+            ]
+        ]

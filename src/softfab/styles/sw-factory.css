@@ -101,6 +101,16 @@ th, td {
     padding: 2px 4px;
     vertical-align: baseline;
 }
+td > p {
+    margin-left: 0;
+    margin-right: 0;
+}
+td > p:first-child {
+    margin-top: 0;
+}
+td > p:last-child {
+    margin-bottom: 0;
+}
 form {
     margin: 0;
     padding: 0;
