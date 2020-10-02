@@ -130,7 +130,7 @@ class SecretPanel(Panel):
     label = 'Secret'
     content = xhtml[
         textInput(name='secret', size=80, style='width:100%',
-                  class_='obfuscate', autocomplete='off'),
+                  autocomplete='off'),
         xhtml.p[
             "Webhooks can be used to report changes in this repository. "
             "The same secret must be entered here and on the site hosting the "

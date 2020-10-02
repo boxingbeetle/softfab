@@ -172,13 +172,6 @@ button {
 .rightalign {
     text-align: right;
 }
-.obfuscate {
-    color: transparent;
-    text-shadow: 0 0 0.5em black;
-}
-.obfuscate::selection {
-    background: #98B4FF;
-}
 
 /* TODO: reports use tr, resources use td */
 tr.ok > td, table.nostrong > tbody > tr > td.ok,
