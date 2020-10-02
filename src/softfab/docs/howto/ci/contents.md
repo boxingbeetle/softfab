@@ -40,7 +40,7 @@ As the payload URL, enter:
 
 Set "Content type" to `application/json`.
 
-For the secret, generate a random string of sufficient length and paste that same string both in the form at GitHub and in the repository configuration here in your Control Center.
+Copy-paste the randomly generated secret string from the New/Edit Repository page here in your Control Center.
 
 The rest of the settings you can leave on their default values.
 
@@ -56,7 +56,7 @@ As the payload URL, enter:
 
 Set "Content type" to `application/json`.
 
-For the secret, generate a random string of sufficient length and paste that same string both in the form at Gogs and in the repository configuration here in your Control Center.
+Copy-paste the randomly generated secret string from the New/Edit Repository page here in your Control Center.
 
 The rest of the settings you can leave on their default values.
 

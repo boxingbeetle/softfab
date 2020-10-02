@@ -2,6 +2,8 @@
 
 from typing import ClassVar, Mapping, Optional
 
+from passlib.pwd import genword
+
 from softfab.EditPage import (
     EditArgs, EditPage, EditProcessor, EditProcessorBase, InitialEditArgs,
     InitialEditProcessor
@@ -62,7 +64,7 @@ class RepoEdit_GET(RepoEditBase):
                       element: Optional[Resource]
                       ) -> Mapping[str, object]:
             if element is None:
-                return dict(secret='')
+                return dict(secret=genword(length=20))
             elif element.typeName == repoResourceTypeName:
                 return dict(
                     locator = element.getParameter('locator') or '',
@@ -135,7 +137,7 @@ class SecretPanel(Panel):
             "Webhooks can be used to report changes in this repository. "
             "The same secret must be entered here and on the site hosting the "
             "repository. "
-            "If no secret is entered here, webhooks will be inactive for this "
+            "If the secret is empty, webhooks will be inactive for this "
             "repository."
             ],
         xhtml.p[
