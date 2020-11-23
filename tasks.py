@@ -243,6 +243,7 @@ def apidocs(c):
         f'--add-package={SRC_DIR}/softfab',
         f'--project-name=SoftFab',
         f'--project-url=https://softfab.io/',
+        '--intersphinx=https://docs.python.org/3/objects.inv',
         ]
     with c.cd(str(TOP_DIR)):
         c.run(' '.join(cmd))
