@@ -1,3 +1,4 @@
+from io import StringIO
 from pathlib import Path
 from shutil import copyfile, rmtree
 
@@ -234,6 +235,13 @@ def ape(c, host='localhost', port=8180, dbdir='run', results=None):
 @task
 def apidocs(c):
     """Generate documentation as HTML files."""
+    git_ref = 'master'
+    with c.cd(str(TOP_DIR)):
+        with StringIO() as git_out:
+            result = c.run('git rev-parse HEAD', out_stream=git_out, warn=True)
+            if result.exited == 0:
+                git_ref = git_out.getvalue().strip()
+    print(f'Found git reference: {git_ref}')
     api_dir = BUILD_DIR / 'apidocs'
     remove_dir(api_dir)
     BUILD_DIR.mkdir(exist_ok=True)
@@ -243,6 +251,8 @@ def apidocs(c):
         f'--add-package={SRC_DIR}/softfab',
         f'--project-name=SoftFab',
         f'--project-url=https://softfab.io/',
+        f'--project-base-dir={TOP_DIR}',
+        f'--html-viewsource-base=https://github.com/boxingbeetle/softfab/tree/{git_ref}',
         '--intersphinx=https://docs.python.org/3/objects.inv',
         ]
     with c.cd(str(TOP_DIR)):
