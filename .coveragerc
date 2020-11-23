@@ -14,7 +14,7 @@ exclude_lines =
 
     # Exclusive to mypy:
     if TYPE_CHECKING:$
-    .\.\.$
+    \.\.\.$
 
     # Hard to test:
     except ImportError:$
